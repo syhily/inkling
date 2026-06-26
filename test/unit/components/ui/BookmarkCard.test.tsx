@@ -1,0 +1,99 @@
+import { fireEvent, render, screen } from '@testing-library/react'
+import { createEditor } from 'lexical'
+import React from 'react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { BookmarkCard, BookmarkIcon } from '@/components/ui/cards/BookmarkCard'
+
+vi.mock('../../../../src/components/ui/CardCaptionEditor', () => ({
+  CardCaptionEditor: () => <div data-testid="card-caption-editor" />,
+}))
+
+function createCaptionEditor() {
+  return createEditor({ namespace: 'test', onError: () => {} })
+}
+
+describe('BookmarkCard', () => {
+  const defaultProps = {
+    handleClose: vi.fn(),
+    handlePasteAsLink: vi.fn(),
+    handleRetry: vi.fn(),
+    handleUrlChange: vi.fn(),
+    handleUrlSubmit: vi.fn(),
+    captionEditor: createCaptionEditor(),
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('renders the populated bookmark card when url and title are present', () => {
+    render(
+      <BookmarkCard
+        {...defaultProps}
+        url="https://example.com"
+        title="Example"
+        description="An example bookmark"
+        publisher="Example Inc"
+        icon="https://example.com/favicon.ico"
+        author="Author Name"
+        thumbnail="https://example.com/image.png"
+      />,
+    )
+
+    expect(screen.getByTestId('bookmark-container')).toBeInTheDocument()
+    expect(screen.getByTestId('bookmark-title')).toHaveTextContent('Example')
+    expect(screen.getByTestId('bookmark-description')).toHaveTextContent('An example bookmark')
+    expect(screen.getByTestId('bookmark-publisher')).toHaveTextContent('Example Inc')
+    expect(screen.getByTestId('bookmark-author')).toHaveTextContent('Author Name')
+    expect(screen.getByTestId('bookmark-thumbnail')).toBeInTheDocument()
+    expect(screen.getByTestId('card-caption-editor')).toBeInTheDocument()
+  })
+
+  it('hides thumbnail on image error', () => {
+    render(
+      <BookmarkCard
+        {...defaultProps}
+        url="https://example.com"
+        title="Example"
+        thumbnail="https://example.com/broken.png"
+      />,
+    )
+
+    const thumbnail = screen.getByTestId('bookmark-thumbnail')
+    fireEvent.error(thumbnail)
+    expect(screen.queryByTestId('bookmark-thumbnail')).not.toBeInTheDocument()
+  })
+
+  it('does not render thumbnail when thumbnail prop is missing', () => {
+    render(<BookmarkCard {...defaultProps} url="https://example.com" title="Example" />)
+
+    expect(screen.queryByTestId('bookmark-thumbnail-container')).not.toBeInTheDocument()
+  })
+
+  it('renders UrlSearchInput when searchLinks is provided', () => {
+    const searchLinks = vi.fn().mockResolvedValue([])
+    render(<BookmarkCard {...defaultProps} searchLinks={searchLinks} urlInputValue="test" />)
+
+    expect(screen.getByTestId('bookmark-url')).toBeInTheDocument()
+  })
+
+  it('renders UrlInput when searchLinks is not provided', () => {
+    render(<BookmarkCard {...defaultProps} urlInputValue="test" />)
+
+    expect(screen.getByTestId('bookmark-url')).toBeInTheDocument()
+  })
+
+  it('renders loading state when urlError is true', () => {
+    render(<BookmarkCard {...defaultProps} urlInputValue="test" urlError={true} isLoading={true} />)
+
+    expect(screen.getByTestId('bookmark-url-loading-container')).toBeInTheDocument()
+  })
+})
+
+describe('BookmarkIcon', () => {
+  it('renders an icon image', () => {
+    render(<BookmarkIcon src="https://example.com/favicon.ico" />)
+    expect(screen.getByTestId('bookmark-icon')).toHaveAttribute('src', 'https://example.com/favicon.ico')
+  })
+})

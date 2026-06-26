@@ -1,0 +1,131 @@
+import type { Meta, StoryFn } from '@storybook/react'
+
+import { createEditor } from 'lexical'
+import React from 'react'
+
+import { GalleryCard, type GalleryCardProps } from '@/components/ui/cards/GalleryCard'
+import { CardWrapper } from '@/components/ui/CardWrapper'
+import CardContext from '@/context/CardContext'
+import { MINIMAL_NODES } from '@/index'
+import populateEditor from '@/utils/storybook/populate-storybook-editor'
+
+const displayOptions = {
+  Default: { isSelected: false, isEditing: false },
+  Selected: { isSelected: true, isEditing: false },
+}
+
+type DisplayKey = keyof typeof displayOptions
+
+interface GalleryCardStoryArgs extends Partial<GalleryCardProps> {
+  display?: DisplayKey
+  caption?: string
+}
+
+function GalleryCardStory({
+  display = 'Default',
+  caption = '',
+  captionEditor: captionEditorProp,
+  captionEditorInitialState,
+  clearErrorMessage = () => {},
+  deleteImage = () => {},
+  filesDropper = { setRef: () => {} },
+  errorMessage,
+  fileInputRef: fileInputRefProp,
+  imageMimeTypes = [],
+  images = [],
+  isSelected: isSelectedProp,
+  onFileChange = () => {},
+  uploader,
+  reorderHandler = { setContainerRef: () => {} },
+}: GalleryCardStoryArgs) {
+  const captionEditor = React.useMemo(() => {
+    if (captionEditorProp) {
+      return captionEditorProp
+    }
+    const editor = createEditor({ nodes: MINIMAL_NODES })
+    populateEditor({ editor, initialHtml: `${caption}` })
+    return editor
+  }, [captionEditorProp, caption])
+
+  const fallbackFileInputRef = React.useRef<HTMLInputElement | null>(null)
+  const fileInputRef = fileInputRefProp ?? fallbackFileInputRef
+  const displayState = displayOptions[display]
+  const isSelected = isSelectedProp ?? displayState.isSelected
+  const isEditing = displayState.isEditing
+
+  const cardContextValue = React.useMemo(
+    () => ({
+      isSelected,
+      isEditing,
+      captionHasFocus: null,
+      cardWidth: 'regular',
+      nodeKey: undefined,
+      cardContainerRef: { current: null },
+      setCardWidth: () => {},
+      setCaptionHasFocus: () => {},
+      setEditing: () => {},
+    }),
+    [isSelected, isEditing],
+  )
+
+  return (
+    <div className="inkling-prose">
+      <div className="my-8 mx-auto w-[1170px] min-w-[initial]">
+        <CardContext.Provider value={cardContextValue}>
+          <CardWrapper isSelected={isSelected} isEditing={isEditing}>
+            <GalleryCard
+              captionEditor={captionEditor}
+              captionEditorInitialState={captionEditorInitialState}
+              clearErrorMessage={clearErrorMessage}
+              deleteImage={deleteImage}
+              errorMessage={errorMessage}
+              fileInputRef={fileInputRef}
+              filesDropper={filesDropper}
+              imageMimeTypes={imageMimeTypes}
+              images={images}
+              isSelected={isSelected}
+              onFileChange={onFileChange}
+              reorderHandler={reorderHandler}
+              uploader={uploader}
+            />
+          </CardWrapper>
+        </CardContext.Provider>
+      </div>
+    </div>
+  )
+}
+
+const story: Meta<typeof GalleryCardStory> = {
+  title: 'Primary cards/Gallery card',
+  component: GalleryCardStory,
+  subcomponents: { CardWrapper },
+  argTypes: {
+    display: {
+      options: Object.keys(displayOptions),
+      mapping: displayOptions,
+      control: {
+        type: 'radio',
+        labels: {
+          Default: 'Default',
+          Selected: 'Selected',
+        },
+        defaultValue: displayOptions.Default,
+      },
+    },
+  },
+  parameters: {
+    status: {
+      type: 'Functional',
+    },
+  },
+}
+export default story
+
+const Template: StoryFn<typeof GalleryCardStory> = (args) => <GalleryCardStory {...args} />
+
+export const Empty = Template.bind({})
+Empty.args = {
+  display: 'Selected',
+  caption: '',
+  filesDropper: {},
+}

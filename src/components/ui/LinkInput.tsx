@@ -1,0 +1,105 @@
+import React, { useEffect, useRef } from 'react'
+
+import CloseIcon from '@/assets/icons/inkling-close.svg?react'
+
+interface LinkInputProps {
+  href?: string
+  update: (href: string) => void
+  cancel: () => void
+}
+
+export function LinkInput({ href, update, cancel }: LinkInputProps) {
+  const [_href, setHref] = React.useState<string | undefined>(href)
+
+  // add refs for input and container
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
+  // update the href when the prop changes
+  React.useEffect(() => {
+    setHref(href)
+  }, [href])
+
+  // when link is open, focus the input
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
+
+  // when link is open, watch the window for mousedown events so that we can
+  // close it when we detect a click outside
+  const closeOnClickOutside = React.useCallback(
+    (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        cancel()
+      }
+    },
+    [cancel],
+  )
+
+  React.useEffect(() => {
+    window.addEventListener('mousedown', closeOnClickOutside)
+    return () => {
+      window.removeEventListener('mousedown', closeOnClickOutside)
+    }
+  }, [closeOnClickOutside])
+
+  // when link is open, watch the window for escape keydown events so that we can exit
+  const onEscape = React.useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        cancel()
+      }
+    },
+    [cancel],
+  )
+
+  React.useEffect(() => {
+    window.addEventListener('keydown', onEscape)
+    return () => {
+      window.removeEventListener('keydown', onEscape)
+    }
+  }, [onEscape])
+
+  return (
+    <div
+      ref={containerRef}
+      className="m-0 gap-1 rounded-lg bg-white p-1 font-sans text-md font-normal text-black shadow-md dark:bg-grey-950 relative flex items-center justify-evenly"
+    >
+      <input
+        ref={inputRef}
+        className="h-8 pl-3 leading-loose text-grey-900 selection:bg-grey/40 dark:bg-grey-950 dark:text-grey-300 dark:selection:bg-grey-800/40 dark:selection:text-grey-100 mb-[1px] w-full"
+        data-testid="link-input"
+        name="link-input"
+        placeholder="Enter url"
+        value={_href}
+        data-inkling-link-input
+        onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
+          setHref(e.target.value)
+        }}
+        onKeyDown={(e: React.KeyboardEvent) => {
+          if (e.key === 'Enter') {
+            // prevent Enter from triggering in the editor and removing text
+            e.preventDefault()
+            update(_href || '')
+            return
+          }
+        }}
+      />
+
+      {!!_href && (
+        <button
+          aria-label="Close"
+          className="right-3 absolute cursor-pointer"
+          type="button"
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation()
+            setHref('')
+            inputRef.current?.focus()
+          }}
+        >
+          <CloseIcon className="size-4 text-grey stroke-2" />
+        </button>
+      )}
+    </div>
+  )
+}
