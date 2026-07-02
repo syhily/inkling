@@ -304,8 +304,8 @@ export default function useMovable({ adjustOnResize, adjustOnDrag }: UseMovableO
     const mouseDownListener = addRefEventListener('mousedown', dragStart)
 
     return () => {
-      ref.current?.removeEventListener('touchstart', touchStartListener)
-      ref.current?.removeEventListener('mousedown', mouseDownListener)
+      document.body.removeEventListener('touchstart', touchStartListener, false)
+      document.body.removeEventListener('mousedown', mouseDownListener, false)
     }
   }, [dragStart])
 

@@ -2,8 +2,7 @@ import type { LexicalEditor } from 'lexical'
 
 import { $createListItemNode, $createListNode, ListItemNode, ListNode } from '@lexical/list'
 import { $createHeadingNode, $createQuoteNode, HeadingNode, QuoteNode } from '@lexical/rich-text'
-import { mergeRegister } from '@lexical/utils'
-import { $createParagraphNode, ParagraphNode } from 'lexical'
+import { mergeRegister, $createParagraphNode, ParagraphNode } from 'lexical'
 
 import { ExtendedHeadingNode } from '@/nodes/base'
 /* c8 ignore start */

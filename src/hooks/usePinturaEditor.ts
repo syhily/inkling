@@ -20,6 +20,7 @@ interface PinturaHandleSaveResult {
 interface UsePinturaEditorResult {
   isEnabled: boolean
   openEditor: ({ image, handleSave }: { image: string; handleSave: (blob: Blob) => void }) => void
+  error: Error | null
 }
 
 declare global {
@@ -40,6 +41,7 @@ export default function usePinturaEditor({
 }: UsePinturaEditorOptions = {}): UsePinturaEditorResult {
   const [scriptLoaded, setScriptLoaded] = useState<boolean>(false)
   const [cssLoaded, setCssLoaded] = useState<boolean>(false)
+  const [error, setError] = useState<Error | null>(null)
   const allowClose = useRef<boolean>(false)
 
   const isEnabled = !disabled && scriptLoaded && cssLoaded
@@ -66,10 +68,10 @@ export default function usePinturaEditor({
           setScriptLoaded(true)
         })
         .catch(() => {
-          // log script loading failure
+          setError(new Error(`Failed to load Pintura script from ${jsUrl}`))
         })
     } catch (e) {
-      // Log script loading error
+      setError(e instanceof Error ? e : new Error('Failed to load Pintura script'))
     }
   }, [config?.jsUrl])
 
@@ -92,10 +94,13 @@ export default function usePinturaEditor({
         link.onload = () => {
           setCssLoaded(true)
         }
+        link.onerror = () => {
+          setError(new Error(`Failed to load Pintura stylesheet from ${cssUrl}`))
+        }
         document.head.appendChild(link)
       }
     } catch (e) {
-      // Log css loading error
+      setError(e instanceof Error ? e : new Error('Failed to load Pintura stylesheet'))
     }
   }, [config?.cssUrl])
 
@@ -161,8 +166,8 @@ export default function usePinturaEditor({
           willClose: () => allowClose.current, // prevent closing on escape, only allow on close button clicks
         })
 
-        editor.on('loaderror', () => {
-          // TODO: log error message
+        editor.on('loaderror', (err) => {
+          setError(err instanceof Error ? err : new Error('Pintura editor load error'))
         })
 
         editor.on('process', (result) => {
@@ -193,5 +198,6 @@ export default function usePinturaEditor({
   return {
     isEnabled,
     openEditor,
+    error,
   }
 }

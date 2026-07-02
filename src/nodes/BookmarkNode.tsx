@@ -15,7 +15,7 @@ export class BookmarkNode extends BaseBookmarkNode {
   __captionEditorInitialState!: import('lexical').EditorState | undefined
   __createdWithUrl
 
-  static kgMenu = [
+  static cardMenu = [
     {
       label: 'Bookmark',
       desc: 'Embed a link as a visual bookmark',

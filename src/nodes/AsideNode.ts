@@ -1,5 +1,4 @@
-import { addClassNamesToElement } from '@lexical/utils'
-import { $createParagraphNode } from 'lexical'
+import { addClassNamesToElement, $createParagraphNode } from 'lexical'
 
 import { AsideNode as BaseAsideNode } from '@/nodes/base'
 

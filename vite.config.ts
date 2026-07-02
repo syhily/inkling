@@ -76,6 +76,15 @@ export default defineConfig(({ mode }) => {
         },
       },
       rolldownOptions: {
+        external: [
+          /^markdown-it/,
+          /^@uiw\/react-codemirror/,
+          /^@uiw\/codemirror-extensions-basic-setup/,
+          /^@codemirror\//,
+          /^emoji-mart/,
+          /^@emoji-mart\//,
+          'fast-average-color',
+        ],
         output: {
           globals: {
             react: 'React',

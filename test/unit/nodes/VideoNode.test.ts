@@ -26,9 +26,9 @@ describe('VideoNode', () => {
     })
   })
 
-  it('exposes a static kgMenu entry', () => {
-    expect(VideoNode.kgMenu[0].label).toBe('Video')
-    expect(VideoNode.kgMenu[0].insertCommand).toBe(INSERT_VIDEO_COMMAND)
+  it('exposes a static cardMenu entry', () => {
+    expect(VideoNode.cardMenu[0].label).toBe('Video')
+    expect(VideoNode.cardMenu[0].insertCommand).toBe(INSERT_VIDEO_COMMAND)
   })
 
   it('returns the video icon', async () => {

@@ -11,7 +11,7 @@ import markdownItSub from 'markdown-it-sub'
 import markdownItSup from 'markdown-it-sup'
 import semver from 'semver'
 
-import { slugify as kgSlugify } from '@/utils'
+import { slugify } from '@/utils'
 
 const renderers: Record<string, MarkdownIt> = {}
 
@@ -20,11 +20,15 @@ interface RenderOptions {
 }
 
 const namedHeaders = function ({ inklingVersion }: RenderOptions = {}) {
-  const slugify = function (inputString: string, usedHeaders: Record<string, number> = {}) {
-    let slug = kgSlugify(inputString, { inklingVersion, type: 'markdown' })
+  const usedHeaders: Record<string, number> = {}
+
+  const generateSlug = function (inputString: string) {
+    let slug = slugify(inputString, { inklingVersion, type: 'markdown' })
     if (usedHeaders[slug]) {
       usedHeaders[slug] += 1
       slug += usedHeaders[slug]
+    } else {
+      usedHeaders[slug] = 1
     }
     return slug
   }
@@ -41,12 +45,11 @@ const namedHeaders = function ({ inklingVersion }: RenderOptions = {}) {
       env: unknown,
       self: Renderer,
     ) {
-      const usedHeaders: Record<string, number> = {}
       tokens[idx].attrs = tokens[idx].attrs || []
       const title = tokens[idx + 1].children!.reduce(function (acc: string, t: Token) {
         return acc + t.content
       }, '')
-      const slug = slugify(title, usedHeaders)
+      const slug = generateSlug(title)
       tokens[idx].attrs!.push(['id', slug])
       if (originalHeadingOpen) {
         return originalHeadingOpen.call(this, tokens, idx, options, env, self)

@@ -1,79 +1,99 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getSelection, $isRangeSelection, $isTextNode } from 'lexical'
-import { useEffect } from 'react'
+import { $getSelection, $isRangeSelection, $isTextNode, COMMAND_PRIORITY_LOW, CONTROLLED_TEXT_INSERTION_COMMAND } from 'lexical'
+import { useEffect, useRef } from 'react'
 
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
-// TODO: this update breaks the undo functionality...
+const DASH = '-'
+
+function isWhitespace(char: string): boolean {
+  return /^\s$/.test(char)
+}
 
 export const EmEnDashPlugin = () => {
   const [editor] = useLexicalComposerContext()
+  const mountedRef = useRef(true)
 
-  // added markdown shortcut to divider card
   useEffect(() => {
-    return editor.registerUpdateListener(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    const replaceDashes = () => {
+      if (!mountedRef.current) {
+        return
+      }
       editor.update(
         () => {
-          // don't do anything when using IME input
-          if (editor.isComposing()) {
-            return
-          }
-
           const selection = $getSelection()
           if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
             return
           }
 
-          // need to detect regexp match for dashes
-          // const genericDashRegExp = /---?.$/; // only matches end of line, not end of word/string
-          const genericDashRegExp = /---?./
           const node = getSelectedNode(selection)
+          if (!$isTextNode(node)) {
+            return
+          }
+
           const text = node.getTextContent()
-          if (!node || !$isTextNode(node) || !text?.match || !text.match(genericDashRegExp)) {
-            return
+          const offset = selection.anchor.offset
+
+          // em dash: three consecutive dashes ending at the cursor
+          if (offset >= 3 && text.slice(offset - 3, offset) === '---') {
+            const charBefore = text[offset - 4]
+            if (charBefore === undefined || charBefore !== DASH) {
+              node.setTextContent(text.slice(0, offset - 3) + '—' + text.slice(offset))
+              selection.anchor.offset = offset - 2
+              selection.focus.offset = offset - 2
+              return
+            }
           }
 
-          /// ???
-          const nativeSelection = window.getSelection()
-          if (!nativeSelection) {
-            return
+          // en dash: non-dash char + '--' + whitespace ending at the cursor
+          if (offset >= 3) {
+            const charAfterDashes = text[offset - 1]
+            const twoDashes = text.slice(offset - 3, offset - 1)
+            const charBeforeDashes = text[offset - 4]
+            if (
+              charAfterDashes !== undefined &&
+              /^\s$/.test(charAfterDashes) &&
+              twoDashes === '--' &&
+              charBeforeDashes !== undefined &&
+              charBeforeDashes !== DASH
+            ) {
+              node.setTextContent(text.slice(0, offset - 3) + '–' + text.slice(offset - 1))
+              selection.anchor.offset = offset - 1
+              selection.focus.offset = offset - 1
+            }
           }
-          const anchorNode = nativeSelection.anchorNode
-          const rootElement = editor.getRootElement()
-
-          if (anchorNode?.nodeType !== Node.TEXT_NODE || !rootElement?.contains(anchorNode)) {
-            return
-          }
-
-          // figure out which dash matches
-          const emDashRegExp = /---([^-])/
-          const enDashRegExp = /[^-]--(\s)/
-
-          const emDashMatch = text.match(emDashRegExp)
-          if (emDashMatch) {
-            const index = emDashMatch?.index
-            const newText = text.slice(0, index) + '—' + text.slice(index + 3)
-            node.setTextContent(newText)
-            selection.anchor.offset = index + 2
-            selection.focus.offset = index + 2
-            return
-          }
-
-          const enDashMatch = text.match(enDashRegExp)
-          if (enDashMatch) {
-            const index = enDashMatch?.index
-            const newText = text.slice(0, index + 1) + '–' + text.slice(index + 3)
-            node.setTextContent(newText)
-            selection.anchor.offset = index + 3
-            selection.focus.offset = index + 3
-            return
-          }
-
-          return
         },
-        { tag: 'history-merge' },
-      ) // this makes it so the transform isn't added to the undo stack - breaks undo without this
-    })
+        { tag: 'history-push' },
+      )
+    }
+
+    return editor.registerCommand(
+      CONTROLLED_TEXT_INSERTION_COMMAND,
+      (eventOrText) => {
+        if (editor.isComposing()) {
+          return false
+        }
+
+        const text = typeof eventOrText === 'string' ? eventOrText : eventOrText.data
+        if (!text || text.length !== 1 || (text !== DASH && !isWhitespace(text))) {
+          return false
+        }
+
+        // Defer the replacement to the next macrotask so it becomes a separate
+        // history entry from the keystroke that triggered it. This lets undo
+        // restore the raw typed dashes.
+        setTimeout(replaceDashes, 0)
+        return false
+      },
+      COMMAND_PRIORITY_LOW,
+    )
   }, [editor])
 
   return null

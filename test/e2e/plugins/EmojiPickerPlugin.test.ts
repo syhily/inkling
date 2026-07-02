@@ -206,7 +206,7 @@ test.describe('Emoji Picker Plugin', async function () {
                 <li>
                   <button
                     aria-label="Edit"
-                    data-kg-active="false"
+                    data-inkling-active="false"
                     type="button">
                     <svg></svg>
                   </button>
@@ -216,7 +216,7 @@ test.describe('Emoji Picker Plugin', async function () {
                 <li>
                   <button
                     aria-label="Save as snippet"
-                    data-kg-active="false"
+                    data-inkling-active="false"
                     type="button">
                     <svg></svg>
                   </button>
@@ -279,7 +279,7 @@ test.describe('Emoji Picker Plugin', async function () {
                     <li>
                     <button
                         aria-label="Edit"
-                        data-kg-active="false"
+                        data-inkling-active="false"
                         type="button">
                         <svg></svg>
                     </button>
@@ -289,7 +289,7 @@ test.describe('Emoji Picker Plugin', async function () {
                     <li>
                     <button
                         aria-label="Save as snippet"
-                        data-kg-active="false"
+                        data-inkling-active="false"
                         type="button">
                         <svg></svg>
                     </button>

@@ -6,7 +6,7 @@ export function getEditorCardNodes(editor: any) {
   const cardNodes: any[] = []
 
   for (const [nodeType, { klass }] of allNodes) {
-    if (!klass.kgMenu) {
+    if (!klass.cardMenu) {
       continue
     }
 

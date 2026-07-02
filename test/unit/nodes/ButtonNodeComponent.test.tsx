@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -104,5 +104,28 @@ describe('ButtonNodeComponent', () => {
 
     expect(screen.getByTestId('button-card')).toBeTruthy()
     expect(screen.getByTestId('button-card-btn').textContent).toBe('Subscribe')
+  })
+
+  it('enters edit mode when the toolbar edit button is clicked', async () => {
+    const nodeKey = await addButtonNode(editor)
+    const setEditing = vi.fn()
+    const composerValue = createComposerContext()
+    const cardValue = createCardContext({ isSelected: true, isEditing: false, setEditing })
+
+    render(
+      <InklingComposerContext.Provider value={composerValue}>
+        <CardContext.Provider value={cardValue}>
+          <ButtonNodeComponent
+            alignment="center"
+            buttonText="Subscribe"
+            buttonUrl="https://example.com"
+            nodeKey={nodeKey}
+          />
+        </CardContext.Provider>
+      </InklingComposerContext.Provider>,
+    )
+
+    fireEvent.click(screen.getByTestId('edit-button-card'))
+    expect(setEditing).toHaveBeenCalledWith(true)
   })
 })

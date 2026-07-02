@@ -36,6 +36,8 @@ describe('HTMLtoLexical', function () {
               direction: null,
               format: '',
               indent: 0,
+              textFormat: 0,
+              textStyle: '',
               type: 'paragraph',
               version: 1,
             },
@@ -60,6 +62,8 @@ describe('HTMLtoLexical', function () {
               direction: null,
               format: '',
               indent: 0,
+              textFormat: 0,
+              textStyle: '',
               type: 'paragraph',
               version: 1,
             },
@@ -94,6 +98,8 @@ describe('HTMLtoLexical', function () {
               direction: null,
               format: '',
               indent: 0,
+              textFormat: 0,
+              textStyle: '',
               type: 'paragraph',
               version: 1,
             },
@@ -128,6 +134,8 @@ describe('HTMLtoLexical', function () {
               direction: null,
               format: '',
               indent: 0,
+              textFormat: 0,
+              textStyle: '',
               type: 'paragraph',
               version: 1,
             },
@@ -162,6 +170,8 @@ describe('HTMLtoLexical', function () {
               direction: null,
               format: '',
               indent: 0,
+              textFormat: 0,
+              textStyle: '',
               type: 'paragraph',
               version: 1,
             },
@@ -180,6 +190,8 @@ describe('HTMLtoLexical', function () {
               direction: null,
               format: '',
               indent: 0,
+              textFormat: 0,
+              textStyle: '',
               type: 'paragraph',
               version: 1,
             },
@@ -213,6 +225,8 @@ describe('HTMLtoLexical', function () {
             direction: null,
             format: '',
             indent: 0,
+            textFormat: 0,
+            textStyle: '',
             type: 'paragraph',
             version: 1,
           },
@@ -231,6 +245,8 @@ describe('HTMLtoLexical', function () {
             direction: null,
             format: '',
             indent: 0,
+            textFormat: 0,
+            textStyle: '',
             type: 'paragraph',
             version: 1,
           },
@@ -306,6 +322,8 @@ describe('HTMLtoLexical', function () {
               direction: null,
               format: '',
               indent: 0,
+              textFormat: 0,
+              textStyle: '',
               type: 'paragraph',
               version: 1,
             },
@@ -476,11 +494,13 @@ describe('HTMLtoLexical', function () {
       assert.ok(lexical.root)
       assert.equal(lexical.root.children.length, 1)
       assert.equal(lexical.root.children[0].type, 'extended-quote')
-      assert.equal(lexical.root.children[0].children.length, 4)
+      assert.equal(lexical.root.children[0].children.length, 6)
       assert.equal(lexical.root.children[0].children[0].text, 'Hello')
       assert.equal(lexical.root.children[0].children[1].type, 'linebreak')
       assert.equal(lexical.root.children[0].children[2].type, 'linebreak')
-      assert.equal(lexical.root.children[0].children[3].text, 'World')
+      assert.equal(lexical.root.children[0].children[3].type, 'linebreak')
+      assert.equal(lexical.root.children[0].children[4].type, 'linebreak')
+      assert.equal(lexical.root.children[0].children[5].text, 'World')
     })
   })
 
@@ -1093,6 +1113,8 @@ describe('HTMLtoLexical', function () {
               direction: null,
               format: '',
               indent: 0,
+              textFormat: 0,
+              textStyle: '',
               type: 'paragraph',
               version: 1,
             },
@@ -1128,6 +1150,8 @@ describe('HTMLtoLexical', function () {
               direction: null,
               format: '',
               indent: 0,
+              textFormat: 0,
+              textStyle: '',
               type: 'paragraph',
               version: 1,
             },
@@ -1159,6 +1183,8 @@ describe('HTMLtoLexical', function () {
               direction: null,
               format: '',
               indent: 0,
+              textFormat: 0,
+              textStyle: '',
               type: 'paragraph',
               version: 1,
             },
@@ -1167,6 +1193,8 @@ describe('HTMLtoLexical', function () {
               direction: null,
               format: '',
               indent: 0,
+              textFormat: 0,
+              textStyle: '',
               type: 'paragraph',
               version: 1,
             },

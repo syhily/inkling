@@ -18,7 +18,7 @@ export class HeaderNode extends BaseHeaderNode {
   __headerTextEditorInitialState!: EditorState | undefined
   __subheaderTextEditorInitialState!: EditorState | undefined
 
-  static kgMenu = [
+  static cardMenu = [
     {
       label: 'Header',
       desc: 'Add a header',

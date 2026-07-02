@@ -9,7 +9,13 @@ import { AudioNode, $createAudioNode, $isAudioNode, type ExportDOMOptions } from
 
 const editorNodes = [AudioNode]
 
-function getHTMLElement(element: HTMLElement | Text | null): HTMLElement {
+function getHTMLElement(element: HTMLElement | DocumentFragment | Text | null): HTMLElement {
+  if (element instanceof DocumentFragment) {
+    if (!element.firstElementChild) {
+      throw new Error('Expected exportDOM DocumentFragment to contain an HTMLElement')
+    }
+    return element.firstElementChild as HTMLElement
+  }
   if (!element || !('outerHTML' in element)) {
     throw new Error('Expected exportDOM to return an HTMLElement')
   }
@@ -25,12 +31,12 @@ describe('AudioNode', function () {
   // NOTE: all tests should use this function, without it you need manual
   // try/catch and done handling to avoid assertion failures not triggering
   // failed tests
-  const editorTest = (testFn: () => void) => () =>
+  const editorTest = (testFn: () => Promise<void> | void) => () =>
     new Promise<void>((resolve, reject) => {
       editor.update(() => {
         try {
-          testFn()
-          resolve()
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
         } catch (e) {
           reject(e)
         }
@@ -55,7 +61,7 @@ describe('AudioNode', function () {
 
   it(
     'matches node with $isAudioNode',
-    editorTest(function () {
+    editorTest(async function () {
       const audioNode = $createAudioNode(dataset)
       $isAudioNode(audioNode).should.be.true()
     }),
@@ -64,7 +70,7 @@ describe('AudioNode', function () {
   describe('data access', function () {
     it(
       'has getters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const audioNode = $createAudioNode(dataset)
 
         audioNode.src.should.equal(dataset.src)
@@ -77,7 +83,7 @@ describe('AudioNode', function () {
 
     it(
       'has setters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const audioNode = $createAudioNode({})
 
         audioNode.src.should.equal('')
@@ -104,7 +110,7 @@ describe('AudioNode', function () {
 
     it(
       'can be created without a dataset',
-      editorTest(function () {
+      editorTest(async function () {
         const audioNode = $createAudioNode()
 
         audioNode.getDataset().should.deepEqual({
@@ -119,7 +125,7 @@ describe('AudioNode', function () {
 
     it(
       'has getDataset() convenience method',
-      editorTest(function () {
+      editorTest(async function () {
         const audioNode = $createAudioNode(dataset)
         const audioNodeDataset = audioNode.getDataset()
 
@@ -133,7 +139,7 @@ describe('AudioNode', function () {
   describe('getType', function () {
     it(
       'returns the correct node type',
-      editorTest(function () {
+      editorTest(async function () {
         AudioNode.getType().should.equal('audio')
       }),
     )
@@ -142,7 +148,7 @@ describe('AudioNode', function () {
   describe('clone', function () {
     it(
       'returns a copy of the current node',
-      editorTest(function () {
+      editorTest(async function () {
         const audioNode = $createAudioNode(dataset)
         const audioNodeDataset = audioNode.getDataset()
         const clone = AudioNode.clone(audioNode) as AudioNode
@@ -156,7 +162,7 @@ describe('AudioNode', function () {
   describe('urlTransformMap', function () {
     it(
       'contains the expected URL mapping',
-      editorTest(function () {
+      editorTest(async function () {
         AudioNode.urlTransformMap.should.deepEqual({
           src: 'url',
         })
@@ -167,7 +173,7 @@ describe('AudioNode', function () {
   describe('hasEditMode', function () {
     it(
       'returns true',
-      editorTest(function () {
+      editorTest(async function () {
         const audioNode = $createAudioNode(dataset)
         audioNode.hasEditMode().should.be.true()
       }),
@@ -177,7 +183,7 @@ describe('AudioNode', function () {
   describe('exportJSON', function () {
     it(
       'contains all data',
-      editorTest(function () {
+      editorTest(async function () {
         const audioNode = $createAudioNode(dataset)
         const json = audioNode.exportJSON()
 
@@ -237,11 +243,11 @@ describe('AudioNode', function () {
   describe('exportDOM', function () {
     it(
       'creates an audio card',
-      editorTest(function () {
+      editorTest(async function () {
         const audioNode = $createAudioNode(dataset)
         const { element } = audioNode.exportDOM(editor, exportOptions)
 
-        getHTMLElement(element).outerHTML.should.prettifyTo(
+        await getHTMLElement(element).outerHTML.should.prettifyTo(
           html`<div class="inkling-card inkling-audio-card">
             <img
               src="/content/images/2022/11/inkling-audio-lexical.jpg"
@@ -311,7 +317,7 @@ describe('AudioNode', function () {
 
     it(
       'renders an empty span with a missing src',
-      editorTest(function () {
+      editorTest(async function () {
         const audioNode = $createAudioNode({})
         const { element } = audioNode.exportDOM(editor, exportOptions)
 
@@ -321,7 +327,7 @@ describe('AudioNode', function () {
 
     it(
       'renders email links with postUrl',
-      editorTest(function () {
+      editorTest(async function () {
         const audioNode = $createAudioNode(dataset)
         const { element } = audioNode.exportDOM(editor, {
           ...exportOptions,
@@ -337,7 +343,7 @@ describe('AudioNode', function () {
 
     it(
       'throws when rendering email without postUrl',
-      editorTest(function () {
+      editorTest(async function () {
         const audioNode = $createAudioNode(dataset)
 
         ;(() => audioNode.exportDOM(editor, { ...exportOptions, target: 'email' })).should.throw(
@@ -350,7 +356,7 @@ describe('AudioNode', function () {
   describe('importDOM', function () {
     it(
       'parses audio card',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <div class="inkling-card inkling-audio-card">
             <img
@@ -428,7 +434,7 @@ describe('AudioNode', function () {
 
     it(
       'ignores malformed duration strings',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <div class="inkling-card inkling-audio-card">
             <div class="inkling-audio-player-container">
@@ -449,7 +455,7 @@ describe('AudioNode', function () {
 
     it(
       'trims duration parts before parsing',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <div class="inkling-card inkling-audio-card">
             <div class="inkling-audio-player-container">
@@ -472,7 +478,7 @@ describe('AudioNode', function () {
   describe('getTextContent', function () {
     it(
       'returns contents',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createAudioNode({})
         node.title = 'Testing'
 

@@ -18,12 +18,12 @@ describe('ImageNode', function () {
   // NOTE: all tests should use this function, without it you need manual
   // try/catch and done handling to avoid assertion failures not triggering
   // failed tests
-  const editorTest = (testFn: () => void) => () =>
+  const editorTest = (testFn: () => Promise<void> | void) => () =>
     new Promise<void>((resolve, reject) => {
       editor.update(() => {
         try {
-          testFn()
-          resolve()
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
         } catch (e) {
           reject(e)
         }
@@ -59,7 +59,7 @@ describe('ImageNode', function () {
 
   it(
     'matches node with $isImageNode',
-    editorTest(function () {
+    editorTest(async function () {
       const imageNode = $createImageNode(dataset)
       $isImageNode(imageNode).should.be.true()
     }),
@@ -68,7 +68,7 @@ describe('ImageNode', function () {
   describe('data access', function () {
     it(
       'has getters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const imageNode = $createImageNode(dataset)
 
         imageNode.src.should.equal('/content/images/2022/11/inkling-lexical.jpg')
@@ -84,7 +84,7 @@ describe('ImageNode', function () {
 
     it(
       'can be created without a dataset',
-      editorTest(function () {
+      editorTest(async function () {
         const imageNode = $createImageNode()
 
         imageNode.getDataset().should.deepEqual({
@@ -102,7 +102,7 @@ describe('ImageNode', function () {
 
     it(
       'has setters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const imageNode = $createImageNode({} as Record<string, unknown>)
 
         imageNode.src.should.equal('')
@@ -141,7 +141,7 @@ describe('ImageNode', function () {
 
     it(
       'has getDataset() convenience method',
-      editorTest(function () {
+      editorTest(async function () {
         const imageNode = $createImageNode(dataset)
         const imageNodeDataset = imageNode.getDataset()
 
@@ -156,11 +156,11 @@ describe('ImageNode', function () {
   describe('exportDOM', function () {
     it(
       'creates a full-featured image card',
-      editorTest(function () {
+      editorTest(async function () {
         const imageNode = $createImageNode(dataset)
         const { element } = imageNode.exportDOM(editor, exportOptions)
 
-        ;(element as HTMLElement).outerHTML.should.prettifyTo(html`
+        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
           <figure class="inkling-card inkling-image-card inkling-card-hascaption">
             <img
               src="/content/images/2022/11/inkling-lexical.jpg"
@@ -186,14 +186,14 @@ describe('ImageNode', function () {
 
     it(
       'creates a full-featured image card with link',
-      editorTest(function () {
+      editorTest(async function () {
         const imageNode = $createImageNode({
           ...dataset,
           href: 'https://example.com',
         })
         const { element } = imageNode.exportDOM(editor, exportOptions)
 
-        ;(element as HTMLElement).outerHTML.should.prettifyTo(html`
+        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
           <figure class="inkling-card inkling-image-card inkling-card-hascaption">
             <a href="https://example.com"
               ><img
@@ -220,11 +220,11 @@ describe('ImageNode', function () {
 
     it(
       'creates a minimal image card',
-      editorTest(function () {
+      editorTest(async function () {
         const imageNode = $createImageNode({ src: '/image.png' })
         const { element } = imageNode.exportDOM(editor, exportOptions)
 
-        ;(element as HTMLElement).outerHTML.should.prettifyTo(html`
+        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
           <figure class="inkling-card inkling-image-card">
             <img src="/image.png" class="inkling-image" alt="" loading="lazy" />
           </figure>
@@ -234,7 +234,7 @@ describe('ImageNode', function () {
 
     it(
       'renders an empty span with a missing src',
-      editorTest(function () {
+      editorTest(async function () {
         const imageNode = $createImageNode({} as Record<string, unknown>)
         const { element } = imageNode.exportDOM(editor, exportOptions)
 
@@ -244,7 +244,7 @@ describe('ImageNode', function () {
 
     it(
       'renders a wide image',
-      editorTest(function () {
+      editorTest(async function () {
         dataset.cardWidth = 'wide'
         const imageNode = $createImageNode(dataset)
         const { element } = imageNode.exportDOM(editor, exportOptions)
@@ -255,7 +255,7 @@ describe('ImageNode', function () {
 
     it(
       "uses resized width and height when there's a max width",
-      editorTest(function () {
+      editorTest(async function () {
         dataset.width = 3000
         dataset.height = 6000
         // add defaultMaxWidth property to options
@@ -273,7 +273,7 @@ describe('ImageNode', function () {
 
     it(
       'uses original width and height when transform is not available',
-      editorTest(function () {
+      editorTest(async function () {
         dataset.width = 3000
         dataset.height = 6000
         exportOptions.canTransformImage = () => false
@@ -289,7 +289,7 @@ describe('ImageNode', function () {
     describe('srcset attribute', function () {
       it(
         'is included when src is an unsplash image',
-        editorTest(function () {
+        editorTest(async function () {
           dataset.width = 3000
           dataset.height = 6000
           dataset.src =
@@ -307,7 +307,7 @@ describe('ImageNode', function () {
 
       it(
         'is ommitted when target is email',
-        editorTest(function () {
+        editorTest(async function () {
           exportOptions.target = 'email'
 
           const imageNode = $createImageNode(dataset)
@@ -334,7 +334,7 @@ describe('ImageNode', function () {
     describe('sizes attribute', function () {
       it(
         'is added for standard images',
-        editorTest(function () {
+        editorTest(async function () {
           dataset.width = 3000
           dataset.height = 6000
 
@@ -348,7 +348,7 @@ describe('ImageNode', function () {
 
       it(
         'is added for wide images',
-        editorTest(function () {
+        editorTest(async function () {
           dataset.width = 3000
           dataset.height = 2000
           dataset.cardWidth = 'wide'
@@ -384,7 +384,7 @@ describe('ImageNode', function () {
   describe('importDOM', function () {
     it(
       'parses an img element',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <img src="/image.png" alt="Alt text" title="Title text" width="3000" height="2000" />
         `)
@@ -401,7 +401,7 @@ describe('ImageNode', function () {
 
     it(
       'parses IMG inside FIGURE to image card without caption',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <img src="http://example.com/test.png" alt="Alt test" title="Title test" />
@@ -418,7 +418,7 @@ describe('ImageNode', function () {
 
     it(
       'parses IMG inside FIGURE to image card with caption',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <img src="http://example.com/test.png" />
@@ -435,7 +435,7 @@ describe('ImageNode', function () {
 
     it(
       'extracts Inkling card widths',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure class="inkling-card inkling-width-wide">
             <img src="http://example.com/test.png" />
@@ -449,7 +449,7 @@ describe('ImageNode', function () {
 
     it(
       'extracts Medium card widths',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure class="graf--layoutFillWidth">
             <img src="http://example.com/test.png" />
@@ -464,7 +464,7 @@ describe('ImageNode', function () {
 
     it(
       'extracts IMG dimensions from width/height attrs',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <img src="http://example.com/test.png" width="640" height="480" />
@@ -481,7 +481,7 @@ describe('ImageNode', function () {
 
     it(
       'extracts IMG dimensions from dataset',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <img src="http://example.com/test.png" width="640" height="480" />
@@ -498,7 +498,7 @@ describe('ImageNode', function () {
 
     it(
       'extracts IMG dimensions from data-image-dimensions',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <img src="http://example.com/test.png" data-image-dimensions="640x480" />
@@ -515,7 +515,7 @@ describe('ImageNode', function () {
 
     it(
       'extracts href when img wrapped in anchor tag',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <a href="https://example.com/link">
@@ -533,7 +533,7 @@ describe('ImageNode', function () {
 
     it(
       'extracts href when img wrapped in anchor tag not within figure',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <a href="https://example.com/link">
             <img src="http://example.com/test.png" />
@@ -551,7 +551,7 @@ describe('ImageNode', function () {
   describe('exportJSON', function () {
     it(
       'contains all data',
-      editorTest(function () {
+      editorTest(async function () {
         dataset.cardWidth = 'wide'
 
         const imageNode = $createImageNode(dataset)
@@ -619,7 +619,7 @@ describe('ImageNode', function () {
   describe('getTextContent', function () {
     it(
       'returns contents',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createImageNode({} as Record<string, unknown>)
         node.getTextContent().should.equal('')
 

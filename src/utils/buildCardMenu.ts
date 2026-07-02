@@ -82,11 +82,11 @@ export function buildCardMenu(
   }
 
   for (const [nodeType, node] of nodes) {
-    const nodeWithMenu = node as { kgMenu?: MenuItem | MenuItem[] }
-    if (Array.isArray(nodeWithMenu.kgMenu)) {
-      nodeWithMenu.kgMenu.forEach((item) => addMenuItem({ nodeType, ...item }))
-    } else if (nodeWithMenu.kgMenu) {
-      addMenuItem({ nodeType, ...nodeWithMenu.kgMenu })
+    const nodeWithMenu = node as { cardMenu?: MenuItem | MenuItem[] }
+    if (Array.isArray(nodeWithMenu.cardMenu)) {
+      nodeWithMenu.cardMenu.forEach((item) => addMenuItem({ nodeType, ...item }))
+    } else if (nodeWithMenu.cardMenu) {
+      addMenuItem({ nodeType, ...nodeWithMenu.cardMenu })
     }
   }
 

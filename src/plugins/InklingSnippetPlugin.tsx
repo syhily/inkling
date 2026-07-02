@@ -1,7 +1,6 @@
 import { $generateNodesFromSerializedNodes, $insertGeneratedNodes } from '@lexical/clipboard'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister } from '@lexical/utils'
-import { $createParagraphNode, $getSelection, COMMAND_PRIORITY_LOW, createCommand } from 'lexical'
+import { mergeRegister, $createParagraphNode, $getSelection, COMMAND_PRIORITY_LOW, createCommand } from 'lexical'
 import React from 'react'
 
 import { $isInklingCard } from '@/nodes/base'

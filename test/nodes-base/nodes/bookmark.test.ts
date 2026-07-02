@@ -19,12 +19,12 @@ describe('BookmarkNode', function () {
   // NOTE: all tests should use this function, without it you need manual
   // try/catch and done handling to avoid assertion failures not triggering
   // failed tests
-  const editorTest = (testFn: () => void) => () =>
+  const editorTest = (testFn: () => Promise<void> | void) => () =>
     new Promise<void>((resolve, reject) => {
       editor.update(() => {
         try {
-          testFn()
-          resolve()
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
         } catch (e) {
           reject(e)
         }
@@ -54,7 +54,7 @@ describe('BookmarkNode', function () {
 
   it(
     'matches node with $isBookmarkNode',
-    editorTest(function () {
+    editorTest(async function () {
       const bookmarkNode = $createBookmarkNode(dataset)
       $isBookmarkNode(bookmarkNode).should.be.true()
     }),
@@ -63,7 +63,7 @@ describe('BookmarkNode', function () {
   describe('data access', function () {
     it(
       'has getters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const bookmarkNode = $createBookmarkNode(dataset)
 
         const metadata = dataset.metadata as Record<string, unknown>
@@ -80,7 +80,7 @@ describe('BookmarkNode', function () {
 
     it(
       'has setters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const bookmarkNode = $createBookmarkNode()
 
         bookmarkNode.url.should.equal('')
@@ -119,7 +119,7 @@ describe('BookmarkNode', function () {
 
     it(
       'has getDataset() convenience method',
-      editorTest(function () {
+      editorTest(async function () {
         const bookmarkNode = $createBookmarkNode(dataset)
         const bookmarkNodeDataset = bookmarkNode.getDataset()
 
@@ -133,7 +133,7 @@ describe('BookmarkNode', function () {
   describe('getType', function () {
     it(
       'returns the correct node type',
-      editorTest(function () {
+      editorTest(async function () {
         BookmarkNode.getType().should.equal('bookmark')
       }),
     )
@@ -142,7 +142,7 @@ describe('BookmarkNode', function () {
   describe('clone', function () {
     it(
       'returns a copy of the current node',
-      editorTest(function () {
+      editorTest(async function () {
         const bookmarkNode = $createBookmarkNode(dataset)
         const bookmarkNodeDataset = bookmarkNode.getDataset()
         const clone = BookmarkNode.clone(bookmarkNode) as BookmarkNode
@@ -156,7 +156,7 @@ describe('BookmarkNode', function () {
   describe('urlTransformMap', function () {
     it(
       'contains the expected URL mapping',
-      editorTest(function () {
+      editorTest(async function () {
         BookmarkNode.urlTransformMap.should.deepEqual({
           url: 'url',
           'metadata.icon': 'url',
@@ -169,7 +169,7 @@ describe('BookmarkNode', function () {
   describe('hasEditMode', function () {
     it(
       'returns true',
-      editorTest(function () {
+      editorTest(async function () {
         const bookmarkNode = $createBookmarkNode(dataset)
         bookmarkNode.hasEditMode().should.be.true()
       }),
@@ -179,7 +179,7 @@ describe('BookmarkNode', function () {
   describe('isEmpty', function () {
     it(
       'returns true if url is empty',
-      editorTest(function () {
+      editorTest(async function () {
         const bookmarkNode = $createBookmarkNode(dataset)
 
         bookmarkNode.isEmpty().should.be.false()
@@ -192,7 +192,7 @@ describe('BookmarkNode', function () {
   describe('exportDOM', function () {
     it(
       'creates an bookmark card',
-      editorTest(function () {
+      editorTest(async function () {
         const bookmarkNode = $createBookmarkNode(dataset)
         const result = bookmarkNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
@@ -220,13 +220,13 @@ describe('BookmarkNode', function () {
 
         const prettyExpectedHtml = Prettier.format(expectedHtml, { parser: 'html' })
 
-        element.outerHTML.should.prettifyTo(prettyExpectedHtml)
+        await element.outerHTML.should.prettifyTo(prettyExpectedHtml)
       }),
     )
 
     it(
       'renders email target',
-      editorTest(function () {
+      editorTest(async function () {
         const options = {
           target: 'email',
         }
@@ -243,7 +243,7 @@ describe('BookmarkNode', function () {
 
     it(
       'renders an empty span with a missing src',
-      editorTest(function () {
+      editorTest(async function () {
         const bookmarkNode = $createBookmarkNode()
         const result = bookmarkNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
@@ -254,7 +254,7 @@ describe('BookmarkNode', function () {
 
     it(
       'escapes HTML for text fields in web',
-      editorTest(function () {
+      editorTest(async function () {
         dataset = {
           url: 'https://www.fake.org/',
           metadata: {
@@ -280,16 +280,16 @@ describe('BookmarkNode', function () {
         element.innerHTML.should.containEql("fa'ker")
         element.innerHTML.should.containEql('Fake &lt;script&gt;alert("XSS")&lt;/script&gt;')
 
-        // Check that caption is not escaped
+        // Check that caption is sanitized before insertion
         element.innerHTML.should.containEql(
-          '<p dir="ltr"><span style="white-space: pre-wrap;">This is a </span><b><strong style="white-space: pre-wrap;">caption</strong></b></p>',
+          '<p><span style="white-space: pre-wrap;">This is a </span><b><strong style="white-space: pre-wrap;">caption</strong></b></p>',
         )
       }),
     )
 
     it(
       'escapes HTML for text fields in email',
-      editorTest(function () {
+      editorTest(async function () {
         const options = {
           target: 'email',
         }
@@ -321,10 +321,61 @@ describe('BookmarkNode', function () {
         element.innerHTML.should.containEql("fa'ker")
         element.innerHTML.should.containEql('Fake &lt;script&gt;alert("XSS")&lt;/script&gt;')
 
-        // Check that caption is not escaped
+        // Check that caption is escaped
         element.innerHTML.should.containEql(
-          '<p dir="ltr"><span style="white-space: pre-wrap;">This is a </span><b><strong style="white-space: pre-wrap;">caption</strong></b></p>',
+          '&lt;p dir="ltr"&gt;&lt;span style="white-space: pre-wrap;"&gt;This is a &lt;/span&gt;&lt;b&gt;&lt;strong style="white-space: pre-wrap;"&gt;caption&lt;/strong&gt;&lt;/b&gt;&lt;/p&gt;',
         )
+      }),
+    )
+
+    it(
+      'drops a bookmark with an unsafe URL',
+      editorTest(function () {
+        const bookmarkNode = $createBookmarkNode({
+          url: 'javascript:alert(1)',
+          metadata: {
+            icon: '',
+            title: '',
+            description: '',
+            author: '',
+            publisher: '',
+            thumbnail: '',
+          },
+          caption: '',
+        })
+        const result = bookmarkNode.exportDOM(editor, exportOptions)
+        const element = result.element as HTMLElement
+
+        element.outerHTML.should.equal('<span></span>')
+      }),
+    )
+
+    it(
+      'sanitizes a malicious caption in web and email',
+      editorTest(function () {
+        const maliciousCaption = '<img src=x onerror=alert(1)>'
+        const bookmarkNode = $createBookmarkNode({
+          url: 'https://www.fake.org/',
+          metadata: {
+            icon: '',
+            title: '',
+            description: '',
+            author: '',
+            publisher: '',
+            thumbnail: '',
+          },
+          caption: maliciousCaption,
+        })
+
+        const webResult = bookmarkNode.exportDOM(editor, exportOptions)
+        const webHtml = (webResult.element as HTMLElement).outerHTML
+        webHtml.should.not.containEql('<img src=x onerror=alert(1)>')
+        webHtml.should.not.containEql('onerror=alert(1)')
+
+        const emailResult = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
+        const emailHtml = (emailResult.element as HTMLElement).innerHTML
+        emailHtml.should.containEql('&lt;img src=x onerror=alert(1)&gt;')
+        emailHtml.should.not.containEql('<img src=x onerror=alert(1)>')
       }),
     )
   })
@@ -332,7 +383,7 @@ describe('BookmarkNode', function () {
   describe('exportJSON', function () {
     it(
       'contains all data',
-      editorTest(function () {
+      editorTest(async function () {
         const bookmarkNode = $createBookmarkNode(dataset)
         const json = bookmarkNode.exportJSON()
         const metadata = dataset.metadata as Record<string, unknown>
@@ -401,14 +452,14 @@ describe('BookmarkNode', function () {
   describe('static properties', function () {
     it(
       'getType',
-      editorTest(function () {
+      editorTest(async function () {
         BookmarkNode.getType().should.equal('bookmark')
       }),
     )
 
     it(
       'urlTransformMap',
-      editorTest(function () {
+      editorTest(async function () {
         BookmarkNode.urlTransformMap.should.deepEqual({
           url: 'url',
           'metadata.icon': 'url',
@@ -421,7 +472,7 @@ describe('BookmarkNode', function () {
   describe('importDOM', function () {
     it(
       'parses bookmark card',
-      editorTest(function () {
+      editorTest(async function () {
         const metadata = dataset.metadata as Record<string, unknown>
         const document = createDocument(html`
           <figure class="inkling-card inkling-bookmark-card inkling-card-hascaption">
@@ -465,7 +516,7 @@ describe('BookmarkNode', function () {
 
       it(
         'parses mixtape block with all data',
-        editorTest(function () {
+        editorTest(async function () {
           const document = createDocument(
             html`<div class="graf graf--mixtapeEmbed graf-after--p">
               <a
@@ -503,7 +554,7 @@ describe('BookmarkNode', function () {
 
       it(
         'parses mixtape with missing title',
-        editorTest(function () {
+        editorTest(async function () {
           const document = createDocument(
             html`<div class="graf graf--mixtapeEmbed graf-after--mixtapeEmbed">
               <a
@@ -540,7 +591,7 @@ describe('BookmarkNode', function () {
 
       it(
         'parses mixtape when title and description are nested descendants',
-        editorTest(function () {
+        editorTest(async function () {
           const document = createDocument(
             html`<div class="graf graf--mixtapeEmbed graf-after--p">
               <a
@@ -583,7 +634,7 @@ describe('BookmarkNode', function () {
   describe('getTextContent', function () {
     it(
       'returns contents',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createBookmarkNode()
         node.getTextContent().should.equal('')
 

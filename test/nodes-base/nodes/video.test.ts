@@ -18,12 +18,12 @@ describe('VideoNode', function () {
   // NOTE: all tests should use this function, without it you need manual
   // try/catch and done handling to avoid assertion failures not triggering
   // failed tests
-  const editorTest = (testFn: () => void) => () =>
+  const editorTest = (testFn: () => Promise<void> | void) => () =>
     new Promise<void>((resolve, reject) => {
       editor.update(() => {
         try {
-          testFn()
-          resolve()
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
         } catch (e) {
           reject(e)
         }
@@ -54,7 +54,7 @@ describe('VideoNode', function () {
 
   it(
     'matches node with $isVideoNode',
-    editorTest(function () {
+    editorTest(async function () {
       const videoNode = $createVideoNode(dataset)
       $isVideoNode(videoNode).should.be.true()
     }),
@@ -63,7 +63,7 @@ describe('VideoNode', function () {
   describe('data access', function () {
     it(
       'has getters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const videoNode = $createVideoNode(dataset)
 
         videoNode.src.should.equal(dataset.src)
@@ -84,7 +84,7 @@ describe('VideoNode', function () {
 
     it(
       'can be created without a dataset',
-      editorTest(function () {
+      editorTest(async function () {
         const videoNode = $createVideoNode()
 
         videoNode.getDataset().should.deepEqual({
@@ -107,7 +107,7 @@ describe('VideoNode', function () {
 
     it(
       'has setters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const videoNode = $createVideoNode({} as Record<string, unknown>)
 
         videoNode.src.should.equal('')
@@ -166,7 +166,7 @@ describe('VideoNode', function () {
 
     it(
       'has getDataset() convenience method',
-      editorTest(function () {
+      editorTest(async function () {
         const videoNode = $createVideoNode(dataset)
         const videoNodeDataset = videoNode.getDataset()
 
@@ -180,7 +180,7 @@ describe('VideoNode', function () {
 
     it(
       'can format duration',
-      editorTest(function () {
+      editorTest(async function () {
         const videoNode = $createVideoNode(dataset)
 
         videoNode.duration = 60
@@ -201,7 +201,7 @@ describe('VideoNode', function () {
   describe('exportJSON', function () {
     it(
       'contains all data',
-      editorTest(function () {
+      editorTest(async function () {
         dataset.cardWidth = 'wide'
 
         const videoNode = $createVideoNode(dataset)
@@ -281,7 +281,7 @@ describe('VideoNode', function () {
   describe('exportDOM', function () {
     it(
       'renders',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           src: '/content/images/2022/11/inkling-lexical.mp4',
           width: 200,
@@ -292,7 +292,7 @@ describe('VideoNode', function () {
         const videoNode = $createVideoNode(payload)
         const { element } = videoNode.exportDOM(editor, exportOptions)
 
-        ;(element as HTMLElement).outerHTML.should.prettifyTo(html`
+        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
           <figure
             class="inkling-card inkling-video-card inkling-width-regular"
             data-inkling-thumbnail="/content/images/2022/11/inkling-lexical.jpg"
@@ -361,7 +361,7 @@ describe('VideoNode', function () {
 
     it(
       'renders for email target',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           src: '/content/images/2022/11/inkling-lexical.mp4',
           width: 200,
@@ -387,7 +387,7 @@ describe('VideoNode', function () {
 
     it(
       'throws when rendering email without postUrl',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           src: '/content/images/2022/11/inkling-lexical.mp4',
           width: 200,
@@ -406,7 +406,7 @@ describe('VideoNode', function () {
 
     it(
       'renders without invalid dimensions when width and height are null',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           src: '/content/images/2022/11/inkling-lexical.mp4',
           width: null,
@@ -428,7 +428,7 @@ describe('VideoNode', function () {
 
     it(
       'renders email target with fallback dimensions when width and height are null',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           src: '/content/images/2022/11/inkling-lexical.mp4',
           width: null,
@@ -453,7 +453,7 @@ describe('VideoNode', function () {
 
     it(
       'renders card width',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           src: '/content/images/2022/11/inkling-lexical.mp4',
           width: 200,
@@ -472,7 +472,7 @@ describe('VideoNode', function () {
 
     it(
       'renders loop attribute',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           src: '/content/images/2022/11/inkling-lexical.mp4',
           width: 200,
@@ -491,7 +491,7 @@ describe('VideoNode', function () {
 
     it(
       'renders caption when provided',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           src: '/content/images/2022/11/inkling-lexical.mp4',
           width: 200,
@@ -507,7 +507,49 @@ describe('VideoNode', function () {
         output.should.containEql(
           '<figure class="inkling-card inkling-video-card inkling-width-regular inkling-card-hascaption"',
         )
-        output.should.containEql('<figcaption><strong>Caption</strong></figcaption>')
+        output.should.containEql('<figcaption>&lt;strong&gt;Caption&lt;/strong&gt;</figcaption>')
+      }),
+    )
+
+    it(
+      'rejects an unsafe video src',
+      editorTest(function () {
+        const payload = {
+          src: 'javascript:alert(1)',
+          width: 200,
+          height: 100,
+          duration: 60,
+          thumbnailSrc: '/content/images/2022/11/inkling-lexical.jpg',
+          caption: '<strong>Caption</strong>',
+        }
+
+        const videoNode = $createVideoNode(payload)
+        const { element } = videoNode.exportDOM(editor, exportOptions)
+
+        ;(element as HTMLElement).outerHTML.should.equal('<span></span>')
+      }),
+    )
+
+    it(
+      'escapes caption markup and sanitizes thumbnail URLs',
+      editorTest(function () {
+        const payload = {
+          src: '/content/images/2022/11/inkling-lexical.mp4',
+          width: 200,
+          height: 100,
+          duration: 60,
+          thumbnailSrc: 'javascript:alert(1)',
+          customThumbnailSrc: '/content/images/2022/11/inkling-lexical-custom.jpg',
+          caption: '<img src=x onerror=alert(1)>',
+        }
+
+        const videoNode = $createVideoNode(payload)
+        const { element } = videoNode.exportDOM(editor, exportOptions)
+        const output = (element as HTMLElement).outerHTML
+
+        output.should.containEql('<figcaption>&lt;img src=x onerror=alert(1)&gt;</figcaption>')
+        output.should.not.containEql('javascript:alert(1)')
+        output.should.containEql('/content/images/2022/11/inkling-lexical-custom.jpg')
       }),
     )
   })
@@ -515,7 +557,7 @@ describe('VideoNode', function () {
   describe('hasEditMode', function () {
     it(
       'returns true',
-      editorTest(function () {
+      editorTest(async function () {
         const videoNode = $createVideoNode(dataset)
         videoNode.hasEditMode().should.be.true()
       }),
@@ -525,7 +567,7 @@ describe('VideoNode', function () {
   describe('importDOM', function () {
     it(
       'parses video card',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure
             class="inkling-card inkling-video-card inkling-width-regular"
@@ -607,7 +649,7 @@ describe('VideoNode', function () {
 
     it(
       'parses video card without caption',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure
             class="inkling-card inkling-video-card inkling-width-regular"
@@ -680,7 +722,7 @@ describe('VideoNode', function () {
 
     it(
       'parses video card with custom thumbnail',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure
             class="inkling-card inkling-video-card inkling-width-regular"
@@ -754,7 +796,7 @@ describe('VideoNode', function () {
 
     it(
       'parses video card without width and height',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure
             class="inkling-card inkling-video-card inkling-width-regular"
@@ -787,7 +829,7 @@ describe('VideoNode', function () {
 
     it(
       'parses wide card width from the figure container',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure
             class="inkling-card inkling-video-card inkling-width-wide"
@@ -813,7 +855,7 @@ describe('VideoNode', function () {
 
     it(
       'ignores malformed duration strings',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure
             class="inkling-card inkling-video-card inkling-width-regular"
@@ -841,7 +883,7 @@ describe('VideoNode', function () {
   describe('getTextContent', function () {
     it(
       'returns contents',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createVideoNode({} as Record<string, unknown>)
         node.getTextContent().should.equal('')
 

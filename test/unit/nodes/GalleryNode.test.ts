@@ -33,9 +33,9 @@ describe('GalleryNode', () => {
     })
   })
 
-  it('exposes a static kgMenu entry', () => {
-    expect(GalleryNode.kgMenu[0].label).toBe('Gallery')
-    expect(GalleryNode.kgMenu[0].insertCommand).toBe(INSERT_GALLERY_COMMAND)
+  it('exposes a static cardMenu entry', () => {
+    expect(GalleryNode.cardMenu[0].label).toBe('Gallery')
+    expect(GalleryNode.cardMenu[0].insertCommand).toBe(INSERT_GALLERY_COMMAND)
   })
 
   it('returns the gallery icon', async () => {

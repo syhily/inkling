@@ -13,6 +13,7 @@ import { GeneratedDecoratorNodeBase } from '@/nodes/base'
 import extractVideoMetadata from '@/utils/extractVideoMetadata'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import { openFileSelection } from '@/utils/openFileSelection'
+import { revokePreviewUrl } from '@/utils/revokePreviewUrl'
 
 interface VideoNodeComponentProps {
   nodeKey: NodeKey
@@ -49,6 +50,7 @@ export function VideoNodeComponent({
   const cardContext = React.useContext(CardContext)
   const videoFileInputRef = React.useRef<HTMLInputElement | null>(null)
   const [previewThumbnail, setPreviewThumbnail] = useState<string>('')
+  const previewThumbnailUrlRef = React.useRef<string>('')
   const videoUploader = fileUploader.useFileUpload('video')
   const thumbnailUploader = fileUploader.useFileUpload('mediaThumbnail')
   const customThumbnailUploader = fileUploader.useFileUpload('image')
@@ -59,6 +61,20 @@ export function VideoNodeComponent({
   const [showSnippetToolbar, setShowSnippetToolbar] = useState<boolean>(false)
 
   const videoMimeTypes: string[] = fileUploader.fileTypes?.video?.mimeTypes || ['video/*']
+
+  const setPreviewThumbnailWithCleanup = React.useCallback((url: string) => {
+    revokePreviewUrl(previewThumbnailUrlRef.current)
+    previewThumbnailUrlRef.current = url
+    setPreviewThumbnail(url)
+  }, [])
+
+  // oxlint-disable react-hooks/exhaustive-deps
+  React.useEffect(() => {
+    return () => {
+      revokePreviewUrl(previewThumbnailUrlRef.current)
+    }
+  }, [])
+  // oxlint-enable react-hooks/exhaustive-deps
 
   React.useEffect(() => {
     const uploadInitialFiles = async (file: File | null) => {
@@ -95,14 +111,14 @@ export function VideoNodeComponent({
     }
 
     if (thumbnailBlob) {
-      setPreviewThumbnail(URL.createObjectURL(thumbnailBlob))
+      setPreviewThumbnailWithCleanup(URL.createObjectURL(thumbnailBlob))
     }
 
     const videoUploadResult = await videoUploader.upload([file])
     const videoUrl = videoUploadResult?.[0]?.url
 
     if (!videoUrl) {
-      setPreviewThumbnail('')
+      setPreviewThumbnailWithCleanup('')
       return
     }
 
@@ -141,7 +157,7 @@ export function VideoNodeComponent({
       })
     }
 
-    setPreviewThumbnail('')
+    setPreviewThumbnailWithCleanup('')
   }
 
   const onVideoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

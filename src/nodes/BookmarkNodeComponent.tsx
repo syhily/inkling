@@ -185,7 +185,7 @@ export function BookmarkNodeComponent({
     } catch (e) {
       setLoading(false)
       setUrlError(true)
-      return
+      throw e
     }
     if (!response) {
       setLoading(false)
@@ -222,11 +222,9 @@ export function BookmarkNodeComponent({
     // only run this once
     if (createdWithUrl) {
       setUrlInputValue(url)
-      try {
-        fetchMetadataEffect()
-      } catch {
+      fetchMetadataEffect().catch(() => {
         handlePasteAsLink()
-      }
+      })
     }
     // We only do this for init
     // oxlint-disable-next-line react-hooks/exhaustive-deps

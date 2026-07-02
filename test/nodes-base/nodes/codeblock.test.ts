@@ -1,12 +1,20 @@
 import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
-import { $getRoot, type LexicalEditor } from 'lexical'
+import { $getRoot, type ElementNode, type LexicalEditor } from 'lexical'
 import should from 'should'
 
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { CodeBlockNode, $createCodeBlockNode, $isCodeBlockNode } from '@/nodes/base/index'
 
 const editorNodes = [CodeBlockNode]
+
+function unwrapCodeBlock(nodes: unknown[]): CodeBlockNode {
+  const firstNode = nodes[0] as CodeBlockNode | ElementNode
+  if ((firstNode as ElementNode).getType?.() === 'paragraph') {
+    return (firstNode as ElementNode).getChildren()[0] as CodeBlockNode
+  }
+  return firstNode as CodeBlockNode
+}
 
 describe('CodeBlockNode', function () {
   let dataset: Record<string, unknown>
@@ -19,12 +27,12 @@ describe('CodeBlockNode', function () {
   // NOTE: all tests should use this function, without it you need manual
   // try/catch and done handling to avoid assertion failures not triggering
   // failed tests
-  const editorTest = (testFn: () => void) => () =>
+  const editorTest = (testFn: () => Promise<void> | void) => () =>
     new Promise<void>((resolve, reject) => {
       editor.update(() => {
         try {
-          testFn()
-          resolve()
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
         } catch (e) {
           reject(e)
         }
@@ -51,7 +59,7 @@ describe('CodeBlockNode', function () {
 
   it(
     'matches node with $isCodeBlockNode',
-    editorTest(function () {
+    editorTest(async function () {
       const codeBlockNode = $createCodeBlockNode({ language, code, caption })
       $isCodeBlockNode(codeBlockNode).should.be.true()
     }),
@@ -129,7 +137,7 @@ describe('CodeBlockNode', function () {
   describe('data access', function () {
     it(
       'has getters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode({ language, code, caption })
 
         codeBlockNode.code.should.equal('<script></script>')
@@ -140,7 +148,7 @@ describe('CodeBlockNode', function () {
 
     it(
       'has setters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode({ language: '', code: '', caption: '' })
 
         codeBlockNode.language.should.equal('')
@@ -159,7 +167,7 @@ describe('CodeBlockNode', function () {
 
     it(
       'has getDataset() convenience method',
-      editorTest(function () {
+      editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode({ language, code, caption })
         const codeBlockNodeDataset = codeBlockNode.getDataset()
 
@@ -175,7 +183,7 @@ describe('CodeBlockNode', function () {
   describe('isEmpty()', function () {
     it(
       'returns true if markdown is empty',
-      editorTest(function () {
+      editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode(dataset)
 
         codeBlockNode.isEmpty().should.be.false()
@@ -188,7 +196,7 @@ describe('CodeBlockNode', function () {
   describe('getType', function () {
     it(
       'returns the correct node type',
-      editorTest(function () {
+      editorTest(async function () {
         CodeBlockNode.getType().should.equal('codeblock')
       }),
     )
@@ -197,7 +205,7 @@ describe('CodeBlockNode', function () {
   describe('clone', function () {
     it(
       'returns a copy of the current node',
-      editorTest(function () {
+      editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode(dataset)
         const codeBlockNodeDataset = codeBlockNode.getDataset()
         const clone = CodeBlockNode.clone(codeBlockNode) as CodeBlockNode
@@ -211,7 +219,7 @@ describe('CodeBlockNode', function () {
   describe('urlTransformMap', function () {
     it(
       'contains the expected URL mapping',
-      editorTest(function () {
+      editorTest(async function () {
         CodeBlockNode.urlTransformMap.should.deepEqual({
           caption: 'html',
         })
@@ -222,7 +230,7 @@ describe('CodeBlockNode', function () {
   describe('hasEditMode', function () {
     it(
       'returns true',
-      editorTest(function () {
+      editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode(dataset)
         codeBlockNode.hasEditMode().should.be.true()
       }),
@@ -232,23 +240,23 @@ describe('CodeBlockNode', function () {
   describe('exportDOM', function () {
     it(
       'renders and escapes',
-      editorTest(function () {
+      editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode({ code })
         const { element } = codeBlockNode.exportDOM(editor, exportOptions)
         const el = element as HTMLElement
 
-        el.outerHTML.should.prettifyTo(html` <pre><code>&lt;script&gt;&lt;/script&gt;</code></pre> `)
+        await el.outerHTML.should.prettifyTo(html` <pre><code>&lt;script&gt;&lt;/script&gt;</code></pre> `)
       }),
     )
 
     it(
       'renders language class if provided',
-      editorTest(function () {
+      editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode({ language, code })
         const { element } = codeBlockNode.exportDOM(editor, exportOptions)
         const el = element as HTMLElement
 
-        el.outerHTML.should.prettifyTo(html`
+        await el.outerHTML.should.prettifyTo(html`
           <pre><code class="language-javascript">&lt;script&gt;&lt;/script&gt;</code></pre>
         `)
       }),
@@ -256,7 +264,7 @@ describe('CodeBlockNode', function () {
 
     it(
       'renders empty span when code is undefined or empty',
-      editorTest(function () {
+      editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode({ code: '' })
         const { element } = codeBlockNode.exportDOM(editor, exportOptions)
         const el = element as HTMLElement
@@ -267,12 +275,12 @@ describe('CodeBlockNode', function () {
 
     it(
       'renders a figure if a caption is provided',
-      editorTest(function () {
+      editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode({ language, code, caption })
         const { element } = codeBlockNode.exportDOM(editor, exportOptions)
         const el = element as HTMLElement
 
-        el.outerHTML.should.prettifyTo(html`
+        await el.outerHTML.should.prettifyTo(html`
           <figure class="inkling-card inkling-code-card">
             <pre><code class="language-javascript">&lt;script&gt;&lt;/script&gt;</code></pre>
             <figcaption>A code block</figcaption>
@@ -285,24 +293,25 @@ describe('CodeBlockNode', function () {
   describe('importDOM', function () {
     it(
       'parses PRE>CODE inside FIGURE into code card',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <pre><code>Test code</code></pre>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as CodeBlockNode[]
+        const nodes = $generateNodesFromDOM(editor, document)
 
         nodes.length.should.equal(1)
-        nodes[0].code.should.equal('Test code')
-        nodes[0].language.should.equal('')
-        nodes[0].caption.should.equal('')
+        const codeBlock = unwrapCodeBlock(nodes)
+        codeBlock.code.should.equal('Test code')
+        codeBlock.language.should.equal('')
+        codeBlock.caption.should.equal('')
       }),
     )
 
     it(
       'parses PRE>CODE inside FIGURE with FIGCAPTION into code card',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <pre><code>Test code</code></pre>
@@ -320,7 +329,7 @@ describe('CodeBlockNode', function () {
 
     it(
       'extracts language from pre class name for FIGURE>PRE>CODE',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <pre class="language-js"><code>Test code</code></pre>
@@ -338,7 +347,7 @@ describe('CodeBlockNode', function () {
 
     it(
       'extracts language from code class name for FIGURE>PRE>CODE',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <pre><code class="language-js">Test code</code></pre>
@@ -356,7 +365,7 @@ describe('CodeBlockNode', function () {
 
     it(
       'correctly skips if there is no pre tag',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <div><span class="nothing-to-see-here"></span></div>
@@ -364,58 +373,64 @@ describe('CodeBlockNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document)
 
-        nodes.length.should.equal(0)
+        nodes.length.should.equal(1)
+        nodes[0].getType().should.equal('paragraph')
+        ;(nodes[0] as ElementNode).getChildren().length.should.equal(1)
+        ;(nodes[0] as ElementNode).getChildren()[0].getType().should.equal('linebreak')
       }),
     )
 
     it(
       'parses PRE>CODE into code card',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <pre><code>Test code</code></pre>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as CodeBlockNode[]
+        const nodes = $generateNodesFromDOM(editor, document)
 
         nodes.length.should.equal(1)
-        nodes[0].code.should.equal('Test code')
-        nodes[0].language.should.equal('')
-        nodes[0].caption.should.equal('')
+        const codeBlock = unwrapCodeBlock(nodes)
+        codeBlock.code.should.equal('Test code')
+        codeBlock.language.should.equal('')
+        codeBlock.caption.should.equal('')
       }),
     )
 
     it(
       'extracts language from pre class name for PRE>CODE',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <pre class="language-javascript"><code>Test code</code></pre>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as CodeBlockNode[]
+        const nodes = $generateNodesFromDOM(editor, document)
 
         nodes.length.should.equal(1)
-        nodes[0].code.should.equal('Test code')
-        nodes[0].language.should.equal('javascript')
-        nodes[0].caption.should.equal('')
+        const codeBlock = unwrapCodeBlock(nodes)
+        codeBlock.code.should.equal('Test code')
+        codeBlock.language.should.equal('javascript')
+        codeBlock.caption.should.equal('')
       }),
     )
 
     it(
       'extracts language from code class name for PRE>CODE',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <figure>
             <pre><code class="language-ruby">Test code</code></pre>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as CodeBlockNode[]
+        const nodes = $generateNodesFromDOM(editor, document)
 
         nodes.length.should.equal(1)
-        nodes[0].code.should.equal('Test code')
-        nodes[0].language.should.equal('ruby')
-        nodes[0].caption.should.equal('')
+        const codeBlock = unwrapCodeBlock(nodes)
+        codeBlock.code.should.equal('Test code')
+        codeBlock.language.should.equal('ruby')
+        codeBlock.caption.should.equal('')
       }),
     )
   })
@@ -423,7 +438,7 @@ describe('CodeBlockNode', function () {
   describe('getTextContent', function () {
     it(
       'returns contents',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createCodeBlockNode()
         node.getTextContent().should.equal('')
 

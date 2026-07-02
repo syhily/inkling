@@ -20,12 +20,12 @@ describe('GalleryNode', function () {
   // NOTE: all tests should use this function, without it you need manual
   // try/catch and done handling to avoid assertion failures not triggering
   // failed tests
-  const editorTest = (testFn: () => void) => () =>
+  const editorTest = (testFn: () => Promise<void> | void) => () =>
     new Promise<void>((resolve, reject) => {
       editor.update(() => {
         try {
-          testFn()
-          resolve()
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
         } catch (e) {
           reject(e)
         }
@@ -117,7 +117,7 @@ describe('GalleryNode', function () {
 
   it(
     'matches node with $isGalleryNode',
-    editorTest(function () {
+    editorTest(async function () {
       const node = $createGalleryNode(dataset)
       $isGalleryNode(node).should.be.true()
     }),
@@ -126,7 +126,7 @@ describe('GalleryNode', function () {
   describe('data access', function () {
     it(
       'has getters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode(dataset)
 
         galleryNode.images.should.deepEqual(dataset.images)
@@ -136,7 +136,7 @@ describe('GalleryNode', function () {
 
     it(
       'can be created without a dataset',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode()
 
         galleryNode.getDataset().should.deepEqual({
@@ -148,7 +148,7 @@ describe('GalleryNode', function () {
 
     it(
       'has setters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode({} as Record<string, unknown>)
 
         galleryNode.images.should.deepEqual([])
@@ -163,7 +163,7 @@ describe('GalleryNode', function () {
 
     it(
       'has getDataset() convenience method',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode(dataset)
 
         galleryNode.getDataset().should.deepEqual(dataset)
@@ -174,7 +174,7 @@ describe('GalleryNode', function () {
   describe('getType', function () {
     it(
       'returns the correct node type',
-      editorTest(function () {
+      editorTest(async function () {
         GalleryNode.getType().should.equal('gallery')
       }),
     )
@@ -183,7 +183,7 @@ describe('GalleryNode', function () {
   describe('clone', function () {
     it(
       'returns a copy of the current node',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode(dataset)
         const galleryNodeDataset = galleryNode.getDataset()
         const clone = GalleryNode.clone(galleryNode) as GalleryNode
@@ -197,7 +197,7 @@ describe('GalleryNode', function () {
   describe('urlTransformMap', function () {
     it(
       'contains the expected URL mapping',
-      editorTest(function () {
+      editorTest(async function () {
         GalleryNode.urlTransformMap.should.deepEqual({
           caption: 'html',
           images: {
@@ -212,7 +212,7 @@ describe('GalleryNode', function () {
   describe('hasEditMode', function () {
     it(
       'returns false',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode(dataset)
         galleryNode.hasEditMode().should.be.false()
       }),
@@ -259,7 +259,7 @@ describe('GalleryNode', function () {
   describe('exportJSON', function () {
     it(
       'contains all data',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode(dataset)
         const json = galleryNode.exportJSON()
 
@@ -276,7 +276,7 @@ describe('GalleryNode', function () {
   describe('importDOM', function () {
     it(
       'parses gallery card',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(`
                 <!--inkling-card-begin: gallery-->
                 <figure class="inkling-card inkling-gallery-card inkling-width-wide">
@@ -347,7 +347,7 @@ describe('GalleryNode', function () {
 
     it(
       'parses Medium gallery',
-      editorTest(function () {
+      editorTest(async function () {
         // Medium Export HTML <div data-paragraph-count="2"><figure class="graf graf--figure graf--layoutOutsetRow is-partialWidth graf-after--p" style="width: 50%;"><div class="aspectRatioPlaceholder is-locked"><img class="graf-image" data-image-id="jklm4567.jpeg" data-width="1200" data-height="800" src="https://cdn-images-1.medium.com/max/600/jklm4567.jpeg"></div></figure><figure class="graf graf--figure graf--layoutOutsetRowContinue is-partialWidth graf-after--figure" style="width: 50%;"><div class="aspectRatioPlaceholder is-locked"><img class="graf-image" data-image-id="qurt6789.jpeg" data-width="1200" data-height="800" src="https://cdn-images-1.medium.com/max/600/qurt6789.jpeg"></div></figure></div><div data-paragraph-count="2"><figure class="graf graf--figure graf--layoutOutsetRow is-partialWidth graf-after--figure" style="width: 69.22%;"><div class="aspectRatioPlaceholder is-locked"><img class="graf-image" data-image-id="zyxw3456.jpeg" data-width="1200" data-height="800" src="https://cdn-images-1.medium.com/max/800/zyxw3456.jpeg"></div></figure><figure class="graf graf--figure graf--layoutOutsetRowContinue is-partialWidth graf-after--figure" style="width: 30.78%;"><div class="aspectRatioPlaceholder is-locked"><img class="graf-image" data-image-id="1234abcd.jpeg" data-width="800" data-height="1200" src="https://cdn-images-1.medium.com/max/400/1234abcd.jpeg"></div></figure></div>
         const document = createDocument(`
                 <div data-paragraph-count="2">
@@ -416,7 +416,7 @@ describe('GalleryNode', function () {
 
     it(
       'handles Medium galleries with multiple captions',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(`
                 <div data-paragraph-count="2">
                     <figure class="graf graf--figure graf--layoutOutsetRow is-partialWidth graf-after--h3" style="width: 69.22%;">
@@ -461,7 +461,7 @@ describe('GalleryNode', function () {
 
       it(
         'parses a stacked gallery into gallery card',
-        editorTest(function () {
+        editorTest(async function () {
           const document = createDocument(html`
             <div class="sqs-gallery-container sqs-gallery-block-stacked">
               <div class="sqs-gallery">
@@ -557,7 +557,7 @@ describe('GalleryNode', function () {
 
       it(
         'can handle multiple captions',
-        editorTest(function () {
+        editorTest(async function () {
           const document = createDocument(html`
             <div class="sqs-gallery-container sqs-gallery-block-stacked">
               <div class="sqs-gallery">
@@ -652,7 +652,7 @@ describe('GalleryNode', function () {
 
       it(
         'parses a slideshow gallery into gallery card',
-        editorTest(function () {
+        editorTest(async function () {
           const document = createDocument(html`
             <div
               class="sqs-gallery-container sqs-gallery-block-slideshow sqs-gallery-block-show-meta sqs-gallery-block-meta-position-bottom"
@@ -760,7 +760,7 @@ describe('GalleryNode', function () {
 
       it(
         'parses a grid gallery into gallery card',
-        editorTest(function () {
+        editorTest(async function () {
           const document = createDocument(html`
             <div
               class="sqs-gallery-container sqs-gallery-block-grid sqs-gallery-aspect-ratio-standard sqs-gallery-thumbnails-per-row-1"
@@ -850,7 +850,7 @@ describe('GalleryNode', function () {
 
       it(
         'ignores summary item galleries',
-        editorTest(function () {
+        editorTest(async function () {
           const document = createDocument(html`
             <div
               class="summary-item-thing sqs-gallery-container sqs-gallery-block-grid sqs-gallery-aspect-ratio-standard sqs-gallery-thumbnails-per-row-1"
@@ -920,7 +920,7 @@ describe('GalleryNode', function () {
   describe('exportDOM', function () {
     it(
       'renders empty span with no images',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode({ images: [], caption: null as unknown as string })
         const { element } = galleryNode.exportDOM(editor, exportOptions)
 
@@ -930,7 +930,7 @@ describe('GalleryNode', function () {
 
     it(
       'renders empty span no valid images',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode({
           images: [{ src: 'undefined' }],
           caption: null as unknown as string,
@@ -943,11 +943,11 @@ describe('GalleryNode', function () {
 
     it(
       'renders',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode(dataset)
         const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
 
-        ;(element as HTMLElement).outerHTML.should.prettifyTo(html`
+        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
           <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
             <div class="inkling-gallery-container">
               <div class="inkling-gallery-row">
@@ -1004,7 +1004,7 @@ describe('GalleryNode', function () {
 
     it(
       'renders images with alt text',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode({
           images: [
             {
@@ -1020,7 +1020,7 @@ describe('GalleryNode', function () {
         })
         const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
 
-        ;(element as HTMLElement).outerHTML.should.prettifyTo(html`
+        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
           <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
             <div class="inkling-gallery-container">
               <div class="inkling-gallery-row">
@@ -1043,7 +1043,7 @@ describe('GalleryNode', function () {
 
     it(
       'renders images with blank alt text',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode({
           images: [
             {
@@ -1058,7 +1058,7 @@ describe('GalleryNode', function () {
         })
         const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
 
-        ;(element as HTMLElement).outerHTML.should.prettifyTo(html`
+        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
           <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
             <div class="inkling-gallery-container">
               <div class="inkling-gallery-row">
@@ -1075,7 +1075,7 @@ describe('GalleryNode', function () {
 
     it(
       'skips invalid images',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode({
           images: [
             {
@@ -1146,7 +1146,7 @@ describe('GalleryNode', function () {
         })
         const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
 
-        ;(element as HTMLElement).outerHTML.should.prettifyTo(html`
+        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
           <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
             <div class="inkling-gallery-container">
               <div class="inkling-gallery-row">
@@ -1166,7 +1166,7 @@ describe('GalleryNode', function () {
 
     it(
       'outputs width/height matching default max image width',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode({
           images: [
             {
@@ -1204,7 +1204,7 @@ describe('GalleryNode', function () {
 
     it(
       'renders all 9 images in a 3x3 grid',
-      editorTest(function () {
+      editorTest(async function () {
         const galleryNode = $createGalleryNode({
           images: [
             {
@@ -1278,7 +1278,7 @@ describe('GalleryNode', function () {
         delete (exportOptions.imageOptimization as Record<string, unknown>).contentImageSizes
         const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-        ;(element as HTMLElement).outerHTML.should.prettifyTo(html`
+        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
           <figure class="inkling-card inkling-gallery-card inkling-width-wide">
             <div class="inkling-gallery-container">
               <div class="inkling-gallery-row">
@@ -1323,7 +1323,7 @@ describe('GalleryNode', function () {
     describe('srcset', function () {
       it(
         'is included when image src is relative or Unsplash',
-        editorTest(function () {
+        editorTest(async function () {
           const galleryNode = $createGalleryNode({
             images: [
               {
@@ -1353,7 +1353,7 @@ describe('GalleryNode', function () {
           delete (exportOptions.imageOptimization as Record<string, unknown>).defaultMaxWidth
           const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-          ;(element as HTMLElement).outerHTML.should.prettifyTo(html`
+          await (element as HTMLElement).outerHTML.should.prettifyTo(html`
             <figure class="inkling-card inkling-gallery-card inkling-width-wide">
               <div class="inkling-gallery-container">
                 <div class="inkling-gallery-row">
@@ -1414,7 +1414,7 @@ describe('GalleryNode', function () {
 
       it(
         'is included when image src is absolute or __INKLING_URL__',
-        editorTest(function () {
+        editorTest(async function () {
           const galleryNode = $createGalleryNode({
             images: [
               {
@@ -1438,7 +1438,7 @@ describe('GalleryNode', function () {
           exportOptions.siteUrl = 'https://localhost:2368'
           const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-          ;(element as HTMLElement).outerHTML.should.prettifyTo(html`
+          await (element as HTMLElement).outerHTML.should.prettifyTo(html`
             <figure class="inkling-card inkling-gallery-card inkling-width-wide">
               <div class="inkling-gallery-container">
                 <div class="inkling-gallery-row">
@@ -1483,7 +1483,7 @@ describe('GalleryNode', function () {
 
       it(
         'is omitted when target === email',
-        editorTest(function () {
+        editorTest(async function () {
           const galleryNode = $createGalleryNode({
             images: [
               {
@@ -1506,7 +1506,7 @@ describe('GalleryNode', function () {
 
       it(
         'is omitted when no contentImageSizes are passed as options',
-        editorTest(function () {
+        editorTest(async function () {
           const galleryNode = $createGalleryNode({
             images: [
               {
@@ -1528,7 +1528,7 @@ describe('GalleryNode', function () {
 
       it(
         'is omitted when `srcsets: false` is passed as an options',
-        editorTest(function () {
+        editorTest(async function () {
           const galleryNode = $createGalleryNode({
             images: [
               {
@@ -1552,7 +1552,7 @@ describe('GalleryNode', function () {
     describe('sizes', function () {
       it(
         'is included for images over 720px',
-        editorTest(function () {
+        editorTest(async function () {
           const galleryNode = $createGalleryNode({
             images: [
               {
@@ -1593,7 +1593,7 @@ describe('GalleryNode', function () {
 
       it(
         'uses "wide" media query for large single-image galleries',
-        editorTest(function () {
+        editorTest(async function () {
           const galleryNode = $createGalleryNode({
             images: [
               {
@@ -1614,7 +1614,7 @@ describe('GalleryNode', function () {
 
       it(
         'uses "standard" media query for medium single-image galleries',
-        editorTest(function () {
+        editorTest(async function () {
           const galleryNode = $createGalleryNode({
             images: [
               {
@@ -1635,7 +1635,7 @@ describe('GalleryNode', function () {
 
       it(
         'is omitted when srcsets are not available',
-        editorTest(function () {
+        editorTest(async function () {
           const galleryNode = $createGalleryNode({
             images: [
               {
@@ -1680,7 +1680,7 @@ describe('GalleryNode', function () {
 
       it(
         'adds width/height and uses resized images',
-        editorTest(function () {
+        editorTest(async function () {
           const galleryNode = $createGalleryNode({
             images: [
               {
@@ -1739,7 +1739,7 @@ describe('GalleryNode', function () {
 
       it(
         "resizes width/height attributes but uses original image when local image can't be transformed",
-        editorTest(function () {
+        editorTest(async function () {
           const galleryNode = $createGalleryNode({
             images: [
               {
@@ -1771,7 +1771,7 @@ describe('GalleryNode', function () {
   describe('getTextContent', function () {
     it(
       'returns contents',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createGalleryNode({} as Record<string, unknown>)
         node.getTextContent().should.equal('')
 

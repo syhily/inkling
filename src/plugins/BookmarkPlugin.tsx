@@ -1,6 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister } from '@lexical/utils'
-import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_HIGH } from 'lexical'
+import { mergeRegister, $getSelection, $isRangeSelection, COMMAND_PRIORITY_HIGH } from 'lexical'
 import React from 'react'
 
 import { $createBookmarkNode, BookmarkNode, INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'

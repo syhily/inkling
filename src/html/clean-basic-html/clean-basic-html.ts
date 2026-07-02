@@ -42,7 +42,7 @@ export function cleanBasicHtml(html: string = '', _options: CleanBasicHtmlOption
   cleanHtml = cleanHtml
     .replace(/(\s|&nbsp;){2,}/g, ' ')
     .trim()
-    .replace(/^&nbsp;|&nbsp$/g, '')
+    .replace(/^&nbsp;|&nbsp;$/g, '')
     .trim()
 
   // remove any elements that have a blank textContent

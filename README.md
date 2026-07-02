@@ -10,6 +10,17 @@ The package is published as **`@inkling/editor`**.
 pnpm add @inkling/editor
 ```
 
+## Installing peer dependencies
+
+The following dependencies are externalized from the bundle and declared as optional peer dependencies. Install the ones that match the features you use:
+
+- `markdown-it` and its plugins (`markdown-it-footnote`, `markdown-it-image-lazy-loading`, `markdown-it-lazy-headers`, `markdown-it-mark`, `markdown-it-sub`, `markdown-it-sup`) — required by the Markdown card.
+- `@uiw/react-codemirror`, `@uiw/codemirror-extensions-basic-setup`, and `@codemirror/*` packages — required by the CodeBlock and HTML cards.
+- `emoji-mart`, `@emoji-mart/data`, and `@emoji-mart/react` — required by the emoji picker.
+- `fast-average-color` — required by the Header card for automatic color extraction.
+
+Because these are optional peer dependencies, the editor will still install without them; only the specific cards that rely on them need the corresponding packages present in your app.
+
 ## Development
 
 The editor runs in standalone mode via the demo app.
@@ -31,6 +42,16 @@ VITE_TENOR_API_KEY=xxx
 ```
 
 The card resolves to Klipy when `VITE_KLIPY_API_KEY` is set, otherwise Tenor. Get a Klipy key at https://partner.klipy.com; the Tenor key is described at https://inkling.org/docs/config/#tenor
+
+#### Unsplash card
+
+To use the Unsplash image search demo, create a `.env.local` file in the project root with an Unsplash access key:
+
+```
+VITE_UNSPLASH_ACCESS_KEY=xxx
+```
+
+Get a key at https://unsplash.com/developers.
 
 #### Bookmark & Embed cards
 
@@ -75,6 +96,7 @@ We use [Vitest](https://vitest.dev) for unit tests and [Playwright](https://play
 
 - `pnpm test` runs all tests and exits
 - `pnpm test:unit` runs unit tests
+- `pnpm typecheck` runs TypeScript type checking
 - `pnpm test:unit:watch` runs unit tests and starts a test watcher that re-runs tests on file changes
 - `pnpm test:unit:watch --ui` runs unit tests and opens a browser UI for exploring and re-running tests
 - `pnpm test:e2e` runs e2e tests

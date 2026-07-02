@@ -17,7 +17,7 @@ export class VideoNode extends BaseVideoNode {
   __captionEditor!: import('lexical').LexicalEditor | null
   __captionEditorInitialState!: import('lexical').EditorState | undefined
 
-  static kgMenu = [
+  static cardMenu = [
     {
       label: 'Video',
       desc: 'Upload and play a video file',

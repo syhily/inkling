@@ -2,6 +2,7 @@ import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } fro
 
 import { GeneratedDecoratorNodeBase } from '@/nodes/base'
 import { getImageDimensions } from '@/utils/getImageDimensions'
+import { revokePreviewUrl } from '@/utils/revokePreviewUrl'
 
 type UploadFn = (files: FileList | File[]) => Promise<Array<{ url?: string }> | undefined>
 
@@ -17,33 +18,36 @@ export const imageUploadHandler = async (
 
   // show preview via an object URL whilst upload is in progress
   const previewUrl = URL.createObjectURL(files[0])
-  if (previewUrl) {
+
+  try {
     await editor.update(() => {
       const node = $getNodeByKey(nodeKey)
       if (node) {
         ;(node as GeneratedDecoratorNodeBase).previewSrc = previewUrl
       }
     })
+
+    // use the local object URL to grab metadata
+    const { width, height } = await getImageDimensions(previewUrl)
+
+    // perform the actual upload
+    const result = await upload(files)
+    const imageSrc = result?.[0]?.url
+
+    // replace preview URL with real URL and set image metadata
+    await editor.update(() => {
+      const node = $getNodeByKey(nodeKey)
+      if (node) {
+        const n = node as GeneratedDecoratorNodeBase
+        n.width = width
+        n.height = height
+        n.src = imageSrc ?? ''
+        n.previewSrc = null
+      }
+    })
+  } finally {
+    revokePreviewUrl(previewUrl)
   }
-
-  // use the local object URL to grab metadata
-  const { width, height } = await getImageDimensions(previewUrl)
-
-  // perform the actual upload
-  const result = await upload(files)
-  const imageSrc = result?.[0]?.url
-
-  // replace preview URL with real URL and set image metadata
-  await editor.update(() => {
-    const node = $getNodeByKey(nodeKey)
-    if (node) {
-      const n = node as GeneratedDecoratorNodeBase
-      n.width = width
-      n.height = height
-      n.src = imageSrc ?? ''
-      n.previewSrc = null
-    }
-  })
 
   return
 }

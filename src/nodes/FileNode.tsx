@@ -11,7 +11,7 @@ export class FileNode extends BaseFileNode {
   __triggerFileDialog = false
   __initialFile: File | undefined = undefined
 
-  static kgMenu = [
+  static cardMenu = [
     {
       label: 'File',
       desc: 'Upload a downloadable file',

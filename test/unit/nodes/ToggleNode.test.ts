@@ -26,9 +26,9 @@ describe('ToggleNode', () => {
     })
   })
 
-  it('exposes a static kgMenu entry', () => {
-    expect(ToggleNode.kgMenu[0].label).toBe('Toggle')
-    expect(ToggleNode.kgMenu[0].insertCommand).toBe(INSERT_TOGGLE_COMMAND)
+  it('exposes a static cardMenu entry', () => {
+    expect(ToggleNode.cardMenu[0].label).toBe('Toggle')
+    expect(ToggleNode.cardMenu[0].insertCommand).toBe(INSERT_TOGGLE_COMMAND)
   })
 
   it('returns the toggle icon', async () => {

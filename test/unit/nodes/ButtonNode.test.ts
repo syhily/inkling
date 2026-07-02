@@ -26,9 +26,9 @@ describe('ButtonNode', () => {
     })
   })
 
-  it('exposes a static kgMenu entry', () => {
-    expect(ButtonNode.kgMenu[0].label).toBe('Button')
-    expect(ButtonNode.kgMenu[0].insertCommand).toBe(INSERT_BUTTON_COMMAND)
+  it('exposes a static cardMenu entry', () => {
+    expect(ButtonNode.cardMenu[0].label).toBe('Button')
+    expect(ButtonNode.cardMenu[0].insertCommand).toBe(INSERT_BUTTON_COMMAND)
   })
 
   it('returns the button icon', async () => {

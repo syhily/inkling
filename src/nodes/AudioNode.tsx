@@ -11,7 +11,7 @@ export class AudioNode extends BaseAudioNode {
   __triggerFileDialog = false
   __initialFile: File | undefined = undefined
 
-  static kgMenu = [
+  static cardMenu = [
     {
       label: 'Audio',
       desc: 'Upload and play an audio file',

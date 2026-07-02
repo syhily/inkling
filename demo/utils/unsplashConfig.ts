@@ -1,10 +1,15 @@
 const API_VERSION = 'v1'
-const API_TOKEN = '8672af113b0a8573edae3aa3713886265d9bb741d707f6c01a486cde8c278980'
+const API_TOKEN = import.meta.env.VITE_UNSPLASH_ACCESS_KEY ?? ''
 
-export const defaultHeaders: Record<string, string | boolean> = {
-  Authorization: `Client-ID ${API_TOKEN}`,
+const defaultHeaders: Record<string, string | boolean> = {
   'Accept-Version': API_VERSION,
   'Content-Type': 'application/json',
   'App-Pragma': 'no-cache',
   'X-Unsplash-Cache': true,
 }
+
+if (API_TOKEN) {
+  defaultHeaders.Authorization = `Client-ID ${API_TOKEN}`
+}
+
+export { defaultHeaders }

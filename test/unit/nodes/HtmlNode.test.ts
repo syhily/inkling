@@ -26,9 +26,9 @@ describe('HtmlNode', () => {
     })
   })
 
-  it('exposes a static kgMenu entry', () => {
-    expect(HtmlNode.kgMenu.label).toBe('HTML')
-    expect(HtmlNode.kgMenu.insertCommand).toBe(INSERT_HTML_COMMAND)
+  it('exposes a static cardMenu entry', () => {
+    expect(HtmlNode.cardMenu.label).toBe('HTML')
+    expect(HtmlNode.cardMenu.insertCommand).toBe(INSERT_HTML_COMMAND)
   })
 
   it('returns the html icon', async () => {

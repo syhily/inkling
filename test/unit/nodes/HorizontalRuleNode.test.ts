@@ -31,9 +31,9 @@ describe('HorizontalRuleNode', () => {
     })
   })
 
-  it('exposes a static kgMenu entry', () => {
-    expect(HorizontalRuleNode.kgMenu.label).toBe('Divider')
-    expect(HorizontalRuleNode.kgMenu.insertCommand).toBe(INSERT_HORIZONTAL_RULE_COMMAND)
+  it('exposes a static cardMenu entry', () => {
+    expect(HorizontalRuleNode.cardMenu.label).toBe('Divider')
+    expect(HorizontalRuleNode.cardMenu.insertCommand).toBe(INSERT_HORIZONTAL_RULE_COMMAND)
   })
 
   it('returns the divider icon', async () => {

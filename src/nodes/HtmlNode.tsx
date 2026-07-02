@@ -9,7 +9,7 @@ import { HtmlNodeComponent } from '@/nodes/HtmlNodeComponent'
 export const INSERT_HTML_COMMAND = createCommand()
 
 export class HtmlNode extends BaseHtmlNode {
-  static kgMenu = {
+  static cardMenu = {
     label: 'HTML',
     desc: 'Insert a HTML editor card',
     Icon: HtmlCardIcon,

@@ -26,9 +26,9 @@ describe('FileNode', () => {
     })
   })
 
-  it('exposes a static kgMenu entry', () => {
-    expect(FileNode.kgMenu[0].label).toBe('File')
-    expect(FileNode.kgMenu[0].insertCommand).toBe(INSERT_FILE_COMMAND)
+  it('exposes a static cardMenu entry', () => {
+    expect(FileNode.cardMenu[0].label).toBe('File')
+    expect(FileNode.cardMenu[0].insertCommand).toBe(INSERT_FILE_COMMAND)
   })
 
   it('returns the file icon', async () => {

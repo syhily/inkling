@@ -1,20 +1,11 @@
 import { $isListNode, ListItemNode } from '@lexical/list'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister } from '@lexical/utils'
-import {
-  $createParagraphNode,
-  $getSelection,
-  $isDecoratorNode,
-  $isParagraphNode,
-  $isRangeSelection,
-  COMMAND_PRIORITY_LOW,
-  PASTE_COMMAND,
-  RootNode,
-} from 'lexical'
+import { mergeRegister, $createParagraphNode, $getSelection, $isDecoratorNode, $isParagraphNode, $isRangeSelection, COMMAND_PRIORITY_LOW, PASTE_COMMAND, RootNode } from 'lexical'
 import React from 'react'
 
 import { PASTE_LINK_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 import { MIME_TEXT_HTML, MIME_TEXT_PLAIN, PASTE_MARKDOWN_COMMAND } from '@/plugins/MarkdownPastePlugin'
+import { isValidUrl } from '@/utils/isInternalUrl'
 
 export const RestrictContentPlugin = ({ paragraphs, allowBr }: { paragraphs: number; allowBr?: boolean }) => {
   const [editor] = useLexicalComposerContext()
@@ -74,8 +65,7 @@ export const RestrictContentPlugin = ({ paragraphs, allowBr }: { paragraphs: num
           const text = clipboard?.clipboardData?.getData(MIME_TEXT_PLAIN)
           const html = clipboard?.clipboardData?.getData(MIME_TEXT_HTML)
 
-          // TODO: replace with better regex to include more protocols like mailto, ftp, etc
-          const linkMatch = text?.match(/^(https?:\/\/[^\s]+)$/)
+          const linkMatch = text && isValidUrl(text) ? ([text, text] as RegExpMatchArray) : null
 
           if (linkMatch) {
             // we're pasting a URL, convert it to an embed/bookmark/link

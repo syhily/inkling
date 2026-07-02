@@ -26,9 +26,9 @@ describe('BookmarkNode', () => {
     })
   })
 
-  it('exposes a static kgMenu entry', () => {
-    expect(BookmarkNode.kgMenu[0].label).toBe('Bookmark')
-    expect(BookmarkNode.kgMenu[0].insertCommand).toBe(INSERT_BOOKMARK_COMMAND)
+  it('exposes a static cardMenu entry', () => {
+    expect(BookmarkNode.cardMenu[0].label).toBe('Bookmark')
+    expect(BookmarkNode.cardMenu[0].insertCommand).toBe(INSERT_BOOKMARK_COMMAND)
   })
 
   it('returns the bookmark icon', async () => {

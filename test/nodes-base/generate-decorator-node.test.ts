@@ -1,5 +1,5 @@
 import 'should'
-import type { LexicalEditor } from 'lexical'
+import type { LexicalEditor, LexicalNodeConfig } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
 
@@ -55,6 +55,23 @@ describe('Utils: generateDecoratorNode', function () {
       })
     })
 
+  const editorTestWithNodes = (
+    getNodes: () => unknown[],
+    testFn: (testEditor: LexicalEditor, nodes: unknown[]) => void,
+  ) => () =>
+    new Promise<void>((resolve, reject) => {
+      const nodes = getNodes()
+      const testEditor = createHeadlessEditor({ nodes: nodes as LexicalNodeConfig[] })
+      testEditor.update(() => {
+        try {
+          testFn(testEditor, nodes)
+          resolve()
+        } catch (e) {
+          reject(e)
+        }
+      })
+    })
+
   describe('exportDOM', function () {
     let NodeWithRender: GeneratedNodeClass
     let $createNodeWithRender: (dataset?: Record<string, unknown>) => GeneratedNodeInstance
@@ -86,78 +103,94 @@ describe('Utils: generateDecoratorNode', function () {
 
     it(
       'uses versioned default renderer (static version)',
-      editorTest(function () {
-        const VersionedNode = utils.generateDecoratorNode({
-          nodeType: 'versioned-render-test',
-          properties: [],
-          version: 2,
-          defaultRenderFn: {
-            1: () => createRenderResult('div', 'version 1'),
-            2: () => createRenderResult('div', 'version 2'),
-          },
-        })
+      editorTestWithNodes(
+        () => [
+          utils.generateDecoratorNode({
+            nodeType: 'versioned-render-test',
+            properties: [],
+            version: 2,
+            defaultRenderFn: {
+              1: () => createRenderResult('div', 'version 1'),
+              2: () => createRenderResult('div', 'version 2'),
+            },
+          }),
+        ],
+        function (testEditor, [VersionedNode]) {
+          const NodeClass = VersionedNode as GeneratedNodeClass
+          const node = new NodeClass() as unknown as GeneratedNodeInstance
+          const result = node.exportDOM(testEditor)
 
-        const node = new VersionedNode() as unknown as GeneratedNodeInstance
-        const result = node.exportDOM(editor)
-
-        result.type.should.equal('inner')
-        expectHtmlElement(result).outerHTML.should.equal('<div>version 2</div>')
-      }),
+          result.type.should.equal('inner')
+          expectHtmlElement(result).outerHTML.should.equal('<div>version 2</div>')
+        },
+      ),
     )
 
     it(
       'uses versioned default renderer (dataset version)',
-      editorTest(function () {
-        const VersionedNode = utils.generateDecoratorNode({
-          nodeType: 'versioned-render-test',
-          properties: [{ name: 'version', default: 1 }],
-          version: 1,
-          defaultRenderFn: {
-            1: () => createRenderResult('div', 'version 1'),
-            2: () => createRenderResult('div', 'version 2'),
-          },
-        })
+      editorTestWithNodes(
+        () => [
+          utils.generateDecoratorNode({
+            nodeType: 'versioned-render-test',
+            properties: [{ name: 'version', default: 1 }],
+            version: 1,
+            defaultRenderFn: {
+              1: () => createRenderResult('div', 'version 1'),
+              2: () => createRenderResult('div', 'version 2'),
+            },
+          }),
+        ],
+        function (testEditor, [VersionedNode]) {
+          const NodeClass = VersionedNode as GeneratedNodeClass
+          const node = new NodeClass({ version: 2 }) as unknown as GeneratedNodeInstance
+          const result = node.exportDOM(testEditor)
 
-        const node = new VersionedNode({ version: 2 }) as unknown as GeneratedNodeInstance
-        const result = node.exportDOM(editor)
-
-        result.type.should.equal('inner')
-        expectHtmlElement(result).outerHTML.should.equal('<div>version 2</div>')
-      }),
+          result.type.should.equal('inner')
+          expectHtmlElement(result).outerHTML.should.equal('<div>version 2</div>')
+        },
+      ),
     )
 
     it(
       'throws error when defaultRenderFn is not provided',
-      editorTest(function () {
-        const NodeWithoutRender = utils.generateDecoratorNode({
-          nodeType: 'no-render-test',
-          properties: [],
-        })
-
-        const node = new NodeWithoutRender() as unknown as GeneratedNodeInstance
-        ;(() => node.exportDOM(editor)).should.throw(
-          '[generateDecoratorNode] no-render-test: "defaultRenderFn" is required',
-        )
-      }),
+      editorTestWithNodes(
+        () => [
+          utils.generateDecoratorNode({
+            nodeType: 'no-render-test',
+            properties: [],
+          }),
+        ],
+        function (testEditor, [NodeWithoutRender]) {
+          const NodeClass = NodeWithoutRender as GeneratedNodeClass
+          const node = new NodeClass() as unknown as GeneratedNodeInstance
+          ;(() => node.exportDOM(testEditor)).should.throw(
+            '[generateDecoratorNode] no-render-test: "defaultRenderFn" is required',
+          )
+        },
+      ),
     )
 
     it(
       'throws error when default versioned renderer is missing for node version',
-      editorTest(function () {
-        const VersionedNode = utils.generateDecoratorNode({
-          nodeType: 'versioned-render-test',
-          properties: [],
-          version: 2,
-          defaultRenderFn: {
-            1: () => createRenderResult('div', 'version 1'),
-          },
-        })
-
-        const node = new VersionedNode() as unknown as GeneratedNodeInstance
-        ;(() => node.exportDOM(editor)).should.throw(
-          '[generateDecoratorNode] versioned-render-test: "defaultRenderFn" for version 2 is required',
-        )
-      }),
+      editorTestWithNodes(
+        () => [
+          utils.generateDecoratorNode({
+            nodeType: 'versioned-render-test',
+            properties: [],
+            version: 2,
+            defaultRenderFn: {
+              1: () => createRenderResult('div', 'version 1'),
+            },
+          }),
+        ],
+        function (testEditor, [VersionedNode]) {
+          const NodeClass = VersionedNode as GeneratedNodeClass
+          const node = new NodeClass() as unknown as GeneratedNodeInstance
+          ;(() => node.exportDOM(testEditor)).should.throw(
+            '[generateDecoratorNode] versioned-render-test: "defaultRenderFn" for version 2 is required',
+          )
+        },
+      ),
     )
 
     ;['emailCustomizationAlpha', 'emailCustomization'].forEach((feature) => {
@@ -185,32 +218,69 @@ describe('Utils: generateDecoratorNode', function () {
 
     it(
       'throws error when custom versioned renderer is missing for node version (emailCustomizationAlpha)',
-      editorTest(function () {
-        const VersionedNode = utils.generateDecoratorNode({
-          nodeType: 'versioned-render-test',
-          properties: [{ name: 'version', default: 1 }],
-          version: 1,
-          defaultRenderFn: {
-            1: () => createRenderResult('div', 'version 1'),
-            2: () => createRenderResult('div', 'version 2'),
-          },
-        })
-
-        const node = new VersionedNode({ version: 2 }) as unknown as GeneratedNodeInstance
-
-        ;(() =>
-          node.exportDOM(editor, {
-            feature: {
-              emailCustomizationAlpha: true,
+      editorTestWithNodes(
+        () => [
+          utils.generateDecoratorNode({
+            nodeType: 'versioned-render-test',
+            properties: [{ name: 'version', default: 1 }],
+            version: 1,
+            defaultRenderFn: {
+              1: () => createRenderResult('div', 'version 1'),
+              2: () => createRenderResult('div', 'version 2'),
             },
-            nodeRenderers: {
-              'versioned-render-test': {
-                1: () => createRenderResult('div', 'version 1'),
+          }),
+        ],
+        function (testEditor, [VersionedNode]) {
+          const NodeClass = VersionedNode as GeneratedNodeClass
+          const node = new NodeClass({ version: 2 }) as unknown as GeneratedNodeInstance
+
+          ;(() =>
+            node.exportDOM(testEditor, {
+              feature: {
+                emailCustomizationAlpha: true,
               },
-            },
-          })).should.throw(
-          "[generateDecoratorNode] versioned-render-test: options.nodeRenderers['versioned-render-test'] for version 2 is required",
-        )
+              nodeRenderers: {
+                'versioned-render-test': {
+                  1: () => createRenderResult('div', 'version 1'),
+                },
+              },
+            })).should.throw(
+            "[generateDecoratorNode] versioned-render-test: options.nodeRenderers['versioned-render-test'] for version 2 is required",
+          )
+        },
+      ),
+    )
+  })
+
+  describe('constructor', function () {
+    let FalsyAwareNode: GeneratedNodeClass
+    let $createFalsyAwareNode: (dataset?: Record<string, unknown>) => GeneratedNodeInstance
+
+    beforeAll(function () {
+      FalsyAwareNode = utils.generateDecoratorNode({
+        nodeType: 'falsy-aware-test',
+        properties: [
+          { name: 'count', default: 10 },
+          { name: 'label', default: 'default' },
+        ],
+      }) as GeneratedNodeClass
+
+      $createFalsyAwareNode = (dataset?: Record<string, unknown>) => {
+        return new FalsyAwareNode(dataset) as unknown as GeneratedNodeInstance
+      }
+
+      editor = createHeadlessEditor({ nodes: [FalsyAwareNode] })
+    })
+
+    it(
+      'preserves falsy non-boolean values like 0 and empty string',
+      editorTest(function () {
+        const node = $createFalsyAwareNode({ count: 0, label: '' })
+
+        node.getDataset().count!.should.equal(0)
+        node.getDataset().label!.should.equal('')
+        node.exportJSON().count!.should.equal(0)
+        node.exportJSON().label!.should.equal('')
       }),
     )
   })

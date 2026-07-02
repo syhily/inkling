@@ -1,4 +1,4 @@
-import slugify from '@/utils/slugify'
+import slugify, { slugify as namedSlugify } from '@/utils/slugify'
 
 describe('slugify()', function () {
   it('handles non-string input', function () {
@@ -57,6 +57,15 @@ describe('slugify()', function () {
 
     it('removes leading/trailing "-" and collapses "-" groups', function () {
       slugify(' \ttest    one  two! \t').should.equal('test-one-two')
+    })
+
+    it('matches the named export for header-like input', function () {
+      const input = 'Some Header!'
+      const fromDefault = slugify(input)
+      const fromNamed = namedSlugify(input)
+
+      fromNamed.should.equal(fromDefault)
+      fromNamed.should.equal('some-header')
     })
   })
 })

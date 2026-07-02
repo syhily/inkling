@@ -50,7 +50,7 @@ describe('ToggleNode', function () {
           '<span style="white-space: pre-wrap;">Hello</span><br><span style="white-space: pre-wrap;">I am a two-line toggle</span>',
         )
         expect(json.content).toEqual(
-          '<p><span style="white-space: pre-wrap;">And I\'m actually pretty awesome</span></p><p><span style="white-space: pre-wrap;">If I do say so myself.</span></p><p><span style="white-space: pre-wrap;">And I do.</span></p>',
+          '<p dir="ltr"><span style="white-space: pre-wrap;">And I\'m actually pretty awesome</span></p><p dir="ltr"><span style="white-space: pre-wrap;">If I do say so myself.</span></p><p dir="ltr"><span style="white-space: pre-wrap;">And I do.</span></p>',
         )
       }),
     )

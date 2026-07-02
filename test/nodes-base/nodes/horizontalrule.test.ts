@@ -17,12 +17,12 @@ describe('HorizontalNode', function () {
   // NOTE: all tests should use this function, without it you need manual
   // try/catch and done handling to avoid assertion failures not triggering
   // failed tests
-  const editorTest = (testFn: () => void) => () =>
+  const editorTest = (testFn: () => Promise<void> | void) => () =>
     new Promise<void>((resolve, reject) => {
       editor.update(() => {
         try {
-          testFn()
-          resolve()
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
         } catch (e) {
           reject(e)
         }
@@ -41,7 +41,7 @@ describe('HorizontalNode', function () {
 
   it(
     'matches node with $isHorizontalRuleNode',
-    editorTest(function () {
+    editorTest(async function () {
       const hrNode = $createHorizontalRuleNode()
       $isHorizontalRuleNode(hrNode).should.be.true()
     }),
@@ -50,11 +50,11 @@ describe('HorizontalNode', function () {
   describe('exportDOM', function () {
     it(
       'creates hr element',
-      editorTest(function () {
+      editorTest(async function () {
         const hrNode = $createHorizontalRuleNode()
         const { element } = hrNode.exportDOM(editor, exportOptions)
 
-        ;(element as HTMLElement).outerHTML.should.prettifyTo(html` <hr /> `)
+        await (element as HTMLElement).outerHTML.should.prettifyTo(html` <hr /> `)
       }),
     )
   })
@@ -62,7 +62,7 @@ describe('HorizontalNode', function () {
   describe('importDOM', function () {
     it(
       'parses an hr element',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html` <hr /> `)
         const nodes = $generateNodesFromDOM(editor, document)
 
@@ -75,7 +75,7 @@ describe('HorizontalNode', function () {
   describe('exportJSON', function () {
     it(
       'contains all data',
-      editorTest(function () {
+      editorTest(async function () {
         dataset.cardWidth = 'wide'
 
         const asideNode = $createHorizontalRuleNode()
@@ -123,7 +123,7 @@ describe('HorizontalNode', function () {
   describe('getTextContent', function () {
     it(
       'returns plaintext representation',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createHorizontalRuleNode()
         node.getTextContent().should.equal('---\n\n')
       }),
@@ -133,7 +133,7 @@ describe('HorizontalNode', function () {
   describe('getIsVisibilityActive', function () {
     it(
       'returns false (has no visibility property)',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createHorizontalRuleNode()
         node.getIsVisibilityActive().should.be.false()
       }),

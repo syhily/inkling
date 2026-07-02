@@ -1,6 +1,8 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
+import { escapeHtml } from '@/nodes/base/utils/escape-html'
+import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { renderEmailButton } from '@/nodes/base/utils/render-helpers/email-button'
 import { html } from '@/nodes/base/utils/tagged-template-fns'
@@ -15,7 +17,7 @@ export function renderButtonNode(node: ButtonNodeData, options: ExportDOMOptions
   addCreateDocumentOption(options)
   const document = options.createDocument!()
 
-  if (!node.buttonUrl || node.buttonUrl.trim() === '') {
+  if (!node.buttonUrl || node.buttonUrl.trim() === '' || !isSafeUrl(node.buttonUrl)) {
     return renderEmptyContainer(document)
   }
 
@@ -43,6 +45,7 @@ function frontendTemplate(node: ButtonNodeData, document: Document) {
 
 function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document: Document) {
   const { buttonUrl, buttonText } = node
+  const escapedButtonText = escapeHtml(buttonText || 'Button Title')
 
   let cardHtml
   if (options.feature?.emailCustomization) {
@@ -52,7 +55,7 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
           <table class="btn btn-accent" border="0" cellspacing="0" cellpadding="0" align="${node.alignment}">
             <tr>
               <td align="center">
-                <a href="${buttonUrl}">${buttonText}</a>
+                <a href="${buttonUrl}">${escapedButtonText}</a>
               </td>
             </tr>
           </table>
@@ -68,7 +71,7 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
       alignment: node.alignment,
       color: 'accent',
       url: buttonUrl,
-      text: buttonText,
+      text: escapedButtonText,
     })
 
     cardHtml = html`
@@ -90,7 +93,7 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
         <table border="0" cellspacing="0" cellpadding="0" align="${node.alignment}">
           <tr>
             <td align="center">
-              <a href="${buttonUrl}">${buttonText}</a>
+              <a href="${buttonUrl}">${escapedButtonText}</a>
             </td>
           </tr>
         </table>

@@ -79,9 +79,9 @@ describe('ImageNode', () => {
     })
   })
 
-  it('exposes a static kgMenu entry', () => {
-    expect(ImageNode.kgMenu[0].label).toBe('Image')
-    expect(ImageNode.kgMenu[0].insertCommand).toBe(INSERT_IMAGE_COMMAND)
+  it('exposes a static cardMenu entry', () => {
+    expect(ImageNode.cardMenu[0].label).toBe('Image')
+    expect(ImageNode.cardMenu[0].insertCommand).toBe(INSERT_IMAGE_COMMAND)
   })
 
   it('returns the image icon', async () => {

@@ -26,6 +26,7 @@ pnpm test:slowmo        # Run E2E tests with slow motion + UI
 ```bash
 pnpm test               # Run unit tests (Vitest)
 pnpm test:e2e           # Run E2E tests (Playwright)
+pnpm typecheck          # Run TypeScript type checking
 pnpm lint               # Run JavaScript/TypeScript lint
 pnpm lint:css           # Run CSS lint
 ```

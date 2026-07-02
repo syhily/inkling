@@ -17,12 +17,12 @@ describe('CalloutNode', function () {
   // NOTE: all tests should use this function, without it you need manual
   // try/catch and done handling to avoid assertion failures not triggering
   // failed tests
-  const editorTest = (testFn: () => void) => () =>
+  const editorTest = (testFn: () => Promise<void> | void) => () =>
     new Promise<void>((resolve, reject) => {
       editor.update(() => {
         try {
-          testFn()
-          resolve()
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
         } catch (e) {
           reject(e)
         }
@@ -48,7 +48,7 @@ describe('CalloutNode', function () {
 
   it(
     'can match node with calloutNode',
-    editorTest(function () {
+    editorTest(async function () {
       const node = $createCalloutNode(dataset)
       $isCalloutNode(node).should.be.true()
     }),
@@ -57,7 +57,7 @@ describe('CalloutNode', function () {
   describe('data access', function () {
     it(
       'has getters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createCalloutNode(dataset)
         node.calloutText.should.equal(dataset.calloutText)
         node.calloutEmoji.should.equal(dataset.calloutEmoji)
@@ -67,7 +67,7 @@ describe('CalloutNode', function () {
 
     it(
       'has setters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createCalloutNode(dataset)
         node.calloutText = 'new text'
         node.calloutText.should.equal('new text')
@@ -80,7 +80,7 @@ describe('CalloutNode', function () {
 
     it(
       'has getDataset() method',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createCalloutNode(dataset)
         const nodeDataset = node.getDataset()
         nodeDataset.should.deepEqual(dataset)
@@ -91,7 +91,7 @@ describe('CalloutNode', function () {
   describe('getType', function () {
     it(
       'returns the correct node type',
-      editorTest(function () {
+      editorTest(async function () {
         CalloutNode.getType().should.equal('callout')
       }),
     )
@@ -100,7 +100,7 @@ describe('CalloutNode', function () {
   describe('clone', function () {
     it(
       'returns a copy of the current node',
-      editorTest(function () {
+      editorTest(async function () {
         const calloutNode = $createCalloutNode(dataset)
         const calloutNodeDataset = calloutNode.getDataset()
         const clone = CalloutNode.clone(calloutNode) as CalloutNode
@@ -114,7 +114,7 @@ describe('CalloutNode', function () {
   describe('urlTransformMap', function () {
     it(
       'contains the expected URL mapping',
-      editorTest(function () {
+      editorTest(async function () {
         CalloutNode.urlTransformMap.should.deepEqual({})
       }),
     )
@@ -123,7 +123,7 @@ describe('CalloutNode', function () {
   describe('hasEditMode', function () {
     it(
       'returns true',
-      editorTest(function () {
+      editorTest(async function () {
         const calloutNode = $createCalloutNode(dataset)
         calloutNode.hasEditMode().should.be.true()
       }),
@@ -133,7 +133,7 @@ describe('CalloutNode', function () {
   describe('exportJSON', function () {
     it(
       'contains all data',
-      editorTest(function () {
+      editorTest(async function () {
         const calloutNode = $createCalloutNode(dataset)
         const json = calloutNode.exportJSON()
 
@@ -149,11 +149,11 @@ describe('CalloutNode', function () {
   describe('exportDOM', function () {
     it(
       'can render to HTML',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
-        element.outerHTML.should.prettifyTo(html`
+        await element.outerHTML.should.prettifyTo(html`
           <div class="inkling-card inkling-callout-card inkling-callout-card-blue">
             <div class="inkling-callout-emoji">💡</div>
             <div class="inkling-callout-text">
@@ -168,7 +168,7 @@ describe('CalloutNode', function () {
 
     it(
       'can render to HTML with no emoji',
-      editorTest(function () {
+      editorTest(async function () {
         const dataset2 = {
           calloutText:
             '<p dir="ltr"><b><strong>Hello!</strong></b><span> Check </span><i><em class="italic">this</em></i> <a href="https://inkling.local" rel="noopener"><span>out</span></a><span>.</span></p>',
@@ -178,7 +178,7 @@ describe('CalloutNode', function () {
         const node = $createCalloutNode(dataset2)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
-        element.outerHTML.should.prettifyTo(html`
+        await element.outerHTML.should.prettifyTo(html`
           <div class="inkling-card inkling-callout-card inkling-callout-card-blue">
             <div class="inkling-callout-text">
               <b><strong>Hello!</strong></b
@@ -192,14 +192,14 @@ describe('CalloutNode', function () {
 
     it(
       'can render to HTML with invalid backgroundColor',
-      editorTest(function () {
+      editorTest(async function () {
         dataset.backgroundColor = 'rgba(124, 139, 154, 0.13)'
 
         const node = $createCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
-        element.outerHTML.should.prettifyTo(html`
+        await element.outerHTML.should.prettifyTo(html`
           <div class="inkling-card inkling-callout-card inkling-callout-card-white">
             <div class="inkling-callout-emoji">💡</div>
             <div class="inkling-callout-text">
@@ -214,7 +214,7 @@ describe('CalloutNode', function () {
 
     it(
       'can render with inline code',
-      editorTest(function () {
+      editorTest(async function () {
         dataset.calloutText =
           '<p><span style="white-space: pre-wrap;">Does </span><code spellcheck="false" style="white-space: pre-wrap;"><span>inline code</span></code><span style="white-space: pre-wrap;"> render properly?</span></p>'
 
@@ -222,7 +222,7 @@ describe('CalloutNode', function () {
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
-        element.outerHTML.should.prettifyTo(html`
+        await element.outerHTML.should.prettifyTo(html`
           <div class="inkling-card inkling-callout-card inkling-callout-card-blue">
             <div class="inkling-callout-emoji">💡</div>
             <div class="inkling-callout-text">
@@ -237,7 +237,7 @@ describe('CalloutNode', function () {
   describe('importDOM', function () {
     it(
       'parses callout card',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <div class="inkling-card inkling-callout-card inkling-callout-card-red">
             <div class="inkling-callout-emoji">💡</div>
@@ -254,7 +254,7 @@ describe('CalloutNode', function () {
 
     it(
       'parses callout card with no emoji',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <div class="inkling-card inkling-callout-card inkling-callout-card-red">
             <div class="inkling-callout-text">This is a callout</div>
@@ -308,7 +308,7 @@ describe('CalloutNode', function () {
   describe('getTextContent', function () {
     it(
       'returns contents',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createCalloutNode()
         node.getTextContent().should.equal('')
 

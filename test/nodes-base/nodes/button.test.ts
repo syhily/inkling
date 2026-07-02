@@ -17,12 +17,12 @@ describe('ButtonNode', function () {
   // NOTE: all tests should use this function, without it you need manual
   // try/catch and done handling to avoid assertion failures not triggering
   // failed tests
-  const editorTest = (testFn: () => void) => () =>
+  const editorTest = (testFn: () => Promise<void> | void) => () =>
     new Promise<void>((resolve, reject) => {
       editor.update(() => {
         try {
-          testFn()
-          resolve()
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
         } catch (e) {
           reject(e)
         }
@@ -43,7 +43,7 @@ describe('ButtonNode', function () {
 
   it(
     'matches node with $isButtonNode',
-    editorTest(function () {
+    editorTest(async function () {
       const buttonNode = $createButtonNode(dataset)
       $isButtonNode(buttonNode).should.be.true()
     }),
@@ -52,7 +52,7 @@ describe('ButtonNode', function () {
   describe('data access', function () {
     it(
       'has getters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const buttonNode = $createButtonNode(dataset)
 
         buttonNode.buttonUrl.should.equal(dataset.buttonUrl)
@@ -63,7 +63,7 @@ describe('ButtonNode', function () {
 
     it(
       'has setters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const buttonNode = $createButtonNode()
 
         buttonNode.buttonUrl.should.equal('')
@@ -82,7 +82,7 @@ describe('ButtonNode', function () {
 
     it(
       'has getDataset() convenience method',
-      editorTest(function () {
+      editorTest(async function () {
         const buttonNode = $createButtonNode(dataset)
         const buttonNodeDataset = buttonNode.getDataset()
 
@@ -96,7 +96,7 @@ describe('ButtonNode', function () {
   describe('getType', function () {
     it(
       'returns the correct node type',
-      editorTest(function () {
+      editorTest(async function () {
         ButtonNode.getType().should.equal('button')
       }),
     )
@@ -105,7 +105,7 @@ describe('ButtonNode', function () {
   describe('clone', function () {
     it(
       'returns a copy of the current node',
-      editorTest(function () {
+      editorTest(async function () {
         const buttonNode = $createButtonNode(dataset)
         const buttonNodeDataset = buttonNode.getDataset()
         const clone = ButtonNode.clone(buttonNode) as ButtonNode
@@ -119,7 +119,7 @@ describe('ButtonNode', function () {
   describe('urlTransformMap', function () {
     it(
       'contains the expected URL mapping',
-      editorTest(function () {
+      editorTest(async function () {
         ButtonNode.urlTransformMap.should.deepEqual({
           buttonUrl: 'url',
         })
@@ -130,7 +130,7 @@ describe('ButtonNode', function () {
   describe('hasEditMode', function () {
     it(
       'returns true',
-      editorTest(function () {
+      editorTest(async function () {
         const buttonNode = $createButtonNode(dataset)
         buttonNode.hasEditMode().should.be.true()
       }),
@@ -140,12 +140,12 @@ describe('ButtonNode', function () {
   describe('exportDOM', function () {
     it(
       'creates a button card',
-      editorTest(function () {
+      editorTest(async function () {
         const buttonNode = $createButtonNode(dataset)
         const result = buttonNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
-        element.outerHTML.should.prettifyTo(
+        await element.outerHTML.should.prettifyTo(
           html`<div class="inkling-card inkling-button-card inkling-align-center">
             <a href="http://blog.com/post1" class="inkling-btn inkling-btn-accent">click me</a>
           </div>`,
@@ -155,7 +155,7 @@ describe('ButtonNode', function () {
 
     it(
       'renders for email target',
-      editorTest(function () {
+      editorTest(async function () {
         const buttonNode = $createButtonNode(dataset)
         const options = {
           target: 'email',
@@ -173,7 +173,7 @@ describe('ButtonNode', function () {
 
     it(
       'renders for email target (emailCustomization)',
-      editorTest(function () {
+      editorTest(async function () {
         const buttonNode = $createButtonNode(dataset)
         const options = {
           target: 'email',
@@ -185,7 +185,7 @@ describe('ButtonNode', function () {
         const element = result.element as HTMLElement
         const output = element.innerHTML
 
-        output.should.prettifyTo(html`
+        await output.should.prettifyTo(html`
           <table border="0" cellpadding="0" cellspacing="0">
             <tbody>
               <tr>
@@ -209,7 +209,7 @@ describe('ButtonNode', function () {
 
     it(
       'renders for email target (emailCustomizationAlpha)',
-      editorTest(function () {
+      editorTest(async function () {
         const buttonNode = $createButtonNode(dataset)
         const options = {
           target: 'email',
@@ -221,7 +221,7 @@ describe('ButtonNode', function () {
         const element = result.element as HTMLElement
         const output = element.innerHTML
 
-        output.should.prettifyTo(html`
+        await output.should.prettifyTo(html`
           <table border="0" cellpadding="0" cellspacing="0">
             <tbody>
               <tr>
@@ -245,7 +245,7 @@ describe('ButtonNode', function () {
 
     it(
       'renders an empty span with a missing buttonUrl',
-      editorTest(function () {
+      editorTest(async function () {
         const buttonNode = $createButtonNode()
         const result = buttonNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
@@ -253,12 +253,43 @@ describe('ButtonNode', function () {
         element.outerHTML.should.equal('<span></span>')
       }),
     )
+
+    it(
+      'rejects an unsafe button URL',
+      editorTest(function () {
+        const buttonNode = $createButtonNode({
+          buttonText: 'click me',
+          buttonUrl: 'javascript:alert(1)',
+          alignment: 'center',
+        })
+        const result = buttonNode.exportDOM(editor, exportOptions)
+        const element = result.element as HTMLElement
+
+        element.outerHTML.should.equal('<span></span>')
+      }),
+    )
+
+    it(
+      'escapes button text markup',
+      editorTest(function () {
+        const buttonNode = $createButtonNode({
+          buttonText: '<script>alert(1)</script>',
+          buttonUrl: 'https://example.com/',
+          alignment: 'center',
+        })
+        const result = buttonNode.exportDOM(editor, exportOptions)
+        const element = result.element as HTMLElement
+
+        element.innerHTML.should.containEql('&lt;script&gt;alert(1)&lt;/script&gt;')
+        element.innerHTML.should.not.containEql('<script>alert(1)</script>')
+      }),
+    )
   })
 
   describe('exportJSON', function () {
     it(
       'contains all data',
-      editorTest(function () {
+      editorTest(async function () {
         const buttonNode = $createButtonNode(dataset)
         const json = buttonNode.exportJSON()
 
@@ -314,14 +345,14 @@ describe('ButtonNode', function () {
   describe('static properties', function () {
     it(
       'getType',
-      editorTest(function () {
+      editorTest(async function () {
         ButtonNode.getType().should.equal('button')
       }),
     )
 
     it(
       'urlTransformMap',
-      editorTest(function () {
+      editorTest(async function () {
         ButtonNode.urlTransformMap.should.deepEqual({
           buttonUrl: 'url',
         })
@@ -332,7 +363,7 @@ describe('ButtonNode', function () {
   describe('importDOM', function () {
     it(
       'parses button card',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <div class="inkling-card inkling-button-card inkling-align-center">
             <a href="http://someblog.com/somepost" class="inkling-btn inkling-btn-accent">click me</a>
@@ -348,7 +379,7 @@ describe('ButtonNode', function () {
 
     it(
       'preserves relative urls in content',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <div class="inkling-card inkling-button-card inkling-align-center">
             <a href="#/portal/signup" class="inkling-btn inkling-btn-accent">Subscribe 1</a>
@@ -366,7 +397,7 @@ describe('ButtonNode', function () {
   describe('getTextContent', function () {
     it(
       'returns contents',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createButtonNode()
         node.buttonText = 'Testing'
         node.buttonUrl = 'http://someblog.com/somepost'

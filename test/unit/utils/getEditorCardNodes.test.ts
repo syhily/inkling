@@ -7,8 +7,8 @@ describe('getEditorCardNodes', () => {
     expect(getEditorCardNodes({ _nodes: new Map() })).toEqual([])
   })
 
-  it('only returns nodes with a kgMenu static property', () => {
-    const cardClass = { kgMenu: [{ label: 'Card' }] }
+  it('only returns nodes with a cardMenu static property', () => {
+    const cardClass = { cardMenu: [{ label: 'Card' }] }
     const plainClass = {}
 
     const editor = {

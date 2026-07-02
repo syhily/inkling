@@ -20,7 +20,7 @@ export class ButtonNode extends BaseButtonNode {
   __textEditor!: LexicalEditor | null
   __textEditorInitialState!: EditorState | undefined
 
-  static kgMenu = [
+  static cardMenu = [
     {
       label: 'Button',
       desc: 'Call-to-action button',

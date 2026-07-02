@@ -2,8 +2,7 @@
 // duplicated here because the upstream version is dependent on TextNode but we use ExtendedTextNode
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister } from '@lexical/utils'
-import { $createTextNode, $isTextNode, type LexicalEditor, type LexicalNode, TextNode } from 'lexical'
+import { mergeRegister, $createTextNode, $isTextNode, type LexicalEditor, type LexicalNode, TextNode } from 'lexical'
 import { useEffect } from 'react'
 
 export function useInklingTextEntity<T extends TextNode = TextNode>(

@@ -15,7 +15,7 @@ export class CalloutNode extends BaseCalloutNode {
   __calloutTextEditor!: import('lexical').LexicalEditor | null
   __calloutTextEditorInitialState!: import('lexical').EditorState | undefined
 
-  static kgMenu = [
+  static cardMenu = [
     {
       label: 'Callout',
       desc: 'Info boxes that stand out',

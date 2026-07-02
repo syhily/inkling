@@ -1,4 +1,4 @@
-import type { HTMLConfig, LexicalEditor } from 'lexical'
+import type { ElementNode, HTMLConfig, LexicalEditor } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
@@ -79,7 +79,9 @@ describe('Serializers: paragraph', function () {
 
         should.equal(nodes.length, 3)
         should.equal(nodes[0].getType(), 'paragraph')
-        should.equal(nodes[1].getType(), 'horizontalrule')
+        should.equal(nodes[1].getType(), 'paragraph')
+        should.equal((nodes[1] as ElementNode).getChildren().length, 1)
+        should.equal((nodes[1] as ElementNode).getChildren()[0].getType(), 'horizontalrule')
         should.equal(nodes[2].getType(), 'paragraph')
       }),
     )

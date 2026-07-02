@@ -17,12 +17,12 @@ describe('ToggleNode', function () {
   // NOTE: all tests should use this function, without it you need manual
   // try/catch and done handling to avoid assertion failures not triggering
   // failed tests
-  const editorTest = (testFn: () => void) => () =>
+  const editorTest = (testFn: () => Promise<void> | void) => () =>
     new Promise<void>((resolve, reject) => {
       editor.update(() => {
         try {
-          testFn()
-          resolve()
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
         } catch (e) {
           reject(e)
         }
@@ -47,7 +47,7 @@ describe('ToggleNode', function () {
 
   it(
     'matches node with $isToggleNode',
-    editorTest(function () {
+    editorTest(async function () {
       const toggleNode = $createToggleNode(dataset)
       $isToggleNode(toggleNode).should.be.true()
     }),
@@ -56,7 +56,7 @@ describe('ToggleNode', function () {
   describe('data access', function () {
     it(
       'has getters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const toggleNode = $createToggleNode(dataset)
 
         toggleNode.heading.should.equal(dataset.heading)
@@ -66,7 +66,7 @@ describe('ToggleNode', function () {
 
     it(
       'has setters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const toggleNode = $createToggleNode()
 
         toggleNode.heading.should.equal('')
@@ -81,7 +81,7 @@ describe('ToggleNode', function () {
 
     it(
       'has getDataset() convenience method',
-      editorTest(function () {
+      editorTest(async function () {
         const toggleNode = $createToggleNode(dataset)
         const toggleNodeDataset = toggleNode.getDataset()
 
@@ -95,7 +95,7 @@ describe('ToggleNode', function () {
   describe('getType', function () {
     it(
       'returns the correct node type',
-      editorTest(function () {
+      editorTest(async function () {
         ToggleNode.getType().should.equal('toggle')
       }),
     )
@@ -104,7 +104,7 @@ describe('ToggleNode', function () {
   describe('clone', function () {
     it(
       'returns a copy of the current node',
-      editorTest(function () {
+      editorTest(async function () {
         const toggleNode = $createToggleNode(dataset)
         const toggleNodeDataset = toggleNode.getDataset()
         const clone = ToggleNode.clone(toggleNode) as ToggleNode
@@ -118,7 +118,7 @@ describe('ToggleNode', function () {
   describe('urlTransformMap', function () {
     it(
       'contains the expected URL mapping',
-      editorTest(function () {
+      editorTest(async function () {
         ToggleNode.urlTransformMap.should.deepEqual({
           heading: 'html',
           content: 'html',
@@ -130,7 +130,7 @@ describe('ToggleNode', function () {
   describe('hasEditMode', function () {
     it(
       'returns true',
-      editorTest(function () {
+      editorTest(async function () {
         const toggleNode = $createToggleNode(dataset)
         toggleNode.hasEditMode().should.be.true()
       }),
@@ -140,7 +140,7 @@ describe('ToggleNode', function () {
   describe('exportJSON', function () {
     it(
       'contains all data',
-      editorTest(function () {
+      editorTest(async function () {
         const toggleNode = $createToggleNode(dataset)
         const json = toggleNode.exportJSON()
 
@@ -194,7 +194,7 @@ describe('ToggleNode', function () {
   describe('exportDOM', function () {
     it(
       'renders',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           heading: 'Heading',
           content: 'Content',
@@ -203,7 +203,7 @@ describe('ToggleNode', function () {
         const result = toggleNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
-        element.outerHTML.should.prettifyTo(html`
+        await element.outerHTML.should.prettifyTo(html`
           <div class="inkling-card inkling-toggle-card" data-inkling-toggle-state="close">
             <div class="inkling-toggle-heading">
               <h4 class="inkling-toggle-heading-text">Heading</h4>
@@ -221,7 +221,7 @@ describe('ToggleNode', function () {
 
     it(
       'renders for email target',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           heading: 'Heading',
           content: 'Content',
@@ -235,7 +235,7 @@ describe('ToggleNode', function () {
         const result = toggleNode.exportDOM(editor, { ...exportOptions, ...options })
         const element = result.element as HTMLElement
 
-        element.outerHTML.should.prettifyTo(html`
+        await element.outerHTML.should.prettifyTo(html`
           <div
             style="background: transparent;
                 border: 1px solid rgba(124, 139, 154, 0.25); border-radius: 4px; padding: 20px; margin-bottom: 1.5em;"
@@ -249,7 +249,7 @@ describe('ToggleNode', function () {
 
     it(
       'renders for email target (emailCustomizationAlpha)',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           heading: 'Heading',
           content: 'Content',
@@ -266,7 +266,7 @@ describe('ToggleNode', function () {
         const result = toggleNode.exportDOM(editor, { ...exportOptions, ...options })
         const element = result.element as HTMLElement
 
-        element.outerHTML.should.prettifyTo(html`
+        await element.outerHTML.should.prettifyTo(html`
           <table cellspacing="0" cellpadding="0" border="0" width="100%" class="inkling-toggle-card">
             <tbody>
               <tr>
@@ -285,7 +285,7 @@ describe('ToggleNode', function () {
 
     it(
       'renders heading',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           heading: 'Heading',
           content: 'Content',
@@ -300,7 +300,7 @@ describe('ToggleNode', function () {
 
     it(
       'renders content',
-      editorTest(function () {
+      editorTest(async function () {
         const payload = {
           heading: 'Heading',
           content: 'Content',
@@ -317,7 +317,7 @@ describe('ToggleNode', function () {
   describe('importDOM', function () {
     it(
       'parses toggle card',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <div class="inkling-card inkling-toggle-card" data-inkling-toggle-state="close">
             <div class="inkling-toggle-heading">
@@ -342,7 +342,7 @@ describe('ToggleNode', function () {
   describe('getTextContent', function () {
     it(
       'returns contents',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createToggleNode()
         node.getTextContent().should.equal('')
 

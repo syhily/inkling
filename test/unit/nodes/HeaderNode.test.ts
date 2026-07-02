@@ -26,9 +26,9 @@ describe('HeaderNode', () => {
     })
   })
 
-  it('exposes a static kgMenu entry', () => {
-    expect(HeaderNode.kgMenu[0].label).toBe('Header')
-    expect(HeaderNode.kgMenu[0].insertCommand).toBe(INSERT_HEADER_COMMAND)
+  it('exposes a static cardMenu entry', () => {
+    expect(HeaderNode.cardMenu[0].label).toBe('Header')
+    expect(HeaderNode.cardMenu[0].insertCommand).toBe(INSERT_HEADER_COMMAND)
   })
 
   it('returns the header icon', async () => {

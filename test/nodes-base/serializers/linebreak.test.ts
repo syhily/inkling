@@ -115,7 +115,7 @@ describe('Serializers: linebreak', function () {
           should.equal(nodes.length, 5)
           should.equal(nodes[0].getType(), 'paragraph')
           should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'extended-text')
+          should.equal(nodes[2].getType(), 'paragraph')
           should.equal(nodes[3].getType(), 'linebreak')
           should.equal(nodes[4].getType(), 'paragraph')
         }),
@@ -131,7 +131,7 @@ describe('Serializers: linebreak', function () {
 
           should.equal(nodes.length, 3)
           should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'extended-text')
+          should.equal(nodes[1].getType(), 'paragraph')
           should.equal(nodes[2].getType(), 'paragraph')
         }),
       )
@@ -146,7 +146,7 @@ describe('Serializers: linebreak', function () {
           should.equal(nodes.length, 5)
           should.equal(nodes[0].getType(), 'paragraph')
           should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'extended-text')
+          should.equal(nodes[2].getType(), 'paragraph')
           should.equal(nodes[3].getType(), 'linebreak')
           should.equal(nodes[4].getType(), 'paragraph')
         }),
@@ -162,7 +162,7 @@ describe('Serializers: linebreak', function () {
 
           should.equal(nodes.length, 3)
           should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'extended-text')
+          should.equal(nodes[1].getType(), 'paragraph')
           should.equal(nodes[2].getType(), 'paragraph')
         }),
       )
@@ -177,7 +177,7 @@ describe('Serializers: linebreak', function () {
           should.equal(nodes.length, 5)
           should.equal(nodes[0].getType(), 'paragraph')
           should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'extended-text')
+          should.equal(nodes[2].getType(), 'paragraph')
           should.equal(nodes[3].getType(), 'linebreak')
           should.equal(nodes[4].getType(), 'paragraph')
         }),
@@ -193,7 +193,7 @@ describe('Serializers: linebreak', function () {
 
           should.equal(nodes.length, 3)
           should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'extended-text')
+          should.equal(nodes[1].getType(), 'paragraph')
           should.equal(nodes[2].getType(), 'paragraph')
         }),
       )

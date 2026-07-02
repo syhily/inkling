@@ -6,7 +6,7 @@ import { $isTextNode, $isLineBreakNode, TextNode } from 'lexical'
 
 import type { RendererOptions } from '@/html/renderer/types'
 
-type TextFormatAbbreviation = 'STRONG' | 'EM' | 'S' | 'U' | 'CODE' | 'SUB' | 'SUP' | 'MARK'
+type TextFormatAbbreviation = 'STRONG' | 'EM' | 'S' | 'U' | 'CODE' | 'SUB' | 'SUP' | 'MARK' | 'SPAN'
 type ExportChildren = (node: ElementNode, options: RendererOptions) => string
 
 const FORMAT_TAG_MAP: Record<TextFormatType, TextFormatAbbreviation> = {
@@ -18,6 +18,9 @@ const FORMAT_TAG_MAP: Record<TextFormatType, TextFormatAbbreviation> = {
   subscript: 'SUB',
   superscript: 'SUP',
   highlight: 'MARK',
+  lowercase: 'SPAN',
+  uppercase: 'SPAN',
+  capitalize: 'SPAN',
 }
 
 type Entries<T> = {

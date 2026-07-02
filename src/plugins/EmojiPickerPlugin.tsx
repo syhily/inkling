@@ -4,7 +4,6 @@ import type { TextNode } from 'lexical'
 import emojiData from '@emoji-mart/data'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { LexicalTypeaheadMenuPlugin } from '@lexical/react/LexicalTypeaheadMenuPlugin'
-import { mergeRegister } from '@lexical/utils'
 import { SearchIndex, init } from 'emoji-mart'
 import {
   $createTextNode,
@@ -13,6 +12,7 @@ import {
   $isTextNode,
   COMMAND_PRIORITY_HIGH,
   KEY_DOWN_COMMAND,
+  mergeRegister,
 } from 'lexical'
 import React from 'react'
 
@@ -127,6 +127,9 @@ export function EmojiPickerPlugin() {
         }
 
         const currentNode = selection.anchor.getNode()
+        if (!$isTextNode(currentNode)) {
+          return
+        }
         // need to replace the last text matching the :test: pattern with a single emoji
         const shortcodeLength = emoji.id.length + 1 // +1 for the end colon
         const textNode = currentNode.spliceText(

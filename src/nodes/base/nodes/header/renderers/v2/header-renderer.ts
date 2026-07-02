@@ -1,8 +1,10 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
+import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
-import { slugify } from '@/nodes/base/utils/slugify'
+import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
+import { slugify } from '@/utils/slugify'
 import { getSrcsetAttribute, type ImageRenderOptions } from '@/nodes/base/utils/srcset-attribute'
 
 interface HeaderV2NodeData {
@@ -52,19 +54,25 @@ interface HeaderV2RenderOptions extends ExportDOMOptions {
 function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions = {}) {
   const cardClasses = getCardClasses(nodeData).join(' ')
 
+  const safeBackgroundImageSrc = isSafeUrl(nodeData.backgroundImageSrc) ? nodeData.backgroundImageSrc : ''
+  const safeButtonUrl = isSafeUrl(nodeData.buttonUrl) ? nodeData.buttonUrl : ''
+  const headerText = nodeData.header ? escapeHtml(nodeData.header) : ''
+  const subheaderText = nodeData.subheader ? escapeHtml(nodeData.subheader) : ''
+  const buttonText = nodeData.buttonText ? escapeHtml(nodeData.buttonText) : ''
+
   const backgroundAccent = nodeData.backgroundColor === 'accent' ? 'inkling-style-accent' : ''
   const buttonAccent = nodeData.buttonColor === 'accent' ? 'inkling-style-accent' : ''
   const buttonStyle = nodeData.buttonColor !== 'accent' ? `background-color: ${nodeData.buttonColor};` : ``
   const alignment = nodeData.alignment === 'center' ? 'inkling-align-center' : ''
   const backgroundImageStyle =
-    nodeData.backgroundColor !== 'accent' && (!nodeData.backgroundImageSrc || nodeData.layout === 'split')
+    nodeData.backgroundColor !== 'accent' && (!safeBackgroundImageSrc || nodeData.layout === 'split')
       ? `background-color: ${nodeData.backgroundColor}`
       : ''
 
   let imgTemplate = ''
-  if (nodeData.backgroundImageSrc) {
+  if (safeBackgroundImageSrc) {
     const bgImage = {
-      src: nodeData.backgroundImageSrc,
+      src: safeBackgroundImageSrc,
       width: nodeData.backgroundImageWidth,
       height: nodeData.backgroundImageHeight,
     }
@@ -86,21 +94,21 @@ function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions
 
   const header = () => {
     if (nodeData.header) {
-      return `<h2 id="${slugify(nodeData.header)}" class="inkling-header-card-heading" style="color: ${nodeData.textColor};" data-text-color="${nodeData.textColor}">${nodeData.header}</h2>`
+      return `<h2 id="${slugify(nodeData.header)}" class="inkling-header-card-heading" style="color: ${nodeData.textColor};" data-text-color="${nodeData.textColor}">${headerText}</h2>`
     }
     return ''
   }
 
   const subheader = () => {
     if (nodeData.subheader) {
-      return `<p id="${slugify(nodeData.subheader)}" class="inkling-header-card-subheading" style="color: ${nodeData.textColor};" data-text-color="${nodeData.textColor}">${nodeData.subheader}</p>`
+      return `<p id="${slugify(nodeData.subheader)}" class="inkling-header-card-subheading" style="color: ${nodeData.textColor};" data-text-color="${nodeData.textColor}">${subheaderText}</p>`
     }
     return ''
   }
 
   const button = () => {
-    if (nodeData.buttonEnabled && nodeData.buttonUrl && nodeData.buttonUrl.trim() !== '') {
-      return `<a href="${nodeData.buttonUrl}" class="inkling-header-card-button ${buttonAccent}" style="${buttonStyle}color: ${nodeData.buttonTextColor};" data-button-color="${nodeData.buttonColor}" data-button-text-color="${nodeData.buttonTextColor}">${nodeData.buttonText}</a>`
+    if (nodeData.buttonEnabled && safeButtonUrl) {
+      return `<a href="${safeButtonUrl}" class="inkling-header-card-button ${buttonAccent}" style="${buttonStyle}color: ${nodeData.buttonTextColor};" data-button-color="${nodeData.buttonColor}" data-button-text-color="${nodeData.buttonTextColor}">${buttonText}</a>`
     }
     return ''
   }
@@ -123,18 +131,24 @@ function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions
 }
 
 function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions) {
+  const safeBackgroundImageSrc = isSafeUrl(nodeData.backgroundImageSrc) ? nodeData.backgroundImageSrc : ''
+  const safeButtonUrl = isSafeUrl(nodeData.buttonUrl) ? nodeData.buttonUrl : ''
+  const headerText = nodeData.header ? escapeHtml(nodeData.header) : ''
+  const subheaderText = nodeData.subheader ? escapeHtml(nodeData.subheader) : ''
+  const buttonText = nodeData.buttonText ? escapeHtml(nodeData.buttonText) : ''
+
   const backgroundAccent = nodeData.backgroundColor === 'accent' ? `background-color: ${nodeData.accentColor};` : ''
   let buttonAccent =
     nodeData.buttonColor === 'accent' ? `background-color: ${nodeData.accentColor};` : nodeData.buttonColor
   let buttonStyle = nodeData.buttonColor !== 'accent' ? `background-color: ${nodeData.buttonColor};` : ''
   let buttonTextColor = nodeData.buttonTextColor
   const alignment = nodeData.alignment === 'center' ? 'text-align: center;' : ''
-  const backgroundImageStyle = nodeData.backgroundImageSrc
+  const backgroundImageStyle = safeBackgroundImageSrc
     ? nodeData.layout !== 'split'
-      ? `background-image: url(${nodeData.backgroundImageSrc}); background-size: cover; background-position: center center;`
+      ? `background-image: url(${safeBackgroundImageSrc}); background-size: cover; background-position: center center;`
       : `background-color: ${nodeData.backgroundColor};`
     : `background-color: ${nodeData.backgroundColor};`
-  const splitImageStyle = `background-image: url(${nodeData.backgroundImageSrc}); background-size: ${nodeData.backgroundSize !== 'contain' ? 'cover' : '50%'}; background-position: center`
+  const splitImageStyle = `background-image: url(${safeBackgroundImageSrc}); background-size: ${nodeData.backgroundSize !== 'contain' ? 'cover' : '50%'}; background-position: center`
 
   if (
     (options?.feature?.emailCustomization || options?.feature?.emailCustomizationAlpha) &&
@@ -162,11 +176,11 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
     return `
             <div class="inkling-header-card inkling-v2" style="color:${nodeData.textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
                 ${
-                  nodeData.layout === 'split' && nodeData.backgroundImageSrc
+                  nodeData.layout === 'split' && safeBackgroundImageSrc
                     ? `
                     <table border="0" cellpadding="0" cellspacing="0" width="100%">
                         <tr>
-                            <td background="${nodeData.backgroundImageSrc}" style="${splitImageStyle}" class="inkling-header-card-image"></td>
+                            <td background="${safeBackgroundImageSrc}" style="${splitImageStyle}" class="inkling-header-card-image"></td>
                         </tr>
                     </table>
                 `
@@ -178,23 +192,23 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
                             <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
                                     <td align="${nodeData.alignment}">
-                                        <h2 class="inkling-header-card-heading" style="color:${nodeData.textColor};">${nodeData.header}</h2>
+                                        <h2 class="inkling-header-card-heading" style="color:${nodeData.textColor};">${headerText}</h2>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="inkling-header-card-subheading-wrapper" align="${nodeData.alignment}">
-                                        <p class="inkling-header-card-subheading" style="color:${nodeData.textColor};">${nodeData.subheader}</p>
+                                        <p class="inkling-header-card-subheading" style="color:${nodeData.textColor};">${subheaderText}</p>
                                     </td>
                                 </tr>
                                 <tr>
                                     ${
-                                      nodeData.buttonEnabled && nodeData.buttonUrl && nodeData.buttonUrl.trim() !== ''
+                                      nodeData.buttonEnabled && safeButtonUrl
                                         ? `
                                         <td class="inkling-header-button-wrapper">
                                             <table class="btn" border="0" cellspacing="0" cellpadding="0" align="${nodeData.alignment}">
                                                 <tr>
                                                     <td align="center" style="${buttonStyle} ${buttonAccent}">
-                                                        <a href="${nodeData.buttonUrl}" style="color: ${buttonTextColor};">${nodeData.buttonText}</a>
+                                                        <a href="${safeButtonUrl}" style="color: ${buttonTextColor};">${buttonText}</a>
                                                     </td>
                                                 </tr>
                                             </table>
@@ -214,19 +228,19 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
   return `
         <div class="inkling-header-card inkling-v2" style="color:${nodeData.textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
             ${
-              nodeData.layout === 'split' && nodeData.backgroundImageSrc
+              nodeData.layout === 'split' && safeBackgroundImageSrc
                 ? `
-                <div class="inkling-header-card-image" background="${nodeData.backgroundImageSrc}" style="${splitImageStyle}"></div>
+                <div class="inkling-header-card-image" background="${safeBackgroundImageSrc}" style="${splitImageStyle}"></div>
             `
                 : ''
             }
             <div class="inkling-header-card-content" style="${nodeData.layout === 'split' && nodeData.backgroundSize === 'contain' ? 'padding-top: 0;' : ''}">
-                <h2 class="inkling-header-card-heading" style="color:${nodeData.textColor};">${nodeData.header}</h2>
-                <p class="inkling-header-card-subheading" style="color:${nodeData.textColor};">${nodeData.subheader}</p>
+                <h2 class="inkling-header-card-heading" style="color:${nodeData.textColor};">${headerText}</h2>
+                <p class="inkling-header-card-subheading" style="color:${nodeData.textColor};">${subheaderText}</p>
                 ${
-                  nodeData.buttonEnabled && nodeData.buttonUrl && nodeData.buttonUrl.trim() !== ''
+                  nodeData.buttonEnabled && safeButtonUrl
                     ? `
-                    <a class="inkling-header-card-button" href="${nodeData.buttonUrl}" style="color: ${nodeData.buttonTextColor}; ${buttonStyle} ${buttonAccent}">${nodeData.buttonText}</a>
+                    <a class="inkling-header-card-button" href="${safeButtonUrl}" style="color: ${nodeData.buttonTextColor}; ${buttonStyle} ${buttonAccent}">${buttonText}</a>
                 `
                     : ''
                 }

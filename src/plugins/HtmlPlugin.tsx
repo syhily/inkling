@@ -1,6 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister } from '@lexical/utils'
-import { COMMAND_PRIORITY_LOW } from 'lexical'
+import { mergeRegister, COMMAND_PRIORITY_LOW } from 'lexical'
 import React from 'react'
 
 import { $createHtmlNode, HtmlNode, INSERT_HTML_COMMAND } from '@/nodes/HtmlNode'

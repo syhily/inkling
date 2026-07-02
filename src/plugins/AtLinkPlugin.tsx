@@ -1,19 +1,7 @@
 import { $createLinkNode } from '@lexical/link'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $insertFirst, mergeRegister } from '@lexical/utils'
-import {
-  $createTextNode,
-  $getSelection,
-  $isRangeSelection,
-  $isTextNode,
-  $nodesOfType,
-  COMMAND_PRIORITY_HIGH,
-  DELETE_CHARACTER_COMMAND,
-  FORMAT_ELEMENT_COMMAND,
-  FORMAT_TEXT_COMMAND,
-  KEY_ESCAPE_COMMAND,
-  PASTE_COMMAND,
-} from 'lexical'
+import { $insertFirst } from '@lexical/utils'
+import { mergeRegister, $createTextNode, $getSelection, $isRangeSelection, $isTextNode, $nodesOfType, COMMAND_PRIORITY_HIGH, DELETE_CHARACTER_COMMAND, FORMAT_ELEMENT_COMMAND, FORMAT_TEXT_COMMAND, KEY_ESCAPE_COMMAND, PASTE_COMMAND } from 'lexical'
 import React from 'react'
 
 import { AtLinkResultsPopup } from '@/components/ui/AtLinkResultsPopup'
@@ -440,6 +428,9 @@ export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps)
         }
 
         const parent = focusedAtLinkNode.getParent()
+        if (!parent) {
+          return
+        }
         // we have to get the children nodes
         const children = parent.getChildren()
 

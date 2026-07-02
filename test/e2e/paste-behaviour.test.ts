@@ -219,14 +219,14 @@ test.describe('Paste behaviour', async () => {
               <div data-inkling-card-toolbar="callout">
                 <ul>
                   <li>
-                    <button aria-label="Edit" data-kg-active="false" type="button">
+                    <button aria-label="Edit" data-inkling-active="false" type="button">
                       <svg></svg>
                     </button>
                     <span role="tooltip">Edit</span>
                   </li>
                   <li></li>
                   <li>
-                    <button aria-label="Save as snippet" data-kg-active="false" type="button">
+                    <button aria-label="Save as snippet" data-inkling-active="false" type="button">
                       <svg></svg>
                     </button>
                     <span role="tooltip">Save as snippet</span>

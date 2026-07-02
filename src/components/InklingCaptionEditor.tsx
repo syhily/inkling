@@ -1,14 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister } from '@lexical/utils'
-import {
-  BLUR_COMMAND,
-  COMMAND_PRIORITY_HIGH,
-  COMMAND_PRIORITY_LOW,
-  FOCUS_COMMAND,
-  KEY_ARROW_DOWN_COMMAND,
-  KEY_ARROW_UP_COMMAND,
-  KEY_ENTER_COMMAND,
-} from 'lexical'
+import { mergeRegister, BLUR_COMMAND, COMMAND_PRIORITY_HIGH, COMMAND_PRIORITY_LOW, FOCUS_COMMAND, KEY_ARROW_DOWN_COMMAND, KEY_ARROW_UP_COMMAND, KEY_ENTER_COMMAND } from 'lexical'
 import React, { useCallback, useContext } from 'react'
 
 import type { NestedKeyboardEvent } from '@/types/events'

@@ -9,6 +9,12 @@ describe('Markdown HTML renderer', function () {
       result.should.match(/<h2 id="h%C3%A9ader-two">/)
     })
 
+    it('deduplicates heading ids', function () {
+      const result = render('# Hello\n# Hello', { inklingVersion: '4.0' })
+      result.should.match(/<h1 id="hello">/)
+      result.should.match(/<h1 id="hello2">/)
+    })
+
     it('outputs `loading="lazy"` on images', function () {
       const markdown = `![](https://mysite.com/content/images/lazy.png)`
       const result = render(markdown, { inklingVersion: '3.0' })

@@ -1,7 +1,9 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
+import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
+import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface VideoNodeData {
@@ -48,7 +50,7 @@ export function renderVideoNode(node: VideoNodeData, options: VideoRenderOptions
 
   const document = options.createDocument!()
 
-  if (!node.src || node.src.trim() === '') {
+  if (!node.src || node.src.trim() === '' || !isSafeUrl(node.src)) {
     return renderEmptyContainer(document)
   }
 
@@ -76,14 +78,17 @@ export function cardTemplate({ node, cardClasses }: { node: VideoNodeData; cardC
   const heightAttr = hasVideoDimensions(node) ? `height="${node.height}"` : ''
   const posterAttr = hasVideoDimensions(node) ? `poster="${getPosterSpacerSrc(node.width, node.height)}"` : ''
   const autoplayAttr = node.loop ? 'loop autoplay muted' : ''
-  const thumbnailSrc = node.customThumbnailSrc || node.thumbnailSrc
+  const safeThumbnailSrc = isSafeUrl(node.thumbnailSrc) ? node.thumbnailSrc : ''
+  const safeCustomThumbnailSrc = isSafeUrl(node.customThumbnailSrc) ? node.customThumbnailSrc : ''
+  const thumbnailSrc = safeCustomThumbnailSrc || safeThumbnailSrc
+  const escapedCaption = node.caption ? escapeHtml(node.caption) : ''
   const hideControlsClass = node.loop ? ' inkling-video-hide' : ''
 
   return `
-        <figure class="${cardClasses}" data-inkling-thumbnail=${node.thumbnailSrc} data-inkling-custom-thumbnail=${node.customThumbnailSrc}>
+        <figure class="${cardClasses}" data-inkling-thumbnail=${safeThumbnailSrc} data-inkling-custom-thumbnail=${safeCustomThumbnailSrc}>
             <div class="inkling-video-container">
                 <video
-                    src="${node.src}"
+                    src="${isSafeUrl(node.src) ? node.src : ''}"
                     ${posterAttr}
                     ${widthAttr}
                     ${heightAttr}
@@ -132,7 +137,7 @@ export function cardTemplate({ node, cardClasses }: { node: VideoNodeData; cardC
                     </div>
                 </div>
             </div>
-            ${node.caption ? `<figcaption>${node.caption}</figcaption>` : ''}
+            ${escapedCaption ? `<figcaption>${escapedCaption}</figcaption>` : ''}
         </figure>
     `
 }
@@ -146,7 +151,11 @@ export function emailCardTemplate({
   options: EmailVideoRenderOptions
   cardClasses: string
 }) {
-  const thumbnailSrc = node.customThumbnailSrc || node.thumbnailSrc
+  const safeThumbnailSrc = isSafeUrl(node.thumbnailSrc) ? node.thumbnailSrc : ''
+  const safeCustomThumbnailSrc = isSafeUrl(node.customThumbnailSrc) ? node.customThumbnailSrc : ''
+  const thumbnailSrc = safeCustomThumbnailSrc || safeThumbnailSrc
+  const safePostUrl = isSafeUrl(options.postUrl) ? options.postUrl : ''
+  const escapedCaption = node.caption ? escapeHtml(node.caption) : ''
   const emailTemplateMaxWidth = 600
   const aspectRatio = hasVideoDimensions(node) ? node.width / node.height : DEFAULT_EMAIL_ASPECT_RATIO
   const emailSpacerWidth = Math.round(emailTemplateMaxWidth / 4)
@@ -160,7 +169,7 @@ export function emailCardTemplate({
   return `
          <figure class="${cardClasses}">
             <!--[if !mso !vml]-->
-            <a class="inkling-video-preview" href="${options.postUrl}" aria-label="Play video" style="mso-hide: all">
+            <a class="inkling-video-preview" href="${safePostUrl}" aria-label="Play video" style="mso-hide: all">
                 <table
                     cellpadding="0"
                     cellspacing="0"
@@ -184,14 +193,14 @@ export function emailCardTemplate({
             <!--[endif]-->
 
             <!--[if vml]>
-            <v:group xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" coordsize="${emailTemplateMaxWidth},${emailSpacerHeight}" coordorigin="0,0" href="${options.postUrl}" style="width:${emailTemplateMaxWidth}px;height:${emailSpacerHeight}px;">
+            <v:group xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" coordsize="${emailTemplateMaxWidth},${emailSpacerHeight}" coordorigin="0,0" href="${safePostUrl}" style="width:${emailTemplateMaxWidth}px;height:${emailSpacerHeight}px;">
                 <v:rect fill="t" stroked="f" style="position:absolute;width:${emailTemplateMaxWidth};height:${emailSpacerHeight};"><v:fill src="${thumbnailSrc}" type="frame"/></v:rect>
                 <v:oval fill="t" strokecolor="white" strokeweight="4px" style="position:absolute;left:${outlookCircleLeft};top:${outlookCircleTop};width:78;height:78"><v:fill color="black" opacity="30%" /></v:oval>
                 <v:shape coordsize="24,32" path="m,l,32,24,16,xe" fillcolor="white" stroked="f" style="position:absolute;left:${outlookPlayLeft};top:${outlookPlayTop};width:30;height:34;" />
             </v:group>
             <![endif]-->
 
-            ${node.caption ? `<figcaption>${node.caption}</figcaption>` : ''}
+            ${escapedCaption ? `<figcaption>${escapedCaption}</figcaption>` : ''}
         </figure>
         `
 }

@@ -26,9 +26,9 @@ describe('AudioNode', () => {
     })
   })
 
-  it('exposes a static kgMenu entry', () => {
-    expect(AudioNode.kgMenu[0].label).toBe('Audio')
-    expect(AudioNode.kgMenu[0].insertCommand).toBe(INSERT_AUDIO_COMMAND)
+  it('exposes a static cardMenu entry', () => {
+    expect(AudioNode.cardMenu[0].label).toBe('Audio')
+    expect(AudioNode.cardMenu[0].insertCommand).toBe(INSERT_AUDIO_COMMAND)
   })
 
   it('returns the audio icon', async () => {

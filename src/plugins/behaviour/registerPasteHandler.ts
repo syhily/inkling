@@ -1,0 +1,116 @@
+import type { LexicalEditor } from 'lexical'
+
+import { $generateNodesFromDOM } from '@lexical/html'
+import { DRAG_DROP_PASTE } from '@lexical/rich-text'
+import { $isRangeSelection, $getSelection, $insertNodes, COMMAND_PRIORITY_LOW, PASTE_COMMAND } from 'lexical'
+
+import { MIME_TEXT_HTML, MIME_TEXT_PLAIN, PASTE_MARKDOWN_COMMAND } from '@/plugins/MarkdownPastePlugin'
+import { isValidUrl } from '@/utils/isInternalUrl'
+import { shouldIgnoreEvent } from '@/utils/shouldIgnoreEvent'
+
+import { PASTE_LINK_COMMAND } from './commands'
+import { normalizePastedHtml } from './utils'
+
+interface PasteHandlerDeps {
+  isNested?: boolean
+}
+
+export function registerPasteHandler(editor: LexicalEditor, deps: PasteHandlerDeps) {
+  const { isNested } = deps
+
+  return editor.registerCommand(
+    PASTE_COMMAND,
+    (clipboardEvent) => {
+      // avoid Inkling behaviours when an inner element (e.g. a card input) has focus
+      // and event wasn't triggered from nested editor
+      if (document.activeElement !== editor.getRootElement() && !isNested) {
+        // ignore default Lexical behaviour when inside an inner input or contenteditable,
+        // without this paste events inside CodeMirror for example will replace the card
+        if (shouldIgnoreEvent(clipboardEvent)) {
+          return true
+        } else {
+          return false
+        }
+      }
+
+      if (!(clipboardEvent instanceof ClipboardEvent)) {
+        return false
+      }
+
+      const clipboardData = clipboardEvent.clipboardData
+      if (!clipboardData) {
+        return false
+      }
+
+      const text = clipboardData.getData(MIME_TEXT_PLAIN)
+
+      // Use shared URL validator so mailto:, ftp:, tel: etc. are handled consistently.
+      const linkMatch = text && isValidUrl(text) ? ([text, text] as RegExpMatchArray) : null
+      if (linkMatch) {
+        // avoid any conversion if we're pasting onto a card shortcut
+        const selection = $getSelection()
+        const node = $isRangeSelection(selection) ? selection.anchor.getNode() : null
+        if (node && node.getTextContent().startsWith('/')) {
+          return false
+        }
+
+        // we're pasting a URL, convert it to an embed/bookmark/link
+        clipboardEvent.preventDefault()
+        editor.dispatchCommand(PASTE_LINK_COMMAND, { linkMatch })
+
+        return true
+      }
+
+      const html = clipboardData.getData(MIME_TEXT_HTML)
+      if (text && !html) {
+        clipboardEvent?.preventDefault()
+        editor.dispatchCommand(PASTE_MARKDOWN_COMMAND, { text, allowBr: true })
+
+        return true
+      }
+
+      // Override Lexical's default paste behaviour when copy/pasting images:
+      //   - By default, Lexical ignores files if there is text/html or text/plain content in the clipboard
+      //   - This causes images copied from e.g. Slack to not paste correctly
+      //   - With this override, we allow pasting images when there is a single image file in the clipboard and if the text/html contains a <img /> tag
+      //
+      // Lexical code:
+      // https://github.com/facebook/lexical/blob/main/packages/lexical-rich-text/src/index.ts#L492-L494
+      // https://github.com/facebook/lexical/blob/main/packages/lexical-rich-text/src/index.ts#L1035
+      const files = clipboardData.files ? Array.from(clipboardData.files) : []
+      const imageFiles = files.filter(
+        (file): file is File => file instanceof File && file.type.startsWith('image/'),
+      )
+      const imgTagMatch = html && !!html.match(/<\s*img\b/gi)
+
+      if (imageFiles.length === 1 && imgTagMatch) {
+        clipboardEvent.preventDefault()
+        editor.dispatchCommand(DRAG_DROP_PASTE, files)
+
+        return true
+      }
+
+      // Normalize Office-style pasted HTML so `white-space: pre-wrap` doesn't
+      // turn newlines inside inline elements into line breaks that split text
+      // formatting. Fall back to Lexical's default paste for empty HTML.
+      if (html) {
+        clipboardEvent.preventDefault()
+        editor.update(() => {
+          const selection = $getSelection()
+          if (!$isRangeSelection(selection)) {
+            return
+          }
+          const normalizedHtml = normalizePastedHtml(html)
+          const parser = new DOMParser()
+          const dom = parser.parseFromString(normalizedHtml, 'text/html')
+          const nodes = $generateNodesFromDOM(editor, dom)
+          $insertNodes(nodes)
+        })
+        return true
+      }
+
+      return false
+    },
+    COMMAND_PRIORITY_LOW,
+  )
+}

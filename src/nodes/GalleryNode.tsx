@@ -29,7 +29,7 @@ export class GalleryNode extends BaseGalleryNode {
   __captionEditor!: import('lexical').LexicalEditor | null
   __captionEditorInitialState!: import('lexical').EditorState | undefined
 
-  static kgMenu = [
+  static cardMenu = [
     {
       label: 'Gallery',
       desc: 'Create an image gallery',

@@ -2,6 +2,7 @@ import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
 
 import { render } from '@/markdown'
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
+import { sanitizeHtml } from '@/utils/sanitize-html'
 
 interface MarkdownNodeData {
   markdown: string
@@ -20,7 +21,7 @@ export function renderMarkdownNode(
 
   const document = options.createDocument()
 
-  const html = render(node.markdown || '', options as Record<string, unknown>)
+  const html = sanitizeHtml(render(node.markdown || '', options as Record<string, unknown>))
 
   const element = document.createElement('div')
   element.innerHTML = html

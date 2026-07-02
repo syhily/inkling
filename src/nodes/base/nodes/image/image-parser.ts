@@ -23,7 +23,7 @@ export function parseImageNode(ImageNode: new (data: Record<string, unknown>) =>
       if (img) {
         return {
           conversion(domNode: HTMLElement) {
-            const kgClass = domNode.className.match(/inkling-width-(wide|full)/)
+            const widthClass = domNode.className.match(/inkling-width-(wide|full)/)
             const grafClass = domNode.className.match(/graf--layout(FillWidth|OutsetCenter)/)
 
             if (!img) {
@@ -32,8 +32,8 @@ export function parseImageNode(ImageNode: new (data: Record<string, unknown>) =>
 
             const payload = readImageAttributesFromElement(img)
 
-            if (kgClass) {
-              payload.cardWidth = kgClass[1]
+            if (widthClass) {
+              payload.cardWidth = widthClass[1]
             } else if (grafClass) {
               payload.cardWidth = grafClass[1] === 'FillWidth' ? 'full' : 'wide'
             }

@@ -25,7 +25,7 @@ export class ToggleNode extends BaseToggleNode {
   __contentEditor!: LexicalEditor | null
   __contentEditorInitialState!: EditorState | undefined
 
-  static kgMenu = [
+  static cardMenu = [
     {
       label: 'Toggle',
       desc: 'Collapsible content block',

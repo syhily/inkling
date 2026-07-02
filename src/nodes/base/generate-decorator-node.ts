@@ -215,11 +215,7 @@ export function generateDecoratorNode<
       super(key)
       const dataset = data as Record<string, unknown>
       internalProps.forEach((prop) => {
-        if (typeof prop.default === 'boolean') {
-          this[prop.privateName] = dataset[prop.name] ?? prop.default
-        } else {
-          this[prop.privateName] = dataset[prop.name] || prop.default
-        }
+        this[prop.privateName] = dataset[prop.name] ?? prop.default
       })
     }
 

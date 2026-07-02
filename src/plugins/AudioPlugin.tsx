@@ -1,6 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister } from '@lexical/utils'
-import { COMMAND_PRIORITY_HIGH, COMMAND_PRIORITY_LOW } from 'lexical'
+import { mergeRegister, COMMAND_PRIORITY_HIGH, COMMAND_PRIORITY_LOW } from 'lexical'
 import React from 'react'
 
 import { $createAudioNode, AudioNode, INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'

@@ -8,7 +8,7 @@ import { HorizontalRuleNode as BaseHorizontalRuleNode } from '@/nodes/base'
 export const INSERT_HORIZONTAL_RULE_COMMAND = createCommand()
 
 export class HorizontalRuleNode extends BaseHorizontalRuleNode {
-  static kgMenu = {
+  static cardMenu = {
     label: 'Divider',
     desc: 'Insert a dividing line',
     Icon: DividerCardIcon,

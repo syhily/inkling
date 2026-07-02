@@ -17,12 +17,12 @@ describe('HtmlNode', function () {
   // NOTE: all tests should use this function, without it you need manual
   // try/catch and done handling to avoid assertion failures not triggering
   // failed tests
-  const editorTest = (testFn: () => void) => () =>
+  const editorTest = (testFn: () => Promise<void> | void) => () =>
     new Promise<void>((resolve, reject) => {
       editor.update(() => {
         try {
-          testFn()
-          resolve()
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
         } catch (e) {
           reject(e)
         }
@@ -48,7 +48,7 @@ describe('HtmlNode', function () {
 
   it(
     'matches node with $isImageNode',
-    editorTest(function () {
+    editorTest(async function () {
       const htmlNode = $createHtmlNode(dataset)
       $isHtmlNode(htmlNode).should.be.true()
     }),
@@ -57,7 +57,7 @@ describe('HtmlNode', function () {
   describe('data access', function () {
     it(
       'has getters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
 
         htmlNode.html.should.equal('<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>')
@@ -66,7 +66,7 @@ describe('HtmlNode', function () {
 
     it(
       'has setters for all properties',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
 
         htmlNode.html.should.equal('<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>')
@@ -77,7 +77,7 @@ describe('HtmlNode', function () {
 
     it(
       'has getDataset() convenience method',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
         const htmlNodeDataset = htmlNode.getDataset()
 
@@ -98,7 +98,7 @@ describe('HtmlNode', function () {
 
     it(
       'has isEmpty() convenience method',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
 
         htmlNode.isEmpty().should.be.false()
@@ -111,7 +111,7 @@ describe('HtmlNode', function () {
   describe('isEmpty()', function () {
     it(
       'returns true if markdown is empty',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
 
         htmlNode.isEmpty().should.be.false()
@@ -124,7 +124,7 @@ describe('HtmlNode', function () {
   describe('getType', function () {
     it(
       'returns the correct node type',
-      editorTest(function () {
+      editorTest(async function () {
         HtmlNode.getType().should.equal('html')
       }),
     )
@@ -133,7 +133,7 @@ describe('HtmlNode', function () {
   describe('getPropertyDefaults', function () {
     it(
       'returns the correct default values',
-      editorTest(function () {
+      editorTest(async function () {
         const defaults = HtmlNode.getPropertyDefaults()
 
         defaults.should.deepEqual({
@@ -155,7 +155,7 @@ describe('HtmlNode', function () {
   describe('clone', function () {
     it(
       'returns a copy of the current node',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
         const htmlNodeDataset = htmlNode.getDataset()
         const clone = HtmlNode.clone(htmlNode) as HtmlNode
@@ -169,7 +169,7 @@ describe('HtmlNode', function () {
   describe('urlTransformMap', function () {
     it(
       'contains the expected URL mapping',
-      editorTest(function () {
+      editorTest(async function () {
         HtmlNode.urlTransformMap.should.deepEqual({
           html: 'html',
         })
@@ -180,7 +180,7 @@ describe('HtmlNode', function () {
   describe('hasEditMode', function () {
     it(
       'returns true',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
         htmlNode.hasEditMode().should.be.true()
       }),
@@ -190,12 +190,12 @@ describe('HtmlNode', function () {
   describe('exportDOM', function () {
     it(
       'creates a html card',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
         const result = htmlNode.exportDOM(editor, exportOptions)
         result.type.should.equal('value')
         const element = result.element as HTMLTextAreaElement
-        element.value.should.prettifyTo(html`
+        await element.value.should.prettifyTo(html`
           <!--inkling-card-begin: html-->
           <p>Paragraph with:</p>
           <ul>
@@ -209,7 +209,7 @@ describe('HtmlNode', function () {
 
     it(
       'renders an empty span with missing html',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode()
         const result = htmlNode.exportDOM(editor, exportOptions)
         result.type.should.equal('inner')
@@ -221,7 +221,7 @@ describe('HtmlNode', function () {
 
     it(
       'renders unclosed tags',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode({ html: '<div style="color:red">' })
         const result = htmlNode.exportDOM(editor, exportOptions)
         result.type.should.equal('value')
@@ -236,7 +236,7 @@ describe('HtmlNode', function () {
 
     it(
       'renders html entities',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode({ html: '<p>&lt;pre&gt;Test&lt;/pre&gt;</p>' })
         const result = htmlNode.exportDOM(editor, exportOptions)
         result.type.should.equal('value')
@@ -250,7 +250,7 @@ describe('HtmlNode', function () {
 
     it(
       'handles single-quote attributes',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode({
           html: '<div data-graph-name=\'The "all-in" cost of a grant\'>Test</div>',
         })
@@ -302,7 +302,7 @@ describe('HtmlNode', function () {
 
         it(
           'renders on web but not email if showOnWeb is true and showOnEmail is false',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = { showOnEmail: false, showOnWeb: true, segment: '' }
             testWebRender(visibility)
             testBlankRender(visibility, 'email')
@@ -311,7 +311,7 @@ describe('HtmlNode', function () {
 
         it(
           'renders on email and not web if showOnEmail is true and showOnWeb is false',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = { showOnEmail: true, showOnWeb: false, segment: '' }
             testEmailRender(visibility)
             testBlankRender(visibility, 'web')
@@ -320,7 +320,7 @@ describe('HtmlNode', function () {
 
         it(
           'renders both on web and email if showOnEmail and showOnWeb are true',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = { showOnEmail: true, showOnWeb: true, segment: '' }
             testWebRender(visibility)
             testEmailRender(visibility)
@@ -371,7 +371,7 @@ describe('HtmlNode', function () {
 
         it(
           'web: excludes gated wrapper when shown to everyone',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = {
               web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
               email: { memberSegment: ALL_MEMBERS_SEGMENT },
@@ -382,7 +382,7 @@ describe('HtmlNode', function () {
 
         it(
           'web: includes gated wrapper with member-only params',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = {
               web: { nonMember: false, memberSegment: ALL_MEMBERS_SEGMENT },
               email: { memberSegment: ALL_MEMBERS_SEGMENT },
@@ -393,7 +393,7 @@ describe('HtmlNode', function () {
 
         it(
           'web: includes gated wrapper with anonymous-only params',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = {
               web: { nonMember: true, memberSegment: '' },
               email: { memberSegment: ALL_MEMBERS_SEGMENT },
@@ -404,7 +404,7 @@ describe('HtmlNode', function () {
 
         it(
           'email: excludes content when hidden from all members',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = {
               web: { nonMember: true, memberSegment: NO_MEMBERS_SEGMENT },
               email: { memberSegment: '' },
@@ -415,7 +415,7 @@ describe('HtmlNode', function () {
 
         it(
           'email: skips segment wrapper when sent to all members',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = {
               web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
               email: { memberSegment: ALL_MEMBERS_SEGMENT },
@@ -427,7 +427,7 @@ describe('HtmlNode', function () {
 
         it(
           'email: includes content with member segment wrapper',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = {
               web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
               email: { memberSegment: 'status:free' },
@@ -438,7 +438,7 @@ describe('HtmlNode', function () {
 
         it(
           'handles web-only (everyone)',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = {
               web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
               email: { memberSegment: NO_MEMBERS_SEGMENT },
@@ -450,7 +450,7 @@ describe('HtmlNode', function () {
 
         it(
           'handles web-only (members-only)',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = {
               web: { nonMember: false, memberSegment: ALL_MEMBERS_SEGMENT },
               email: { memberSegment: NO_MEMBERS_SEGMENT },
@@ -462,7 +462,7 @@ describe('HtmlNode', function () {
 
         it(
           'handles email-only (free members)',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = {
               web: { nonMember: false, memberSegment: NO_MEMBERS_SEGMENT },
               email: { memberSegment: 'status:free' },
@@ -474,7 +474,7 @@ describe('HtmlNode', function () {
 
         it(
           'handles visibility for no-one',
-          editorTest(function () {
+          editorTest(async function () {
             const visibility = {
               web: { nonMember: false, memberSegment: NO_MEMBERS_SEGMENT },
               email: { memberSegment: NO_MEMBERS_SEGMENT },
@@ -490,7 +490,7 @@ describe('HtmlNode', function () {
   describe('importDOM', function () {
     it(
       'parses a html node',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <span
             ><!--inkling-card-begin: html-->
@@ -506,7 +506,7 @@ describe('HtmlNode', function () {
 
     it(
       'removes the html end comment from the DOM after parsing',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <span
             ><!--inkling-card-begin: html-->
@@ -527,7 +527,7 @@ describe('HtmlNode', function () {
 
     it(
       'does not consume sibling nodes when the html end comment is missing',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <span
             ><!--inkling-card-begin: html-->
@@ -548,7 +548,7 @@ describe('HtmlNode', function () {
 
     it(
       'parses html table',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <table style="float:right">
             <tr>
@@ -573,7 +573,7 @@ describe('HtmlNode', function () {
 
     it(
       'parses table nested in another table',
-      editorTest(function () {
+      editorTest(async function () {
         const document = createDocument(html`
           <table id="table1">
             <tr>
@@ -611,7 +611,7 @@ describe('HtmlNode', function () {
   describe('exportJSON', function () {
     it(
       'contains all data',
-      editorTest(function () {
+      editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
         const json = htmlNode.exportJSON()
 
@@ -720,7 +720,7 @@ describe('HtmlNode', function () {
   describe('getTextContent', function () {
     it(
       'returns contents',
-      editorTest(function () {
+      editorTest(async function () {
         const node = $createHtmlNode()
         node.getTextContent().should.equal('')
 
@@ -741,28 +741,28 @@ describe('HtmlNode', function () {
     describe('with old visibility format', function () {
       it(
         'returns false when both showOnEmail and showOnWeb are true and segment is blank',
-        editorTest(function () {
+        editorTest(async function () {
           testIsVisibilityActive(false, { showOnEmail: true, showOnWeb: true, segment: '' })
         }),
       )
 
       it(
         'returns true when showOnEmail is false',
-        editorTest(function () {
+        editorTest(async function () {
           testIsVisibilityActive(true, { showOnEmail: false, showOnWeb: true, segment: '' })
         }),
       )
 
       it(
         'returns true when showOnWeb is false',
-        editorTest(function () {
+        editorTest(async function () {
           testIsVisibilityActive(true, { showOnEmail: true, showOnWeb: false, segment: '' })
         }),
       )
 
       it(
         'returns true when segment is not empty',
-        editorTest(function () {
+        editorTest(async function () {
           testIsVisibilityActive(true, { showOnEmail: true, showOnWeb: true, segment: 'status:-free' })
         }),
       )
@@ -771,7 +771,7 @@ describe('HtmlNode', function () {
     describe('with new visibility format', function () {
       it(
         'returns false when shown to everyone',
-        editorTest(function () {
+        editorTest(async function () {
           testIsVisibilityActive(false, {
             web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
             email: { memberSegment: ALL_MEMBERS_SEGMENT },
@@ -781,7 +781,7 @@ describe('HtmlNode', function () {
 
       it(
         'returns true when hidden on web for non-members',
-        editorTest(function () {
+        editorTest(async function () {
           testIsVisibilityActive(true, {
             web: { nonMember: false, memberSegment: ALL_MEMBERS_SEGMENT },
             email: { memberSegment: ALL_MEMBERS_SEGMENT },
@@ -791,7 +791,7 @@ describe('HtmlNode', function () {
 
       it(
         'returns true when hidden on web for members',
-        editorTest(function () {
+        editorTest(async function () {
           testIsVisibilityActive(true, {
             web: { nonMember: true, memberSegment: 'status:free' },
             email: { memberSegment: ALL_MEMBERS_SEGMENT },
@@ -801,7 +801,7 @@ describe('HtmlNode', function () {
 
       it(
         'returns true when hidden on email for all members',
-        editorTest(function () {
+        editorTest(async function () {
           testIsVisibilityActive(true, {
             web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
             email: { memberSegment: '' },
@@ -811,7 +811,7 @@ describe('HtmlNode', function () {
 
       it(
         'returns true when hidden on email for some members',
-        editorTest(function () {
+        editorTest(async function () {
           testIsVisibilityActive(true, {
             web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
             email: { memberSegment: 'status:free' },

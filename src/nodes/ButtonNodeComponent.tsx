@@ -27,7 +27,7 @@ export function ButtonNodeComponent({
 }: ButtonNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
   const { cardConfig } = React.useContext(InklingComposerContext)
-  const { isEditing, isSelected } = React.useContext(CardContext)
+  const { isEditing, isSelected, setEditing } = React.useContext(CardContext)
   const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
 
   const handleButtonTextChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -60,7 +60,7 @@ export function ButtonNodeComponent({
   const handleToolbarEdit = (event: React.MouseEvent): void => {
     event.preventDefault()
     event.stopPropagation()
-    // TODO: implement edit mode
+    setEditing(true)
   }
 
   return (

@@ -343,6 +343,39 @@ describe('HeaderNode', function () {
           renderedHtml.should.equal(cleanedExpectedHtml)
         }),
       )
+
+      it(
+        'escapes user text and drops unsafe URLs in exported HTML',
+        editorTest(function () {
+          const payload = {
+            version: 2,
+            backgroundImageSrc: 'javascript:alert(1)',
+            buttonEnabled: true,
+            buttonText: '<em>Button</em>',
+            buttonUrl: 'https://example.com/',
+            header: '<script>alert(1)</script>',
+            subheader: '<img src=x onerror=alert(1)>',
+            alignment: 'center',
+            backgroundColor: '#F0F0F0',
+            backgroundSize: 'cover',
+            textColor: '#000000',
+            buttonColor: '#000000',
+            buttonTextColor: '#FFFFFF',
+            layout: 'full',
+            swapped: false,
+          }
+          const node = $createHeaderNode(payload)
+          const { element } = node.exportDOM(editor, exportOptions)
+          const html = (element as HTMLElement).outerHTML
+
+          html.should.containEql('&lt;script&gt;alert(1)&lt;/script&gt;')
+          html.should.containEql('&lt;img src=x onerror=alert(1)&gt;')
+          html.should.containEql('&lt;em&gt;Button&lt;/em&gt;')
+          html.should.not.containEql('<script>alert(1)</script>')
+          html.should.not.containEql('javascript:alert(1)')
+          should.exist((element as HTMLElement).querySelector('.inkling-header-card-button'))
+        }),
+      )
     })
   })
 })

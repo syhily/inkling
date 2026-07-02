@@ -33,6 +33,13 @@ describe('cleanBasicHtml', function () {
     result.should.equal('')
   })
 
+  it('trims trailing non-breaking space entities', function () {
+    const html = 'Hello&nbsp;'
+    const result = cleanBasicHtml(html, options)
+
+    result.should.equal('Hello')
+  })
+
   it('keeps whitespace between text', function () {
     const html = '&nbsp; <br>Testing &nbsp;Significant Whitespace<br />&nbsp;'
     const result = cleanBasicHtml(html, options)

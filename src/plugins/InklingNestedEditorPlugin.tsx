@@ -1,13 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister } from '@lexical/utils'
-import {
-  $createNodeSelection,
-  $getSelection,
-  $setSelection,
-  BLUR_COMMAND,
-  COMMAND_PRIORITY_LOW,
-  KEY_ENTER_COMMAND,
-} from 'lexical'
+import { mergeRegister, $createNodeSelection, $getSelection, $setSelection, BLUR_COMMAND, COMMAND_PRIORITY_LOW, KEY_ENTER_COMMAND } from 'lexical'
 import React from 'react'
 
 import type { InklingEditorInternals } from '@/types/lexical-internals'

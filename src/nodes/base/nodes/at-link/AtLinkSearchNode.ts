@@ -51,7 +51,7 @@ export class AtLinkSearchNode extends TextNode {
     return span
   }
 
-  updateDOM(prevNode: AtLinkSearchNode, dom: HTMLElement, config: EditorConfig) {
+  updateDOM(prevNode: this, dom: HTMLElement, config: EditorConfig) {
     dom.dataset.placeholder =
       this.__placeholder !== null ? this.__placeholder : this.__text ? '' : this.defaultPlaceholder
 

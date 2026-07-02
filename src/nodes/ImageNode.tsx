@@ -39,7 +39,7 @@ export class ImageNode extends BaseImageNode {
   __selector: React.ComponentType<{ nodeKey: NodeKey }> | undefined
   __isImageHidden: boolean | undefined
 
-  static kgMenu = [
+  static cardMenu = [
     {
       label: 'Image',
       desc: 'Upload, or embed with /image [url]',

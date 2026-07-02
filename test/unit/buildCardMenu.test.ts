@@ -10,7 +10,7 @@ describe('buildCardMenu', function () {
       [
         'one',
         {
-          kgMenu: {
+          cardMenu: {
             label: 'One',
             desc: 'Card test one',
             Icon,
@@ -21,7 +21,7 @@ describe('buildCardMenu', function () {
       [
         'two',
         {
-          kgMenu: {
+          cardMenu: {
             label: 'Two',
             desc: 'Card test two',
             Icon,
@@ -65,7 +65,7 @@ describe('buildCardMenu', function () {
       [
         'one',
         {
-          kgMenu: {
+          cardMenu: {
             label: 'One',
             desc: 'Card test one',
             Icon,
@@ -76,7 +76,7 @@ describe('buildCardMenu', function () {
       [
         'two',
         {
-          kgMenu: {
+          cardMenu: {
             label: 'Two',
             desc: 'Card test two',
             section: 'Secondary',
@@ -127,7 +127,7 @@ describe('buildCardMenu', function () {
       [
         'one',
         {
-          kgMenu: [
+          cardMenu: [
             {
               label: 'One',
               desc: 'Card test one',
@@ -178,7 +178,7 @@ describe('buildCardMenu', function () {
         [
           'one',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'One',
               desc: 'Card test one',
               Icon,
@@ -190,7 +190,7 @@ describe('buildCardMenu', function () {
         [
           'two',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'Two',
               desc: 'Card test two',
               Icon,
@@ -235,7 +235,7 @@ describe('buildCardMenu', function () {
         [
           'one',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'One',
               desc: 'Card test one',
               Icon,
@@ -247,7 +247,7 @@ describe('buildCardMenu', function () {
         [
           'two',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'Two',
               desc: 'Card test two',
               Icon,
@@ -286,7 +286,7 @@ describe('buildCardMenu', function () {
         [
           'one',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'One',
               desc: 'Card test one',
               Icon,
@@ -298,7 +298,7 @@ describe('buildCardMenu', function () {
         [
           'two',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'Two',
               desc: 'Card test two',
               Icon,
@@ -337,7 +337,7 @@ describe('buildCardMenu', function () {
         [
           'one',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'One',
               desc: 'Card test one',
               Icon,
@@ -349,7 +349,7 @@ describe('buildCardMenu', function () {
         [
           'two',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'Two',
               desc: 'Card test two',
               section: 'Secondary',
@@ -388,7 +388,7 @@ describe('buildCardMenu', function () {
         [
           'one',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'One',
               desc: 'Card test one',
               Icon,
@@ -400,7 +400,7 @@ describe('buildCardMenu', function () {
         [
           'two',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'Two',
               desc: 'Card test two',
               section: 'Secondary',
@@ -423,7 +423,7 @@ describe('buildCardMenu', function () {
         [
           'one',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'One',
               desc: 'Card test one',
               Icon,
@@ -435,7 +435,7 @@ describe('buildCardMenu', function () {
         [
           'two',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'Two',
               desc: 'Card test two',
               Icon,
@@ -473,7 +473,7 @@ describe('buildCardMenu', function () {
         [
           'one',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'One wow',
               desc: 'Card test one',
               Icon,
@@ -485,7 +485,7 @@ describe('buildCardMenu', function () {
         [
           'two',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'Two',
               desc: 'Card test two',
               Icon,
@@ -528,7 +528,9 @@ describe('buildCardMenu', function () {
             [
               {
                 Icon: expect.any(Function),
-                insertCommand: {},
+                insertCommand: {
+                  type: 'INSERT_SNIPPET_COMMAND',
+                },
                 insertParams: {
                   name: 'One snippet',
                 },
@@ -540,7 +542,9 @@ describe('buildCardMenu', function () {
               },
               {
                 Icon: expect.any(Function),
-                insertCommand: {},
+                insertCommand: {
+                  type: 'INSERT_SNIPPET_COMMAND',
+                },
                 insertParams: {
                   name: 'Two snippet',
                 },
@@ -566,7 +570,9 @@ describe('buildCardMenu', function () {
             [
               {
                 Icon: expect.any(Function),
-                insertCommand: {},
+                insertCommand: {
+                  type: 'INSERT_SNIPPET_COMMAND',
+                },
                 insertParams: {
                   name: 'One snippet',
                 },
@@ -577,7 +583,9 @@ describe('buildCardMenu', function () {
               },
               {
                 Icon: expect.any(Function),
-                insertCommand: {},
+                insertCommand: {
+                  type: 'INSERT_SNIPPET_COMMAND',
+                },
                 insertParams: {
                   name: 'Two snippet',
                 },
@@ -609,7 +617,9 @@ describe('buildCardMenu', function () {
             [
               {
                 Icon: expect.any(Function),
-                insertCommand: {},
+                insertCommand: {
+                  type: 'INSERT_SNIPPET_COMMAND',
+                },
                 insertParams: {
                   name: 'Test1',
                 },
@@ -621,7 +631,9 @@ describe('buildCardMenu', function () {
               },
               {
                 Icon: expect.any(Function),
-                insertCommand: {},
+                insertCommand: {
+                  type: 'INSERT_SNIPPET_COMMAND',
+                },
                 insertParams: {
                   name: 'Test2',
                 },
@@ -643,7 +655,7 @@ describe('buildCardMenu', function () {
         [
           'one',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'One',
               desc: 'Card test one',
               Icon,
@@ -655,7 +667,7 @@ describe('buildCardMenu', function () {
         [
           'two',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'Two',
               desc: 'Card test two',
               Icon,
@@ -688,7 +700,7 @@ describe('buildCardMenu', function () {
         [
           'one',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'One',
               desc: 'Card test one',
               Icon,
@@ -700,7 +712,7 @@ describe('buildCardMenu', function () {
         [
           'two',
           {
-            kgMenu: {
+            cardMenu: {
               label: 'Two',
               desc: 'Card test two',
               Icon,

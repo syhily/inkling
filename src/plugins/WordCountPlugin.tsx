@@ -1,11 +1,52 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister } from '@lexical/utils'
-import { $getRoot, $isElementNode } from 'lexical'
+import { mergeRegister, $getNodeByKey, $getRoot, $isElementNode, $isRootNode, type LexicalEditor, type LexicalNode } from 'lexical'
 import throttle from 'lodash/throttle'
 import React from 'react'
 
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { countWords } from '@/utils'
+
+interface WordCountState {
+  nodeWordCounts: Map<string, number>
+  lastWordCount: number
+}
+
+const editorWordCountStates = new WeakMap<LexicalEditor, WordCountState>()
+
+function getWordCountState(topLevelEditor: LexicalEditor): WordCountState {
+  let state = editorWordCountStates.get(topLevelEditor)
+  if (!state) {
+    state = { nodeWordCounts: new Map<string, number>(), lastWordCount: 0 }
+    editorWordCountStates.set(topLevelEditor, state)
+  }
+  return state
+}
+
+function getNodeWordCount(node: LexicalNode): number {
+  if ($isElementNode(node)) {
+    let textContent = ''
+    const children = node.getChildren()
+    const childrenLength = children.length
+    for (let i = 0; i < childrenLength; i++) {
+      const child = children[i]
+      textContent += child.getTextContent()
+      if ($isElementNode(child) && i !== childrenLength - 1 && !child.isInline()) {
+        textContent += '\n\n'
+      }
+    }
+    return countWords(textContent)
+  }
+
+  return countWords(node.getTextContent())
+}
+
+function findRootChild(node: LexicalNode): LexicalNode | null {
+  let current: LexicalNode | null = node
+  while (current && !$isRootNode(current.getParent())) {
+    current = current.getParent()
+  }
+  return current
+}
 
 // TODO: language is not currently used but in future we should switch to using
 // Intl.Segmenter to get more accurate word counts for non-latin languages. For
@@ -28,15 +69,28 @@ export const WordCountPlugin = ({
       onWordCountChangeRef.current = onChange
     }
 
-    let lastWordCount = 0
+    let pendingDirtyKeys = new Set<string>()
 
-    const countEditorWords = () => {
-      let wordCount = 0
+    const getTopLevelEditor = (): LexicalEditor => {
       let topLevelEditor = editor
-
       while (topLevelEditor._parentEditor) {
         topLevelEditor = topLevelEditor._parentEditor
       }
+      return topLevelEditor
+    }
+
+    const emitCount = (count: number) => {
+      const topLevelEditor = getTopLevelEditor()
+      const state = getWordCountState(topLevelEditor)
+      if (count !== state.lastWordCount) {
+        state.lastWordCount = count
+        onChange(count)
+      }
+    }
+
+    const countEditorWords = () => {
+      const topLevelEditor = getTopLevelEditor()
+      const state = getWordCountState(topLevelEditor)
 
       topLevelEditor.getEditorState().read(() => {
         // NOTE: we can't use RootNode.getTextContent() here because it will
@@ -44,36 +98,74 @@ export const WordCountPlugin = ({
         // the case for changes in nested editors
 
         const rootNode = $getRoot()
-
-        // Borrowing code from ElementNode.getTextContent() to bypass the cache
-        let textContent = ''
         const children = rootNode.getChildren()
-        const childrenLength = children.length
-        for (let i = 0; i < childrenLength; i++) {
-          const child = children[i]
-          textContent += child.getTextContent()
-          if ($isElementNode(child) && i !== childrenLength - 1 && !child.isInline()) {
-            textContent += `\n\n`
+        let wordCount = 0
+
+        state.nodeWordCounts.clear()
+        for (const child of children) {
+          const childCount = getNodeWordCount(child)
+          state.nodeWordCounts.set(child.getKey(), childCount)
+          wordCount += childCount
+        }
+
+        state.lastWordCount = wordCount
+        onChange(wordCount)
+      })
+    }
+
+    const flushIncrementalCount = () => {
+      if (pendingDirtyKeys.size === 0) {
+        return
+      }
+
+      const topLevelEditor = getTopLevelEditor()
+      const state = getWordCountState(topLevelEditor)
+      const keysToRecompute = new Set<string>()
+
+      topLevelEditor.getEditorState().read(() => {
+        for (const key of pendingDirtyKeys) {
+          const node = $getNodeByKey(key)
+          if (!node) {
+            continue
+          }
+          const rootChild = findRootChild(node)
+          if (rootChild) {
+            keysToRecompute.add(rootChild.getKey())
+          }
+        }
+        pendingDirtyKeys.clear()
+
+        const rootNode = $getRoot()
+        const children = rootNode.getChildren()
+        const currentKeys = new Set(children.map((child) => child.getKey()))
+
+        let wordCount = state.lastWordCount
+
+        for (const [key, count] of state.nodeWordCounts) {
+          if (!currentKeys.has(key)) {
+            wordCount -= count
+            state.nodeWordCounts.delete(key)
           }
         }
 
-        wordCount = countWords(textContent)
+        for (const child of children) {
+          const key = child.getKey()
+          if (keysToRecompute.has(key) || !state.nodeWordCounts.has(key)) {
+            wordCount -= state.nodeWordCounts.get(key) ?? 0
+            const childCount = getNodeWordCount(child)
+            state.nodeWordCounts.set(key, childCount)
+            wordCount += childCount
+          }
+        }
+
+        emitCount(wordCount)
       })
-
-      if (wordCount !== lastWordCount) {
-        lastWordCount = wordCount
-        onChange(wordCount)
-      }
-
-      // start with zero word count if editor is empty
-      if (wordCount === 0 && lastWordCount === 0) {
-        onChange(0)
-      }
     }
 
-    countEditorWords()
-
     const throttledCount = throttle(countEditorWords, 200)
+    const throttledIncrementalCount = throttle(flushIncrementalCount, 200)
+
+    countEditorWords()
 
     const cleanupRegister = mergeRegister(
       editor.registerUpdateListener(({ dirtyElements, dirtyLeaves, prevEditorState, tags }) => {
@@ -85,12 +177,29 @@ export const WordCountPlugin = ({
           return
         }
 
-        throttledCount()
+        // Nested editors don't receive top-level dirty maps, so fall back to a
+        // full recompute. The shared node count cache keeps subsequent top-level
+        // updates incremental.
+        if (editor._parentEditor) {
+          pendingDirtyKeys.clear()
+          throttledCount()
+          return
+        }
+
+        for (const key of dirtyLeaves) {
+          pendingDirtyKeys.add(key)
+        }
+        for (const key of dirtyElements.keys()) {
+          pendingDirtyKeys.add(key)
+        }
+
+        throttledIncrementalCount()
       }),
     )
 
     return () => {
       throttledCount.cancel()
+      throttledIncrementalCount.cancel()
       cleanupRegister()
 
       if (!editor._parentEditor) {

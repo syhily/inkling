@@ -4,6 +4,8 @@ import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { truncateHtml } from '@/nodes/base/utils/truncate'
+import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
+import { sanitizeHtml } from '@/utils/sanitize-html'
 
 interface BookmarkNodeData {
   url: string
@@ -21,7 +23,7 @@ export function renderBookmarkNode(node: BookmarkNodeData, options: ExportDOMOpt
 
   const document = options.createDocument!()
 
-  if (!node.url || node.url.trim() === '') {
+  if (!node.url || node.url.trim() === '' || !isSafeUrl(node.url)) {
     return renderEmptyContainer(document)
   }
 
@@ -38,30 +40,30 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
   const author = escapeHtml(node.author)
   const description = escapeHtml(node.description)
 
-  const icon = node.icon
-  const url = node.url
-  const thumbnail = node.thumbnail
-  const caption = node.caption
+  const safeUrl = isSafeUrl(node.url) ? node.url : ''
+  const safeIcon = isSafeUrl(node.icon) ? node.icon : ''
+  const safeThumbnail = isSafeUrl(node.thumbnail) ? node.thumbnail : ''
+  const caption = escapeHtml(node.caption)
 
   const element = document.createElement('div')
 
   const html = `
         <!--[if !mso !vml]-->
-            <figure class="inkling-card inkling-bookmark-card ${caption ? `inkling-card-hascaption` : ''}">
-                <a class="inkling-bookmark-container" href="${url}">
+            <figure class="inkling-card inkling-bookmark-card ${node.caption ? `inkling-card-hascaption` : ''}">
+                <a class="inkling-bookmark-container" href="${safeUrl}">
                     <div class="inkling-bookmark-content">
                         <div class="inkling-bookmark-title">${title}</div>
                         <div class="inkling-bookmark-description">${truncateHtml(description, 120, 90)}</div>
                         <div class="inkling-bookmark-metadata">
-                            ${icon ? `<img class="inkling-bookmark-icon" src="${icon}" alt="">` : ''}
+                            ${safeIcon ? `<img class="inkling-bookmark-icon" src="${safeIcon}" alt="">` : ''}
                             ${publisher ? `<span class="inkling-bookmark-author" src="${publisher}">${publisher}</span>` : ''}
                             ${author ? `<span class="inkling-bookmark-publisher" src="${author}">${author}</span>` : ''}
                         </div>
                     </div>
                     ${
-                      thumbnail
-                        ? `<div class="inkling-bookmark-thumbnail" style="background-image: url('${thumbnail}')">
-                        <img src="${thumbnail}" alt="" onerror="this.style.display='none'"></div>`
+                      safeThumbnail
+                        ? `<div class="inkling-bookmark-thumbnail" style="background-image: url('${safeThumbnail}')">
+                        <img src="${safeThumbnail}" alt="" onerror="this.style.display='none'"></div>`
                         : ''
                     }
                 </a>
@@ -75,7 +77,7 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
                         <table style="margin: 0; padding: 0; border-collapse: collapse; border-spacing: 0;">
                             <tr>
                                 <td class="inkling-bookmark-title--outlook">
-                                    <a href="${url}" style="text-decoration: none; color: #15212A; font-size: 15px; line-height: 1.5em; font-weight: 600;">
+                                    <a href="${safeUrl}" style="text-decoration: none; color: #15212A; font-size: 15px; line-height: 1.5em; font-weight: 600;">
                                         ${title}
                                     </a>
                                 </td>
@@ -83,7 +85,7 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
                             <tr>
                                 <td>
                                     <div class="inkling-bookmark-description--outlook">
-                                        <a href="${url}" style="text-decoration: none; margin-top: 12px; color: #738a94; font-size: 13px; line-height: 1.5em; font-weight: 400;">
+                                        <a href="${safeUrl}" style="text-decoration: none; margin-top: 12px; color: #738a94; font-size: 13px; line-height: 1.5em; font-weight: 400;">
                                             ${truncateHtml(description, 120, 90)}
                                         </a>
                                     </div>
@@ -94,18 +96,18 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
                                     <table style="margin: 0; padding: 0; border-collapse: collapse; border-spacing: 0;">
                                         <tr>
                                             ${
-                                              icon
+                                              safeIcon
                                                 ? `
                                                 <td valign="middle" class="inkling-bookmark-icon--outlook" style="padding-right: 8px; font-size: 0; line-height: 1.5em;">
-                                                    <a href="${url}" style="text-decoration: none; color: #15212A;">
-                                                        <img src="${icon}" width="22" height="22" alt=" ">
+                                                    <a href="${safeUrl}" style="text-decoration: none; color: #15212A;">
+                                                        <img src="${safeIcon}" width="22" height="22" alt=" ">
                                                     </a>
                                                 </td>
                                             `
                                                 : ''
                                             }
                                             <td valign="middle" class="inkling-bookmark-byline--outlook">
-                                                <a href="${url}" style="text-decoration: none; color: #15212A;">
+                                                <a href="${safeUrl}" style="text-decoration: none; color: #15212A;">
                                                     ${publisher}
                                                     ${author ? `&nbsp;&#x2022;&nbsp;` : ''}
                                                     ${author}
@@ -137,7 +139,7 @@ function frontendTemplate(node: BookmarkNodeData, document: Document) {
 
   const container = document.createElement('a')
   container.setAttribute('class', 'inkling-bookmark-container')
-  container.href = node.url
+  container.href = isSafeUrl(node.url) ? node.url : ''
   element.appendChild(container)
 
   const content = document.createElement('div')
@@ -198,7 +200,7 @@ function frontendTemplate(node: BookmarkNodeData, document: Document) {
 
   if (caption) {
     const figCaption = document.createElement('figcaption')
-    figCaption.innerHTML = caption
+    figCaption.innerHTML = sanitizeHtml(caption)
     element.appendChild(figCaption)
   }
 

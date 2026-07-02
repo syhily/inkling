@@ -116,12 +116,12 @@ test.describe('Floating format toolbar', async () => {
 
         await assertHTML(page, testCase.html)
 
-        expect(await page.$eval(buttonSelector, (e) => e.dataset.kgActive)).toEqual('true')
+        expect(await page.$eval(buttonSelector, (e) => e.dataset.inklingActive)).toEqual('true')
 
         await page.click(buttonSelector)
 
         await assertHTML(page, html`<p dir="ltr"><span data-lexical-text="true">text for selection</span></p>`)
-        expect(await page.$eval(buttonSelector, (e) => e.dataset.kgActive)).toEqual('false')
+        expect(await page.$eval(buttonSelector, (e) => e.dataset.inklingActive)).toEqual('false')
       })
     })
 
@@ -138,12 +138,12 @@ test.describe('Floating format toolbar', async () => {
 
       await assertHTML(page, html` <h2 dir="ltr"><span data-lexical-text="true">header for selection</span></h2> `)
 
-      expect(await page.$eval(buttonSelector, (e) => e.dataset.kgActive)).toEqual('true')
+      expect(await page.$eval(buttonSelector, (e) => e.dataset.inklingActive)).toEqual('true')
 
       await page.click(buttonSelector)
 
       await assertHTML(page, html`<p dir="ltr"><span data-lexical-text="true">header for selection</span></p>`)
-      expect(await page.$eval(buttonSelector, (e) => e.dataset.kgActive)).toEqual('false')
+      expect(await page.$eval(buttonSelector, (e) => e.dataset.inklingActive)).toEqual('false')
     })
 
     test('toggles h4 to h3', async function () {
@@ -159,12 +159,12 @@ test.describe('Floating format toolbar', async () => {
 
       await assertHTML(page, html` <h3 dir="ltr"><span data-lexical-text="true">header for selection</span></h3> `)
 
-      expect(await page.$eval(buttonSelector, (e) => e.dataset.kgActive)).toEqual('true')
+      expect(await page.$eval(buttonSelector, (e) => e.dataset.inklingActive)).toEqual('true')
 
       await page.click(buttonSelector)
 
       await assertHTML(page, html`<p dir="ltr"><span data-lexical-text="true">header for selection</span></p>`)
-      expect(await page.$eval(buttonSelector, (e) => e.dataset.kgActive)).toEqual('false')
+      expect(await page.$eval(buttonSelector, (e) => e.dataset.inklingActive)).toEqual('false')
     })
 
     test('cycles through quote styles', async function () {
@@ -184,7 +184,7 @@ test.describe('Floating format toolbar', async () => {
           </blockquote>
         `,
       )
-      expect(await page.$eval(buttonSelector, (e) => e.dataset.kgActive)).toEqual('true')
+      expect(await page.$eval(buttonSelector, (e) => e.dataset.inklingActive)).toEqual('true')
 
       await page.click(buttonSelector)
 
@@ -196,12 +196,12 @@ test.describe('Floating format toolbar', async () => {
           </aside>
         `,
       )
-      expect(await page.$eval(buttonSelector, (e) => e.dataset.kgActive)).toEqual('true')
+      expect(await page.$eval(buttonSelector, (e) => e.dataset.inklingActive)).toEqual('true')
 
       await page.click(buttonSelector)
 
       await assertHTML(page, html`<p dir="ltr"><span data-lexical-text="true">quote text</span></p>`)
-      expect(await page.$eval(buttonSelector, (e) => e.dataset.kgActive)).toEqual('false')
+      expect(await page.$eval(buttonSelector, (e) => e.dataset.inklingActive)).toEqual('false')
     })
 
     test('can create link (with search)', async function () {

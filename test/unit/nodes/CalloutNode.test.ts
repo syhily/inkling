@@ -26,9 +26,9 @@ describe('CalloutNode', () => {
     })
   })
 
-  it('exposes a static kgMenu entry', () => {
-    expect(CalloutNode.kgMenu[0].label).toBe('Callout')
-    expect(CalloutNode.kgMenu[0].insertCommand).toBe(INSERT_CALLOUT_COMMAND)
+  it('exposes a static cardMenu entry', () => {
+    expect(CalloutNode.cardMenu[0].label).toBe('Callout')
+    expect(CalloutNode.cardMenu[0].insertCommand).toBe(INSERT_CALLOUT_COMMAND)
   })
 
   it('returns the callout icon', async () => {

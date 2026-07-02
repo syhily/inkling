@@ -15,6 +15,7 @@ import useGalleryReorder from '@/hooks/useGalleryReorder'
 import { GeneratedDecoratorNodeBase } from '@/nodes/base'
 import { MAX_IMAGES, recalculateImageRows } from '@/nodes/GalleryNode'
 import { getImageDimensions } from '@/utils/getImageDimensions'
+import { revokePreviewUrl } from '@/utils/revokePreviewUrl'
 
 interface DragHandlerLike {
   isDraggedOver?: boolean
@@ -51,6 +52,7 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
     })
     return existingImages ?? []
   })
+  const previewUrlsRef = React.useRef<Set<string>>(new Set())
 
   const galleryReorder = useGalleryReorder({ images, updateImages: reorderImages, isSelected })
   const imageUploader: ImageUploaderLike = fileUploader.useFileUpload('image')
@@ -78,11 +80,25 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
   }
 
   const deleteImage = (imageToDelete: GalleryImage): void => {
+    if (imageToDelete.previewSrc) {
+      revokePreviewUrl(imageToDelete.previewSrc)
+      previewUrlsRef.current.delete(imageToDelete.previewSrc)
+    }
+
     const newImages = images.filter((image) => image.fileName !== imageToDelete.fileName)
     recalculateImageRows(newImages)
     setImages(newImages)
     setNodeImages(newImages)
   }
+
+  // oxlint-disable react-hooks/exhaustive-deps
+  React.useEffect(() => {
+    return () => {
+      previewUrlsRef.current.forEach((url) => revokePreviewUrl(url))
+      previewUrlsRef.current.clear()
+    }
+  }, [])
+  // oxlint-enable react-hooks/exhaustive-deps
 
   const handleImageUploads = async (files: FileList | File[]): Promise<void> => {
     const currentCount = images.length
@@ -102,6 +118,7 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
     // create preview images and capture dimensions
     for (const file of strippedFiles) {
       const previewSrc = URL.createObjectURL(file)
+      previewUrlsRef.current.add(previewSrc)
       const { width, height } = await getImageDimensions(previewSrc)
 
       newImages.push({
@@ -119,24 +136,50 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
 
     // start uploads
     const uploadResult = await imageUploader.upload?.(strippedFiles)
-    const uploadedImages = [...newImages]
 
     if (!uploadResult) {
+      const cleanedImages = newImages.map((image, index) =>
+        index < currentCount ? image : withoutPreviewSrc(image),
+      )
+      newImages.slice(currentCount).forEach((image) => {
+        revokePreviewUrl(image.previewSrc)
+        previewUrlsRef.current.delete(image.previewSrc as string)
+      })
+      recalculateImageRows(cleanedImages)
+      setImages(cleanedImages)
+      setNodeImages(cleanedImages)
       setErrorMessage('Something went wrong while uploading images. Please refresh the page and try again')
       return
     }
 
-    uploadResult.forEach((result) => {
-      const image = uploadedImages.find((i) => i.fileName === result.fileName)
+    const uploadedImages = newImages.map((image, index) => {
+      if (index < currentCount) {
+        return image
+      }
 
-      if (image) {
-        image.src = result.url
+      const result = uploadResult.find((r) => r.fileName === image.fileName)
+      if (!result) {
+        return image
+      }
+
+      revokePreviewUrl(image.previewSrc)
+      previewUrlsRef.current.delete(image.previewSrc as string)
+
+      return {
+        ...image,
+        src: result.url,
+        previewSrc: undefined,
       }
     })
 
     // update local state
-    setImages(newImages)
-    setNodeImages(newImages)
+    setImages(uploadedImages)
+    setNodeImages(uploadedImages)
+  }
+
+  function withoutPreviewSrc(image: GalleryImage): GalleryImage {
+    const { previewSrc: _previewSrc, ...rest } = image
+    return rest
   }
 
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {

@@ -92,7 +92,7 @@ export function ToolbarMenuItem({
       <button
         aria-label={label}
         className={`my-1 h-8 w-9 rounded-md hover:bg-grey-200/80 dark:bg-grey-950 dark:hover:bg-grey-900 flex cursor-pointer items-center justify-center transition ${isActive ? 'bg-grey-200/80' : 'bg-white'}`}
-        data-kg-active={isActive}
+        data-inkling-active={isActive}
         data-testid={dataTestId}
         type="button"
         onClick={onClick}

@@ -1,6 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister } from '@lexical/utils'
-import { $getSelection, COMMAND_PRIORITY_LOW, createCommand } from 'lexical'
+import { mergeRegister, $getSelection, COMMAND_PRIORITY_LOW, createCommand } from 'lexical'
 import React from 'react'
 
 import GifPlugin from '@/components/ui/GifPlugin'
