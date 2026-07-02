@@ -58,7 +58,7 @@ export interface InklingComposerContextValue {
   createWebsocketProvider: (id: string, yjsDocMap: Map<string, Doc>) => WebsocketProvider
   onWordCountChangeRef: React.MutableRefObject<((count: number) => void) | null>
   dragDropHandler?: DragDropHandler
-  onError: (error: Error) => void
+  onError: (error: unknown, info: React.ErrorInfo) => void
 }
 
 const InklingComposerContext = React.createContext<InklingComposerContextValue>({

@@ -73,8 +73,8 @@ export function LinkInput({ href, update, cancel }: LinkInputProps) {
         placeholder="Enter url"
         value={_href}
         data-inkling-link-input
-        onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
-          setHref(e.target.value)
+        onInput={(e: React.InputEvent<HTMLInputElement>) => {
+          setHref(e.currentTarget.value)
         }}
         onKeyDown={(e: React.KeyboardEvent) => {
           if (e.key === 'Enter') {

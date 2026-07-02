@@ -14,7 +14,7 @@ import defaultTheme from '@/themes/default'
 // Catch any errors that occur during Lexical updates and log them
 // or throw them as needed. If you don't throw them, Lexical will
 // try to recover gracefully without losing user data.
-function defaultOnError(error: Error) {
+function defaultOnError(error: unknown, _info?: React.ErrorInfo) {
   if (import.meta.env.DEV) {
     // eslint-disable-next-line no-console
     console.error(error)
@@ -30,7 +30,7 @@ const defaultConfig = {
 interface InklingComposerProps {
   initialEditorState?: string | Record<string, unknown> | null
   nodes?: typeof DEFAULT_NODES
-  onError?: (error: Error) => void
+  onError?: (error: unknown, info?: React.ErrorInfo) => void
   fileUploader?: import('@/context/InklingComposerContext').FileUploader | Record<string, unknown>
   cardConfig?: import('@/context/InklingComposerContext').CardConfig
   darkMode?: boolean

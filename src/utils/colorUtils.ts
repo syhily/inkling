@@ -1,6 +1,8 @@
 import Color from 'color'
+import type { ColorInstance } from 'color'
 
 export { Color }
+export type { ColorInstance }
 
 /**
  * Returns black or white depending on which has better contrast against the
@@ -8,7 +10,7 @@ export { Color }
  *
  * NOTE: `.b()` returns the Lab b-channel, not RGB blue — this is intentional.
  */
-export function textColorForBackgroundColor(background: string | Color): Color {
+export function textColorForBackgroundColor(background: string | ColorInstance): ColorInstance {
   const backgroundColor = Color(background)
 
   const white = Color({ r: 255, g: 255, b: 255 })

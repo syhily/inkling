@@ -86,11 +86,44 @@ export default defineConfig(({ mode }) => {
           'fast-average-color',
         ],
         output: {
-          globals: {
-            react: 'React',
-            'react/jsx-runtime': 'React',
-            'react-dom': 'ReactDOM',
-            'react-dom/client': 'ReactDOM',
+          globals: function (id: string) {
+            // Provide explicit global names for optional peer dependencies
+            // that are externalized from the UMD build.
+            const globals: Record<string, string> = {
+              'react': 'React',
+              'react/jsx-runtime': 'React',
+              'react-dom': 'ReactDOM',
+              'react-dom/client': 'ReactDOM',
+              'markdown-it': 'markdownit',
+              'markdown-it-footnote': 'markdownitFootnote',
+              'markdown-it-image-lazy-loading': 'markdownitImageLazyLoading',
+              'markdown-it-lazy-headers': 'markdownitLazyHeaders',
+              'markdown-it-mark': 'markdownitMark',
+              'markdown-it-sub': 'markdownitSub',
+              'markdown-it-sup': 'markdownitSup',
+              'emoji-mart': 'EmojiMart',
+              '@emoji-mart/data': 'EmojiMartData',
+              '@emoji-mart/react': 'EmojiMartReact',
+              'fast-average-color': 'FastAverageColor',
+              '@uiw/react-codemirror': 'UIWReactCodemirror',
+              '@uiw/codemirror-extensions-basic-setup': 'UIWCodemirrorExtensionsBasicSetup',
+              '@codemirror/autocomplete': 'CMAutocomplete',
+              '@codemirror/commands': 'CMCommands',
+              '@codemirror/lang-css': 'CMLangCss',
+              '@codemirror/lang-html': 'CMLangHtml',
+              '@codemirror/lang-javascript': 'CMLangJavascript',
+              '@codemirror/language': 'CMLanguage',
+              '@codemirror/view': 'CMView',
+            }
+            if (id in globals) {
+              return globals[id]
+            }
+            // Fallback to a best-effort global name; this keeps the build
+            // deterministic even if a new external is added.
+            return id
+              .replace(/^@/, '')
+              .replace(/\//g, '_')
+              .replace(/-/g, '_')
           },
           assetFileNames: (assetInfo: { names?: string[] }) => {
             // Vite 6 changed CSS output naming in lib mode from

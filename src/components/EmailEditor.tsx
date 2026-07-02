@@ -56,7 +56,7 @@ interface EmailEditorProps {
   fileUploader?: FileUploader
   initialEditorState?: unknown
   onChange?: (editorState: unknown) => void
-  onError?: (error: Error) => void
+  onError?: (error: unknown, info?: React.ErrorInfo) => void
   children?: React.ReactNode
   markdownTransformers?: unknown[]
   placeholderText?: string
