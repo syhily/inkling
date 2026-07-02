@@ -76,6 +76,12 @@ export default defineConfig(({ mode }) => {
         },
       },
       rolldownOptions: {
+        // Suppress upstream Lexical/Rolldown INVALID_ANNOTATION warnings that
+        // originate from @lexical/react's pre-minified prod.mjs files. The
+        // annotation position is controlled by Meta's build tooling, not us.
+        checks: {
+          invalidAnnotation: false,
+        },
         external: [
           /^markdown-it/,
           /^@uiw\/react-codemirror/,
