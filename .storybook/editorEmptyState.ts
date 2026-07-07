@@ -1,4 +1,4 @@
-export const editorEmptyState = JSON.stringify({
+export const editorEmptyState: string = JSON.stringify({
   root: {
     children: [{ children: [], direction: null, format: '', indent: 0, type: 'paragraph', version: 1 }],
     direction: null,
