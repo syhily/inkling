@@ -59,6 +59,7 @@ import WordCountPlugin from '@/plugins/WordCountPlugin'
 /* Exports ------------------------------------------------------------------ */
 
 export * from '@/utils'
+export { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown'
 
 export {
   DesignSandbox,
