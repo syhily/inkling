@@ -77,8 +77,11 @@ function CaptionPlugin({ parentEditor }: { parentEditor: import('lexical').Lexic
       editor.registerCommand(
         KEY_ENTER_COMMAND,
         (event) => {
-          // TODO: find a more elegant way to handle this
-          // intercept enter commands when interacting with the typeahead menu (same command priority)
+          // Lexical 0.46.0 added `commandPriority` to typeahead menus, but the
+          // project's menus still register at the default `COMMAND_PRIORITY_LOW`,
+          // which is the same priority used here. Until the menu is configured
+          // to register at a higher priority, bail out when a typeahead menu is
+          // open so the menu can handle Enter itself.
           if (document.querySelector(`#typeahead-menu`)) {
             return false
           }
@@ -102,7 +105,10 @@ function CaptionPlugin({ parentEditor }: { parentEditor: import('lexical').Lexic
       editor.registerCommand(
         KEY_ARROW_DOWN_COMMAND,
         (event) => {
-          // TODO: wait for new lexical version, see https://github.com/facebook/lexical/commit/df2a50bc88e0778af26e109502cfcfb9cbe245d5
+          // Lexical 0.46.0 added `commandPriority` to typeahead menus, but the
+          // project's menus still register at the default `COMMAND_PRIORITY_LOW`.
+          // Bail out when a typeahead menu is open so arrow keys navigate the
+          // menu instead of moving focus to the next/parent editor.
           if (document.querySelector(`#typeahead-menu`)) {
             return false
           }
@@ -116,7 +122,10 @@ function CaptionPlugin({ parentEditor }: { parentEditor: import('lexical').Lexic
       editor.registerCommand(
         KEY_ARROW_UP_COMMAND,
         (event) => {
-          // TODO: wait for new lexical version, see https://github.com/facebook/lexical/commit/df2a50bc88e0778af26e109502cfcfb9cbe245d5
+          // Lexical 0.46.0 added `commandPriority` to typeahead menus, but the
+          // project's menus still register at the default `COMMAND_PRIORITY_LOW`.
+          // Bail out when a typeahead menu is open so arrow keys navigate the
+          // menu instead of moving focus to the next/parent editor.
           if (document.querySelector(`#typeahead-menu`)) {
             return false
           }

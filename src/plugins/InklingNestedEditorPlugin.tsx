@@ -68,7 +68,11 @@ function InklingNestedEditorPlugin({
       editor.registerCommand(
         KEY_ENTER_COMMAND,
         (event) => {
-          // TODO: wait for new lexical version, see https://github.com/facebook/lexical/commit/df2a50bc88e0778af26e109502cfcfb9cbe245d5
+          // Lexical 0.46.0 added `commandPriority` to typeahead menus, but the
+          // project's menus still register at the default `COMMAND_PRIORITY_LOW`.
+          // Until they are configured to register at a higher priority, this
+          // check prevents nested editor enter handlers from swallowing events
+          // meant for the open typeahead menu.
           if (document.querySelector(`#typeahead-menu`)) {
             return false
           }
