@@ -11,9 +11,6 @@ const config: StorybookConfig = {
     name: getAbsolutePath('@storybook/react-vite'),
     options: {},
   },
-  core: {
-    builder: getAbsolutePath('@storybook/builder-vite'),
-  },
   viteFinal: async (viteConfig) => {
     return mergeConfig(viteConfig, {
       resolve: {
@@ -30,8 +27,6 @@ const config: StorybookConfig = {
   stories: ['../src/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
   addons: [
     getAbsolutePath('@storybook/addon-links'),
-    getAbsolutePath('@storybook/addon-essentials'),
-    getAbsolutePath('@storybook/addon-interactions'),
     getAbsolutePath('@etchteam/storybook-addon-status'),
   ],
   features: {},
