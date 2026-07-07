@@ -78,7 +78,7 @@ test.describe('Image card', async () => {
                   <div>
                     <div data-inkling="editor">
                       <div contenteditable="true" role="textbox" spellcheck="true" data-lexical-editor="true">
-                        <p dir="ltr">
+                        <p dir="auto">
                           <span data-lexical-text="true">This is a</span>
                           <strong data-lexical-text="true">caption</strong>
                         </p>
@@ -147,7 +147,7 @@ test.describe('Image card', async () => {
             </figure>
           </div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
     )
   })
@@ -202,6 +202,8 @@ test.describe('Image card', async () => {
           indent: 0,
           type: 'paragraph',
           version: 1,
+          textFormat: 0,
+          textStyle: '',
         },
       ]),
     )
@@ -327,7 +329,7 @@ test.describe('Image card', async () => {
             <div data-inkling-card-toolbar="image"></div>
           </div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardToolbarContents: true },
     )
@@ -644,7 +646,7 @@ test.describe('Image card', async () => {
             </figure>
           </div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
     )
   })
@@ -691,7 +693,7 @@ test.describe('Image card', async () => {
         <div data-lexical-decorator="true" contenteditable="false">
           <div data-inkling-card-editing="false" data-inkling-card-selected="true" data-inkling-card="image"></div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardContents: true },
     )
@@ -712,7 +714,7 @@ test.describe('Image card', async () => {
         <div data-lexical-decorator="true" contenteditable="false">
           <div data-inkling-card-editing="false" data-inkling-card-selected="true" data-inkling-card="image"></div>
         </div>
-        <p dir="ltr"><span data-lexical-text="true">Testing</span></p>
+        <p dir="auto"><span data-lexical-text="true">Testing</span></p>
       `,
       { ignoreCardContents: true },
     )
@@ -831,15 +833,14 @@ test.describe('Image card', async () => {
                         data-lexical-editor="true"
                         data-inkling-dnd-container="true"
                       >
-                        <p dir="ltr">
+                        <p dir="auto">
                           <span data-lexical-text="true">Photo by</span>
-                          <a href="https://unsplash.com/@jamillatrach" dir="ltr">
+                          <a href="https://unsplash.com/@jamillatrach">
                             <span data-lexical-text="true">Latrach Med Jamil</span>
                           </a>
                           <span data-lexical-text="true">/</span>
                           <a
                             href="https://unsplash.com/?utm_source=inkling&amp;utm_medium=referral&amp;utm_campaign=api-credit"
-                            dir="ltr"
                           >
                             <span data-lexical-text="true">Unsplash</span>
                           </a>
@@ -854,7 +855,7 @@ test.describe('Image card', async () => {
             <div data-inkling-card-toolbar="image"></div>
           </div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardToolbarContents: true },
     )
@@ -894,7 +895,7 @@ test.describe('Image card', async () => {
                         data-lexical-editor="true"
                         data-inkling-dnd-container="true"
                       >
-                        <p><br /></p>
+                        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
                       </div>
                     </div>
                     <div>Type caption for image (optional)</div>
@@ -906,7 +907,7 @@ test.describe('Image card', async () => {
             <div data-inkling-card-toolbar="image"></div>
           </div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardToolbarContents: true },
     )
@@ -949,7 +950,7 @@ test.describe('Image card', async () => {
                         data-lexical-editor="true"
                         data-inkling-dnd-container="true"
                       >
-                        <p><br /></p>
+                        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
                       </div>
                     </div>
                     <div>Type caption for image (optional)</div>
@@ -961,7 +962,7 @@ test.describe('Image card', async () => {
             <div data-inkling-card-toolbar="image"></div>
           </div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardToolbarContents: true },
     )
@@ -1276,7 +1277,7 @@ test.describe('Image card', async () => {
         <div data-lexical-decorator="true" contenteditable="false">
           <div data-inkling-card-editing="false" data-inkling-card-selected="true" data-inkling-card="image"></div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardContents: true },
     )
@@ -1292,7 +1293,7 @@ test.describe('Image card', async () => {
         <div data-lexical-decorator="true" contenteditable="false" data-inkling-card-width="wide">
           <div data-inkling-card-editing="false" data-inkling-card-selected="false" data-inkling-card="gallery"></div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardContents: true },
     )
@@ -1605,7 +1606,7 @@ test.describe('Image card - Klipy GIF provider', async () => {
                         data-lexical-editor="true"
                         data-inkling-dnd-container="true"
                       >
-                        <p><br /></p>
+                        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
                       </div>
                     </div>
                     <div>Type caption for image (optional)</div>
@@ -1617,7 +1618,7 @@ test.describe('Image card - Klipy GIF provider', async () => {
             <div data-inkling-card-toolbar="image"></div>
           </div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardToolbarContents: true },
     )

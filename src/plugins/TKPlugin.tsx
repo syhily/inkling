@@ -259,7 +259,6 @@ export default function TKPlugin() {
     }
   }, [])
 
-  // TODO: register ExtendedTextNode + replacement on nested editors
   const nodeType = editor.hasNode(ExtendedTextNode) ? ExtendedTextNode : TextNode
 
   useInklingTextEntity(getTKMatch, TKNode, createTKNode, nodeType)

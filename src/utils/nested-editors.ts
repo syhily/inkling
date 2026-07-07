@@ -1,4 +1,4 @@
-import { createEditor, type EditorState, type Klass, type LexicalEditor, type LexicalNode } from 'lexical'
+import { createEditor, type EditorState, type Klass, type LexicalEditor, type LexicalNode, type LexicalNodeReplacement } from 'lexical'
 
 import { MINIMAL_NODES } from '@/index'
 import generateEditorState from '@/utils/generateEditorState'
@@ -26,7 +26,7 @@ const BLANK_EDITOR_STATE = JSON.stringify({
 export interface SetupNestedEditorOptions {
   editor?: LexicalEditor
   initialEditorState?: string
-  nodes?: ReadonlyArray<Klass<LexicalNode>>
+  nodes?: ReadonlyArray<Klass<LexicalNode> | LexicalNodeReplacement>
 }
 
 export function setupNestedEditor(

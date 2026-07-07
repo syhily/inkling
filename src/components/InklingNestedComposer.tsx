@@ -4,6 +4,8 @@ import { LexicalNestedComposer } from '@lexical/react/LexicalNestedComposer'
 import React from 'react'
 
 import InklingComposerContext from '@/context/InklingComposerContext'
+import ReplacementStringsPlugin from '@/plugins/ReplacementStringsPlugin'
+import TKPlugin from '@/plugins/TKPlugin'
 import WordCountPlugin from '@/plugins/WordCountPlugin'
 
 interface InklingNestedComposerProps {
@@ -48,6 +50,8 @@ const InklingNestedComposer = ({
       {onWordCountChangeRef?.current ? (
         <WordCountPlugin onChange={onWordCountChangeRef.current as (count: number) => void} />
       ) : null}
+      <TKPlugin />
+      <ReplacementStringsPlugin />
       {children}
     </LexicalNestedComposer>
   )

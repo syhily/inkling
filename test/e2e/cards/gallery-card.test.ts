@@ -158,7 +158,7 @@ test.describe('Gallery card', async () => {
                   <div>
                     <div data-inkling="editor">
                       <div contenteditable="true" role="textbox" spellcheck="true" data-lexical-editor="true">
-                        <p><br /></p>
+                        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
                       </div>
                     </div>
                     <div>Type caption for gallery (optional)</div>
@@ -169,7 +169,7 @@ test.describe('Gallery card', async () => {
             </figure>
           </div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
     )
   })
@@ -230,7 +230,7 @@ test.describe('Gallery card', async () => {
                   <div>
                     <div data-inkling="editor">
                       <div contenteditable="true" role="textbox" spellcheck="true" data-lexical-editor="true">
-                        <p><br /></p>
+                        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
                       </div>
                     </div>
                     <div>Type caption for gallery (optional)</div>
@@ -242,7 +242,7 @@ test.describe('Gallery card', async () => {
             <div data-inkling-card-toolbar="gallery"></div>
           </div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardToolbarContents: true },
     )
@@ -505,7 +505,7 @@ test.describe('Gallery card', async () => {
             </figure>
           </div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardContents: false },
     )

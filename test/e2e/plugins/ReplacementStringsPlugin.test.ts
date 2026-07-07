@@ -26,7 +26,7 @@ test.describe('ReplacementStringsPlugin', async function () {
       await assertHTML(
         page,
         html`
-          <p dir="ltr">
+          <p dir="auto">
             <span data-lexical-text="true">Hello </span>
             <code spellcheck="false" data-lexical-text="true"><span>{first_name}</span></code>
             <span data-lexical-text="true">!</span>
@@ -42,7 +42,7 @@ test.describe('ReplacementStringsPlugin', async function () {
       await assertHTML(
         page,
         html`
-          <p dir="ltr">
+          <p dir="auto">
             <span data-lexical-text="true">Hello </span>
             <code spellcheck="false" data-lexical-text="true"><span>{first_name, "there"}</span></code>
             <span data-lexical-text="true">!</span>
@@ -58,7 +58,7 @@ test.describe('ReplacementStringsPlugin', async function () {
       await assertHTML(
         page,
         html`
-          <p dir="ltr">
+          <p dir="auto">
             <span data-lexical-text="true">Your email is </span>
             <code spellcheck="false" data-lexical-text="true"><span>{email}</span></code>
           </p>
@@ -73,7 +73,7 @@ test.describe('ReplacementStringsPlugin', async function () {
       await assertHTML(
         page,
         html`
-          <p dir="ltr">
+          <p dir="auto">
             <span data-lexical-text="true">Hi </span>
             <code spellcheck="false" data-lexical-text="true"><span>{first_name}</span></code>
             <span data-lexical-text="true">, your email is </span>
@@ -90,7 +90,7 @@ test.describe('ReplacementStringsPlugin', async function () {
       await assertHTML(
         page,
         html`
-          <p dir="ltr">
+          <p dir="auto">
             <code spellcheck="false" data-lexical-text="true"><span>{first_name}</span></code>
             <span data-lexical-text="true"> is here</span>
           </p>
@@ -105,7 +105,7 @@ test.describe('ReplacementStringsPlugin', async function () {
       await assertHTML(
         page,
         html`
-          <p dir="ltr">
+          <p dir="auto">
             <span data-lexical-text="true">Name: </span>
             <code spellcheck="false" data-lexical-text="true"><span>{first_name}</span></code>
           </p>
@@ -120,7 +120,7 @@ test.describe('ReplacementStringsPlugin', async function () {
       await assertHTML(
         page,
         html`
-          <p dir="ltr">
+          <p dir="auto">
             <code spellcheck="false" data-lexical-text="true"><span>{first_name}</span></code>
           </p>
         `,
@@ -134,7 +134,7 @@ test.describe('ReplacementStringsPlugin', async function () {
       await assertHTML(
         page,
         html`
-          <p dir="ltr">
+          <p dir="auto">
             <code spellcheck="false" data-lexical-text="true"><span>{first_name}{last_name}</span></code>
           </p>
         `,
@@ -148,7 +148,7 @@ test.describe('ReplacementStringsPlugin', async function () {
       await assertHTML(
         page,
         html`
-          <p dir="ltr">
+          <p dir="auto">
             <span data-lexical-text="true">This {is incomplete</span>
           </p>
         `,
@@ -162,7 +162,7 @@ test.describe('ReplacementStringsPlugin', async function () {
       await assertHTML(
         page,
         html`
-          <p dir="ltr">
+          <p dir="auto">
             <span data-lexical-text="true">Empty</span>
             <code spellcheck="false" data-lexical-text="true"><span>{}</span></code>
             <span data-lexical-text="true">braces</span>

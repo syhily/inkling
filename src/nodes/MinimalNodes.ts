@@ -1,7 +1,7 @@
 import { LinkNode } from '@lexical/link'
 
-import { TKNode } from '@/nodes/base'
+import { ExtendedTextNode, TKNode, extendedTextNodeReplacement } from '@/nodes/base'
 
-const MINIMAL_NODES = [LinkNode, TKNode]
+const MINIMAL_NODES = [ExtendedTextNode, extendedTextNodeReplacement, LinkNode, TKNode]
 
 export default MINIMAL_NODES
