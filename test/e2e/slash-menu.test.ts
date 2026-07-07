@@ -42,7 +42,7 @@ test.describe('Slash menu', async () => {
       await page.keyboard.type('/')
 
       // sanity check that text was fully selected + replaced
-      await assertHTML(page, html`<p><span data-lexical-text="true">/</span></p>`)
+      await assertHTML(page, html`<p dir="auto"><span data-lexical-text="true">/</span></p>`)
 
       await expect(page.locator('[data-inkling-slash-menu]')).toBeVisible()
     })
@@ -143,8 +143,8 @@ test.describe('Slash menu', async () => {
       await assertHTML(
         page,
         html`
-          <p><br /></p>
-          <p dir="ltr"><span data-lexical-text="true">/words</span></p>
+          <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
+          <p dir="auto"><span data-lexical-text="true">/words</span></p>
         `,
       )
     })
@@ -249,7 +249,7 @@ test.describe('Slash menu', async () => {
               <hr />
             </div>
           </div>
-          <p><br /></p>
+          <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
         `,
       )
 
@@ -272,7 +272,7 @@ test.describe('Slash menu', async () => {
       await assertHTML(
         page,
         html`
-          <p dir="ltr"><span data-lexical-text="true">Testing</span></p>
+          <p dir="auto"><span data-lexical-text="true">Testing</span></p>
           <div data-lexical-decorator="true" contenteditable="false">
             <div
               data-inkling-card-editing="false"
@@ -282,7 +282,7 @@ test.describe('Slash menu', async () => {
               <hr />
             </div>
           </div>
-          <p><br /></p>
+          <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
         `,
       )
 
@@ -318,7 +318,7 @@ test.describe('Slash menu', async () => {
           <div data-lexical-decorator="true" contenteditable="false">
             <div data-inkling-card-editing="false" data-inkling-card-selected="true" data-inkling-card="image"></div>
           </div>
-          <p><br /></p>
+          <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
         `,
         { ignoreCardContents: true },
       )
@@ -339,7 +339,7 @@ test.describe('Slash menu', async () => {
           <div data-lexical-decorator="true" contenteditable="false">
             <div data-inkling-card-editing="false" data-inkling-card-selected="true" data-inkling-card="image"></div>
           </div>
-          <p><br /></p>
+          <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
         `,
         { ignoreCardContents: true },
       )
@@ -366,7 +366,7 @@ test.describe('Slash menu', async () => {
           <div data-lexical-decorator="true" contenteditable="false">
             <div data-inkling-card-editing="true" data-inkling-card-selected="true" data-inkling-card="callout"></div>
           </div>
-          <p dir="ltr"><span data-lexical-text="true">Testing</span></p>
+          <p dir="auto"><span data-lexical-text="true">Testing</span></p>
         `,
         { ignoreCardContents: true },
       )
@@ -393,7 +393,7 @@ test.describe('Slash menu', async () => {
               data-inkling-card="horizontalrule"
             ></div>
           </div>
-          <p><br /></p>
+          <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
         `,
         { ignoreCardContents: true },
       )

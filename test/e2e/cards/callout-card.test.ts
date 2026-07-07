@@ -27,7 +27,7 @@ test.describe('Callout Card', async () => {
           children: [
             {
               type: 'callout',
-              calloutText: '<p dir="ltr"><span>Hello World</span></p>',
+              calloutText: '<p dir="auto"><span>Hello World</span></p>',
               calloutEmoji: '😚',
               backgroundColor: 'blue',
             },
@@ -54,14 +54,12 @@ test.describe('Callout Card', async () => {
               <div>
                 <div data-inkling="editor">
                   <div
-                    contenteditable="false"
+                    contenteditable="true"
                     role="textbox"
                     spellcheck="true"
                     data-lexical-editor="true"
-                    aria-autocomplete="none"
-                    aria-readonly="true"
                   >
-                    <p dir="ltr"><span data-lexical-text="true">Hello World</span></p>
+                    <p dir="auto"><span data-lexical-text="true">Hello World</span></p>
                   </div>
                 </div>
               </div>
@@ -86,7 +84,7 @@ test.describe('Callout Card', async () => {
         <div data-lexical-decorator="true" contenteditable="false">
           <div data-inkling-card-editing="true" data-inkling-card-selected="true" data-inkling-card="callout"></div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardContents: true },
     )
@@ -228,14 +226,14 @@ test.describe('Callout Card', async () => {
               <div>
                 <div data-inkling="editor">
                   <div
+                    aria-autocomplete="none"
+                    aria-readonly="true"
                     contenteditable="false"
                     role="textbox"
                     spellcheck="true"
                     data-lexical-editor="true"
-                    aria-autocomplete="none"
-                    aria-readonly="true"
                   >
-                    <p dir="ltr">
+                    <p dir="auto">
                       <span data-lexical-text="true">testing nesting</span>
                     </p>
                   </div>
@@ -245,8 +243,8 @@ test.describe('Callout Card', async () => {
             <div></div>
           </div>
         </div>
-        <p><br /></p>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardContents: false },
     )
@@ -269,14 +267,14 @@ test.describe('Callout Card', async () => {
               <div>
                 <div data-inkling="editor">
                   <div
+                    aria-autocomplete="none"
+                    aria-readonly="true"
                     contenteditable="false"
                     role="textbox"
                     spellcheck="true"
                     data-lexical-editor="true"
-                    aria-autocomplete="none"
-                    aria-readonly="true"
                   >
-                    <p dir="ltr">
+                    <p dir="auto">
                       <span data-lexical-text="true">testing nesting</span>
                     </p>
                   </div>
@@ -287,7 +285,7 @@ test.describe('Callout Card', async () => {
             <div data-inkling-card-toolbar="callout"></div>
           </div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardToolbarContents: true },
     )
@@ -300,7 +298,7 @@ test.describe('Callout Card', async () => {
         <div data-lexical-decorator="true" contenteditable="false">
           <div data-inkling-card-editing="true" data-inkling-card-selected="true" data-inkling-card="callout"></div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardContents: true },
     )
@@ -318,7 +316,7 @@ test.describe('Callout Card', async () => {
         <div data-lexical-decorator="true" contenteditable="false">
           <div data-inkling-card-editing="false" data-inkling-card-selected="true" data-inkling-card="callout"></div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardContents: true },
     )
@@ -383,14 +381,12 @@ test.describe('Callout Card', async () => {
               <div>
                 <div data-inkling="editor">
                   <div
-                    contenteditable="false"
+                    contenteditable="true"
                     role="textbox"
                     spellcheck="true"
                     data-lexical-editor="true"
-                    aria-autocomplete="none"
-                    aria-readonly="true"
                   >
-                    <p dir="ltr"><span data-lexical-text="true">Hello world</span></p>
+                    <p dir="auto"><span data-lexical-text="true">Hello world</span></p>
                   </div>
                 </div>
               </div>
@@ -399,7 +395,7 @@ test.describe('Callout Card', async () => {
             <div data-inkling-card-toolbar="callout"></div>
           </div>
         </div>
-        <p><br /></p>
+        <p dir="auto"><br data-lexical-managed-linebreak="true" /></p>
       `,
       { ignoreCardToolbarContents: true },
     )
