@@ -12,6 +12,8 @@ import { HeadingNode, QuoteNode } from '@lexical/rich-text'
 
 import { CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
+import { ImageNode } from '@/nodes/ImageNode'
+import { IMAGE_CARD_TRANSFORMER } from '@/markdown/card-transformers'
 import { DEFAULT_TRANSFORMERS } from '@/plugins/MarkdownShortcutPlugin'
 
 /**
@@ -33,9 +35,10 @@ const MARKDOWN_NODES = [
   LinkNode,
   CodeBlockNode,
   HorizontalRuleNode,
+  ImageNode,
 ]
 
-const TRANSFORMERS = DEFAULT_TRANSFORMERS as Transformer[]
+const TRANSFORMERS = [...DEFAULT_TRANSFORMERS, IMAGE_CARD_TRANSFORMER] as Transformer[]
 
 function createMarkdownEditor() {
   return createHeadlessEditor({
