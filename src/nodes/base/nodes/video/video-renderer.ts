@@ -3,7 +3,7 @@ import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
-import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
+import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface VideoNodeData {
@@ -50,7 +50,7 @@ export function renderVideoNode(node: VideoNodeData, options: VideoRenderOptions
 
   const document = options.createDocument!()
 
-  if (!node.src || node.src.trim() === '' || !isSafeUrl(node.src)) {
+  if (!node.src || node.src.trim() === '' || !isSafeMediaUrl(node.src)) {
     return renderEmptyContainer(document)
   }
 
@@ -78,8 +78,8 @@ export function cardTemplate({ node, cardClasses }: { node: VideoNodeData; cardC
   const heightAttr = hasVideoDimensions(node) ? `height="${node.height}"` : ''
   const posterAttr = hasVideoDimensions(node) ? `poster="${getPosterSpacerSrc(node.width, node.height)}"` : ''
   const autoplayAttr = node.loop ? 'loop autoplay muted' : ''
-  const safeThumbnailSrc = isSafeUrl(node.thumbnailSrc) ? node.thumbnailSrc : ''
-  const safeCustomThumbnailSrc = isSafeUrl(node.customThumbnailSrc) ? node.customThumbnailSrc : ''
+  const safeThumbnailSrc = isSafeMediaUrl(node.thumbnailSrc) ? node.thumbnailSrc : ''
+  const safeCustomThumbnailSrc = isSafeMediaUrl(node.customThumbnailSrc) ? node.customThumbnailSrc : ''
   const thumbnailSrc = safeCustomThumbnailSrc || safeThumbnailSrc
   const escapedCaption = node.caption ? escapeHtml(node.caption) : ''
   const hideControlsClass = node.loop ? ' inkling-video-hide' : ''
@@ -88,7 +88,7 @@ export function cardTemplate({ node, cardClasses }: { node: VideoNodeData; cardC
         <figure class="${cardClasses}" data-inkling-thumbnail=${safeThumbnailSrc} data-inkling-custom-thumbnail=${safeCustomThumbnailSrc}>
             <div class="inkling-video-container">
                 <video
-                    src="${isSafeUrl(node.src) ? node.src : ''}"
+                    src="${isSafeMediaUrl(node.src) ? node.src : ''}"
                     ${posterAttr}
                     ${widthAttr}
                     ${heightAttr}
@@ -151,8 +151,8 @@ export function emailCardTemplate({
   options: EmailVideoRenderOptions
   cardClasses: string
 }) {
-  const safeThumbnailSrc = isSafeUrl(node.thumbnailSrc) ? node.thumbnailSrc : ''
-  const safeCustomThumbnailSrc = isSafeUrl(node.customThumbnailSrc) ? node.customThumbnailSrc : ''
+  const safeThumbnailSrc = isSafeMediaUrl(node.thumbnailSrc) ? node.thumbnailSrc : ''
+  const safeCustomThumbnailSrc = isSafeMediaUrl(node.customThumbnailSrc) ? node.customThumbnailSrc : ''
   const thumbnailSrc = safeCustomThumbnailSrc || safeThumbnailSrc
   const safePostUrl = isSafeUrl(options.postUrl) ? options.postUrl : ''
   const escapedCaption = node.caption ? escapeHtml(node.caption) : ''
