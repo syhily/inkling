@@ -1,3 +1,4 @@
+import { LexicalCollaboration } from '@lexical/react/LexicalCollaborationContext'
 import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin'
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import React from 'react'
@@ -168,18 +169,20 @@ const InklingComposer = ({
       <InklingComposerContext.Provider value={composerContextValue}>
         <InklingSelectedCardContext>
           <TKContext>
-            {enableMultiplayer ? (
-              <CollaborationPlugin
-                id="main"
-                // oxlint-disable-next-line typescript/no-explicit-any
-                initialEditorState={initialEditorState as any}
-                // oxlint-disable-next-line typescript/no-explicit-any
-                providerFactory={createWebsocketProvider as any}
-                shouldBootstrap={true}
-                username={multiplayerUsername}
-              />
-            ) : null}
-            {children}
+            <LexicalCollaboration>
+              {enableMultiplayer ? (
+                <CollaborationPlugin
+                  id="main"
+                  // oxlint-disable-next-line typescript/no-explicit-any
+                  initialEditorState={initialEditorState as any}
+                  // oxlint-disable-next-line typescript/no-explicit-any
+                  providerFactory={createWebsocketProvider as any}
+                  shouldBootstrap={true}
+                  username={multiplayerUsername}
+                />
+              ) : null}
+              {children}
+            </LexicalCollaboration>
           </TKContext>
         </InklingSelectedCardContext>
       </InklingComposerContext.Provider>
