@@ -4,7 +4,7 @@ import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { truncateHtml } from '@/nodes/base/utils/truncate'
-import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
+import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 
 interface BookmarkNodeData {
@@ -41,8 +41,8 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
   const description = escapeHtml(node.description)
 
   const safeUrl = isSafeUrl(node.url) ? node.url : ''
-  const safeIcon = isSafeUrl(node.icon) ? node.icon : ''
-  const safeThumbnail = isSafeUrl(node.thumbnail) ? node.thumbnail : ''
+  const safeIcon = isSafeMediaUrl(node.icon) ? node.icon : ''
+  const safeThumbnail = isSafeMediaUrl(node.thumbnail) ? node.thumbnail : ''
   const caption = escapeHtml(node.caption)
 
   const element = document.createElement('div')

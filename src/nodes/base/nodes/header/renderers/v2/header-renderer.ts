@@ -3,7 +3,7 @@ import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
-import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
+import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { slugify } from '@/utils/slugify'
 import { getSrcsetAttribute, type ImageRenderOptions } from '@/nodes/base/utils/srcset-attribute'
 
@@ -54,7 +54,7 @@ interface HeaderV2RenderOptions extends ExportDOMOptions {
 function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions = {}) {
   const cardClasses = getCardClasses(nodeData).join(' ')
 
-  const safeBackgroundImageSrc = isSafeUrl(nodeData.backgroundImageSrc) ? nodeData.backgroundImageSrc : ''
+  const safeBackgroundImageSrc = isSafeMediaUrl(nodeData.backgroundImageSrc) ? nodeData.backgroundImageSrc : ''
   const safeButtonUrl = isSafeUrl(nodeData.buttonUrl) ? nodeData.buttonUrl : ''
   const headerText = nodeData.header ? escapeHtml(nodeData.header) : ''
   const subheaderText = nodeData.subheader ? escapeHtml(nodeData.subheader) : ''
@@ -131,7 +131,7 @@ function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions
 }
 
 function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions) {
-  const safeBackgroundImageSrc = isSafeUrl(nodeData.backgroundImageSrc) ? nodeData.backgroundImageSrc : ''
+  const safeBackgroundImageSrc = isSafeMediaUrl(nodeData.backgroundImageSrc) ? nodeData.backgroundImageSrc : ''
   const safeButtonUrl = isSafeUrl(nodeData.buttonUrl) ? nodeData.buttonUrl : ''
   const headerText = nodeData.header ? escapeHtml(nodeData.header) : ''
   const subheaderText = nodeData.subheader ? escapeHtml(nodeData.subheader) : ''
