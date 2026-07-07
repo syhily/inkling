@@ -15,12 +15,12 @@ import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { DEFAULT_TRANSFORMERS } from '@/plugins/MarkdownShortcutPlugin'
 
 /**
- * Spike prototype for a public markdown import/export API.
+ * Public markdown import/export API.
  *
- * This file is intentionally not exported from `src/index.ts`. It exists to
- * prove that Lexical's built-in markdown conversion can be wired up with the
- * existing Inkling node set and transformers, and to surface gaps that a
- * production API would need to address.
+ * Provides round-trip conversion between markdown strings and serialized
+ * Lexical editor states using `@lexical/markdown` with the existing Inkling
+ * node set and transformers (headings, lists, quotes, links, code blocks,
+ * horizontal rules, sub/superscript, etc.).
  *
  * Design notes and limitations are documented in `docs/markdown-api.md`.
  */

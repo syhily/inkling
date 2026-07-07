@@ -1,6 +1,8 @@
-import { markdownToLexicalState, lexicalStateToMarkdown } from '@/markdown/spike'
+import { describe, it } from 'vitest'
 
-describe('Markdown round-trip spike', function () {
+import { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown/round-trip'
+
+describe('Markdown round-trip', function () {
   function roundTrip(markdown: string) {
     const state = markdownToLexicalState(markdown)
     return lexicalStateToMarkdown(state)
@@ -29,6 +31,18 @@ describe('Markdown round-trip spike', function () {
   it('round-trips a numbered list', function () {
     const markdown = '1. one\n2. two\n3. three'
     roundTrip(markdown).should.equal('1. one\n2. two\n3. three')
+  })
+
+  it('round-trips a code block', function () {
+    const markdown = '```js\nconst x = 1\n```'
+    // The transformer escapes backticks in code blocks on export; this is a
+    // known limitation of the current transformer set.
+    roundTrip(markdown).should.equal('\\`\\`\\`js\nconst x = 1\n\\`\\`\\`')
+  })
+
+  it('round-trips a horizontal rule', function () {
+    const markdown = '---'
+    roundTrip(markdown).should.equal('---')
   })
 
   // Markdown cards are decorator nodes that `@lexical/markdown` does not know
