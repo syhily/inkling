@@ -12,7 +12,7 @@ import {
   EDIT_CARD_COMMAND,
   SELECT_CARD_COMMAND,
   SHOW_CARD_VISIBILITY_SETTINGS_COMMAND,
-} from '@/plugins/InklingBehaviourPlugin'
+} from '@/plugins/behaviour/commands'
 import { VISIBILITY_SETTINGS } from '@/utils/visibility'
 
 interface InklingCardWrapperProps {

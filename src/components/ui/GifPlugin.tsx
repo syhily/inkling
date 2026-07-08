@@ -5,7 +5,7 @@ import React from 'react'
 
 import GifSelector from '@/components/ui/GifSelector'
 import InklingComposerContext from '@/context/InklingComposerContext'
-import { DELETE_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
+import { DELETE_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { INSERT_FROM_GIF_COMMAND } from '@/plugins/InklingSelectorPlugin'
 import { getGifProviderConfig, useGif } from '@/utils/services/gif'
 

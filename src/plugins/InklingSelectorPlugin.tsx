@@ -4,7 +4,7 @@ import React from 'react'
 
 import GifPlugin from '@/components/ui/GifPlugin'
 import { $createImageNode, ImageNode, type ImageNodeDataset } from '@/nodes/ImageNode'
-import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
+import { INSERT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 export const OPEN_GIF_SELECTOR_COMMAND = createCommand<ImageNodeDataset>()
 export const INSERT_FROM_GIF_COMMAND = createCommand<ImageNodeDataset>()

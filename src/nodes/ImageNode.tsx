@@ -6,10 +6,11 @@ import type { CardConfig } from '@/context/InklingComposerContext'
 
 import GIFIcon from '@/assets/icons/inkling-card-type-gif.svg?react'
 import ImageCardIcon from '@/assets/icons/inkling-card-type-image.svg?react'
+import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
-import { InklingCardWrapper, MINIMAL_NODES } from '@/index'
 import { ImageNode as BaseImageNode } from '@/nodes/base'
 import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
+import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { OPEN_GIF_SELECTOR_COMMAND } from '@/plugins/InklingSelectorPlugin'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 

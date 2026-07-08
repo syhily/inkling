@@ -1,6 +1,13 @@
-import { createEditor, type EditorState, type Klass, type LexicalEditor, type LexicalNode, type LexicalNodeReplacement } from 'lexical'
+import {
+  createEditor,
+  type EditorState,
+  type Klass,
+  type LexicalEditor,
+  type LexicalNode,
+  type LexicalNodeReplacement,
+} from 'lexical'
 
-import { MINIMAL_NODES } from '@/index'
+import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import generateEditorState from '@/utils/generateEditorState'
 
 const BLANK_EDITOR_STATE = JSON.stringify({
