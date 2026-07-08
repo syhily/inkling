@@ -11,7 +11,6 @@ import FloatingButton from './components/FloatingButton'
 import Sidebar from './components/Sidebar'
 import Watermark from './components/Watermark'
 import { klipyConfig, tenorConfig } from './utils/gifConfig'
-import { defaultHeaders as defaultUnsplashHeaders } from './utils/unsplashConfig'
 import { fileTypes, useFileUpload } from './utils/useFileUpload'
 import { useSnippets } from './utils/useSnippets'
 
@@ -27,7 +26,6 @@ interface EditorAPI {
 }
 
 const cardConfig = {
-  unsplash: { defaultHeaders: defaultUnsplashHeaders },
   tenor: tenorConfig,
   klipy: klipyConfig,
 }
@@ -119,7 +117,7 @@ function HtmlOutputDemo() {
         >
           <div className="relative h-full grow">
             <div ref={containerRef} className="h-full overflow-auto" onClick={focusEditor}>
-              <div className="px-6 lg:px-0 mx-auto max-w-[740px] py-[15vmin]">
+              <div className="mx-auto max-w-[740px] px-6 py-[15vmin] lg:px-0">
                 <InklingComposableEditor cursorDidExitAtTop={focusTitle} registerAPI={handleRegisterAPI}>
                   <HtmlOutputPlugin html={html} setHtml={setHtml} />
                 </InklingComposableEditor>
@@ -127,7 +125,7 @@ function HtmlOutputDemo() {
             </div>
           </div>
           <Watermark />
-          <div className="sm:relative absolute z-20 flex h-full flex-col items-end">
+          <div className="absolute z-20 flex h-full flex-col items-end sm:relative">
             <Sidebar isOpen={isSidebarOpen} view={sidebarView} />
             <FloatingButton isOpen={isSidebarOpen} onClick={openSidebar} />
           </div>

@@ -1178,8 +1178,8 @@ describe('GalleryNode', function () {
             },
             {
               row: 0,
-              fileName: 'photo-1591672299888-e16a08b6c7ce',
-              src: 'https://images.unsplash.com/photo-1591672299888-e16a08b6c7ce?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=2000&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ',
+              fileName: 'external.jpg',
+              src: 'https://example.com/external.jpg',
               width: 2500,
               height: 1800,
             },
@@ -1196,7 +1196,7 @@ describe('GalleryNode', function () {
         output.should.not.match(/width="3200"/)
         output.should.not.match(/height="1600"/)
 
-        // unsplash is not
+        // external is not
         output.should.match(/width="2500"/)
         output.should.match(/height="1800"/)
       }),
@@ -1322,7 +1322,7 @@ describe('GalleryNode', function () {
 
     describe('srcset', function () {
       it(
-        'is included when image src is relative or Unsplash',
+        'is included when image src is relative',
         editorTest(async function () {
           const galleryNode = $createGalleryNode({
             images: [
@@ -1338,13 +1338,6 @@ describe('GalleryNode', function () {
                 fileName: 'NatGeo02.jpg',
                 src: '/subdir/support/content/images/2018/08/NatGeo01-9.jpg',
                 width: 3200,
-                height: 1600,
-              },
-              {
-                row: 0,
-                fileName: 'photo-1591672299888-e16a08b6c7ce',
-                src: 'https://images.unsplash.com/photo-1591672299888-e16a08b6c7ce?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=2000&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ',
-                width: 2000,
                 height: 1600,
               },
             ],
@@ -1385,22 +1378,6 @@ describe('GalleryNode', function () {
                         /subdir/support/content/images/size/w1000/2018/08/NatGeo01-9.jpg 1000w,
                         /subdir/support/content/images/size/w1600/2018/08/NatGeo01-9.jpg 1600w,
                         /subdir/support/content/images/size/w2400/2018/08/NatGeo01-9.jpg 2400w
-                      "
-                      sizes="(min-width: 720px) 720px"
-                    />
-                  </div>
-                  <div class="inkling-gallery-image">
-                    <img
-                      src="https://images.unsplash.com/photo-1591672299888-e16a08b6c7ce?ixlib=rb-1.2.1&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=2000&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ"
-                      width="2000"
-                      height="1600"
-                      loading="lazy"
-                      alt=""
-                      srcset="
-                        https://images.unsplash.com/photo-1591672299888-e16a08b6c7ce?ixlib=rb-1.2.1&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=600&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ   600w,
-                        https://images.unsplash.com/photo-1591672299888-e16a08b6c7ce?ixlib=rb-1.2.1&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=1000&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ 1000w,
-                        https://images.unsplash.com/photo-1591672299888-e16a08b6c7ce?ixlib=rb-1.2.1&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=1600&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ 1600w,
-                        https://images.unsplash.com/photo-1591672299888-e16a08b6c7ce?ixlib=rb-1.2.1&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=2000&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ 2000w
                       "
                       sizes="(min-width: 720px) 720px"
                     />
@@ -1569,13 +1546,6 @@ describe('GalleryNode', function () {
                 width: 640,
                 height: 1600,
               },
-              {
-                row: 0,
-                fileName: 'photo',
-                src: 'https://images.unsplash.com/photo?w=2000',
-                width: 2000,
-                height: 1600,
-              },
             ],
           })
 
@@ -1584,10 +1554,9 @@ describe('GalleryNode', function () {
           const output = (element as HTMLElement).outerHTML
           const sizes = output.match(/sizes="(.*?)"/g)
 
-          sizes!.length.should.equal(2)
+          sizes!.length.should.equal(1)
 
           output.should.match(/standard\.jpg 720w" sizes="\(min-width: 720px\) 720px"/)
-          output.should.match(/photo\?w=2000 2000w" sizes="\(min-width: 720px\) 720px"/)
         }),
       )
 
@@ -1652,13 +1621,6 @@ describe('GalleryNode', function () {
                 width: 640,
                 height: 1600,
               },
-              {
-                row: 0,
-                fileName: 'photo',
-                src: 'https://images.unsplash.com/photo?w=2000',
-                width: 2000,
-                height: 1600,
-              },
             ],
           })
 
@@ -1704,21 +1666,14 @@ describe('GalleryNode', function () {
                 width: 2000,
                 height: 1600,
               },
-              {
-                row: 1,
-                fileName: 'unsplash.jpg',
-                src: 'https://images.unsplash.com/unsplash.jpg?w=2000',
-                width: 2000,
-                height: 1600,
-              },
             ],
           })
 
           const { element } = galleryNode.exportDOM(editor, exportOptions)
           const output = (element as HTMLElement).outerHTML
 
-          // 3 images wider than 600px template width resized to fit
-          output.match(/width="600"/g)!.length.should.equal(3)
+          // 2 images wider than 600px template width resized to fit
+          output.match(/width="600"/g)!.length.should.equal(2)
           // 1 image smaller than template width
           output.should.match(/width="300"/)
 
@@ -1732,8 +1687,6 @@ describe('GalleryNode', function () {
           output.should.match(/\/subdir\/support\/content\/images\/2018\/08\/small\.jpg/)
           // resized because image is > 1600
           output.should.match(/\/content\/images\/size\/w1600\/2018\/08\/photo\.jpg/)
-          // resized unsplash image
-          output.should.match(/https:\/\/images\.unsplash\.com\/unsplash\.jpg\?w=1200/)
         }),
       )
 

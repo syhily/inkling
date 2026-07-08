@@ -18,7 +18,6 @@ import NftCardIcon from '@/assets/icons/inkling-card-type-nft.svg?react'
 import SnippetCardIcon from '@/assets/icons/inkling-card-type-snippet.svg?react'
 import ToggleCardIcon from '@/assets/icons/inkling-card-type-toggle.svg?react'
 import TwitterCardIcon from '@/assets/icons/inkling-card-type-twitter.svg?react'
-import UnsplashCardIcon from '@/assets/icons/inkling-card-type-unsplash.svg?react'
 import VideoCardIcon from '@/assets/icons/inkling-card-type-video.svg?react'
 import GalleryPlaceholderIcon from '@/assets/icons/inkling-gallery-placeholder.svg?react'
 import HeadingTwoIcon from '@/assets/icons/inkling-heading-2.svg?react'
@@ -78,7 +77,7 @@ const DesignSandbox = () => {
     /* ---------------------------------------------------------- */
 
   function ComponentTitle({ label }: { label: string }) {
-    return <h3 className="mb-4 mt-20 text-xl font-bold first-of-type:mt-8">{label}</h3>
+    return <h3 className="mt-20 mb-4 text-xl font-bold first-of-type:mt-8">{label}</h3>
   }
 
   /* Floating toolbar
@@ -87,7 +86,7 @@ const DesignSandbox = () => {
   function TextToolbar() {
     return (
       <div className="max-w-fit">
-        <ul className="m-0 rounded bg-black px-1 py-0 font-sans text-md font-normal text-white flex items-center justify-evenly">
+        <ul className="m-0 flex items-center justify-evenly rounded bg-black px-1 py-0 font-sans text-md font-normal text-white">
           <ToolbarItem Icon={BoldIcon} label="Format text as bold" />
           <ToolbarItem Icon={ItalicIcon} label="Format text as italics" />
           <ToolbarItem Icon={HeadingTwoIcon} label="Toggle heading 1" />
@@ -105,7 +104,7 @@ const DesignSandbox = () => {
   function ImageToolbar() {
     return (
       <div className="max-w-fit">
-        <ul className="m-0 rounded bg-black px-1 py-0 font-sans text-md font-normal text-white flex items-center justify-evenly">
+        <ul className="m-0 flex items-center justify-evenly rounded bg-black px-1 py-0 font-sans text-md font-normal text-white">
           <ToolbarItem Icon={ImgRegularIcon} label="Set image to regular" />
           <ToolbarItem Icon={ImgWideIcon} label="Set image to wide" />
           <ToolbarItem Icon={ImgFullIcon} label="Set image to full" />
@@ -122,7 +121,7 @@ const DesignSandbox = () => {
   function GalleryToolbar() {
     return (
       <div className="max-w-fit">
-        <ul className="m-0 rounded bg-black px-1 py-0 font-sans text-md font-normal text-white flex items-center justify-evenly">
+        <ul className="m-0 flex items-center justify-evenly rounded bg-black px-1 py-0 font-sans text-md font-normal text-white">
           <ToolbarItem Icon={AddIcon} label="Add image" />
           <ToolbarSeparator />
           <ToolbarItem Icon={SnippetIcon} label="Save as snippet" />
@@ -141,8 +140,8 @@ const DesignSandbox = () => {
     [key: string]: unknown
   }) {
     return (
-      <li className="m-0 p-0 first:m-0 flex" {...props}>
-        <div className="size-9 flex items-center justify-center">
+      <li className="m-0 flex p-0 first:m-0" {...props}>
+        <div className="flex size-9 items-center justify-center">
           <Icon className="fill-white" />
         </div>
       </li>
@@ -150,7 +149,7 @@ const DesignSandbox = () => {
   }
 
   function ToolbarSeparator() {
-    return <li className="m-0 mx-1 h-5 bg-grey-900 w-px"></li>
+    return <li className="m-0 mx-1 h-5 w-px bg-grey-900"></li>
   }
 
   /* Plus button
@@ -160,10 +159,10 @@ const DesignSandbox = () => {
     return (
       <button
         aria-label="Add a card"
-        className="group size-7 border-grey bg-white hover:border-grey-900 md:size-9 relative flex cursor-pointer items-center justify-center rounded-full border transition-all ease-linear"
+        className="group relative flex size-7 cursor-pointer items-center justify-center rounded-full border border-grey bg-white transition-all ease-linear hover:border-grey-900 md:size-9"
         type="button"
       >
-        <PlusIcon className="size-4 stroke-grey-800 group-hover:stroke-grey-900 stroke-2" />
+        <PlusIcon className="size-4 stroke-grey-800 stroke-2 group-hover:stroke-grey-900" />
       </button>
     )
   }
@@ -173,7 +172,7 @@ const DesignSandbox = () => {
 
   function CardMenu() {
     return (
-      <div className="m-0 mb-3 rounded-lg bg-white p-0 text-sm shadow z-[9999999] max-h-[376px] w-[312px] flex-col overflow-y-auto bg-clip-padding">
+      <div className="z-[9999999] m-0 mb-3 max-h-[376px] w-[312px] flex-col overflow-y-auto rounded-lg bg-white bg-clip-padding p-0 text-sm shadow">
         <CardMenuSection label="Primary" />
         <CardMenuItem desc="Upload, or embed with /image [url]" Icon={ImageCardIcon} label="Image" />
         <CardMenuItem desc="Insert a raw HTML card" Icon={HtmlCardIcon} label="HTML" />
@@ -190,7 +189,6 @@ const DesignSandbox = () => {
         <CardMenuItem desc="Add a bold section header" Icon={HeaderCardIcon} label="Header" />
         <CardMenuSection label="Embed" />
         <CardMenuItem desc="/twitter [tweet url]" Icon={TwitterCardIcon} label="Twitter" />
-        <CardMenuItem desc="/unsplash [search-term or url]" Icon={UnsplashCardIcon} label="Unsplash" />
         <CardMenuItem desc="/nft [opensea url]" Icon={NftCardIcon} label="NFT" />
         <CardMenuSection label="Snippets" />
         <CardSnippetItem Icon={SnippetCardIcon} label="A random snippet" />
@@ -201,7 +199,7 @@ const DesignSandbox = () => {
   function CardMenuSection({ label, ...props }: { label: string; [key: string]: unknown }) {
     return (
       <div
-        className="mb-2 px-4 pt-3 text-2xs font-medium text-grey flex shrink-0 flex-col justify-center tracking-[.06rem] uppercase"
+        className="mb-2 flex shrink-0 flex-col justify-center px-4 pt-3 text-2xs font-medium tracking-[.06rem] text-grey uppercase"
         style={{ minWidth: 'calc(100% - 3.2rem)' }}
         {...props}
       >
@@ -223,17 +221,17 @@ const DesignSandbox = () => {
   }) {
     return (
       <div
-        className="px-4 py-2 text-grey-800 hover:bg-grey-100 flex cursor-pointer flex-row items-center border border-transparent"
+        className="flex cursor-pointer flex-row items-center border border-transparent px-4 py-2 text-grey-800 hover:bg-grey-100"
         {...props}
       >
         <div className="flex items-center">
           <Icon className="size-7" />
         </div>
         <div className="flex flex-col">
-          <div className="m-0 ml-4 font-normal text-grey-900 truncate text-[1.3rem] leading-[1.333em] tracking-[.02rem]">
+          <div className="m-0 ml-4 truncate text-[1.3rem] leading-[1.333em] font-normal tracking-[.02rem] text-grey-900">
             {label}
           </div>
-          <div className="m-0 ml-4 text-2xs font-normal text-grey truncate leading-[1.333em] tracking-[.02rem]">
+          <div className="m-0 ml-4 truncate text-2xs leading-[1.333em] font-normal tracking-[.02rem] text-grey">
             {desc}
           </div>
         </div>
@@ -252,14 +250,14 @@ const DesignSandbox = () => {
   }) {
     return (
       <div
-        className="px-4 py-2 text-grey-800 hover:bg-grey-100 flex cursor-pointer flex-row items-center border border-transparent"
+        className="flex cursor-pointer flex-row items-center border border-transparent px-4 py-2 text-grey-800 hover:bg-grey-100"
         {...props}
       >
         <div className="flex items-center">
           <Icon className="size-7" />
         </div>
         <div className="flex flex-col">
-          <div className="m-0 ml-4 font-normal text-grey-900 truncate text-[1.3rem] leading-[1.333em] tracking-[.02rem]">
+          <div className="m-0 ml-4 truncate text-[1.3rem] leading-[1.333em] font-normal tracking-[.02rem] text-grey-900">
             {label}
           </div>
         </div>
@@ -273,7 +271,7 @@ const DesignSandbox = () => {
   function DividerCard() {
     return (
       <div>
-        <hr className="border-grey-300 block h-[1px] border-0 border-t" />
+        <hr className="block h-[1px] border-0 border-t border-grey-300" />
       </div>
     )
   }
@@ -283,9 +281,9 @@ const DesignSandbox = () => {
 
   function CodeBlock() {
     return (
-      <div className="border-green border-2">
+      <div className="border-2 border-green">
         <div className="rounded bg-grey-50 px-3 py-2">
-          <textarea className="bg-grey-50 font-mono w-full resize-none text-[1.7rem]" />
+          <textarea className="w-full resize-none bg-grey-50 font-mono text-[1.7rem]" />
         </div>
         <CaptionEditor placeholder="Type caption for code block (optional)" />
       </div>
@@ -317,7 +315,7 @@ const DesignSandbox = () => {
           <MediaPlaceholder desc="Click to select an image" Icon={ImgPlaceholderIcon} />
           <CaptionEditor placeholder="Type caption for image (optional)" />
           <button
-            className={`bottom-0 right-0 m-3 rounded px-1 font-normal leading-7 tracking-wide absolute cursor-pointer border text-[1.3rem] transition-all duration-100 ${altText ? 'border-green bg-green text-white' : 'border-grey text-grey'} `}
+            className={`absolute right-0 bottom-0 m-3 cursor-pointer rounded border px-1 text-[1.3rem] leading-7 font-normal tracking-wide transition-all duration-100 ${altText ? 'border-green bg-green text-white' : 'border-grey text-grey'} `}
             type="button"
             onClick={(e) => toggleAltText(e)}
           >
@@ -348,8 +346,8 @@ const DesignSandbox = () => {
     return (
       <div className="relative">
         <figure className="cursor-pointer border border-transparent" {...props}>
-          <div className="h-100 border-grey-100 bg-grey-50 relative flex items-center justify-center border before:pb-[62.5%]">
-            <button className="group p-20 flex flex-col items-center justify-center" type="button">
+          <div className="relative flex h-100 items-center justify-center border border-grey-100 bg-grey-50 before:pb-[62.5%]">
+            <button className="group flex flex-col items-center justify-center p-20" type="button">
               <Icon className="size-32 opacity-80 transition-all ease-linear group-hover:scale-105 group-hover:opacity-100" />
               <p className="mt-4 text-sm font-normal text-grey-700 group-hover:text-grey-800">{desc}</p>
             </button>
@@ -365,7 +363,7 @@ const DesignSandbox = () => {
   function CaptionEditor({ placeholder }: { placeholder: string }) {
     return (
       <input
-        className="not-inkling-prose p-2 font-sans text-sm font-normal tracking-wide text-grey-900 w-full text-center"
+        className="not-inkling-prose w-full p-2 text-center font-sans text-sm font-normal tracking-wide text-grey-900"
         placeholder={placeholder}
       />
     )
@@ -376,7 +374,7 @@ const DesignSandbox = () => {
 
   function GalleryCard() {
     return (
-      <div className="border-green border-2">
+      <div className="border-2 border-green">
         <MediaPlaceholder desc="Click to select up to 9 images" Icon={GalleryPlaceholderIcon} />
         <CaptionEditor placeholder="Type caption for gallery (optional)" />
       </div>

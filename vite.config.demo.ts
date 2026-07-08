@@ -49,7 +49,6 @@ export default defineConfig({
       './test/markdown/**/*.test.{js,jsx,ts,tsx}',
       './test/transforms/**/*.test.{js,jsx,ts,tsx}',
       './test/nodes-base/**/*.test.{js,jsx,ts,tsx}',
-      './test/unsplash/unit/**/*.test.{js,jsx,ts,tsx}',
     ],
     testTimeout: 10000,
     ...(process.env.CI && {

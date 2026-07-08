@@ -43,16 +43,6 @@ VITE_TENOR_API_KEY=xxx
 
 The card resolves to Klipy when `VITE_KLIPY_API_KEY` is set, otherwise Tenor. Get a Klipy key at https://partner.klipy.com; the Tenor key is described at https://inkling.org/docs/config/#tenor
 
-#### Unsplash card
-
-To use the Unsplash image search demo, create a `.env.local` file in the project root with an Unsplash access key:
-
-```
-VITE_UNSPLASH_ACCESS_KEY=xxx
-```
-
-Get a key at https://unsplash.com/developers.
-
 #### Bookmark & Embed cards
 
 These cards make external web requests. Since the demo doesn't have a server to process these requests, we must fetch these resources on the front end. To do this we need to enable CORS, which is most easily done with a browser extension like 'Test CORS' for Chrome. Otherwise you will see blocked requests logging errors in the console. This can also be avoided by using test data directly without fetching via `fetchEmbed.js`.

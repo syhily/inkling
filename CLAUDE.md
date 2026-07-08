@@ -65,7 +65,6 @@ For debugging and development:
 - `test/markdown/` - Markdown import/export tests
 - `test/nodes-base/` - Base node behavior tests
 - `test/transforms/` - Transform utility tests
-- `test/unsplash/` - Unsplash image integration tests
 
 ## Development Workflow
 

@@ -37,7 +37,6 @@ import emailContent from './content/email-content.json'
 import minimalContent from './content/minimal-content.json'
 import { fetchEmbed } from './utils/fetchEmbed'
 import { klipyConfig, tenorConfig } from './utils/gifConfig'
-import { defaultHeaders as defaultUnsplashHeaders } from './utils/unsplashConfig'
 import { fileTypes, useFileUpload } from './utils/useFileUpload'
 import { useSnippets } from './utils/useSnippets'
 
@@ -78,7 +77,6 @@ const WEBSOCKET_ENDPOINT = params.get('multiplayerEndpoint') || 'ws://localhost:
 const WEBSOCKET_ID = params.get('multiplayerId') || '0'
 
 const defaultCardConfig: Record<string, unknown> = {
-  unsplash: defaultUnsplashHeaders,
   fetchEmbed: fetchEmbed,
   tenor: tenorConfig,
   klipy: klipyConfig,
@@ -456,7 +454,7 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
     <>
       <Watermark editorType={editorType || 'full'} />
       {!isEmailEditor && (
-        <div className="sm:relative absolute z-20 flex h-full flex-col items-end">
+        <div className="absolute z-20 flex h-full flex-col items-end sm:relative">
           <Sidebar isOpen={isSidebarOpen} saveContent={saveContent} view={sidebarView} />
           <FloatingButton isOpen={isSidebarOpen} onClick={openSidebar} />
         </div>
@@ -484,7 +482,7 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
         onClick={focusEditor}
         onMouseDown={maybeSkipFocusEditor}
       >
-        <div className="px-6 lg:px-0 mx-auto max-w-[740px] py-[15vmin]">
+        <div className="mx-auto max-w-[740px] px-6 py-[15vmin] lg:px-0">
           {showTitle ? <TitleTextBox ref={titleRef} editorAPI={editorAPI} setTitle={setTitle} title={title} /> : null}
           {children}
         </div>

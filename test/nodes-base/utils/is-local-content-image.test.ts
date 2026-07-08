@@ -11,7 +11,7 @@ describe('Utils: isLocalContentImage', function () {
   })
 
   it('returns false for external images', function () {
-    isLocalContentImage('https://unsplash.com/photos/test').should.be.false()
+    isLocalContentImage('https://example.com/photos/test').should.be.false()
     isLocalContentImage('https://example.com/other/images/test.jpg').should.be.false()
   })
 

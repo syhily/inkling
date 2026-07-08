@@ -6,12 +6,11 @@ import type { CardConfig } from '@/context/InklingComposerContext'
 
 import GIFIcon from '@/assets/icons/inkling-card-type-gif.svg?react'
 import ImageCardIcon from '@/assets/icons/inkling-card-type-image.svg?react'
-import UnsplashIcon from '@/assets/icons/inkling-card-type-unsplash.svg?react'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
 import { InklingCardWrapper, MINIMAL_NODES } from '@/index'
 import { ImageNode as BaseImageNode } from '@/nodes/base'
 import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
-import { OPEN_GIF_SELECTOR_COMMAND, OPEN_UNSPLASH_SELECTOR_COMMAND } from '@/plugins/InklingSelectorPlugin'
+import { OPEN_GIF_SELECTOR_COMMAND } from '@/plugins/InklingSelectorPlugin'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 export const INSERT_IMAGE_COMMAND = createCommand()
@@ -52,21 +51,6 @@ export class ImageNode extends BaseImageNode {
       queryParams: ['src'],
       priority: 1,
       shortcut: '/image',
-    },
-    {
-      section: 'Embeds',
-      label: 'Unsplash',
-      desc: '/unsplash [search term or url]',
-      Icon: UnsplashIcon,
-      insertCommand: OPEN_UNSPLASH_SELECTOR_COMMAND,
-      insertParams: {
-        triggerFileDialog: false,
-      },
-      isHidden: ({ config }: { config: CardConfig }) => !config?.unsplash,
-      matches: ['unsplash', 'uns'],
-      queryParams: ['src'],
-      priority: 3,
-      shortcut: '/unsplash',
     },
     {
       label: 'GIF',

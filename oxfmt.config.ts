@@ -46,7 +46,7 @@ export default defineConfig({
     ],
   },
   sortTailwindcss: {
-    stylesheet: 'src/unsplash/styles/index.css',
+    stylesheet: 'src/styles/index.css',
     functions: ['clsx'],
     preserveWhitespace: true,
   },

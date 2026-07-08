@@ -288,24 +288,6 @@ describe('ImageNode', function () {
 
     describe('srcset attribute', function () {
       it(
-        'is included when src is an unsplash image',
-        editorTest(async function () {
-          dataset.width = 3000
-          dataset.height = 6000
-          dataset.src =
-            'https://images.unsplash.com/photo-1591672299888-e16a08b6c7ce?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=2000&fit=max&ixid=eyJhcHBfaWQiOjExNzczfQ'
-
-          const imageNode = $createImageNode(dataset)
-          const { element } = imageNode.exportDOM(editor, exportOptions)
-          const output = (element as HTMLElement).outerHTML
-
-          output.should.containEql(
-            'https://images.unsplash.com/photo-1591672299888-e16a08b6c7ce?ixlib=rb-1.2.1&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=600&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ 600w, https://images.unsplash.com/photo-1591672299888-e16a08b6c7ce?ixlib=rb-1.2.1&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=1000&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ 1000w, https://images.unsplash.com/photo-1591672299888-e16a08b6c7ce?ixlib=rb-1.2.1&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=1600&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ 1600w, https://images.unsplash.com/photo-1591672299888-e16a08b6c7ce?ixlib=rb-1.2.1&amp;q=80&amp;fm=jpg&amp;crop=entropy&amp;cs=tinysrgb&amp;w=2400&amp;fit=max&amp;ixid=eyJhcHBfaWQiOjExNzczfQ 2400w',
-          )
-        }),
-      )
-
-      it(
         'is ommitted when target is email',
         editorTest(async function () {
           exportOptions.target = 'email'
@@ -327,8 +309,6 @@ describe('ImageNode', function () {
       it('omits sizes larger than image width and includes origin image width if smaller than largest responsive width')
       it('works correctly with subdirectories')
       it('works correctly with absolute subdirectories')
-      it('is included when src is an Unsplash image')
-      it('has same size omission behaviour for Unsplash as local files')
     })
 
     describe('sizes attribute', function () {
@@ -371,12 +351,10 @@ describe('ImageNode', function () {
 
     describe('email target', function () {
       it('adds width/height and uses resized local image')
-      it('adds width/height and uses resized unsplash image')
-      it("adds width/height and uses original src when local image can't be transformed")
+      it('adds width/height and uses original src when local image cannot be transformed')
       it('uses original image if size is smaller than "retina" size')
       it('uses original image width/height if image is smaller than 600px wide')
       it('skips width/height and resize if payload is missing dimensions')
-      it('resizes Unsplash images even if width/height data is missing')
       it('omits srcset attribute')
     })
   })

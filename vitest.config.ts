@@ -27,9 +27,8 @@ export default defineConfig({
       './test/markdown/**/*.test.{js,jsx,ts,tsx}',
       './test/transforms/**/*.test.{js,jsx,ts,tsx}',
       './test/nodes-base/**/*.test.{js,jsx,ts,tsx}',
-      './test/unsplash/unit/**/*.test.{js,jsx,ts,tsx}',
     ],
-    exclude: ['./test/e2e/**', './test/acceptance/**', './test/unsplash/acceptance/**'],
+    exclude: ['./test/e2e/**', './test/acceptance/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'cobertura'],

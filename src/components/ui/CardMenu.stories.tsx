@@ -14,7 +14,6 @@ import ImageCardIcon from '@/assets/icons/inkling-card-type-image.svg?react'
 import NftCardIcon from '@/assets/icons/inkling-card-type-nft.svg?react'
 import ToggleCardIcon from '@/assets/icons/inkling-card-type-toggle.svg?react'
 import TwitterCardIcon from '@/assets/icons/inkling-card-type-twitter.svg?react'
-import UnsplashCardIcon from '@/assets/icons/inkling-card-type-unsplash.svg?react'
 import VideoCardIcon from '@/assets/icons/inkling-card-type-video.svg?react'
 import { CardMenu, CardMenuItem, CardMenuSection, CardSnippetItem } from '@/components/ui/CardMenu'
 
@@ -40,7 +39,6 @@ const meta = {
       <CardMenuItem desc="Add a bold section header" Icon={HeaderCardIcon} label="Header" />
       <CardMenuSection label="Embed" />
       <CardMenuItem desc="/twitter [tweet url]" Icon={TwitterCardIcon} label="Twitter" />
-      <CardMenuItem desc="/unsplash [search-term or url]" Icon={UnsplashCardIcon} label="Unsplash" />
       <CardMenuItem desc="/nft [opensea url]" Icon={NftCardIcon} label="NFT" />
       <CardMenuSection label="Snippets" />
       <CardSnippetItem label="Snippet one" />
@@ -77,7 +75,6 @@ export const Default: Story = {
         'Embed',
         [
           { label: 'Twitter', desc: '/twitter [tweet url]', Icon: TwitterCardIcon },
-          { label: 'Unsplash', desc: '/unsplash [search-term or url]', Icon: UnsplashCardIcon },
           { label: 'NFT', desc: '/nft [opensea url]', Icon: NftCardIcon },
         ],
       ],

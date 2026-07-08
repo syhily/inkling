@@ -7,7 +7,7 @@ import { assertHTML, focusEditor, html, initialize, insertCard, pasteText, selec
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const visibleEmailMenuItems = ['Image', 'Unsplash', 'GIF', 'Bookmark', 'Button', 'Callout', 'HTML', 'Divider']
+const visibleEmailMenuItems = ['Image', 'GIF', 'Bookmark', 'Button', 'Callout', 'HTML', 'Divider']
 
 const unavailableEmailMenuItems = [
   'Audio',
