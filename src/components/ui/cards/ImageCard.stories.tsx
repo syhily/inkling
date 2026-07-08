@@ -1,8 +1,9 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { createEditor } from 'lexical'
+import React from 'react'
 
-import { ImageCard } from '@/components/ui/cards/ImageCard'
+import { ImageCard, type ImageCardProps } from '@/components/ui/cards/ImageCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import { MINIMAL_NODES } from '@/index'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
@@ -10,12 +11,40 @@ import populateEditor from '@/utils/storybook/populate-storybook-editor'
 const displayOptions = {
   Default: { isSelected: false, isEditing: false },
   Selected: { isSelected: true, isEditing: false },
+} as const
+
+type DisplayKey = keyof typeof displayOptions
+
+interface ImageCardStoryArgs extends Partial<ImageCardProps> {
+  display?: DisplayKey
+  caption?: string
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+function ImageCardStory({ display = 'Default', caption = '', ...args }: ImageCardStoryArgs) {
+  const captionEditor = createEditor({ nodes: MINIMAL_NODES })
+  populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
+  const displayState = displayOptions[display]
+  const componentProps = {
+    onFileChange: () => {},
+    setAltText: () => {},
+    imageUploader: {},
+    ...args,
+  }
+
+  return (
+    <div className="inkling-prose">
+      <div className="my-8 mx-auto max-w-[740px] min-w-[initial]">
+        <CardWrapper {...displayState} {...componentProps}>
+          <ImageCard {...displayState} {...componentProps} captionEditor={captionEditor} />
+        </CardWrapper>
+      </div>
+    </div>
+  )
+}
+
+const meta = {
   title: 'Primary cards/Image card',
-  component: ImageCard,
+  component: ImageCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
     display: {
@@ -40,109 +69,101 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof ImageCardStory>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = ({ display, caption, ...args }) => {
-  const captionEditor = createEditor({ nodes: MINIMAL_NODES })
-  populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
+type Story = StoryObj<typeof meta>
 
-  return (
-    <div className="inkling-prose">
-      <div className="my-8 mx-auto max-w-[740px] min-w-[initial]">
-        <CardWrapper {...display} {...args}>
-          <ImageCard {...display} {...args} captionEditor={captionEditor} />
-        </CardWrapper>
-      </div>
-    </div>
-  )
-}
-
-export const Empty = Template.bind({})
-Empty.args = {
-  display: 'Selected',
-  setAltText: true,
-  caption: '',
-  altText: '',
-  imageUploader: {
-    isLoading: false,
-    progress: 100,
-  },
-  imageFileDragHandler: {
-    isDraggedOver: false,
+export const Empty: Story = {
+  args: {
+    display: 'Selected',
+    setAltText: () => {},
+    caption: '',
+    altText: '',
+    imageUploader: {
+      isLoading: false,
+      progress: 100,
+    },
+    imageFileDragHandler: {
+      isDraggedOver: false,
+    },
   },
 }
 
-export const Uploading = Template.bind({})
-Uploading.args = {
-  display: 'Selected',
-  cardWidth: 'regular',
-  setAltText: true,
-  caption: '',
-  altText: '',
-  isDraggedOver: false,
-  previewSrc: 'https://static.inkling.local/v4.0.0/images/feature-image.jpg',
-  imageUploader: {
-    progress: 50,
-    isLoading: true,
-  },
-  imageFileDragHandler: {
-    isDraggedOver: false,
-  },
-}
-
-export const Populated = Template.bind({})
-Populated.args = {
-  display: 'Selected',
-  cardWidth: 'regular',
-  src: 'https://static.inkling.local/v4.0.0/images/feature-image.jpg',
-  setAltText: true,
-  caption: 'Welcome to your new Inkling publication',
-  altText: 'Feature image',
-  imageUploader: {
-    isLoading: false,
-    progress: 100,
-  },
-  imageFileDragHandler: {
-    isDraggedOver: false,
+export const Uploading: Story = {
+  args: {
+    display: 'Selected',
+    cardWidth: 'regular',
+    setAltText: () => {},
+    caption: '',
+    altText: '',
+    previewSrc: 'https://static.inkling.local/v4.0.0/images/feature-image.jpg',
+    imageUploader: {
+      progress: 50,
+      isLoading: true,
+    },
+    imageFileDragHandler: {
+      isDraggedOver: false,
+    },
   },
 }
 
-export const Errors = Template.bind({})
-Errors.args = {
-  display: 'Selected',
-  cardWidth: 'regular',
-  setAltText: true,
-  caption: '',
-  altText: '',
-  imageUploader: {
-    errors: [
-      {
-        message: 'The file type you uploaded is not supported. Please use .GIF, .JPG, .JPEG, .PNG, .SVG, .SVGZ, .WEBP',
-      },
-    ],
-  },
-  imageFileDragHandler: {
-    isDraggedOver: false,
+export const Populated: Story = {
+  args: {
+    display: 'Selected',
+    cardWidth: 'regular',
+    src: 'https://static.inkling.local/v4.0.0/images/feature-image.jpg',
+    setAltText: () => {},
+    caption: 'Welcome to your new Inkling publication',
+    altText: 'Feature image',
+    imageUploader: {
+      isLoading: false,
+      progress: 100,
+    },
+    imageFileDragHandler: {
+      isDraggedOver: false,
+    },
   },
 }
 
-export const DraggedOver = Template.bind({})
-DraggedOver.args = {
-  display: 'Selected',
-  cardWidth: 'regular',
-  setAltText: true,
-  caption: '',
-  altText: '',
-  imageUploader: {
-    errors: [
-      {
-        message: 'The file type you uploaded is not supported. Please use .GIF, .JPG, .JPEG, .PNG, .SVG, .SVGZ, .WEBP',
-      },
-    ],
+export const Errors: Story = {
+  args: {
+    display: 'Selected',
+    cardWidth: 'regular',
+    setAltText: () => {},
+    caption: '',
+    altText: '',
+    imageUploader: {
+      errors: [
+        {
+          message:
+            'The file type you uploaded is not supported. Please use .GIF, .JPG, .JPEG, .PNG, .SVG, .SVGZ, .WEBP',
+        },
+      ],
+    },
+    imageFileDragHandler: {
+      isDraggedOver: false,
+    },
   },
-  imageFileDragHandler: {
-    isDraggedOver: true,
+}
+
+export const DraggedOver: Story = {
+  args: {
+    display: 'Selected',
+    cardWidth: 'regular',
+    setAltText: () => {},
+    caption: '',
+    altText: '',
+    imageUploader: {
+      errors: [
+        {
+          message:
+            'The file type you uploaded is not supported. Please use .GIF, .JPG, .JPEG, .PNG, .SVG, .SVGZ, .WEBP',
+        },
+      ],
+    },
+    imageFileDragHandler: {
+      isDraggedOver: true,
+    },
   },
 }

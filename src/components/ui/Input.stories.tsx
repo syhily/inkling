@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { Input } from '@/components/ui/Input'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Input',
   component: Input,
   parameters: {
@@ -11,14 +10,15 @@ const story: Meta<any> = {
       type: 'uiReady',
     },
   },
+} satisfies Meta<typeof Input>
+export default meta
+
+type Story = StoryObj<typeof meta>
+
+export const Default: Story = {
+  render: (args) => (
+    <div className="w-[240px]">
+      <Input {...args} />
+    </div>
+  ),
 }
-export default story
-
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => (
-  <div className="w-[240px]">
-    <Input {...args} />
-  </div>
-)
-
-export const Default = Template.bind({})

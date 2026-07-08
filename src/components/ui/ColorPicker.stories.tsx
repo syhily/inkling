@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { ColorPicker } from '@/components/ui/ColorPicker'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Color picker (New)',
   component: ColorPicker,
   parameters: {
@@ -11,26 +10,30 @@ const story: Meta<any> = {
       type: 'uiReady',
     },
   },
-  argTypes: {
-    selectedName: { control: 'select', options: ['grey', 'blue', 'green', 'yellow', 'red', 'pink', 'purple'] },
+} satisfies Meta<typeof ColorPicker>
+export default meta
+
+type Story = StoryObj<typeof meta>
+
+export const Default: Story = {
+  args: {
+    value: '#777777',
+    onChange: () => {},
   },
 }
-export default story
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => {
-  return (
-    <div className="w-[240px]">
-      <ColorPicker {...args} />
-    </div>
-  )
+export const WithEyedropper: Story = {
+  args: {
+    value: '#777777',
+    eyedropper: true,
+    onChange: () => {},
+  },
 }
 
-export const Default = Template.bind({})
-Default.args = {
-  swatches: [
-    { title: 'Brand color', accent: true },
-    { title: 'Black', hex: '#000000' },
-    { title: 'Transparent', transparent: true },
-  ],
+export const WithTransparentOption: Story = {
+  args: {
+    value: '#777777',
+    hasTransparentOption: true,
+    onChange: () => {},
+  },
 }

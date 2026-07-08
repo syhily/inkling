@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { Button } from '@/components/ui/Button'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Button',
   component: Button,
   argTypes: {
@@ -16,7 +15,7 @@ const story: Meta<any> = {
       control: { type: 'select' },
     },
     width: {
-      options: ['regular', 'full'],
+      options: ['auto', 'full'],
       control: { type: 'radio' },
     },
   },
@@ -25,30 +24,29 @@ const story: Meta<any> = {
       type: 'uiReady',
     },
   },
-}
-export default story
+} satisfies Meta<typeof Button>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => {
-  return <Button {...args} />
-}
+type Story = StoryObj<typeof meta>
 
-export const Empty = Template.bind({})
-Empty.args = {
-  color: 'accent',
-  size: 'small',
-  width: 'regular',
-  value: '',
-  placeholder: 'Add button text',
+export const Empty: Story = {
+  args: {
+    color: 'accent',
+    size: 'small',
+    width: 'auto',
+    value: '',
+    placeholder: 'Add button text',
+  },
 }
 
-export const Populated = Template.bind({})
-Populated.args = {
-  color: 'accent',
-  size: 'small',
-  width: 'regular',
-  value: 'Subscribe',
-  placeholder: 'Add button text',
-  href: 'https://google.com/',
-  target: '__blank',
+export const Populated: Story = {
+  args: {
+    color: 'accent',
+    size: 'small',
+    width: 'auto',
+    value: 'Subscribe',
+    placeholder: 'Add button text',
+    href: 'https://google.com/',
+    target: '__blank',
+  },
 }

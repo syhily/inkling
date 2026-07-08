@@ -1,11 +1,10 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { useState } from 'react'
 
 import { Modal } from '@/components/ui/Modal'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Modal',
   component: Modal,
   parameters: {
@@ -13,11 +12,12 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof Modal>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => {
+type Story = StoryObj<typeof meta>
+
+function ModalStory() {
   const [isOpen, setOpen] = useState(false)
 
   const openModal = () => setOpen(true)
@@ -39,4 +39,10 @@ const Template: StoryFn<any> = (args) => {
   )
 }
 
-export const Default = Template.bind({})
+export const Default: Story = {
+  args: {
+    isOpen: false,
+    onClose: () => {},
+  },
+  render: () => <ModalStory />,
+}

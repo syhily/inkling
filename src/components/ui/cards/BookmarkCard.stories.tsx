@@ -1,6 +1,7 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { createEditor } from 'lexical'
+import React from 'react'
 
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
@@ -10,12 +11,49 @@ import populateEditor from '@/utils/storybook/populate-storybook-editor'
 const displayOptions = {
   Default: { isSelected: false, isEditing: false },
   Selected: { isSelected: true, isEditing: false },
+} as const
+
+type DisplayKey = keyof typeof displayOptions
+
+type BookmarkCardProps = React.ComponentProps<typeof BookmarkCard>
+
+interface BookmarkCardStoryArgs extends Partial<BookmarkCardProps> {
+  display?: DisplayKey
+  caption?: string
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+function BookmarkCardStory({ display = 'Default', caption = '', ...args }: BookmarkCardStoryArgs) {
+  const captionEditor = createEditor({ nodes: MINIMAL_NODES })
+  populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
+  const displayState = displayOptions[display]
+  const componentProps = {
+    handleClose: () => {},
+    handlePasteAsLink: () => {},
+    handleRetry: () => {},
+    handleUrlChange: () => {},
+    handleUrlSubmit: () => {},
+    ...args,
+  }
+
+  return (
+    <div className="inkling-prose">
+      <div className="not-inkling-prose my-8 p-4 mx-auto max-w-[740px] min-w-[initial]">
+        <CardWrapper {...displayState} {...componentProps}>
+          <BookmarkCard {...displayState} {...componentProps} captionEditor={captionEditor} />
+        </CardWrapper>
+      </div>
+      <div className="not-inkling-prose dark my-8 bg-black p-4 mx-auto max-w-[740px] min-w-[initial]">
+        <CardWrapper {...displayState} {...componentProps}>
+          <BookmarkCard {...displayState} {...componentProps} captionEditor={captionEditor} />
+        </CardWrapper>
+      </div>
+    </div>
+  )
+}
+
+const meta = {
   title: 'Primary cards/Bookmark card',
-  component: BookmarkCard,
+  component: BookmarkCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
     display: {
@@ -36,70 +74,54 @@ const story: Meta<any> = {
       type: 'uiReady',
     },
   },
-}
-export default story
+} satisfies Meta<typeof BookmarkCardStory>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = ({ display, caption, ...args }) => {
-  const captionEditor = createEditor({ nodes: MINIMAL_NODES })
-  populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
+type Story = StoryObj<typeof meta>
 
-  return (
-    <div className="inkling-prose">
-      <div className="not-inkling-prose my-8 p-4 mx-auto max-w-[740px] min-w-[initial]">
-        <CardWrapper {...display} {...args}>
-          <BookmarkCard {...display} {...args} captionEditor={captionEditor} />
-        </CardWrapper>
-      </div>
-      <div className="not-inkling-prose dark my-8 bg-black p-4 mx-auto max-w-[740px] min-w-[initial]">
-        <CardWrapper {...display} {...args}>
-          <BookmarkCard {...display} {...args} captionEditor={captionEditor} />
-        </CardWrapper>
-      </div>
-    </div>
-  )
+export const Empty: Story = {
+  args: {
+    display: 'Selected',
+    url: '',
+    urlPlaceholder: 'Paste URL to add bookmark content...',
+    title: 'Inkling: The Creator Economy Platform',
+    description:
+      'The world’s most popular modern publishing platform for creating a new media platform. Used by Apple, SkyNews, Buffer, OpenAI, and thousands more.',
+    icon: 'https://www.inkling.local/favicon.ico',
+    publisher: 'Inkling - The Professional Publishing Platform',
+    author: 'Author McAuthory',
+    thumbnail: 'https://inkling.local/images/meta/inkling.png',
+  },
 }
 
-export const Empty = Template.bind({})
-Empty.args = {
-  display: 'Selected',
-  url: '',
-  urlPlaceholder: 'Paste URL to add bookmark content...',
-  title: 'Inkling: The Creator Economy Platform',
-  description:
-    'The world’s most popular modern publishing platform for creating a new media platform. Used by Apple, SkyNews, Buffer, OpenAI, and thousands more.',
-  icon: 'https://www.inkling.local/favicon.ico',
-  publisher: 'Inkling - The Professional Publishing Platform',
-  author: 'Author McAuthory',
-  thumbnail: 'https://inkling.local/images/meta/inkling.png',
+export const Populated: Story = {
+  args: {
+    display: 'Selected',
+    url: 'https://inkling.local/',
+    urlPlaceholder: 'Paste URL to add bookmark content...',
+    title: 'Inkling: The Creator Economy Platform',
+    description:
+      'The world’s most popular modern publishing platform for creating a new media platform. Used by Apple, SkyNews, Buffer, OpenAI, and thousands more.',
+    icon: 'https://www.inkling.local/favicon.ico',
+    publisher: 'Inkling - The Professional Publishing Platform',
+    author: 'Author McAuthory',
+    thumbnail: 'https://inkling.local/images/meta/inkling.png',
+    caption: '',
+  },
 }
 
-export const Populated = Template.bind({})
-Populated.args = {
-  display: 'Selected',
-  url: 'https://inkling.local/',
-  urlPlaceholder: 'Paste URL to add bookmark content...',
-  title: 'Inkling: The Creator Economy Platform',
-  description:
-    'The world’s most popular modern publishing platform for creating a new media platform. Used by Apple, SkyNews, Buffer, OpenAI, and thousands more.',
-  icon: 'https://www.inkling.local/favicon.ico',
-  publisher: 'Inkling - The Professional Publishing Platform',
-  author: 'Author McAuthory',
-  thumbnail: 'https://inkling.local/images/meta/inkling.png',
-  caption: '',
-}
-
-export const WithCaption = Template.bind({})
-WithCaption.args = {
-  display: 'Selected',
-  url: 'https://inkling.local/',
-  urlPlaceholder: 'Paste URL to add bookmark content...',
-  title: 'Inkling: The Creator Economy Platform',
-  description:
-    'The world’s most popular modern publishing platform for creating a new media platform. Used by Apple, SkyNews, Buffer, OpenAI, and thousands more.',
-  icon: 'https://www.inkling.local/favicon.ico',
-  publisher: 'Inkling - The Professional Publishing Platform',
-  author: 'Author McAuthory',
-  thumbnail: 'https://inkling.local/images/meta/inkling.png',
-  caption: 'This is a caption',
+export const WithCaption: Story = {
+  args: {
+    display: 'Selected',
+    url: 'https://inkling.local/',
+    urlPlaceholder: 'Paste URL to add bookmark content...',
+    title: 'Inkling: The Creator Economy Platform',
+    description:
+      'The world’s most popular modern publishing platform for creating a new media platform. Used by Apple, SkyNews, Buffer, OpenAI, and thousands more.',
+    icon: 'https://www.inkling.local/favicon.ico',
+    publisher: 'Inkling - The Professional Publishing Platform',
+    author: 'Author McAuthory',
+    thumbnail: 'https://inkling.local/images/meta/inkling.png',
+    caption: 'This is a caption',
+  },
 }

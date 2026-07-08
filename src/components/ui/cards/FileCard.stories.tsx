@@ -1,18 +1,53 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
-import { FileCard } from '@/components/ui/cards/FileCard'
+import React from 'react'
+
+import { FileCard, type FileCardProps } from '@/components/ui/cards/FileCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 
 const displayOptions = {
   Default: { isSelected: false, isEditing: false },
   Selected: { isSelected: true, isEditing: false },
   Editing: { isSelected: true, isEditing: true },
+} as const
+
+type DisplayKey = keyof typeof displayOptions
+
+interface FileCardStoryArgs extends Partial<FileCardProps> {
+  display?: DisplayKey
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+function FileCardStory({ display = 'Default', ...args }: FileCardStoryArgs) {
+  const displayState = displayOptions[display]
+  const componentProps = {
+    fileDragHandler: {},
+    onFileChange: () => {},
+    handleFileTitle: () => {},
+    handleFileDesc: () => {},
+    ...args,
+  }
+
+  return (
+    <div className="inkling-prose">
+      <div className="not-inkling-prose my-8 mx-auto max-w-[740px] min-w-[initial]">
+        <CardWrapper {...displayState} {...componentProps}>
+          <FileCard {...displayState} {...componentProps} />
+        </CardWrapper>
+      </div>
+      <div className="dark bg-black py-10">
+        <div className="not-inkling-prose my-8 mx-auto max-w-[740px] min-w-[initial]">
+          <CardWrapper {...displayState} {...componentProps}>
+            <FileCard {...displayState} {...componentProps} />
+          </CardWrapper>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const meta = {
   title: 'Primary cards/File card',
-  component: FileCard,
+  component: FileCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
     display: {
@@ -34,51 +69,35 @@ const story: Meta<any> = {
       type: 'uiReady',
     },
   },
-}
-export default story
+} satisfies Meta<typeof FileCardStory>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = ({ display, ...args }) => (
-  <div className="inkling-prose">
-    <div className="not-inkling-prose my-8 mx-auto max-w-[740px] min-w-[initial]">
-      <CardWrapper {...display} {...args}>
-        <FileCard {...display} {...args} />
-      </CardWrapper>
-    </div>
-    <div className="dark bg-black py-10">
-      <div className="not-inkling-prose my-8 mx-auto max-w-[740px] min-w-[initial]">
-        <CardWrapper {...display} {...args}>
-          <FileCard {...display} {...args} />
-        </CardWrapper>
-      </div>
-    </div>
-  </div>
-)
+type Story = StoryObj<typeof meta>
 
-export const Empty = Template.bind({})
-Empty.args = {
-  display: 'Editing',
-  isPopulated: false,
-  fileTitle: 'Example file',
-  fileTitlePlaceholder: 'File title',
-  fileDesc: '',
-  fileDescPlaceholder: 'Add optional file description',
-  fileName: 'Example-file.pdf',
-  fileSize: '165 KB',
-  fileInputRef: {},
-  fileDragHandler: {},
+export const Empty: Story = {
+  args: {
+    display: 'Editing',
+    isPopulated: false,
+    fileTitle: 'Example file',
+    fileTitlePlaceholder: 'File title',
+    fileDesc: '',
+    fileDescPlaceholder: 'Add optional file description',
+    fileName: 'Example-file.pdf',
+    fileSize: '165 KB',
+    fileInputRef: { current: null },
+  },
 }
 
-export const Populated = Template.bind({})
-Populated.args = {
-  display: 'Editing',
-  isPopulated: true,
-  fileTitle: 'Example file',
-  fileTitlePlaceholder: 'File title',
-  fileDesc: '',
-  fileDescPlaceholder: 'Add optional file description',
-  fileName: 'Example-file.pdf',
-  fileSize: '165 KB',
-  fileInputRef: {},
-  fileDragHandler: {},
+export const Populated: Story = {
+  args: {
+    display: 'Editing',
+    isPopulated: true,
+    fileTitle: 'Example file',
+    fileTitlePlaceholder: 'File title',
+    fileDesc: '',
+    fileDescPlaceholder: 'Add optional file description',
+    fileName: 'Example-file.pdf',
+    fileSize: '165 KB',
+    fileInputRef: { current: null },
+  },
 }

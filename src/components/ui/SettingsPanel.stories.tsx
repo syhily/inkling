@@ -1,5 +1,5 @@
-import type { Meta, StoryFn } from '@storybook/react'
 /* oxlint-disable react/jsx-key */
+import type { Meta, StoryObj } from '@storybook/react'
 
 import CenterAlignIcon from '@/assets/icons/inkling-align-center.svg?react'
 import LeftAlignIcon from '@/assets/icons/inkling-align-left.svg?react'
@@ -17,8 +17,7 @@ import {
   ToggleSetting,
 } from '@/components/ui/SettingsPanel'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Settings panel/Settings panel',
   component: SettingsPanel,
   subcomponents: { ToggleSetting, InputSetting, ButtonGroupSetting },
@@ -27,17 +26,10 @@ const story: Meta<any> = {
       type: 'uiReady',
     },
   },
-}
-export default story
+} satisfies Meta<typeof SettingsPanel>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => {
-  return (
-    <div className="relative">
-      <SettingsPanel {...args} />
-    </div>
-  )
-}
+type Story = StoryObj<typeof meta>
 
 const alignmentButtonGroup = [
   {
@@ -85,41 +77,43 @@ const sizeButtonGroup = [
   },
 ]
 
-export const SignupCard = Template.bind({})
-SignupCard.args = {
-  children: [
-    <ColorPickerSetting
-      label="Background color"
-      onPickerChange={() => {}}
-      swatches={[
-        { title: 'Brand color', accent: true },
-        { title: 'Black', hex: '#000000' },
-        { title: 'Transparent', transparent: true },
-      ]}
-      value="#777777"
-    />,
-    <MultiSelectDropdownSetting
-      availableItems={['Free members', 'Paid members']}
-      description="These labels will be applied to members who sign up via this form."
-      items={['Free members']}
-      label="Labels"
-      onChange={() => {}}
-    />,
-  ],
+export const SignupCard: Story = {
+  args: {
+    children: [
+      <ColorPickerSetting
+        label="Background color"
+        onPickerChange={() => {}}
+        swatches={[
+          { title: 'Brand color', accent: true },
+          { title: 'Black', hex: '#000000' },
+          { title: 'Transparent', transparent: true },
+        ]}
+        value="#777777"
+      />,
+      <MultiSelectDropdownSetting
+        availableItems={['Free members', 'Paid members']}
+        description="These labels will be applied to members who sign up via this form."
+        items={['Free members']}
+        label="Labels"
+        onChange={() => {}}
+      />,
+    ],
+  },
 }
 
-export const ButtonCard = Template.bind({})
-ButtonCard.args = {
-  children: [
-    <ButtonGroupSetting buttons={alignmentButtonGroup} label="Content alignment" onClick={() => {}} />,
-    <InputSetting label="Button text" onChange={() => {}} placeholder="Add button text" value="" />,
-    <InputSetting
-      label="Button URL"
-      onChange={() => {}}
-      placeholder="https://yoursite.com/#/portal/signup/"
-      value=""
-    />,
-  ],
+export const ButtonCard: Story = {
+  args: {
+    children: [
+      <ButtonGroupSetting buttons={alignmentButtonGroup} label="Content alignment" onClick={() => {}} />,
+      <InputSetting label="Button text" onChange={() => {}} placeholder="Add button text" value="" />,
+      <InputSetting
+        label="Button URL"
+        onChange={() => {}}
+        placeholder="https://yoursite.com/#/portal/signup/"
+        value=""
+      />,
+    ],
+  },
 }
 
 const calloutColorPicker = [
@@ -170,52 +164,55 @@ const calloutColorPicker = [
   },
 ]
 
-export const CalloutCard = Template.bind({})
-CalloutCard.args = {
-  children: [
-    <ColorOptionSetting buttons={calloutColorPicker} label="Background color" layout="stacked" onClick={() => {}} />,
-    <ToggleSetting isChecked={false} label="Emoji" onChange={() => {}} />,
-  ],
+export const CalloutCard: Story = {
+  args: {
+    children: [
+      <ColorOptionSetting buttons={calloutColorPicker} label="Background color" layout="stacked" onClick={() => {}} />,
+      <ToggleSetting isChecked={false} label="Emoji" onChange={() => {}} />,
+    ],
+  },
 }
 
-export const VideoCard = Template.bind({})
-VideoCard.args = {
-  children: [
-    <ButtonGroupSetting buttons={widthButtonGroup} label="Video width" onClick={() => {}} />,
-    <ToggleSetting
-      isChecked={false}
-      description="Autoplay your video on a loop without sound."
-      label="Loop"
-      onChange={() => {}}
-    />,
-    <MediaUploadSetting
-      borderStyle="simple"
-      desc=""
-      icon="file"
-      label="Custom thumbnail"
-      onFileChange={() => {}}
-      onRemoveMedia={() => {}}
-      openImageEditor={() => {}}
-      placeholderRef={() => {}}
-      setFileInputRef={() => {}}
-      size="xsmall"
-    />,
-  ],
+export const VideoCard: Story = {
+  args: {
+    children: [
+      <ButtonGroupSetting buttons={widthButtonGroup} label="Video width" onClick={() => {}} />,
+      <ToggleSetting
+        isChecked={false}
+        description="Autoplay your video on a loop without sound."
+        label="Loop"
+        onChange={() => {}}
+      />,
+      <MediaUploadSetting
+        borderStyle="simple"
+        desc=""
+        icon="file"
+        label="Custom thumbnail"
+        onFileChange={() => {}}
+        onRemoveMedia={() => {}}
+        openImageEditor={() => {}}
+        placeholderRef={() => {}}
+        setFileInputRef={() => {}}
+        size="xsmall"
+      />,
+    ],
+  },
 }
 
-export const ProductCard = Template.bind({})
-ProductCard.args = {
-  children: [
-    <ToggleSetting isChecked={false} label="Rating" onChange={() => {}} />,
-    <ToggleSetting isChecked={false} label="Button" onChange={() => {}} />,
-    <InputSetting label="Button text" onChange={() => {}} placeholder="Add button text" value="" />,
-    <InputSetting
-      label="Button URL"
-      onChange={() => {}}
-      placeholder="https://yoursite.com/#/portal/signup/"
-      value=""
-    />,
-  ],
+export const ProductCard: Story = {
+  args: {
+    children: [
+      <ToggleSetting isChecked={false} label="Rating" onChange={() => {}} />,
+      <ToggleSetting isChecked={false} label="Button" onChange={() => {}} />,
+      <InputSetting label="Button text" onChange={() => {}} placeholder="Add button text" value="" />,
+      <InputSetting
+        label="Button URL"
+        onChange={() => {}}
+        placeholder="https://yoursite.com/#/portal/signup/"
+        value=""
+      />,
+    ],
+  },
 }
 
 const headerColorPicker = [
@@ -236,18 +233,19 @@ const headerColorPicker = [
   },
 ]
 
-export const HeaderCard = Template.bind({})
-HeaderCard.args = {
-  children: [
-    <ButtonGroupSetting buttons={sizeButtonGroup} label="Size" onClick={() => {}} />,
-    <ColorOptionSetting buttons={headerColorPicker} label="Style" onClick={() => {}} />,
-    <ToggleSetting isChecked={false} label="Button" onChange={() => {}} />,
-    <InputSetting label="Button text" onChange={() => {}} placeholder="Add button text" value="" />,
-    <InputSetting
-      label="Button URL"
-      onChange={() => {}}
-      placeholder="https://yoursite.com/#/portal/signup/"
-      value=""
-    />,
-  ],
+export const HeaderCard: Story = {
+  args: {
+    children: [
+      <ButtonGroupSetting buttons={sizeButtonGroup} label="Size" onClick={() => {}} />,
+      <ColorOptionSetting buttons={headerColorPicker} label="Style" onClick={() => {}} />,
+      <ToggleSetting isChecked={false} label="Button" onChange={() => {}} />,
+      <InputSetting label="Button text" onChange={() => {}} placeholder="Add button text" value="" />,
+      <InputSetting
+        label="Button URL"
+        onChange={() => {}}
+        placeholder="https://yoursite.com/#/portal/signup/"
+        value=""
+      />,
+    ],
+  },
 }

@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { MediaPlayer } from '@/components/ui/MediaPlayer'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Media player',
   component: MediaPlayer,
   parameters: {
@@ -11,13 +10,13 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof MediaPlayer>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => <MediaPlayer {...args} />
+type Story = StoryObj<typeof meta>
 
-export const Default = Template.bind({})
-Default.args = {
-  theme: 'dark',
+export const Default: Story = {
+  args: {
+    theme: 'dark' as const,
+  },
 }

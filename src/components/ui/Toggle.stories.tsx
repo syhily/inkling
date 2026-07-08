@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { Toggle } from '@/components/ui/Toggle'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Toggle',
   component: Toggle,
   parameters: {
@@ -11,13 +10,13 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof Toggle>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => <Toggle {...args} />
+type Story = StoryObj<typeof meta>
 
-export const Default = Template.bind({})
-Default.args = {
-  isChecked: true,
+export const Default: Story = {
+  args: {
+    isChecked: true,
+  },
 }

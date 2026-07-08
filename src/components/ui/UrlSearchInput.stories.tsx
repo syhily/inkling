@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { UrlSearchInput } from '@/components/ui/UrlSearchInput'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Searchable URL Input',
   component: UrlSearchInput,
   parameters: {
@@ -11,52 +10,103 @@ const story: Meta<any> = {
       type: 'uiReady',
     },
   },
-}
-export default story
+} satisfies Meta<typeof UrlSearchInput>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => (
-  <div className="w-[740px]">
-    <div className="p-4">
-      <UrlSearchInput {...args} />
-    </div>
-    <div className="dark bg-black p-4">
-      <UrlSearchInput {...args} />
-    </div>
-  </div>
-)
+type Story = StoryObj<typeof meta>
 
-export const Empty = Template.bind({})
-Empty.args = {
-  value: '',
-  onChange: () => {},
-}
-
-export const Loading = Template.bind({})
-Loading.args = {
-  value: 'https://inkling.local/',
-  onChange: () => {},
-  isLoading: true,
-}
-
-export const Placeholder = Template.bind({})
-Placeholder.args = {
-  value: '',
-  onChange: () => {},
-  placeholder: 'Enter a URL to add content...',
-}
-
-export const Populated = Template.bind({})
-Populated.args = {
-  value: 'https://sampleurl.com',
-  onChange: () => {},
-}
-
-export const Error = Template.bind({})
-Error.args = {
-  value: 'thisisntaurl',
-  hasError: true,
-  onChange: () => {},
-  handleRetry: () => {},
+const baseArgs = {
+  handleUrlChange: () => {},
+  handleUrlSubmit: () => {},
   handlePasteAsLink: () => {},
+  handleRetry: () => {},
+  handleClose: () => {},
+}
+
+export const Empty: Story = {
+  args: {
+    ...baseArgs,
+    value: '',
+  },
+  render: (args) => (
+    <div className="w-[740px]">
+      <div className="p-4">
+        <UrlSearchInput {...args} />
+      </div>
+      <div className="dark bg-black p-4">
+        <UrlSearchInput {...args} />
+      </div>
+    </div>
+  ),
+}
+
+export const Loading: Story = {
+  args: {
+    ...baseArgs,
+    value: 'https://inkling.local/',
+    isLoading: true,
+  },
+  render: (args) => (
+    <div className="w-[740px]">
+      <div className="p-4">
+        <UrlSearchInput {...args} />
+      </div>
+      <div className="dark bg-black p-4">
+        <UrlSearchInput {...args} />
+      </div>
+    </div>
+  ),
+}
+
+export const Placeholder: Story = {
+  args: {
+    ...baseArgs,
+    value: '',
+    placeholder: 'Enter a URL to add content...',
+  },
+  render: (args) => (
+    <div className="w-[740px]">
+      <div className="p-4">
+        <UrlSearchInput {...args} />
+      </div>
+      <div className="dark bg-black p-4">
+        <UrlSearchInput {...args} />
+      </div>
+    </div>
+  ),
+}
+
+export const Populated: Story = {
+  args: {
+    ...baseArgs,
+    value: 'https://sampleurl.com',
+  },
+  render: (args) => (
+    <div className="w-[740px]">
+      <div className="p-4">
+        <UrlSearchInput {...args} />
+      </div>
+      <div className="dark bg-black p-4">
+        <UrlSearchInput {...args} />
+      </div>
+    </div>
+  ),
+}
+
+export const Error: Story = {
+  args: {
+    ...baseArgs,
+    value: 'thisisntaurl',
+    hasError: true,
+  },
+  render: (args) => (
+    <div className="w-[740px]">
+      <div className="p-4">
+        <UrlSearchInput {...args} />
+      </div>
+      <div className="dark bg-black p-4">
+        <UrlSearchInput {...args} />
+      </div>
+    </div>
+  ),
 }

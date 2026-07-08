@@ -1,4 +1,4 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import AudioCardIcon from '@/assets/icons/inkling-card-type-audio.svg?react'
 import BookmarkCardIcon from '@/assets/icons/inkling-card-type-bookmark.svg?react'
@@ -18,7 +18,7 @@ import UnsplashCardIcon from '@/assets/icons/inkling-card-type-unsplash.svg?reac
 import VideoCardIcon from '@/assets/icons/inkling-card-type-video.svg?react'
 import { CardMenu, CardMenuItem, CardMenuSection, CardSnippetItem } from '@/components/ui/CardMenu'
 
-export default {
+const meta = {
   title: 'Components/Card menu',
   component: CardMenu,
   subcomponents: { CardMenuSection, CardMenuItem, CardSnippetItem },
@@ -47,45 +47,47 @@ export default {
       <CardSnippetItem label="Snippet two" />
     </CardMenu>
   ),
-} as Meta<typeof CardMenu>
+} satisfies Meta<typeof CardMenu>
+export default meta
 
-const Template: StoryFn<typeof CardMenu> = (args) => <CardMenu {...args} />
+type Story = StoryObj<typeof meta>
 
-export const Default = Template.bind({})
-Default.args = {
-  menu: new Map([
-    [
-      'Primary',
+export const Default: Story = {
+  args: {
+    menu: new Map([
       [
-        { label: 'Image', desc: 'Upload, or embed with /image [url]', Icon: ImageCardIcon },
-        { label: 'HTML', desc: 'Insert a raw HTML card', Icon: HtmlCardIcon },
-        { label: 'Gallery', desc: 'Create an image gallery', Icon: GalleryCardIcon },
-        { label: 'Divider', desc: 'Insert a dividing line', Icon: DividerCardIcon },
-        { label: 'Bookmark', desc: 'Embed a link as a visual bookmark', Icon: BookmarkCardIcon },
-        { label: 'Button', desc: 'Add a button to your post', Icon: ButtonCardIcon },
-        { label: 'Callout', desc: 'Info boxes that stand out', Icon: CalloutCardIcon },
-        { label: 'GIF', desc: 'Search and embed gifs', Icon: GifCardIcon },
-        { label: 'Toggle', desc: 'Add collapsible content', Icon: ToggleCardIcon },
-        { label: 'Video', desc: 'Upload and play a video', Icon: VideoCardIcon },
-        { label: 'Audio', desc: 'Upload and play an audio file', Icon: AudioCardIcon },
-        { label: 'File', desc: 'Upload a downloadable file', Icon: FileCardIcon },
-        { label: 'Header', desc: 'Add a bold section header', Icon: HeaderCardIcon },
+        'Primary',
+        [
+          { label: 'Image', desc: 'Upload, or embed with /image [url]', Icon: ImageCardIcon },
+          { label: 'HTML', desc: 'Insert a raw HTML card', Icon: HtmlCardIcon },
+          { label: 'Gallery', desc: 'Create an image gallery', Icon: GalleryCardIcon },
+          { label: 'Divider', desc: 'Insert a dividing line', Icon: DividerCardIcon },
+          { label: 'Bookmark', desc: 'Embed a link as a visual bookmark', Icon: BookmarkCardIcon },
+          { label: 'Button', desc: 'Add a button to your post', Icon: ButtonCardIcon },
+          { label: 'Callout', desc: 'Info boxes that stand out', Icon: CalloutCardIcon },
+          { label: 'GIF', desc: 'Search and embed gifs', Icon: GifCardIcon },
+          { label: 'Toggle', desc: 'Add collapsible content', Icon: ToggleCardIcon },
+          { label: 'Video', desc: 'Upload and play a video', Icon: VideoCardIcon },
+          { label: 'Audio', desc: 'Upload and play an audio file', Icon: AudioCardIcon },
+          { label: 'File', desc: 'Upload a downloadable file', Icon: FileCardIcon },
+          { label: 'Header', desc: 'Add a bold section header', Icon: HeaderCardIcon },
+        ],
       ],
-    ],
-    [
-      'Embed',
       [
-        { label: 'Twitter', desc: '/twitter [tweet url]', Icon: TwitterCardIcon },
-        { label: 'Unsplash', desc: '/unsplash [search-term or url]', Icon: UnsplashCardIcon },
-        { label: 'NFT', desc: '/nft [opensea url]', Icon: NftCardIcon },
+        'Embed',
+        [
+          { label: 'Twitter', desc: '/twitter [tweet url]', Icon: TwitterCardIcon },
+          { label: 'Unsplash', desc: '/unsplash [search-term or url]', Icon: UnsplashCardIcon },
+          { label: 'NFT', desc: '/nft [opensea url]', Icon: NftCardIcon },
+        ],
       ],
-    ],
-    [
-      'Snippets',
       [
-        { type: 'snippet', label: 'Snippet one' },
-        { type: 'snippet', label: 'Snippet two' },
+        'Snippets',
+        [
+          { type: 'snippet', label: 'Snippet one' },
+          { type: 'snippet', label: 'Snippet two' },
+        ],
       ],
-    ],
-  ]),
+    ]),
+  },
 }

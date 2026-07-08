@@ -1,11 +1,10 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import React from 'react'
 
 import { SnippetInput } from '@/components/ui/SnippetInput'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Toolbar/SnippetInput',
   component: SnippetInput,
   parameters: {
@@ -13,11 +12,12 @@ const story: Meta<any> = {
       type: 'Functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof SnippetInput>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => {
+type Story = StoryObj<typeof meta>
+
+function SnippetInputStory(args: React.ComponentProps<typeof SnippetInput>) {
   const [value, setValue] = React.useState(args.value || '')
 
   return (
@@ -31,31 +31,37 @@ const Template: StoryFn<any> = (args) => {
   )
 }
 
-export const Empty = Template.bind({})
-Empty.args = {
-  value: '',
+export const Empty: Story = {
+  args: {
+    value: '',
+  },
+  render: (args) => <SnippetInputStory {...args} />,
 }
 
-export const Populated = Template.bind({})
-Populated.args = {
-  value: 'snippet',
+export const Populated: Story = {
+  args: {
+    value: 'snippet',
+  },
+  render: (args) => <SnippetInputStory {...args} />,
 }
 
-export const WithList = Template.bind({})
-WithList.args = {
-  value: 'snippet',
-  snippets: [
-    {
-      name: 'snippet1',
-      value: 'text for snippet 1',
-    },
-    {
-      name: 'snippet2',
-      value: 'text for snippet 2',
-    },
-    {
-      name: 'snippet3',
-      value: 'text for snippet 3',
-    },
-  ],
+export const WithList: Story = {
+  args: {
+    value: 'snippet',
+    snippets: [
+      {
+        name: 'snippet1',
+        value: 'text for snippet 1',
+      },
+      {
+        name: 'snippet2',
+        value: 'text for snippet 2',
+      },
+      {
+        name: 'snippet3',
+        value: 'text for snippet 3',
+      },
+    ],
+  },
+  render: (args) => <SnippetInputStory {...args} />,
 }

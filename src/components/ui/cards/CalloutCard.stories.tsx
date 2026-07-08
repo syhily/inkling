@@ -1,6 +1,7 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { createEditor } from 'lexical'
+import React from 'react'
 
 import { CalloutCard } from '@/components/ui/cards/CalloutCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
@@ -10,12 +11,37 @@ const displayOptions = {
   Default: { isSelected: false, isEditing: false },
   Selected: { isSelected: true, isEditing: false },
   Editing: { isSelected: true, isEditing: true },
+} as const
+
+type DisplayKey = keyof typeof displayOptions
+
+type CalloutCardProps = React.ComponentProps<typeof CalloutCard>
+
+interface CalloutCardStoryArgs extends Partial<CalloutCardProps> {
+  display?: DisplayKey
+  value?: string
+  placeholder?: string
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+function CalloutCardStory({ display = 'Default', value = '', placeholder, ...args }: CalloutCardStoryArgs) {
+  const textEditor = createEditor()
+  populateEditor({ editor: textEditor, initialHtml: `${value}` })
+  const displayState = displayOptions[display]
+
+  return (
+    <div className="inkling-prose">
+      <div className="my-8 mx-auto max-w-[740px] min-w-[initial]">
+        <CardWrapper {...displayState} {...args}>
+          <CalloutCard {...displayState} {...args} textEditor={textEditor} />
+        </CardWrapper>
+      </div>
+    </div>
+  )
+}
+
+const meta = {
   title: 'Primary cards/Callout card',
-  component: CalloutCard,
+  component: CalloutCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
     display: {
@@ -37,41 +63,29 @@ const story: Meta<any> = {
       type: 'uiReady',
     },
   },
-}
-export default story
+} satisfies Meta<typeof CalloutCardStory>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = ({ display, value, ...args }) => {
-  const textEditor = createEditor()
-  populateEditor({ editor: textEditor, initialHtml: `${value}` })
+type Story = StoryObj<typeof meta>
 
-  return (
-    <div className="inkling-prose">
-      <div className="my-8 mx-auto max-w-[740px] min-w-[initial]">
-        <CardWrapper {...display} {...args}>
-          <CalloutCard {...display} {...args} textEditor={textEditor} />
-        </CardWrapper>
-      </div>
-    </div>
-  )
+export const Empty: Story = {
+  args: {
+    display: 'Editing',
+    value: '',
+    placeholder: 'Callout text...',
+    emoji: true,
+    color: 'grey',
+    setShowEmojiPicker: () => {},
+  },
 }
 
-export const Empty = Template.bind({})
-Empty.args = {
-  display: 'Editing',
-  value: '',
-  placeholder: 'Callout text...',
-  emoji: true,
-  color: 'grey',
-  setShowEmojiPicker: () => {},
-}
-
-export const Populated = Template.bind({})
-Populated.args = {
-  display: 'Editing',
-  value: 'Something to pay attention to.',
-  placeholder: 'Callout text...',
-  emoji: true,
-  color: 'grey',
-  setShowEmojiPicker: () => {},
+export const Populated: Story = {
+  args: {
+    display: 'Editing',
+    value: 'Something to pay attention to.',
+    placeholder: 'Callout text...',
+    emoji: true,
+    color: 'grey',
+    setShowEmojiPicker: () => {},
+  },
 }

@@ -1,4 +1,6 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
+
+import React from 'react'
 
 import HtmlIndicatorIcon from '@/assets/icons/inkling-indicator-html.svg?react'
 import { HtmlCard } from '@/components/ui/cards/HtmlCard'
@@ -8,12 +10,37 @@ const displayOptions = {
   Default: { isSelected: false, isEditing: false },
   Selected: { isSelected: true, isEditing: false },
   Editing: { isSelected: true, isEditing: true },
+} as const
+
+type DisplayKey = keyof typeof displayOptions
+
+type HtmlCardProps = React.ComponentProps<typeof HtmlCard>
+
+interface HtmlCardStoryArgs extends Partial<HtmlCardProps> {
+  display?: DisplayKey
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+function HtmlCardStory({ display = 'Default', ...args }: HtmlCardStoryArgs) {
+  const displayState = displayOptions[display]
+  const componentProps = {
+    updateHtml: () => {},
+    ...args,
+  }
+
+  return (
+    <div className="inkling-prose">
+      <div className="my-8 mx-auto w-[740px] min-w-[initial]">
+        <CardWrapper IndicatorIcon={HtmlIndicatorIcon} wrapperStyle="code-card" {...displayState} {...componentProps}>
+          <HtmlCard {...displayState} {...componentProps} />
+        </CardWrapper>
+      </div>
+    </div>
+  )
+}
+
+const meta = {
   title: 'Primary cards/Html card',
-  component: HtmlCard,
+  component: HtmlCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
     display: {
@@ -34,34 +61,28 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof HtmlCardStory>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = ({ display, ...args }) => (
-  <div className="inkling-prose">
-    <div className="my-8 mx-auto w-[740px] min-w-[initial]">
-      <CardWrapper IndicatorIcon={HtmlIndicatorIcon} wrapperStyle="code-card" {...display} {...args}>
-        <HtmlCard updateCode={() => {}} {...display} {...args} />
-      </CardWrapper>
-    </div>
-  </div>
-)
+type Story = StoryObj<typeof meta>
 
-export const Empty = Template.bind({})
-Empty.args = {
-  html: '',
-  display: 'Editing',
+export const Empty: Story = {
+  args: {
+    html: '',
+    display: 'Editing',
+  },
 }
 
-export const Progress = Template.bind({})
-Progress.args = {
-  html: `<h1>Header</h1>\n\r<p>Paragraph</p>\n\r<ul><li>List</li><li>Items</li></ul>\n\r<!-- comment -->`,
-  display: 'Editing',
+export const Progress: Story = {
+  args: {
+    html: `<h1>Header</h1>\n\r<p>Paragraph</p>\n\r<ul><li>List</li><li>Items</li></ul>\n\r<!-- comment -->`,
+    display: 'Editing',
+  },
 }
 
-export const Populated = Template.bind({})
-Populated.args = {
-  html: `<h1>Header</h1>\n\r<p>Paragraph</p>\n\r<ul><li>List</li><li>Items</li></ul>\n\r<!-- comment -->`,
-  display: 'Selected',
+export const Populated: Story = {
+  args: {
+    html: `<h1>Header</h1>\n\r<p>Paragraph</p>\n\r<ul><li>List</li><li>Items</li></ul>\n\r<!-- comment -->`,
+    display: 'Selected',
+  },
 }

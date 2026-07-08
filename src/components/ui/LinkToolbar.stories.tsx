@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { LinkToolbar } from '@/components/ui/LinkToolbar'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Toolbar/LinkToolbar',
   component: LinkToolbar,
   parameters: {
@@ -11,19 +10,18 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof LinkToolbar>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => {
-  return (
+type Story = StoryObj<typeof meta>
+
+export const Base: Story = {
+  args: {
+    href: 'https://inkling.local/',
+  },
+  render: (args) => (
     <div className="flex">
       <LinkToolbar {...args} />
     </div>
-  )
-}
-
-export const Base = Template.bind({})
-Base.args = {
-  href: 'https://inkling.local/',
+  ),
 }

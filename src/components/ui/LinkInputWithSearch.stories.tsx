@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { LinkInputWithSearch } from '@/components/ui/LinkInputWithSearch'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Toolbar/LinkInputWithSearch',
   component: LinkInputWithSearch,
   parameters: {
@@ -11,24 +10,33 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof LinkInputWithSearch>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => {
-  return (
+type Story = StoryObj<typeof meta>
+
+export const Empty: Story = {
+  args: {
+    href: '',
+    update: () => {},
+    cancel: () => {},
+  },
+  render: (args) => (
     <div className="flex">
       <LinkInputWithSearch {...args} />
     </div>
-  )
+  ),
 }
 
-export const Empty = Template.bind({})
-Empty.args = {
-  href: '',
-}
-
-export const Populated = Template.bind({})
-Populated.args = {
-  href: 'https://inkling.local',
+export const Populated: Story = {
+  args: {
+    href: 'https://inkling.local',
+    update: () => {},
+    cancel: () => {},
+  },
+  render: (args) => (
+    <div className="flex">
+      <LinkInputWithSearch {...args} />
+    </div>
+  ),
 }

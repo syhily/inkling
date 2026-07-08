@@ -1,6 +1,7 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { createEditor } from 'lexical'
+import React from 'react'
 
 import { CodeBlockCard } from '@/components/ui/cards/CodeBlockCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
@@ -11,12 +12,36 @@ const displayOptions = {
   Default: { isSelected: false, isEditing: false },
   Selected: { isSelected: true, isEditing: false },
   Editing: { isSelected: true, isEditing: true },
+} as const
+
+type DisplayKey = keyof typeof displayOptions
+
+type CodeBlockCardProps = React.ComponentProps<typeof CodeBlockCard>
+
+interface CodeBlockCardStoryArgs extends Partial<CodeBlockCardProps> {
+  display?: DisplayKey
+  caption?: string
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+function CodeBlockCardStory({ display = 'Default', caption = '', ...args }: CodeBlockCardStoryArgs) {
+  const captionEditor = createEditor({ nodes: MINIMAL_NODES })
+  populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
+  const displayState = displayOptions[display]
+
+  return (
+    <div className="inkling-prose">
+      <div className="my-8 mx-auto max-w-[740px] min-w-[initial]">
+        <CardWrapper wrapperStyle="code-card" {...displayState} {...args}>
+          <CodeBlockCard captionEditor={captionEditor} updateCode={() => {}} {...displayState} {...args} />
+        </CardWrapper>
+      </div>
+    </div>
+  )
+}
+
+const meta = {
   title: 'Primary cards/Code card',
-  component: CodeBlockCard,
+  component: CodeBlockCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
     display: {
@@ -38,37 +63,25 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof CodeBlockCardStory>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = ({ display, caption, ...args }) => {
-  const captionEditor = createEditor({ nodes: MINIMAL_NODES })
-  populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
+type Story = StoryObj<typeof meta>
 
-  return (
-    <div className="inkling-prose">
-      <div className="my-8 mx-auto max-w-[740px] min-w-[initial]">
-        <CardWrapper wrapperStyle="code-card" {...display} {...args}>
-          <CodeBlockCard captionEditor={captionEditor} updateCode={() => {}} {...display} {...args} />
-        </CardWrapper>
-      </div>
-    </div>
-  )
+export const Empty: Story = {
+  args: {
+    display: 'Editing',
+    code: '',
+    language: '',
+    caption: '',
+  },
 }
 
-export const Empty = Template.bind({})
-Empty.args = {
-  display: 'Editing',
-  code: '',
-  language: '',
-  caption: '',
-}
-
-export const Populated = Template.bind({})
-Populated.args = {
-  display: 'Editing',
-  code: '<script></script>',
-  language: 'html',
-  caption: 'A code example',
+export const Populated: Story = {
+  args: {
+    display: 'Editing',
+    code: '<script></script>',
+    language: 'html',
+    caption: 'A code example',
+  },
 }

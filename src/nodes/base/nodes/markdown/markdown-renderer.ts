@@ -1,6 +1,6 @@
 import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
 
-import { render } from '@/markdown'
+import { render } from '@/markdown/markdown-html-renderer'
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 

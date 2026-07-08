@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { Slider } from '@/components/ui/Slider'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Slider',
   component: Slider,
   parameters: {
@@ -11,16 +10,16 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof Slider>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => <Slider {...args} />
+type Story = StoryObj<typeof meta>
 
-export const Default = Template.bind({})
-Default.args = {
-  min: 1,
-  max: 10,
-  value: 5,
-  onChange: () => {},
+export const Default: Story = {
+  args: {
+    min: 1,
+    max: 10,
+    value: 5,
+    onChange: () => {},
+  },
 }

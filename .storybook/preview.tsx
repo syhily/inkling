@@ -1,4 +1,5 @@
 import type { Preview } from '@storybook/react'
+
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
 
 import '@/styles/index.css'

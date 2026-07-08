@@ -25,10 +25,7 @@ const config: StorybookConfig = {
     })
   },
   stories: ['../src/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: [
-    getAbsolutePath('@storybook/addon-links'),
-    getAbsolutePath('@etchteam/storybook-addon-status'),
-  ],
+  addons: [getAbsolutePath('@storybook/addon-links'), getAbsolutePath('@etchteam/storybook-addon-status')],
   features: {},
   docs: {},
 }

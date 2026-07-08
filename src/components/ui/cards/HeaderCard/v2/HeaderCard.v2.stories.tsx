@@ -1,6 +1,7 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { createEditor } from 'lexical'
+import React from 'react'
 
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/v2/HeaderCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
@@ -13,12 +14,65 @@ const displayOptions = {
   Default: { isSelected: false, isEditing: false },
   Selected: { isSelected: true, isEditing: false },
   Editing: { isSelected: true, isEditing: true },
+} as const
+
+type DisplayKey = keyof typeof displayOptions
+
+type HeaderCardProps = React.ComponentProps<typeof HeaderCard>
+
+interface HeaderCardStoryArgs extends Partial<HeaderCardProps> {
+  display?: DisplayKey
+  header?: string
+  subheader?: string
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+function HeaderCardStory({ display = 'Default', header = '', subheader = '', ...args }: HeaderCardStoryArgs) {
+  const headerTextEditor = createEditor({ nodes: MINIMAL_NODES })
+  const subheaderTextEditor = createEditor({ nodes: MINIMAL_NODES })
+
+  populateEditor({ editor: headerTextEditor, initialHtml: `${header}` })
+  populateEditor({ editor: subheaderTextEditor, initialHtml: `${subheader}` })
+
+  const displayState = displayOptions[display]
+  const componentProps = {
+    handleAlignment: () => {},
+    handleButtonText: () => {},
+    handleButtonEnabled: () => {},
+    handleShowBackgroundImage: () => {},
+    handleHideBackgroundImage: () => {},
+    handleClearBackgroundImage: () => {},
+    handleBackgroundColor: () => {},
+    handleButtonColor: () => {},
+    handleLayout: () => {},
+    handleTextColor: () => {},
+    onFileChange: () => {},
+    openImageEditor: () => {},
+    imageDragHandler: {},
+    handleSwapLayout: () => {},
+    handleBackgroundSize: () => {},
+    handleButtonTextBlur: () => {},
+    handleButtonUrlBlur: () => {},
+    handleButtonUrl: () => {},
+    setFileInputRef: () => {},
+    ...args,
+    headerTextEditor,
+    subheaderTextEditor,
+  }
+
+  return (
+    <div className="inkling-prose">
+      <div className="my-8 mx-auto w-full min-w-[initial]">
+        <CardWrapper {...displayState} {...componentProps}>
+          <HeaderCard {...displayState} {...componentProps} />
+        </CardWrapper>
+      </div>
+    </div>
+  )
+}
+
+const meta = {
   title: 'Primary cards/Header card v2',
-  component: HeaderCard,
+  component: HeaderCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
     display: {
@@ -44,70 +98,46 @@ const story: Meta<any> = {
       type: 'Functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof HeaderCardStory>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = ({ display, header, subheader, ...args }) => {
-  const headerTextEditor = createEditor({ nodes: MINIMAL_NODES })
-  const subheaderTextEditor = createEditor({ nodes: MINIMAL_NODES })
+type Story = StoryObj<typeof meta>
 
-  populateEditor({ editor: headerTextEditor, initialHtml: `${header}` })
-  populateEditor({ editor: subheaderTextEditor, initialHtml: `${subheader}` })
-
-  return (
-    <div className="inkling-prose">
-      <div className="my-8 mx-auto w-full min-w-[initial]">
-        <CardWrapper {...display} {...args}>
-          <HeaderCard
-            {...display}
-            {...args}
-            header={header}
-            headerTextEditor={headerTextEditor}
-            subheader={subheader}
-            subheaderTextEditor={subheaderTextEditor}
-          />
-        </CardWrapper>
-      </div>
-    </div>
-  )
+export const Empty: Story = {
+  args: {
+    display: 'Editing',
+    layout: 'regular',
+    alignment: 'center',
+    showBackgroundImage: false,
+    backgroundImageSrc: 'https://static.inkling.local/v4.0.0/images/andreas-selter-e4yK8QQlZa0-unsplash.jpg',
+    header: '',
+    subheader: '',
+    buttonText: '',
+    buttonColor: '#000000',
+    buttonTextColor: '#ffffff',
+    backgroundColor: '#F3B389',
+    textColor: '#000000',
+    buttonUrl: '',
+    headerTextEditorInitialState: editorEmptyState,
+    subheaderTextEditorInitialState: editorEmptyState,
+  },
 }
 
-export const Empty = Template.bind({})
-Empty.args = {
-  display: 'Editing',
-  layout: 'regular',
-  alignment: 'center',
-  showBackgroundImage: false,
-  backgroundImageSrc: 'https://static.inkling.local/v4.0.0/images/andreas-selter-e4yK8QQlZa0-unsplash.jpg',
-  header: '',
-  subheader: '',
-  buttonText: '',
-  buttonColor: '#000000',
-  buttonTextColor: '#ffffff',
-  backgroundColor: '#F3B389',
-  textColor: '#000000',
-  buttonUrl: '',
-  handleBackgroundColor: () => {},
-  headerTextEditorInitialState: editorEmptyState,
-  subheaderTextEditorInitialState: editorEmptyState,
-}
-
-export const Populated = Template.bind({})
-Populated.args = {
-  display: 'Editing',
-  layout: 'split',
-  alignment: 'center',
-  showBackgroundImage: true,
-  backgroundImageSrc: 'https://static.inkling.local/v4.0.0/images/andreas-selter-e4yK8QQlZa0-unsplash.jpg',
-  header: 'This is a heading',
-  subheader: 'And here is some subheading text.',
-  buttonEnabled: true,
-  buttonText: 'Click Me',
-  buttonColor: '#000000',
-  buttonTextColor: '#ffffff',
-  backgroundColor: '#F3B389',
-  textColor: '#000000',
-  buttonUrl: 'https://inkling.local/',
-  handleBackgroundColor: () => {},
+export const Populated: Story = {
+  args: {
+    display: 'Editing',
+    layout: 'split',
+    alignment: 'center',
+    showBackgroundImage: true,
+    backgroundImageSrc: 'https://static.inkling.local/v4.0.0/images/andreas-selter-e4yK8QQlZa0-unsplash.jpg',
+    header: 'This is a heading',
+    subheader: 'And here is some subheading text.',
+    buttonEnabled: true,
+    buttonText: 'Click Me',
+    buttonColor: '#000000',
+    buttonTextColor: '#ffffff',
+    backgroundColor: '#F3B389',
+    textColor: '#000000',
+    buttonUrl: 'https://inkling.local/',
+  },
 }

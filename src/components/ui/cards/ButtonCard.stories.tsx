@@ -1,4 +1,6 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
+
+import React from 'react'
 
 import { ButtonCard } from '@/components/ui/cards/ButtonCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
@@ -7,12 +9,33 @@ const displayOptions = {
   Default: { isSelected: false, isEditing: false },
   Selected: { isSelected: true, isEditing: false },
   Editing: { isSelected: true, isEditing: true },
+} as const
+
+type DisplayKey = keyof typeof displayOptions
+
+type ButtonCardProps = React.ComponentProps<typeof ButtonCard>
+
+interface ButtonCardStoryArgs extends Partial<ButtonCardProps> {
+  display?: DisplayKey
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+function ButtonCardStory({ display = 'Default', ...args }: ButtonCardStoryArgs) {
+  const displayState = displayOptions[display]
+
+  return (
+    <div className="inkling-prose">
+      <div className="my-8 mx-auto max-w-[740px] min-w-[initial]">
+        <CardWrapper wrapperStyle="wide" {...displayState} {...args}>
+          <ButtonCard {...displayState} {...args} />
+        </CardWrapper>
+      </div>
+    </div>
+  )
+}
+
+const meta = {
   title: 'Primary cards/Button card',
-  component: ButtonCard,
+  component: ButtonCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
     display: {
@@ -38,34 +61,27 @@ const story: Meta<any> = {
       type: 'uiReady',
     },
   },
-}
-export default story
+} satisfies Meta<typeof ButtonCardStory>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = ({ display, ...args }) => (
-  <div className="inkling-prose">
-    <div className="my-8 mx-auto max-w-[740px] min-w-[initial]">
-      <CardWrapper wrapperStyle="wide" {...display} {...args}>
-        <ButtonCard {...display} {...args} />
-      </CardWrapper>
-    </div>
-  </div>
-)
+type Story = StoryObj<typeof meta>
 
-export const Empty = Template.bind({})
-Empty.args = {
-  display: 'Editing',
-  alignment: 'center',
-  buttonText: '',
-  buttonPlaceholder: 'Add button text',
-  buttonUrl: '',
+export const Empty: Story = {
+  args: {
+    display: 'Editing',
+    alignment: 'center',
+    buttonText: '',
+    buttonPlaceholder: 'Add button text',
+    buttonUrl: '',
+  },
 }
 
-export const Populated = Template.bind({})
-Populated.args = {
-  display: 'Editing',
-  alignment: 'center',
-  buttonText: 'Subscribe',
-  buttonPlaceholder: 'Add button text',
-  buttonUrl: 'https://inkling.local/',
+export const Populated: Story = {
+  args: {
+    display: 'Editing',
+    alignment: 'center',
+    buttonText: 'Subscribe',
+    buttonPlaceholder: 'Add button text',
+    buttonUrl: 'https://inkling.local/',
+  },
 }

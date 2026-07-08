@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { Dropdown } from '@/components/ui/Dropdown'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Dropdown',
   component: Dropdown,
   argTypes: {
@@ -14,23 +13,22 @@ const story: Meta<any> = {
       type: 'uiReady',
     },
   },
-}
-export default story
+} satisfies Meta<typeof Dropdown>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => (
-  <div className="w-[240px]">
-    <Dropdown {...args} />
-  </div>
-)
+type Story = StoryObj<typeof meta>
 
-export const Default = Template.bind({})
-Default.args = {
-  label: 'Visibility',
-  description: 'Visible for this audience when delivered by email. This card is not published on your site.',
-  value: 'Free members',
-  menu: [
-    { label: 'Free members', name: 'Free members' },
-    { label: 'Paid members', name: 'Paid members' },
-  ],
+export const Default: Story = {
+  args: {
+    value: 'Free members',
+    menu: [
+      { label: 'Free members', name: 'Free members' },
+      { label: 'Paid members', name: 'Paid members' },
+    ],
+  },
+  render: (args) => (
+    <div className="w-[240px]">
+      <Dropdown {...args} />
+    </div>
+  ),
 }

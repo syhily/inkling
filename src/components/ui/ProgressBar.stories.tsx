@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { ProgressBar } from '@/components/ui/ProgressBar'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Progress bar',
   component: ProgressBar,
   parameters: {
@@ -11,14 +10,13 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof ProgressBar>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => <ProgressBar {...args} />
+type Story = StoryObj<typeof meta>
 
-export const Default = Template.bind({})
-Default.args = {
-  style: { width: 60 + '%' },
-  fullWidth: false,
+export const Default: Story = {
+  args: {
+    style: { width: 60 + '%' },
+  },
 }

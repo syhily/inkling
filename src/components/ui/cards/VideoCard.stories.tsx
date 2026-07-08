@@ -1,8 +1,9 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { createEditor } from 'lexical'
+import React from 'react'
 
-import { VideoCard } from '@/components/ui/cards/VideoCard'
+import { VideoCard, type VideoCardProps } from '@/components/ui/cards/VideoCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import { MINIMAL_NODES } from '@/index'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
@@ -11,12 +12,54 @@ const displayOptions = {
   Default: { isSelected: false, isEditing: false },
   Selected: { isSelected: true, isEditing: false },
   Editing: { isSelected: true, isEditing: true },
+} as const
+
+type DisplayKey = keyof typeof displayOptions
+
+interface VideoCardStoryArgs extends Partial<VideoCardProps> {
+  display?: DisplayKey
+  caption?: string
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+function VideoCardStory({ display = 'Default', caption = '', ...args }: VideoCardStoryArgs) {
+  const captionEditor = createEditor({ nodes: MINIMAL_NODES })
+  populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
+  const fileInputRef = React.useRef<HTMLInputElement>(null) as React.RefObject<HTMLInputElement>
+  const displayState = displayOptions[display]
+  const componentProps = {
+    captionEditorInitialState: undefined,
+    fileInputRef,
+    onVideoFileChange: () => {},
+    videoDragHandler: {},
+    videoMimeTypes: [],
+    customThumbnail: '',
+    thumbnail: '',
+    onCustomThumbnailChange: () => {},
+    onRemoveCustomThumbnail: () => {},
+    totalDuration: '',
+    cardWidth: 'regular',
+    isLoopChecked: false,
+    onLoopChange: () => {},
+    onCardWidthChange: () => {},
+    thumbnailMimeTypes: [],
+    ...args,
+    captionEditor,
+  }
+
+  return (
+    <div className="inkling-prose">
+      <div className="not-inkling-prose my-8 mx-auto max-w-[740px] min-w-[initial]">
+        <CardWrapper {...displayState} {...componentProps}>
+          <VideoCard {...displayState} {...componentProps} />
+        </CardWrapper>
+      </div>
+    </div>
+  )
+}
+
+const meta = {
   title: 'Primary cards/Video card',
-  component: VideoCard,
+  component: VideoCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
     display: {
@@ -42,128 +85,123 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof VideoCardStory>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = ({ display, caption, ...args }) => {
-  const captionEditor = createEditor({ nodes: MINIMAL_NODES })
-  populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
+type Story = StoryObj<typeof meta>
 
-  return (
-    <div className="inkling-prose">
-      <div className="not-inkling-prose my-8 mx-auto max-w-[740px] min-w-[initial]">
-        <CardWrapper {...display} {...args}>
-          <VideoCard {...display} {...args} captionEditor={captionEditor} />
-        </CardWrapper>
-      </div>
-    </div>
-  )
-}
-
-export const Empty = Template.bind({})
-Empty.args = {
-  display: 'Editing',
-  caption: '',
-}
-
-export const Uploading = Template.bind({})
-Uploading.args = {
-  display: 'Editing',
-  cardWidth: 'regular',
-  thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
-  customThumbnail: '',
-  totalDuration: '32:27',
-  caption: '',
-  videoUploader: {
-    isLoading: true,
-    progress: 60,
+export const Empty: Story = {
+  args: {
+    display: 'Editing',
+    caption: '',
   },
 }
 
-export const DraggedOver = Template.bind({})
-DraggedOver.args = {
-  display: 'Editing',
-  cardWidth: 'regular',
-  thumbnail: '',
-  customThumbnail: '',
-  caption: '',
-  videoDragHandler: {
-    isDraggedOver: true,
+export const Uploading: Story = {
+  args: {
+    display: 'Editing',
+    cardWidth: 'regular',
+    thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
+    customThumbnail: '',
+    totalDuration: '32:27',
+    caption: '',
+    videoUploader: {
+      isLoading: true,
+      progress: 60,
+    },
   },
 }
 
-export const Populated = Template.bind({})
-Populated.args = {
-  display: 'Editing',
-  cardWidth: 'regular',
-  isLoopChecked: false,
-  thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
-  customThumbnail: '',
-  totalDuration: '32:27',
-  caption: 'Watch the full documentary here.',
-}
-
-export const Error = Template.bind({})
-Error.args = {
-  display: 'Editing',
-  cardWidth: 'regular',
-  thumbnail: '',
-  customThumbnail: '',
-  totalDuration: '32:27',
-  caption: '',
-  videoUploadErrors: [{ message: 'The file type you uploaded is not supported. Please use .MP4, .WEBM, .OGV' }],
-}
-
-export const ThumbnailUploading = Template.bind({})
-ThumbnailUploading.args = {
-  display: 'Editing',
-  cardWidth: 'regular',
-  thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
-  customThumbnail: '',
-  totalDuration: '32:27',
-  caption: 'Watch the full documentary here.',
-  customThumbnailUploader: {
-    isLoading: true,
-    progress: 60,
+export const DraggedOver: Story = {
+  args: {
+    display: 'Editing',
+    cardWidth: 'regular',
+    thumbnail: '',
+    customThumbnail: '',
+    caption: '',
+    videoDragHandler: {
+      isDraggedOver: true,
+    },
   },
 }
 
-export const ThumbnailDraggedOver = Template.bind({})
-ThumbnailDraggedOver.args = {
-  display: 'Editing',
-  cardWidth: 'regular',
-  thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
-  customThumbnail: '',
-  totalDuration: '32:27',
-  caption: 'Watch the full documentary here.',
-  thumbnailDragHandler: {
-    isDraggedOver: true,
+export const Populated: Story = {
+  args: {
+    display: 'Editing',
+    cardWidth: 'regular',
+    isLoopChecked: false,
+    thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
+    customThumbnail: '',
+    totalDuration: '32:27',
+    caption: 'Watch the full documentary here.',
   },
 }
 
-export const ThumbnailPopulated = Template.bind({})
-ThumbnailPopulated.args = {
-  display: 'Editing',
-  cardWidth: 'regular',
-  isLoopChecked: false,
-  thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
-  customThumbnail:
-    'https://images.unsplash.com/photo-1543242594-c8bae8b9e708?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2970&q=80',
-  totalDuration: '32:27',
-  caption: 'Watch the full documentary here.',
+export const Error: Story = {
+  args: {
+    display: 'Editing',
+    cardWidth: 'regular',
+    thumbnail: '',
+    customThumbnail: '',
+    totalDuration: '32:27',
+    caption: '',
+    videoUploadErrors: [{ message: 'The file type you uploaded is not supported. Please use .MP4, .WEBM, .OGV' }],
+  },
 }
 
-export const ThumbnailError = Template.bind({})
-ThumbnailError.args = {
-  display: 'Editing',
-  cardWidth: 'regular',
-  isLoopChecked: false,
-  thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
-  customThumbnail: '',
-  totalDuration: '32:27',
-  caption: 'Watch the full documentary here.',
-  customThumbnailUploader: {
-    errors: [{ message: 'This file type is not supported. Please use .GIF, .JPG, .JPEG, .PNG, .SVG, .SVGZ, .WEBP' }],
+export const ThumbnailUploading: Story = {
+  args: {
+    display: 'Editing',
+    cardWidth: 'regular',
+    thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
+    customThumbnail: '',
+    totalDuration: '32:27',
+    caption: 'Watch the full documentary here.',
+    customThumbnailUploader: {
+      isLoading: true,
+      progress: 60,
+    },
+  },
+}
+
+export const ThumbnailDraggedOver: Story = {
+  args: {
+    display: 'Editing',
+    cardWidth: 'regular',
+    thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
+    customThumbnail: '',
+    totalDuration: '32:27',
+    caption: 'Watch the full documentary here.',
+    thumbnailDragHandler: {
+      isDraggedOver: true,
+    },
+  },
+}
+
+export const ThumbnailPopulated: Story = {
+  args: {
+    display: 'Editing',
+    cardWidth: 'regular',
+    isLoopChecked: false,
+    thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
+    customThumbnail:
+      'https://images.unsplash.com/photo-1543242594-c8bae8b9e708?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA==&auto=format&fit=crop&w=2970&q=80',
+    totalDuration: '32:27',
+    caption: 'Watch the full documentary here.',
+  },
+}
+
+export const ThumbnailError: Story = {
+  args: {
+    display: 'Editing',
+    cardWidth: 'regular',
+    isLoopChecked: false,
+    thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
+    customThumbnail: '',
+    totalDuration: '32:27',
+    caption: 'Watch the full documentary here.',
+    customThumbnailUploader: {
+      errors: [{ message: 'This file type is not supported. Please use .GIF, .JPG, .JPEG, .PNG, .SVG, .SVGZ, .WEBP' }],
+    },
   },
 }

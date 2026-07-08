@@ -1,4 +1,6 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
+
+import React from 'react'
 
 import { HorizontalRuleCard } from '@/components/ui/cards/HorizontalRuleCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
@@ -6,12 +8,33 @@ import { CardWrapper } from '@/components/ui/CardWrapper'
 const displayOptions = {
   Default: { isSelected: false, isEditing: false },
   Selected: { isSelected: true, isEditing: false },
+} as const
+
+type DisplayKey = keyof typeof displayOptions
+
+type HorizontalRuleCardProps = React.ComponentProps<typeof HorizontalRuleCard>
+
+interface HorizontalRuleCardStoryArgs extends Partial<HorizontalRuleCardProps> {
+  display?: DisplayKey
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+function HorizontalRuleCardStory({ display = 'Default' }: HorizontalRuleCardStoryArgs) {
+  const displayState = displayOptions[display]
+
+  return (
+    <div className="inkling-prose">
+      <div className="my-8 mx-auto max-w-[740px] min-w-[initial]">
+        <CardWrapper {...displayState}>
+          <HorizontalRuleCard />
+        </CardWrapper>
+      </div>
+    </div>
+  )
+}
+
+const meta = {
   title: 'Primary cards/Divider card',
-  component: HorizontalRuleCard,
+  component: HorizontalRuleCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
     display: {
@@ -32,21 +55,13 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof HorizontalRuleCardStory>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = ({ display, ...args }) => (
-  <div className="inkling-prose">
-    <div className="my-8 mx-auto max-w-[740px] min-w-[initial]">
-      <CardWrapper {...display} {...args}>
-        <HorizontalRuleCard {...display} {...args} />
-      </CardWrapper>
-    </div>
-  </div>
-)
+type Story = StoryObj<typeof meta>
 
-export const Default = Template.bind({})
-Default.args = {
-  display: 'Selected',
+export const Default: Story = {
+  args: {
+    display: 'Selected',
+  },
 }

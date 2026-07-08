@@ -1,8 +1,11 @@
+/* oxlint-disable react/jsx-key */
+import type { Meta, StoryObj } from '@storybook/react'
+
 import React from 'react'
 
 import { ToolbarMenuItem } from '@/components/ui/ToolbarMenu'
 
-const story = {
+const meta = {
   title: 'Toolbar/Toolbar buttons',
   component: ToolbarMenuItem,
   parameters: {
@@ -10,98 +13,109 @@ const story = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof ToolbarMenuItem>
+export default meta
 
-interface StoryTemplate {
-  (args: Record<string, unknown>): React.ReactElement
-  bind: (thisArg: unknown) => StoryTemplate
-  args?: Record<string, unknown>
-}
+type Story = StoryObj<typeof meta>
 
-const Template = ((args: Record<string, unknown>) => {
+function ToolbarMenuItemStory(args: React.ComponentProps<typeof ToolbarMenuItem>) {
   const [isActive, setActive] = React.useState(false)
-  const itemArgs = args as Omit<React.ComponentProps<typeof ToolbarMenuItem>, 'isActive' | 'onClick'>
+
   return (
     <div className="flex">
       <div className="rounded bg-black">
-        <ToolbarMenuItem {...itemArgs} isActive={isActive} onClick={() => setActive(!isActive)} />
+        <ToolbarMenuItem {...args} isActive={isActive} onClick={() => setActive(!isActive)} />
       </div>
     </div>
   )
-}) as StoryTemplate
-
-export const Bold: StoryTemplate = Template.bind({})
-Bold.args = {
-  icon: 'bold',
 }
 
-export const Italic: StoryTemplate = Template.bind({})
-Italic.args = {
-  icon: 'italic',
+export const boldArgs = { icon: 'bold' as const, label: 'Bold', isActive: false as const }
+export const Bold: Story = {
+  args: boldArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const HeadingTwo: StoryTemplate = Template.bind({})
-HeadingTwo.args = {
-  icon: 'headingTwo',
+export const italicArgs = { icon: 'italic' as const, label: 'Italic', isActive: false as const }
+export const Italic: Story = {
+  args: italicArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const HeadingThree: StoryTemplate = Template.bind({})
-HeadingThree.args = {
-  icon: 'headingThree',
+export const headingTwoArgs = { icon: 'headingTwo' as const, label: 'Heading 2', isActive: false as const }
+export const HeadingTwo: Story = {
+  args: headingTwoArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const Quote: StoryTemplate = Template.bind({})
-Quote.args = {
-  icon: 'quote',
+export const headingThreeArgs = { icon: 'headingThree' as const, label: 'Heading 3', isActive: false as const }
+export const HeadingThree: Story = {
+  args: headingThreeArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const QuoteOne: StoryTemplate = Template.bind({})
-QuoteOne.args = {
-  icon: 'quoteOne',
+export const quoteArgs = { icon: 'quote' as const, label: 'Quote', isActive: false as const }
+export const Quote: Story = {
+  args: quoteArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const QuoteTwo: StoryTemplate = Template.bind({})
-QuoteTwo.args = {
-  icon: 'quoteTwo',
+export const quoteOneArgs = { icon: 'quoteOne' as const, label: 'Quote 1', isActive: false as const }
+export const QuoteOne: Story = {
+  args: quoteOneArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const Link: StoryTemplate = Template.bind({})
-Link.args = {
-  icon: 'link',
+export const quoteTwoArgs = { icon: 'quoteTwo' as const, label: 'Quote 2', isActive: false as const }
+export const QuoteTwo: Story = {
+  args: quoteTwoArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const ImgRegular: StoryTemplate = Template.bind({})
-ImgRegular.args = {
-  icon: 'imgRegular',
+export const linkArgs = { icon: 'link' as const, label: 'Link', isActive: false as const }
+export const Link: Story = {
+  args: linkArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const ImgWide: StoryTemplate = Template.bind({})
-ImgWide.args = {
-  icon: 'imgWide',
+export const imgRegularArgs = { icon: 'imgRegular' as const, label: 'Regular image', isActive: false as const }
+export const ImgRegular: Story = {
+  args: imgRegularArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const ImgFull: StoryTemplate = Template.bind({})
-ImgFull.args = {
-  icon: 'imgFull',
+export const imgWideArgs = { icon: 'imgWide' as const, label: 'Wide image', isActive: false as const }
+export const ImgWide: Story = {
+  args: imgWideArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const ImgReplace: StoryTemplate = Template.bind({})
-ImgReplace.args = {
-  icon: 'imgReplace',
+export const imgFullArgs = { icon: 'imgFull' as const, label: 'Full image', isActive: false as const }
+export const ImgFull: Story = {
+  args: imgFullArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const Add: StoryTemplate = Template.bind({})
-Add.args = {
-  icon: 'add',
+export const imgReplaceArgs = { icon: 'imgReplace' as const, label: 'Replace image', isActive: false as const }
+export const ImgReplace: Story = {
+  args: imgReplaceArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const Edit: StoryTemplate = Template.bind({})
-Edit.args = {
-  icon: 'edit',
+export const addArgs = { icon: 'add' as const, label: 'Add', isActive: false as const }
+export const Add: Story = {
+  args: addArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const Snippet: StoryTemplate = Template.bind({})
-Snippet.args = {
-  icon: 'snippet',
+export const editArgs = { icon: 'edit' as const, label: 'Edit', isActive: false as const }
+export const Edit: Story = {
+  args: editArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
+}
+
+export const snippetArgs = { icon: 'snippet' as const, label: 'Snippet', isActive: false as const }
+export const Snippet: Story = {
+  args: snippetArgs,
+  render: (args) => <ToolbarMenuItemStory {...args} />,
 }

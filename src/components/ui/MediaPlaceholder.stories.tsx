@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Media placeholder (beta)',
   component: MediaPlaceholder,
   argTypes: {
@@ -25,69 +24,82 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof MediaPlaceholder>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => (
-  <div className="flex">
-    <MediaPlaceholder {...args} />
-  </div>
-)
+type Story = StoryObj<typeof meta>
 
-export const Image = Template.bind({})
-Image.args = {
-  icon: 'image',
-  desc: 'Click to select an image',
-  size: 'medium',
-  borderStyle: 'squared',
+const baseArgs = {
+  filePicker: () => {},
 }
 
-export const Gallery = Template.bind({})
-Gallery.args = {
-  icon: 'gallery',
-  desc: 'Click to select up to 9 images',
-  size: 'large',
-  borderStyle: 'squared',
+export const Image: Story = {
+  args: {
+    ...baseArgs,
+    icon: 'image' as const,
+    desc: 'Click to select an image',
+    size: 'medium' as const,
+    borderStyle: 'squared' as const,
+  },
 }
 
-export const Video = Template.bind({})
-Video.args = {
-  icon: 'video',
-  desc: 'Click to select a video',
-  size: 'medium',
-  borderStyle: 'squared',
+export const Gallery: Story = {
+  args: {
+    ...baseArgs,
+    icon: 'gallery' as const,
+    desc: 'Click to select up to 9 images',
+    size: 'large' as const,
+    borderStyle: 'squared' as const,
+  },
 }
 
-export const Audio = Template.bind({})
-Audio.args = {
-  icon: 'audio',
-  desc: 'Click to upload an audio file',
-  size: 'xsmall',
-  borderStyle: 'squared',
+export const Video: Story = {
+  args: {
+    ...baseArgs,
+    icon: 'video' as const,
+    desc: 'Click to select a video',
+    size: 'medium' as const,
+    borderStyle: 'squared' as const,
+  },
 }
 
-export const File = Template.bind({})
-File.args = {
-  icon: 'file',
-  desc: 'Click to upload a file',
-  size: 'xsmall',
-  borderStyle: 'squared',
+export const Audio: Story = {
+  args: {
+    ...baseArgs,
+    icon: 'audio' as const,
+    desc: 'Click to upload an audio file',
+    size: 'xsmall' as const,
+    borderStyle: 'squared' as const,
+  },
 }
 
-export const Product = Template.bind({})
-Product.args = {
-  icon: 'product',
-  desc: 'Click to upload a product image',
-  size: 'small',
-  borderStyle: 'squared',
+export const File: Story = {
+  args: {
+    ...baseArgs,
+    icon: 'file' as const,
+    desc: 'Click to upload a file',
+    size: 'xsmall' as const,
+    borderStyle: 'squared' as const,
+  },
 }
 
-export const ErrorState = Template.bind({})
-ErrorState.args = {
-  icon: 'video',
-  desc: 'Click to select a video',
-  size: 'medium',
-  borderStyle: 'squared',
-  errors: [{ message: 'The file type you uploaded is not supported. Please use .MP4, .WEBM, .OGV' }],
+export const Product: Story = {
+  args: {
+    ...baseArgs,
+    icon: 'product' as const,
+    desc: 'Click to upload a product image',
+    size: 'small' as const,
+    borderStyle: 'squared' as const,
+  },
+}
+
+export const ErrorState: Story = {
+  args: {
+    ...baseArgs,
+    icon: 'video' as const,
+    desc: 'Click to select a video',
+    size: 'medium' as const,
+    borderStyle: 'squared' as const,
+    errors: [{ message: 'The file type you uploaded is not supported. Please use .MP4, .WEBM, .OGV' }],
+  },
 }

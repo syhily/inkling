@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { SubscribeForm } from '@/components/ui/SubscribeForm'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Subscribe form',
   component: SubscribeForm,
   parameters: {
@@ -11,14 +10,15 @@ const story: Meta<any> = {
       type: 'uiReady',
     },
   },
+} satisfies Meta<typeof SubscribeForm>
+export default meta
+
+type Story = StoryObj<typeof meta>
+
+export const Default: Story = {
+  render: (args) => (
+    <div className="w-[560px]">
+      <SubscribeForm {...args} />
+    </div>
+  ),
 }
-export default story
-
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => (
-  <div className="w-[560px]">
-    <SubscribeForm {...args} />
-  </div>
-)
-
-export const Default = Template.bind({})

@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { PlusButton } from '@/components/ui/PlusMenu'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Card menu/Plus button',
   component: PlusButton,
   parameters: {
@@ -11,14 +10,15 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
+} satisfies Meta<typeof PlusButton>
+export default meta
+
+type Story = StoryObj<typeof meta>
+
+export const Default: Story = {
+  render: (args) => (
+    <div className="relative mt-[2px] ml-[66px]">
+      <PlusButton {...args} />
+    </div>
+  ),
 }
-export default story
-
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => (
-  <div className="relative mt-[2px] ml-[66px]">
-    <PlusButton {...args} />
-  </div>
-)
-
-export const Default = Template.bind({})

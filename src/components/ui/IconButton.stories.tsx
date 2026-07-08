@@ -1,10 +1,9 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import DeleteIcon from '@/assets/icons/inkling-trash.svg?react'
 import { IconButton } from '@/components/ui/IconButton'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/Icon button',
   component: IconButton,
   parameters: {
@@ -12,15 +11,13 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof IconButton>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => {
-  return <IconButton {...args} />
-}
+type Story = StoryObj<typeof meta>
 
-export const Default = Template.bind({})
-Default.args = {
-  Icon: DeleteIcon,
+export const Default: Story = {
+  args: {
+    Icon: DeleteIcon,
+  },
 }

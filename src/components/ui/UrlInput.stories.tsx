@@ -1,9 +1,8 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { UrlInput } from '@/components/ui/UrlInput'
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+const meta = {
   title: 'Generic/URL Input',
   component: UrlInput,
   parameters: {
@@ -11,52 +10,101 @@ const story: Meta<any> = {
       type: 'uiReady',
     },
   },
-}
-export default story
+} satisfies Meta<typeof UrlInput>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = (args) => (
-  <div className="w-[740px]">
-    <div className="p-4">
-      <UrlInput {...args} />
+type Story = StoryObj<typeof meta>
+
+const baseArgs = {
+  handleUrlChange: () => {},
+}
+
+export const Empty: Story = {
+  args: {
+    ...baseArgs,
+    value: '',
+  },
+  render: (args) => (
+    <div className="w-[740px]">
+      <div className="p-4">
+        <UrlInput {...args} />
+      </div>
+      <div className="dark bg-black p-4">
+        <UrlInput {...args} />
+      </div>
     </div>
-    <div className="dark bg-black p-4">
-      <UrlInput {...args} />
+  ),
+}
+
+export const Loading: Story = {
+  args: {
+    ...baseArgs,
+    value: 'https://inkling.local/',
+    isLoading: true,
+  },
+  render: (args) => (
+    <div className="w-[740px]">
+      <div className="p-4">
+        <UrlInput {...args} />
+      </div>
+      <div className="dark bg-black p-4">
+        <UrlInput {...args} />
+      </div>
     </div>
-  </div>
-)
-
-export const Empty = Template.bind({})
-Empty.args = {
-  value: '',
-  onChange: () => {},
+  ),
 }
 
-export const Loading = Template.bind({})
-Loading.args = {
-  value: 'https://inkling.local/',
-  onChange: () => {},
-  isLoading: true,
+export const Placeholder: Story = {
+  args: {
+    ...baseArgs,
+    value: '',
+    placeholder: 'Enter a URL to add content...',
+  },
+  render: (args) => (
+    <div className="w-[740px]">
+      <div className="p-4">
+        <UrlInput {...args} />
+      </div>
+      <div className="dark bg-black p-4">
+        <UrlInput {...args} />
+      </div>
+    </div>
+  ),
 }
 
-export const Placeholder = Template.bind({})
-Placeholder.args = {
-  value: '',
-  onChange: () => {},
-  placeholder: 'Enter a URL to add content...',
+export const Populated: Story = {
+  args: {
+    ...baseArgs,
+    value: 'https://sampleurl.com',
+  },
+  render: (args) => (
+    <div className="w-[740px]">
+      <div className="p-4">
+        <UrlInput {...args} />
+      </div>
+      <div className="dark bg-black p-4">
+        <UrlInput {...args} />
+      </div>
+    </div>
+  ),
 }
 
-export const Populated = Template.bind({})
-Populated.args = {
-  value: 'https://sampleurl.com',
-  onChange: () => {},
-}
-
-export const Error = Template.bind({})
-Error.args = {
-  value: 'thisisntaurl',
-  hasError: true,
-  onChange: () => {},
-  handleRetry: () => {},
-  handlePasteAsLink: () => {},
+export const Error: Story = {
+  args: {
+    ...baseArgs,
+    value: 'thisisntaurl',
+    hasError: true,
+    handleRetry: () => {},
+    handlePasteAsLink: () => {},
+  },
+  render: (args) => (
+    <div className="w-[740px]">
+      <div className="p-4">
+        <UrlInput {...args} />
+      </div>
+      <div className="dark bg-black p-4">
+        <UrlInput {...args} />
+      </div>
+    </div>
+  ),
 }

@@ -1,4 +1,4 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
 import { createEditor } from 'lexical'
 import React from 'react'
@@ -12,7 +12,7 @@ import populateEditor from '@/utils/storybook/populate-storybook-editor'
 const displayOptions = {
   Default: { isSelected: false, isEditing: false },
   Selected: { isSelected: true, isEditing: false },
-}
+} as const
 
 type DisplayKey = keyof typeof displayOptions
 
@@ -95,7 +95,7 @@ function GalleryCardStory({
   )
 }
 
-const story: Meta<typeof GalleryCardStory> = {
+const meta = {
   title: 'Primary cards/Gallery card',
   component: GalleryCardStory,
   subcomponents: { CardWrapper },
@@ -118,14 +118,15 @@ const story: Meta<typeof GalleryCardStory> = {
       type: 'Functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof GalleryCardStory>
+export default meta
 
-const Template: StoryFn<typeof GalleryCardStory> = (args) => <GalleryCardStory {...args} />
+type Story = StoryObj<typeof meta>
 
-export const Empty = Template.bind({})
-Empty.args = {
-  display: 'Selected',
-  caption: '',
-  filesDropper: {},
+export const Empty: Story = {
+  args: {
+    display: 'Selected',
+    caption: '',
+    filesDropper: {},
+  },
 }

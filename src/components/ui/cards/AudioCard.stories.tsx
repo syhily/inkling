@@ -1,18 +1,48 @@
-import type { Meta, StoryFn } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react'
 
-import { AudioCard } from '@/components/ui/cards/AudioCard'
+import React from 'react'
+
+import { AudioCard, type AudioCardProps } from '@/components/ui/cards/AudioCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 
 const displayOptions = {
   Default: { isSelected: false, isEditing: false },
   Selected: { isSelected: true, isEditing: false },
   Editing: { isSelected: true, isEditing: true },
+} as const
+
+type DisplayKey = keyof typeof displayOptions
+
+interface AudioCardStoryArgs extends Partial<AudioCardProps> {
+  display?: DisplayKey
+  titlePlaceholder?: string
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const story: Meta<any> = {
+function AudioCardStory({ display = 'Default', titlePlaceholder, ...args }: AudioCardStoryArgs) {
+  const displayState = displayOptions[display]
+  const componentProps = {
+    updateTitle: () => {},
+    onAudioFileChange: () => {},
+    onThumbnailFileChange: () => {},
+    audioUploader: {},
+    thumbnailUploader: {},
+    ...args,
+  }
+
+  return (
+    <div className="inkling-prose">
+      <div className="not-inkling-prose my-8 mx-auto max-w-[740px] min-w-[initial]">
+        <CardWrapper {...displayState} {...componentProps}>
+          <AudioCard {...displayState} {...componentProps} />
+        </CardWrapper>
+      </div>
+    </div>
+  )
+}
+
+const meta = {
   title: 'Primary cards/Audio card',
-  component: AudioCard,
+  component: AudioCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
     display: {
@@ -34,128 +64,130 @@ const story: Meta<any> = {
       type: 'functional',
     },
   },
-}
-export default story
+} satisfies Meta<typeof AudioCardStory>
+export default meta
 
-// oxlint-disable-next-line typescript/no-explicit-any
-const Template: StoryFn<any> = ({ display, ...args }) => (
-  <div className="inkling-prose">
-    <div className="not-inkling-prose my-8 mx-auto max-w-[740px] min-w-[initial]">
-      <CardWrapper {...display} {...args}>
-        <AudioCard {...display} {...args} />
-      </CardWrapper>
-    </div>
-  </div>
-)
+type Story = StoryObj<typeof meta>
 
-export const Empty = Template.bind({})
-Empty.args = {
-  display: 'Editing',
-  src: '',
-  duration: '',
-  title: '',
-  isDraggedOver: false,
-  audioUploader: {},
-  thumbnailUploader: {},
-}
-
-export const Uploading = Template.bind({})
-Uploading.args = {
-  display: 'Editing',
-  src: '',
-  duration: '',
-  title: '',
-  titlePlaceholder: 'Add a title...',
-  audioUploader: { progress: 50, isLoading: true },
-  thumbnailUploader: {},
-}
-
-export const DraggedOver = Template.bind({})
-DraggedOver.args = {
-  display: 'Editing',
-  src: '',
-  duration: '',
-  title: '',
-  audioUploader: {},
-  thumbnailUploader: {},
-  audioDragHandler: {
-    isDraggedOver: true,
+export const Empty: Story = {
+  args: {
+    display: 'Editing',
+    src: '',
+    duration: 0,
+    title: '',
+    titlePlaceholder: 'Add a title...',
+    audioUploader: {},
+    thumbnailUploader: {},
   },
 }
 
-export const Populated = Template.bind({})
-Populated.args = {
-  display: 'Editing',
-  thumbnailSrc: '',
-  src: 'audio.mp3',
-  duration: 19,
-  title: 'The Inkling Podcast',
-  titlePlaceholder: 'Add a title...',
-  audioUploader: {},
-  thumbnailUploader: {},
-}
-
-export const Error = Template.bind({})
-Error.args = {
-  display: 'Editing',
-  src: '',
-  title: '',
-  audioUploader: {
-    errors: [
-      {
-        filename: 'audio.mp3',
-        message: 'The file type you uploaded is not supported. Please use .MP3, .WAV, .OGG, .M4A',
-      },
-    ],
+export const Uploading: Story = {
+  args: {
+    display: 'Editing',
+    src: '',
+    duration: 0,
+    title: '',
+    titlePlaceholder: 'Add a title...',
+    audioUploader: { progress: 50, isLoading: true },
+    thumbnailUploader: {},
   },
-  thumbnailUploader: {},
 }
 
-export const ThumbnailUploading = Template.bind({})
-ThumbnailUploading.args = {
-  display: 'Editing',
-  src: 'audio.mp3',
-  duration: 19,
-  title: 'The Inkling Podcast',
-  titlePlaceholder: 'Add a title...',
-  thumbnailUploader: { progress: 50, isLoading: true },
+export const DraggedOver: Story = {
+  args: {
+    display: 'Editing',
+    src: '',
+    duration: 0,
+    title: '',
+    audioUploader: {},
+    thumbnailUploader: {},
+    audioDragHandler: {
+      isDraggedOver: true,
+    },
+  },
 }
 
-export const ThumbnailDraggedOver = Template.bind({})
-ThumbnailDraggedOver.args = {
-  display: 'Editing',
-  src: 'audio.mp3',
-  duration: 19,
-  title: 'The Inkling Podcast',
-  titlePlaceholder: 'Add a title...',
-  isDraggedOver: true,
-  audioUploader: {},
-  thumbnailUploader: {},
+export const Populated: Story = {
+  args: {
+    display: 'Editing',
+    thumbnailSrc: '',
+    src: 'audio.mp3',
+    duration: 19,
+    title: 'The Inkling Podcast',
+    titlePlaceholder: 'Add a title...',
+    audioUploader: {},
+    thumbnailUploader: {},
+  },
 }
 
-export const ThumbnailPopulated = Template.bind({})
-ThumbnailPopulated.args = {
-  display: 'Editing',
-  thumbnailSrc: 'https://static.inkling.local/Orb4b.gif',
-  src: 'audio.mp3',
-  duration: 19,
-  title: 'The Inkling Podcast',
-  titlePlaceholder: 'Add a title...',
-  isDraggedOver: false,
-  audioUploader: {},
-  thumbnailUploader: {},
+export const Error: Story = {
+  args: {
+    display: 'Editing',
+    src: '',
+    duration: 0,
+    title: '',
+    titlePlaceholder: 'Add a title...',
+    audioUploader: {
+      errors: [
+        {
+          message: 'The file type you uploaded is not supported. Please use .MP3, .WAV, .OGG, .M4A',
+        },
+      ],
+    },
+    thumbnailUploader: {},
+  },
 }
 
-export const ThumbnailError = Template.bind({})
-ThumbnailError.args = {
-  display: 'Editing',
-  src: 'audio.mp3',
-  duration: 19,
-  title: 'The Inkling Podcast',
-  titlePlaceholder: 'Add a title...',
-  thumbnailUploader: {
-    progress: 100,
-    isLoading: false,
-    errors: [{ filename: 'audio.mp3', message: 'File not supported' }],
+export const ThumbnailUploading: Story = {
+  args: {
+    display: 'Editing',
+    src: 'audio.mp3',
+    duration: 19,
+    title: 'The Inkling Podcast',
+    titlePlaceholder: 'Add a title...',
+    thumbnailUploader: { progress: 50, isLoading: true },
+  },
+}
+
+export const ThumbnailDraggedOver: Story = {
+  args: {
+    display: 'Editing',
+    src: 'audio.mp3',
+    duration: 19,
+    title: 'The Inkling Podcast',
+    titlePlaceholder: 'Add a title...',
+    thumbnailDragHandler: {
+      isDraggedOver: true,
+    },
+    audioUploader: {},
+    thumbnailUploader: {},
+  },
+}
+
+export const ThumbnailPopulated: Story = {
+  args: {
+    display: 'Editing',
+    thumbnailSrc: 'https://static.inkling.local/Orb4b.gif',
+    src: 'audio.mp3',
+    duration: 19,
+    title: 'The Inkling Podcast',
+    titlePlaceholder: 'Add a title...',
+    audioUploader: {},
+    thumbnailUploader: {},
+  },
+}
+
+export const ThumbnailError: Story = {
+  args: {
+    display: 'Editing',
+    src: 'audio.mp3',
+    duration: 19,
+    title: 'The Inkling Podcast',
+    titlePlaceholder: 'Add a title...',
+    thumbnailUploader: {
+      progress: 100,
+      isLoading: false,
+      errors: [{ message: 'File not supported' }],
+    },
   },
 }
