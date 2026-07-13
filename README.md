@@ -22,6 +22,70 @@ The following dependencies are externalized from the bundle and declared as opti
 
 Because these are optional peer dependencies, the editor will still install without them; only the specific cards that rely on them need the corresponding packages present in your app.
 
+## Public API
+
+Everything below is exported from the package entry point.
+
+### Markdown API
+
+- `markdownToLexicalState` / `lexicalStateToMarkdown` — synchronous round-trip conversion between markdown strings and serialized Lexical editor states. See `docs/markdown-api.md`.
+
+### Components
+
+- `InklingEditor` — ready-to-use editor with all default plugins wired in.
+- `InklingComposableEditor` — editor shell for composing your own plugin set.
+- `InklingComposer` — low-level Lexical composer (theme, nodes, error handling, optional multiplayer via `enableMultiplayer`).
+- `InklingNestedComposer` — composer for nested editors inside cards.
+- `InklingCardWrapper` — shared wrapper handling card selection, editing, and visibility settings.
+- `EmailEditor` — preconfigured editor variant for email content.
+- `DesignSandbox` — development sandbox showcasing editor UI pieces such as the text toolbar.
+
+### Plugins
+
+Around 30 plugins are exported:
+
+`AllDefaultPlugins`, `AudioPlugin`, `BookmarkPlugin`, `ButtonPlugin`, `CalloutPlugin`, `CardMenuPlugin`, `DragDropPastePlugin`, `DragDropReorderPlugin`, `EmEnDashPlugin`, `EmojiPickerPlugin`, `ExternalControlPlugin`, `FilePlugin`, `FloatingToolbarPlugin`, `GalleryPlugin`, `HeaderPlugin`, `HorizontalRulePlugin`, `HtmlOutputPlugin`, `HtmlPlugin`, `ImagePlugin`, `InklingBehaviourPlugin`, `InklingSelectorPlugin`, `InklingSnippetPlugin`, `ListPlugin`, `MarkdownShortcutPlugin`, `PlusCardMenuPlugin`, `ReplacementStringsPlugin`, `RestrictContentPlugin`, `SlashCardMenuPlugin`, `TKCountPlugin`, `TogglePlugin`, `VideoPlugin`, `WordCountPlugin`.
+
+Most map to a card or an obvious editor feature. The less obvious ones:
+
+- `AllDefaultPlugins` — the full default plugin bundle used by `InklingEditor`.
+- `InklingBehaviourPlugin` — core keyboard and paste behaviors plus card commands.
+- `CardMenuPlugin` — bundles `PlusCardMenuPlugin` and `SlashCardMenuPlugin`.
+- `EmEnDashPlugin` — auto-replaces typed hyphens with em/en dashes.
+- `ExternalControlPlugin` — exposes an imperative API (`serialize`, `focusEditor`, `insertParagraphAtTop/Bottom`, etc.).
+- `HtmlOutputPlugin` — emits the editor's HTML output via callback, with optional debounce.
+- `InklingSelectorPlugin` — GIF selector commands for image nodes.
+- `InklingSnippetPlugin` — inserts predefined content snippets.
+- `ReplacementStringsPlugin` — rewrites `{placeholder, "fallback"}` template strings in text nodes.
+- `RestrictContentPlugin` — restricts content to a maximum number of plain paragraphs, stripping cards and other block types.
+- `TKCountPlugin` — reports the count of "TK" placeholder markers via `onChange`.
+
+### Node sets
+
+- `DEFAULT_NODES` — full node set for the standard editor (all cards plus extended text/heading/quote nodes).
+- `BASIC_NODES` — lists, links, and TK nodes.
+- `MINIMAL_NODES` — extended text, links, and TK nodes; the smallest viable set.
+- `EMAIL_NODES` — text-formatting nodes for email (headings, quotes, lists, links, horizontal rules).
+- `EMAIL_EDITOR_NODES` — node set for `EmailEditor`: the default nodes minus cards unsuitable for email.
+
+### Transformers
+
+Markdown shortcut transformer sets for the different editor variants:
+
+- `DEFAULT_TRANSFORMERS` — full set used by the standard editor.
+- `EMAIL_TRANSFORMERS` — the `EmailEditor` set.
+- `BASIC_TRANSFORMERS` — lists plus inline formatting.
+- `MINIMAL_TRANSFORMERS` — inline formatting only.
+- `ELEMENT_TRANSFORMERS` — block-level transformers (headings, quotes, lists, horizontal rules, code blocks).
+- `HR_TRANSFORMER` / `CODE_BLOCK_TRANSFORMER` — individual transformers for `---` rules and fenced code blocks.
+
+### Config and utilities
+
+- `EMAIL_EDITOR_CARD_CONFIG` — default card configuration for `EmailEditor`.
+- `getEmailEditorCardConfig` — merges a caller-provided card config with the email defaults.
+- `version` — the package version string (`development` outside built bundles).
+- Utilities — the utils barrel exposes `slugify`, `countWords`, `Color` / `textColorForBackgroundColor`, `debounce` / `throttle`, `escapeRegExp` / `kebabCase` / `pick`, and the selection helpers `$isAtStartOfDocument`, `$selectDecoratorNode`, `$isAtTopOfNode`, and `getTopLevelNativeElement`.
+
 ## Development
 
 The editor runs in standalone mode via the demo app.
@@ -44,9 +108,9 @@ VITE_TENOR_API_KEY=xxx
 
 The card resolves to Klipy when `VITE_KLIPY_API_KEY` is set, otherwise Tenor. Get a Klipy key at https://partner.klipy.com; the Tenor key is described at https://inkling.org/docs/config/#tenor
 
-#### Bookmark & Embed cards
+#### Bookmark cards
 
-These cards make external web requests. Since the demo doesn't have a server to process these requests, we must fetch these resources on the front end. To do this we need to enable CORS, which is most easily done with a browser extension like 'Test CORS' for Chrome. Otherwise you will see blocked requests logging errors in the console. This can also be avoided by using test data directly without fetching via `fetchEmbed.js`.
+Pasting a URL into an empty paragraph creates a bookmark card. Bookmark cards make external web requests to fetch link metadata (title, description, thumbnail). Since the demo doesn't have a server to process these requests, we must fetch these resources on the front end. To do this we need to enable CORS, which is most easily done with a browser extension like 'Test CORS' for Chrome. Otherwise you will see blocked requests logging errors in the console. This can also be avoided by using the demo's `fetchEmbed` stub in `demo/utils/fetchEmbed.ts`, which returns fixed test data instead of fetching.
 
 ## Additional notes
 
