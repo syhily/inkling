@@ -30,7 +30,6 @@ import {
   KEY_ARROW_UP_COMMAND,
   KEY_BACKSPACE_COMMAND,
   KEY_DELETE_COMMAND,
-  KEY_DOWN_COMMAND,
   KEY_ENTER_COMMAND,
   KEY_ESCAPE_COMMAND,
   KEY_MODIFIER_COMMAND,
@@ -42,33 +41,18 @@ import { $isInklingCard } from '@/nodes/base'
 import { $createCodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $isAtStartOfDocument, $isAtTopOfNode, $selectDecoratorNode, getTopLevelNativeElement } from '@/utils'
 
+import type { KeyboardNavigationDeps } from './keyboard-navigation/types'
 import type { CardKeyboardEvent } from './types'
 
 import { DELETE_CARD_COMMAND, SELECT_CARD_COMMAND } from './commands'
+import { registerKeyDownPassthrough } from './keyboard-navigation/key-down'
 import { $selectCard, RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX, SPECIAL_MARKUPS } from './utils'
-
-interface KeyboardNavigationDeps {
-  selectedCardKey: string | null
-  isEditingCard: boolean
-  setIsEditingCard: (editing: boolean) => void
-  isNested?: boolean
-  cursorDidExitAtTop?: () => void
-}
 
 export function registerKeyboardNavigation(editor: LexicalEditor, deps: KeyboardNavigationDeps) {
   const { selectedCardKey, isEditingCard, setIsEditingCard, isNested, cursorDidExitAtTop } = deps
 
   return mergeRegister(
-    editor.registerCommand(
-      KEY_DOWN_COMMAND,
-      () => {
-        // Avoid processing custom commands when inside a card's editor.
-        // This also prevents Lexical calling event.preventDefault on
-        // cut/copy/paste events letting the browser/inner editors do their thing
-        return false
-      },
-      COMMAND_PRIORITY_LOW,
-    ),
+    registerKeyDownPassthrough(editor, deps),
     editor.registerCommand(
       KEY_ENTER_COMMAND,
       (event) => {
