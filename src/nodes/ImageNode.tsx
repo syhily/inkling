@@ -8,7 +8,7 @@ import GIFIcon from '@/assets/icons/inkling-card-type-gif.svg?react'
 import ImageCardIcon from '@/assets/icons/inkling-card-type-image.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
-import { ImageNode as BaseImageNode } from '@/nodes/base'
+import { ImageNode as BaseImageNode, normalizeCardWidth } from '@/nodes/base'
 import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { OPEN_GIF_SELECTOR_COMMAND } from '@/plugins/InklingSelectorPlugin'
@@ -152,7 +152,7 @@ export class ImageNode extends BaseImageNode {
     const Selector = this.__selector
 
     return (
-      <InklingCardWrapper nodeKey={this.getKey()} width={this.cardWidth}>
+      <InklingCardWrapper nodeKey={this.getKey()} width={normalizeCardWidth(this.cardWidth) ?? 'regular'}>
         {Selector && <Selector nodeKey={this.getKey()} />}
 
         {!this.__isImageHidden && (

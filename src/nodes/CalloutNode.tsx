@@ -94,6 +94,6 @@ export const $createCalloutNode = (dataset: Record<string, any>) => {
   return new CalloutNode(dataset)
 }
 
-export function $isCalloutNode(node: unknown) {
+export function $isCalloutNode(node: unknown): node is CalloutNode {
   return node instanceof CalloutNode
 }

@@ -70,6 +70,6 @@ export const $createAudioNode = (dataset: Record<string, any>) => {
   return new AudioNode(dataset)
 }
 
-export function $isAudioNode(node: unknown) {
+export function $isAudioNode(node: unknown): node is AudioNode {
   return node instanceof AudioNode
 }

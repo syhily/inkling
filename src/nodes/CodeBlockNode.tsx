@@ -88,6 +88,6 @@ export function $createCodeBlockNode(dataset: Record<string, any>) {
   return new CodeBlockNode(dataset)
 }
 
-export function $isCodeBlockNode(node: unknown) {
+export function $isCodeBlockNode(node: unknown): node is CodeBlockNode {
   return node instanceof CodeBlockNode
 }

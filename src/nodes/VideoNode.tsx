@@ -4,7 +4,7 @@ import { createCommand } from 'lexical'
 import VideoCardIcon from '@/assets/icons/inkling-card-type-video.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
-import { VideoNode as BaseVideoNode } from '@/nodes/base'
+import { normalizeCardWidth, VideoNode as BaseVideoNode } from '@/nodes/base'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { VideoNodeComponent } from '@/nodes/VideoNodeComponent'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
@@ -90,12 +90,14 @@ export class VideoNode extends BaseVideoNode {
   }
 
   decorate() {
+    const cardWidth = normalizeCardWidth(this.cardWidth) ?? 'regular'
+
     return (
-      <InklingCardWrapper nodeKey={this.getKey()} width={this.cardWidth}>
+      <InklingCardWrapper nodeKey={this.getKey()} width={cardWidth}>
         <VideoNodeComponent
           captionEditor={this.__captionEditor}
           captionEditorInitialState={this.__captionEditorInitialState}
-          cardWidth={this.cardWidth}
+          cardWidth={cardWidth}
           customThumbnail={this.customThumbnailSrc}
           initialFile={this.__initialFile ?? null}
           isLoopChecked={this.loop}
@@ -114,6 +116,6 @@ export const $createVideoNode = (dataset: Record<string, any>) => {
   return new VideoNode(dataset)
 }
 
-export function $isVideoNode(node: unknown) {
+export function $isVideoNode(node: unknown): node is VideoNode {
   return node instanceof VideoNode
 }

@@ -125,6 +125,6 @@ export const $createToggleNode = (dataset?: ToggleDataset): ToggleNode => {
   return new ToggleNode(dataset)
 }
 
-export function $$isisToggleNode(node: unknown): boolean {
+export function $isToggleNode(node: unknown): node is ToggleNode {
   return node instanceof ToggleNode
 }

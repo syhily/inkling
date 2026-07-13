@@ -48,6 +48,6 @@ export function $createHtmlNode(dataset: Record<string, any>) {
   return new HtmlNode(dataset)
 }
 
-export function $isHtmlNode(node: unknown) {
+export function $isHtmlNode(node: unknown): node is HtmlNode {
   return node instanceof HtmlNode
 }

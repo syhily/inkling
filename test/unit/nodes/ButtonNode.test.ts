@@ -2,7 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { ButtonNode, $createButtonNode, $$isisButtonNode, INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
+import { ButtonNode, $createButtonNode, $isButtonNode, INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
 
 const editorNodes = [ButtonNode]
 
@@ -19,10 +19,10 @@ describe('ButtonNode', () => {
     editor = createHeadlessEditor({ nodes: editorNodes, onError: () => {} })
   })
 
-  it('matches node with $$isisButtonNode', async () => {
+  it('matches node with $isButtonNode', async () => {
     await updateEditor(editor, () => {
       const buttonNode = $createButtonNode()
-      expect($$isisButtonNode(buttonNode)).toBe(true)
+      expect($isButtonNode(buttonNode)).toBe(true)
     })
   })
 

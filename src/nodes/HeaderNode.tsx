@@ -5,7 +5,7 @@ import { createCommand, type EditorState, type LexicalEditor } from 'lexical'
 import HeaderCardIcon from '@/assets/icons/inkling-card-type-header.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
-import { HeaderNode as BaseHeaderNode } from '@/nodes/base'
+import { HeaderNode as BaseHeaderNode, normalizeCardWidth, type CardWidth } from '@/nodes/base'
 import HeaderNodeComponent from '@/nodes/header/v2/HeaderNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
@@ -85,9 +85,9 @@ export class HeaderNode extends BaseHeaderNode {
     return dataset
   }
 
-  getCardWidth() {
+  getCardWidth(): CardWidth | undefined {
     const layout = this.layout
-    return layout === 'split' ? 'full' : layout
+    return normalizeCardWidth(layout === 'split' ? 'full' : layout)
   }
 
   decorate() {
@@ -141,6 +141,6 @@ export const $createHeaderNode = (dataset: Record<string, any>) => {
   return new HeaderNode(dataset)
 }
 
-export function $isHeaderNode(node: unknown) {
+export function $isHeaderNode(node: unknown): node is HeaderNode {
   return node instanceof HeaderNode
 }

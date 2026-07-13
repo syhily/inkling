@@ -35,6 +35,6 @@ export function $createHorizontalRuleNode() {
   return new HorizontalRuleNode()
 }
 
-export function $isHorizontalRuleNode(node: unknown) {
+export function $isHorizontalRuleNode(node: unknown): node is HorizontalRuleNode {
   return node instanceof HorizontalRuleNode
 }

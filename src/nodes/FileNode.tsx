@@ -73,6 +73,6 @@ export const $createFileNode = (dataset: Record<string, any>) => {
   return new FileNode(dataset)
 }
 
-export function $isFileNode(node: unknown) {
+export function $isFileNode(node: unknown): node is FileNode {
   return node instanceof FileNode
 }

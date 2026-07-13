@@ -124,6 +124,6 @@ export const $createGalleryNode = (dataset: Record<string, any>) => {
   return new GalleryNode(dataset)
 }
 
-export function $isGalleryNode(node: unknown) {
+export function $isGalleryNode(node: unknown): node is GalleryNode {
   return node instanceof GalleryNode
 }

@@ -10,7 +10,7 @@ import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { GeneratedDecoratorNodeBase } from '@/nodes/base'
-import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
+import { isCardWidth } from '@/nodes/base/utils/card-widths'
 import extractVideoMetadata from '@/utils/extractVideoMetadata'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import { openFileSelection } from '@/utils/openFileSelection'
@@ -213,27 +213,26 @@ export function VideoNodeComponent({
     })
   }
 
-  const onLoopChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onLoopChange = (checked: boolean) => {
     editor.update(() => {
       const node = $getNodeByKey(nodeKey)
       if (node) {
-        ;(node as GeneratedDecoratorNodeBase).loop = true
+        ;(node as GeneratedDecoratorNodeBase).loop = checked
       }
     })
   }
 
-  const onCardWidthChange = (width: string) => {
-    const cardWidth = normalizeCardWidth(width)
-    if (!cardWidth) {
+  const onCardWidthChange = (width: unknown) => {
+    if (!isCardWidth(width)) {
       return
     }
 
     editor.update(() => {
       const node = $getNodeByKey(nodeKey)
       if (node) {
-        ;(node as GeneratedDecoratorNodeBase).cardWidth = cardWidth
+        ;(node as GeneratedDecoratorNodeBase).cardWidth = width
       }
-      cardContext.setCardWidth(cardWidth)
+      cardContext.setCardWidth(width)
     })
   }
 

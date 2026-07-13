@@ -2,7 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { ToggleNode, $createToggleNode, $$isisToggleNode, INSERT_TOGGLE_COMMAND } from '@/nodes/ToggleNode'
+import { ToggleNode, $createToggleNode, $isToggleNode, INSERT_TOGGLE_COMMAND } from '@/nodes/ToggleNode'
 
 const editorNodes = [ToggleNode]
 
@@ -19,10 +19,10 @@ describe('ToggleNode', () => {
     editor = createHeadlessEditor({ nodes: editorNodes, onError: () => {} })
   })
 
-  it('matches node with $$isisToggleNode', async () => {
+  it('matches node with $isToggleNode', async () => {
     await updateEditor(editor, () => {
       const node = $createToggleNode()
-      expect($$isisToggleNode(node)).toBe(true)
+      expect($isToggleNode(node)).toBe(true)
     })
   })
 

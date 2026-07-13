@@ -92,6 +92,6 @@ export const $createButtonNode = (dataset?: ButtonDataset): ButtonNode => {
   return new ButtonNode(dataset)
 }
 
-export function $$isisButtonNode(node: unknown): boolean {
+export function $isButtonNode(node: unknown): node is ButtonNode {
   return node instanceof ButtonNode
 }

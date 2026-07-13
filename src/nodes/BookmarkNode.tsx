@@ -101,6 +101,6 @@ export const $createBookmarkNode = (dataset: Record<string, any>) => {
   return new BookmarkNode(dataset)
 }
 
-export function $isBookmarkNode(node: unknown) {
+export function $isBookmarkNode(node: unknown): node is BookmarkNode {
   return node instanceof BookmarkNode
 }
