@@ -197,6 +197,9 @@ test.describe('Code Block card', async () => {
     await page.keyboard.press('Escape')
     await page.click('[data-testid="codeblock-caption"]')
     await page.keyboard.type('My caption')
+    // let the caption editor's sync to the card node settle so its history
+    // entries don't interleave with the deletion entries below
+    await page.waitForTimeout(600)
     await page.keyboard.press('Enter')
     await page.keyboard.press('Backspace')
     // Lexical's history merges consecutive same-type changes within 1000ms;

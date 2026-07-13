@@ -358,8 +358,14 @@ test.describe('Callout Card', async () => {
     await insertCard(page, { cardName: 'callout' })
 
     await page.keyboard.type('Hello world')
+    // let the nested editor's sync to the card node settle so its history
+    // entries don't interleave with the deletion entries below
+    await page.waitForTimeout(600)
     await page.keyboard.press('Enter')
     await page.keyboard.press('Backspace')
+    // Lexical's history merges consecutive same-type changes within 1000ms;
+    // wait so the card deletion becomes its own undo group
+    await page.waitForTimeout(1200)
     await page.keyboard.press('Backspace')
     await page.keyboard.press(`${ctrlOrCmd}+z`)
     await expect(page.locator('[data-inkling-card="callout"]')).toBeVisible()

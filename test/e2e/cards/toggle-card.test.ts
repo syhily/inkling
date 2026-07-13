@@ -263,6 +263,9 @@ test.describe('Toggle card', async () => {
     await page.keyboard.type('Test title')
     await page.keyboard.press('Enter')
     await page.keyboard.type('Test description')
+    // let the nested editor's sync to the card node settle so its history
+    // entries don't interleave with the deletion entries below
+    await page.waitForTimeout(600)
     // Exit card edit mode, then use Enter+Backspace×2 to delete so undo
     // has a proper history entry. Direct Escape→Backspace doesn't create a
     // main editor content update between card insertion and deletion, so the
@@ -271,6 +274,9 @@ test.describe('Toggle card', async () => {
     await page.keyboard.press('Escape')
     await page.keyboard.press('Enter')
     await page.keyboard.press('Backspace')
+    // Lexical's history merges consecutive same-type changes within 1000ms;
+    // wait so the card deletion becomes its own undo group
+    await page.waitForTimeout(1200)
     await page.keyboard.press('Backspace')
     await page.keyboard.press(`${ctrlOrCmd(page)}+z`)
 
