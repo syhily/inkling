@@ -23,7 +23,7 @@ Repo quick reference (verification gates used by every plan):
 | 001  | Harden URL validation across export paths                         | P1       | M      | —                                | DONE (`366a46a`) |
 | 002  | Escape video and email renderer interpolation                     | P1       | M      | 001                              | DONE (`9b0ea11`) |
 | 003  | Sanitize callout attributes + visibility segment                  | P1       | S      | 001                              | DONE (`b1088b5`) |
-| 004  | Validate header card style values                                 | P1       | S      | —                                | TODO             |
+| 004  | Validate header card style values                                 | P1       | S      | —                                | DONE (`2fa89e2`) |
 | 005  | Fix async races (link search, header color) + gallery selector    | P1       | M      | —                                | TODO             |
 | 006  | Gate per-keystroke DOM scans (drag-reorder, at-link)              | P1       | S      | —                                | TODO             |
 | 007  | Drop semver runtime dep + debounce HtmlOutputPlugin               | P2       | S      | —                                | TODO             |
