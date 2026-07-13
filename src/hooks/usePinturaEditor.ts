@@ -191,7 +191,7 @@ export default function usePinturaEditor({
     window.addEventListener('click', handleCloseClick, { capture: true })
 
     return () => {
-      window.removeEventListener('click', handleCloseClick)
+      window.removeEventListener('click', handleCloseClick, { capture: true })
     }
   }, [])
 
