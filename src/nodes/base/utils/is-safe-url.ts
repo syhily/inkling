@@ -13,6 +13,12 @@ export function isSafeUrl(url: string): boolean {
     return false
   }
 
+  // Browsers strip ASCII tab/LF/CR before scheme parsing; a URL containing
+  // them can smuggle a dangerous scheme past the regex below.
+  if (/[\x00-\x20]/.test(trimmed)) {
+    return false
+  }
+
   const schemeMatch = trimmed.match(/^([a-z][a-z0-9+.-]*):/i)
   if (!schemeMatch) {
     // No scheme -> treat as a relative URL
@@ -35,6 +41,12 @@ export function isSafeMediaUrl(url: string): boolean {
 
   const trimmed = url.trim()
   if (trimmed === '') {
+    return false
+  }
+
+  // Browsers strip ASCII tab/LF/CR before scheme parsing; a URL containing
+  // them can smuggle a dangerous scheme past the regex below.
+  if (/[\x00-\x20]/.test(trimmed)) {
     return false
   }
 

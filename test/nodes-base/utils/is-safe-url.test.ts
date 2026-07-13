@@ -29,6 +29,23 @@ describe('isSafeUrl', () => {
     expect(isSafeUrl('javascript:alert(1)')).toBe(false)
   })
 
+  it('rejects URLs with control characters or whitespace inside the scheme', () => {
+    // browsers strip ASCII tab/LF/CR before scheme parsing, so these would
+    // otherwise be treated as relative URLs and navigated as javascript:
+    expect(isSafeUrl('jav\tascript:alert(1)')).toBe(false)
+    expect(isSafeUrl('java\nscript:alert(1)')).toBe(false)
+    expect(isSafeUrl('java\rscript:alert(1)')).toBe(false)
+  })
+
+  it('rejects URLs with spaces in the path', () => {
+    expect(isSafeUrl('https://example.com/a b')).toBe(false)
+  })
+
+  it('still allows safe URLs after the control-character check', () => {
+    expect(isSafeUrl('/relative/path')).toBe(true)
+    expect(isSafeUrl('https://example.com')).toBe(true)
+  })
+
   it('rejects empty strings', () => {
     expect(isSafeUrl('')).toBe(false)
     expect(isSafeUrl('   ')).toBe(false)
@@ -65,6 +82,24 @@ describe('isSafeMediaUrl', () => {
 
   it('rejects javascript URLs', () => {
     expect(isSafeMediaUrl('javascript:alert(1)')).toBe(false)
+  })
+
+  it('rejects URLs with control characters or whitespace inside the scheme', () => {
+    // browsers strip ASCII tab/LF/CR before scheme parsing, so these would
+    // otherwise be treated as relative URLs and navigated as javascript:
+    expect(isSafeMediaUrl('jav\tascript:alert(1)')).toBe(false)
+    expect(isSafeMediaUrl('java\nscript:alert(1)')).toBe(false)
+    expect(isSafeMediaUrl('java\rscript:alert(1)')).toBe(false)
+  })
+
+  it('rejects URLs with spaces in the path', () => {
+    expect(isSafeMediaUrl('https://example.com/a b')).toBe(false)
+  })
+
+  it('still allows safe URLs after the control-character check', () => {
+    expect(isSafeMediaUrl('/relative/path')).toBe(true)
+    expect(isSafeMediaUrl('https://example.com')).toBe(true)
+    expect(isSafeMediaUrl('data:image/png;base64,abc')).toBe(true)
   })
 
   it('rejects empty strings', () => {

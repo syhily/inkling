@@ -4,6 +4,7 @@ import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-
 import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { isLocalContentImage } from '@/nodes/base/utils/is-local-content-image'
+import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 import { sanitizeHtml } from '@/utils/sanitize-html'
@@ -136,9 +137,10 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
     }
   }
 
-  if (node.href) {
+  const href = node.href
+  if (href && isSafeUrl(href)) {
     const a = document.createElement('a')
-    a.setAttribute('href', node.href)
+    a.setAttribute('href', href)
     a.appendChild(img)
     figure.appendChild(a)
   } else {

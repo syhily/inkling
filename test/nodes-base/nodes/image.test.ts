@@ -235,6 +235,22 @@ describe('ImageNode', function () {
     )
 
     it(
+      'drops the link when the href is unsafe',
+      editorTest(async function () {
+        const imageNode = $createImageNode({
+          src: '/image.png',
+          href: 'javascript:alert(1)',
+        })
+        const { element } = imageNode.exportDOM(editor, exportOptions)
+        const output = (element as HTMLElement).outerHTML
+
+        output.should.not.containEql('<a')
+        output.should.not.containEql('javascript:')
+        output.should.containEql('<img src="/image.png"')
+      }),
+    )
+
+    it(
       'creates a minimal image card',
       editorTest(async function () {
         const imageNode = $createImageNode({ src: '/image.png' })

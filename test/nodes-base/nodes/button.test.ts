@@ -270,6 +270,21 @@ describe('ButtonNode', function () {
     )
 
     it(
+      'rejects an unsafe button URL for the email target',
+      editorTest(function () {
+        const buttonNode = $createButtonNode({
+          buttonText: 'click me',
+          buttonUrl: 'javascript:alert(1)',
+          alignment: 'center',
+        })
+        const result = buttonNode.exportDOM(editor, { ...exportOptions, target: 'email' })
+        const element = result.element as HTMLElement
+
+        element.outerHTML.should.equal('<span></span>')
+      }),
+    )
+
+    it(
       'escapes button text markup',
       editorTest(function () {
         const buttonNode = $createButtonNode({

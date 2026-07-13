@@ -6,6 +6,8 @@ import { $isTextNode, $isLineBreakNode, TextNode } from 'lexical'
 
 import type { RendererOptions } from '@/html/renderer/types'
 
+import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
+
 type TextFormatAbbreviation = 'STRONG' | 'EM' | 'S' | 'U' | 'CODE' | 'SUB' | 'SUP' | 'MARK' | 'SPAN'
 type ExportChildren = (node: ElementNode, options: RendererOptions) => string
 
@@ -157,9 +159,11 @@ export default class TextContent {
   // PRIVATE -----------------------------------------------------------------
 
   _buildAnchorElement(anchor: HTMLElement, node: LinkNode) {
-    // Only set the href if we have a URL, otherwise we get a link to the current page
-    if (node.getURL()) {
-      anchor.setAttribute('href', node.getURL())
+    // Only set the href if we have a URL, otherwise we get a link to the current page;
+    // unsafe URLs (e.g. javascript:) are dropped the same way
+    const url = node.getURL()
+    if (url && isSafeUrl(url)) {
+      anchor.setAttribute('href', url)
     }
     if (node.getRel()) {
       anchor.setAttribute('rel', node.getRel() || '')

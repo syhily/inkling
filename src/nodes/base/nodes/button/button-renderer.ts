@@ -30,12 +30,13 @@ export function renderButtonNode(node: ButtonNodeData, options: ExportDOMOptions
 
 function frontendTemplate(node: ButtonNodeData, document: Document) {
   const cardClasses = getCardClasses(node)
+  const safeButtonUrl = isSafeUrl(node.buttonUrl) ? node.buttonUrl : ''
 
   const cardDiv = document.createElement('div')
   cardDiv.setAttribute('class', cardClasses)
 
   const button = document.createElement('a')
-  button.setAttribute('href', node.buttonUrl)
+  button.setAttribute('href', safeButtonUrl)
   button.setAttribute('class', 'inkling-btn inkling-btn-accent')
   button.textContent = node.buttonText || 'Button Title'
 
@@ -44,7 +45,8 @@ function frontendTemplate(node: ButtonNodeData, document: Document) {
 }
 
 function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document: Document) {
-  const { buttonUrl, buttonText } = node
+  const { buttonText } = node
+  const safeButtonUrl = isSafeUrl(node.buttonUrl) ? node.buttonUrl : ''
   const escapedButtonText = escapeHtml(buttonText || 'Button Title')
 
   let cardHtml
@@ -55,7 +57,7 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
           <table class="btn btn-accent" border="0" cellspacing="0" cellpadding="0" align="${node.alignment}">
             <tr>
               <td align="center">
-                <a href="${buttonUrl}">${escapedButtonText}</a>
+                <a href="${safeButtonUrl}">${escapedButtonText}</a>
               </td>
             </tr>
           </table>
@@ -70,7 +72,7 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
     const buttonHtml = renderEmailButton({
       alignment: node.alignment,
       color: 'accent',
-      url: buttonUrl,
+      url: safeButtonUrl,
       text: escapedButtonText,
     })
 
@@ -93,7 +95,7 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
         <table border="0" cellspacing="0" cellpadding="0" align="${node.alignment}">
           <tr>
             <td align="center">
-              <a href="${buttonUrl}">${escapedButtonText}</a>
+              <a href="${safeButtonUrl}">${escapedButtonText}</a>
             </td>
           </tr>
         </table>
