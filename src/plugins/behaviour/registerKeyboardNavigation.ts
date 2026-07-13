@@ -14,7 +14,6 @@ import {
   $setSelection,
   COMMAND_PRIORITY_LOW,
   DELETE_LINE_COMMAND,
-  KEY_DELETE_COMMAND,
   KEY_ESCAPE_COMMAND,
   KEY_TAB_COMMAND,
 } from 'lexical'
@@ -32,6 +31,7 @@ import {
   registerArrowUpCommand,
 } from './keyboard-navigation/arrows'
 import { registerBackspaceCommand } from './keyboard-navigation/backspace'
+import { registerDeleteCommand } from './keyboard-navigation/delete'
 import { registerEnterCommand } from './keyboard-navigation/enter'
 import { registerKeyDownPassthrough } from './keyboard-navigation/key-down'
 import { registerModifierCommand } from './keyboard-navigation/modifier'
@@ -50,61 +50,7 @@ export function registerKeyboardNavigation(editor: LexicalEditor, deps: Keyboard
     registerModifierCommand(editor, deps),
     // backspace when card isn't selected
     registerBackspaceCommand(editor, deps),
-    editor.registerCommand(
-      KEY_DELETE_COMMAND,
-      (event) => {
-        // avoid processing card behaviours when an inner element has focus
-        if (document.activeElement !== editor.getRootElement()) {
-          return true
-        }
-
-        // delete selected card if we have one
-        if (!isNested && selectedCardKey) {
-          event?.preventDefault()
-          editor.dispatchCommand(DELETE_CARD_COMMAND, { cardKey: selectedCardKey, direction: 'forward' })
-          return true
-        }
-
-        // handle card selection around card boundaries
-        const selection = $getSelection()
-        if ($isRangeSelection(selection)) {
-          if (selection.isCollapsed()) {
-            const anchor = selection?.anchor
-            const anchorNode = anchor.getNode()
-            const topLevelElement = anchorNode.getTopLevelElement()
-            const nextSibling = topLevelElement?.getNextSibling()
-
-            const onEmptyNode = topLevelElement?.getTextContent().trim() === '' && selection?.anchor.offset === 0
-
-            if (onEmptyNode && nextSibling && $isDecoratorNode(nextSibling)) {
-              // delete the empty node and select the previous card
-              event?.preventDefault()
-              topLevelElement?.remove()
-              $selectDecoratorNode(nextSibling)
-              return true
-            }
-
-            const atEndOfNode =
-              (anchor.type === 'element' &&
-                $isElementNode(anchorNode) &&
-                anchor.offset === anchorNode.getChildrenSize()) ||
-              (anchor.type === 'text' &&
-                anchor.offset === anchorNode.getTextContentSize() &&
-                anchor.getNode().getParent()?.getLastChild()?.is(anchor.getNode()))
-
-            if (atEndOfNode && nextSibling && $isDecoratorNode(nextSibling)) {
-              // delete the card, keeping selection in place
-              event?.preventDefault()
-              nextSibling.remove()
-              return true
-            }
-          }
-        }
-
-        return false
-      },
-      COMMAND_PRIORITY_LOW,
-    ),
+    registerDeleteCommand(editor, deps),
     editor.registerCommand(
       DELETE_LINE_COMMAND,
       (isBackward) => {
