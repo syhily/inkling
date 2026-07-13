@@ -13,7 +13,9 @@ export function parseHeaderNode(HeaderNode: new (data: Record<string, unknown>) 
             const headerElement = div.querySelector('.inkling-header-card-heading')
             const subheaderElement = div.querySelector('.inkling-header-card-subheading')
             const buttonElement = div.querySelector('.inkling-header-card-button')
-            const alignment = div.querySelector('.inkling-header-card-text')?.classList.contains('inkling-align-center') ? 'center' : ''
+            const alignment = div.querySelector('.inkling-header-card-text')?.classList.contains('inkling-align-center')
+              ? 'center'
+              : ''
             const backgroundImageSrc = div.querySelector('.inkling-header-card-image')?.getAttribute('src')
             const layout = backgroundImageSrc ? 'split' : ''
             const backgroundColor = div.classList.contains('inkling-style-accent')

@@ -1,5 +1,13 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister, $getNodeByKey, $getRoot, $isElementNode, $isRootNode, type LexicalEditor, type LexicalNode } from 'lexical'
+import {
+  mergeRegister,
+  $getNodeByKey,
+  $getRoot,
+  $isElementNode,
+  $isRootNode,
+  type LexicalEditor,
+  type LexicalNode,
+} from 'lexical'
 import throttle from 'lodash/throttle'
 import React from 'react'
 

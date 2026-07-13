@@ -70,7 +70,7 @@ function GalleryCardStory({
 
   return (
     <div className="inkling-prose">
-      <div className="my-8 mx-auto w-[1170px] min-w-[initial]">
+      <div className="mx-auto my-8 w-[1170px] min-w-[initial]">
         <CardContext.Provider value={cardContextValue}>
           <CardWrapper isSelected={isSelected} isEditing={isEditing}>
             <GalleryCard

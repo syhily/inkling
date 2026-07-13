@@ -23,7 +23,7 @@ export function Gif({ data, isHighlighted, onClick, onMouseEnter }: GifProps) {
 
   return (
     <div
-      className={`group rounded-md relative cursor-pointer overflow-hidden border-2 ${isHighlighted ? 'border-green' : 'border-transparent'}`}
+      className={`group relative cursor-pointer overflow-hidden rounded-md border-2 ${isHighlighted ? 'border-green' : 'border-transparent'}`}
       data-gif-index={data.index}
       data-testid="gif-item"
       onClick={onClick}

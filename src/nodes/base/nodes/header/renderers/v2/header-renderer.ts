@@ -4,8 +4,8 @@ import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
-import { slugify } from '@/utils/slugify'
 import { getSrcsetAttribute, type ImageRenderOptions } from '@/nodes/base/utils/srcset-attribute'
+import { slugify } from '@/utils/slugify'
 
 interface HeaderV2NodeData {
   alignment: string

@@ -77,12 +77,7 @@ export function FloatingLinkToolbar({ anchorElem, onEditLink, disabled }: Floati
       if (!firstChild || !lastChild || !$isTextNode(firstChild) || !$isTextNode(lastChild)) {
         return
       }
-      selection.setTextNodeRange(
-        firstChild,
-        0,
-        lastChild,
-        lastChild.getTextContentSize(),
-      )
+      selection.setTextNodeRange(firstChild, 0, lastChild, lastChild.getTextContentSize())
       $setSelection(selection)
       onEditLink({ href })
     })

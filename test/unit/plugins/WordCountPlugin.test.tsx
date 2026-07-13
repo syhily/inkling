@@ -1,6 +1,4 @@
 import { act, renderHook } from '@testing-library/react'
-import React from 'react'
-
 import {
   $createParagraphNode,
   $createTextNode,
@@ -10,6 +8,7 @@ import {
   type LexicalEditor,
   type NodeKey,
 } from 'lexical'
+import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import InklingComposerContext from '@/context/InklingComposerContext'

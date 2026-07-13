@@ -132,7 +132,7 @@ const EmojiPickerPortal = ({
   return (
     <Portal>
       <div
-        className="mr-9 mt-10 rounded-md bg-white z-20"
+        className="z-20 mt-10 mr-9 rounded-md bg-white"
         data-testid="emoji-picker-container"
         style={style}
         onClick={handleClick}

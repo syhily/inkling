@@ -1,3 +1,3 @@
 export function ReadOnlyOverlay() {
-  return <div className="top-0 !m-0 p-0 absolute z-10 size-full cursor-default"></div>
+  return <div className="absolute top-0 z-10 !m-0 size-full cursor-default p-0"></div>
 }

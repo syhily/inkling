@@ -1,6 +1,16 @@
 import { $isListNode, ListItemNode } from '@lexical/list'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister, $createParagraphNode, $getSelection, $isDecoratorNode, $isParagraphNode, $isRangeSelection, COMMAND_PRIORITY_LOW, PASTE_COMMAND, RootNode } from 'lexical'
+import {
+  mergeRegister,
+  $createParagraphNode,
+  $getSelection,
+  $isDecoratorNode,
+  $isParagraphNode,
+  $isRangeSelection,
+  COMMAND_PRIORITY_LOW,
+  PASTE_COMMAND,
+  RootNode,
+} from 'lexical'
 import React from 'react'
 
 import { PASTE_LINK_COMMAND } from '@/plugins/InklingBehaviourPlugin'

@@ -296,17 +296,17 @@ export function HeaderCard({
   return (
     <>
       <div
-        className="font-sans text-black ease-in-out flex w-full transition-colors"
+        className="flex w-full font-sans text-black transition-colors ease-in-out"
         data-testid={'header-card-container'}
         style={wrapperStyle()}
       >
         <div
           className={clsx(
-            'ease-in-out sm:flex-row flex w-full flex-col transition-colors',
-            layout === 'split' && isSwapped && 'sm:flex-row-reverse flex-col-reverse',
+            'flex w-full flex-col transition-colors ease-in-out sm:flex-row',
+            layout === 'split' && isSwapped && 'flex-col-reverse sm:flex-row-reverse',
             // This is needed to align the content with wide breakout width
             (layout === 'full' || (layout === 'split' && correctedBackgroundSize === 'contain')) &&
-              'xs:w-[calc(740px+8rem)] md:w-[calc(740px+12rem)] lg:w-[calc(740px+22rem)] xl:w-[calc(740px+40rem)] mx-auto w-[calc(740px+4rem)]',
+              'mx-auto w-[calc(740px+4rem)] xs:w-[calc(740px+8rem)] md:w-[calc(740px+12rem)] lg:w-[calc(740px+22rem)] xl:w-[calc(740px+40rem)]',
             backgroundImageSrc && layout === 'split' && correctedBackgroundSize === 'contain' && 'items-center',
           )}
           data-testid={'header-card-content'}
@@ -330,10 +330,10 @@ export function HeaderCard({
                 correctedBackgroundSize === 'contain' && 'sm:my-10 md:my-14',
                 !isSwapped &&
                   correctedBackgroundSize === 'contain' &&
-                  'mt-10 xs:px-[calc(92px-(8rem/2))] sm:pl-[calc(92px-(12rem/2))] sm:pr-0 md:pl-[calc(92px-(12rem/2))] lg:pl-0 px-[calc(32px-(4rem/2))]',
+                  'mt-10 px-[calc(32px-(4rem/2))] xs:px-[calc(92px-(8rem/2))] sm:pr-0 sm:pl-[calc(92px-(12rem/2))] md:pl-[calc(92px-(12rem/2))] lg:pl-0',
                 isSwapped &&
                   correctedBackgroundSize === 'contain' &&
-                  'mb-10 xs:px-[calc(92px-(8rem/2))] sm:pl-0 sm:pr-[calc(92px-(12rem/2))] md:pr-[calc(92px-(12rem/2))] lg:pr-0 px-[calc(32px-(4rem/2))]',
+                  'mb-10 px-[calc(32px-(4rem/2))] xs:px-[calc(92px-(8rem/2))] sm:pr-[calc(92px-(12rem/2))] sm:pl-0 md:pr-[calc(92px-(12rem/2))] lg:pr-0',
               )}
               desc="Click to select an image"
               dragHandler={imageDragHandler}
@@ -357,19 +357,19 @@ export function HeaderCard({
             className={clsx(
               'mx-auto flex w-full flex-1 flex-col justify-center',
               alignment === 'center' && 'items-center',
-              layout === 'regular' && 'sm:py-[6rem] md:px-[6rem] md:py-[10rem] lg:px-[8rem] p-[4rem]',
-              layout === 'wide' && 'sm:py-[6rem] md:px-[8rem] md:py-[14rem] lg:px-0 max-w-[740px] p-[4rem]',
+              layout === 'regular' && 'p-[4rem] sm:py-[6rem] md:px-[6rem] md:py-[10rem] lg:px-[8rem]',
+              layout === 'wide' && 'max-w-[740px] p-[4rem] sm:py-[6rem] md:px-[8rem] md:py-[14rem] lg:px-0',
               layout === 'full' &&
-                'xs:px-[calc(92px-(8rem/2))] sm:py-[6rem] md:px-[calc(92px-(12rem/2))] md:py-[12rem] lg:px-0 lg:py-[14rem] xl:py-[18rem] px-[calc(32px-(4rem/2))] py-[4rem]',
-              layout === 'split' && 'sm:py-[6rem] md:px-[6rem] md:py-[12rem] lg:px-[8rem] lg:py-[16rem] p-[4rem]',
+                'px-[calc(32px-(4rem/2))] py-[4rem] xs:px-[calc(92px-(8rem/2))] sm:py-[6rem] md:px-[calc(92px-(12rem/2))] md:py-[12rem] lg:px-0 lg:py-[14rem] xl:py-[18rem]',
+              layout === 'split' && 'p-[4rem] sm:py-[6rem] md:px-[6rem] md:py-[12rem] lg:px-[8rem] lg:py-[16rem]',
               !isSwapped &&
                 layout === 'split' &&
                 correctedBackgroundSize === 'contain' &&
-                'xs:px-[calc(92px-(8rem/2))] sm:px-[calc(92px-(12rem/2))] md:pr-[calc(92px-(12rem/2))] lg:pr-0 px-[calc(32px-(4rem/2))]',
+                'px-[calc(32px-(4rem/2))] xs:px-[calc(92px-(8rem/2))] sm:px-[calc(92px-(12rem/2))] md:pr-[calc(92px-(12rem/2))] lg:pr-0',
               isSwapped &&
                 layout === 'split' &&
                 correctedBackgroundSize === 'contain' &&
-                'xs:px-[calc(92px-(8rem/2))] sm:px-[calc(92px-(12rem/2))] md:pl-[calc(92px-(12rem/2))] lg:pl-0 px-[calc(32px-(4rem/2))]',
+                'px-[calc(32px-(4rem/2))] xs:px-[calc(92px-(8rem/2))] sm:px-[calc(92px-(12rem/2))] md:pl-[calc(92px-(12rem/2))] lg:pl-0',
             )}
           >
             {/* Heading */}
@@ -384,7 +384,7 @@ export function HeaderCard({
                 initialEditorState={headerTextEditorInitialState}
                 nodes="minimal"
                 placeholderClassName={clsx(
-                  '!font-bold !tracking-tight !leading-[1.1] opacity-50',
+                  '!leading-[1.1] !font-bold !tracking-tight opacity-50',
                   alignment === 'center' && 'text-center',
                   layout === 'regular' && 'text-3xl sm:text-4xl',
                   (layout === 'wide' || layout === 'split') && 'text-3xl sm:text-4xl md:text-5xl',
@@ -394,7 +394,7 @@ export function HeaderCard({
                 singleParagraph={true}
                 style={{ color: matchingTextColor(backgroundColor || '') }}
                 textClassName={clsx(
-                  'inkling-lexical-heading font-bold relative w-full whitespace-normal caret-current',
+                  'inkling-lexical-heading relative w-full font-bold whitespace-normal caret-current',
                   !isEditing && isEditorEmpty(headerTextEditor) ? 'hidden' : 'peer',
                   alignment === 'center' && 'text-center [&:has(.placeholder)]:w-fit [&:has(.placeholder)]:text-left',
                   layout === 'regular' && 'heading-small',
@@ -414,7 +414,7 @@ export function HeaderCard({
                 initialEditorState={subheaderTextEditorInitialState}
                 nodes="minimal"
                 placeholderClassName={clsx(
-                  '!font-medium !leading-snug !tracking-tight opacity-60',
+                  '!leading-snug !font-medium !tracking-tight opacity-60',
                   alignment === 'center' && 'text-center',
                   layout === 'regular' && 'text-lg sm:text-xl',
                   (layout === 'wide' || layout === 'split') && 'text-lg leading-snug sm:text-xl md:text-[2.2rem]',
@@ -438,7 +438,7 @@ export function HeaderCard({
 
             {buttonEnabled && (
               <div
-                className={`text-${alignment} w-full ${layout === 'regular' ? 'peer-[.inkling-lexical]:mt-8' : layout === 'wide' ? 'peer-[.inkling-lexical]:mt-8 md:w-2/3' : layout === 'full' ? 'peer-[.inkling-lexical]:mt-8 md:w-2/3 peer-[.inkling-lexical]:md:mt-8 xl:w-1/2' : 'peer-[.inkling-lexical]:mt-8 peer-[.inkling-lexical]:md:mt-8 max-w-[500px]'}`}
+                className={`text-${alignment} w-full ${layout === 'regular' ? 'peer-[.inkling-lexical]:mt-8' : layout === 'wide' ? 'peer-[.inkling-lexical]:mt-8 md:w-2/3' : layout === 'full' ? 'peer-[.inkling-lexical]:mt-8 md:w-2/3 peer-[.inkling-lexical]:md:mt-8 xl:w-1/2' : 'max-w-[500px] peer-[.inkling-lexical]:mt-8 peer-[.inkling-lexical]:md:mt-8'}`}
               >
                 <Button
                   dataTestId="header-card-button"
@@ -497,8 +497,8 @@ export function HeaderCard({
                   customContent: (
                     <button
                       className={clsx(
-                        `group size-6 border-grey-300 bg-grey-100 text-black relative flex shrink-0 items-center justify-center rounded-full border`,
-                        showBackgroundImage && 'outline-green outline outline-2',
+                        `group relative flex size-6 shrink-0 items-center justify-center rounded-full border border-grey-300 bg-grey-100 text-black`,
+                        showBackgroundImage && 'outline outline-2 outline-green',
                       )}
                       data-testid="header-background-image-toggle"
                       title="Image"

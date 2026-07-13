@@ -29,13 +29,13 @@ function FileCardStory({ display = 'Default', ...args }: FileCardStoryArgs) {
 
   return (
     <div className="inkling-prose">
-      <div className="not-inkling-prose my-8 mx-auto max-w-[740px] min-w-[initial]">
+      <div className="not-inkling-prose mx-auto my-8 max-w-[740px] min-w-[initial]">
         <CardWrapper {...displayState} {...componentProps}>
           <FileCard {...displayState} {...componentProps} />
         </CardWrapper>
       </div>
       <div className="dark bg-black py-10">
-        <div className="not-inkling-prose my-8 mx-auto max-w-[740px] min-w-[initial]">
+        <div className="not-inkling-prose mx-auto my-8 max-w-[740px] min-w-[initial]">
           <CardWrapper {...displayState} {...componentProps}>
             <FileCard {...displayState} {...componentProps} />
           </CardWrapper>

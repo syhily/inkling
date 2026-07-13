@@ -1,5 +1,14 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister, BLUR_COMMAND, COMMAND_PRIORITY_HIGH, COMMAND_PRIORITY_LOW, FOCUS_COMMAND, KEY_ARROW_DOWN_COMMAND, KEY_ARROW_UP_COMMAND, KEY_ENTER_COMMAND } from 'lexical'
+import {
+  mergeRegister,
+  BLUR_COMMAND,
+  COMMAND_PRIORITY_HIGH,
+  COMMAND_PRIORITY_LOW,
+  FOCUS_COMMAND,
+  KEY_ARROW_DOWN_COMMAND,
+  KEY_ARROW_UP_COMMAND,
+  KEY_ENTER_COMMAND,
+} from 'lexical'
 import React, { useCallback, useContext } from 'react'
 
 import type { NestedKeyboardEvent } from '@/types/events'
@@ -17,7 +26,7 @@ import { EmojiPickerPlugin } from '@/plugins/EmojiPickerPlugin'
 
 const Placeholder = ({ text = 'Type here' }) => {
   return (
-    <div className="left-0 top-0 !m-0 font-sans text-sm font-normal tracking-wide text-grey-500 dark:text-grey-800 pointer-events-none absolute min-w-full cursor-text leading-[24px]">
+    <div className="pointer-events-none absolute top-0 left-0 !m-0 min-w-full cursor-text font-sans text-sm leading-[24px] font-normal tracking-wide text-grey-500 dark:text-grey-800">
       {text}
     </div>
   )

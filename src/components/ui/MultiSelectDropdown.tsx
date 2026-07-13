@@ -31,7 +31,7 @@ function Item({ item, selected, onChange }: ItemProps) {
   return (
     <li key={item.name} className={`${selectionClass} m-0 hover:bg-grey-100 dark:hover:bg-grey-900`}>
       <button
-        className="px-3 dark:text-white size-full cursor-pointer py-[7px] text-left"
+        className="size-full cursor-pointer px-3 py-[7px] text-left dark:text-white"
         data-testid="multiselect-dropdown-item"
         type="button"
         onMouseDownCapture={handleOptionMouseDown}
@@ -136,15 +136,15 @@ export function MultiSelectDropdown({
   }
 
   return (
-    <div className="font-sans text-sm font-normal relative z-0" data-testid={dataTestId}>
+    <div className="relative z-0 font-sans text-sm font-normal" data-testid={dataTestId}>
       <div
-        className={`gap-1 rounded-lg relative flex w-full cursor-text flex-wrap border ${isFocused ? 'border-green bg-white dark:bg-grey-925 shadow-[0_0_0_2px_rgba(48,207,67,.25)]' : 'border-grey-100 bg-grey-100 dark:bg-grey-900 dark:hover:bg-grey-925 dark:border-transparent'} py-2 pr-5 font-sans text-sm font-normal text-grey-900 placeholder:text-grey-500 dark:text-white dark:selection:bg-grey-800 dark:placeholder:text-grey-700 px-[10px] leading-[1.5] focus-visible:outline-none`}
+        className={`relative flex w-full cursor-text flex-wrap gap-1 rounded-lg border ${isFocused ? 'border-green bg-white shadow-[0_0_0_2px_rgba(48,207,67,.25)] dark:bg-grey-925' : 'border-grey-100 bg-grey-100 dark:border-transparent dark:bg-grey-900 dark:hover:bg-grey-925'} px-[10px] py-2 pr-5 font-sans text-sm leading-[1.5] font-normal text-grey-900 placeholder:text-grey-500 focus-visible:outline-none dark:text-white dark:selection:bg-grey-800 dark:placeholder:text-grey-700`}
         onClick={() => inputRef.current?.focus()}
       >
         {selectedItems.map((item) => (
           <button
             key={item.name}
-            className="gap-1.5 rounded bg-black pl-2 pr-1 text-white dark:bg-grey-100 dark:text-grey-900 flex cursor-pointer items-center py-px leading-[1.5]"
+            className="flex cursor-pointer items-center gap-1.5 rounded bg-black py-px pr-1 pl-2 leading-[1.5] text-white dark:bg-grey-100 dark:text-grey-900"
             data-testid="multiselect-dropdown-selected"
             type="button"
             onMouseDownCapture={(event) => handleDeselect(event, item)}
@@ -157,7 +157,7 @@ export function MultiSelectDropdown({
         <div className="flex-1">
           <input
             ref={inputRef}
-            className="px-0 size-full min-w-[5rem] appearance-none bg-transparent leading-none outline-none"
+            className="size-full min-w-[5rem] appearance-none bg-transparent px-0 leading-none outline-none"
             placeholder={selectedItems.length === 0 ? placeholder : ''}
             value={filter}
             onBlur={handleBlur}
@@ -167,7 +167,7 @@ export function MultiSelectDropdown({
           />
         </div>
 
-        <ArrowIcon className={`right-3 top-4 size-2 text-grey-900 absolute ${open && 'rotate-180'}`} />
+        <ArrowIcon className={`absolute top-4 right-3 size-2 text-grey-900 ${open && 'rotate-180'}`} />
       </div>
       {open && !!filteredItems.length && (
         <DropdownContainer>

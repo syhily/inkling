@@ -155,7 +155,7 @@ function TKIndicator({
 
   return (
     <div
-      className="p-1 text-2xs font-medium text-grey-600 absolute cursor-pointer"
+      className="absolute cursor-pointer p-1 text-2xs font-medium text-grey-600"
       data-testid="tk-indicator"
       style={style}
       onClick={onClick}

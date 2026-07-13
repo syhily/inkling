@@ -99,7 +99,7 @@ function PopulatedImageCard({
       />
       {imageUploader.isLoading ? (
         <div
-          className="inset-0 bg-white/50 absolute flex min-w-full items-center justify-center overflow-hidden"
+          className="absolute inset-0 flex min-w-full items-center justify-center overflow-hidden bg-white/50"
           data-testid="upload-progress"
         >
           <ProgressBar style={progressStyle} />
@@ -109,14 +109,14 @@ function PopulatedImageCard({
       )}
       {imageCardDragHandler?.isDraggedOver ? (
         <div
-          className={`inset-0 border-grey/20 bg-black/80 dark:border-grey/10 dark:bg-grey-950 absolute flex items-center justify-center border`}
+          className={`absolute inset-0 flex items-center justify-center border border-grey/20 bg-black/80 dark:border-grey/10 dark:bg-grey-950`}
         >
           <CardText text="Drop to convert to a gallery" />
         </div>
       ) : null}
       {imageFileDragHandler?.isDraggedOver ? (
         <div
-          className={`inset-0 border-grey/20 bg-black/80 dark:border-grey/10 dark:bg-grey-950 absolute flex items-center justify-center border`}
+          className={`absolute inset-0 flex items-center justify-center border border-grey/20 bg-black/80 dark:border-grey/10 dark:bg-grey-950`}
           data-testid="drag-overlay"
         >
           <CardText text="Drop to replace image" />
@@ -124,7 +124,7 @@ function PopulatedImageCard({
       ) : null}
       {isPinturaEnabled && !isGif(src) && (
         <div
-          className={`inset-0 from-black/0 via-black/5 to-black/30 p-3 pointer-events-none invisible absolute bg-gradient-to-t opacity-0 transition-all group-hover/image:visible group-hover/image:opacity-100`}
+          className={`pointer-events-none invisible absolute inset-0 bg-gradient-to-t from-black/0 via-black/5 to-black/30 p-3 opacity-0 transition-all group-hover/image:visible group-hover/image:opacity-100`}
         >
           <div className="flex flex-row-reverse">
             <IconButton

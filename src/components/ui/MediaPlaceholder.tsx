@@ -19,7 +19,7 @@ export const PLACEHOLDER_ICONS: Record<string, typeof ImgPlaceholderIcon> = {
 export const CardText = ({ text, type }: { text?: string; type?: string }) => (
   <span
     className={clsx(
-      'font-sans text-sm font-semibold text-grey-800 group-hover:text-grey-800 text-center transition-all',
+      'text-center font-sans text-sm font-semibold text-grey-800 transition-all group-hover:text-grey-800',
       type === 'button' && 'px-3 py-1',
     )}
     data-inkling-card-drag-text
@@ -32,7 +32,7 @@ const ButtonContents = ({ desc, hasErrors }: { desc?: string; hasErrors?: boolea
   if (hasErrors) {
     return null
   }
-  return <p className="!font-sans !font-medium text-grey-900 !text-[1.3rem]">{desc}</p>
+  return <p className="!font-sans !text-[1.3rem] !font-medium text-grey-900">{desc}</p>
 }
 
 const StandardContents = ({
@@ -62,7 +62,7 @@ const StandardContents = ({
   )
 
   const descriptionClasses = clsx(
-    '!font-sans !text-sm !font-normal text-grey-700 flex min-w-[auto] opacity-80 transition-all group-hover:opacity-100',
+    'flex min-w-[auto] !font-sans !text-sm !font-normal text-grey-700 opacity-80 transition-all group-hover:opacity-100',
     size === 'xsmall' && '!mt-0',
     size !== 'xsmall' && '!mt-4',
   )
@@ -105,9 +105,9 @@ export function MediaPlaceholder({
 }) {
   const containerClasses = clsx(
     'relative flex h-full items-center justify-center',
-    type === 'button' ? 'rounded-lg bg-grey-100' : 'bg-grey-50 border',
-    size === 'xsmall' && type !== 'button' && 'dark:bg-grey-900 before:pb-[12.5%]',
-    size !== 'xsmall' && type !== 'button' && 'dark:bg-grey-950 before:pb-[62.5%]',
+    type === 'button' ? 'rounded-lg bg-grey-100' : 'border bg-grey-50',
+    size === 'xsmall' && type !== 'button' && 'before:pb-[12.5%] dark:bg-grey-900',
+    size !== 'xsmall' && type !== 'button' && 'before:pb-[62.5%] dark:bg-grey-950',
     (borderStyle === 'rounded' || borderStyle === 'heavy') &&
       type !== 'button' &&
       'rounded-lg border-grey/20 dark:border-transparent',
@@ -119,7 +119,7 @@ export function MediaPlaceholder({
   const buttonClasses = clsx(
     'group flex cursor-pointer items-center justify-center select-none',
     type === 'button' && 'px-3 py-1',
-    type !== 'button' && (size === 'xsmall' ? 'p-4' : 'p-20 flex-col'),
+    type !== 'button' && (size === 'xsmall' ? 'p-4' : 'flex-col p-20'),
   )
 
   const errorClasses = clsx('font-sans text-sm font-semibold text-red', size !== 'xsmall' && 'mt-3 max-w-[65%]')

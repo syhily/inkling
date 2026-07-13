@@ -40,13 +40,13 @@ function ToggleCardStory({ display = 'Default', heading = '', content = '', ...a
 
   return (
     <div className="inkling-prose">
-      <div className="not-inkling-prose my-8 py-10 mx-auto max-w-[740px] min-w-[initial]">
+      <div className="not-inkling-prose mx-auto my-8 max-w-[740px] min-w-[initial] py-10">
         <CardWrapper {...displayState}>
           <ToggleCard {...displayState} {...componentProps} />
         </CardWrapper>
       </div>
-      <div className="bg-black py-10 w-full">
-        <div className="not-inkling-prose dark my-8 mx-auto max-w-[740px] min-w-[initial]">
+      <div className="w-full bg-black py-10">
+        <div className="not-inkling-prose dark mx-auto my-8 max-w-[740px] min-w-[initial]">
           <CardWrapper {...displayState}>
             <ToggleCard {...displayState} {...componentProps} />
           </CardWrapper>

@@ -14,7 +14,7 @@ interface EditorLinkProps {
 function EditorLink({ editorType }: EditorLinkProps) {
   return (
     <Link rel="nofollow ugc noopener noreferrer" to={editorType?.url}>
-      <span className="font-normal hover:font-bold ml-[.7rem] hidden group-hover:inline">/ {editorType?.name}</span>
+      <span className="ml-[.7rem] hidden font-normal group-hover:inline hover:font-bold">/ {editorType?.name}</span>
     </Link>
   )
 }
@@ -27,7 +27,7 @@ const Watermark = ({ editorType }: WatermarkProps) => {
   if (!editorType) {
     return (
       <a
-        className="bottom-4 left-6 rounded bg-white py-1 pl-1 pr-2 font-mono text-sm tracking-tight text-black absolute z-20 flex items-center"
+        className="absolute bottom-4 left-6 z-20 flex items-center rounded bg-white py-1 pr-2 pl-1 font-mono text-sm tracking-tight text-black"
         href="https://github.com/syhily/inkling"
         rel="nofollow ugc noopener noreferrer"
         target="_blank"
@@ -51,7 +51,7 @@ const Watermark = ({ editorType }: WatermarkProps) => {
 
   return (
     <>
-      <div className="group bottom-4 left-6 rounded bg-white py-1 pl-1 pr-2 font-mono text-sm tracking-tight text-black absolute z-20 flex items-center">
+      <div className="group absolute bottom-4 left-6 z-20 flex items-center rounded bg-white py-1 pr-2 pl-1 font-mono text-sm tracking-tight text-black">
         <InklingFavicon className="mr-2 size-6" />
         <span className="pr-1 font-bold tracking-wide">Inkling</span>
         <span className="group-hover:font-bold">

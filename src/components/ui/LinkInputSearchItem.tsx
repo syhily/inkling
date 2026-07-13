@@ -22,7 +22,7 @@ export function LinkInputSearchItem({
 }) {
   return (
     <InputListItem
-      className="gap-3 rounded-md px-4 py-2 text-black dark:text-white my-[.2rem] flex cursor-pointer items-center justify-between text-left"
+      className="my-[.2rem] flex cursor-pointer items-center justify-between gap-3 rounded-md px-4 py-2 text-left text-black dark:text-white"
       dataTestId={dataTestId}
       item={item}
       scrollIntoView={scrollIntoView}
@@ -34,7 +34,7 @@ export function LinkInputSearchItem({
       <span className="line-clamp-1 flex items-center gap-[.6rem]">
         {item.Icon && <item.Icon className="size-[1.4rem] stroke-[1.5px]" />}
         <span
-          className="text-sm font-medium leading-snug block truncate"
+          className="block truncate text-sm leading-snug font-medium"
           data-testid={`${dataTestId}-listOption-label`}
         >
           <HighlightedString highlightString={highlightString} shouldHighlight={item.highlight} string={item.label} />
@@ -42,7 +42,7 @@ export function LinkInputSearchItem({
       </span>
       {selected && (item.metaText || item.MetaIcon) && (
         <span
-          className="leading-snug tracking-tight text-grey-600 dark:text-grey-500 flex shrink-0 items-center gap-[.6rem] text-[1.3rem]"
+          className="flex shrink-0 items-center gap-[.6rem] text-[1.3rem] leading-snug tracking-tight text-grey-600 dark:text-grey-500"
           data-testid={`${dataTestId}-listOption-meta`}
         >
           <span title={item.metaIconTitle}>{item.MetaIcon && <item.MetaIcon className="size-[1.4rem]" />}</span>

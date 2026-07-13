@@ -20,17 +20,17 @@ const TabView = ({
   return (
     <>
       <div
-        className={`no-scrollbar gap-4 border-grey-300 dark:border-grey-900 flex border-b ${tabs.length > 1 ? 'px-6 w-full' : 'mx-6'}`}
+        className={`no-scrollbar flex gap-4 border-b border-grey-300 dark:border-grey-900 ${tabs.length > 1 ? 'w-full px-6' : 'mx-6'}`}
       >
         {tabs.map((tab: { id: string; label: string }) => (
           <button
             key={tab.id}
-            className={`pb-3 pt-4 text-sm font-semibold -mb-px appearance-none whitespace-nowrap transition-all ${
+            className={`-mb-px appearance-none pt-4 pb-3 text-sm font-semibold whitespace-nowrap transition-all ${
               tabs.length > 1 ? 'cursor-pointer border-b-2' : 'cursor-default'
             } ${
               activeTab === tab.id
                 ? 'border-black text-black dark:border-white dark:text-white'
-                : 'text-grey-600 hover:border-grey-500 dark:text-grey-500 dark:hover:border-grey-500 border-transparent'
+                : 'border-transparent text-grey-600 hover:border-grey-500 dark:text-grey-500 dark:hover:border-grey-500'
             }`}
             data-testid={`tab-${tab.id}`}
             type="button"
@@ -40,7 +40,7 @@ const TabView = ({
           </button>
         ))}
       </div>
-      <div className="gap-3 p-6 pt-4 flex flex-col" data-testid={`tab-contents-${activeTab}`}>
+      <div className="flex flex-col gap-3 p-6 pt-4" data-testid={`tab-contents-${activeTab}`}>
         {tabContent[activeTab]}
       </div>
     </>

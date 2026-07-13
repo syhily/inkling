@@ -1,12 +1,6 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
-import {
-  $createNodeSelection,
-  $getNodeByKey,
-  $getSelection,
-  $isNodeSelection,
-  $setSelection,
-} from 'lexical'
+import { $createNodeSelection, $getNodeByKey, $getSelection, $isNodeSelection, $setSelection } from 'lexical'
 
 import type { CardNode } from '@/types/lexical-internals'
 
@@ -88,12 +82,7 @@ export function registerCardSelection(editor: LexicalEditor, deps: CardSelection
     // clear it to avoid blocking future legitimate deselections.
     // history-merge updates are excluded because they fire as
     // internal bookkeeping before decorator reconciliation.
-    if (
-      !tags.has('historic') &&
-      !tags.has('history-merge') &&
-      isCardSelected &&
-      preserveCardSelection === cardKey
-    ) {
+    if (!tags.has('historic') && !tags.has('history-merge') && isCardSelected && preserveCardSelection === cardKey) {
       preserveCardSelection = null
     }
 

@@ -138,9 +138,7 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
     const uploadResult = await imageUploader.upload?.(strippedFiles)
 
     if (!uploadResult) {
-      const cleanedImages = newImages.map((image, index) =>
-        index < currentCount ? image : withoutPreviewSrc(image),
-      )
+      const cleanedImages = newImages.map((image, index) => (index < currentCount ? image : withoutPreviewSrc(image)))
       newImages.slice(currentCount).forEach((image) => {
         revokePreviewUrl(image.previewSrc)
         previewUrlsRef.current.delete(image.previewSrc as string)

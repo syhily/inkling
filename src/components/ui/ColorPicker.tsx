@@ -109,13 +109,13 @@ export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange,
         onMouseDown={startUsingColorPicker}
         onTouchStart={startUsingColorPicker}
       />
-      <div className="mt-3 gap-2 flex">
+      <div className="mt-3 flex gap-2">
         <div
           ref={inputWrapperRef}
-          className={`rounded-lg border-grey-100 bg-grey-100 px-3 py-1.5 font-sans text-sm font-normal text-grey-900 placeholder:text-grey-500 focus-within:border-green focus-within:bg-white dark:bg-grey-900 dark:text-white dark:selection:bg-grey-800 dark:placeholder:text-grey-700 dark:focus-within:border-green dark:hover:bg-grey-925 dark:focus:bg-grey-925 relative flex w-full items-center border transition-colors focus-within:shadow-[0_0_0_2px_rgba(48,207,67,.25)] focus-within:outline-none dark:border-transparent`}
+          className={`relative flex w-full items-center rounded-lg border border-grey-100 bg-grey-100 px-3 py-1.5 font-sans text-sm font-normal text-grey-900 transition-colors placeholder:text-grey-500 focus-within:border-green focus-within:bg-white focus-within:shadow-[0_0_0_2px_rgba(48,207,67,.25)] focus-within:outline-none dark:border-transparent dark:bg-grey-900 dark:text-white dark:selection:bg-grey-800 dark:placeholder:text-grey-700 dark:focus-within:border-green dark:hover:bg-grey-925 dark:focus:bg-grey-925`}
           onClick={focusHexInputOnClick}
         >
-          <span className="ml-1 mr-2 text-grey-700">#</span>
+          <span className="mr-2 ml-1 text-grey-700">#</span>
           <HexColorInput
             aria-label="Color value"
             className="z-50 w-full bg-transparent"
@@ -124,7 +124,7 @@ export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange,
           />
           {eyedropper && !!window.EyeDropper && (
             <button
-              className="inset-y-0 right-3 size-4 absolute z-50 my-auto p-[1px]"
+              className="absolute inset-y-0 right-3 z-50 my-auto size-4 p-[1px]"
               type="button"
               onClick={openColorPicker}
             >
@@ -170,8 +170,8 @@ function ColorSwatch({ hex, accent, transparent, title, isSelected, onSelect }: 
     <button
       ref={ref}
       className={clsx(
-        `group size-5 border-grey-250 dark:border-grey-800 relative flex shrink-0 items-center rounded-full border`,
-        isSelected && 'outline-green outline outline-2',
+        `group relative flex size-5 shrink-0 items-center rounded-full border border-grey-250 dark:border-grey-800`,
+        isSelected && 'outline outline-2 outline-green',
       )}
       style={{ backgroundColor }}
       title={title}
@@ -179,7 +179,7 @@ function ColorSwatch({ hex, accent, transparent, title, isSelected, onSelect }: 
       onClick={onSelectHandler}
     >
       {transparent && (
-        <div className="left-0 top-0 border-b-red absolute z-10 w-[136%] origin-left rotate-45 border-b" />
+        <div className="absolute top-0 left-0 z-10 w-[136%] origin-left rotate-45 border-b border-b-red" />
       )}
       <Tooltip label={title} />
     </button>
@@ -256,7 +256,7 @@ export function ColorIndicator({
   return (
     <div className="relative" data-testid="color-selector-button">
       <button
-        className={`size-6 relative cursor-pointer rounded-full ${value ? 'p-[2px]' : 'border-grey-200 dark:border-grey-800 border'}`}
+        className={`relative size-6 cursor-pointer rounded-full ${value ? 'p-[2px]' : 'border border-grey-200 dark:border-grey-800'}`}
         type="button"
         onClick={() => {
           setIsOpen(!isOpen)
@@ -264,7 +264,7 @@ export function ColorIndicator({
       >
         {value && (
           <div
-            className="inset-0 absolute rounded-full bg-clip-content p-[3px]"
+            className="absolute inset-0 rounded-full bg-clip-content p-[3px]"
             style={{
               background:
                 'conic-gradient(hsl(360,100%,50%),hsl(315,100%,50%),hsl(270,100%,50%),hsl(225,100%,50%),hsl(180,100%,50%),hsl(135,100%,50%),hsl(90,100%,50%),hsl(45,100%,50%),hsl(0,100%,50%))',
@@ -277,14 +277,14 @@ export function ColorIndicator({
         )}
         <span
           className={clsx(
-            'border-white dark:border-grey-950 block size-full rounded-full border-2',
+            'block size-full rounded-full border-2 border-white dark:border-grey-950',
             value === 'image' && 'flex items-center justify-center',
           )}
           style={{ backgroundColor }}
         >
           {value === 'image' && <ImgBgIcon className="size-[1.4rem]" />}
           {value === 'transparent' && (
-            <div className="border-b-red absolute top-[3px] left-[3px] z-10 w-[136%] origin-left rotate-45 border-b" />
+            <div className="absolute top-[3px] left-[3px] z-10 w-[136%] origin-left rotate-45 border-b border-b-red" />
           )}
         </span>
       </button>
@@ -293,7 +293,7 @@ export function ColorIndicator({
         <div
           ref={popoverRef}
           className={clsx(
-            '-right-3 mb-2 gap-3 rounded-lg bg-white p-3 shadow ease-in-out dark:bg-grey-900 absolute bottom-full z-10 flex flex-col transition-[width] duration-200',
+            'absolute -right-3 bottom-full z-10 mb-2 flex flex-col gap-3 rounded-lg bg-white p-3 shadow transition-[width] duration-200 ease-in-out dark:bg-grey-900',
             (isExpanded || showChildren) && 'min-w-[296px]',
           )}
           onClick={stopPropagation}
@@ -310,8 +310,8 @@ export function ColorIndicator({
             />
           )}
           {showChildren && children}
-          <div className="gap-1 flex justify-end">
-            <div className={`gap-1 flex items-center`}>
+          <div className="flex justify-end gap-1">
+            <div className={`flex items-center gap-1`}>
               {swatches.map(({ customContent, ...swatch }) =>
                 customContent ? (
                   <Fragment key={swatch.title ?? Math.random().toString()}>{customContent}</Fragment>
@@ -329,7 +329,7 @@ export function ColorIndicator({
             </div>
             <button
               aria-label="Pick color"
-              className={`group size-6 relative rounded-full ${!selectedSwatch ? 'p-[2px]' : 'border-grey-200 dark:border-grey-800 border'}`}
+              className={`group relative size-6 rounded-full ${!selectedSwatch ? 'p-[2px]' : 'border border-grey-200 dark:border-grey-800'}`}
               data-testid="color-picker-toggle"
               type="button"
               onClick={() => {
@@ -339,7 +339,7 @@ export function ColorIndicator({
               {!selectedSwatch ? (
                 <>
                   <div
-                    className="inset-0 absolute rounded-full bg-clip-content p-[3px]"
+                    className="absolute inset-0 rounded-full bg-clip-content p-[3px]"
                     style={{
                       background:
                         'conic-gradient(hsl(360,100%,50%),hsl(315,100%,50%),hsl(270,100%,50%),hsl(225,100%,50%),hsl(180,100%,50%),hsl(135,100%,50%),hsl(90,100%,50%),hsl(45,100%,50%),hsl(0,100%,50%))',
@@ -350,16 +350,16 @@ export function ColorIndicator({
                     }}
                   />
                   <span
-                    className="border-white dark:border-grey-950 block size-full rounded-full border-2"
+                    className="block size-full rounded-full border-2 border-white dark:border-grey-950"
                     style={{ backgroundColor: value }}
                   >
                     {value === 'transparent' && (
-                      <div className="border-b-red absolute top-[3px] left-[3px] z-10 w-[136%] origin-left rotate-45 border-b" />
+                      <div className="absolute top-[3px] left-[3px] z-10 w-[136%] origin-left rotate-45 border-b border-b-red" />
                     )}
                   </span>
                 </>
               ) : (
-                <div className="inset-0 absolute rounded-full bg-[conic-gradient(hsl(360,100%,50%),hsl(315,100%,50%),hsl(270,100%,50%),hsl(225,100%,50%),hsl(180,100%,50%),hsl(135,100%,50%),hsl(90,100%,50%),hsl(45,100%,50%),hsl(0,100%,50%))]" />
+                <div className="absolute inset-0 rounded-full bg-[conic-gradient(hsl(360,100%,50%),hsl(315,100%,50%),hsl(270,100%,50%),hsl(225,100%,50%),hsl(180,100%,50%),hsl(135,100%,50%),hsl(90,100%,50%),hsl(45,100%,50%),hsl(0,100%,50%))]" />
               )}
               <Tooltip label="Pick color" />
             </button>

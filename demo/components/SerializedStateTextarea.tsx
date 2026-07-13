@@ -26,7 +26,7 @@ const SerializedStateTextarea = ({ isOpen }: SerializedStateTextareaProps) => {
 
   return (
     <>
-      <div className="bg-black !p-4 font-mono text-sm text-grey-300 selection:bg-grey-800 size-full resize-none !overflow-auto">
+      <div className="size-full resize-none !overflow-auto bg-black !p-4 font-mono text-sm text-grey-300 selection:bg-grey-800">
         {isOpen && <Highlight className="json">{serializedJson}</Highlight>}
       </div>
       <OnChangePlugin onChange={onChange} />

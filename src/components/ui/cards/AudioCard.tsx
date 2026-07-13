@@ -97,7 +97,7 @@ function AudioUploading({ progress }: AudioUploadingProps) {
 
   return (
     <div className="h-full border border-transparent">
-      <div className="border-grey/20 bg-grey-50 relative flex h-full items-center justify-center border before:pb-[12.5%]">
+      <div className="relative flex h-full items-center justify-center border border-grey/20 bg-grey-50 before:pb-[12.5%]">
         <div className="flex w-full items-center justify-center overflow-hidden">
           <ProgressBar style={progressStyle} />
         </div>
@@ -176,7 +176,7 @@ function AudioThumbnail({
   if (isDraggedOver) {
     return (
       <div
-        className="group h-20 rounded-md bg-purple relative flex aspect-square items-center justify-center"
+        className="group relative flex aspect-square h-20 items-center justify-center rounded-md bg-purple"
         data-testid="audio-thumbnail-dragover"
       >
         <p className="font-sans text-sm font-semibold text-white">Drop it 🔥</p>
@@ -185,7 +185,7 @@ function AudioThumbnail({
   } else if (errors && errors.length > 0) {
     return (
       <span
-        className="group h-20 rounded-md bg-grey-200 px-1 font-sans text-2xs font-semibold leading-snug text-red relative flex aspect-square items-center justify-center text-center"
+        className="group relative flex aspect-square h-20 items-center justify-center rounded-md bg-grey-200 px-1 text-center font-sans text-2xs leading-snug font-semibold text-red"
         data-testid="thumbnail-errors"
       >
         {errors[0].message}
@@ -193,15 +193,15 @@ function AudioThumbnail({
     )
   } else if (src) {
     return (
-      <div className="group/image h-20 rounded-md bg-purple relative flex aspect-square items-center justify-center">
+      <div className="group/image relative flex aspect-square h-20 items-center justify-center rounded-md bg-purple">
         <img
           alt="Audio thumbnail"
-          className="rounded-md ease-in size-full object-cover transition"
+          className="size-full rounded-md object-cover transition ease-in"
           data-testid="audio-thumbnail"
           src={src}
         />
         {isEditing && (
-          <div className="right-2 top-2 absolute flex opacity-0 transition-all group-hover/image:opacity-100">
+          <div className="absolute top-2 right-2 flex opacity-0 transition-all group-hover/image:opacity-100">
             <IconButton dataTestId="remove-thumbnail" Icon={DeleteIcon} label="Delete" onClick={removeThumbnail} />
           </div>
         )}
@@ -209,15 +209,15 @@ function AudioThumbnail({
     )
   } else if (isUploading) {
     return (
-      <div className="group h-20 rounded-md bg-purple flex aspect-square items-center justify-center">
+      <div className="group flex aspect-square h-20 items-center justify-center rounded-md bg-purple">
         <ProgressBar bgStyle="transparent" style={progressStyle} />
       </div>
     )
   } else {
     return (
-      <div className="group h-20 rounded-md bg-purple flex aspect-square items-center justify-center">
+      <div className="group flex aspect-square h-20 items-center justify-center rounded-md bg-purple">
         <button
-          className="size-20 flex cursor-pointer items-center justify-center"
+          className="flex size-20 cursor-pointer items-center justify-center"
           data-testid="upload-thumbnail"
           type="button"
           onClick={() => openFileSelection({ fileInputRef: fileInputRef })}
@@ -268,7 +268,7 @@ function PopulatedAudioCard({
     <>
       <div
         ref={thumbnailDragHandler.setRef}
-        className="rounded-md border-grey/30 p-2 flex border"
+        className="flex rounded-md border border-grey/30 p-2"
         data-testid="audio-card-populated"
       >
         <AudioThumbnail
@@ -283,10 +283,10 @@ function PopulatedAudioCard({
           src={thumbnailSrc}
           onFileChange={onFileChange}
         />
-        <div className="h-20 px-4 flex w-full flex-col justify-between">
+        <div className="flex h-20 w-full flex-col justify-between px-4">
           {(isEditing || title) && (
             <TextInput
-              className="font-sans text-lg font-bold bg-transparent text-current"
+              className="bg-transparent font-sans text-lg font-bold text-current"
               data-testid="audio-title"
               name="title"
               placeholder={placeholder}

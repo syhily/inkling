@@ -62,36 +62,36 @@ export function BookmarkCard({
     return (
       <div>
         <div
-          className="not-inkling-prose rounded-md border-grey/40 font-sans dark:border-grey/20 relative flex min-h-[120px] w-full border bg-transparent"
+          className="not-inkling-prose relative flex min-h-[120px] w-full rounded-md border border-grey/40 bg-transparent font-sans dark:border-grey/20"
           data-testid="bookmark-container"
         >
           <div
-            className="p-5 flex grow basis-full flex-col items-start justify-start"
+            className="flex grow basis-full flex-col items-start justify-start p-5"
             data-testid="bookmark-text-container"
           >
             <div
-              className="font-semibold leading-normal tracking-normal text-grey-900 dark:text-grey-100 text-[1.5rem]"
+              className="text-[1.5rem] leading-normal font-semibold tracking-normal text-grey-900 dark:text-grey-100"
               data-testid="bookmark-title"
             >
               {title}
             </div>
             <div
-              className="mt-1 text-sm font-normal leading-normal text-grey-800 dark:text-grey-600 line-clamp-2 max-h-[44px] overflow-y-hidden"
+              className="mt-1 line-clamp-2 max-h-[44px] overflow-y-hidden text-sm leading-normal font-normal text-grey-800 dark:text-grey-600"
               data-testid="bookmark-description"
             >
               {description}
             </div>
-            <div className="text-sm font-medium leading-9 text-grey-900 mt-[20px] flex items-center">
+            <div className="mt-[20px] flex items-center text-sm leading-9 font-medium text-grey-900">
               {icon && <BookmarkIcon src={icon} />}
               <span
-                className=" db leading-6 text-grey-900 dark:text-grey-100 max-w-[240px] truncate"
+                className=" db max-w-[240px] truncate leading-6 text-grey-900 dark:text-grey-100"
                 data-testid="bookmark-publisher"
               >
                 {publisher}
               </span>
               {author && (
                 <span
-                  className="font-normal text-grey-800 before:mx-1.5 before:text-grey-900 dark:text-grey-600 dark:before:text-grey-100 before:content-['•']"
+                  className="font-normal text-grey-800 before:mx-1.5 before:text-grey-900 before:content-['•'] dark:text-grey-600 dark:before:text-grey-100"
                   data-testid="bookmark-author"
                 >
                   {author}
@@ -100,17 +100,17 @@ export function BookmarkCard({
             </div>
           </div>
           {thumbnail && thumbnailVisible && (
-            <div className={'m-0 relative min-w-[33%] grow-1'} data-testid="bookmark-thumbnail-container">
+            <div className={'relative m-0 min-w-[33%] grow-1'} data-testid="bookmark-thumbnail-container">
               <img
                 alt=""
-                className="inset-0 absolute size-full rounded-r-[.5rem] object-cover"
+                className="absolute inset-0 size-full rounded-r-[.5rem] object-cover"
                 data-testid="bookmark-thumbnail"
                 src={thumbnail}
                 onError={handleThumbnailError}
               />
             </div>
           )}
-          <div className="inset-0 mt-0 absolute z-50"></div>
+          <div className="absolute inset-0 z-50 mt-0"></div>
         </div>
         <CardCaptionEditor
           captionEditor={captionEditor}

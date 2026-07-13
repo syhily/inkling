@@ -88,11 +88,11 @@ export function LinkInputWithSearch({ href, update, cancel }: LinkInputWithSearc
   return (
     <div
       ref={containerRef}
-      className="m-0 rounded-lg bg-white p-1 px-2 font-sans text-sm font-medium shadow-md dark:bg-grey-950 relative flex w-full flex-col"
+      className="relative m-0 flex w-full flex-col rounded-lg bg-white p-1 px-2 font-sans text-sm font-medium shadow-md dark:bg-grey-950"
     >
       <Input
         autoFocus={true}
-        className="my-1 rounded-md bg-grey-100 px-4 py-2 text-sm font-medium leading-snug text-black placeholder:text-sm placeholder:font-medium placeholder:leading-snug placeholder:text-grey-500 focus:border-green focus:bg-white dark:border-grey-800/80 dark:bg-grey-900 dark:text-white dark:selection:bg-grey-600/40 dark:selection:text-grey-100 dark:focus:border-green dark:focus:bg-grey-900 h-auto w-full border border-transparent text-left focus:shadow-[0_0_0_2px_rgba(48,207,67,.25)]"
+        className="my-1 h-auto w-full rounded-md border border-transparent bg-grey-100 px-4 py-2 text-left text-sm leading-snug font-medium text-black placeholder:text-sm placeholder:leading-snug placeholder:font-medium placeholder:text-grey-500 focus:border-green focus:bg-white focus:shadow-[0_0_0_2px_rgba(48,207,67,.25)] dark:border-grey-800/80 dark:bg-grey-900 dark:text-white dark:selection:bg-grey-600/40 dark:selection:text-grey-100 dark:focus:border-green dark:focus:bg-grey-900"
         dataTestId={testId}
         name="link-input"
         placeholder="Search or enter URL to link"
@@ -114,7 +114,7 @@ export function LinkInputWithSearch({ href, update, cancel }: LinkInputWithSearc
       />
       {showSuggestions && (
         <>
-          <ul className="bg-white py-1 dark:bg-grey-950 max-h-[30vh] w-full overflow-y-auto">
+          <ul className="max-h-[30vh] w-full overflow-y-auto bg-white py-1 dark:bg-grey-950">
             {isSearching && !listOptions.length && <InputListLoadingItem dataTestId={testId} />}
             <KeyboardSelectionWithGroups
               getGroup={getGroup}

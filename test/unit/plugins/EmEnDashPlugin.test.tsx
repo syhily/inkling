@@ -28,19 +28,13 @@ function getEditorText(editor: ReturnType<typeof createTestEditor>): string {
   return editor.getEditorState().read(() => $getRoot().getTextContent())
 }
 
-async function updateEditor(
-  editor: ReturnType<typeof createTestEditor>,
-  updateFn: () => void,
-): Promise<void> {
+async function updateEditor(editor: ReturnType<typeof createTestEditor>, updateFn: () => void): Promise<void> {
   await new Promise<void>((resolve) => {
     editor.update(updateFn, { onUpdate: () => resolve() })
   })
 }
 
-async function typeText(
-  editor: ReturnType<typeof createTestEditor>,
-  text: string,
-): Promise<void> {
+async function typeText(editor: ReturnType<typeof createTestEditor>, text: string): Promise<void> {
   for (const char of text) {
     await act(async () => {
       editor.dispatchCommand(CONTROLLED_TEXT_INSERTION_COMMAND, char)
@@ -63,17 +57,8 @@ async function undo(editor: ReturnType<typeof createTestEditor>): Promise<void> 
   })
 }
 
-function TestWrapper({
-  children,
-  editor,
-}: {
-  children: React.ReactNode
-  editor: ReturnType<typeof createTestEditor>
-}) {
-  const contextValue = useMemo(
-    () => [editor, createLexicalComposerContext(null, {})] as const,
-    [editor],
-  )
+function TestWrapper({ children, editor }: { children: React.ReactNode; editor: ReturnType<typeof createTestEditor> }) {
+  const contextValue = useMemo(() => [editor, createLexicalComposerContext(null, {})] as const, [editor])
   return <LexicalComposerContext.Provider value={contextValue}>{children}</LexicalComposerContext.Provider>
 }
 

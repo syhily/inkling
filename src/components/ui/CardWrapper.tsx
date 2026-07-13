@@ -82,10 +82,10 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
     let indicatorIcon
     if (isVisibilityActive) {
       indicatorIcon = (
-        <div className="top-0 lg:top-8 sticky">
+        <div className="sticky top-0 lg:top-8">
           <VisibilityIndicator
             aria-label="Card is hidden for select audiences"
-            className="size-5 text-grey absolute left-[-6rem] cursor-pointer"
+            className="absolute left-[-6rem] size-5 cursor-pointer text-grey"
             data-testid="visibility-indicator"
             style={{
               left: position.left,
@@ -97,10 +97,10 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
       )
     } else if (IndicatorIcon) {
       indicatorIcon = (
-        <div className="top-0 lg:top-8 sticky">
+        <div className="sticky top-0 lg:top-8">
           <IndicatorIcon
             aria-label={`${cardType} indicator`}
-            className="size-5 text-grey absolute left-[-6rem]"
+            className="absolute left-[-6rem] size-5 text-grey"
             style={{
               left: position.left,
               top: position.top,

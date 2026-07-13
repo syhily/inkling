@@ -15,8 +15,8 @@ export const ImageUploadSwatch = ({
   return (
     <button
       className={clsx(
-        `group size-6 border-grey-300 bg-grey-100 text-black relative flex shrink-0 items-center justify-center rounded-full border`,
-        showBackgroundImage && 'outline-green outline outline-2',
+        `group relative flex size-6 shrink-0 items-center justify-center rounded-full border border-grey-300 bg-grey-100 text-black`,
+        showBackgroundImage && 'outline outline-2 outline-green',
       )}
       data-testid={dataTestId}
       title="Image"

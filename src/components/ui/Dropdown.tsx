@@ -40,7 +40,7 @@ export function Dropdown({ menu = [], value, onChange, placeholder, dataTestId }
     return (
       <li
         key={item.name}
-        className={`px-3 py-2 hover:bg-grey-100 dark:hover:bg-grey-900 cursor-pointer ${selected ? 'bg-grey-100 dark:bg-grey-900' : ''}`}
+        className={`cursor-pointer px-3 py-2 hover:bg-grey-100 dark:hover:bg-grey-900 ${selected ? 'bg-grey-100 dark:bg-grey-900' : ''}`}
         data-testid={`${dataTestId}-option-${item.name}`}
         onClick={() => handleSelect(item)}
       >
@@ -54,7 +54,7 @@ export function Dropdown({ menu = [], value, onChange, placeholder, dataTestId }
   return (
     <div ref={containerRef} className="relative" data-testid={dataTestId}>
       <div
-        className={`rounded-lg px-3 py-2 flex w-full cursor-pointer items-center justify-between border ${open ? 'border-green bg-white dark:bg-grey-925' : 'border-grey-100 bg-grey-100 dark:bg-grey-900 dark:hover:bg-grey-925 dark:border-transparent'}`}
+        className={`flex w-full cursor-pointer items-center justify-between rounded-lg border px-3 py-2 ${open ? 'border-green bg-white dark:bg-grey-925' : 'border-grey-100 bg-grey-100 dark:border-transparent dark:bg-grey-900 dark:hover:bg-grey-925'}`}
         onClick={handleOpen}
       >
         <span className="text-sm text-grey-900 dark:text-white">

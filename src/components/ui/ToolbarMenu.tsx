@@ -51,7 +51,7 @@ export function ToolbarMenu({ children, hide, ...props }: ToolbarMenuProps) {
 
   return (
     <ul
-      className="m-0 gap-1 rounded-lg bg-white px-1 font-sans text-md font-normal text-black shadow-md dark:bg-grey-950 pointer-events-auto relative flex items-center justify-evenly"
+      className="pointer-events-auto relative m-0 flex items-center justify-evenly gap-1 rounded-lg bg-white px-1 font-sans text-md font-normal text-black shadow-md dark:bg-grey-950"
       {...props}
     >
       {children}
@@ -88,10 +88,10 @@ export function ToolbarMenuItem({
   const Icon = TOOLBAR_ICONS[icon]
 
   return (
-    <li className="group m-0 p-0 first:m-0 relative flex" {...props}>
+    <li className="group relative m-0 flex p-0 first:m-0" {...props}>
       <button
         aria-label={label}
-        className={`my-1 h-8 w-9 rounded-md hover:bg-grey-200/80 dark:bg-grey-950 dark:hover:bg-grey-900 flex cursor-pointer items-center justify-center transition ${isActive ? 'bg-grey-200/80' : 'bg-white'}`}
+        className={`my-1 flex h-8 w-9 cursor-pointer items-center justify-center rounded-md transition hover:bg-grey-200/80 dark:bg-grey-950 dark:hover:bg-grey-900 ${isActive ? 'bg-grey-200/80' : 'bg-white'}`}
         data-inkling-active={isActive}
         data-testid={dataTestId}
         type="button"
@@ -115,5 +115,5 @@ export function ToolbarMenuSeparator({ hide }: ToolbarMenuSeparatorProps) {
     return null
   }
 
-  return <li className="m-0 bg-grey-300/80 dark:bg-grey-900 w-px self-stretch"></li>
+  return <li className="m-0 w-px self-stretch bg-grey-300/80 dark:bg-grey-900"></li>
 }

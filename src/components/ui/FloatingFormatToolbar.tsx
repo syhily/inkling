@@ -1,7 +1,13 @@
 import type { LexicalEditor } from 'lexical'
 
 import { TOGGLE_LINK_COMMAND } from '@lexical/link'
-import { mergeRegister, $getSelection, $isRangeSelection, COMMAND_PRIORITY_LOW, DELETE_CHARACTER_COMMAND } from 'lexical'
+import {
+  mergeRegister,
+  $getSelection,
+  $isRangeSelection,
+  COMMAND_PRIORITY_LOW,
+  DELETE_CHARACTER_COMMAND,
+} from 'lexical'
 import debounce from 'lodash/debounce'
 import React from 'react'
 

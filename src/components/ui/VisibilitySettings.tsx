@@ -32,11 +32,11 @@ export function VisibilitySettings({ visibilityOptions, toggleVisibility }: Visi
     })
 
     return (
-      <div key={group.key} className="gap-3 flex flex-col" data-testid="visibility-settings">
+      <div key={group.key} className="flex flex-col gap-3" data-testid="visibility-settings">
         <p className="text-sm font-bold tracking-normal text-grey-900 dark:text-grey-300">{group.label}</p>
         {toggles}
         {index < visibilityOptions.length - 1 && (
-          <hr className="not-inkling-prose my-2 border-t-grey-300 dark:border-t-grey-900 block" />
+          <hr className="not-inkling-prose my-2 block border-t-grey-300 dark:border-t-grey-900" />
         )}
       </div>
     )

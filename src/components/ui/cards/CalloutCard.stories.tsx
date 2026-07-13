@@ -30,7 +30,7 @@ function CalloutCardStory({ display = 'Default', value = '', placeholder, ...arg
 
   return (
     <div className="inkling-prose">
-      <div className="my-8 mx-auto max-w-[740px] min-w-[initial]">
+      <div className="mx-auto my-8 max-w-[740px] min-w-[initial]">
         <CardWrapper {...displayState} {...args}>
           <CalloutCard {...displayState} {...args} textEditor={textEditor} />
         </CardWrapper>

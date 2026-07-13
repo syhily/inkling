@@ -12,11 +12,11 @@ export const Input = ({
   onKeyDown?: (e: React.KeyboardEvent) => void
 }) => {
   return (
-    <div className="m-0 gap-1 rounded-lg bg-white font-sans text-md font-normal text-black shadow-md dark:bg-grey-950 relative flex items-center justify-evenly">
+    <div className="relative m-0 flex items-center justify-evenly gap-1 rounded-lg bg-white font-sans text-md font-normal text-black shadow-md dark:bg-grey-950">
       <input
         autoComplete="off"
         autoFocus={true}
-        className={`bg-white py-1 pl-3 pr-9 font-normal leading-loose text-grey-900 selection:bg-grey/40 dark:bg-grey-950 dark:text-grey-100 dark:placeholder:text-grey-800 mb-[1px] h-auto w-full ${value ? 'rounded-t rounded-b-none' : 'rounded'}`}
+        className={`mb-[1px] h-auto w-full bg-white py-1 pr-9 pl-3 leading-loose font-normal text-grey-900 selection:bg-grey/40 dark:bg-grey-950 dark:text-grey-100 dark:placeholder:text-grey-800 ${value ? 'rounded-t rounded-b-none' : 'rounded'}`}
         data-testid="snippet-name"
         placeholder="Snippet name"
         value={value ?? ''}
@@ -24,8 +24,8 @@ export const Input = ({
         onChange={onChange}
         onKeyDown={onKeyDown}
       />
-      <button aria-label="Close" className="right-3 absolute cursor-pointer" type="button" onClick={onClear}>
-        <CloseIcon className="size-3 text-grey stroke-2" />
+      <button aria-label="Close" className="absolute right-3 cursor-pointer" type="button" onClick={onClear}>
+        <CloseIcon className="size-3 stroke-2 text-grey" />
       </button>
     </div>
   )

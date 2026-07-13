@@ -21,7 +21,7 @@ export function IconButton({
     <button
       aria-label={label}
       className={clsx(
-        'group h-8 w-9 rounded-md bg-white/90 text-grey-900 hover:bg-white hover:text-black pointer-events-auto relative flex cursor-pointer items-center justify-center transition-all',
+        'group pointer-events-auto relative flex h-8 w-9 cursor-pointer items-center justify-center rounded-md bg-white/90 text-grey-900 transition-all hover:bg-white hover:text-black',
         className,
       )}
       data-testid={dataTestId}

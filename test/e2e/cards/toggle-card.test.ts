@@ -51,7 +51,7 @@ test.describe('Toggle card', async () => {
       html`
         <div data-lexical-decorator="true" contenteditable="false">
           <div data-inkling-card-editing="false" data-inkling-card-selected="false" data-inkling-card="toggle">
-            <div class="rounded border-grey/40 py-4 px-6 dark:border-grey/30 border">
+            <div class="rounded border border-grey/40 px-6 py-4 dark:border-grey/30">
               <div class="flex cursor-text items-start justify-between">
                 <div class="mr-2 w-full">
                   <div class="inkling-lexical-heading">
@@ -69,11 +69,11 @@ test.describe('Toggle card', async () => {
                     </div>
                   </div>
                 </div>
-                <div class="h-8 w-8 mt-[-1px] ml-auto flex shrink-0 cursor-pointer items-center justify-center">
+                <div class="mt-[-1px] ml-auto flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center">
                   <svg></svg>
                 </div>
               </div>
-              <div class="mt-2 visible w-full">
+              <div class="visible mt-2 w-full">
                 <div>
                   <div data-inkling="editor">
                     <div
@@ -107,7 +107,7 @@ test.describe('Toggle card', async () => {
       html`
         <div data-lexical-decorator="true" contenteditable="false">
           <div data-inkling-card-editing="true" data-inkling-card-selected="true" data-inkling-card="toggle">
-            <div class="rounded border-grey/40 py-4 px-6 dark:border-grey/30 border">
+            <div class="rounded border border-grey/40 px-6 py-4 dark:border-grey/30">
               <div class="flex cursor-text items-start justify-between">
                 <div class="mr-2 w-full">
                   <div class="inkling-lexical-heading">
@@ -119,11 +119,11 @@ test.describe('Toggle card', async () => {
                     <div><div>Toggle header</div></div>
                   </div>
                 </div>
-                <div class="h-8 w-8 mt-[-1px] ml-auto flex shrink-0 cursor-pointer items-center justify-center">
+                <div class="mt-[-1px] ml-auto flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center">
                   <svg></svg>
                 </div>
               </div>
-              <div class="mt-2 visible w-full">
+              <div class="visible mt-2 w-full">
                 <div>
                   <div data-inkling="editor">
                     <div contenteditable="true" role="textbox" spellcheck="true" data-lexical-editor="true">

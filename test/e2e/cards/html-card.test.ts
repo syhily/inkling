@@ -188,7 +188,7 @@ test.describe('Html card', async () => {
           <div data-inkling-card-editing="false" data-inkling-card-selected="false" data-inkling-card="html">
             <div>
               <div class="min-h-[3.5vh] whitespace-normal">Here are some words</div>
-              <div class="inset-0 mt-0 absolute z-50"></div>
+              <div class="absolute inset-0 z-50 mt-0"></div>
             </div>
           </div>
         </div>

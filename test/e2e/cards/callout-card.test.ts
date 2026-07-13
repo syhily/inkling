@@ -53,12 +53,7 @@ test.describe('Callout Card', async () => {
               <div><button type="button">😚</button></div>
               <div>
                 <div data-inkling="editor">
-                  <div
-                    contenteditable="true"
-                    role="textbox"
-                    spellcheck="true"
-                    data-lexical-editor="true"
-                  >
+                  <div contenteditable="true" role="textbox" spellcheck="true" data-lexical-editor="true">
                     <p dir="auto"><span data-lexical-text="true">Hello World</span></p>
                   </div>
                 </div>
@@ -380,12 +375,7 @@ test.describe('Callout Card', async () => {
               <div><button type="button">💡</button></div>
               <div>
                 <div data-inkling="editor">
-                  <div
-                    contenteditable="true"
-                    role="textbox"
-                    spellcheck="true"
-                    data-lexical-editor="true"
-                  >
+                  <div contenteditable="true" role="textbox" spellcheck="true" data-lexical-editor="true">
                     <p dir="auto"><span data-lexical-text="true">Hello world</span></p>
                   </div>
                 </div>

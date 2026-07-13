@@ -3,8 +3,8 @@ import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AudioNode, $createAudioNode, type AudioNode as AudioNodeType } from '@/nodes/AudioNode'
-import { getAudioMetadata } from '@/utils/getAudioMetadata'
 import { audioUploadHandler } from '@/utils/audioUploadHandler'
+import { getAudioMetadata } from '@/utils/getAudioMetadata'
 
 vi.mock('@/utils/getAudioMetadata', () => ({
   getAudioMetadata: vi.fn(),

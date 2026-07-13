@@ -82,7 +82,7 @@ function GalleryImage({ image, deleteImage, position, isDragging }: GalleryImage
 
       {isDragging ? null : (
         <div
-          className={`inset-0 from-black/0 via-black/5 to-black/30 p-3 pointer-events-none invisible absolute bg-gradient-to-t opacity-0 transition-all group-hover/image:visible group-hover/image:opacity-100 ${overlayClasses.join(' ')}`}
+          className={`pointer-events-none invisible absolute inset-0 bg-gradient-to-t from-black/0 via-black/5 to-black/30 p-3 opacity-0 transition-all group-hover/image:visible group-hover/image:opacity-100 ${overlayClasses.join(' ')}`}
         >
           <div className="flex flex-row-reverse">
             <IconButton
@@ -184,7 +184,7 @@ function UploadOverlay({ progress }: UploadOverlayProps) {
 
   return (
     <div
-      className="inset-0 bg-white/50 absolute flex min-w-full items-center justify-center overflow-hidden"
+      className="absolute inset-0 flex min-w-full items-center justify-center overflow-hidden bg-white/50"
       data-testid="gallery-progress"
     >
       <ProgressBar bgStyle="transparent" style={progressStyle} />
@@ -195,10 +195,10 @@ function UploadOverlay({ progress }: UploadOverlayProps) {
 function FileDragOverlay() {
   return (
     <div
-      className="bg-black-60 inset-0 bg-black/60 pointer-events-none absolute flex items-center"
+      className="bg-black-60 pointer-events-none absolute inset-0 flex items-center bg-black/60"
       data-inkling-card-drag-text
     >
-      <span className="sans-serif fw7 f7 font-bold text-white block w-full text-center">
+      <span className="sans-serif fw7 f7 block w-full text-center font-bold text-white">
         Drop to add up to 9 images
       </span>
     </div>
@@ -278,8 +278,8 @@ export function GalleryCard({
         {images.length && filesDraggedOver ? <FileDragOverlay /> : null}
 
         {errorMessage && !isDragging ? (
-          <div className="inset-0 bg-black/60 absolute flex items-center justify-center" data-testid="gallery-error">
-            <span className="center sans-serif f7 bg-red px-2 font-bold text-white block">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60" data-testid="gallery-error">
+            <span className="center sans-serif f7 block bg-red px-2 font-bold text-white">
               {errorMessage}.
               <button
                 className="ml-2 cursor-pointer underline"

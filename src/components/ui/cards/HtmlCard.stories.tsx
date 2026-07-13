@@ -29,7 +29,7 @@ function HtmlCardStory({ display = 'Default', ...args }: HtmlCardStoryArgs) {
 
   return (
     <div className="inkling-prose">
-      <div className="my-8 mx-auto w-[740px] min-w-[initial]">
+      <div className="mx-auto my-8 w-[740px] min-w-[initial]">
         <CardWrapper IndicatorIcon={HtmlIndicatorIcon} wrapperStyle="code-card" {...displayState} {...componentProps}>
           <HtmlCard {...displayState} {...componentProps} />
         </CardWrapper>

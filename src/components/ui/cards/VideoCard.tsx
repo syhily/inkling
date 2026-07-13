@@ -78,20 +78,20 @@ function PopulatedVideoCard({
           {customThumbnail && (
             <img
               alt="Video custom thumbnail"
-              className="inset-0 bg-white absolute size-full object-cover"
+              className="absolute inset-0 size-full bg-white object-cover"
               src={customThumbnail}
             />
           )}
         </div>
-        <div className="inset-0 from-black/0 via-black/5 to-black/30 absolute flex items-center justify-center bg-gradient-to-t">
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/0 via-black/5 to-black/30">
           {videoUploader.isLoading || (
-            <button className="size-20 bg-black/50 flex items-center justify-center rounded-full" type="button">
-              <PlayIcon className="w-5 fill-white h-auto" />
+            <button className="flex size-20 items-center justify-center rounded-full bg-black/50" type="button">
+              <PlayIcon className="h-auto w-5 fill-white" />
             </button>
           )}
         </div>
         <div
-          className={`bottom-0 h-20 from-black/0 to-black/50 absolute flex w-full justify-end bg-gradient-to-b ${cardWidth === 'full' ? 'px-7 py-4' : 'px-4'}`}
+          className={`absolute bottom-0 flex h-20 w-full justify-end bg-gradient-to-b from-black/0 to-black/50 ${cardWidth === 'full' ? 'px-7 py-4' : 'px-4'}`}
         >
           <MediaPlayer duration={totalDuration} theme="light" />
         </div>
@@ -100,7 +100,7 @@ function PopulatedVideoCard({
       </div>
       {videoUploader.isLoading && (
         <div
-          className="inset-0 bg-white/50 absolute flex min-w-full items-center justify-center overflow-hidden"
+          className="absolute inset-0 flex min-w-full items-center justify-center overflow-hidden bg-white/50"
           data-testid="video-progress"
         >
           <ProgressBar bgStyle="transparent" style={progressStyle} />

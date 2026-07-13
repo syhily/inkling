@@ -8,11 +8,11 @@ const EmailEditorWrapper = ({ children }: EmailEditorWrapperProps) => {
   return (
     <div>
       <div className="mb-6">
-        <div className="py-2 text-sm flex items-center">
+        <div className="flex items-center py-2 text-sm">
           <span className="w-20 font-semibold">From:</span>
           <span className="text-gray-500">Inkling &lt;noreply@example.com&gt;</span>
         </div>
-        <div className="py-2 text-sm flex items-center">
+        <div className="flex items-center py-2 text-sm">
           <span className="w-20 font-semibold">Subject:</span>
           <span className="text-gray-500">Welcome to Inkling</span>
         </div>

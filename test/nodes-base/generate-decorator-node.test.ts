@@ -55,22 +55,20 @@ describe('Utils: generateDecoratorNode', function () {
       })
     })
 
-  const editorTestWithNodes = (
-    getNodes: () => unknown[],
-    testFn: (testEditor: LexicalEditor, nodes: unknown[]) => void,
-  ) => () =>
-    new Promise<void>((resolve, reject) => {
-      const nodes = getNodes()
-      const testEditor = createHeadlessEditor({ nodes: nodes as LexicalNodeConfig[] })
-      testEditor.update(() => {
-        try {
-          testFn(testEditor, nodes)
-          resolve()
-        } catch (e) {
-          reject(e)
-        }
+  const editorTestWithNodes =
+    (getNodes: () => unknown[], testFn: (testEditor: LexicalEditor, nodes: unknown[]) => void) => () =>
+      new Promise<void>((resolve, reject) => {
+        const nodes = getNodes()
+        const testEditor = createHeadlessEditor({ nodes: nodes as LexicalNodeConfig[] })
+        testEditor.update(() => {
+          try {
+            testFn(testEditor, nodes)
+            resolve()
+          } catch (e) {
+            reject(e)
+          }
+        })
       })
-    })
 
   describe('exportDOM', function () {
     let NodeWithRender: GeneratedNodeClass

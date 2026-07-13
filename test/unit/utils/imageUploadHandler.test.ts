@@ -86,9 +86,7 @@ describe('imageUploadHandler', () => {
     const upload = vi.fn().mockResolvedValue([{ url: 'https://example.com/image.png' }])
     const nodeKey = await createImageNodeInEditor()
 
-    await expect(imageUploadHandler([file], nodeKey, editor, upload)).rejects.toThrow(
-      'failed to read dimensions',
-    )
+    await expect(imageUploadHandler([file], nodeKey, editor, upload)).rejects.toThrow('failed to read dimensions')
 
     expect(createObjectURLSpy).toHaveBeenCalledExactlyOnceWith(file)
     expect(revokeObjectURLSpy).toHaveBeenCalledExactlyOnceWith('blob://image-preview')

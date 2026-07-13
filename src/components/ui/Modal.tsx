@@ -26,15 +26,15 @@ export function Modal({
   return (
     <Portal>
       <div
-        className="left-0 top-0 fixed z-40 flex size-full items-start justify-center overflow-auto"
+        className="fixed top-0 left-0 z-40 flex size-full items-start justify-center overflow-auto"
         role="dialog"
         aria-modal
         onKeyDown={controlByKeys}
       >
-        <div className="inset-0 bg-black fixed z-40 h-[100vh] opacity-60" onClick={onClose}></div>
-        <div className="my-8 rounded-lg bg-white drop-shadow-2xl dark:bg-black relative z-50 w-full max-w-[550px]">
-          <button aria-label="Close dialog" className="right-6 top-6 absolute cursor-pointer" type="button" autoFocus>
-            <CloseIcon className="size-4 text-grey-400 stroke-2" onClick={onClose} />
+        <div className="fixed inset-0 z-40 h-[100vh] bg-black opacity-60" onClick={onClose}></div>
+        <div className="relative z-50 my-8 w-full max-w-[550px] rounded-lg bg-white drop-shadow-2xl dark:bg-black">
+          <button aria-label="Close dialog" className="absolute top-6 right-6 cursor-pointer" type="button" autoFocus>
+            <CloseIcon className="size-4 stroke-2 text-grey-400" onClick={onClose} />
           </button>
           {children}
         </div>

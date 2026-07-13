@@ -53,7 +53,7 @@ function FileUploading({ progress }: FileUploadingProps) {
 
   return (
     <div className="h-full border border-transparent">
-      <div className="border-grey/20 bg-grey-50 dark:bg-grey-900 relative flex h-full items-center justify-center border before:pb-[12.5%]">
+      <div className="relative flex h-full items-center justify-center border border-grey/20 bg-grey-50 before:pb-[12.5%] dark:bg-grey-900">
         <div className="flex w-full items-center justify-center overflow-hidden">
           <ProgressBar style={progressStyle} />
         </div>
@@ -89,15 +89,15 @@ function PopulatedFileCard({
 }: PopulatedFileCardProps) {
   return (
     <div>
-      <div className="rounded-md border-grey/30 p-2 flex justify-between border">
+      <div className="flex justify-between rounded-md border border-grey/30 p-2">
         <div
-          className={`px-2 font-sans flex w-full flex-col ${title || desc || isEditing ? 'justify-between' : 'justify-center'}`}
+          className={`flex w-full flex-col px-2 font-sans ${title || desc || isEditing ? 'justify-between' : 'justify-center'}`}
         >
           {(isEditing || title || desc) && (
             <div className="flex flex-col">
               {(isEditing || title) && (
                 <TextInput
-                  className="text-lg font-bold tracking-tight text-black dark:text-grey-200 h-[30px] bg-transparent leading-none"
+                  className="h-[30px] bg-transparent text-lg leading-none font-bold tracking-tight text-black dark:text-grey-200"
                   data-inkling-file-card="fileTitle"
                   maxLength="80"
                   placeholder={titlePlaceholder}
@@ -107,7 +107,7 @@ function PopulatedFileCard({
               )}
               {(isEditing || desc) && (
                 <TextInput
-                  className="pb-1 font-normal text-grey-700 placeholder:text-grey-500 dark:text-grey-300 dark:placeholder:text-grey-800 h-[26px] bg-transparent text-[1.6rem] leading-none"
+                  className="h-[26px] bg-transparent pb-1 text-[1.6rem] leading-none font-normal text-grey-700 placeholder:text-grey-500 dark:text-grey-300 dark:placeholder:text-grey-800"
                   data-inkling-file-card="fileDescription"
                   maxLength="100"
                   placeholder={descPlaceholder}
@@ -126,14 +126,14 @@ function PopulatedFileCard({
           </div>
         </div>
         <div
-          className={`!mt-0 rounded-md bg-grey-200 dark:bg-grey-900 flex w-full max-w-[96px] items-center justify-center ${(title && desc) || isEditing ? 'h-[96px]' : title || desc ? 'h-[64px]' : 'h-[40px]'}`}
+          className={`!mt-0 flex w-full max-w-[96px] items-center justify-center rounded-md bg-grey-200 dark:bg-grey-900 ${(title && desc) || isEditing ? 'h-[96px]' : title || desc ? 'h-[64px]' : 'h-[40px]'}`}
         >
           <FileUploadIcon
-            className={`text-green ease-in transition-all duration-75 ${title || desc || isEditing ? 'size-6' : 'size-5'}`}
+            className={`text-green transition-all duration-75 ease-in ${title || desc || isEditing ? 'size-6' : 'size-5'}`}
           />
         </div>
       </div>
-      {!isEditing && <div className="inset-0 absolute z-50"></div>}
+      {!isEditing && <div className="absolute inset-0 z-50"></div>}
     </div>
   )
 }

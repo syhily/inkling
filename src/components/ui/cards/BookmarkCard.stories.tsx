@@ -37,12 +37,12 @@ function BookmarkCardStory({ display = 'Default', caption = '', ...args }: Bookm
 
   return (
     <div className="inkling-prose">
-      <div className="not-inkling-prose my-8 p-4 mx-auto max-w-[740px] min-w-[initial]">
+      <div className="not-inkling-prose mx-auto my-8 max-w-[740px] min-w-[initial] p-4">
         <CardWrapper {...displayState} {...componentProps}>
           <BookmarkCard {...displayState} {...componentProps} captionEditor={captionEditor} />
         </CardWrapper>
       </div>
-      <div className="not-inkling-prose dark my-8 bg-black p-4 mx-auto max-w-[740px] min-w-[initial]">
+      <div className="not-inkling-prose dark mx-auto my-8 max-w-[740px] min-w-[initial] bg-black p-4">
         <CardWrapper {...displayState} {...componentProps}>
           <BookmarkCard {...displayState} {...componentProps} captionEditor={captionEditor} />
         </CardWrapper>

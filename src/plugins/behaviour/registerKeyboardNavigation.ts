@@ -2,9 +2,9 @@ import type { LexicalEditor } from 'lexical'
 
 import { $isLinkNode } from '@lexical/link'
 import { $isListItemNode, $isListNode, INSERT_ORDERED_LIST_COMMAND, INSERT_UNORDERED_LIST_COMMAND } from '@lexical/list'
-import { mergeRegister } from '@lexical/utils'
 import { $createHeadingNode, $createQuoteNode, $isQuoteNode } from '@lexical/rich-text'
 import { $setBlocksType } from '@lexical/selection'
+import { mergeRegister } from '@lexical/utils'
 import {
   $createNodeSelection,
   $createParagraphNode,
@@ -37,13 +37,14 @@ import {
   KEY_TAB_COMMAND,
 } from 'lexical'
 
-import { $isInklingCard } from '@/nodes/base'
 import { $createAsideNode, $isAsideNode } from '@/nodes/AsideNode'
+import { $isInklingCard } from '@/nodes/base'
 import { $createCodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $isAtStartOfDocument, $isAtTopOfNode, $selectDecoratorNode, getTopLevelNativeElement } from '@/utils'
 
-import { DELETE_CARD_COMMAND, SELECT_CARD_COMMAND } from './commands'
 import type { CardKeyboardEvent } from './types'
+
+import { DELETE_CARD_COMMAND, SELECT_CARD_COMMAND } from './commands'
 import { $selectCard, RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX, SPECIAL_MARKUPS } from './utils'
 
 interface KeyboardNavigationDeps {
@@ -126,11 +127,7 @@ export function registerKeyboardNavigation(editor: LexicalEditor, deps: Keyboard
 
         // let the browser handle selection when in a card inner element (e.g. nested editor)
         // NOTE: must come after ctrl/cmd+enter because that always toggles no matter the selection
-        if (
-          event &&
-          !(event as CardKeyboardEvent)._fromNested &&
-          document.activeElement !== editor.getRootElement()
-        ) {
+        if (event && !(event as CardKeyboardEvent)._fromNested && document.activeElement !== editor.getRootElement()) {
           return true
         }
 
@@ -983,10 +980,7 @@ export function registerKeyboardNavigation(editor: LexicalEditor, deps: Keyboard
           }
 
           // handle indent behavior
-          if (
-            $isListItemNode(currentNode) ||
-            ($isTextNode(currentNode) && $isListItemNode(currentNode.getParent()))
-          ) {
+          if ($isListItemNode(currentNode) || ($isTextNode(currentNode) && $isListItemNode(currentNode.getParent()))) {
             event.preventDefault()
             let node = $isTextNode(currentNode) ? currentNode.getParent() : currentNode
             if (!node) {

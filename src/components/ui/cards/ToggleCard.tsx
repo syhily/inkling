@@ -23,7 +23,7 @@ export function ToggleCard({
 }) {
   return (
     <>
-      <div className="rounded-md border-grey/40 px-6 py-4 dark:border-grey/30 border">
+      <div className="rounded-md border border-grey/40 px-6 py-4 dark:border-grey/30">
         <div className="flex cursor-text items-start justify-between">
           <div className="mr-2 w-full">
             <InklingNestedEditor
@@ -42,8 +42,8 @@ export function ToggleCard({
               }
             />
           </div>
-          <div className="size-8 z-20 !mt-[-1px] ml-auto flex shrink-0 items-center justify-center">
-            <ArrowDownIcon className={'size-4 text-grey-400 dark:text-grey/30 stroke-2'} />
+          <div className="z-20 !mt-[-1px] ml-auto flex size-8 shrink-0 items-center justify-center">
+            <ArrowDownIcon className={'size-4 stroke-2 text-grey-400 dark:text-grey/30'} />
           </div>
         </div>
         <div className={'!mt-2 w-full'}>

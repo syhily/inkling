@@ -52,14 +52,14 @@ const InitialContentToggle = ({
   return (
     <>
       <button
-        className="right-6 top-4 bg-black ease-in-out absolute z-20 block h-[22px] w-[42px] cursor-pointer rounded-full transition-all"
+        className="absolute top-4 right-6 z-20 block h-[22px] w-[42px] cursor-pointer rounded-full bg-black transition-all ease-in-out"
         type="button"
         onClick={toggle}
       >
-        <EyeOpenIcon className="size-3 text-white absolute top-[5px] left-[6px]" />
-        <EyeClosedIcon className="size-3 text-white absolute top-[5px] right-[6px]" />
+        <EyeOpenIcon className="absolute top-[5px] left-[6px] size-3 text-white" />
+        <EyeClosedIcon className="absolute top-[5px] right-[6px] size-3 text-white" />
         <div
-          className={`bg-white ease-in-out absolute top-[2px] size-[18px] rounded-full transition-all ${isOn ? 'left-[22px]' : 'left-[2px]'}`}
+          className={`absolute top-[2px] size-[18px] rounded-full bg-white transition-all ease-in-out ${isOn ? 'left-[22px]' : 'left-[2px]'}`}
         ></div>
       </button>
     </>

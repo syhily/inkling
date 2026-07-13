@@ -63,7 +63,7 @@ export const TitleTextBox = React.forwardRef<TitleTextBoxRef, TitleTextBoxProps>
     return (
       <textarea
         ref={titleEl}
-        className="mb-3 pb-1 font-sans text-5xl font-bold text-black dark:text-white w-full min-w-[auto] resize-none overflow-hidden bg-transparent focus-visible:outline-none"
+        className="mb-3 w-full min-w-[auto] resize-none overflow-hidden bg-transparent pb-1 font-sans text-5xl font-bold text-black focus-visible:outline-none dark:text-white"
         data-testid="post-title"
         placeholder="Post title"
         value={title}

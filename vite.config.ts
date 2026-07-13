@@ -96,7 +96,7 @@ export default defineConfig(({ mode }) => {
             // Provide explicit global names for optional peer dependencies
             // that are externalized from the UMD build.
             const globals: Record<string, string> = {
-              'react': 'React',
+              react: 'React',
               'react/jsx-runtime': 'React',
               'react-dom': 'ReactDOM',
               'react-dom/client': 'ReactDOM',
@@ -126,10 +126,7 @@ export default defineConfig(({ mode }) => {
             }
             // Fallback to a best-effort global name; this keeps the build
             // deterministic even if a new external is added.
-            return id
-              .replace(/^@/, '')
-              .replace(/\//g, '_')
-              .replace(/-/g, '_')
+            return id.replace(/^@/, '').replace(/\//g, '_').replace(/-/g, '_')
           },
           assetFileNames: (assetInfo: { names?: string[] }) => {
             // Vite 6 changed CSS output naming in lib mode from

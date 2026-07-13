@@ -21,7 +21,7 @@ export function HtmlCard({
       ) : (
         <div>
           <HtmlDisplay html={html} />
-          <div className="inset-0 mt-0 absolute z-50"></div>
+          <div className="absolute inset-0 z-50 mt-0"></div>
         </div>
       )}
     </>

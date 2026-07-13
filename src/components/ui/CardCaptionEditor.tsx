@@ -15,7 +15,7 @@ interface CaptionInputProps {
 
 function CaptionInput({ captionEditor, captionEditorInitialState, placeholder, dataTestId }: CaptionInputProps) {
   return (
-    <div className={`m-0 px-9 w-full text-center`} data-testid={dataTestId} data-inkling-allow-clickthrough>
+    <div className={`m-0 w-full px-9 text-center`} data-testid={dataTestId} data-inkling-allow-clickthrough>
       <InklingCaptionEditor
         captionEditor={captionEditor!}
         captionEditorInitialState={captionEditorInitialState}
@@ -42,7 +42,7 @@ function AltTextInput({ value, placeholder, onChange, readOnly, dataTestId, auto
   return (
     <TextInput
       autoFocus={autoFocus}
-      className="not-inkling-prose px-9 font-sans text-sm font-normal tracking-wide text-grey-800 placeholder:text-grey-500 dark:text-grey-500 dark:placeholder:text-grey-800 w-full bg-transparent text-center leading-[1.625]"
+      className="not-inkling-prose w-full bg-transparent px-9 text-center font-sans text-sm leading-[1.625] font-normal tracking-wide text-grey-800 placeholder:text-grey-500 dark:text-grey-500 dark:placeholder:text-grey-800"
       data-testid={dataTestId}
       placeholder={placeholder}
       readOnly={readOnly}
@@ -61,7 +61,7 @@ interface AltToggleButtonProps {
 function AltToggleButton({ isEditingAlt, onClick }: AltToggleButtonProps) {
   return (
     <button
-      className={`bottom-0 right-0 m-2 rounded-md px-1 font-sans font-normal leading-7 tracking-wide absolute cursor-pointer border text-[1.3rem] transition-all duration-100 ${isEditingAlt ? 'border-green bg-green text-white' : 'border-grey text-grey'} `}
+      className={`absolute right-0 bottom-0 m-2 cursor-pointer rounded-md border px-1 font-sans text-[1.3rem] leading-7 font-normal tracking-wide transition-all duration-100 ${isEditingAlt ? 'border-green bg-green text-white' : 'border-grey text-grey'} `}
       data-testid="alt-toggle-button"
       name="alt-toggle-button"
       type="button"
@@ -114,7 +114,7 @@ export function CardCaptionEditor({
 
   return (
     (isSelected || !isCaptionEmpty) && (
-      <figcaption className="p-2 flex min-h-[40px] w-full">
+      <figcaption className="flex min-h-[40px] w-full p-2">
         {isEditingAlt ? (
           <AltTextInput
             dataTestId={dataTestId}

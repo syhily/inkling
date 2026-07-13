@@ -1,5 +1,11 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getSelection, $isRangeSelection, $isTextNode, COMMAND_PRIORITY_LOW, CONTROLLED_TEXT_INSERTION_COMMAND } from 'lexical'
+import {
+  $getSelection,
+  $isRangeSelection,
+  $isTextNode,
+  COMMAND_PRIORITY_LOW,
+  CONTROLLED_TEXT_INSERTION_COMMAND,
+} from 'lexical'
 import { useEffect, useRef } from 'react'
 
 import { getSelectedNode } from '@/utils/getSelectedNode'

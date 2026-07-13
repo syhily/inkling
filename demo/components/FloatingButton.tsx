@@ -6,7 +6,7 @@ interface FloatingButtonProps {
 const FloatingButton = ({ isOpen, onClick }: FloatingButtonProps) => {
   return (
     <div
-      className={`bottom-4 right-6 rounded px-2 py-1 font-mono text-sm tracking-tight text-grey-600 ease-in-out fixed z-20 transition-all duration-200 ${isOpen ? 'bg-transparent' : 'bg-white'}`}
+      className={`fixed right-6 bottom-4 z-20 rounded px-2 py-1 font-mono text-sm tracking-tight text-grey-600 transition-all duration-200 ease-in-out ${isOpen ? 'bg-transparent' : 'bg-white'}`}
     >
       <button className="cursor-pointer" type="button" onClick={() => onClick('json')}>
         JSON output

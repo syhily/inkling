@@ -53,7 +53,7 @@ export function SettingsPanel({ children, darkMode, cardWidth, tabs, defaultTab,
       {tabs ? (
         <div
           ref={ref as React.RefObject<HTMLDivElement>}
-          className="not-inkling-prose left-0 top-0 m-0 rounded-lg bg-white font-sans shadow-lg dark:bg-grey-950 dark:shadow-xl fixed z-[9999999] flex w-[320px] flex-col bg-clip-padding will-change-transform"
+          className="not-inkling-prose fixed top-0 left-0 z-[9999999] m-0 flex w-[320px] flex-col rounded-lg bg-white bg-clip-padding font-sans shadow-lg will-change-transform dark:bg-grey-950 dark:shadow-xl"
           data-testid="settings-panel"
           data-inkling-settings-panel
         >
@@ -62,7 +62,7 @@ export function SettingsPanel({ children, darkMode, cardWidth, tabs, defaultTab,
       ) : (
         <div
           ref={ref as React.RefObject<HTMLDivElement>}
-          className="not-inkling-prose left-0 top-0 m-0 gap-3 rounded-lg bg-white p-6 font-sans shadow-lg dark:bg-grey-950 dark:shadow-xl fixed z-[9999999] flex w-[320px] flex-col bg-clip-padding will-change-transform"
+          className="not-inkling-prose fixed top-0 left-0 z-[9999999] m-0 flex w-[320px] flex-col gap-3 rounded-lg bg-white bg-clip-padding p-6 font-sans shadow-lg will-change-transform dark:bg-grey-950 dark:shadow-xl"
           data-testid="settings-panel"
           data-inkling-settings-panel
         >
@@ -87,12 +87,12 @@ export function ToggleSetting({ label, description, isChecked, onChange, dataTes
       <div>
         <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
         {description && (
-          <p className="mt-1 text-xs font-normal leading-snug text-grey-700 dark:text-grey-600 w-11/12">
+          <p className="mt-1 w-11/12 text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">
             {description}
           </p>
         )}
       </div>
-      <div className="pl-2 flex shrink-0">
+      <div className="flex shrink-0 pl-2">
         <Toggle dataTestId={dataTestId} isChecked={isChecked} onChange={onChange} />
       </div>
     </label>
@@ -121,8 +121,8 @@ export function SliderSetting({
   dataTestId,
 }: SliderSettingProps) {
   return (
-    <div className="my-2 gap-1 flex w-full flex-col">
-      <div className="font-sans font-normal flex items-center justify-between text-[1.3rem]">
+    <div className="my-2 flex w-full flex-col gap-1">
+      <div className="flex items-center justify-between font-sans text-[1.3rem] font-normal">
         <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
         <div className="text-grey-900 dark:text-grey-100" data-testid={`${dataTestId}-value`}>
           {value}
@@ -137,7 +137,7 @@ export function SliderSetting({
         onChange={onChange}
       />
       {description && (
-        <p className="mt-1 text-xs font-normal leading-snug text-grey-700 dark:text-grey-600">{description}</p>
+        <p className="mt-1 text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">{description}</p>
       )}
     </div>
   )
@@ -181,7 +181,7 @@ export function InputSetting({
         onChange={onChange}
       />
       {description && (
-        <p className="text-xs font-normal leading-snug text-grey-700 dark:text-grey-600">{description}</p>
+        <p className="text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">{description}</p>
       )}
     </div>
   )
@@ -275,7 +275,7 @@ export function InputListSetting({
         key={item.value}
         className={clsx(
           selected && 'bg-grey-100 dark:bg-grey-925',
-          'm-0 px-3 hover:bg-grey-100 dark:hover:bg-grey-925 cursor-pointer py-[7px] text-left',
+          'm-0 cursor-pointer px-3 py-[7px] text-left hover:bg-grey-100 dark:hover:bg-grey-925',
         )}
         dataTestId={dataTestId ?? ''}
         item={item as InputListItemData}
@@ -285,13 +285,13 @@ export function InputListSetting({
         onMouseOver={onMouseOver}
       >
         <span
-          className="text-sm font-normal leading-tight text-black dark:text-white block"
+          className="block text-sm leading-tight font-normal text-black dark:text-white"
           data-testid={`${dataTestId}-listOption-${item.label}`}
         >
           {item.label}
         </span>
         <span
-          className="text-xs leading-tight text-grey-700 dark:text-grey-600 block truncate"
+          className="block truncate text-xs leading-tight text-grey-700 dark:text-grey-600"
           data-testid={`${dataTestId}-listOption-${item.value}`}
         >
           {item.value}
@@ -312,7 +312,7 @@ export function InputListSetting({
         onChange={onChange}
       />
       {description && (
-        <p className="text-xs font-normal leading-snug text-grey-700 dark:text-grey-600">{description}</p>
+        <p className="text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">{description}</p>
       )}
     </div>
   )
@@ -329,7 +329,7 @@ interface DropdownSettingProps {
 
 export function DropdownSetting({ label, description, value, menu, onChange, dataTestId }: DropdownSettingProps) {
   return (
-    <div className="gap-1 flex w-full flex-col justify-between">
+    <div className="flex w-full flex-col justify-between gap-1">
       <div
         className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300"
         data-testid={`${dataTestId}-label`}
@@ -338,7 +338,7 @@ export function DropdownSetting({ label, description, value, menu, onChange, dat
       </div>
       <Dropdown dataTestId={dataTestId} menu={menu} value={value ?? ''} onChange={onChange} />
       {description && (
-        <p className="text-xs font-normal leading-snug text-grey-700 dark:text-grey-600">{description}</p>
+        <p className="text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">{description}</p>
       )}
     </div>
   )
@@ -374,7 +374,7 @@ export function MultiSelectDropdownSetting({
   allowAdd = true,
 }: MultiSelectDropdownSettingProps) {
   return (
-    <div className="gap-1 flex w-full flex-col justify-between">
+    <div className="flex w-full flex-col justify-between gap-1">
       <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
       <MultiSelectDropdown
         allowAdd={allowAdd}
@@ -385,7 +385,7 @@ export function MultiSelectDropdownSetting({
         onChange={onChange}
       />
       {description && (
-        <p className="text-xs font-normal leading-snug text-grey-700 dark:text-grey-600">{description}</p>
+        <p className="text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">{description}</p>
       )}
     </div>
   )
@@ -409,7 +409,7 @@ export function ButtonGroupSetting({ label, onClick, selectedName, buttons, hasT
     <div className="flex w-full items-center justify-between text-[1.3rem]">
       <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
 
-      <div className="pl-2 shrink-0">
+      <div className="shrink-0 pl-2">
         <ButtonGroup
           buttons={buttons as ButtonGroupButton[]}
           hasTooltip={hasTooltip}
@@ -490,7 +490,7 @@ export function ColorPickerSetting({
       <div className="flex w-full items-center justify-between text-[1.3rem]">
         <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
 
-        <div className="pl-2 shrink-0">
+        <div className="shrink-0 pl-2">
           <ColorIndicator
             eyedropper={eyedropper}
             hasTransparentOption={hasTransparentOption}
@@ -564,10 +564,10 @@ export function MediaUploadSetting({
   setFileInputRef,
 }: MediaUploadSettingProps) {
   return (
-    <div className={clsx(className, !stacked && 'gap-3 flex justify-between')} data-testid="media-upload-setting">
+    <div className={clsx(className, !stacked && 'flex justify-between gap-3')} data-testid="media-upload-setting">
       <div
         className={
-          hideLabel ? 'sr-only' : 'mb-2 text-sm font-medium tracking-normal text-grey-900 dark:text-grey-400 shrink-0'
+          hideLabel ? 'sr-only' : 'mb-2 shrink-0 text-sm font-medium tracking-normal text-grey-900 dark:text-grey-400'
         }
       >
         {label}

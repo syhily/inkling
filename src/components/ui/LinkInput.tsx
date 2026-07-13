@@ -63,11 +63,11 @@ export function LinkInput({ href, update, cancel }: LinkInputProps) {
   return (
     <div
       ref={containerRef}
-      className="m-0 gap-1 rounded-lg bg-white p-1 font-sans text-md font-normal text-black shadow-md dark:bg-grey-950 relative flex items-center justify-evenly"
+      className="relative m-0 flex items-center justify-evenly gap-1 rounded-lg bg-white p-1 font-sans text-md font-normal text-black shadow-md dark:bg-grey-950"
     >
       <input
         ref={inputRef}
-        className="h-8 pl-3 leading-loose text-grey-900 selection:bg-grey/40 dark:bg-grey-950 dark:text-grey-300 dark:selection:bg-grey-800/40 dark:selection:text-grey-100 mb-[1px] w-full"
+        className="mb-[1px] h-8 w-full pl-3 leading-loose text-grey-900 selection:bg-grey/40 dark:bg-grey-950 dark:text-grey-300 dark:selection:bg-grey-800/40 dark:selection:text-grey-100"
         data-testid="link-input"
         name="link-input"
         placeholder="Enter url"
@@ -89,7 +89,7 @@ export function LinkInput({ href, update, cancel }: LinkInputProps) {
       {!!_href && (
         <button
           aria-label="Close"
-          className="right-3 absolute cursor-pointer"
+          className="absolute right-3 cursor-pointer"
           type="button"
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation()
@@ -97,7 +97,7 @@ export function LinkInput({ href, update, cancel }: LinkInputProps) {
             inputRef.current?.focus()
           }}
         >
-          <CloseIcon className="size-4 text-grey stroke-2" />
+          <CloseIcon className="size-4 stroke-2 text-grey" />
         </button>
       )}
     </div>

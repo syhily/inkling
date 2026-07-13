@@ -1,5 +1,5 @@
-import { render, waitFor } from '@testing-library/react'
 import { LinkNode } from '@lexical/link'
+import { render, waitFor } from '@testing-library/react'
 import { $isParagraphNode, createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -35,7 +35,9 @@ function createCardContext(overrides: Partial<React.ContextType<typeof CardConte
   }
 }
 
-function createComposerContext(overrides: Partial<React.ContextType<typeof InklingComposerContext>['cardConfig']> = {}) {
+function createComposerContext(
+  overrides: Partial<React.ContextType<typeof InklingComposerContext>['cardConfig']> = {},
+) {
   return {
     fileUploader: {
       useFileUpload: () => ({

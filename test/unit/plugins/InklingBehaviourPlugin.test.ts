@@ -4,10 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
-import InklingBehaviourPlugin, {
-  INSERT_CARD_COMMAND,
-  SELECT_CARD_COMMAND,
-} from '@/plugins/InklingBehaviourPlugin'
+import InklingBehaviourPlugin, { INSERT_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),

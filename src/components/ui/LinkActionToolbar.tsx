@@ -11,10 +11,10 @@ export interface LinkActionToolbarProps {
 
 export function LinkActionToolbar({ href, onEdit, onRemove, dataTestId, children }: LinkActionToolbarProps) {
   return (
-    <div className="gap-2 flex items-center" data-testid={dataTestId}>
+    <div className="flex items-center gap-2" data-testid={dataTestId}>
       {href && (
         <a
-          className="text-sm text-green max-w-[200px] truncate hover:underline"
+          className="max-w-[200px] truncate text-sm text-green hover:underline"
           data-testid={`${dataTestId}-link`}
           href={href}
           rel="noopener noreferrer"

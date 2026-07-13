@@ -7,7 +7,7 @@ export default function InklingErrorBoundary({ children }: { children: React.Rea
   const { onError } = React.useContext(InklingComposerContext)
 
   return (
-    <ReactErrorBoundary fallback={<div className="border-red p-2 border">An error was thrown.</div>} onError={onError}>
+    <ReactErrorBoundary fallback={<div className="border border-red p-2">An error was thrown.</div>} onError={onError}>
       {children}
     </ReactErrorBoundary>
   )

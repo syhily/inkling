@@ -350,17 +350,17 @@ const GifSelector = ({
   return (
     <div
       ref={selectorRef}
-      className="rounded border-grey-200 bg-grey-50 dark:bg-grey-900 flex h-[540px] flex-col border dark:border-none"
+      className="flex h-[540px] flex-col rounded border border-grey-200 bg-grey-50 dark:border-none dark:bg-grey-900"
       data-testid="gif-selector"
       // prevent click handle in the editor while selector is active
       onClick={(e) => e.stopPropagation()}
     >
       <header className="p-6">
         <div className="relative w-full">
-          <SearchIcon className="left-4 size-4 -translate-y-2 text-grey-500 dark:text-grey-800 absolute top-1/2" />
+          <SearchIcon className="absolute top-1/2 left-4 size-4 -translate-y-2 text-grey-500 dark:text-grey-800" />
           <input
             ref={searchRef}
-            className="h-10 border-grey-300 pl-10 pr-8 font-sans text-md font-normal text-black focus:border-green focus:shadow-insetgreen dark:border-grey-800 dark:bg-grey-950 dark:text-white dark:placeholder:text-grey-800 dark:focus:border-green w-full rounded-full border"
+            className="h-10 w-full rounded-full border border-grey-300 pr-8 pl-10 font-sans text-md font-normal text-black focus:border-green focus:shadow-insetgreen dark:border-grey-800 dark:bg-grey-950 dark:text-white dark:placeholder:text-grey-800 dark:focus:border-green"
             placeholder={provider === 'klipy' ? 'Search KLIPY' : 'Search Tenor for GIFs'}
             autoFocus
             onChange={handleSearch}
@@ -369,12 +369,12 @@ const GifSelector = ({
       </header>
 
       <div className="relative h-full overflow-hidden">
-        <div className="px-6 h-full overflow-auto" onScroll={handleScroll}>
+        <div className="h-full overflow-auto px-6" onScroll={handleScroll}>
           {!error && !isSearchInProgress && (
-            <div className="gap-4 flex">
+            <div className="flex gap-4">
               {columns.map((column, i) => (
                 // oxlint-disable-next-line react/no-array-index-key
-                <section key={i} className="basis-0 gap-4 flex grow flex-col justify-start">
+                <section key={i} className="flex grow basis-0 flex-col justify-start gap-4">
                   {column.map((gif) => (
                     <Gif
                       key={gif.id}

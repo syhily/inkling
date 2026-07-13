@@ -3,8 +3,9 @@ import type { LexicalEditor } from 'lexical'
 import { mergeRegister } from '@lexical/utils'
 import { $getNearestNodeFromDOMNode, CLICK_COMMAND, COMMAND_PRIORITY_LOW, CUT_COMMAND } from 'lexical'
 
-import { $selectCard } from './utils'
 import { shouldIgnoreEvent } from '@/utils/shouldIgnoreEvent'
+
+import { $selectCard } from './utils'
 
 export function registerClickAndCut(editor: LexicalEditor) {
   return mergeRegister(

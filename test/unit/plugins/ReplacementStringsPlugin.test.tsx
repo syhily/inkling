@@ -1,10 +1,10 @@
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import { LexicalNestedComposer } from '@lexical/react/LexicalNestedComposer'
+import { render } from '@testing-library/react'
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor, $isTextNode } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { render } from '@testing-library/react'
 import CardContext from '@/context/CardContext'
 import { TKContext } from '@/context/TKContext'
 import { ExtendedTextNode, TKNode, extendedTextNodeReplacement } from '@/nodes/base'
@@ -34,7 +34,9 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
         theme: {},
       }}
     >
-      <TKContext><CardContext.Provider value={cardContextValue}>{children}</CardContext.Provider></TKContext>
+      <TKContext>
+        <CardContext.Provider value={cardContextValue}>{children}</CardContext.Provider>
+      </TKContext>
     </LexicalComposer>
   )
 }

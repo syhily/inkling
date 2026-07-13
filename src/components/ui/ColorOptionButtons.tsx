@@ -29,14 +29,14 @@ export function ColorOptionButtons({ buttons = [], selectedName, onClick }: Colo
   return (
     <div ref={componentRef} className="relative">
       <button
-        className={`size-6 relative cursor-pointer rounded-full ${selectedName ? 'p-[2px]' : 'border-grey-200 dark:border-grey-800 border'}`}
+        className={`relative size-6 cursor-pointer rounded-full ${selectedName ? 'p-[2px]' : 'border border-grey-200 dark:border-grey-800'}`}
         data-testid="color-options-button"
         type="button"
         onClick={() => setIsOpen(!isOpen)}
       >
         {selectedName && (
           <div
-            className="inset-0 absolute rounded-full bg-clip-content p-[3px]"
+            className="absolute inset-0 rounded-full bg-clip-content p-[3px]"
             style={{
               background:
                 'conic-gradient(hsl(360,100%,50%),hsl(315,100%,50%),hsl(270,100%,50%),hsl(225,100%,50%),hsl(180,100%,50%),hsl(135,100%,50%),hsl(90,100%,50%),hsl(45,100%,50%),hsl(0,100%,50%))',
@@ -48,18 +48,18 @@ export function ColorOptionButtons({ buttons = [], selectedName, onClick }: Colo
           />
         )}
         <span
-          className={`${selectedButton?.color || ''} border-white dark:border-grey-950 block size-full rounded-full border-2`}
+          className={`${selectedButton?.color || ''} block size-full rounded-full border-2 border-white dark:border-grey-950`}
         ></span>
       </button>
 
       {/* Color options popover */}
       {isOpen && (
         <div
-          className="-right-3 mb-2 rounded-lg bg-white px-3 py-2 shadow dark:bg-grey-900 absolute bottom-full z-10"
+          className="absolute -right-3 bottom-full z-10 mb-2 rounded-lg bg-white px-3 py-2 shadow dark:bg-grey-900"
           data-testid="color-options-popover"
         >
           <div className="flex">
-            <ul className="rounded-md font-sans text-md font-normal text-white flex w-full items-center justify-between">
+            <ul className="flex w-full items-center justify-between rounded-md font-sans text-md font-normal text-white">
               {buttons.map((button: ColorOptionButton) => {
                 const { label, name, color } = button
                 return name !== 'image' ? (
@@ -82,8 +82,8 @@ export function ColorOptionButtons({ buttons = [], selectedName, onClick }: Colo
                     data-testid="background-image-color-button"
                     onClick={() => onClick(name)}
                   >
-                    <span className="size-6 border-black/5 flex items-center justify-center rounded-full border border-1">
-                      <PlusIcon className="size-3 stroke-grey-700 dark:stroke-grey-500 dark:group-hover:stroke-grey-100 stroke-2" />
+                    <span className="flex size-6 items-center justify-center rounded-full border border-1 border-black/5">
+                      <PlusIcon className="size-3 stroke-grey-700 stroke-2 dark:stroke-grey-500 dark:group-hover:stroke-grey-100" />
                     </span>
                   </li>
                 )
@@ -112,7 +112,7 @@ export function ColorButton({ onClick, label, name, color, selectedName }: Color
     <li className="mb-0">
       <button
         aria-label={label}
-        className={`group size-6 relative flex cursor-pointer items-center justify-center rounded-full border-2 ${isActive ? 'border-green' : 'border-transparent'}`}
+        className={`group relative flex size-6 cursor-pointer items-center justify-center rounded-full border-2 ${isActive ? 'border-green' : 'border-transparent'}`}
         data-testid={`color-picker-${name}`}
         type="button"
         onClick={handleClick}

@@ -22,9 +22,9 @@ export function SnippetActionToolbar({
   }
 
   return (
-    <div className="gap-2 flex items-center" data-testid={dataTestId} onKeyDown={handleKeyDown}>
+    <div className="flex items-center gap-2" data-testid={dataTestId} onKeyDown={handleKeyDown}>
       <input
-        className="rounded-md border-grey-300 bg-white px-3 py-2 text-sm font-sans text-grey-900 placeholder:text-grey-500 focus:border-green dark:border-grey-800 dark:bg-grey-900 dark:text-white flex-1 border focus:outline-none"
+        className="flex-1 rounded-md border border-grey-300 bg-white px-3 py-2 font-sans text-sm text-grey-900 placeholder:text-grey-500 focus:border-green focus:outline-none dark:border-grey-800 dark:bg-grey-900 dark:text-white"
         data-testid={`${dataTestId}-input`}
         placeholder="Search snippets..."
         type="text"

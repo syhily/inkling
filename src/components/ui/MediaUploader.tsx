@@ -137,7 +137,7 @@ export function MediaUploader({
           />
           <div
             className={clsx(
-              'inset-0 from-black/0 via-black/5 to-black/30 absolute bg-gradient-to-t opacity-0 transition-all group-hover/image:opacity-100',
+              'absolute inset-0 bg-gradient-to-t from-black/0 via-black/5 to-black/30 opacity-0 transition-all group-hover/image:opacity-100',
               borderStyle === 'rounded' && 'rounded-lg',
             )}
           ></div>
@@ -145,7 +145,7 @@ export function MediaUploader({
       )}
 
       {!isLoading && (
-        <div className="right-1 top-1 space-x-1 absolute flex opacity-0 transition-all group-hover/image:opacity-100">
+        <div className="absolute top-1 right-1 flex space-x-1 opacity-0 transition-all group-hover/image:opacity-100">
           {additionalActions}
           {isPinturaEnabled && openImageEditor && (
             <IconButton Icon={WandIcon} label="Edit" onClick={() => openImageEditor(handleImageEditorSave)} />
@@ -157,7 +157,7 @@ export function MediaUploader({
       {isLoading && (
         <div
           className={clsx(
-            'inset-0 bg-grey-100 absolute flex min-w-full items-center justify-center overflow-hidden',
+            'absolute inset-0 flex min-w-full items-center justify-center overflow-hidden bg-grey-100',
             borderStyle === 'rounded' && 'rounded-lg',
           )}
           data-testid="custom-thumbnail-progress"

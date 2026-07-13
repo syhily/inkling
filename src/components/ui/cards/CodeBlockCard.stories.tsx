@@ -30,7 +30,7 @@ function CodeBlockCardStory({ display = 'Default', caption = '', ...args }: Code
 
   return (
     <div className="inkling-prose">
-      <div className="my-8 mx-auto max-w-[740px] min-w-[initial]">
+      <div className="mx-auto my-8 max-w-[740px] min-w-[initial]">
         <CardWrapper wrapperStyle="code-card" {...displayState} {...args}>
           <CodeBlockCard captionEditor={captionEditor} updateCode={() => {}} {...displayState} {...args} />
         </CardWrapper>

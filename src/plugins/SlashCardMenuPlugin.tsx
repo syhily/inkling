@@ -1,7 +1,19 @@
 import type { LexicalCommand, LexicalEditor, RangeSelection } from 'lexical'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister, $createParagraphNode, $getSelection, $isParagraphNode, $isRangeSelection, COMMAND_PRIORITY_HIGH, KEY_ARROW_DOWN_COMMAND, KEY_ARROW_LEFT_COMMAND, KEY_ARROW_RIGHT_COMMAND, KEY_ARROW_UP_COMMAND, KEY_ENTER_COMMAND } from 'lexical'
+import {
+  mergeRegister,
+  $createParagraphNode,
+  $getSelection,
+  $isParagraphNode,
+  $isRangeSelection,
+  COMMAND_PRIORITY_HIGH,
+  KEY_ARROW_DOWN_COMMAND,
+  KEY_ARROW_LEFT_COMMAND,
+  KEY_ARROW_RIGHT_COMMAND,
+  KEY_ARROW_UP_COMMAND,
+  KEY_ENTER_COMMAND,
+} from 'lexical'
 import React from 'react'
 
 import type { BuildCardMenuResult } from '@/utils/buildCardMenu'
@@ -387,7 +399,7 @@ function useSlashCardMenu(editor: LexicalEditor) {
     return (
       <div
         ref={containerRef}
-        className="-left-2 mt-2 absolute z-50"
+        className="absolute -left-2 z-50 mt-2"
         style={position as React.CSSProperties}
         data-inkling-slash-container
       >

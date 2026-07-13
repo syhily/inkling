@@ -1,5 +1,6 @@
-import Color from 'color'
 import type { ColorInstance } from 'color'
+
+import Color from 'color'
 
 export { Color }
 export type { ColorInstance }
