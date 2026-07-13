@@ -106,6 +106,19 @@ describe('FileNode', function () {
       }),
     )
 
+    it(
+      'does not create an anchor for unsafe src URLs',
+      editorTest(function () {
+        const fileNode = $createFileNode({ ...dataset, src: 'javascript:alert(1)' })
+        const { element } = fileNode.exportDOM(editor, exportOptions)
+        const html = (element as HTMLElement).outerHTML
+
+        html.should.not.containEql('href="javascript:')
+        html.should.containEql('inkling-file-card-container')
+        html.should.containEql('Cool image to download')
+      }),
+    )
+
     describe('email template', function () {
       beforeEach(function () {
         exportOptions.target = 'email'
@@ -188,6 +201,24 @@ describe('FileNode', function () {
           elHtml.should.containEql('file&lt;.html')
           elHtml.should.containEql('Title with ')
           elHtml.should.containEql('Caption with ')
+        }),
+      )
+      it(
+        'does not link fields when the href is unsafe',
+        editorTest(function () {
+          exportOptions.postUrl = 'javascript:alert(1)'
+          const fileNode = $createFileNode(dataset)
+          const { element } = fileNode.exportDOM(editor, exportOptions)
+          const el = element as HTMLElement
+
+          const titleLink = el.querySelector('.inkling-file-title')
+          should.not.exist(titleLink!.closest('a'))
+
+          const descriptionLink = el.querySelector('.inkling-file-description')
+          should.not.exist(descriptionLink!.closest('a'))
+
+          const metaLink = el.querySelector('.inkling-file-meta')
+          should.not.exist(metaLink!.closest('a'))
         }),
       )
     })

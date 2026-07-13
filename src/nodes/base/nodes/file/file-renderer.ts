@@ -3,6 +3,7 @@ import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
+import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { bytesToSize } from '@/nodes/base/utils/size-byte-converter'
 
@@ -47,6 +48,7 @@ function emailTemplate(node: FileNodeData, document: Document, options: ExportDO
   }
 
   const href = options.postUrl || node.src || undefined
+  const safeHref = href && isSafeUrl(href) ? href : undefined
 
   const html = `
         <table cellspacing="0" cellpadding="4" border="0" class="inkling-file-card" width="100%">
@@ -59,7 +61,7 @@ function emailTemplate(node: FileNodeData, document: Document, options: ExportDO
                                   node.fileTitle
                                     ? `
                                 <table cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td>
-                                    ${wrapWithAnchor(escapeHtml(node.fileTitle), href, 'inkling-file-title')}
+                                    ${wrapWithAnchor(escapeHtml(node.fileTitle), safeHref, 'inkling-file-title')}
                                 </td></tr></table>
                                 `
                                     : ``
@@ -68,19 +70,19 @@ function emailTemplate(node: FileNodeData, document: Document, options: ExportDO
                                   node.fileCaption
                                     ? `
                                 <table cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td>
-                                    ${wrapWithAnchor(escapeHtml(node.fileCaption), href, 'inkling-file-description')}
+                                    ${wrapWithAnchor(escapeHtml(node.fileCaption), safeHref, 'inkling-file-description')}
                                 </td></tr></table>
                                 `
                                     : ``
                                 }
                                 <table cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td>
-                                    ${wrapWithAnchor(`<span class="inkling-file-name">${escapeHtml(node.fileName)}</span> &bull; ${bytesToSize(node.fileSize)}`, href, 'inkling-file-meta')}
+                                    ${wrapWithAnchor(`<span class="inkling-file-name">${escapeHtml(node.fileName)}</span> &bull; ${bytesToSize(node.fileSize)}`, safeHref, 'inkling-file-meta')}
                                 </td></tr></table>
                             </td>
                             <td width="80" valign="middle" class="inkling-file-thumbnail">
                                 ${
-                                  href
-                                    ? `<a href="${escapeHtml(href)}" style="display: block; top: 0; right: 0; bottom: 0; left: 0;">
+                                  href && safeHref
+                                    ? `<a href="${escapeHtml(safeHref)}" style="display: block; top: 0; right: 0; bottom: 0; left: 0;">
                                     <img src="https://static.inkling.local/v4.0.0/images/download-icon-darkmode.png" style="${escapeHtml(iconCls)}">
                                 </a>`
                                     : `<img src="https://static.inkling.local/v4.0.0/images/download-icon-darkmode.png" style="${escapeHtml(iconCls)}">`
@@ -102,12 +104,6 @@ function emailTemplate(node: FileNodeData, document: Document, options: ExportDO
 function cardTemplate(node: FileNodeData, document: Document) {
   const card = document.createElement('div')
   card.setAttribute('class', 'inkling-card inkling-file-card')
-
-  const container = document.createElement('a')
-  container.setAttribute('class', 'inkling-file-card-container')
-  container.setAttribute('href', node.src)
-  container.setAttribute('title', 'Download')
-  container.setAttribute('download', '')
 
   const contents = document.createElement('div')
   contents.setAttribute('class', 'inkling-file-card-contents')
@@ -137,6 +133,19 @@ function cardTemplate(node: FileNodeData, document: Document) {
   contents.appendChild(title)
   contents.appendChild(caption)
   contents.appendChild(metadata)
+
+  let container: HTMLElement
+  if (node.src && isSafeUrl(node.src)) {
+    const anchor = document.createElement('a')
+    anchor.setAttribute('class', 'inkling-file-card-container')
+    anchor.setAttribute('href', node.src)
+    anchor.setAttribute('title', 'Download')
+    anchor.setAttribute('download', '')
+    container = anchor
+  } else {
+    container = document.createElement('div')
+    container.setAttribute('class', 'inkling-file-card-container')
+  }
 
   container.appendChild(contents)
 
