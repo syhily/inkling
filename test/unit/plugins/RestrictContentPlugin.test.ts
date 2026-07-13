@@ -1,7 +1,15 @@
 import { renderHook } from '@testing-library/react'
-import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
+import {
+  $createParagraphNode,
+  $createTextNode,
+  $getRoot,
+  createEditor,
+  PASTE_COMMAND,
+  type LexicalEditor,
+} from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { MIME_TEXT_HTML, MIME_TEXT_PLAIN } from '@/plugins/MarkdownPastePlugin'
 import { RestrictContentPlugin } from '@/plugins/RestrictContentPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -47,5 +55,25 @@ describe('RestrictContentPlugin', () => {
     editor.getEditorState().read(() => {
       expect($getRoot().getChildrenSize()).toBe(2)
     })
+  })
+
+  it('calls preventDefault on the plain-text markdown paste path', async () => {
+    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
+    useLexicalComposerContext.mockReturnValue([editor])
+
+    renderHook(() => RestrictContentPlugin({ paragraphs: 2 }))
+
+    const preventDefault = vi.fn()
+    const clipboardData = {
+      getData: (mime: string) => (mime === MIME_TEXT_PLAIN ? 'hello world' : mime === MIME_TEXT_HTML ? '' : ''),
+    } as DataTransfer
+
+    const handled = editor.dispatchCommand(PASTE_COMMAND, {
+      clipboardData,
+      preventDefault,
+    } as unknown as ClipboardEvent)
+
+    expect(handled).toBe(true)
+    expect(preventDefault).toHaveBeenCalled()
   })
 })

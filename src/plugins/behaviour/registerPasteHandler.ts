@@ -4,11 +4,10 @@ import { $generateNodesFromDOM } from '@lexical/html'
 import { DRAG_DROP_PASTE } from '@lexical/rich-text'
 import { $isRangeSelection, $getSelection, $insertNodes, COMMAND_PRIORITY_LOW, PASTE_COMMAND } from 'lexical'
 
-import { MIME_TEXT_HTML, MIME_TEXT_PLAIN, PASTE_MARKDOWN_COMMAND } from '@/plugins/MarkdownPastePlugin'
-import { isValidUrl } from '@/utils/isInternalUrl'
+import { MIME_TEXT_HTML } from '@/plugins/MarkdownPastePlugin'
 import { shouldIgnoreEvent } from '@/utils/shouldIgnoreEvent'
 
-import { PASTE_LINK_COMMAND } from './commands'
+import { handlePlainTextPaste } from './plainTextPaste'
 import { normalizePastedHtml } from './utils'
 
 interface PasteHandlerDeps {
@@ -42,32 +41,11 @@ export function registerPasteHandler(editor: LexicalEditor, deps: PasteHandlerDe
         return false
       }
 
-      const text = clipboardData.getData(MIME_TEXT_PLAIN)
-
-      // Use shared URL validator so mailto:, ftp:, tel: etc. are handled consistently.
-      const linkMatch = text && isValidUrl(text) ? ([text, text] as RegExpMatchArray) : null
-      if (linkMatch) {
-        // avoid any conversion if we're pasting onto a card shortcut
-        const selection = $getSelection()
-        const node = $isRangeSelection(selection) ? selection.anchor.getNode() : null
-        if (node && node.getTextContent().startsWith('/')) {
-          return false
-        }
-
-        // we're pasting a URL, convert it to an embed/bookmark/link
-        clipboardEvent.preventDefault()
-        editor.dispatchCommand(PASTE_LINK_COMMAND, { linkMatch })
-
+      if (handlePlainTextPaste(editor, clipboardData, clipboardEvent, { allowBr: true })) {
         return true
       }
 
       const html = clipboardData.getData(MIME_TEXT_HTML)
-      if (text && !html) {
-        clipboardEvent?.preventDefault()
-        editor.dispatchCommand(PASTE_MARKDOWN_COMMAND, { text, allowBr: true })
-
-        return true
-      }
 
       // Override Lexical's default paste behaviour when copy/pasting images:
       //   - By default, Lexical ignores files if there is text/html or text/plain content in the clipboard

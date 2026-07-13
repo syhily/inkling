@@ -13,9 +13,7 @@ import {
 } from 'lexical'
 import React from 'react'
 
-import { PASTE_LINK_COMMAND } from '@/plugins/InklingBehaviourPlugin'
-import { MIME_TEXT_HTML, MIME_TEXT_PLAIN, PASTE_MARKDOWN_COMMAND } from '@/plugins/MarkdownPastePlugin'
-import { isValidUrl } from '@/utils/isInternalUrl'
+import { handlePlainTextPaste } from '@/plugins/behaviour/plainTextPaste'
 
 export const RestrictContentPlugin = ({ paragraphs, allowBr }: { paragraphs: number; allowBr?: boolean }) => {
   const [editor] = useLexicalComposerContext()
@@ -72,26 +70,15 @@ export const RestrictContentPlugin = ({ paragraphs, allowBr }: { paragraphs: num
       editor.registerCommand(
         PASTE_COMMAND,
         (clipboard: ClipboardEvent) => {
-          const text = clipboard?.clipboardData?.getData(MIME_TEXT_PLAIN)
-          const html = clipboard?.clipboardData?.getData(MIME_TEXT_HTML)
-
-          const linkMatch = text && isValidUrl(text) ? ([text, text] as RegExpMatchArray) : null
-
-          if (linkMatch) {
-            // we're pasting a URL, convert it to an embed/bookmark/link
-            clipboard.preventDefault()
-            editor.dispatchCommand(PASTE_LINK_COMMAND, { linkMatch })
-
-            return true
+          const clipboardData = clipboard?.clipboardData
+          if (!clipboardData) {
+            return false
           }
 
-          if (text && !html) {
-            editor.dispatchCommand(PASTE_MARKDOWN_COMMAND, { text, allowBr: allowBr ?? false })
-
-            return true
-          }
-
-          return false
+          return handlePlainTextPaste(editor, clipboardData, clipboard, {
+            allowBr: allowBr ?? false,
+            skipCardShortcutGuard: true,
+          })
         },
         COMMAND_PRIORITY_LOW,
       ),
