@@ -27,7 +27,7 @@ The editor runs in standalone mode via the demo app.
 
 ### Standalone mode
 
-Run `pnpm dev` to start the editor in standalone mode for development on http://localhost:5173. This command generates a demo site from the `index.html` file, which renders the demo app in `demo/demo.jsx`.
+Run `pnpm dev` to start the editor in standalone mode for development on http://localhost:5173. This command generates a demo site from the `index.html` file, which renders the demo app in `demo/demo.tsx`.
 
 ### Specific card setup
 
@@ -84,7 +84,8 @@ All imported files are processed/optimised via SVGO (see `svgo.config.js` for op
 
 We use [Vitest](https://vitest.dev) for unit tests and [Playwright](https://playwright.dev) for e2e testing.
 
-- `pnpm test` runs all tests and exits
+- `pnpm test` runs unit tests and exits
+- `pnpm test:e2e` runs end-to-end tests and exits
 - `pnpm test:unit` runs unit tests
 - `pnpm typecheck` runs TypeScript type checking
 - `pnpm test:unit:watch` runs unit tests and starts a test watcher that re-runs tests on file changes
