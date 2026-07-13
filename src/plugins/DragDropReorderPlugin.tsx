@@ -3,6 +3,7 @@ import {
   $createNodeSelection,
   $getNearestNodeFromDOMNode,
   $getNodeByKey,
+  $getRoot,
   $setSelection,
   type LexicalEditor,
   type NodeKey,
@@ -284,11 +285,40 @@ function useDragDropReorder(editor: LexicalEditor, isEditable: boolean): void {
   }, [editor, inkling])
 
   React.useEffect(() => {
-    return editor.registerUpdateListener(() => {
-      // refresh drag/drop
-      // TODO: can be made more performant by only refreshing when droppable
-      // order changes or when sections are added/removed
-      cardContainer.current?.refresh()
+    return editor.registerUpdateListener(({ dirtyElements, editorState }) => {
+      // Refresh drag/drop markers only when the set, order, or DOM identity of
+      // top-level blocks may have changed. Text edits only mark the edited
+      // node's ancestors as dirty *parents* (flag false), so per-keystroke
+      // updates skip the refresh; a direct root child being intentionally
+      // dirty (cloned) means a block was added, removed, reordered, or
+      // re-rendered — and the reconciler recreates its DOM. Lexical 0.46
+      // marks the root itself intentionally dirty on every update
+      // ($applyAllTransforms), so the root's own flag is ignored.
+      // onDragStart additionally forces a refresh as a final safety net.
+      let hasDirtyRootChildCandidate = false
+      for (const [key, intentionallyDirty] of dirtyElements) {
+        if (key !== 'root' && intentionallyDirty) {
+          hasDirtyRootChildCandidate = true
+          break
+        }
+      }
+      if (!hasDirtyRootChildCandidate) {
+        return
+      }
+
+      editorState.read(() => {
+        const root = $getRoot()
+        for (const [key, intentionallyDirty] of dirtyElements) {
+          if (key === 'root' || !intentionallyDirty) {
+            continue
+          }
+          const node = $getNodeByKey(key)
+          if (node && node.getParent() === root) {
+            cardContainer.current?.refresh()
+            return
+          }
+        }
+      })
     })
   }, [editor])
 

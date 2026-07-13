@@ -177,6 +177,13 @@ interface AtLinkPluginProps {
 export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps) => {
   const [editor] = useLexicalComposerContext()
   const [focusedAtLinkNode, setFocusedAtLinkNode] = React.useState<AtLinkNode | null>(null)
+  // ref mirror so the update-listener closure can read the current value
+  // (state updates are async and the listener is registered only once)
+  const focusedAtLinkNodeRef = React.useRef<AtLinkNode | null>(null)
+  const updateFocusedAtLinkNode = (node: AtLinkNode | null) => {
+    focusedAtLinkNodeRef.current = node
+    setFocusedAtLinkNode(node)
+  }
   const [query, setQuery] = React.useState('')
   const searchOptions = React.useMemo(() => ({ noResultOptions }), [])
   const { isSearching, listOptions } = useSearchLinks(query, searchLinks, searchOptions)
@@ -318,9 +325,18 @@ export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps)
   // - update plugin state with search query based on at-link-search node text content
   // - remove at-link nodes when they don't have focus (i.e. using arrow keys to move out of them)
   React.useEffect(() => {
-    return editor.registerUpdateListener(() => {
+    return editor.registerUpdateListener(({ dirtyLeaves, dirtyElements }) => {
       // do nothing if we're in the middle of composing text
       if (editor.isComposing()) {
+        return
+      }
+
+      // Skip the full-tree at-link scan unless an at-link is active or the
+      // update touched nodes that could contain one — at-link nodes only
+      // exist transiently while the search popup is open, tracked via the ref
+      // (selection changes away from an at-link have empty dirty sets but a
+      // focused at-link, so the ref check keeps the removal path working).
+      if (!focusedAtLinkNodeRef.current && dirtyLeaves.size === 0 && dirtyElements.size === 0) {
         return
       }
 
@@ -332,7 +348,7 @@ export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps)
         // an at-link node, remove all of them
         if (!$isRangeSelection(selection)) {
           atLinkNodes.forEach((atLinkNode) => $removeAtLink(atLinkNode))
-          setFocusedAtLinkNode(null)
+          updateFocusedAtLinkNode(null)
           setQuery('')
           return
         }
@@ -358,7 +374,7 @@ export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps)
 
           if (selectedAtLinkNode) {
             // search node is focused, update our search query
-            setFocusedAtLinkNode(selectedAtLinkNode)
+            updateFocusedAtLinkNode(selectedAtLinkNode)
 
             // at-link nodes always have a ZWNJ node followed by an at-link-search node
             const searchNode = selectedAtLinkNode.getChildAtIndex(1)
@@ -383,7 +399,7 @@ export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps)
             }
           } else {
             // search node isn't focused, reset plugin state
-            setFocusedAtLinkNode(null)
+            updateFocusedAtLinkNode(null)
             setQuery('')
           }
 
@@ -566,7 +582,7 @@ export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps)
           linkNode.selectEnd()
 
           setQuery('')
-          setFocusedAtLinkNode(null)
+          updateFocusedAtLinkNode(null)
         } else {
           const bookmarkNode = $createBookmarkNode({
             url: item.value,
