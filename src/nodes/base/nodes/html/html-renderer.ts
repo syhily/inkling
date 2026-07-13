@@ -2,6 +2,7 @@ import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { wrapReplacementStrings } from '@/nodes/base/utils/replacement-strings'
 import { renderWithVisibility } from '@/nodes/base/utils/visibility'
 
 interface HtmlNodeData {
@@ -21,7 +22,14 @@ export function renderHtmlNode(node: HtmlNodeData, options: ExportDOMOptions = {
     return renderEmptyContainer(document)
   }
 
-  const wrappedHtml = `\n<!--inkling-card-begin: html-->\n${html}\n<!--inkling-card-end: html-->\n`
+  // Wrap replacement strings like {uniqueid} with %% for email processing
+  // Only wrap if emailUniqueid feature flag is enabled
+  let processedHtml = html
+  if (options.feature?.emailUniqueid) {
+    processedHtml = wrapReplacementStrings(html)
+  }
+
+  const wrappedHtml = `\n<!--inkling-card-begin: html-->\n${processedHtml}\n<!--inkling-card-end: html-->\n`
 
   const textarea = document.createElement('textarea')
   textarea.value = wrappedHtml

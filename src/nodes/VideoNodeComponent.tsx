@@ -10,6 +10,7 @@ import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { GeneratedDecoratorNodeBase } from '@/nodes/base'
+import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
 import extractVideoMetadata from '@/utils/extractVideoMetadata'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import { openFileSelection } from '@/utils/openFileSelection'
@@ -222,12 +223,17 @@ export function VideoNodeComponent({
   }
 
   const onCardWidthChange = (width: string) => {
+    const cardWidth = normalizeCardWidth(width)
+    if (!cardWidth) {
+      return
+    }
+
     editor.update(() => {
       const node = $getNodeByKey(nodeKey)
       if (node) {
-        ;(node as GeneratedDecoratorNodeBase).cardWidth = width
+        ;(node as GeneratedDecoratorNodeBase).cardWidth = cardWidth
       }
-      cardContext.setCardWidth(width)
+      cardContext.setCardWidth(cardWidth)
     })
   }
 

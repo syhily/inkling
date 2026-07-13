@@ -267,6 +267,38 @@ describe('HtmlNode', function () {
       }),
     )
 
+    it(
+      'wraps uniqueid replacement strings when emailUniqueid feature is enabled',
+      editorTest(async function () {
+        const htmlNode = $createHtmlNode({
+          html: '<img src="https://ads.example.com/banner.jpg?id={uniqueid}" alt="Ad">',
+        })
+        const result = htmlNode.exportDOM(editor, { ...exportOptions, feature: { emailUniqueid: true } })
+        expect(result.type).toBe('value')
+        const element = result.element as HTMLTextAreaElement
+
+        expect(element.value).toBe(
+          '\n<!--inkling-card-begin: html-->\n<img src="https://ads.example.com/banner.jpg?id=%%{uniqueid}%%" alt="Ad">\n<!--inkling-card-end: html-->\n',
+        )
+      }),
+    )
+
+    it(
+      'does not wrap uniqueid replacement strings when emailUniqueid feature is disabled',
+      editorTest(async function () {
+        const htmlNode = $createHtmlNode({
+          html: '<img src="https://ads.example.com/banner.jpg?id={uniqueid}" alt="Ad">',
+        })
+        const result = htmlNode.exportDOM(editor, { ...exportOptions, feature: { emailUniqueid: false } })
+        expect(result.type).toBe('value')
+        const element = result.element as HTMLTextAreaElement
+
+        expect(element.value).toBe(
+          '\n<!--inkling-card-begin: html-->\n<img src="https://ads.example.com/banner.jpg?id={uniqueid}" alt="Ad">\n<!--inkling-card-end: html-->\n',
+        )
+      }),
+    )
+
     describe('visibility rendering', function () {
       describe('with old visibility settings', function () {
         function testWebRender(visibility: Record<string, unknown>) {

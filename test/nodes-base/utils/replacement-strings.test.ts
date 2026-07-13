@@ -29,6 +29,14 @@ describe('Utils: replacement-strings', function () {
     it('does not wrap non-replacement text', function () {
       expect(wrapReplacementStrings('Hello world')).toBe('Hello world')
     })
+
+    it('does not wrap replacement strings that are already wrapped', function () {
+      expect(wrapReplacementStrings('Hello %%{name}%%')).toBe('Hello %%{name}%%')
+    })
+
+    it('wraps unwrapped tokens alongside already wrapped ones', function () {
+      expect(wrapReplacementStrings('%%{first_name}%% and {last_name}')).toBe('%%{first_name}%% and %%{last_name}%%')
+    })
   })
 
   describe('removeCodeWrappersFromHelpers', function () {

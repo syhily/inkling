@@ -8,6 +8,7 @@ import { CardWrapper } from '@/components/ui/CardWrapper'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
+import { normalizeCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 import {
   EDIT_CARD_COMMAND,
   SELECT_CARD_COMMAND,
@@ -31,7 +32,8 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
   const [editor] = useLexicalComposerContext()
   const [cardType, setCardType] = React.useState<string | null>(null)
   const [captionHasFocus, setCaptionHasFocus] = React.useState<boolean | null>(null)
-  const [cardWidth, setCardWidth] = React.useState<string>(width || 'regular')
+  const normalizedWidth = normalizeCardWidth(width) ?? 'regular'
+  const [cardWidth, setCardWidth] = React.useState<CardWidth>(normalizedWidth)
   const containerRef = React.useRef<HTMLDivElement | null>(null)
   const skipClick = React.useRef(false)
 
@@ -203,7 +205,7 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
       <CardWrapper
         ref={containerRef}
         cardType={cardType}
-        cardWidth={width}
+        cardWidth={normalizedWidth}
         feature={cardConfig?.feature}
         IndicatorIcon={IndicatorIcon}
         isDragging={isDragging}

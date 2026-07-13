@@ -1,6 +1,7 @@
 export { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
 export * from '@/nodes/base/export-dom'
 export { ensureLexicalNodeOwnMethods } from '@/nodes/base/ensure-node-own-methods'
+export { CARD_WIDTHS, isCardWidth, normalizeCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 
 import { AsideNode } from '@/nodes/base/nodes/aside/AsideNode'
 import { AtLinkNode, AtLinkSearchNode } from '@/nodes/base/nodes/at-link/index'

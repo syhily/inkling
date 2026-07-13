@@ -1,8 +1,10 @@
 import React from 'react'
 
+import type { CardWidth } from '@/nodes/base/utils/card-widths'
+
 import VisibilityIndicator from '@/assets/icons/inkling-indicator-visibility.svg?react'
 
-const CARD_WIDTH_CLASSES: Record<string, string> = {
+const CARD_WIDTH_CLASSES: Partial<Record<CardWidth, string>> = {
   wide: [
     'w-[calc(75vw-var(--inkling-breakout-adjustment-with-fallback)+2px)] mx-[calc(50%-(50vw-var(--inkling-breakout-adjustment-with-fallback))-.8rem)] min-w-[calc(100%+3.6rem)] translate-x-[calc(50vw-50%+.8rem-var(--inkling-breakout-adjustment-with-fallback))]',
     'md:min-w-[calc(100%+10rem)]',
@@ -17,7 +19,7 @@ const DEFAULT_INDICATOR_POSITION = {
 
 interface CardWrapperProps {
   cardType?: string
-  cardWidth?: 'wide' | 'full' | 'regular'
+  cardWidth?: CardWidth
   feature?: boolean | object
   // oxlint-disable-next-line typescript/no-explicit-any
   IndicatorIcon?: React.ComponentType<any>

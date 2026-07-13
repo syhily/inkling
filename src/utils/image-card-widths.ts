@@ -1,20 +1,20 @@
-const VALID_IMAGE_CARD_WIDTHS: string[] = ['regular', 'wide', 'full']
+import { CARD_WIDTHS, isCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 
-export function getAllowedImageCardWidths(configuredWidths: string[] | undefined | null): string[] {
+export function getAllowedImageCardWidths(configuredWidths: string[] | undefined | null): CardWidth[] {
   if (!Array.isArray(configuredWidths)) {
-    return VALID_IMAGE_CARD_WIDTHS
+    return [...CARD_WIDTHS]
   }
 
-  const filteredWidths = [...new Set(configuredWidths.filter((width) => VALID_IMAGE_CARD_WIDTHS.includes(width)))]
+  const filteredWidths = [...new Set(configuredWidths.filter(isCardWidth))]
 
   if (filteredWidths.length === 0) {
-    return VALID_IMAGE_CARD_WIDTHS
+    return [...CARD_WIDTHS]
   }
 
   return filteredWidths
 }
 
-export function getDefaultImageCardWidth(allowedWidths: string[]): string {
+export function getDefaultImageCardWidth(allowedWidths: CardWidth[]): CardWidth {
   if (allowedWidths.includes('regular')) {
     return 'regular'
   }

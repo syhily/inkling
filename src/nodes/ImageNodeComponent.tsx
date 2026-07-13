@@ -2,6 +2,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $createNodeSelection, $getNodeByKey, $setSelection, type NodeKey } from 'lexical'
 import React from 'react'
 
+import type { CardWidth } from '@/nodes/base/utils/card-widths'
 import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
@@ -252,7 +253,7 @@ export function ImageNodeComponent({
   }, [triggerFileDialog, nodeKey, editor, fileInputRef])
 
   const handleImageCardResize = React.useCallback(
-    (newWidth: string) => {
+    (newWidth: CardWidth) => {
       if (!allowedImageCardWidths.includes(newWidth)) {
         return
       }
