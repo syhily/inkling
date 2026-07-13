@@ -60,6 +60,6 @@ export default defineConfig({
     command: `pnpm dev:test`,
     url: `http://localhost:${E2E_PORT}`,
     reuseExistingServer: !process.env.CI,
-    timeout: 10000,
+    timeout: 120000,
   },
 })

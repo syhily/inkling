@@ -172,6 +172,8 @@
     "markdown-it-mark": "^4.0.0",
     "markdown-it-sub": "^2.0.0",
     "markdown-it-sup": "^2.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "y-websocket": "^3.0.0",
     "yjs": "^13.6.0"
   },
