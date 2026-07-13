@@ -99,4 +99,35 @@ describe('HtmlOutputPlugin', () => {
 
     expect(setHtml).toHaveBeenLastCalledWith('')
   })
+
+  it('debounces rapid changes into a single setHtml call when debounceMs is set', async () => {
+    await updateEditor(editor, () => {
+      const root = $getRoot()
+      root.clear()
+      root.append($createParagraphNode().append($createTextNode('hello')))
+    })
+
+    vi.useFakeTimers()
+    try {
+      const { result } = renderHook(() => HtmlOutputPlugin({ setHtml, debounceMs: 100 }))
+      const onChange = () => (result.current as { props: { onChange: () => void } }).props.onChange()
+
+      act(() => {
+        onChange()
+        onChange()
+        onChange()
+      })
+
+      expect(setHtml).not.toHaveBeenCalled()
+
+      await act(async () => {
+        vi.advanceTimersByTime(100)
+      })
+
+      expect(setHtml).toHaveBeenCalledTimes(1)
+      expect(setHtml).toHaveBeenCalledWith(expect.stringContaining('hello'))
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })

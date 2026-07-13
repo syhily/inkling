@@ -4,9 +4,18 @@ import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
 import { $getRoot, $insertNodes } from 'lexical'
 import React from 'react'
 
-export const HtmlOutputPlugin = ({ html = '', setHtml }: { html?: string; setHtml?: (html: string) => void }) => {
+export const HtmlOutputPlugin = ({
+  html = '',
+  setHtml,
+  debounceMs = 0,
+}: {
+  html?: string
+  setHtml?: (html: string) => void
+  debounceMs?: number
+}) => {
   const [editor] = useLexicalComposerContext()
   const isFirstRender = React.useRef(true)
+  const debounceTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const exportHtml = React.useCallback(() => {
     editor.update(() => {
@@ -16,6 +25,14 @@ export const HtmlOutputPlugin = ({ html = '', setHtml }: { html?: string; setHtm
       setHtml?.(hasContent ? htmlString : '')
     })
   }, [editor, setHtml])
+
+  React.useEffect(() => {
+    return () => {
+      if (debounceTimer.current !== null) {
+        clearTimeout(debounceTimer.current)
+      }
+    }
+  }, [])
 
   React.useLayoutEffect(() => {
     if (!isFirstRender.current) {
@@ -59,8 +76,18 @@ export const HtmlOutputPlugin = ({ html = '', setHtml }: { html?: string; setHtm
   }, [])
 
   const onChange = React.useCallback(() => {
+    if (debounceMs > 0) {
+      if (debounceTimer.current !== null) {
+        clearTimeout(debounceTimer.current)
+      }
+      debounceTimer.current = setTimeout(() => {
+        debounceTimer.current = null
+        exportHtml()
+      }, debounceMs)
+      return
+    }
     exportHtml()
-  }, [exportHtml])
+  }, [debounceMs, exportHtml])
 
   return <OnChangePlugin onChange={onChange} />
 }

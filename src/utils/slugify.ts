@@ -1,21 +1,25 @@
-import semver from 'semver'
-
 interface SlugifyOptions {
   inklingVersion?: string
   type?: string
+}
+
+// Only the `<4.x` vs `>=4.x` distinction matters (pre-4.0 slug formats).
+// Versions that don't parse as `major.minor` are treated as latest, matching
+// the old null-coercion fallthrough.
+function isLegacyVersion(inklingVersion: string): boolean {
+  const major = Number.parseInt(inklingVersion, 10)
+  return !Number.isNaN(major) && major < 4
 }
 
 export default function slugify(
   inputString: unknown = '',
   { inklingVersion = '4.0', type = 'mobiledoc' }: SlugifyOptions = {},
 ): string {
-  const version = semver.coerce(inklingVersion)
-
   if (typeof inputString !== 'string' || (inputString || '').trim() === '') {
     return ''
   }
 
-  if (version && semver.satisfies(version, '<4.x')) {
+  if (isLegacyVersion(inklingVersion)) {
     if (type === 'markdown') {
       // backwards compatible slugs used in the pre-4.0 markdown format
       return inputString.replace(/[^\w]/g, '').toLowerCase()

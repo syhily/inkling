@@ -9,9 +9,16 @@ import markdownItLazyHeaders from 'markdown-it-lazy-headers'
 import markdownItMark from 'markdown-it-mark'
 import markdownItSub from 'markdown-it-sub'
 import markdownItSup from 'markdown-it-sup'
-import semver from 'semver'
 
 import { slugify } from '@/utils'
+
+// Only the `<4.x` vs `>=4.x` distinction matters (pre-4.0 slug formats).
+// Versions that don't parse as `major.minor` are treated as latest, matching
+// the old null-coercion fallthrough.
+function isLegacyVersion(inklingVersion: string): boolean {
+  const major = Number.parseInt(inklingVersion, 10)
+  return !Number.isNaN(major) && major < 4
+}
 
 const renderers: Record<string, MarkdownIt> = {}
 
@@ -61,9 +68,7 @@ const namedHeaders = function ({ inklingVersion }: RenderOptions = {}) {
 }
 
 const selectRenderer = function (options: RenderOptions): MarkdownIt {
-  const version = semver.coerce(options.inklingVersion || '4.0')
-
-  if (version && semver.satisfies(version, '<4.x')) {
+  if (isLegacyVersion(options.inklingVersion || '4.0')) {
     if (renderers['<4.x']) {
       return renderers['<4.x']
     }

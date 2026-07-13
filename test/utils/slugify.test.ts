@@ -12,6 +12,11 @@ describe('slugify()', function () {
       slugify('test one\ttwo', { inklingVersion: '2.0', type: 'markdown' }).should.eql('testonetwo')
     })
 
+    it('uses the legacy slug for a 3.x patch version', function () {
+      slugify('test one\ttwo', { inklingVersion: '3.9.1', type: 'markdown' }).should.eql('testonetwo')
+      slugify('test one\ttwo', { inklingVersion: '3.9.1' }).should.eql('test-one-two')
+    })
+
     it('replaces all "non-word" chars with empty string', function () {
       slugify('tést øne twö', { inklingVersion: '2.0', type: 'markdown' }).should.eql('tstnetw')
     })
@@ -66,6 +71,12 @@ describe('slugify()', function () {
 
       fromNamed.should.equal(fromDefault)
       fromNamed.should.equal('some-header')
+    })
+
+    it('uses the 4.x slug for 4.x versions and unparseable versions', function () {
+      for (const inklingVersion of ['4.0', '4.2.0', 'dev']) {
+        slugify('test one\t two', { inklingVersion }).should.equal('test-one-two')
+      }
     })
   })
 })
