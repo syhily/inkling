@@ -42,7 +42,7 @@ Repo quick reference (verification gates used by every plan):
 | 020  | Add markdown card transformer                                     | P2       | S      | —                                | DONE (`8f13eef`) |
 | 021  | Fix stale docs + public API overview                              | P2       | S      | 020                              | DONE (`14af652`) |
 | 022  | Spike: headless HTML/email export API                             | P3       | M      | —                                | DONE (`0305602`) |
-| 023  | Triage TODO cluster + draggable duplication decision              | P3       | M      | —                                | TODO             |
+| 023  | Triage TODO cluster + draggable duplication decision              | P3       | M      | —                                | DONE (`51177e2`) |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale — finding fixed independently or approach
