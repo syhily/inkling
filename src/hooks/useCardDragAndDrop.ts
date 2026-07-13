@@ -82,13 +82,6 @@ export default function useCardDragAndDrop({
     [onDropEnd],
   )
 
-  // returns {
-  //   direction: 'horizontal' TODO: use a constant?
-  //   position: 'left'/'right' TODO: use constants?
-  //   beforeElems: array of elems to left of indicator
-  //   afterElems: array of elems to right of indicator
-  //   droppableIndex:
-  // }
   const _getIndicatorPosition = React.useCallback(
     (draggableInfo: DraggableInfo) => {
       return getIndicatorPosition?.(draggableInfo) || false

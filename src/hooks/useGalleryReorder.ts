@@ -156,13 +156,6 @@ export default function useGalleryReorder({
     return false
   }
 
-  // returns {
-  //   direction: 'horizontal' TODO: use a constant?
-  //   position: 'left'/'right' TODO: use constants?
-  //   beforeElems: array of elems to left of indicator
-  //   afterElems: array of elems to right of indicator
-  //   droppableIndex:
-  // }
   const getIndicatorPosition = (
     draggableInfo: DraggableInfo,
     droppableElem: HTMLElement | null,

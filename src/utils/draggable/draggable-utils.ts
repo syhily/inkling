@@ -3,7 +3,12 @@ function setVendorStyle(style: CSSStyleDeclaration, prop: string, value: string)
   ;(style as unknown as Record<string, string>)[prop] = value
 }
 
-// TODO: more or less duplicated in inkling-card-gallery other than direction
+// NOTE: the DnD geometry helpers in this file (isCardDropAllowed, getParent,
+// sibling lookups, scrollable-element lookups) are vendor-synced with the
+// inkling-card-gallery repo, which keeps its own copy (differing mainly in
+// drag direction). There is no shared package yet — any behavior change here
+// must be mirrored there, and vice versa. See docs/tech-debt-triage.md for
+// the duplication decision.
 export function isCardDropAllowed(draggableIndex: number, droppableIndex: number, position = ''): boolean {
   // images can be dragged out of a gallery to any position
   if (draggableIndex === -1) {
@@ -28,7 +33,9 @@ export function isCardDropAllowed(draggableIndex: number, droppableIndex: number
   return adjustedDroppable !== draggableIndex
 }
 
-// TODO: rename to closest? getParent can actually match passed in element
+// unlike Element.closest, getParent can match the passed-in element itself;
+// the name is kept for parity with the inkling-card-gallery copy — renaming
+// requires changing both repos (see header note)
 export function getParent(element: Element | null, value: string | ((el: Element) => boolean)): Element | null {
   return getWithMatch(element, value, (current: Element) => {
     const parent = current.parentNode

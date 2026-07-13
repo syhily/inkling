@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -9,6 +9,7 @@ import {
   DropdownSetting,
   InputListSetting,
   InputSetting,
+  InputUrlSetting,
   MediaUploadSetting,
   MultiSelectDropdownSetting,
   SettingsPanel,
@@ -16,10 +17,17 @@ import {
   ToggleSetting,
 } from '@/components/ui/SettingsPanel'
 
-// Mock the composer context used by InputUrlSetting
-vi.mock('../../../src/context/InklingComposerContext', () => ({
-  default: { Provider: ({ children }: { children: React.ReactNode }) => <>{children}</> },
+import type { CardConfig } from '../../../src/context/InklingComposerContext'
+
+const mocks = vi.hoisted(() => ({
+  contextValue: { cardConfig: {} as CardConfig },
 }))
+
+// Mock the composer context used by InputUrlSetting
+vi.mock('../../../src/context/InklingComposerContext', async () => {
+  const React = await import('react')
+  return { default: React.createContext(mocks.contextValue) }
+})
 
 describe('SettingsPanel', function () {
   it('renders children in the default (non-tab) layout', function () {
@@ -117,6 +125,40 @@ describe('SettingsPanel', function () {
       render(<MediaUploadSetting label="Cover" onFileChange={() => {}} onRemoveMedia={() => {}} />)
       expect(screen.getByText('Cover')).toBeInTheDocument()
       expect(screen.getByTestId('media-upload-setting')).toBeInTheDocument()
+    })
+  })
+
+  describe('InputUrlSetting', function () {
+    it('shows autocomplete suggestions once links resolve', async function () {
+      const fetchAutocompleteLinks = vi.fn(async () => [{ value: 'https://example.com', label: 'Example' }])
+      mocks.contextValue.cardConfig = { fetchAutocompleteLinks }
+
+      render(<InputUrlSetting dataTestId="url" label="URL" value="" onChange={() => {}} />)
+
+      fireEvent.focus(screen.getByRole('textbox'))
+
+      expect(await screen.findByTestId('url-listOption-Example')).toBeInTheDocument()
+    })
+
+    it('ignores autocomplete results that resolve after unmount', async function () {
+      let resolveLinks!: (links: { value: string; label: string }[]) => void
+      const fetchAutocompleteLinks = vi.fn(
+        () =>
+          new Promise<{ value: string; label: string }[]>((resolve) => {
+            resolveLinks = resolve
+          }),
+      )
+      mocks.contextValue.cardConfig = { fetchAutocompleteLinks }
+
+      const { unmount } = render(<InputUrlSetting dataTestId="url" label="URL" value="" onChange={() => {}} />)
+
+      expect(fetchAutocompleteLinks).toHaveBeenCalled()
+
+      unmount()
+      resolveLinks([{ value: 'https://example.com', label: 'Example' }])
+      // the late resolution must not trigger a state update on the unmounted
+      // component — act() flushes the microtask without errors or warnings
+      await act(async () => {})
     })
   })
 })

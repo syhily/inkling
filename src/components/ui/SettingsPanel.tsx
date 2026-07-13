@@ -208,9 +208,15 @@ export function InputUrlSetting({ dataTestId, label, value, onChange }: InputUrl
 
   React.useEffect(() => {
     if (cardConfig?.fetchAutocompleteLinks) {
-      cardConfig
-        .fetchAutocompleteLinks()
+      const fetchAutocompleteLinks = cardConfig.fetchAutocompleteLinks
+      let cancelled = false
+      fetchAutocompleteLinks()
         .then((links) => {
+          // the component unmounted or cardConfig changed before the request
+          // resolved — don't update state with stale results
+          if (cancelled) {
+            return
+          }
           setListOptions(
             links?.map((link) => {
               return { value: link.value ?? '', label: link.label }
@@ -218,8 +224,14 @@ export function InputUrlSetting({ dataTestId, label, value, onChange }: InputUrl
           )
         })
         .catch(() => {
+          if (cancelled) {
+            return
+          }
           setListOptions([])
         })
+      return () => {
+        cancelled = true
+      }
     }
   }, [cardConfig])
 

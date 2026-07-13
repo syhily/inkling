@@ -9,6 +9,14 @@ export const defaultOptions = {
   sensitivity: 50,
 }
 
+export interface ScrollHandlerOptions {
+  // selector for the element that actually scrolls when the only scrollable
+  // ancestor is the document scrolling element — defaults to the Admin app's
+  // editor container; pass your own selector (or null to disable the override)
+  // if your layout differs
+  documentScrollContainerSelector?: string | null
+}
+
 interface MousePosition {
   clientX: number
   clientY: number
@@ -21,9 +29,14 @@ export class ScrollHandler {
   scrollableElement: HTMLElement | null = null
   scrollAnimationFrame: number | null = null
   _isSafari: boolean
+  _documentScrollContainerSelector: string | null
 
-  constructor() {
+  constructor(options?: ScrollHandlerOptions) {
     this.options = Object.assign({}, defaultOptions)
+    this._documentScrollContainerSelector =
+      options?.documentScrollContainerSelector === undefined
+        ? '.gh-inkling-editor'
+        : options.documentScrollContainerSelector
 
     this._isSafari = navigator.userAgent.indexOf('Safari') !== -1 && navigator.userAgent.indexOf('Chrome') === -1
 
@@ -80,12 +93,14 @@ export class ScrollHandler {
       return null
     }
 
-    // workaround for our particular scrolling setup
-    // TODO: find a way to make this configurable
+    // workaround for layouts that scroll inside a container rather than the
+    // document: when the document scrolling element is the only scrollable
+    // ancestor, prefer the configured container (see ScrollHandlerOptions)
     if (found === getDocumentScrollingElement()) {
-      // TODO: will only work inside Admin
-      const adminEditor = document.querySelector<HTMLElement>('.gh-inkling-editor')
-      return adminEditor ?? (found as HTMLElement)
+      const container = this._documentScrollContainerSelector
+        ? document.querySelector<HTMLElement>(this._documentScrollContainerSelector)
+        : null
+      return container ?? (found as HTMLElement)
     }
 
     return found as HTMLElement
