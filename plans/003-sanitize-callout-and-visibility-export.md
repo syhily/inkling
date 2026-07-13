@@ -138,13 +138,47 @@ its structure on `test/nodes-base/utils/is-safe-url.test.ts`.
 
 ### Step 1: Strip non-allowlisted attributes in `cleanDOM`
 
+> **Amendment (2026-07-13, reviewer)**: the first executor hit the STOP
+> condition "existing tests rely on attributes outside the allowlist".
+> Investigation: the callout's nested Lexical editor serializes links as
+> `<a href="…" rel="noopener">` and inline code as
+> `<code spellcheck="false" style="white-space: pre-wrap;">` — these are
+> legitimate editor output, asserted by existing tests
+> (`callout.test.ts:38,162,174,186,208,219,229`). Stripping them would alter
+> legitimate formatting, so the allowlist is deliberately expanded below.
+> `style` remains dangerous in general (CSS-based defacement/exfiltration in
+> published content and email), so its _value_ is constrained to Lexical's
+> known output. Do not expand the allowlist further without a recorded
+> decision.
+>
+> **Amendment 2 (2026-07-13, reviewer)**: the second STOP found
+> `class="italic"` on `<em>` in the shared fixture
+> (`callout.test.ts:38,161,174,185,207`). Decision: **strip `class` too** and
+> update the three snapshot expectations to drop `class="italic"` from the
+> expected output (the input fixture stays as-is). Rationale: the class is a
+> theme hook, not formatting — `<em>`/`<i>` render italic without it, so no
+> legitimate formatting is lost — while arbitrary `class` values can hook
+> consumer-site CSS/JS in published content, which is exactly the injection
+> class this plan closes. Sanctioned snapshot change: the three
+> `prettifyTo` expectations at `callout.test.ts:161,185,207` drop
+> `class="italic"`; note it in the commit message. Also noted by the
+> executor: `test/nodes-base/utils/visibility.test.ts` already exists (404
+> lines) — **extend it**, do not create a new file; and existing
+> `memberSegment` fixtures all conform to the regex (STOP #3 cannot trigger
+> on current fixtures).
+
 Extend `cleanDOM` with a second parameter and attribute filtering. Target
 shape:
 
 ```ts
+// Attributes the nested callout editor legitimately produces. A[href] is
+// additionally validated with isSafeUrl; CODE[style] is constrained to
+// Lexical's known inline-code serialization.
 const ALLOWED_ATTRIBUTES: Record<string, string[]> = {
-  A: ['href'],
+  A: ['href', 'rel', 'target'],
+  CODE: ['spellcheck', 'style'],
 }
+const CODE_STYLE_REGEX = /^white-space:\s*pre-wrap;?$/
 
 export function cleanDOM(
   node: Element,
@@ -154,12 +188,15 @@ export function cleanDOM(
   // existing tag-unwrap loop, plus for each surviving element child:
   //   - remove every attribute whose name is not in allowedAttributes[tagName]
   //   - for A[href], additionally require isSafeUrl(value); remove the attribute otherwise
+  //   - for CODE[style], additionally require CODE_STYLE_REGEX.test(value.trim()); remove otherwise
 }
 ```
 
 Keep the unwrap behavior for disallowed tags exactly as-is (children survive).
 Import `isSafeUrl` from `@/nodes/base/utils/is-safe-url`. Update the callout
 renderer's call only if the default parameter isn't sufficient (it should be).
+The four pre-existing callout tests must pass **unchanged** with this
+allowlist.
 
 **Verify**: `pnpm test:unit -t "callout"` → all pass, including new tests from
 the Test plan.
@@ -193,6 +230,10 @@ but only if a second caller exists; otherwise keep it local.
   - `calloutText: '<a href="https://example.com">ok</a>'` → `href` preserved.
   - `calloutText: '<mark style="background:red" onclick="x">m</mark>'` →
     `style` and `onclick` removed, text preserved.
+  - `calloutText: '<code style="position:fixed;inset:0">x</code>'` → `style`
+    removed (value outside the `white-space: pre-wrap` constraint); and
+    regression: `<code spellcheck="false" style="white-space: pre-wrap;">`
+    keeps both attributes (matches the existing inline-code fixture).
   - regression: `<strong>bold</strong>` and disallowed-tag unwrapping
     (`<div><script>…</script>text</div>` → script tag removed per existing
     tag behavior) still work as before.
@@ -225,8 +266,11 @@ Stop and report back (do not improvise) if:
 
 - The excerpts in "Current state" don't match the live code (drift).
 - A real callout in existing tests/fixtures relies on attributes outside the
-  allowlist (e.g. `class` on `<a>`) — report the attribute; do not silently
-  expand the allowlist beyond `A[href]`.
+  expanded allowlist (`A: href/rel/target`, `CODE: spellcheck/style` with the
+  constrained style value) other than `class` — `class` is deliberately
+  stripped everywhere per Amendment 2, with the three `class="italic"`
+  snapshots sanctioned to change. Report any other attribute; do not silently
+  expand the allowlist further.
 - `memberSegment` values in existing fixtures fail `SEGMENT_REGEX` — that means
   the documented alphabet is incomplete; report the actual values seen.
 - A step's verification fails twice after a reasonable fix attempt.
