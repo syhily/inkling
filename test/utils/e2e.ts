@@ -79,6 +79,49 @@ export async function focusEditor(page: Page, parentSelector = '.inkling-lexical
   await page.focus(selector)
 }
 
+// Lexical's history plugin merges consecutive same-type changes that happen
+// within 1000ms of each other (@lexical/history merge delay). Tests that need
+// the next change to become its own undo group must wait this window out.
+// This documents a Lexical behavioral constant — re-verify on Lexical upgrades
+// (0.46 changed history behavior once already; commits 33a23bf, 3a4c109).
+export const HISTORY_MERGE_WINDOW_MS = 1000
+
+export async function waitForHistoryGroupBoundary(page: Page) {
+  // 200ms of slack on top of the merge window so timing jitter on loaded CI
+  // runners cannot land the next change inside the previous undo group.
+  await page.waitForTimeout(HISTORY_MERGE_WINDOW_MS + 200)
+}
+
+// CodeMirror groups transactions that occur within 500ms into a single undo
+// group (history newGroupDelay). Wait it out so the next change is undoable
+// on its own.
+export const CODEMIRROR_HISTORY_GROUP_DELAY_MS = 500
+
+export async function waitForCodeMirrorHistoryGroup(page: Page) {
+  await page.waitForTimeout(CODEMIRROR_HISTORY_GROUP_DELAY_MS + 200)
+}
+
+// Waits until a nested card editor's content has rendered into the card DOM.
+// Card nodes read their nested editors live in exportJSON(), so polling the
+// editor-state JSON can't observe the propagation — the DOM is the honest
+// signal that React committed the nested editor's latest update. Replaces
+// fixed sleeps that let the nested editor settle so the following keystrokes
+// aren't batched into the same update as the typing.
+export async function waitForCardContentSynced(page: Page, cardName: string, text: string) {
+  await expect(page.locator(`[data-inkling-card="${cardName}"]`)).toContainText(text)
+  // flush pending Lexical updates / React effects (double rAF)
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            resolve()
+          })
+        })
+      }),
+  )
+}
+
 interface AssertHTMLOptions {
   selector?: string
   ignoreClasses?: boolean

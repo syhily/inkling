@@ -1,6 +1,17 @@
 import { expect, test } from '@playwright/test'
 
-import { assertHTML, createSnippet, focusEditor, html, initialize, insertCard, isMac, pasteText } from '#/utils/e2e'
+import {
+  assertHTML,
+  createSnippet,
+  focusEditor,
+  html,
+  initialize,
+  insertCard,
+  isMac,
+  pasteText,
+  waitForCardContentSynced,
+  waitForHistoryGroupBoundary,
+} from '#/utils/e2e'
 
 test.describe('Bookmark card (with searchLinks)', async () => {
   const ctrlOrCmd = isMac() ? 'Meta' : 'Control'
@@ -197,8 +208,7 @@ test.describe('Bookmark card (with searchLinks)', async () => {
       await expect(retryButton).not.toBeVisible()
     })
 
-    // todo: test is failing, need to figure if the error in test logic or on code
-    test.skip('paste as link button removes card and inserts text node link', async function () {
+    test('paste as link button removes card and inserts text node link', async function () {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
@@ -216,7 +226,7 @@ test.describe('Bookmark card (with searchLinks)', async () => {
         page,
         html`
           <p>
-            <a href="badurl" dir="ltr"><span data-lexical-text="true">badurl</span></a>
+            <a href="https://badurl" dir="ltr"><span data-lexical-text="true">badurl</span></a>
           </p>
           <p><br /></p>
         `,
@@ -275,12 +285,12 @@ test.describe('Bookmark card (with searchLinks)', async () => {
     await page.keyboard.type('My test caption')
     // let the caption editor's sync to the card node settle so its history
     // entries don't interleave with the deletion entries below
-    await page.waitForTimeout(600)
+    await waitForCardContentSynced(page, 'bookmark', 'My test caption')
     await page.keyboard.press('Enter')
     await page.keyboard.press('Backspace')
     // Lexical's history merges consecutive same-type changes within 1000ms;
     // wait so the card deletion becomes its own undo group
-    await page.waitForTimeout(1200)
+    await waitForHistoryGroupBoundary(page)
     await page.keyboard.press('Backspace')
     await page.keyboard.press(`${ctrlOrCmd}+z`)
 

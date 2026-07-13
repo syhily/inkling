@@ -1,6 +1,16 @@
 import { expect, test } from '@playwright/test'
 
-import { assertHTML, ctrlOrCmd, focusEditor, html, initialize, pasteText, selectBackwards } from '#/utils/e2e'
+import {
+  assertHTML,
+  ctrlOrCmd,
+  focusEditor,
+  html,
+  initialize,
+  pasteText,
+  selectBackwards,
+  waitForCardContentSynced,
+  waitForHistoryGroupBoundary,
+} from '#/utils/e2e'
 
 test.describe('Code Block card', async () => {
   let page
@@ -199,12 +209,12 @@ test.describe('Code Block card', async () => {
     await page.keyboard.type('My caption')
     // let the caption editor's sync to the card node settle so its history
     // entries don't interleave with the deletion entries below
-    await page.waitForTimeout(600)
+    await waitForCardContentSynced(page, 'codeblock', 'My caption')
     await page.keyboard.press('Enter')
     await page.keyboard.press('Backspace')
     // Lexical's history merges consecutive same-type changes within 1000ms;
     // wait so the card deletion becomes its own undo group
-    await page.waitForTimeout(1200)
+    await waitForHistoryGroupBoundary(page)
     await page.keyboard.press('Backspace')
     await page.keyboard.press(`${ctrlOrCmd(page)}+z`)
 

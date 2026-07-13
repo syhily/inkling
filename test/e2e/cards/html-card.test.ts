@@ -1,6 +1,14 @@
 import { expect, test } from '@playwright/test'
 
-import { assertHTML, createSnippet, ctrlOrCmd, focusEditor, html, initialize } from '#/utils/e2e'
+import {
+  assertHTML,
+  createSnippet,
+  ctrlOrCmd,
+  focusEditor,
+  html,
+  initialize,
+  waitForCodeMirrorHistoryGroup,
+} from '#/utils/e2e'
 
 test.describe('Html card', async () => {
   let page
@@ -157,7 +165,7 @@ test.describe('Html card', async () => {
     await expect(page.getByText('Here are some words')).toBeVisible()
     // CodeMirror groups changes within 500ms into a single undo transaction,
     // wait to ensure backspace is a separate undo group from the typing
-    await page.waitForTimeout(600)
+    await waitForCodeMirrorHistoryGroup(page)
     await page.keyboard.press('Backspace')
     await expect(page.getByText('Here are some word')).toBeVisible()
     await page.keyboard.press(`${ctrlOrCmd(page)}+z`)

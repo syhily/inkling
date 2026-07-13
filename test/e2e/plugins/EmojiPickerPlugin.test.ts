@@ -231,8 +231,7 @@ test.describe('Emoji Picker Plugin', async function () {
     )
   })
 
-  // not sure why this test is flaky on CI...
-  test.skip('can use emojis in captions', async function () {
+  test('can use emojis in captions', async function () {
     await focusEditor(page)
 
     await page.keyboard.type('```js ', { delay: 10 })
@@ -274,7 +273,7 @@ test.describe('Emoji Picker Plugin', async function () {
                     </div>
                 </div>
                 </figcaption>
-                <div data-inkling-card-toolbar="button">
+                <div data-inkling-card-toolbar="code-block">
                 <ul>
                     <li>
                     <button
@@ -300,6 +299,7 @@ test.describe('Emoji Picker Plugin', async function () {
             </div>
         </div>
         `,
+      { ignoreCardToolbarContents: true },
     )
   })
 

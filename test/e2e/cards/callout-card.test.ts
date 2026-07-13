@@ -1,7 +1,17 @@
 import { expect, test } from '@playwright/test'
 
 import { selectNamedColor } from '#/utils/color-select-helper'
-import { assertHTML, createSnippet, focusEditor, html, initialize, insertCard, isMac } from '#/utils/e2e'
+import {
+  assertHTML,
+  createSnippet,
+  focusEditor,
+  html,
+  initialize,
+  insertCard,
+  isMac,
+  waitForCardContentSynced,
+  waitForHistoryGroupBoundary,
+} from '#/utils/e2e'
 
 test.describe('Callout Card', async () => {
   const ctrlOrCmd = isMac() ? 'Meta' : 'Control'
@@ -360,12 +370,12 @@ test.describe('Callout Card', async () => {
     await page.keyboard.type('Hello world')
     // let the nested editor's sync to the card node settle so its history
     // entries don't interleave with the deletion entries below
-    await page.waitForTimeout(600)
+    await waitForCardContentSynced(page, 'callout', 'Hello world')
     await page.keyboard.press('Enter')
     await page.keyboard.press('Backspace')
     // Lexical's history merges consecutive same-type changes within 1000ms;
     // wait so the card deletion becomes its own undo group
-    await page.waitForTimeout(1200)
+    await waitForHistoryGroupBoundary(page)
     await page.keyboard.press('Backspace')
     await page.keyboard.press(`${ctrlOrCmd}+z`)
     await expect(page.locator('[data-inkling-card="callout"]')).toBeVisible()

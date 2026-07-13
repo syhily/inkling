@@ -357,8 +357,7 @@ test.describe('Image card', async () => {
     await expect(await page.locator('text="This is a caption"')).toBeVisible()
   })
 
-  // NOTE: still works, but it's a focus issue
-  test.skip('can paste html to caption', async function () {
+  test('can paste html to caption', async function () {
     const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
 
     await insertEmptyImageCard(page)
@@ -408,8 +407,10 @@ test.describe('Image card', async () => {
                 <button name="alt-toggle-button" type="button">Alt</button>
               </figcaption>
             </figure>
+            <div data-inkling-card-toolbar="image"></div>
           </div>
         </div>
+        <p><br /></p>
       `,
       { ignoreCardToolbarContents: true },
     )
@@ -1109,7 +1110,7 @@ test.describe('Image card', async () => {
     })
   })
 
-  test.skip('can drag image card onto image card to create gallery', async function () {
+  test('can drag image card onto image card to create gallery', async function () {
     const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
     await focusEditor(page)
 

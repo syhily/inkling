@@ -15,14 +15,19 @@ describe('cleanBasicHtml', function () {
     }
   })
 
-  // Skipped: in jsdom environment `document` is globally available so
-  // cleanBasicHtml() no longer throws when createDocument is omitted
-  it.skip('errors in Node.js env without a `createDocument` option', function () {
-    expect(function () {
-      cleanBasicHtml('Test')
-    }).toThrow(
-      /^cleanBasicHtml\(\) must be passed a `createDocument` function as an option when used in a non-browser environment$/,
-    )
+  it('errors in Node.js env without a `createDocument` option', function () {
+    // simulate a non-browser environment: no DOMParser on the global scope
+    vi.stubGlobal('DOMParser', undefined)
+    vi.stubGlobal('window', undefined)
+    try {
+      expect(function () {
+        cleanBasicHtml('Test')
+      }).toThrow(
+        /^cleanBasicHtml\(\) must be passed a `createDocument` function as an option when used in a non-browser environment$/,
+      )
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('trims all variants of whitespace', function () {

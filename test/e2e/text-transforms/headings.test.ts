@@ -201,38 +201,6 @@ test.describe('Text transforms > Headings', async () => {
     })
   })
 
-  test.describe('on lists', function () {
-    // TODO: core lexical behaviour differs from our mobiledoc editor here
-    test.skip('"# " before list item converts list to h1', async function () {
-      await focusEditor(page)
-      await page.keyboard.type('- list item')
-      await assertHTML(
-        page,
-        html`
-          <ul>
-            <li value="1" dir="ltr"><span data-lexical-text="true">list item</span></li>
-          </ul>
-        `,
-      )
-
-      // move caret to beginning of list item
-      const liHandle = await page.locator('div[contenteditable="true"] li')
-      const liBox = await liHandle.boundingBox()
-      await page.mouse.click(liBox.x + 1, liBox.y + 5)
-
-      // type `# ` at beginning to convert to heading
-      await page.keyboard.type('# ')
-      await assertHTML(
-        page,
-        html`
-          <h1 dir="ltr">
-            <span data-lexical-text="true">list item</span>
-          </h1>
-        `,
-      )
-    })
-  })
-
   test.describe('on quotes', function () {
     test('"# " at beginning of blockquote converts to h1', async function () {
       await focusEditor(page)

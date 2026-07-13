@@ -1704,7 +1704,13 @@ test.describe('Card behaviour', async () => {
     })
   })
 
-  // this behaviour changes between mac and windows
+  // CMD/CTRL+Backspace behaviour differs by platform (macOS deletes to line
+  // start, Windows/Linux deletes a word), so a single expected HTML can't hold
+  // on both local macOS and Ubuntu CI; additionally the multi-line case
+  // currently deletes the whole paragraph and selects the card on macOS —
+  // suspected product bug in paragraph deletion at line start after a
+  // decorator card; needs per-platform expectations and a product fix.
+  // SKIP-REASON: platform-dependent deletion semantics + suspected product bug, see above
   test.describe.skip('CMD+BACKSPACE', function () {
     test('on an populated paragraph after a card', async function () {
       await focusEditor(page)
@@ -2199,8 +2205,7 @@ test.describe('Card behaviour', async () => {
     })
 
     test.describe('codemirror', function () {
-      // Skipped because CodeMirror does not pick up the copy/paste properly inside Playwright - manual testing is working
-      test.skip('can copy/paste', async function () {
+      test('can copy/paste', async function () {
         await focusEditor(page)
         await insertCard(page, { cardName: 'html' })
 
@@ -2212,6 +2217,9 @@ test.describe('Card behaviour', async () => {
         await page.keyboard.press(`${ctrlOrCmd(page)}+KeyA`)
         await page.waitForTimeout(100)
         await page.keyboard.press(`${ctrlOrCmd(page)}+KeyC`)
+        await page.waitForTimeout(100)
+        // collapse selection to the end so pastes append instead of replacing
+        await page.keyboard.press('ArrowRight')
         await page.waitForTimeout(100)
         await page.keyboard.press(`${ctrlOrCmd(page)}+KeyV`)
         await page.waitForTimeout(100)
@@ -2243,9 +2251,10 @@ test.describe('Card behaviour', async () => {
                           contenteditable="true"
                           role="textbox"
                           aria-multiline="true"
+                          writingsuggestions="false"
                           data-language="html"
                         >
-                          <div>Testing</div>
+                          <div>TestingTestingTesting</div>
                         </div>
                         <div aria-hidden="true">
                           <div></div>
