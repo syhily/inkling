@@ -51,6 +51,15 @@ interface HeaderV2RenderOptions extends ExportDOMOptions {
   design?: { buttonStyle?: string }
 }
 
+// Colors come from document JSON, not just the color picker — constrain to
+// values the picker can produce before interpolating into style/attributes.
+const COLOR_REGEX =
+  /^#[0-9a-fA-F]{3,8}$|^rgba?\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*(?:,\s*[\d.]+\s*)?\)$|^[a-zA-Z]+$/
+
+function safeColor(value: string, fallback: string): string {
+  return COLOR_REGEX.test(value) ? value : fallback
+}
+
 function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions = {}) {
   const cardClasses = getCardClasses(nodeData).join(' ')
 
@@ -60,13 +69,19 @@ function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions
   const subheaderText = nodeData.subheader ? escapeHtml(nodeData.subheader) : ''
   const buttonText = nodeData.buttonText ? escapeHtml(nodeData.buttonText) : ''
 
+  const textColor = safeColor(nodeData.textColor, '#000000')
+  const buttonTextColor = safeColor(nodeData.buttonTextColor, '#000000')
+  const buttonColor = nodeData.buttonColor === 'accent' ? 'accent' : safeColor(nodeData.buttonColor, 'transparent')
+  const backgroundColor =
+    nodeData.backgroundColor === 'accent' ? 'accent' : safeColor(nodeData.backgroundColor, 'transparent')
+
   const backgroundAccent = nodeData.backgroundColor === 'accent' ? 'inkling-style-accent' : ''
   const buttonAccent = nodeData.buttonColor === 'accent' ? 'inkling-style-accent' : ''
-  const buttonStyle = nodeData.buttonColor !== 'accent' ? `background-color: ${nodeData.buttonColor};` : ``
+  const buttonStyle = nodeData.buttonColor !== 'accent' ? `background-color: ${buttonColor};` : ``
   const alignment = nodeData.alignment === 'center' ? 'inkling-align-center' : ''
   const backgroundImageStyle =
     nodeData.backgroundColor !== 'accent' && (!safeBackgroundImageSrc || nodeData.layout === 'split')
-      ? `background-color: ${nodeData.backgroundColor}`
+      ? `background-color: ${backgroundColor}`
       : ''
 
   let imgTemplate = ''
@@ -94,21 +109,21 @@ function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions
 
   const header = () => {
     if (nodeData.header) {
-      return `<h2 id="${slugify(nodeData.header)}" class="inkling-header-card-heading" style="color: ${nodeData.textColor};" data-text-color="${nodeData.textColor}">${headerText}</h2>`
+      return `<h2 id="${slugify(nodeData.header)}" class="inkling-header-card-heading" style="color: ${textColor};" data-text-color="${textColor}">${headerText}</h2>`
     }
     return ''
   }
 
   const subheader = () => {
     if (nodeData.subheader) {
-      return `<p id="${slugify(nodeData.subheader)}" class="inkling-header-card-subheading" style="color: ${nodeData.textColor};" data-text-color="${nodeData.textColor}">${subheaderText}</p>`
+      return `<p id="${slugify(nodeData.subheader)}" class="inkling-header-card-subheading" style="color: ${textColor};" data-text-color="${textColor}">${subheaderText}</p>`
     }
     return ''
   }
 
   const button = () => {
     if (nodeData.buttonEnabled && safeButtonUrl) {
-      return `<a href="${safeButtonUrl}" class="inkling-header-card-button ${buttonAccent}" style="${buttonStyle}color: ${nodeData.buttonTextColor};" data-button-color="${nodeData.buttonColor}" data-button-text-color="${nodeData.buttonTextColor}">${buttonText}</a>`
+      return `<a href="${safeButtonUrl}" class="inkling-header-card-button ${buttonAccent}" style="${buttonStyle}color: ${buttonTextColor};" data-button-color="${buttonColor}" data-button-text-color="${buttonTextColor}">${buttonText}</a>`
     }
     return ''
   }
@@ -116,7 +131,7 @@ function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions
   const wrapperStyle = backgroundImageStyle ? `style="${backgroundImageStyle};"` : ''
 
   return `
-        <div class="${cardClasses} ${backgroundAccent}" ${wrapperStyle} data-background-color="${nodeData.backgroundColor}">
+        <div class="${cardClasses} ${backgroundAccent}" ${wrapperStyle} data-background-color="${backgroundColor}">
             ${nodeData.layout !== 'split' ? imgTemplate : ''}
             <div class="inkling-header-card-content">
                 ${nodeData.layout === 'split' ? imgTemplate : ''}
@@ -137,17 +152,21 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
   const subheaderText = nodeData.subheader ? escapeHtml(nodeData.subheader) : ''
   const buttonText = nodeData.buttonText ? escapeHtml(nodeData.buttonText) : ''
 
-  const backgroundAccent = nodeData.backgroundColor === 'accent' ? `background-color: ${nodeData.accentColor};` : ''
-  let buttonAccent =
-    nodeData.buttonColor === 'accent' ? `background-color: ${nodeData.accentColor};` : nodeData.buttonColor
-  let buttonStyle = nodeData.buttonColor !== 'accent' ? `background-color: ${nodeData.buttonColor};` : ''
-  let buttonTextColor = nodeData.buttonTextColor
+  const textColor = safeColor(nodeData.textColor, '#000000')
+  const buttonColor = nodeData.buttonColor === 'accent' ? 'accent' : safeColor(nodeData.buttonColor, 'transparent')
+  const backgroundColor = safeColor(nodeData.backgroundColor, 'transparent')
+  const accentColor = safeColor(nodeData.accentColor, 'transparent')
+
+  const backgroundAccent = nodeData.backgroundColor === 'accent' ? `background-color: ${accentColor};` : ''
+  let buttonAccent = nodeData.buttonColor === 'accent' ? `background-color: ${accentColor};` : buttonColor
+  let buttonStyle = nodeData.buttonColor !== 'accent' ? `background-color: ${buttonColor};` : ''
+  let buttonTextColor = safeColor(nodeData.buttonTextColor, '#000000')
   const alignment = nodeData.alignment === 'center' ? 'text-align: center;' : ''
   const backgroundImageStyle = safeBackgroundImageSrc
     ? nodeData.layout !== 'split'
       ? `background-image: url(${safeBackgroundImageSrc}); background-size: cover; background-position: center center;`
-      : `background-color: ${nodeData.backgroundColor};`
-    : `background-color: ${nodeData.backgroundColor};`
+      : `background-color: ${backgroundColor};`
+    : `background-color: ${backgroundColor};`
   const splitImageStyle = `background-image: url(${safeBackgroundImageSrc}); background-size: ${nodeData.backgroundSize !== 'contain' ? 'cover' : '50%'}; background-position: center`
 
   if (
@@ -157,24 +176,24 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
     if (nodeData.buttonColor === 'accent') {
       buttonAccent = ''
       buttonStyle = `
-                border: 1px solid ${nodeData.accentColor};
+                border: 1px solid ${accentColor};
                 background-color: transparent;
-                color: ${nodeData.accentColor} !important;
+                color: ${accentColor} !important;
             `
-      buttonTextColor = nodeData.accentColor
+      buttonTextColor = accentColor
     } else {
       buttonStyle = `
-                border: 1px solid ${nodeData.buttonColor};
+                border: 1px solid ${buttonColor};
                 background-color: transparent;
-                color: ${nodeData.buttonColor} !important;
+                color: ${buttonColor} !important;
             `
-      buttonTextColor = nodeData.buttonColor
+      buttonTextColor = buttonColor
     }
   }
 
   if (options?.feature?.emailCustomization || options?.feature?.emailCustomizationAlpha) {
     return `
-            <div class="inkling-header-card inkling-v2" style="color:${nodeData.textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
+            <div class="inkling-header-card inkling-v2" style="color:${textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
                 ${
                   nodeData.layout === 'split' && safeBackgroundImageSrc
                     ? `
@@ -186,18 +205,18 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
                 `
                     : ''
                 }
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="color:${nodeData.textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="color:${textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
                     <tr>
                         <td class="inkling-header-card-content" style="${nodeData.layout === 'split' && nodeData.backgroundSize === 'contain' ? 'padding-top: 0;' : ''}">
                             <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
                                     <td align="${nodeData.alignment}">
-                                        <h2 class="inkling-header-card-heading" style="color:${nodeData.textColor};">${headerText}</h2>
+                                        <h2 class="inkling-header-card-heading" style="color:${textColor};">${headerText}</h2>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="inkling-header-card-subheading-wrapper" align="${nodeData.alignment}">
-                                        <p class="inkling-header-card-subheading" style="color:${nodeData.textColor};">${subheaderText}</p>
+                                        <p class="inkling-header-card-subheading" style="color:${textColor};">${subheaderText}</p>
                                     </td>
                                 </tr>
                                 <tr>
@@ -226,7 +245,7 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
   }
 
   return `
-        <div class="inkling-header-card inkling-v2" style="color:${nodeData.textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
+        <div class="inkling-header-card inkling-v2" style="color:${textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
             ${
               nodeData.layout === 'split' && safeBackgroundImageSrc
                 ? `
@@ -235,12 +254,12 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
                 : ''
             }
             <div class="inkling-header-card-content" style="${nodeData.layout === 'split' && nodeData.backgroundSize === 'contain' ? 'padding-top: 0;' : ''}">
-                <h2 class="inkling-header-card-heading" style="color:${nodeData.textColor};">${headerText}</h2>
-                <p class="inkling-header-card-subheading" style="color:${nodeData.textColor};">${subheaderText}</p>
+                <h2 class="inkling-header-card-heading" style="color:${textColor};">${headerText}</h2>
+                <p class="inkling-header-card-subheading" style="color:${textColor};">${subheaderText}</p>
                 ${
                   nodeData.buttonEnabled && safeButtonUrl
                     ? `
-                    <a class="inkling-header-card-button" href="${safeButtonUrl}" style="color: ${nodeData.buttonTextColor}; ${buttonStyle} ${buttonAccent}">${buttonText}</a>
+                    <a class="inkling-header-card-button" href="${safeButtonUrl}" style="color: ${buttonTextColor}; ${buttonStyle} ${buttonAccent}">${buttonText}</a>
                 `
                     : ''
                 }

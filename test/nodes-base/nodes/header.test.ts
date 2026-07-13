@@ -376,6 +376,127 @@ describe('HeaderNode', function () {
           should.exist((element as HTMLElement).querySelector('.inkling-header-card-button'))
         }),
       )
+
+      it(
+        'falls back to the default text color when textColor breaks out of its attribute',
+        editorTest(function () {
+          const node = $createHeaderNode({
+            ...dataset,
+            textColor: 'red"><img src=x onerror=alert(1)>',
+          })
+          const { element } = node.exportDOM(editor, exportOptions)
+          const el = element as HTMLElement
+          const html = el.outerHTML
+
+          html.should.not.containEql('onerror')
+          html.should.not.containEql('<img src=x')
+          const heading = el.querySelector('.inkling-header-card-heading') as HTMLElement
+          should.exist(heading)
+          heading.getAttribute('data-text-color')!.should.equal('#000000')
+          heading.getAttribute('style')!.should.containEql('color: #000000')
+        }),
+      )
+
+      it(
+        'falls back to transparent when backgroundColor is a url() value',
+        editorTest(function () {
+          const node = $createHeaderNode({
+            ...dataset,
+            backgroundColor: 'url(https://evil.example/x)',
+          })
+          const { element } = node.exportDOM(editor, exportOptions)
+          const el = element as HTMLElement
+          const html = el.outerHTML
+
+          html.should.not.containEql('evil.example')
+          html.should.not.containEql('url(')
+          el.getAttribute('data-background-color')!.should.equal('transparent')
+        }),
+      )
+
+      it(
+        'falls back to transparent when buttonColor contains attacker content',
+        editorTest(function () {
+          const node = $createHeaderNode({
+            ...dataset,
+            buttonColor: 'expression(alert(1))',
+          })
+          const { element } = node.exportDOM(editor, exportOptions)
+          const el = element as HTMLElement
+          const html = el.outerHTML
+
+          html.should.not.containEql('expression')
+          const button = el.querySelector('.inkling-header-card-button') as HTMLElement
+          should.exist(button)
+          button.getAttribute('data-button-color')!.should.equal('transparent')
+          button.getAttribute('style')!.should.containEql('background-color: transparent')
+        }),
+      )
+
+      it(
+        'renders picker-produced color formats unchanged',
+        editorTest(function () {
+          for (const color of ['#aabbcc', '#abc', 'rgb(1, 2, 3)', 'rgba(1, 2, 3, 0.5)', 'white']) {
+            const node = $createHeaderNode({
+              ...dataset,
+              textColor: color,
+              buttonTextColor: color,
+              buttonColor: color,
+              backgroundColor: color,
+            })
+            const { element } = node.exportDOM(editor, exportOptions)
+            const el = element as HTMLElement
+
+            el.getAttribute('data-background-color')!.should.equal(color)
+            const heading = el.querySelector('.inkling-header-card-heading') as HTMLElement
+            heading.getAttribute('data-text-color')!.should.equal(color)
+            const button = el.querySelector('.inkling-header-card-button') as HTMLElement
+            button.getAttribute('data-button-color')!.should.equal(color)
+            button.getAttribute('data-button-text-color')!.should.equal(color)
+          }
+        }),
+      )
+
+      it(
+        'preserves the accent sentinel for background and button colors',
+        editorTest(function () {
+          const node = $createHeaderNode({
+            ...dataset,
+            backgroundColor: 'accent',
+            buttonColor: 'accent',
+          })
+          const { element } = node.exportDOM(editor, exportOptions)
+          const el = element as HTMLElement
+
+          el.getAttribute('data-background-color')!.should.equal('accent')
+          el.className.should.containEql('inkling-style-accent')
+          const button = el.querySelector('.inkling-header-card-button') as HTMLElement
+          should.exist(button)
+          button.getAttribute('data-button-color')!.should.equal('accent')
+          button.className.should.containEql('inkling-style-accent')
+          button.getAttribute('style')!.should.not.containEql('background-color')
+        }),
+      )
+
+      it(
+        'sanitizes color values in the email renderer',
+        editorTest(function () {
+          const node = $createHeaderNode({
+            ...dataset,
+            backgroundImageSrc: '',
+            textColor: 'red"><img src=x onerror=alert(1)>',
+            backgroundColor: 'url(https://evil.example/x)',
+          })
+          const { element } = node.exportDOM(editor, { ...exportOptions, target: 'email' })
+          const html = (element as HTMLElement).outerHTML
+
+          html.should.not.containEql('onerror')
+          html.should.not.containEql('<img src=x')
+          html.should.not.containEql('evil.example')
+          html.should.containEql('color:#000000')
+          html.should.containEql('background-color: transparent')
+        }),
+      )
     })
   })
 })
