@@ -27,7 +27,7 @@ Repo quick reference (verification gates used by every plan):
 | 005  | Fix async races (link search, header color) + gallery selector    | P1       | M      | —                                | DONE (`e9c1bc3`) |
 | 006  | Gate per-keystroke DOM scans (drag-reorder, at-link)              | P1       | S      | —                                | DONE (`7227ab5`) |
 | 007  | Drop semver runtime dep + debounce HtmlOutputPlugin               | P2       | S      | —                                | DONE (`eee1a97`) |
-| 008  | Externalize yjs/y-websocket as optional peers                     | P2       | M      | —                                | TODO             |
+| 008  | Externalize yjs/y-websocket as optional peers                     | P2       | M      | —                                | DONE (`74eece1`) |
 | 009  | Replace lodash with in-repo utilities                             | P2       | M      | —                                | TODO             |
 | 010  | Consolidate duplicated plain-text paste handling                  | P2       | S      | —                                | TODO             |
 | 011  | Isolate private Lexical API usage                                 | P2       | M      | —                                | TODO             |
