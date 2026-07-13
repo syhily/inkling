@@ -63,7 +63,7 @@ interface HeaderCardProps {
   isPinturaEnabled?: boolean
   layout?: string
   onFileChange: (event: FileChangeEvent) => void
-  openImageEditor: (options: { image?: string; handleSave: (file: File) => void }) => void
+  openImageEditor: (options: { image: string; handleSave: (blob: Blob) => void }) => void
   imageDragHandler: { isDraggedOver?: boolean; setRef?: (element: HTMLElement | null) => void }
   headerTextEditor: LexicalEditor
   headerTextEditorInitialState?: unknown
@@ -354,7 +354,7 @@ export function HeaderCard({
               isLoading={isLoading}
               isPinturaEnabled={isPinturaEnabled}
               mimeTypes={['image/*']}
-              openImageEditor={(handleSave: (file: File) => void) => openImageEditor({ handleSave })}
+              openImageEditor={openImageEditor}
               progress={progress}
               size="large"
               src={backgroundImageSrc}
@@ -565,7 +565,7 @@ export function HeaderCard({
               isPinturaEnabled={isPinturaEnabled}
               label="Image"
               mimeTypes={['image/*']}
-              openImageEditor={(handleSave: (file: File) => void) => openImageEditor({ handleSave })}
+              openImageEditor={openImageEditor}
               placeholderRef={imageDragHandler?.setRef ?? undefined}
               progress={progress}
               setFileInputRef={setFileInputRef}

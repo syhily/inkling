@@ -12,7 +12,10 @@ interface BookmarkCardProps {
   handlePasteAsLink: (href: string) => void
   handleRetry: () => void
   handleUrlChange: (eventOrUrl: React.ChangeEvent<HTMLInputElement> | string) => void
-  handleUrlSubmit: (eventOrUrl: React.KeyboardEvent<HTMLInputElement> | string | null, type?: string) => void
+  handleUrlSubmit: (
+    eventOrUrl: React.KeyboardEvent<HTMLInputElement> | KeyboardEvent | string | null,
+    type?: string,
+  ) => void
   url?: string
   urlInputValue?: string
   urlPlaceholder?: string

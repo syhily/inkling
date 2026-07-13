@@ -314,10 +314,10 @@ export function ColorIndicator({
             <div className={`flex items-center gap-1`}>
               {swatches.map(({ customContent, ...swatch }) =>
                 customContent ? (
-                  <Fragment key={swatch.title ?? Math.random().toString()}>{customContent}</Fragment>
+                  <Fragment key={swatch.title}>{customContent}</Fragment>
                 ) : (
                   <ColorSwatch
-                    key={swatch.title ?? Math.random().toString()}
+                    key={swatch.title}
                     isSelected={selectedSwatch === swatch.title}
                     onSelect={(val) => {
                       onSwatchChange(val)

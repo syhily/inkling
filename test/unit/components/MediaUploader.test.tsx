@@ -47,9 +47,9 @@ describe('MediaUploader', function () {
     expect(onRemoveMedia).toHaveBeenCalledTimes(1)
   })
 
-  it('opens the image editor and converts the saved file into a FileChangeEvent', function () {
+  it('opens the image editor with the current image and converts the saved blob into a FileChangeEvent', function () {
     const onFileChange = vi.fn()
-    const openImageEditor = vi.fn((handleSave) => {
+    const openImageEditor = vi.fn(({ handleSave }: { image: string; handleSave: (blob: Blob) => void }) => {
       handleSave(file)
     })
 
@@ -65,6 +65,7 @@ describe('MediaUploader', function () {
     fireEvent.click(screen.getByLabelText('Edit'))
 
     expect(openImageEditor).toHaveBeenCalledTimes(1)
+    expect(openImageEditor).toHaveBeenCalledWith(expect.objectContaining({ image: 'https://example.com/kitten.png' }))
     expect(onFileChange).toHaveBeenCalledTimes(1)
     expect((onFileChange.mock.calls[0]![0] as { target: { files: File[] } }).target.files[0]).toBe(file)
   })

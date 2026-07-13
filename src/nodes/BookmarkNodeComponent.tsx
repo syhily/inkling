@@ -67,7 +67,7 @@ export function BookmarkNodeComponent({
   }
 
   const handleUrlSubmit = async (
-    eventOrUrl: React.KeyboardEvent<HTMLInputElement> | string | null,
+    eventOrUrl: React.KeyboardEvent<HTMLInputElement> | KeyboardEvent | string | null,
     type?: string,
   ): Promise<void> => {
     if (!eventOrUrl) {
@@ -91,7 +91,10 @@ export function BookmarkNodeComponent({
     }
 
     if (typeof eventOrUrl === 'object' && 'key' in eventOrUrl && eventOrUrl.key === 'Enter') {
-      fetchMetadata((eventOrUrl.target as HTMLInputElement).value)
+      // when Enter is pressed with focus in the main editor (UrlInputPlugin)
+      // the event target is the editor root, so fall back to the input value
+      const targetValue = (eventOrUrl.target as HTMLInputElement).value
+      fetchMetadata(targetValue ?? urlInputValue)
     }
   }
 

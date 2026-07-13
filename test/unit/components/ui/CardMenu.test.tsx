@@ -84,6 +84,16 @@ describe('CardSnippetItem', () => {
     expect(onRemove).toHaveBeenCalledTimes(1)
     expect(onClick).not.toHaveBeenCalled()
   })
+
+  it('closes the menu after removing a snippet', () => {
+    const onRemove = vi.fn()
+    const closeMenu = vi.fn()
+    render(<CardSnippetItem label="Snippet" closeMenu={closeMenu} dataTestId="snippet-item" onRemove={onRemove} />)
+
+    fireEvent.click(screen.getByText('Remove'))
+    expect(onRemove).toHaveBeenCalledTimes(1)
+    expect(closeMenu).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('CardMenu', () => {
@@ -139,6 +149,7 @@ describe('CardMenu', () => {
     expect(screen.getByText('My Snippet')).toBeInTheDocument()
     fireEvent.click(screen.getByText('Remove'))
     expect(onRemove).toHaveBeenCalledTimes(1)
+    expect(closeMenu).toHaveBeenCalledTimes(1)
   })
 
   it('marks selected item', () => {

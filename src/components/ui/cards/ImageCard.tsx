@@ -80,7 +80,7 @@ function PopulatedImageCard({
   }
 
   const progressAlt =
-    imageUploader.progress && imageUploader.progress.toFixed(0) < '100'
+    imageUploader.progress !== undefined && Math.round(imageUploader.progress) < 100
       ? `upload in progress, ${imageUploader.progress}`
       : ''
 

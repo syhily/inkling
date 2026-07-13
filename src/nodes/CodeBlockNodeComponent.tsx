@@ -26,8 +26,8 @@ export function CodeBlockNodeComponent({
   captionEditorInitialState,
 }: CodeBlockNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const { cardConfig } = React.useContext(InklingComposerContext)
-  const { isEditing, isSelected } = React.useContext(CardContext)
+  const { cardConfig, darkMode } = React.useContext(InklingComposerContext)
+  const { isEditing, isSelected, setEditing } = React.useContext(CardContext)
   const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
 
   const updateCode = React.useCallback(
@@ -57,6 +57,7 @@ export function CodeBlockNodeComponent({
   const handleToolbarEdit = (event: React.MouseEvent): void => {
     event.preventDefault()
     event.stopPropagation()
+    setEditing(true)
   }
 
   return (
@@ -65,6 +66,7 @@ export function CodeBlockNodeComponent({
         captionEditor={captionEditor ?? null}
         captionEditorInitialState={captionEditorInitialState}
         code={code}
+        darkMode={darkMode}
         isEditing={isEditing}
         isSelected={isSelected}
         language={language}

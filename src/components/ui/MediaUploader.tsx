@@ -30,7 +30,7 @@ export interface MediaUploaderProps {
   isEditing?: boolean
   isLoading?: boolean
   isPinturaEnabled?: boolean
-  openImageEditor?: (handleSave: (file: File) => void) => void
+  openImageEditor?: (options: { image: string; handleSave: (blob: Blob) => void }) => void
   progress?: number
   errors?: Error[] | { message?: string }[]
   onRemoveMedia?: () => void
@@ -84,10 +84,14 @@ export function MediaUploader({
     onFileChange(e)
   }
 
-  const handleImageEditorSave = (editedImage: File) => {
+  const handleImageEditorSave = (editedImage: Blob) => {
+    const file =
+      editedImage instanceof File
+        ? editedImage
+        : new File([editedImage], 'image', { type: editedImage.type || 'image/png' })
     onFileChange({
       target: {
-        files: [editedImage],
+        files: [file],
       },
     })
   }
@@ -147,8 +151,12 @@ export function MediaUploader({
       {!isLoading && (
         <div className="absolute top-1 right-1 flex space-x-1 opacity-0 transition-all group-hover/image:opacity-100">
           {additionalActions}
-          {isPinturaEnabled && openImageEditor && (
-            <IconButton Icon={WandIcon} label="Edit" onClick={() => openImageEditor(handleImageEditorSave)} />
+          {isPinturaEnabled && openImageEditor && src && (
+            <IconButton
+              Icon={WandIcon}
+              label="Edit"
+              onClick={() => openImageEditor({ image: src, handleSave: handleImageEditorSave })}
+            />
           )}
           <IconButton dataTestId="media-upload-remove" Icon={DeleteIcon} label="Delete" onClick={onRemove} />
         </div>

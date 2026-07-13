@@ -1,4 +1,8 @@
+import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import { COMMAND_PRIORITY_LOW, KEY_ENTER_COMMAND } from 'lexical'
 import React from 'react'
+
+import CloseIcon from '@/assets/icons/inkling-close.svg?react'
 
 export interface UrlInputProps {
   dataTestId?: string
@@ -6,11 +10,35 @@ export interface UrlInputProps {
   handlePasteAsLink?: (href: string) => void
   handleRetry?: () => void
   handleUrlChange?: (eventOrUrl: React.ChangeEvent<HTMLInputElement> | string) => void
-  handleUrlSubmit?: (event: React.KeyboardEvent<HTMLInputElement>) => void
+  handleUrlSubmit?: (event: React.KeyboardEvent<HTMLInputElement> | KeyboardEvent | null) => void
   hasError?: boolean
   isLoading?: boolean
   placeholder?: string
   value?: string
+}
+
+// submits the URL on Enter even when focus is in the main editor rather
+// than the input (e.g. right after pasting a URL into the editor)
+function UrlInputPlugin({ onEnter }: { onEnter?: (event: KeyboardEvent | null) => void }) {
+  const composerContext = React.useContext(LexicalComposerContext)
+  const editor = composerContext?.[0]
+
+  React.useEffect(() => {
+    if (!editor || !onEnter) {
+      return
+    }
+
+    return editor.registerCommand(
+      KEY_ENTER_COMMAND,
+      (event) => {
+        onEnter(event)
+        return false
+      },
+      COMMAND_PRIORITY_LOW,
+    )
+  }, [editor, onEnter])
+
+  return null
 }
 
 export function UrlInput({
@@ -105,12 +133,12 @@ export function UrlInput({
         </div>
         {handleClose && (
           <button
-            className="ml-2 cursor-pointer"
+            className="ml-2 cursor-pointer p-1"
             data-testid={`${dataTestId}-error-close`}
             type="button"
             onClick={handleClose}
           >
-            ✕
+            <CloseIcon className="size-4 stroke-2 text-grey-400" />
           </button>
         )}
       </div>
@@ -119,6 +147,7 @@ export function UrlInput({
 
   return (
     <div className="flex w-full items-center rounded-md border border-grey-300 px-3 py-2 text-sm leading-snug font-normal text-grey-900 focus-within:border-green focus-within:bg-white focus-within:shadow-[0_0_0_2px_rgba(48,207,67,.25)] focus-visible:outline-none dark:border-grey-800 dark:bg-grey-900 dark:placeholder:text-grey-800">
+      <UrlInputPlugin onEnter={handleUrlSubmit} />
       <input
         autoFocus
         className="w-full bg-transparent text-sm outline-none"

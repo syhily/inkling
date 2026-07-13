@@ -172,6 +172,7 @@ export interface CardSnippetItemProps {
   scrollToItem?: boolean
   onClick?: (event: React.MouseEvent) => void
   onRemove?: () => void
+  closeMenu?: () => void
 }
 
 export const CardSnippetItem = ({
@@ -182,6 +183,7 @@ export const CardSnippetItem = ({
   scrollToItem,
   onClick,
   onRemove,
+  closeMenu,
 }: CardSnippetItemProps) => {
   const itemRef = React.useRef<HTMLDivElement | null>(null)
 
@@ -190,6 +192,12 @@ export const CardSnippetItem = ({
       itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
     }
   }, [scrollToItem])
+
+  const handleSnippetRemove = (event: React.MouseEvent) => {
+    event.stopPropagation() // prevent snippet insertion
+    onRemove?.()
+    closeMenu?.()
+  }
 
   const handleMouseDown = (event: React.MouseEvent) => {
     // prevent menu closing before snippet insertion
@@ -216,10 +224,7 @@ export const CardSnippetItem = ({
             className="ml-auto shrink-0 cursor-pointer rounded-md p-[4px] group-hover:block hover:bg-grey-200 dark:hover:bg-grey-950"
             title="Remove snippet"
             type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              onRemove()
-            }}
+            onClick={handleSnippetRemove}
           >
             <TrashCardIcon className="size-[1.8rem] stroke-red stroke-[1.5] text-red" />
             <span className="sr-only">Remove</span>
@@ -246,6 +251,7 @@ export const CardMenu = ({
   insert = () => {},
   selectedItemIndex = 0,
   scrollToSelectedItem = false,
+  closeMenu,
 }: CardMenuProps) => {
   const CardMenuSections: React.ReactElement[] = []
 
@@ -285,6 +291,7 @@ export const CardMenu = ({
         CardMenuItems.push(
           <CardSnippetItem
             key={itemIndex}
+            closeMenu={closeMenu}
             dataItemId={itemIndex}
             data-testid={item.dataTestId}
             isSelected={isSelected}

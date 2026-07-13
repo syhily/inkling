@@ -40,6 +40,26 @@ describe('ImageCard', function () {
     expect(screen.getByTestId('upload-progress')).toBeInTheDocument()
   })
 
+  it('announces upload progress in the alt text while uploading', function () {
+    render(
+      <ImageCard {...baseProps} imageUploader={{ isLoading: true, progress: 50 }} src="https://example.com/cat.png" />,
+    )
+
+    expect(screen.getByTestId('image-card-loading')).toHaveAttribute('alt', 'upload in progress, 50')
+  })
+
+  it('does not announce upload progress once the upload completes', function () {
+    render(
+      <ImageCard
+        {...baseProps}
+        imageUploader={{ isLoading: false, progress: 100 }}
+        src="https://example.com/cat.png"
+      />,
+    )
+
+    expect(screen.getByTestId('image-card-populated')).toHaveAttribute('alt', '')
+  })
+
   it('shows the drag-to-replace overlay when the file drag handler is active', function () {
     render(
       <ImageCard {...baseProps} imageFileDragHandler={{ isDraggedOver: true }} src="https://example.com/cat.png" />,

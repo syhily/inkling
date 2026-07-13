@@ -230,4 +230,32 @@ describe('ColorIndicator', () => {
 
     expect(onSwatchChange).toHaveBeenCalledWith('transparent')
   })
+
+  it('keeps swatch elements stable across re-renders', () => {
+    const { rerender } = render(
+      <ColorIndicator
+        value="#ff0000"
+        swatches={swatches}
+        onSwatchChange={onSwatchChange}
+        onTogglePicker={onTogglePicker}
+        onChange={onChange}
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('color-selector-button').querySelector('button')!)
+    const swatchBefore = screen.getByTitle('Red')
+
+    rerender(
+      <ColorIndicator
+        value="#00ff00"
+        swatches={swatches}
+        onSwatchChange={onSwatchChange}
+        onTogglePicker={onTogglePicker}
+        onChange={onChange}
+      />,
+    )
+
+    // random keys would remount the swatches, breaking reconciliation
+    expect(screen.getByTitle('Red')).toBe(swatchBefore)
+  })
 })

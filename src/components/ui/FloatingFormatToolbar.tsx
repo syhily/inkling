@@ -3,8 +3,11 @@ import type { LexicalEditor } from 'lexical'
 import { TOGGLE_LINK_COMMAND } from '@lexical/link'
 import {
   mergeRegister,
+  $createRangeSelection,
   $getSelection,
   $isRangeSelection,
+  $isTextNode,
+  $setSelection,
   COMMAND_PRIORITY_LOW,
   DELETE_CHARACTER_COMMAND,
 } from 'lexical'
@@ -184,7 +187,27 @@ export function FloatingFormatToolbar({
             href={href}
             cancel={handleActionToolbarClose}
             update={(url) => {
-              editor.dispatchCommand(TOGGLE_LINK_COMMAND, url || null)
+              editor.update(() => {
+                editor.dispatchCommand(TOGGLE_LINK_COMMAND, url || null)
+
+                // collapse the selection to the end of the focus node to avoid
+                // the format toolbar popping up again over the linked text
+                const selection = $getSelection()
+                if ($isRangeSelection(selection)) {
+                  const focusNode = selection.focus.getNode()
+                  if (!$isTextNode(focusNode)) {
+                    return
+                  }
+                  const rangeSelection = $createRangeSelection()
+                  rangeSelection.setTextNodeRange(
+                    focusNode,
+                    focusNode.getTextContentSize(),
+                    focusNode,
+                    focusNode.getTextContentSize(),
+                  )
+                  $setSelection(rangeSelection)
+                }
+              })
               handleActionToolbarClose()
             }}
           />

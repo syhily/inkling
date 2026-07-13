@@ -9,9 +9,13 @@ import InklingComposerContext from '@/context/InklingComposerContext'
 import { BookmarkNode, $createBookmarkNode } from '@/nodes/BookmarkNode'
 import { BookmarkNodeComponent } from '@/nodes/BookmarkNodeComponent'
 
-vi.mock('@lexical/react/LexicalComposerContext', () => ({
-  useLexicalComposerContext: vi.fn(),
-}))
+vi.mock('@lexical/react/LexicalComposerContext', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@lexical/react/LexicalComposerContext')>()
+  return {
+    ...actual,
+    useLexicalComposerContext: vi.fn(),
+  }
+})
 
 function createTestEditor(): LexicalEditor {
   const editor = createEditor({ namespace: 'test', nodes: [BookmarkNode, LinkNode], onError: () => {} })

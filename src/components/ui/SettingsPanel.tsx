@@ -544,7 +544,7 @@ interface MediaUploadSettingProps {
   borderStyle?: 'simple' | 'heavy' | 'squared' | 'rounded'
   mimeTypes?: string[]
   isPinturaEnabled?: boolean
-  openImageEditor?: (handleSave: (file: File) => void) => void
+  openImageEditor?: (options: { image: string; handleSave: (blob: Blob) => void }) => void
   setFileInputRef?: (ref: React.MutableRefObject<HTMLInputElement | null>) => void
   dataTestId?: string
 }
