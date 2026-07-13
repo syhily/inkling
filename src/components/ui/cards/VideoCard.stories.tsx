@@ -48,7 +48,7 @@ function VideoCardStory({ display = 'Default', caption = '', ...args }: VideoCar
 
   return (
     <div className="inkling-prose">
-      <div className="not-inkling-prose my-8 mx-auto max-w-[740px] min-w-[initial]">
+      <div className="not-inkling-prose mx-auto my-8 max-w-[740px] min-w-[initial]">
         <CardWrapper {...displayState} {...componentProps}>
           <VideoCard {...displayState} {...componentProps} />
         </CardWrapper>
@@ -184,8 +184,7 @@ export const ThumbnailPopulated: Story = {
     cardWidth: 'regular',
     isLoopChecked: false,
     thumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
-    customThumbnail:
-      'https://images.unsplash.com/photo-1543242594-c8bae8b9e708?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA==&auto=format&fit=crop&w=2970&q=80',
+    customThumbnail: 'https://static.inkling.local/v5.0.0/images/publication-cover.jpg',
     totalDuration: '32:27',
     caption: 'Watch the full documentary here.',
   },

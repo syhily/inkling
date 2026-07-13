@@ -61,7 +61,7 @@ function HeaderCardStory({ display = 'Default', header = '', subheader = '', ...
 
   return (
     <div className="inkling-prose">
-      <div className="my-8 mx-auto w-full min-w-[initial]">
+      <div className="mx-auto my-8 w-full min-w-[initial]">
         <CardWrapper {...displayState} {...componentProps}>
           <HeaderCard {...displayState} {...componentProps} />
         </CardWrapper>

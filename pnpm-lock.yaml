@@ -21,12 +21,6 @@ importers:
       lodash:
         specifier: 4.18.1
         version: 4.18.1
-      luxon:
-        specifier: 3.7.2
-        version: 3.7.2
-      prop-types:
-        specifier: 15.8.1
-        version: 15.8.1
       react-error-boundary:
         specifier: 6.1.2
         version: 6.1.2(react@19.2.7)
@@ -145,9 +139,6 @@ importers:
       '@types/color':
         specifier: ^4.2.1
         version: 4.2.1
-      '@types/color-convert':
-        specifier: 3.0.1
-        version: 3.0.1
       '@types/html-minifier-terser':
         specifier: 7.0.2
         version: 7.0.2
@@ -271,9 +262,6 @@ importers:
       oxlint:
         specifier: 1.72.0
         version: 1.72.0
-      pluralize:
-        specifier: 8.0.0
-        version: 8.0.0
       prettier:
         specifier: 3.9.4
         version: 3.9.4
@@ -2180,10 +2168,6 @@ packages:
   '@types/color-convert@2.0.4':
     resolution: {integrity: sha512-Ub1MmDdyZ7mX//g25uBAoH/mWGd9swVbt8BseymnaE18SU4po/PjmCrHxqIIRjBo3hV/vh1KGr0eMxUhp+t+dQ==}
 
-  '@types/color-convert@3.0.1':
-    resolution: {integrity: sha512-Wj7O4Y7tPo/3y9z4K0XRLbLBP2hCHq2vlmLkR0uQDGmLdoUVDmUrXy50ZffMxZKzBpYxFT+4FnDT8xzMlnKRQQ==}
-    deprecated: This is a stub types definition. color-convert provides its own type definitions, so you do not need this installed.
-
   '@types/color-name@1.1.5':
     resolution: {integrity: sha512-j2K5UJqGTxeesj6oQuGpMgifpT5k9HprgQd8D1Y0lOFqKHl3PJu5GMeS4Y5EgjS55AE6OQxf8mPED9uaGbf4Cg==}
 
@@ -3303,10 +3287,6 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
-  luxon@3.7.2:
-    resolution: {integrity: sha512-vtEhXh/gNjI9Yg1u4jX/0YVPMvxzHuGgCm6tC5kZyb08yjGWGnqAjGJvcXbqQR2P3MyMEFnRbpcdFS6PBcLqew==}
-    engines: {node: '>=12'}
-
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
     hasBin: true
@@ -3652,10 +3632,6 @@ packages:
     resolution: {integrity: sha512-DWnY5o3YbLWK4GovuAVwpqL+1VwGNdUGrRr++8j8PtQQzvAVZUIMjKQ90fY689sEJZJBbZVw1rXaOKSTitkzPQ==}
     engines: {node: '>=18'}
     hasBin: true
-
-  pluralize@8.0.0:
-    resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
-    engines: {node: '>=4'}
 
   postcss-safe-parser@7.0.1:
     resolution: {integrity: sha512-0AioNCJZ2DPYz5ABT6bddIqlhgwhpHZ/l65YAYo0BCIn0xiDpsnTHz0gnoTGk0OXZW0JRs+cDwL8u/teRdz+8A==}
@@ -6052,10 +6028,6 @@ snapshots:
     dependencies:
       '@types/color-name': 1.1.5
 
-  '@types/color-convert@3.0.1':
-    dependencies:
-      color-convert: 2.0.1
-
   '@types/color-name@1.1.5': {}
 
   '@types/color@4.2.1':
@@ -7160,8 +7132,6 @@ snapshots:
     dependencies:
       yallist: 3.1.1
 
-  luxon@3.7.2: {}
-
   lz-string@1.5.0: {}
 
   magic-string@0.30.21:
@@ -7735,8 +7705,6 @@ snapshots:
       playwright-core: 1.61.1
     optionalDependencies:
       fsevents: 2.3.2
-
-  pluralize@8.0.0: {}
 
   postcss-safe-parser@7.0.1(postcss@8.5.15):
     dependencies:
