@@ -473,8 +473,8 @@
     }
 
     > :where(div[data-inkling-card-width='full'] + div[data-inkling-card-width='full']):not(
-        :where(.not-inkling-prose, [class~='not-inkling-prose'] *)
-      ) {
+      :where(.not-inkling-prose, [class~='not-inkling-prose'] *)
+    ) {
       padding: 0;
     }
 
@@ -572,7 +572,7 @@
 .inkling-lexical-caption {
   .inkling-prose {
     :where(p, blockquote, aside, ul, ol):not(:where(.not-inkling-prose, [class~='not-inkling-prose'] *)) {
-      @apply text-sm font-sans tracking-wide leading-[24px];
+      @apply font-sans text-sm leading-[24px] tracking-wide;
     }
   }
 }
@@ -580,7 +580,7 @@
 .inkling-lexical-section-title {
   .inkling-prose {
     :where(p, blockquote, aside, ul, ol):not(:where(.not-inkling-prose, [class~='not-inkling-prose'] *)) {
-      @apply text-md font-sans leading-normal font-bold tracking-[-.01em] uppercase;
+      @apply font-sans text-md leading-normal font-bold tracking-[-.01em] uppercase;
     }
     :where(strong):not(:where(.not-inkling-prose, [class~='not-inkling-prose'] *)) {
       @apply !font-extrabold;
@@ -591,7 +591,7 @@
 .inkling-lexical-heading {
   .inkling-prose {
     :where(p, blockquote, aside, ul, ol):not(:where(.not-inkling-prose, [class~='not-inkling-prose'] *)) {
-      @apply font-sans font-bold tracking-tight !leading-[1.1];
+      @apply font-sans !leading-[1.1] font-bold tracking-tight;
     }
     :where(a, a span):not(:where(.not-inkling-prose, [class~='not-inkling-prose'] *)) {
       @apply !text-current;
@@ -648,7 +648,7 @@
 .inkling-lexical-subheading.subheading-xsmall {
   .inkling-prose {
     :where(p, blockquote, aside, ul, ol):not(:where(.not-inkling-prose, [class~='not-inkling-prose'] *)) {
-      @apply font-normal text-[1.6rem];
+      @apply text-[1.6rem] font-normal;
     }
   }
 }

@@ -38,7 +38,6 @@ export class DragDropHandler {
   _currentOverDroppableElem: HTMLElement | null = null
   _currentOverDroppablePosition: DroppablePosition | null = null
   _dropIndicator: HTMLElement | null = null
-  _elementsWithHoverRemoved: Map<HTMLElement, string[]> = new Map()
   _eventHandlers: Record<string, EventHandlerEntry> = {}
   _dragPreviewContainerElement: HTMLElement | null = null
   _rafUpdateDragPreviewElementPosition: (() => void) | null = null
@@ -348,36 +347,22 @@ export class DragDropHandler {
     })
 
     // prevent hover effects showing whilst dragging
-    this._removeHoverClasses()
+    this._setHoverSuppression(true)
 
     this._handleDrag()
   }
 
-  _removeHoverClasses() {
-    this._restoreHoverClasses()
-
-    this._elementsWithHoverRemoved = new Map()
-
-    const elementsWithHover = document.querySelectorAll('[class*="hover:"]')
-
-    elementsWithHover.forEach((element) => {
-      const hoverClasses = Array.from(element.classList.values()).filter((cls) => cls.startsWith('hover:'))
-
-      this._elementsWithHoverRemoved.set(element as HTMLElement, hoverClasses)
-
-      ;(element as HTMLElement).classList.remove(...hoverClasses)
-    })
-  }
-
-  _restoreHoverClasses() {
-    if (!this._elementsWithHoverRemoved) {
-      return
+  _setHoverSuppression(suppress: boolean) {
+    const editorRoot =
+      this.editorContainerElement?.closest('[data-inkling="editor"]') ||
+      document.querySelector('[data-inkling="editor"]')
+    if (editorRoot) {
+      if (suppress) {
+        editorRoot.setAttribute('data-inkling-dragging', 'true')
+      } else {
+        editorRoot.removeAttribute('data-inkling-dragging')
+      }
     }
-
-    this._elementsWithHoverRemoved.forEach((hoverClasses, element) => {
-      element.classList.add(...hoverClasses)
-    })
-    this._elementsWithHoverRemoved = new Map()
   }
 
   // called when mouse moves whilst a drag is in progress
@@ -604,7 +589,7 @@ export class DragDropHandler {
       container.onDragEnd()
     })
 
-    this._restoreHoverClasses()
+    this._setHoverSuppression(false)
 
     applyUserSelect(document.body, '')
     document.querySelectorAll('[data-inkling="editor"] [data-lexical-editor]').forEach((el) => {

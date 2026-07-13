@@ -3,6 +3,11 @@
   --cta-link-color-text: var(--grey-900);
 }
 
+/* Suppress hover effects while dragging cards */
+[data-inkling='editor'][data-inkling-dragging] [class*='hover:'] {
+  pointer-events: none !important;
+}
+
 /* Link color */
 .inkling-lexical .cta-link-color {
   color: var(--cta-link-color) !important;

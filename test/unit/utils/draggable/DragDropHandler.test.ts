@@ -280,4 +280,51 @@ describe('DragDropHandler', () => {
     const mouseUp = new MouseEvent('mouseup', { bubbles: true })
     document.dispatchEvent(mouseUp)
   })
+
+  it('toggles hover suppression attribute on the editor root during drag', async () => {
+    const containerElement = createContainer('hover-suppression')
+    const editorRoot = document.createElement('div')
+    editorRoot.dataset.inkling = 'editor'
+    const lexicalEditor = document.createElement('div')
+    lexicalEditor.dataset.lexicalEditor = 'true'
+    editorRoot.appendChild(lexicalEditor)
+    document.body.appendChild(editorRoot)
+
+    handler.destroy()
+    handler = new DragDropHandler({ editorContainerElement: lexicalEditor })
+    handler.registerContainer(containerElement, createHandlers())
+
+    const draggable = containerElement.querySelector('.draggable') as HTMLElement
+    const img = document.createElement('img')
+    img.width = 100
+    img.height = 100
+    draggable.appendChild(img)
+
+    const mouseDown = new MouseEvent('mousedown', {
+      bubbles: true,
+      clientX: 10,
+      clientY: 10,
+      button: 0,
+    })
+    draggable.dispatchEvent(mouseDown)
+
+    const mouseMove = new MouseEvent('mousemove', {
+      bubbles: true,
+      clientX: 15,
+      clientY: 15,
+      button: 0,
+    })
+    document.dispatchEvent(mouseMove)
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 50)
+    })
+
+    expect(editorRoot.dataset.inklingDragging).toBe('true')
+
+    const mouseUp = new MouseEvent('mouseup', { bubbles: true })
+    document.dispatchEvent(mouseUp)
+
+    expect(editorRoot.dataset.inklingDragging).toBeUndefined()
+  })
 })
