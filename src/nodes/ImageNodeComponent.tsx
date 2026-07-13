@@ -249,7 +249,7 @@ export function ImageNodeComponent({
     return () => {
       clearTimeout(renderTimeout)
     }
-  })
+  }, [triggerFileDialog, nodeKey, editor, fileInputRef])
 
   const handleImageCardResize = React.useCallback(
     (newWidth: string) => {

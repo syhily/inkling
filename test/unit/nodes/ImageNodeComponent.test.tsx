@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { createEditor, type LexicalEditor } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -6,9 +6,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
+import { openFileSelection } from '@/utils/openFileSelection'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
+}))
+
+vi.mock('@/utils/openFileSelection', () => ({
+  openFileSelection: vi.fn(),
 }))
 
 vi.mock('../../../src/components/ui/CardCaptionEditor', () => ({
@@ -90,5 +95,19 @@ describe('ImageNodeComponent', () => {
     )
 
     expect(screen.getByTestId('image-card-populated')).toBeTruthy()
+  })
+
+  it('opens the file dialog once when triggerFileDialog is true', async () => {
+    const composerValue = createComposerContext({ image: { mimeTypes: ['image/png'] } })
+    const cardValue = createCardContext()
+    render(
+      <InklingComposerContext.Provider value={composerValue}>
+        <CardContext.Provider value={cardValue}>
+          <ImageNodeComponent nodeKey="img-1" src="/image.png" triggerFileDialog />
+        </CardContext.Provider>
+      </InklingComposerContext.Provider>,
+    )
+
+    await waitFor(() => expect(openFileSelection).toHaveBeenCalledTimes(1))
   })
 })
