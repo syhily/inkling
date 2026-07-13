@@ -43,6 +43,7 @@ Repo quick reference (verification gates used by every plan):
 | 021  | Fix stale docs + public API overview                              | P2       | S      | 020                              | DONE (`14af652`) |
 | 022  | Spike: headless HTML/email export API                             | P3       | M      | —                                | DONE (`0305602`) |
 | 023  | Triage TODO cluster + draggable duplication decision              | P3       | M      | —                                | DONE (`51177e2`) |
+| 024  | koenig 对齐重构（对比回流 + 回归修复）                            | P1       | L      | —                                | IN PROGRESS      |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale — finding fixed independently or approach
