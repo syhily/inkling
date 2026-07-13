@@ -39,6 +39,7 @@
     "prepare": "husky .github/hooks",
     "presetup": "pnpm install",
     "pretest": "VITE_TEST=true pnpm build --config vite.config.demo.ts && pnpm build",
+    "pretest:unit": "pnpm build",
     "pretest:watch": "pnpm pretest",
     "preview": "vite preview --outDir dist-demo",
     "setup": "pnpm install && pnpm build",
