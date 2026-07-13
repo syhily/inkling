@@ -83,13 +83,32 @@ exact naming pattern — e.g. existing `test/unit/` entries).
 - `test/unit/utils/timing.test.ts` (create) and tests for the three other
   utilities (create or extend the matching file)
 - `package.json` (remove two lines)
+- `test/utils/e2e.ts` and `test/nodes-base/nodes/header.test.ts` — see
+  Amendment 1 below
+
+> **Amendment 1 (2026-07-13, reviewer)**: the executor's STOP was correct —
+> two test-side lodash imports exist that the audit missed (present at the
+> plan's base commit): `test/utils/e2e.ts:4` imports `lodash/startCase.js`
+> (used at line ~473) and `test/nodes-base/nodes/header.test.ts:6` imports
+> `lodash` for `_.replace` (6 sites). Both are now in scope:
+>
+> - `test/utils/e2e.ts`: replace `startCase` with a 3-line local helper
+>   (split on spaces/underscores/hyphens, capitalize each word, join with a
+>   space — verify against the one call site's actual inputs) or inline it at
+>   the call site if that's cleaner.
+> - `test/nodes-base/nodes/header.test.ts`: `_.replace(string, pattern,
+replacement)` is exactly `String.prototype.replace` — swap directly and
+>   drop the import.
+>
+> Both files keep every assertion unchanged.
 
 **Out of scope**:
 
 - Behavior changes at any call site (wait times, call patterns).
-- `demo/` or `test/` lodash usage — verify none exists
-  (`grep -rn "lodash" demo test` should return nothing; if it does, report —
-  do not expand scope).
+- Any other `demo/` or `test/` changes beyond the two files added by
+  Amendment 1 — if `grep -rn "lodash" demo test` returns matches beyond
+  `test/utils/e2e.ts` and `test/nodes-base/nodes/header.test.ts`, report —
+  do not expand scope.
 - The unused `escapeRegExp` variants elsewhere — only replace what exists.
 
 ## Git workflow
