@@ -30,7 +30,7 @@ inkling 是 koenig 的衍生单包重构版，两者各自完成 JS→TS 转换�
 | 1    | 共享工具回流                       | `cdbbf8c` | DONE |
 | 2    | generateDecoratorNode 泛型类型回流 | `40dcf89` | DONE |
 | 3    | 节点层修复                         | `0db022d` | DONE |
-| 4    | 组件层回归修复                     | —         | TODO |
+| 4    | 组件层回归修复                     | `0b21585` | DONE |
 | 5    | 插件层修复                         | —         | TODO |
 | 6    | 邮件渲染回流                       | —         | TODO |
 | 7    | 死代码与存疑项清理                 | —         | TODO |
@@ -53,7 +53,7 @@ inkling 是 koenig 的衍生单包重构版，两者各自完成 JS→TS 转换�
    - ImageNodeComponent/VideoNodeComponent 的 `onCardWidthChange` 用 `isCardWidth` 校验（批 1 已部分完成，核实补齐）。
 4. `$isXNode` 类型谓词统一：包装层各 `$isXNode` 仅 `ImageNode.tsx:205` 返回 `node is ImageNode` 谓词，其余返回 `boolean`——统一为谓词形式（先 grep 确认调用方兼容）。
 
-### 批 4：组件层回归修复（TODO）
+### 批 4：组件层回归修复（DONE `0b21585`）
 
 1. `src/nodes/CodeBlockNodeComponent.tsx`：(a) `darkMode` 重新传给 `CodeBlockCard`（koenig :43 传递，当前恒亮色预览）；(b) `handleToolbarEdit`（:57-60）恢复 `setEditing(true)` 并从 CardContext 取 `setEditing`——工具栏 Edit 按钮当前是空操作。
 2. `src/components/ui/cards/ImageCard.tsx:83` — `imageUploader.progress.toFixed(0) < '100'` 字符串字典序比较 → 数值比较（koenig 是 `< 100`），上传中文案当前永不显示。
@@ -90,7 +90,8 @@ inkling 是 koenig 的衍生单包重构版，两者各自完成 JS→TS 转换�
 4. `src/utils/dataSrcToFile.ts:17` — `Math.random` 改回 `crypto.getRandomValues`（koenig 原版）。
 5. `src/nodes/base/utils/visibility.ts` — segment 文案/语义注释更新为 koenig 侧的 "comped + gift" 表述（核实后顺手）。
 6. 核实项（默认不动，逐一记录结论）：`useMovable.ts` `currentX/Y` 初值 0 的 `(0,0)` 边界；`ButtonNode.tsx:79` `wrapperStyle="wide"`→`width="regular"`；`ToggleNode.tsx:47` `MINIMAL_NODES` vs koenig `BASIC_NODES`；VideoCard `borderStyle`；Gif item 的 div 化 a11y 回退；DragDropHandler 拖拽让位动画移除；`CardMenu.tsx` 的 `trackEvent` 空 stub 与 `inkling.local` 占位链接（含 `Gif/Error.tsx:19`）。
-7. 产出：在 commit message 或 `docs/tech-debt-triage.md` 追加本节核实结论。
+7. 排查 `test/e2e/cards/code-block-card.test.ts › can undo/redo content in code editor`：批 4 执行时发现在干净 main（批 3 提交点）上同样失败，属既有问题（疑似 CodeMirror undo 与编辑器焦点时序）。诊断后修复或按 `SKIP-REASON` 流程处理。
+8. 产出：在 commit message 或 `docs/tech-debt-triage.md` 追加本节核实结论。
 
 ## 明确不做（产品裁剪，已确认）
 
