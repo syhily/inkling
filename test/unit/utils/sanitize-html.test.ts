@@ -50,4 +50,17 @@ describe('Utils: sanitize-html', () => {
     const sanitizedHtml = sanitizeHtml(`<a href="${href}">link</a>`)
     expect(sanitizedHtml).toEqual('<a>link</a>')
   })
+
+  it('replaces iframes with a placeholder', function () {
+    const sanitizedHtml = sanitizeHtml('<iframe src="https://example.com"></iframe>')
+    expect(sanitizedHtml).toEqual('<pre class="iframe-embed-placeholder">Embedded iFrame</pre>')
+  })
+
+  it('does not hang on input that used to cause catastrophic backtracking', function () {
+    const payload = '<' + 'a'.repeat(10000) + '</script>'
+    const start = performance.now()
+    const result = sanitizeHtml(payload)
+    expect(performance.now() - start).toBeLessThan(100)
+    expect(result).not.toContain('<script')
+  })
 })
