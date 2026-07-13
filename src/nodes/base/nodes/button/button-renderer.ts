@@ -57,7 +57,7 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
           <table class="btn btn-accent" border="0" cellspacing="0" cellpadding="0" align="${node.alignment}">
             <tr>
               <td align="center">
-                <a href="${safeButtonUrl}">${escapedButtonText}</a>
+                <a href="${escapeHtml(safeButtonUrl)}">${escapedButtonText}</a>
               </td>
             </tr>
           </table>
@@ -72,7 +72,7 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
     const buttonHtml = renderEmailButton({
       alignment: node.alignment,
       color: 'accent',
-      url: safeButtonUrl,
+      url: escapeHtml(safeButtonUrl),
       text: escapedButtonText,
     })
 
@@ -95,7 +95,7 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
         <table border="0" cellspacing="0" cellpadding="0" align="${node.alignment}">
           <tr>
             <td align="center">
-              <a href="${safeButtonUrl}">${escapedButtonText}</a>
+              <a href="${escapeHtml(safeButtonUrl)}">${escapedButtonText}</a>
             </td>
           </tr>
         </table>

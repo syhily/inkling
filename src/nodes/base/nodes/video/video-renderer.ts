@@ -85,17 +85,17 @@ export function cardTemplate({ node, cardClasses }: { node: VideoNodeData; cardC
   const hideControlsClass = node.loop ? ' inkling-video-hide' : ''
 
   return `
-        <figure class="${cardClasses}" data-inkling-thumbnail=${safeThumbnailSrc} data-inkling-custom-thumbnail=${safeCustomThumbnailSrc}>
+        <figure class="${cardClasses}" data-inkling-thumbnail="${escapeHtml(safeThumbnailSrc)}" data-inkling-custom-thumbnail="${escapeHtml(safeCustomThumbnailSrc)}">
             <div class="inkling-video-container">
                 <video
-                    src="${isSafeMediaUrl(node.src) ? node.src : ''}"
+                    src="${escapeHtml(isSafeMediaUrl(node.src) ? node.src : '')}"
                     ${posterAttr}
                     ${widthAttr}
                     ${heightAttr}
                     ${autoplayAttr}
                     playsinline
                     preload="metadata"
-                    style="background: transparent url('${thumbnailSrc}') 50% 50% / cover no-repeat;"
+                    style="background: transparent url('${escapeHtml(thumbnailSrc)}') 50% 50% / cover no-repeat;"
                 ></video>
                 <div class="inkling-video-overlay">
                     <button class="inkling-video-large-play-icon" aria-label="Play video">

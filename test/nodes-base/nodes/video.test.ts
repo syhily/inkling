@@ -552,6 +552,27 @@ describe('VideoNode', function () {
         output.should.containEql('/content/images/2022/11/inkling-lexical-custom.jpg')
       }),
     )
+
+    it(
+      'escapes quote-containing thumbnail URLs in the web template',
+      editorTest(function () {
+        const payload = {
+          src: '/content/images/2022/11/inkling-lexical.mp4',
+          width: 200,
+          height: 100,
+          duration: 60,
+          thumbnailSrc: '/x"><img/src=y/onerror=alert(1)>',
+        }
+
+        const videoNode = $createVideoNode(payload)
+        const { element } = videoNode.exportDOM(editor, exportOptions)
+        const output = (element as HTMLElement).outerHTML
+
+        output.should.containEql('data-inkling-thumbnail="/x&quot;')
+        output.should.containEql('&quot;')
+        ;(element as HTMLElement).querySelectorAll('img').length.should.equal(0)
+      }),
+    )
   })
 
   describe('hasEditMode', function () {

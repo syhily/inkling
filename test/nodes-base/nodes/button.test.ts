@@ -299,6 +299,25 @@ describe('ButtonNode', function () {
         element.innerHTML.should.not.containEql('<script>alert(1)</script>')
       }),
     )
+
+    it(
+      'escapes a quote-containing button URL in email templates',
+      editorTest(function () {
+        const buttonNode = $createButtonNode({
+          buttonText: 'click me',
+          buttonUrl: '#/portal/"quoted"',
+          alignment: 'center',
+        })
+
+        for (const feature of [{ emailCustomization: true }, { emailCustomizationAlpha: true }, {}]) {
+          const result = buttonNode.exportDOM(editor, { ...exportOptions, target: 'email', feature })
+          const element = result.element as HTMLElement
+
+          element.innerHTML.should.containEql('href="#/portal/&quot;quoted&quot;"')
+          element.querySelectorAll('a').length.should.equal(1)
+        }
+      }),
+    )
   })
 
   describe('exportJSON', function () {

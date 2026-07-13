@@ -317,7 +317,7 @@ describe('BookmarkNode', function () {
         element.innerHTML.should.containEql(
           'Inkling: Independent technology &lt;script&gt;alert("XSS")&lt;/script&gt; for modern publishing.',
         )
-        element.innerHTML.should.containEql('doing &amp;quot;kewl&amp;quot; stuff')
+        element.innerHTML.should.containEql('doing "kewl" stuff')
         element.innerHTML.should.containEql("fa'ker")
         element.innerHTML.should.containEql('Fake &lt;script&gt;alert("XSS")&lt;/script&gt;')
 
@@ -376,6 +376,56 @@ describe('BookmarkNode', function () {
         const emailHtml = (emailResult.element as HTMLElement).innerHTML
         emailHtml.should.containEql('&lt;img src=x onerror=alert(1)&gt;')
         emailHtml.should.not.containEql('<img src=x onerror=alert(1)>')
+      }),
+    )
+
+    it(
+      'does not double-escape the description in email',
+      editorTest(function () {
+        const bookmarkNode = $createBookmarkNode({
+          url: 'https://www.fake.org/',
+          metadata: {
+            icon: '',
+            title: '',
+            description: 'Fish & Chips <3',
+            author: '',
+            publisher: '',
+            thumbnail: '',
+          },
+          caption: '',
+        })
+        const result = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
+        const element = result.element as HTMLElement
+
+        element.innerHTML.should.containEql('Fish &amp; Chips &lt;3')
+        element.innerHTML.should.not.containEql('&amp;amp;')
+        element.innerHTML.should.not.containEql('&amp;lt;')
+      }),
+    )
+
+    it(
+      'escapes a quote-containing URL in email templates',
+      editorTest(function () {
+        const bookmarkNode = $createBookmarkNode({
+          url: '/x"><svg/onload=alert(1)>',
+          metadata: {
+            icon: '',
+            title: 'title',
+            description: '',
+            author: '',
+            publisher: '',
+            thumbnail: '',
+          },
+          caption: '',
+        })
+        const result = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
+        const element = result.element as HTMLElement
+
+        element.innerHTML.should.containEql('href="/x&quot;')
+        ;(element.querySelector('svg') === null).should.be.true()
+        element.querySelectorAll('a').forEach((anchor) => {
+          anchor.getAttribute('href')!.should.equal('/x"><svg/onload=alert(1)>')
+        })
       }),
     )
   })

@@ -38,7 +38,7 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
   const title = escapeHtml(node.title)
   const publisher = escapeHtml(node.publisher)
   const author = escapeHtml(node.author)
-  const description = escapeHtml(node.description)
+  const description = node.description
 
   const safeUrl = isSafeUrl(node.url) ? node.url : ''
   const safeIcon = isSafeMediaUrl(node.icon) ? node.icon : ''
@@ -50,20 +50,20 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
   const html = `
         <!--[if !mso !vml]-->
             <figure class="inkling-card inkling-bookmark-card ${node.caption ? `inkling-card-hascaption` : ''}">
-                <a class="inkling-bookmark-container" href="${safeUrl}">
+                <a class="inkling-bookmark-container" href="${escapeHtml(safeUrl)}">
                     <div class="inkling-bookmark-content">
                         <div class="inkling-bookmark-title">${title}</div>
                         <div class="inkling-bookmark-description">${truncateHtml(description, 120, 90)}</div>
                         <div class="inkling-bookmark-metadata">
-                            ${safeIcon ? `<img class="inkling-bookmark-icon" src="${safeIcon}" alt="">` : ''}
+                            ${safeIcon ? `<img class="inkling-bookmark-icon" src="${escapeHtml(safeIcon)}" alt="">` : ''}
                             ${publisher ? `<span class="inkling-bookmark-author" src="${publisher}">${publisher}</span>` : ''}
                             ${author ? `<span class="inkling-bookmark-publisher" src="${author}">${author}</span>` : ''}
                         </div>
                     </div>
                     ${
                       safeThumbnail
-                        ? `<div class="inkling-bookmark-thumbnail" style="background-image: url('${safeThumbnail}')">
-                        <img src="${safeThumbnail}" alt="" onerror="this.style.display='none'"></div>`
+                        ? `<div class="inkling-bookmark-thumbnail" style="background-image: url('${escapeHtml(safeThumbnail)}')">
+                        <img src="${escapeHtml(safeThumbnail)}" alt="" onerror="this.style.display='none'"></div>`
                         : ''
                     }
                 </a>
@@ -77,7 +77,7 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
                         <table style="margin: 0; padding: 0; border-collapse: collapse; border-spacing: 0;">
                             <tr>
                                 <td class="inkling-bookmark-title--outlook">
-                                    <a href="${safeUrl}" style="text-decoration: none; color: #15212A; font-size: 15px; line-height: 1.5em; font-weight: 600;">
+                                    <a href="${escapeHtml(safeUrl)}" style="text-decoration: none; color: #15212A; font-size: 15px; line-height: 1.5em; font-weight: 600;">
                                         ${title}
                                     </a>
                                 </td>
@@ -85,7 +85,7 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
                             <tr>
                                 <td>
                                     <div class="inkling-bookmark-description--outlook">
-                                        <a href="${safeUrl}" style="text-decoration: none; margin-top: 12px; color: #738a94; font-size: 13px; line-height: 1.5em; font-weight: 400;">
+                                        <a href="${escapeHtml(safeUrl)}" style="text-decoration: none; margin-top: 12px; color: #738a94; font-size: 13px; line-height: 1.5em; font-weight: 400;">
                                             ${truncateHtml(description, 120, 90)}
                                         </a>
                                     </div>
@@ -99,15 +99,15 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
                                               safeIcon
                                                 ? `
                                                 <td valign="middle" class="inkling-bookmark-icon--outlook" style="padding-right: 8px; font-size: 0; line-height: 1.5em;">
-                                                    <a href="${safeUrl}" style="text-decoration: none; color: #15212A;">
-                                                        <img src="${safeIcon}" width="22" height="22" alt=" ">
+                                                    <a href="${escapeHtml(safeUrl)}" style="text-decoration: none; color: #15212A;">
+                                                        <img src="${escapeHtml(safeIcon)}" width="22" height="22" alt=" ">
                                                     </a>
                                                 </td>
                                             `
                                                 : ''
                                             }
                                             <td valign="middle" class="inkling-bookmark-byline--outlook">
-                                                <a href="${safeUrl}" style="text-decoration: none; color: #15212A;">
+                                                <a href="${escapeHtml(safeUrl)}" style="text-decoration: none; color: #15212A;">
                                                     ${publisher}
                                                     ${author ? `&nbsp;&#x2022;&nbsp;` : ''}
                                                     ${author}

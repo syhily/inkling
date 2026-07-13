@@ -351,6 +351,25 @@ describe('AudioNode', function () {
         )
       }),
     )
+
+    it(
+      'escapes the title in the email template',
+      editorTest(async function () {
+        const audioNode = $createAudioNode({
+          ...dataset,
+          title: '"><script>alert(1)</script>',
+        })
+        const { element } = audioNode.exportDOM(editor, {
+          ...exportOptions,
+          target: 'email',
+          postUrl: 'https://example.com/posts/test-audio',
+        })
+
+        const htmlElement = getHTMLElement(element)
+        htmlElement.outerHTML.should.containEql('&lt;script&gt;alert(1)&lt;/script&gt;')
+        ;(htmlElement.querySelector('script') === null).should.be.true()
+      }),
+    )
   })
 
   describe('importDOM', function () {
