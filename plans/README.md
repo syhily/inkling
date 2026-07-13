@@ -36,7 +36,7 @@ Repo quick reference (verification gates used by every plan):
 | 014  | Replace `should` with Vitest `expect`                             | P2       | M      | —                                | DONE (`5869a72`) |
 | 015  | Wire coverage into verification + CI                              | P1       | M      | —                                | DONE (`1fbd2cc`) |
 | 016  | Add composer component unit tests                                 | P2       | M      | —                                | DONE (`8f571b8`) |
-| 017  | Add hook + markdown plugin unit tests                             | P2       | M      | — (005 for useSearchLinks cases) | TODO             |
+| 017  | Add hook + markdown plugin unit tests                             | P2       | M      | — (005 for useSearchLinks cases) | DONE (`f1b46f7`) |
 | 018  | Stabilize e2e waits + triage skipped tests                        | P2       | M      | —                                | TODO             |
 | 019  | DX/packaging hygiene (format CI, timeout, CLAUDE.md, React peers) | P2       | S      | —                                | TODO             |
 | 020  | Add markdown card transformer                                     | P2       | S      | —                                | TODO             |
