@@ -18,31 +18,31 @@ Repo quick reference (verification gates used by every plan):
 
 ## Execution order & status
 
-| Plan | Title                                                             | Priority | Effort | Depends on                       | Status |
-| ---- | ----------------------------------------------------------------- | -------- | ------ | -------------------------------- | ------ |
+| Plan | Title                                                             | Priority | Effort | Depends on                       | Status           |
+| ---- | ----------------------------------------------------------------- | -------- | ------ | -------------------------------- | ---------------- |
 | 001  | Harden URL validation across export paths                         | P1       | M      | —                                | DONE (`366a46a`) |
-| 002  | Escape video and email renderer interpolation                     | P1       | M      | 001                              | TODO   |
-| 003  | Sanitize callout attributes + visibility segment                  | P1       | S      | 001                              | TODO   |
-| 004  | Validate header card style values                                 | P1       | S      | —                                | TODO   |
-| 005  | Fix async races (link search, header color) + gallery selector    | P1       | M      | —                                | TODO   |
-| 006  | Gate per-keystroke DOM scans (drag-reorder, at-link)              | P1       | S      | —                                | TODO   |
-| 007  | Drop semver runtime dep + debounce HtmlOutputPlugin               | P2       | S      | —                                | TODO   |
-| 008  | Externalize yjs/y-websocket as optional peers                     | P2       | M      | —                                | TODO   |
-| 009  | Replace lodash with in-repo utilities                             | P2       | M      | —                                | TODO   |
-| 010  | Consolidate duplicated plain-text paste handling                  | P2       | S      | —                                | TODO   |
-| 011  | Isolate private Lexical API usage                                 | P2       | M      | —                                | TODO   |
-| 012  | Split registerKeyboardNavigation god function                     | P3       | L      | 018                              | TODO   |
-| 013  | Remove dead/redundant dependencies                                | P2       | S      | —                                | TODO   |
-| 014  | Replace `should` with Vitest `expect`                             | P2       | M      | —                                | TODO   |
-| 015  | Wire coverage into verification + CI                              | P1       | M      | —                                | TODO   |
-| 016  | Add composer component unit tests                                 | P2       | M      | —                                | TODO   |
-| 017  | Add hook + markdown plugin unit tests                             | P2       | M      | — (005 for useSearchLinks cases) | TODO   |
-| 018  | Stabilize e2e waits + triage skipped tests                        | P2       | M      | —                                | TODO   |
-| 019  | DX/packaging hygiene (format CI, timeout, CLAUDE.md, React peers) | P2       | S      | —                                | TODO   |
-| 020  | Add markdown card transformer                                     | P2       | S      | —                                | TODO   |
-| 021  | Fix stale docs + public API overview                              | P2       | S      | 020                              | TODO   |
-| 022  | Spike: headless HTML/email export API                             | P3       | M      | —                                | TODO   |
-| 023  | Triage TODO cluster + draggable duplication decision              | P3       | M      | —                                | TODO   |
+| 002  | Escape video and email renderer interpolation                     | P1       | M      | 001                              | DONE (`9b0ea11`) |
+| 003  | Sanitize callout attributes + visibility segment                  | P1       | S      | 001                              | TODO             |
+| 004  | Validate header card style values                                 | P1       | S      | —                                | TODO             |
+| 005  | Fix async races (link search, header color) + gallery selector    | P1       | M      | —                                | TODO             |
+| 006  | Gate per-keystroke DOM scans (drag-reorder, at-link)              | P1       | S      | —                                | TODO             |
+| 007  | Drop semver runtime dep + debounce HtmlOutputPlugin               | P2       | S      | —                                | TODO             |
+| 008  | Externalize yjs/y-websocket as optional peers                     | P2       | M      | —                                | TODO             |
+| 009  | Replace lodash with in-repo utilities                             | P2       | M      | —                                | TODO             |
+| 010  | Consolidate duplicated plain-text paste handling                  | P2       | S      | —                                | TODO             |
+| 011  | Isolate private Lexical API usage                                 | P2       | M      | —                                | TODO             |
+| 012  | Split registerKeyboardNavigation god function                     | P3       | L      | 018                              | TODO             |
+| 013  | Remove dead/redundant dependencies                                | P2       | S      | —                                | TODO             |
+| 014  | Replace `should` with Vitest `expect`                             | P2       | M      | —                                | TODO             |
+| 015  | Wire coverage into verification + CI                              | P1       | M      | —                                | TODO             |
+| 016  | Add composer component unit tests                                 | P2       | M      | —                                | TODO             |
+| 017  | Add hook + markdown plugin unit tests                             | P2       | M      | — (005 for useSearchLinks cases) | TODO             |
+| 018  | Stabilize e2e waits + triage skipped tests                        | P2       | M      | —                                | TODO             |
+| 019  | DX/packaging hygiene (format CI, timeout, CLAUDE.md, React peers) | P2       | S      | —                                | TODO             |
+| 020  | Add markdown card transformer                                     | P2       | S      | —                                | TODO             |
+| 021  | Fix stale docs + public API overview                              | P2       | S      | 020                              | TODO             |
+| 022  | Spike: headless HTML/email export API                             | P3       | M      | —                                | TODO             |
+| 023  | Triage TODO cluster + draggable duplication decision              | P3       | M      | —                                | TODO             |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale — finding fixed independently or approach
