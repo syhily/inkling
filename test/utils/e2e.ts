@@ -190,6 +190,15 @@ export function prettifyHTML(string: string, options: Record<string, unknown> = 
     output = output.replace(/\sstyle="([^"]*)"/g, '')
   }
 
+  // Normalize direction attributes. Lexical 0.46 defaults to dir="auto" on
+  // root-level elements, but the test suite was written against earlier
+  // behavior where direction was either absent or "ltr". Stripping dir from
+  // both sides keeps the assertions focused on structure and content.
+  output = output.replace(/\sdir="([^"]*)"/g, '')
+
+  // Normalize Lexical 0.46 managed line-break markers.
+  output = output.replace(/<br\s+data-lexical-managed-linebreak="true"\s*\/?\s*>/g, '<br />')
+
   return prettier
     .format(output, {
       attributeGroups: ['$DEFAULT', '^data-'],
