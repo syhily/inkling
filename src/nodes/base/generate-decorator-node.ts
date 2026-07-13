@@ -1,4 +1,4 @@
-import type { LexicalEditor } from 'lexical'
+import type { LexicalEditor, SerializedLexicalNode } from 'lexical'
 
 import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { Visibility } from '@/nodes/base/utils/visibility'
@@ -11,11 +11,17 @@ import {
   migrateOldVisibilityFormat,
 } from '@/nodes/base/utils/visibility'
 
-// The render function accepts any Lexical node; `unknown` breaks contravariant
-// parameter assignment for typed node consumers.
-// oxlint-disable-next-line typescript/no-explicit-any
-type RenderFn<TOutput extends ExportDOMOutput = ExportDOMOutput> = (node: any, options: ExportDOMOptions) => TOutput
-type VersionedRenderFn<TOutput extends ExportDOMOutput = ExportDOMOutput> = Record<string | number, RenderFn<TOutput>>
+// Bivariant method syntax so that a render function declared with a concrete
+// node type can be assigned to `RenderFn<TRenderNode, TOutput>`, while explicit
+// `TRenderNode` type arguments still let TypeScript check the render function
+// against a known node type (see HeaderNode).
+type RenderFn<TNode = unknown, TOutput extends ExportDOMOutput = ExportDOMOutput> = {
+  bivarianceHack(node: TNode, options: ExportDOMOptions): TOutput
+}['bivarianceHack']
+type VersionedRenderFn<TNode = unknown, TOutput extends ExportDOMOutput = ExportDOMOutput> = Record<
+  string | number,
+  RenderFn<TNode, TOutput>
+>
 type WidenLiteral<T> = T extends string
   ? string
   : T extends number
@@ -92,6 +98,14 @@ type GeneratedDecoratorNodeInstance<
     exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): TOutput
   }
 
+// An intersection rather than Lexical's `Spread` utility: `Spread` isn't provably
+// assignable to `SerializedLexicalNode` when TDataset is an unresolved generic, which
+// breaks the `exportJSON` override inside `generateDecoratorNode`. The trade-off is
+// that a dataset property colliding with `type`/`version` at an incompatible type
+// produces `never` — keep such properties compatible (e.g. HeaderNode's `version: number`).
+export type SerializedGeneratedDecoratorNode<TDataset extends Record<string, unknown> = Record<string, unknown>> =
+  SerializedLexicalNode & TDataset
+
 export interface GeneratedDecoratorNodeClass<
   TDataset extends Record<string, unknown>,
   TOutput extends ExportDOMOutput = ExportDOMOutput,
@@ -163,25 +177,35 @@ export function generateDecoratorNode<
   Props extends readonly DecoratorNodeProperty[] = readonly [],
   HasVisibility extends boolean = false,
   TOutput extends ExportDOMOutput = ExportDOMOutput,
+  // When not passed explicitly, TRenderNode is inferred from `defaultRenderFn`'s
+  // node parameter — the render fn's declared node type is trusted, not validated
+  // against the generated node shape. Pass explicit type arguments (see HeaderNode)
+  // to have render fns checked against a known node type.
+  TRenderNode = GeneratedDecoratorNodeInstance<DecoratorNodeValueMap<Props, HasVisibility>, TOutput>,
 >({
   nodeType,
-  // oxlint-disable-next-line typescript/no-explicit-any
-  properties = [] as any as Props,
+  properties,
   defaultRenderFn,
   version = 1,
-  hasVisibility = false as HasVisibility,
+  hasVisibility,
 }: {
   nodeType: string
   properties?: Props
-  defaultRenderFn?: RenderFn<TOutput> | VersionedRenderFn<TOutput>
+  defaultRenderFn?: RenderFn<TRenderNode, TOutput> | VersionedRenderFn<TRenderNode, TOutput>
   version?: number
   hasVisibility?: HasVisibility
 }): GeneratedDecoratorNodeClass<DecoratorNodeValueMap<Props, HasVisibility>, TOutput> {
-  validateArguments(nodeType, properties)
+  type GeneratedDataset = DecoratorNodeValueMap<Props, HasVisibility>
+  type GeneratedRenderFn = RenderFn<TRenderNode, TOutput>
+  type GeneratedVersionedRenderFn = VersionedRenderFn<TRenderNode, TOutput>
+
+  const nodeProperties = properties ?? []
+
+  validateArguments(nodeType, nodeProperties)
 
   // Adds a `privateName` field to the properties for convenience (e.g. `__name`):
   // properties: [{name: 'name', privateName: '__name', type: 'string', default: 'hello'}, {...}]
-  const internalProps = properties.map((prop) => {
+  const internalProps = nodeProperties.map((prop) => {
     return Object.defineProperties(
       {},
       {
@@ -313,60 +337,59 @@ export function generateDecoratorNode<
      * @extends DecoratorNode
      * @see https://lexical.dev/docs/concepts/serialization#lexicalnodeexportjson
      */
-    // @ts-expect-error -- strict mode migration
-    exportJSON() {
-      const dataset: Record<string, unknown> = {
+    exportJSON(): SerializedGeneratedDecoratorNode<GeneratedDataset> {
+      const dataset = {
         type: nodeType,
         version: version,
         ...internalProps.reduce((obj: Record<string, unknown>, prop) => {
           obj[prop.name] = this[prop.name]
           return obj
         }, {}),
-      }
+      } as SerializedGeneratedDecoratorNode<GeneratedDataset>
       return dataset
     }
 
     exportDOM(_editor: LexicalEditor, options: ExportDOMOptions = {}): TOutput {
       // this.__version is used when a node has a version property which
       // means it's set from the serialized version data at runtime
-      const nodeVersion = this.__version || version
+      const nodeVersion =
+        typeof this.__version === 'string' || typeof this.__version === 'number' ? this.__version : version
+      const node = this as unknown as TRenderNode
 
       const nodeRenderers = options.nodeRenderers as
-        | Record<string, RenderFn<TOutput> | VersionedRenderFn<TOutput>>
+        | Record<string, GeneratedRenderFn | GeneratedVersionedRenderFn>
         | undefined
       if (nodeRenderers?.[nodeType]) {
         const render = nodeRenderers[nodeType]
 
         if (typeof render === 'object') {
-          const versionRenderer = (render as VersionedRenderFn<TOutput>)[nodeVersion as number]
+          const versionRenderer = render[nodeVersion]
           if (!versionRenderer) {
             throw new Error(
               `[generateDecoratorNode] ${nodeType}: options.nodeRenderers['${nodeType}'] for version ${nodeVersion} is required`,
             )
           }
-          return versionRenderer(this, options)
+          return versionRenderer(node, options)
         } else {
-          return (render as RenderFn<TOutput>)(this, options)
+          return render(node, options)
         }
       }
 
       if (typeof defaultRenderFn === 'object') {
-        const render = (defaultRenderFn as VersionedRenderFn<TOutput>)[nodeVersion as number]
+        const render = defaultRenderFn[nodeVersion]
         if (!render) {
           throw new Error(
             `[generateDecoratorNode] ${nodeType}: "defaultRenderFn" for version ${nodeVersion} is required`,
           )
         }
-        return render(this, options)
+        return render(node, options)
       }
 
       if (!defaultRenderFn) {
         throw new Error(`[generateDecoratorNode] ${nodeType}: "defaultRenderFn" is required`)
       }
 
-      const render = defaultRenderFn as RenderFn<TOutput>
-
-      return render(this, options)
+      return defaultRenderFn(node, options)
     }
 
     /* c8 ignore start */
@@ -419,7 +442,7 @@ export function generateDecoratorNode<
      */
     getTextContent() {
       const self = this.getLatest()
-      const propertiesWithText = properties.filter((prop) => !!prop.wordCount)
+      const propertiesWithText = nodeProperties.filter((prop) => !!prop.wordCount)
 
       const text = propertiesWithText
         .map((prop) => readTextContent(self, prop.name))
@@ -477,8 +500,7 @@ export function generateDecoratorNode<
     })
   })
 
-  // oxlint-disable-next-line typescript/no-explicit-any
-  return GeneratedDecoratorNode as any as GeneratedDecoratorNodeClass<
+  return GeneratedDecoratorNode as unknown as GeneratedDecoratorNodeClass<
     DecoratorNodeValueMap<Props, HasVisibility>,
     TOutput
   >

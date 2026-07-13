@@ -34,7 +34,15 @@ export type HeaderData = DecoratorNodeData<typeof headerProperties>
 
 export interface HeaderNode extends DecoratorNodeValueMap<typeof headerProperties> {}
 
-export class HeaderNode extends generateDecoratorNode({
+type HeaderRenderNode = Parameters<typeof renderHeaderNodeV2>[0]
+type HeaderRenderOutput = ReturnType<typeof renderHeaderNodeV2>
+
+export class HeaderNode extends generateDecoratorNode<
+  typeof headerProperties,
+  false,
+  HeaderRenderOutput,
+  HeaderRenderNode
+>({
   nodeType: 'header',
   properties: headerProperties,
   defaultRenderFn: {
