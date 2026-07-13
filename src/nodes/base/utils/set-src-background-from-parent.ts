@@ -11,8 +11,10 @@
  * tag, so TypeScript checking of the inner function body is not meaningful.
  */
 
+import { isSafeUrl } from './is-safe-url'
+
 export function buildSrcBackgroundScript(document: Document): HTMLScriptElement {
-  function setSrcBackgroundFromParent() {
+  function setSrcBackgroundFromParent(isSafeUrl: (url: string) => boolean) {
     const script = document.currentScript
     if (!(script instanceof HTMLScriptElement) || !script.parentElement) {
       return
@@ -24,7 +26,7 @@ export function buildSrcBackgroundScript(document: Document): HTMLScriptElement 
     }
 
     const baseSrc = el.getAttribute('data-src')
-    if (!baseSrc) {
+    if (!baseSrc || !isSafeUrl(baseSrc)) {
       return
     }
 
@@ -75,6 +77,6 @@ export function buildSrcBackgroundScript(document: Document): HTMLScriptElement 
   }
 
   const script = document.createElement('script')
-  script.innerHTML = `(${setSrcBackgroundFromParent.toString()})()`
+  script.textContent = `(${setSrcBackgroundFromParent.toString()})(${isSafeUrl.toString()})`
   return script
 }
