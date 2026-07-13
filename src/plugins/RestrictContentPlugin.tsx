@@ -14,6 +14,7 @@ import {
 import React from 'react'
 
 import { handlePlainTextPaste } from '@/plugins/behaviour/plainTextPaste'
+import { isEditorUpdating } from '@/utils/lexical-internals'
 
 export const RestrictContentPlugin = ({ paragraphs, allowBr }: { paragraphs: number; allowBr?: boolean }) => {
   const [editor] = useLexicalComposerContext()
@@ -24,7 +25,7 @@ export const RestrictContentPlugin = ({ paragraphs, allowBr }: { paragraphs: num
         // even if this node transform is registered on a nested editor it will
         // still be triggered for root node changes in other editors so we need
         // to make sure we're only operating on the root node for this editor
-        if (!editor._updating) {
+        if (!isEditorUpdating(editor)) {
           return
         }
 

@@ -2,6 +2,8 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getNodeByKey, $getSelection, $isRangeSelection, $isTextNode } from 'lexical'
 import { useEffect, useRef } from 'react'
 
+import { getRegisteredNodeMap } from '@/utils/lexical-internals'
+
 const DASH = '-'
 const EM_DASH = '—'
 const EN_DASH = '–'
@@ -94,7 +96,9 @@ export const EmEnDashPlugin = () => {
     // '---' as the sole content of a paragraph is the horizontal-rule markdown
     // shortcut - leave it alone so the HR transform can fire. Only relevant
     // when a horizontalrule node is actually registered.
-    const supportsHrShortcut = [...editor._nodes.values()].some(({ klass }) => klass.getType() === 'horizontalrule')
+    const supportsHrShortcut = [...getRegisteredNodeMap(editor).values()].some(
+      ({ klass }) => klass.getType() === 'horizontalrule',
+    )
 
     return editor.registerUpdateListener(({ dirtyLeaves, tags }) => {
       if (!mountedRef.current || editor.isComposing()) {

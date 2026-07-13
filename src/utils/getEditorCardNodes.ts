@@ -1,16 +1,19 @@
-// oxlint-disable-next-line typescript/no-explicit-any
-export function getEditorCardNodes(editor: any) {
-  // TODO: open upstream PR to add public method of getting nodes
-  const allNodes = editor._nodes
-  // oxlint-disable-next-line typescript/no-explicit-any
-  const cardNodes: any[] = []
+import type { LexicalEditor, LexicalNode } from 'lexical'
+
+import { getRegisteredNodeMap } from '@/utils/lexical-internals'
+
+export function getEditorCardNodes(editor: LexicalEditor): [string, LexicalNode][] {
+  const allNodes = getRegisteredNodeMap(editor)
+  const cardNodes: [string, LexicalNode][] = []
 
   for (const [nodeType, { klass }] of allNodes) {
-    if (!klass.cardMenu) {
+    if (!('cardMenu' in klass)) {
       continue
     }
 
-    cardNodes.push([nodeType, klass])
+    // the card klass (with its static cardMenu config) is passed where callers
+    // type it as a LexicalNode — see buildCardMenu, which reads the static prop
+    cardNodes.push([nodeType, klass as unknown as LexicalNode])
   }
 
   return cardNodes
