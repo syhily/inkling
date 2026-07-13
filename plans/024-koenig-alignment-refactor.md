@@ -29,7 +29,7 @@ inkling 是 koenig 的衍生单包重构版，两者各自完成 JS→TS 转换�
 | ---- | ---------------------------------- | --------- | ---- |
 | 1    | 共享工具回流                       | `cdbbf8c` | DONE |
 | 2    | generateDecoratorNode 泛型类型回流 | `40dcf89` | DONE |
-| 3    | 节点层修复                         | —         | TODO |
+| 3    | 节点层修复                         | `0db022d` | DONE |
 | 4    | 组件层回归修复                     | —         | TODO |
 | 5    | 插件层修复                         | —         | TODO |
 | 6    | 邮件渲染回流                       | —         | TODO |
@@ -43,7 +43,7 @@ inkling 是 koenig 的衍生单包重构版，两者各自完成 JS→TS 转换�
 
 `generate-decorator-node.ts`：`TRenderNode` 第四泛型 + bivarianceHack；`SerializedGeneratedDecoratorNode<TDataset>`（intersection 替代 Spread）；`exportJSON` 去掉 `@ts-expect-error`；exportDOM 版本解析显式 narrow；HeaderNode 接显式类型实参。保留了 inkling 的统一 `??` 默认值（koenig 的 `||` 对 falsy 有 bug）。
 
-### 批 3：节点层修复（TODO）
+### 批 3：节点层修复（DONE `0db022d`）
 
 1. `src/nodes/ButtonNode.tsx:95` `$$isisButtonNode`、`src/nodes/ToggleNode.tsx:128` `$$isisToggleNode` — 改名事故，改回 `$isButtonNode`/`$isToggleNode`（koenig 侧为正确名），同步修正 `test/unit/nodes/ButtonNode.test.ts:5` 及全部引用方，grep 确认无残留。
 2. `src/nodes/VideoNodeComponent.tsx:219` — `(node as GeneratedDecoratorNodeBase).loop = true` 硬编码 → koenig 原版 `node.loop = event.target.checked`（循环播放开关当前无法关闭）。
