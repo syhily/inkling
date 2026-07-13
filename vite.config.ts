@@ -90,6 +90,8 @@ export default defineConfig(({ mode }) => {
           /^emoji-mart/,
           /^@emoji-mart\//,
           'fast-average-color',
+          'yjs',
+          'y-websocket',
         ],
         output: {
           globals: function (id: string) {
@@ -120,6 +122,8 @@ export default defineConfig(({ mode }) => {
               '@codemirror/lang-javascript': 'CMLangJavascript',
               '@codemirror/language': 'CMLanguage',
               '@codemirror/view': 'CMView',
+              yjs: 'Y',
+              'y-websocket': 'yWebsocket',
             }
             if (id in globals) {
               return globals[id]

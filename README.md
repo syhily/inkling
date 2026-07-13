@@ -18,6 +18,7 @@ The following dependencies are externalized from the bundle and declared as opti
 - `@uiw/react-codemirror`, `@uiw/codemirror-extensions-basic-setup`, and `@codemirror/*` packages — required by the CodeBlock and HTML cards.
 - `emoji-mart`, `@emoji-mart/data`, and `@emoji-mart/react` — required by the emoji picker.
 - `fast-average-color` — required by the Header card for automatic color extraction.
+- `yjs` and `y-websocket` — required by the multiplayer/collaboration mode (`enableMultiplayer` on `InklingComposer`).
 
 Because these are optional peer dependencies, the editor will still install without them; only the specific cards that rely on them need the corresponding packages present in your app.
 
