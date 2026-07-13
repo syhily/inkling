@@ -2,10 +2,11 @@ import { $generateHtmlFromNodes } from '@lexical/html'
 import { createCommand } from 'lexical'
 
 import CodeBlockIcon from '@/assets/icons/inkling-card-type-gen-embed.svg?react'
+import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
-import { InklingCardWrapper, MINIMAL_NODES } from '@/index'
 import { CodeBlockNode as BaseCodeBlockNode } from '@/nodes/base'
 import { CodeBlockNodeComponent } from '@/nodes/CodeBlockNodeComponent'
+import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 export const INSERT_CODE_BLOCK_COMMAND = createCommand()

@@ -2,9 +2,10 @@ import { $generateHtmlFromNodes } from '@lexical/html'
 import { createCommand } from 'lexical'
 
 import VideoCardIcon from '@/assets/icons/inkling-card-type-video.svg?react'
+import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
-import { InklingCardWrapper, MINIMAL_NODES } from '@/index'
 import { VideoNode as BaseVideoNode } from '@/nodes/base'
+import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { VideoNodeComponent } from '@/nodes/VideoNodeComponent'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
