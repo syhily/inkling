@@ -98,4 +98,129 @@ describe('useSearchLinks', () => {
     expect(result.current.listOptions[0]?.items[0]?.value).toBe('https://example.com/page')
     expect(searchLinks).toHaveBeenCalledTimes(1)
   })
+
+  it('treats mailto: queries as URLs without searching', async () => {
+    const searchLinks = vi.fn((): Promise<SearchResult[] | undefined> => Promise.resolve([]))
+
+    const { result, rerender } = renderHook(({ query }) => useSearchLinks(query, searchLinks), {
+      initialProps: { query: '' },
+    })
+
+    await waitFor(() => expect(result.current.isSearching).toBe(false))
+    expect(searchLinks).toHaveBeenCalledTimes(1)
+
+    rerender({ query: 'mailto:hello@example.com' })
+
+    expect(result.current.listOptions[0]?.label).toBe('Link to web page')
+    expect(result.current.listOptions[0]?.items[0]?.type).toBe('url')
+    expect(result.current.listOptions[0]?.items[0]?.value).toBe('mailto:hello@example.com')
+    expect(searchLinks).toHaveBeenCalledTimes(1)
+  })
+
+  it('loads default options on mount and marks them as the default type', async () => {
+    const searchLinks = vi.fn((): Promise<SearchResult[] | undefined> => Promise.resolve(resultsFor('recent')))
+
+    const { result } = renderHook(() => useSearchLinks('', searchLinks))
+
+    expect(result.current.isSearching).toBe(true)
+    await waitFor(() => expect(result.current.isSearching).toBe(false))
+
+    expect(result.current.listOptions[0]?.label).toBe('recent')
+    expect(result.current.listOptions[0]?.items[0]).toMatchObject({
+      label: 'recent result',
+      value: 'https://example.com/recent',
+      highlight: false,
+      type: 'default',
+    })
+  })
+
+  it('maps search results to list options', async () => {
+    const searchLinks = vi.fn(
+      (term?: string): Promise<SearchResult[] | undefined> =>
+        term === 'cats'
+          ? Promise.resolve([
+              { label: 'Pages', items: [{ title: 'Cats', url: 'https://example.com/cats', metaText: 'Page' }] },
+            ])
+          : Promise.resolve([]),
+    )
+
+    const { result, rerender } = renderHook(({ query }) => useSearchLinks(query, searchLinks), {
+      initialProps: { query: '' },
+    })
+
+    await waitFor(() => expect(result.current.isSearching).toBe(false))
+
+    rerender({ query: 'cats' })
+    await waitForDebounce()
+
+    await waitFor(() => expect(result.current.listOptions[0]?.label).toBe('Pages'))
+    expect(result.current.listOptions[0]?.items[0]).toMatchObject({
+      label: 'Cats',
+      value: 'https://example.com/cats',
+      highlight: true,
+      type: 'internal',
+      metaText: 'Page',
+    })
+  })
+
+  it('shows the no-results option when a search returns an empty array', async () => {
+    const searchLinks = vi.fn((): Promise<SearchResult[] | undefined> => Promise.resolve([]))
+
+    const { result, rerender } = renderHook(({ query }) => useSearchLinks(query, searchLinks), {
+      initialProps: { query: '' },
+    })
+
+    await waitFor(() => expect(result.current.isSearching).toBe(false))
+
+    rerender({ query: 'nothing-matches' })
+    await waitForDebounce()
+
+    await waitFor(() => expect(result.current.listOptions[0]?.items[0]?.type).toBe('no-results'))
+    expect(result.current.listOptions[0]?.label).toBe('Link to web page')
+    expect(result.current.listOptions[0]?.items[0]?.label).toBe('Enter URL to create link')
+    expect(result.current.listOptions[0]?.items[0]?.value).toBeNull()
+  })
+
+  it('uses custom noResultOptions when a search returns nothing', async () => {
+    const searchLinks = vi.fn((): Promise<SearchResult[] | undefined> => Promise.resolve([]))
+    const noResultOptions = vi.fn(() => [
+      {
+        label: 'Custom',
+        items: [{ label: 'Nothing here', value: null, Icon: () => null, highlight: false, type: 'custom-empty' }],
+      },
+    ])
+
+    const { result, rerender } = renderHook(({ query }) => useSearchLinks(query, searchLinks, { noResultOptions }), {
+      initialProps: { query: '' },
+    })
+
+    await waitFor(() => expect(result.current.isSearching).toBe(false))
+
+    rerender({ query: 'nothing-matches' })
+    await waitForDebounce()
+
+    await waitFor(() => expect(result.current.listOptions[0]?.label).toBe('Custom'))
+    expect(result.current.listOptions[0]?.items[0]?.type).toBe('custom-empty')
+    expect(noResultOptions).toHaveBeenCalled()
+  })
+
+  it('shows the default options again when the query is cleared', async () => {
+    const searchLinks = vi.fn(
+      (term?: string): Promise<SearchResult[] | undefined> =>
+        term === 'cats' ? Promise.resolve(resultsFor('search')) : Promise.resolve(resultsFor('default')),
+    )
+
+    const { result, rerender } = renderHook(({ query }) => useSearchLinks(query, searchLinks), {
+      initialProps: { query: '' },
+    })
+
+    await waitFor(() => expect(result.current.listOptions[0]?.label).toBe('default'))
+
+    rerender({ query: 'cats' })
+    await waitForDebounce()
+    await waitFor(() => expect(result.current.listOptions[0]?.label).toBe('search'))
+
+    rerender({ query: '' })
+    expect(result.current.listOptions[0]?.label).toBe('default')
+  })
 })
