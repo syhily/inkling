@@ -1,11 +1,11 @@
 import { $isLinkNode, type LinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { $createRangeSelection, $getNearestNodeFromDOMNode, $isTextNode, $setSelection } from 'lexical'
-import debounce from 'lodash/debounce'
 import React from 'react'
 
 import FloatingToolbar from '@/components/ui/FloatingToolbar'
 import { LinkToolbar } from '@/components/ui/LinkToolbar'
+import { debounce } from '@/utils'
 
 interface FloatingLinkToolbarProps {
   anchorElem: HTMLElement

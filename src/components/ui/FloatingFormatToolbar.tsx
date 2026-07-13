@@ -8,7 +8,6 @@ import {
   COMMAND_PRIORITY_LOW,
   DELETE_CHARACTER_COMMAND,
 } from 'lexical'
-import debounce from 'lodash/debounce'
 import React from 'react'
 
 import FloatingToolbar from '@/components/ui/FloatingToolbar'
@@ -17,6 +16,7 @@ import { LinkActionToolbarWithSearch } from '@/components/ui/LinkActionToolbarWi
 import { LinkInput } from '@/components/ui/LinkInput'
 import { SnippetActionToolbar } from '@/components/ui/SnippetActionToolbar'
 import InklingComposerContext from '@/context/InklingComposerContext'
+import { debounce } from '@/utils'
 
 // don't show the toolbar until the mouse has moved a certain distance,
 // avoids accidental toolbar display when clicking buttons that select content

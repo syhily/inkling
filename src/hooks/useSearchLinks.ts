@@ -1,7 +1,7 @@
-import debounce from 'lodash/debounce'
 import React from 'react'
 
 import EarthIcon from '@/assets/icons/inkling-earth.svg?react'
+import { debounce } from '@/utils'
 
 const DEBOUNCE_MS = 100
 const URL_QUERY_REGEX = /^http|^#|^\/|^mailto:|^tel:/

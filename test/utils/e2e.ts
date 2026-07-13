@@ -1,13 +1,20 @@
 import { expect, type Page } from '@playwright/test'
 import prettier from '@prettier/sync'
 import jsdom from 'jsdom'
-import startCase from 'lodash/startCase.js'
 import fs from 'node:fs'
 
 import { E2E_PORT } from '../../playwright.config'
 
 const { JSDOM } = jsdom
 const browserCtrlOrCmdMap = new WeakMap()
+
+// start-case helper: 'call-to-action' -> 'Call To Action'
+function startCase(str: string): string {
+  return str
+    .split(/[\s_-]+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
 
 export async function initialize({ page, uri = '/#/?content=false' }: { page: Page; uri?: string }) {
   const url = `http://localhost:${E2E_PORT}${uri}`

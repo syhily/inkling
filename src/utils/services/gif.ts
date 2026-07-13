@@ -1,5 +1,6 @@
-import debounce from 'lodash/debounce'
 import { useRef, useState } from 'react'
+
+import { debounce } from '@/utils'
 
 const API_VERSION = 'v2'
 const DEBOUNCE_MS = 600

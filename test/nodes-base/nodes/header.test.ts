@@ -3,7 +3,6 @@ import type { LexicalEditor } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
-import _ from 'lodash'
 
 import { createDocument, dom } from '#/nodes-base/test-utils/index'
 import { HeaderNode, $createHeaderNode, $isHeaderNode } from '@/nodes/base/index'
@@ -239,7 +238,7 @@ describe('HeaderNode', function () {
           const el = element as HTMLElement
 
           // Assuming outerHTML gets the full HTML string of the element
-          const renderedHtml = _.replace(el.outerHTML, /\s/g, '')
+          const renderedHtml = el.outerHTML.replace(/\s/g, '')
           const expectedHtml = `
                 <div class="inkling-card inkling-header-card inkling-v2 inkling-width-full inkling-content-wide " data-background-color="#F0F0F0">
                 <picture><img class="inkling-header-card-image" src="https://example.com/image.jpg" loading="lazy" alt=""></picture>
@@ -252,7 +251,7 @@ describe('HeaderNode', function () {
                     </div>
                 </div>
                 `
-          const cleanedExpectedHtml = _.replace(expectedHtml, /\s/g, '')
+          const cleanedExpectedHtml = expectedHtml.replace(/\s/g, '')
           renderedHtml.should.equal(cleanedExpectedHtml)
         }),
       )
@@ -291,7 +290,7 @@ describe('HeaderNode', function () {
 
           const { element } = node.exportDOM(editor, exportOptions)
           const el = element as HTMLElement
-          const renderedHtml = _.replace(el.outerHTML, /\s/g, '')
+          const renderedHtml = el.outerHTML.replace(/\s/g, '')
           const expectedHtml = `
                 <div class="inkling-card inkling-header-card inkling-v2 inkling-width-full inkling-content-wide " style="background-color: #000000;" data-background-color="#000000">
                     <div class="inkling-header-card-content">
@@ -302,7 +301,7 @@ describe('HeaderNode', function () {
                 </div>
                 `
 
-          const cleanedExpectedHtml = _.replace(expectedHtml, /\s/g, '')
+          const cleanedExpectedHtml = expectedHtml.replace(/\s/g, '')
           renderedHtml.should.equal(cleanedExpectedHtml)
         }),
       )
@@ -327,7 +326,7 @@ describe('HeaderNode', function () {
 
           const { element } = node.exportDOM(editor, exportOptions)
           const el = element as HTMLElement
-          const renderedHtml = _.replace(el.outerHTML, /\s/g, '')
+          const renderedHtml = el.outerHTML.replace(/\s/g, '')
           const expectedHtml = `
                 <div class="inkling-card inkling-header-card inkling-v2 inkling-width-full inkling-content-wide " data-background-color="#000000">
                     <picture><img class="inkling-header-card-image" src="/content/images/2022/11/inkling-lexical.jpg" srcset="/content/images/size/w600/2022/11/inkling-lexical.jpg 600w, /content/images/size/w1000/2022/11/inkling-lexical.jpg 1000w, /content/images/size/w1600/2022/11/inkling-lexical.jpg 1600w, /content/images/size/w2400/2022/11/inkling-lexical.jpg 2400w" loading="lazy" alt=""></picture>
@@ -339,7 +338,7 @@ describe('HeaderNode', function () {
                 </div>
                 `
 
-          const cleanedExpectedHtml = _.replace(expectedHtml, /\s/g, '')
+          const cleanedExpectedHtml = expectedHtml.replace(/\s/g, '')
           renderedHtml.should.equal(cleanedExpectedHtml)
         }),
       )

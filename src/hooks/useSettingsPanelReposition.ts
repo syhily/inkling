@@ -1,7 +1,7 @@
-import debounce from 'lodash/debounce'
 import { useCallback, useLayoutEffect, useRef } from 'react'
 
 import useMovable from '@/hooks/useMovable'
+import { debounce } from '@/utils'
 import { getScrollParent } from '@/utils/getScrollParent'
 
 const CARD_SPACING = 20 // default distance between card and settings panel

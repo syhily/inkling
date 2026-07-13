@@ -1,4 +1,4 @@
-import escapeRegExp from 'lodash/escapeRegExp'
+import { escapeRegExp } from '@/utils'
 
 export function HighlightedString({
   string,

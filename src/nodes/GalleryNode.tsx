@@ -1,6 +1,5 @@
 import { $generateHtmlFromNodes } from '@lexical/html'
 import { createCommand } from 'lexical'
-import pick from 'lodash/pick'
 
 import type { GalleryImage } from '@/types/gallery'
 
@@ -10,6 +9,7 @@ import { cleanBasicHtml } from '@/html/clean-basic-html'
 import { GalleryNode as BaseGalleryNode } from '@/nodes/base'
 import { GalleryNodeComponent } from '@/nodes/GalleryNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
+import { pick } from '@/utils'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 export const INSERT_GALLERY_COMMAND = createCommand()

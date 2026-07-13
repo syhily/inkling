@@ -1,5 +1,6 @@
-import throttle from 'lodash/throttle'
 import React from 'react'
+
+import { throttle } from '@/utils'
 
 export interface TKContextValue {
   tkNodeMap: Record<string, string[]>

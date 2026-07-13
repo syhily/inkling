@@ -1,6 +1,7 @@
 import clsx from 'clsx'
-import debounce from 'lodash/debounce'
 import React, { useLayoutEffect } from 'react'
+
+import { debounce } from '@/utils'
 
 /**
  * Note: when using the DropdownContainer, make sure the input and the dropdown both are in a relative container with a defined z-index (or new stacking context)

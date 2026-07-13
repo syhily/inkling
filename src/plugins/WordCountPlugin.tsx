@@ -8,11 +8,10 @@ import {
   type LexicalEditor,
   type LexicalNode,
 } from 'lexical'
-import throttle from 'lodash/throttle'
 import React from 'react'
 
 import InklingComposerContext from '@/context/InklingComposerContext'
-import { countWords } from '@/utils'
+import { countWords, throttle } from '@/utils'
 
 interface WordCountState {
   nodeWordCounts: Map<string, number>

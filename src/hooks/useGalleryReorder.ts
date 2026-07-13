@@ -1,10 +1,10 @@
-import pick from 'lodash/pick'
 import React from 'react'
 
 import type { GalleryImage } from '@/types/gallery'
 import type { DraggableInfo, DroppablePosition } from '@/utils/draggable/DragDropContainer'
 
 import InklingComposerContext from '@/context/InklingComposerContext'
+import { pick } from '@/utils'
 import { getImageFilenameFromSrc } from '@/utils/getImageFilenameFromSrc'
 
 export type { GalleryImage }
