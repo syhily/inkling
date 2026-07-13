@@ -34,7 +34,7 @@ Repo quick reference (verification gates used by every plan):
 | 012  | Split registerKeyboardNavigation god function                     | P3       | L      | 018                              | TODO             |
 | 013  | Remove dead/redundant dependencies                                | P2       | S      | —                                | DONE (`7660ce8`) |
 | 014  | Replace `should` with Vitest `expect`                             | P2       | M      | —                                | DONE (`5869a72`) |
-| 015  | Wire coverage into verification + CI                              | P1       | M      | —                                | TODO             |
+| 015  | Wire coverage into verification + CI                              | P1       | M      | —                                | DONE (`1fbd2cc`) |
 | 016  | Add composer component unit tests                                 | P2       | M      | —                                | TODO             |
 | 017  | Add hook + markdown plugin unit tests                             | P2       | M      | — (005 for useSearchLinks cases) | TODO             |
 | 018  | Stabilize e2e waits + triage skipped tests                        | P2       | M      | —                                | TODO             |
