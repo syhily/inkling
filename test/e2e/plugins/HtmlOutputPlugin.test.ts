@@ -39,7 +39,7 @@ test.describe('Html Output Plugin', async function () {
 
     // check that default content renders to html
     await expect(await page.getByTestId('html-output').textContent()).toEqual(
-      '<p dir="ltr"><span style="white-space: pre-wrap;">check </span><a href="https://inkling.local/changelog/markdown/"><span style="white-space: pre-wrap;">inkling.local/changelog/markdown/</span></a></p>',
+      '<p><span style="white-space: pre-wrap;">check </span><a href="https://inkling.local/changelog/markdown/"><span style="white-space: pre-wrap;">inkling.local/changelog/markdown/</span></a></p>',
     )
 
     // remove content
@@ -69,7 +69,7 @@ test.describe('Html Output Plugin', async function () {
 
     // check that link renders to html
     await expect(await page.getByTestId('html-output').textContent()).toEqual(
-      '<p dir="ltr"><a href="https://inkling.local/changelog/markdown/"><span style="white-space: pre-wrap;">inkling.local/changelog/markdown/</span></a></p>',
+      '<p><a href="https://inkling.local/changelog/markdown/"><span style="white-space: pre-wrap;">inkling.local/changelog/markdown/</span></a></p>',
     )
   })
 })

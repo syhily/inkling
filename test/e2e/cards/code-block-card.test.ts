@@ -199,8 +199,14 @@ test.describe('Code Block card', async () => {
     await page.keyboard.type('My caption')
     await page.keyboard.press('Enter')
     await page.keyboard.press('Backspace')
+    // Lexical's history merges consecutive same-type changes within 1000ms;
+    // wait so the card deletion becomes its own undo group
+    await page.waitForTimeout(1200)
     await page.keyboard.press('Backspace')
     await page.keyboard.press(`${ctrlOrCmd(page)}+z`)
+
+    // wait for the decorator to re-render after the historic update restores the card
+    await page.waitForSelector('[data-inkling-card="codeblock"][data-inkling-card-editing="false"]')
 
     await assertHTML(
       page,
@@ -248,6 +254,9 @@ test.describe('Code Block card', async () => {
     await page.keyboard.type('My caption')
     await page.keyboard.press('Backspace')
     await page.keyboard.press(`${ctrlOrCmd(page)}+z`)
+
+    // wait for the decorator to re-render after the historic update restores the caption
+    await page.waitForSelector('[data-inkling-card="codeblock"][data-inkling-card-editing="false"]')
 
     await assertHTML(
       page,

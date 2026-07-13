@@ -69,7 +69,6 @@ test.describe('Node transforms', async () => {
     await assertHTML(
       page,
       html`
-        <p></p>
         <p dir="ltr"><span data-lexical-text="true">Hello Fintech Friends,</span></p>
         <div data-lexical-decorator="true" contenteditable="false">
           <div
@@ -78,7 +77,6 @@ test.describe('Node transforms', async () => {
             data-inkling-card="horizontalrule"
           ></div>
         </div>
-        <p></p>
       `,
       { ignoreCardContents: true },
     )
@@ -144,7 +142,6 @@ test.describe('Node transforms', async () => {
       page,
       html`
         <p dir="ltr"><span data-lexical-text="true">Hello Fintech Friends,</span></p>
-        <p></p>
         <p><br /></p>
         <div data-lexical-decorator="true" contenteditable="false">
           <div
@@ -153,7 +150,6 @@ test.describe('Node transforms', async () => {
             data-inkling-card="horizontalrule"
           ></div>
         </div>
-        <p></p>
       `,
       { ignoreCardContents: true },
     )

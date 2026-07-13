@@ -1,19 +1,82 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import {
-  $getSelection,
-  $isRangeSelection,
-  $isTextNode,
-  COMMAND_PRIORITY_LOW,
-  CONTROLLED_TEXT_INSERTION_COMMAND,
-} from 'lexical'
+import { $getNodeByKey, $getSelection, $isRangeSelection, $isTextNode } from 'lexical'
 import { useEffect, useRef } from 'react'
 
-import { getSelectedNode } from '@/utils/getSelectedNode'
-
 const DASH = '-'
+const EM_DASH = '—'
+const EN_DASH = '–'
 
-function isWhitespace(char: string): boolean {
-  return /^\s$/.test(char)
+function $replaceDashes(dirtyLeaves: Set<string>, supportsHrShortcut: boolean) {
+  const selection = $getSelection()
+  const isCollapsedRange = $isRangeSelection(selection) && selection.isCollapsed()
+  const anchorNode = isCollapsedRange ? selection.anchor.getNode() : null
+  const originalAnchorOffset = isCollapsedRange ? selection.anchor.offset : null
+
+  let totalOffsetAdjustment = 0
+
+  dirtyLeaves.forEach((key) => {
+    const node = $getNodeByKey(key)
+    if (!$isTextNode(node)) {
+      return
+    }
+
+    let text = node.getTextContent()
+
+    // '---' as the sole content of a paragraph is the horizontal-rule
+    // markdown shortcut - leave it alone so the HR transform can fire
+    if (supportsHrShortcut && text === '---' && node.getParent()?.getTextContent() === '---') {
+      return
+    }
+
+    let replaced = false
+    let i = text.length
+
+    while (i >= 3) {
+      // em dash: three consecutive dashes, not preceded or followed by a dash
+      if (
+        text.slice(i - 3, i) === '---' &&
+        (i - 4 < 0 || text[i - 4] !== DASH) &&
+        (i === text.length || text[i] !== DASH)
+      ) {
+        if (isCollapsedRange && anchorNode === node && originalAnchorOffset !== null && originalAnchorOffset >= i) {
+          totalOffsetAdjustment += 2
+        }
+
+        text = text.slice(0, i - 3) + EM_DASH + text.slice(i)
+        node.setTextContent(text)
+        replaced = true
+        i -= 3
+        continue
+      }
+
+      // en dash: non-dash char + '--' + whitespace ending at i
+      if (
+        i >= 3 &&
+        text.slice(i - 3, i - 1) === '--' &&
+        /^\s$/.test(text[i - 1]) &&
+        i - 4 >= 0 &&
+        text[i - 4] !== DASH
+      ) {
+        if (isCollapsedRange && anchorNode === node && originalAnchorOffset !== null && originalAnchorOffset >= i) {
+          totalOffsetAdjustment += 1
+        }
+
+        text = text.slice(0, i - 3) + EN_DASH + text.slice(i - 1)
+        node.setTextContent(text)
+        replaced = true
+        i -= 3
+        continue
+      }
+
+      i -= 1
+    }
+
+    if (replaced && isCollapsedRange && anchorNode === node && originalAnchorOffset !== null) {
+      const newOffset = originalAnchorOffset - totalOffsetAdjustment
+      selection.anchor.offset = newOffset
+      selection.focus.offset = newOffset
+    }
+  })
 }
 
 export const EmEnDashPlugin = () => {
@@ -28,78 +91,31 @@ export const EmEnDashPlugin = () => {
   }, [])
 
   useEffect(() => {
-    const replaceDashes = () => {
-      if (!mountedRef.current) {
+    // '---' as the sole content of a paragraph is the horizontal-rule markdown
+    // shortcut - leave it alone so the HR transform can fire. Only relevant
+    // when a horizontalrule node is actually registered.
+    const supportsHrShortcut = [...editor._nodes.values()].some(({ klass }) => klass.getType() === 'horizontalrule')
+
+    return editor.registerUpdateListener(({ dirtyLeaves, tags }) => {
+      if (!mountedRef.current || editor.isComposing()) {
         return
       }
-      editor.update(
-        () => {
-          const selection = $getSelection()
-          if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
-            return
-          }
 
-          const node = getSelectedNode(selection)
-          if (!$isTextNode(node)) {
-            return
-          }
+      // Skip historic/undo updates and our own replacement updates so we don't
+      // re-trigger while undoing or replace immediately after a replacement.
+      if (tags.has('historic') || tags.has('history-push') || tags.has('history-merge')) {
+        return
+      }
 
-          const text = node.getTextContent()
-          const offset = selection.anchor.offset
+      if (!dirtyLeaves || dirtyLeaves.size === 0) {
+        return
+      }
 
-          // em dash: three consecutive dashes ending at the cursor
-          if (offset >= 3 && text.slice(offset - 3, offset) === '---') {
-            const charBefore = text[offset - 4]
-            if (charBefore === undefined || charBefore !== DASH) {
-              node.setTextContent(text.slice(0, offset - 3) + '—' + text.slice(offset))
-              selection.anchor.offset = offset - 2
-              selection.focus.offset = offset - 2
-              return
-            }
-          }
-
-          // en dash: non-dash char + '--' + whitespace ending at the cursor
-          if (offset >= 3) {
-            const charAfterDashes = text[offset - 1]
-            const twoDashes = text.slice(offset - 3, offset - 1)
-            const charBeforeDashes = text[offset - 4]
-            if (
-              charAfterDashes !== undefined &&
-              /^\s$/.test(charAfterDashes) &&
-              twoDashes === '--' &&
-              charBeforeDashes !== undefined &&
-              charBeforeDashes !== DASH
-            ) {
-              node.setTextContent(text.slice(0, offset - 3) + '–' + text.slice(offset - 1))
-              selection.anchor.offset = offset - 1
-              selection.focus.offset = offset - 1
-            }
-          }
-        },
-        { tag: 'history-push' },
-      )
-    }
-
-    return editor.registerCommand(
-      CONTROLLED_TEXT_INSERTION_COMMAND,
-      (eventOrText) => {
-        if (editor.isComposing()) {
-          return false
-        }
-
-        const text = typeof eventOrText === 'string' ? eventOrText : eventOrText.data
-        if (!text || text.length !== 1 || (text !== DASH && !isWhitespace(text))) {
-          return false
-        }
-
-        // Defer the replacement to the next macrotask so it becomes a separate
-        // history entry from the keystroke that triggered it. This lets undo
-        // restore the raw typed dashes.
-        setTimeout(replaceDashes, 0)
-        return false
-      },
-      COMMAND_PRIORITY_LOW,
-    )
+      // Perform the replacement synchronously in a tagged update so it becomes a
+      // separate history entry from the keystroke that triggered it. This keeps
+      // undo able to restore the raw typed dashes.
+      editor.update(() => $replaceDashes(dirtyLeaves, supportsHrShortcut), { tag: 'history-push' })
+    })
   }, [editor])
 
   return null

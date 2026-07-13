@@ -71,10 +71,18 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
             const cardNode = $getNodeByKey(nodeKey) as CardNode | null
             const clickedDifferentEditor = !cardNode
             const target = event.target as HTMLElement
-            const clickedToolbar = target.closest('[data-inkling-allow-clickthrough="false"]')
+            // elements marked as click-through (captions, toolbars) handle their own
+            // clicks and must not trigger the card's edit mode
+            const clickedClickthrough = target.closest('[data-inkling-allow-clickthrough]')
             const clickedSettingsPanel = target.closest('[data-inkling-settings-panel]')
 
-            if (isSelected && cardNode?.hasEditMode?.() && !isEditing && !clickedToolbar && !clickedSettingsPanel) {
+            if (
+              isSelected &&
+              cardNode?.hasEditMode?.() &&
+              !isEditing &&
+              !clickedClickthrough &&
+              !clickedSettingsPanel
+            ) {
               editor.dispatchCommand(EDIT_CARD_COMMAND, {
                 cardKey: nodeKey,
                 focusEditor: !clickedDifferentEditor,

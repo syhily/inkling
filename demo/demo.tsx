@@ -21,7 +21,7 @@ ReactDOM.createRoot(rootElement).render(
       <Navigator />
       <Routes>
         <Route element={<DesignSandbox />} path="/designsandbox" />
-        <Route element={<RestrictedContentDemo paragraphs={1} />} path="/contentrestricted" />
+        <Route element={<RestrictedContentDemo />} path="/contentrestricted" />
         <Route element={<HtmlOutputDemo />} path="/html-output" />
         <Route element={<DemoApp introContent={true} />} path="/" />
         <Route element={<DemoApp editorType="basic" introContent={true} />} path="/basic" />

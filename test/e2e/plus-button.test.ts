@@ -251,6 +251,9 @@ test.describe('Plus button', async () => {
 
       await page.click('[data-inkling-plus-button]')
 
+      // menu opens asynchronously after the click
+      await page.waitForSelector('[data-inkling-plus-menu]')
+
       expect(await page.locator('[data-inkling-plus-menu]')).not.toBeNull()
       await assertPosition(page, '[data-inkling-plus-menu]', { y: p3Box.y }, { threshold: 5 })
 

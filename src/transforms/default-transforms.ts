@@ -26,6 +26,8 @@ export function registerDefaultTransforms(editor: LexicalEditor) {
     registerRemoveAlignmentTransform(editor, HeadingNode),
     registerRemoveAlignmentTransform(editor, ExtendedHeadingNode),
     registerRemoveAlignmentTransform(editor, QuoteNode),
+    // Lexical 0.46 added format support to list items; strip alignment from them too
+    registerRemoveAlignmentTransform(editor, ListItemNode),
 
     // fix invalid nesting of nodes
     registerDenestTransform(editor, ParagraphNode, () => $createParagraphNode()),

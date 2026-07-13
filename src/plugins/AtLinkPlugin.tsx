@@ -5,10 +5,12 @@ import {
   mergeRegister,
   $createTextNode,
   $getSelection,
+  $isElementNode,
   $isRangeSelection,
   $isTextNode,
   $nodesOfType,
   COMMAND_PRIORITY_HIGH,
+  CONTROLLED_TEXT_INSERTION_COMMAND,
   DELETE_CHARACTER_COMMAND,
   FORMAT_ELEMENT_COMMAND,
   FORMAT_TEXT_COMMAND,
@@ -54,6 +56,109 @@ function $removeAtLink(node: AtLinkNode, { focus = false } = {}) {
   }
 }
 
+function $shouldConvertAtLink(): boolean {
+  const selection = $getSelection()
+  if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
+    return false
+  }
+
+  const anchor = selection.anchor
+
+  if (anchor.type === 'element') {
+    const anchorNode = anchor.getNode()
+    if (!$isElementNode(anchorNode)) {
+      return false
+    }
+    const child = anchorNode.getChildAtIndex(anchor.offset)
+    const prevChild = anchor.offset > 0 ? anchorNode.getChildAtIndex(anchor.offset - 1) : null
+
+    let textBeforeAnchor = ''
+    let textAfterAnchor = ''
+
+    if ($isTextNode(prevChild)) {
+      textBeforeAnchor = prevChild.getTextContent()
+    }
+    if ($isTextNode(child)) {
+      textAfterAnchor = child.getTextContent()
+    }
+
+    return (textBeforeAnchor === '' || /\s$/.test(textBeforeAnchor)) && /^($|\s|\.)/.test(textAfterAnchor)
+  }
+
+  if (anchor.type !== 'text') {
+    return false
+  }
+
+  const anchorNode = anchor.getNode()
+  if (!anchorNode.isSimpleText()) {
+    return false
+  }
+
+  const anchorOffset = anchor.offset
+  let textBeforeAnchor = anchorNode.getTextContent().slice(0, anchorOffset)
+  let textAfterAnchor = anchorNode.getTextContent().slice(anchorOffset)
+
+  // adjust before/after text if we're immediately preceded/followed by a text node
+  // because that content needs to be accounted for in our regex match
+  const prevSibling = anchorNode.getPreviousSibling()
+  const nextSibling = anchorNode.getNextSibling()
+
+  if (anchorOffset === 0 && $isTextNode(prevSibling)) {
+    textBeforeAnchor = prevSibling.getTextContent()
+  }
+
+  if (anchorOffset === anchorNode.getTextContent().length && $isTextNode(nextSibling)) {
+    textAfterAnchor = nextSibling.getTextContent()
+  }
+
+  return (textBeforeAnchor === '' || /\s$/.test(textBeforeAnchor)) && /^($|\s|\.)/.test(textAfterAnchor)
+}
+
+function $insertAtLink(): boolean {
+  if (!$shouldConvertAtLink()) {
+    return false
+  }
+
+  const selection = $getSelection()
+  if (!$isRangeSelection(selection)) {
+    return false
+  }
+
+  let linkFormat = 0
+  const anchorNode = selection.anchor.getNode()
+  if ($isTextNode(anchorNode)) {
+    linkFormat = anchorNode.getFormat()
+  }
+
+  const atLinkNode = $createAtLinkNode()
+  atLinkNode.setLinkFormat(linkFormat)
+  atLinkNode.append($createZWNJNode())
+  atLinkNode.append($createAtLinkSearchNode(''))
+
+  const anchor = selection.anchor
+  if (anchor.type === 'element' && $isElementNode(anchorNode)) {
+    const targetChild = anchorNode.getChildAtIndex(anchor.offset)
+    if (targetChild) {
+      targetChild.insertBefore(atLinkNode)
+    } else {
+      anchorNode.append(atLinkNode)
+    }
+  } else {
+    selection.insertNodes([atLinkNode])
+  }
+
+  atLinkNode.select(1, 1)
+
+  const searchNode = atLinkNode.getChildAtIndex(1)
+  const rangeSelection = $getSelection()
+  if ($isAtLinkSearchNode(searchNode) && $isRangeSelection(rangeSelection)) {
+    rangeSelection.anchor.set(searchNode.getKey(), 0, 'text')
+    rangeSelection.focus.set(searchNode.getKey(), 0, 'text')
+  }
+
+  return true
+}
+
 function noResultOptions(): ListOptionSection[] {
   return [
     {
@@ -76,12 +181,32 @@ export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps)
   const searchOptions = React.useMemo(() => ({ noResultOptions }), [])
   const { isSearching, listOptions } = useSearchLinks(query, searchLinks, searchOptions)
 
-  // register an event listener to detect '@' character being typed
-  // - we only ever want to convert an '@' to an at-link node when it's typed
-  //   so a native event listener makes more sense than a lexical update listener
-  //   that would need to constantly compare against current and previous states
-  // - '@' must be preceded by beginning of line, whitespace, or br
-  // - '@' must be followed by whitespace, end of line, or br
+  // Convert a typed '@' into an at-link node. We intercept Lexical's controlled
+  // text-insertion command so the conversion works regardless of whether the
+  // browser fires a native 'input' event.
+  React.useEffect(() => {
+    return editor.registerCommand(
+      CONTROLLED_TEXT_INSERTION_COMMAND,
+      (eventOrText) => {
+        if (editor.isComposing()) {
+          return false
+        }
+
+        const inputType = typeof eventOrText === 'string' ? 'insertText' : eventOrText.inputType
+        const data = typeof eventOrText === 'string' ? eventOrText : eventOrText.data
+
+        if (inputType !== 'insertText' || data !== '@') {
+          return false
+        }
+
+        return $insertAtLink()
+      },
+      COMMAND_PRIORITY_HIGH,
+    )
+  }, [editor])
+
+  // Native 'input' fallback for the rare case where Lexical lets the browser
+  // insert text without dispatching CONTROLLED_TEXT_INSERTION_COMMAND.
   React.useEffect(() => {
     const rootElement = editor.getRootElement()
     if (!rootElement) {
@@ -173,36 +298,18 @@ export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps)
             const searchNode = atLinkNode.getChildAtIndex(1)
             const rangeSelection = $getSelection()
             if ($isAtLinkSearchNode(searchNode) && $isRangeSelection(rangeSelection)) {
-              rangeSelection.anchor.set(searchNode.getKey(), 0, 'element')
-              rangeSelection.focus.set(searchNode.getKey(), 0, 'element')
+              rangeSelection.anchor.set(searchNode.getKey(), 0, 'text')
+              rangeSelection.focus.set(searchNode.getKey(), 0, 'text')
             }
           })
         }
       }
     }
 
-    // weirdly the 'input' event doesn't fire for the first character typed in a paragraph
-    const handleAtBeforeInput = (event: InputEvent) => {
-      if (event.inputType === 'insertText' && event.data === '@') {
-        editor.update(() => {
-          const selection = $getSelection()
-          if (
-            $isRangeSelection(selection) &&
-            selection.isCollapsed() &&
-            !selection.anchor.getNode().getPreviousSibling()
-          ) {
-            handleAtInsert(event)
-          }
-        })
-      }
-    }
-
     rootElement.addEventListener('input', handleAtInsert as EventListener)
-    rootElement.addEventListener('beforeinput', handleAtBeforeInput as EventListener)
 
     return () => {
       rootElement.removeEventListener('input', handleAtInsert as EventListener)
-      rootElement.removeEventListener('beforeinput', handleAtBeforeInput as EventListener)
     }
   }, [editor])
 
@@ -265,8 +372,8 @@ export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps)
               selectedAtLinkNode.select(1, 1)
               const rangeSelection = $getSelection()
               if ($isRangeSelection(rangeSelection) && $isAtLinkSearchNode(searchNode)) {
-                rangeSelection.anchor.set(searchNode.getKey(), 0, 'element')
-                rangeSelection.focus.set(searchNode.getKey(), 0, 'element')
+                rangeSelection.anchor.set(searchNode.getKey(), 0, 'text')
+                rangeSelection.focus.set(searchNode.getKey(), 0, 'text')
               }
             }
 

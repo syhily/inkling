@@ -273,10 +273,19 @@ test.describe('Bookmark card (with searchLinks)', async () => {
 
     await page.click('[data-testid="bookmark-caption"]')
     await page.keyboard.type('My test caption')
+    // let the caption editor's sync to the card node settle so its history
+    // entries don't interleave with the deletion entries below
+    await page.waitForTimeout(600)
     await page.keyboard.press('Enter')
     await page.keyboard.press('Backspace')
+    // Lexical's history merges consecutive same-type changes within 1000ms;
+    // wait so the card deletion becomes its own undo group
+    await page.waitForTimeout(1200)
     await page.keyboard.press('Backspace')
     await page.keyboard.press(`${ctrlOrCmd}+z`)
+
+    // wait for the decorator to re-render after the historic update restores the card
+    await page.waitForSelector('[data-inkling-card="bookmark"][data-inkling-card-editing="false"]')
 
     await assertHTML(
       page,
