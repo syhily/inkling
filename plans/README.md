@@ -38,7 +38,7 @@ Repo quick reference (verification gates used by every plan):
 | 016  | Add composer component unit tests                                 | P2       | M      | —                                | DONE (`8f571b8`) |
 | 017  | Add hook + markdown plugin unit tests                             | P2       | M      | — (005 for useSearchLinks cases) | DONE (`f1b46f7`) |
 | 018  | Stabilize e2e waits + triage skipped tests                        | P2       | M      | —                                | DONE (`b582435`) |
-| 019  | DX/packaging hygiene (format CI, timeout, CLAUDE.md, React peers) | P2       | S      | —                                | TODO             |
+| 019  | DX/packaging hygiene (format CI, timeout, CLAUDE.md, React peers) | P2       | S      | —                                | DONE (`0e09d5b`) |
 | 020  | Add markdown card transformer                                     | P2       | S      | —                                | TODO             |
 | 021  | Fix stale docs + public API overview                              | P2       | S      | 020                              | TODO             |
 | 022  | Spike: headless HTML/email export API                             | P3       | M      | —                                | TODO             |
