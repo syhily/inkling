@@ -335,6 +335,38 @@ describe('Utils: visibility', function () {
           '\n<!--inkling-gated-block:begin nonMember:true memberSegment:"status:free" --><p>testing</p><!--inkling-gated-block:end-->\n',
         )
       })
+
+      it('preserves a comma-separated member segment in the marker', function () {
+        const visibility = { web: { nonMember: false, memberSegment: 'status:free,status:-free' } }
+        const result = runRender('testing', visibility, 'web')
+
+        getHTMLTextAreaElement(result.element).value.should.equal(
+          '\n<!--inkling-gated-block:begin nonMember:false memberSegment:"status:free,status:-free" --><p>testing</p><!--inkling-gated-block:end-->\n',
+        )
+      })
+
+      it('falls back to an empty segment when memberSegment breaks out of the comment', function () {
+        const visibility = { web: { nonMember: false, memberSegment: '--><img src=x onerror=alert(1)>' } }
+        const result = runRender('testing', visibility, 'web')
+
+        const value = getHTMLTextAreaElement(result.element).value
+        value.should.equal(
+          '\n<!--inkling-gated-block:begin nonMember:false memberSegment:"" --><p>testing</p><!--inkling-gated-block:end-->\n',
+        )
+        value.should.not.containEql('<img')
+        // the first comment terminator is the begin marker's own close — the
+        // injected `-->` did not terminate the comment early
+        value.indexOf('-->').should.equal(value.indexOf('memberSegment:"" -->') + 'memberSegment:"" '.length)
+      })
+
+      it('coerces a truthy non-boolean nonMember to false', function () {
+        const visibility = { web: { nonMember: 'yes' as unknown as boolean, memberSegment: 'status:free' } }
+        const result = runRender('testing', visibility, 'web')
+
+        getHTMLTextAreaElement(result.element).value.should.equal(
+          '\n<!--inkling-gated-block:begin nonMember:false memberSegment:"status:free" --><p>testing</p><!--inkling-gated-block:end-->\n',
+        )
+      })
     })
 
     it('handles no render type', function () {

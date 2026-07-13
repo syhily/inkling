@@ -158,7 +158,7 @@ describe('CalloutNode', function () {
             <div class="inkling-callout-emoji">💡</div>
             <div class="inkling-callout-text">
               <b><strong>Hello!</strong></b
-              >Check<i><em class="italic">this</em></i
+              >Check<i><em>this</em></i
               ><a href="https://inkling.local" rel="noopener">out</a>.
             </div>
           </div>
@@ -182,7 +182,7 @@ describe('CalloutNode', function () {
           <div class="inkling-card inkling-callout-card inkling-callout-card-blue">
             <div class="inkling-callout-text">
               <b><strong>Hello!</strong></b
-              >Check<i><em class="italic">this</em></i
+              >Check<i><em>this</em></i
               ><a href="https://inkling.local" rel="noopener">out</a>.
             </div>
           </div>
@@ -204,7 +204,7 @@ describe('CalloutNode', function () {
             <div class="inkling-callout-emoji">💡</div>
             <div class="inkling-callout-text">
               <b><strong>Hello!</strong></b
-              >Check<i><em class="italic">this</em></i
+              >Check<i><em>this</em></i
               ><a href="https://inkling.local" rel="noopener">out</a>.
             </div>
           </div>
@@ -228,6 +228,116 @@ describe('CalloutNode', function () {
             <div class="inkling-callout-text">
               Does <code spellcheck="false" style="white-space: pre-wrap">inline code</code> render properly?
             </div>
+          </div>
+        `)
+      }),
+    )
+
+    it(
+      'strips dangerous href and event handlers from links',
+      editorTest(async function () {
+        dataset.calloutText = '<a href="javascript:alert(1)" onmouseover="alert(2)">x</a>'
+
+        const node = $createCalloutNode(dataset)
+        const result = node.exportDOM(editor, exportOptions)
+        const element = result.element as HTMLElement
+
+        await element.outerHTML.should.prettifyTo(html`
+          <div class="inkling-card inkling-callout-card inkling-callout-card-blue">
+            <div class="inkling-callout-emoji">💡</div>
+            <div class="inkling-callout-text"><a>x</a></div>
+          </div>
+        `)
+      }),
+    )
+
+    it(
+      'preserves safe link hrefs',
+      editorTest(async function () {
+        dataset.calloutText = '<a href="https://example.com">ok</a>'
+
+        const node = $createCalloutNode(dataset)
+        const result = node.exportDOM(editor, exportOptions)
+        const element = result.element as HTMLElement
+
+        await element.outerHTML.should.prettifyTo(html`
+          <div class="inkling-card inkling-callout-card inkling-callout-card-blue">
+            <div class="inkling-callout-emoji">💡</div>
+            <div class="inkling-callout-text"><a href="https://example.com">ok</a></div>
+          </div>
+        `)
+      }),
+    )
+
+    it(
+      'strips style and event handlers from marks',
+      editorTest(async function () {
+        dataset.calloutText = '<mark style="background:red" onclick="x">m</mark>'
+
+        const node = $createCalloutNode(dataset)
+        const result = node.exportDOM(editor, exportOptions)
+        const element = result.element as HTMLElement
+
+        await element.outerHTML.should.prettifyTo(html`
+          <div class="inkling-card inkling-callout-card inkling-callout-card-blue">
+            <div class="inkling-callout-emoji">💡</div>
+            <div class="inkling-callout-text"><mark>m</mark></div>
+          </div>
+        `)
+      }),
+    )
+
+    it(
+      'strips inline-code styles outside the editor serialization',
+      editorTest(async function () {
+        dataset.calloutText = '<code style="position:fixed;inset:0">x</code>'
+
+        const node = $createCalloutNode(dataset)
+        const result = node.exportDOM(editor, exportOptions)
+        const element = result.element as HTMLElement
+
+        await element.outerHTML.should.prettifyTo(html`
+          <div class="inkling-card inkling-callout-card inkling-callout-card-blue">
+            <div class="inkling-callout-emoji">💡</div>
+            <div class="inkling-callout-text"><code>x</code></div>
+          </div>
+        `)
+      }),
+    )
+
+    it(
+      'keeps the editor inline-code serialization attributes',
+      editorTest(async function () {
+        dataset.calloutText = '<code spellcheck="false" style="white-space: pre-wrap;">inline code</code>'
+
+        const node = $createCalloutNode(dataset)
+        const result = node.exportDOM(editor, exportOptions)
+        const element = result.element as HTMLElement
+
+        await element.outerHTML.should.prettifyTo(html`
+          <div class="inkling-card inkling-callout-card inkling-callout-card-blue">
+            <div class="inkling-callout-emoji">💡</div>
+            <div class="inkling-callout-text">
+              <code spellcheck="false" style="white-space: pre-wrap">inline code</code>
+            </div>
+          </div>
+        `)
+      }),
+    )
+
+    it(
+      'keeps allowed formatting tags and unwraps disallowed tags',
+      editorTest(async function () {
+        dataset.calloutText = '<strong>bold</strong><div><script>alert(1)</script>text</div>'
+
+        const node = $createCalloutNode(dataset)
+        const result = node.exportDOM(editor, exportOptions)
+        const element = result.element as HTMLElement
+
+        await element.outerHTML.should.prettifyTo(html`
+          <div class="inkling-card inkling-callout-card inkling-callout-card-blue">
+            <div class="inkling-callout-emoji">💡</div>
+            <div class="inkling-callout-text"><strong>bold</strong>alert(1)text</div>
           </div>
         `)
       }),

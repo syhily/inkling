@@ -213,13 +213,20 @@ function _renderWithEmailVisibility(
   return { element: container, type: 'html' as const }
 }
 
+const SEGMENT_REGEX = /^(status:[\w+-]+,)*status:[\w+-]+$/
+
 function _renderWithWebVisibility(
   document: Document,
   content: string,
   webVisibility: { nonMember: boolean; memberSegment: string },
 ): ExportDOMOutput<'value'> {
   const { nonMember, memberSegment } = webVisibility
-  const wrappedContent = `\n<!--inkling-gated-block:begin nonMember:${nonMember} memberSegment:"${memberSegment}" -->${content}<!--inkling-gated-block:end-->\n`
+  // the marker is embedded in an HTML comment that downstream publishers parse;
+  // a memberSegment containing `-->` would terminate the comment early, so only
+  // the documented segment alphabet (or '' for no-one) is interpolated
+  const safeSegment = memberSegment === '' || SEGMENT_REGEX.test(memberSegment) ? memberSegment : ''
+  const safeNonMember = nonMember === true
+  const wrappedContent = `\n<!--inkling-gated-block:begin nonMember:${safeNonMember} memberSegment:"${safeSegment}" -->${content}<!--inkling-gated-block:end-->\n`
   const textarea = document.createElement('textarea')
   textarea.value = wrappedContent
   return { element: textarea, type: 'value' as const }
