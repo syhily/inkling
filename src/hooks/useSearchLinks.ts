@@ -114,6 +114,8 @@ export const useSearchLinks = (
   const [listOptions, setListOptions] = React.useState<ListOptionSection[]>([])
   const [isSearching, setIsSearching] = React.useState<boolean>(false)
 
+  const latestTermRef = React.useRef<string | null>(null)
+
   const search = React.useMemo(() => {
     return async function _search(term: string): Promise<void> {
       if (URL_QUERY_REGEX.test(term)) {
@@ -121,14 +123,22 @@ export const useSearchLinks = (
         return
       }
 
+      latestTermRef.current = term
       setIsSearching(true)
       const results = await searchLinks(term)
+
+      // a newer query superseded this one while we were awaiting — don't
+      // let a slow older response overwrite the newer results
+      if (latestTermRef.current !== term) {
+        return
+      }
 
       // can return undefined if the search was cancelled, avoid updating
       // in that scenario because we can end up in a race condition where
       // we overwrite the results with an empty array whilst still waiting
       // for a later search to complete. Avoids flashing of "no results".
       if (results === undefined) {
+        setIsSearching(false)
         return
       }
 
@@ -140,6 +150,8 @@ export const useSearchLinks = (
   const debouncedSearch = React.useMemo(() => {
     return debounce(search, DEBOUNCE_MS)
   }, [search])
+
+  React.useEffect(() => () => debouncedSearch.cancel(), [debouncedSearch])
 
   // Fetch default search results when first rendering
   React.useEffect(() => {

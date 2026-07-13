@@ -110,6 +110,31 @@ describe('useGalleryReorder', () => {
     ])
   })
 
+  it('adds an external image on drop when the src contains selector-special characters', async () => {
+    const src = 'https://example.com/weird"].jpg?sig=a"b'
+    const { options, updateImages } = await getRegisteredOptions([])
+
+    const element = document.createElement('div')
+    const img = document.createElement('img')
+    img.src = src
+    element.append(img)
+
+    const draggableInfo: DraggableInfo = {
+      type: 'image',
+      element,
+      target: null,
+      source: null,
+      mousePosition: { x: 0, y: 0 },
+      insertIndex: 0,
+      dataset: { src },
+    }
+
+    const success = options.onDrop(draggableInfo)
+
+    expect(success).toBe(true)
+    expect(updateImages).toHaveBeenCalledWith([expect.objectContaining({ src })])
+  })
+
   it('reorders images when dropping an internal image', async () => {
     const images: GalleryImage[] = [
       { src: 'https://example.com/one.jpg' },

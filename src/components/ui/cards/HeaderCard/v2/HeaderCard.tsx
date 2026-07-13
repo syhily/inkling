@@ -143,9 +143,16 @@ export function HeaderCard({
 
   useEffect(() => {
     if (backgroundImageSrc && layout !== 'split') {
+      const src = backgroundImageSrc
+      let cancelled = false
       new FastAverageColor()
-        .getColorAsync(backgroundImageSrc, { defaultColor: [255, 255, 255, 255] })
+        .getColorAsync(src, { defaultColor: [255, 255, 255, 255] })
         .then((color) => {
+          // the background image changed again before the color was
+          // extracted — don't apply the previous image's color
+          if (cancelled) {
+            return
+          }
           // If we uploaded a transparent image, the average color will be semi transparent, we need to merge it with white
           // Merge white color to the color
           const correctedHex = mergeWhiteColor({
@@ -159,6 +166,9 @@ export function HeaderCard({
         .catch(() => {
           // Failed to load/average the image — keep the current text color
         })
+      return () => {
+        cancelled = true
+      }
     }
     // This is only needed when the background image or layout is changed
     // oxlint-disable-next-line react-hooks/exhaustive-deps

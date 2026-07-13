@@ -80,7 +80,7 @@ export default function useGalleryReorder({
       if (draggableIndex === -1) {
         // external image being added
         const { dataset } = draggableInfo
-        const img = draggableInfo.element?.querySelector(`img[src="${dataset.src}"]`)
+        const img = draggableInfo.element?.querySelector(`img[src="${CSS.escape(String(dataset.src))}"]`)
 
         // image card datasets may not have all of the details we need but we can fill them in
         dataset.width = dataset.width || (img as HTMLImageElement)?.naturalWidth
