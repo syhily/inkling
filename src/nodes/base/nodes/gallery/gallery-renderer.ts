@@ -4,8 +4,10 @@ import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-
 import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { isLocalContentImage } from '@/nodes/base/utils/is-local-content-image'
+import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
+import { sanitizeHtml } from '@/utils/sanitize-html'
 
 interface GalleryImage {
   fileName: string
@@ -179,7 +181,7 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
         }
       }
 
-      if (image.href) {
+      if (image.href && isSafeUrl(image.href)) {
         const a = document.createElement('a')
         a.setAttribute('href', image.href)
         a.appendChild(img)
@@ -195,7 +197,7 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
 
   if (node.caption) {
     const figcaption = document.createElement('figcaption')
-    figcaption.innerHTML = node.caption
+    figcaption.innerHTML = sanitizeHtml(node.caption)
     figure.appendChild(figcaption)
     figure.setAttribute('class', `${figure.getAttribute('class')} inkling-card-hascaption`)
   }

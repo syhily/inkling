@@ -290,6 +290,23 @@ describe('CodeBlockNode', function () {
     )
   })
 
+  it(
+    'sanitizes caption HTML',
+    editorTest(async function () {
+      const codeBlockNode = $createCodeBlockNode({
+        language,
+        code,
+        caption: 'Caption \u003cscript\u003ealert(1)\u003c/script\u003e \u003cimg src=x onerror=alert(1)\u003e',
+      })
+      const { element } = codeBlockNode.exportDOM(editor, exportOptions)
+      const html = (element as HTMLElement).outerHTML
+
+      html.should.not.containEql('\u003cscript')
+      html.should.not.containEql('onerror')
+      html.should.containEql('Caption')
+    }),
+  )
+
   describe('importDOM', function () {
     it(
       'parses PRE>CODE inside FIGURE into code card',

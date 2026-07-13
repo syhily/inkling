@@ -942,6 +942,47 @@ describe('GalleryNode', function () {
     )
 
     it(
+      'sanitizes caption HTML',
+      editorTest(async function () {
+        const galleryNode = $createGalleryNode({
+          ...dataset,
+          caption: 'Gallery \u003cscript\u003ealert(1)\u003c/script\u003e \u003cimg src=x onerror=alert(1)\u003e',
+        })
+        const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
+        const html = (element as HTMLElement).outerHTML
+
+        html.should.not.containEql('\u003cscript')
+        html.should.not.containEql('onerror')
+        html.should.containEql('Gallery')
+      }),
+    )
+
+    it(
+      'does not link images with unsafe hrefs',
+      editorTest(async function () {
+        const galleryNode = $createGalleryNode({
+          ...dataset,
+          caption: '',
+          images: [
+            {
+              row: 0,
+              fileName: 'NatGeo01.jpg',
+              src: '/content/images/2018/08/NatGeo01-9.jpg',
+              width: 3200,
+              height: 1600,
+              href: 'javascript:alert(1)',
+            },
+          ],
+        })
+        const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
+        const html = (element as HTMLElement).outerHTML
+
+        should.not.exist((element as HTMLElement).querySelector('a'))
+        html.should.containEql('/content/images/2018/08/NatGeo01-9.jpg')
+      }),
+    )
+
+    it(
       'renders',
       editorTest(async function () {
         const galleryNode = $createGalleryNode(dataset)

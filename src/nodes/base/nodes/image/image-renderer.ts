@@ -6,6 +6,7 @@ import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-
 import { isLocalContentImage } from '@/nodes/base/utils/is-local-content-image'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
+import { sanitizeHtml } from '@/utils/sanitize-html'
 
 interface ImageNodeData {
   src: string
@@ -146,7 +147,7 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
 
   if (node.caption) {
     const caption = document.createElement('figcaption')
-    caption.innerHTML = node.caption
+    caption.innerHTML = sanitizeHtml(node.caption)
     figure.appendChild(caption)
   }
 

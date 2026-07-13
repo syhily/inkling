@@ -2,6 +2,7 @@ import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { sanitizeHtml } from '@/utils/sanitize-html'
 
 interface CodeBlockNodeData {
   code: string
@@ -33,7 +34,7 @@ export function renderCodeBlockNode(node: CodeBlockNodeData, options: ExportDOMO
     figure.appendChild(pre)
 
     const figcaption = document.createElement('figcaption')
-    figcaption.innerHTML = node.caption
+    figcaption.innerHTML = sanitizeHtml(node.caption)
     figure.appendChild(figcaption)
 
     return { element: figure, type: 'outer' as const }
