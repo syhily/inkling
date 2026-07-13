@@ -45,8 +45,11 @@ describe('Markdown round-trip', function () {
     expect(roundTrip(markdown)).toBe('---')
   })
 
-  // Markdown cards are decorator nodes that `@lexical/markdown` does not know
-  // how to serialize. A production API would need a custom element transformer
-  // for `MarkdownNode` (or fall back to HTML).
-  it.todo('round-trips a markdown card')
+  // Markdown cards round-trip via the `inkling:markdown` fence, whose body is
+  // the card's raw markdown content (see `round-trip-cards.test.ts` for the
+  // full field-level coverage).
+  it('round-trips a markdown card', function () {
+    const markdown = '```inkling:markdown\nSome **bold** text\n```'
+    expect(roundTrip(markdown).trim()).toBe(markdown)
+  })
 })

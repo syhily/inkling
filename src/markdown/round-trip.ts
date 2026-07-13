@@ -15,10 +15,12 @@ import {
   GALLERY_CARD_TRANSFORMER,
   HTML_CARD_TRANSFORMER,
   IMAGE_CARD_TRANSFORMER,
+  MARKDOWN_CARD_TRANSFORMER,
   TOGGLE_CARD_TRANSFORMER,
   VIDEO_CARD_TRANSFORMER,
 } from '@/markdown/card-transformers'
 import { AudioNode } from '@/nodes/AudioNode'
+import { MarkdownNode } from '@/nodes/base/nodes/markdown/MarkdownNode'
 import { BookmarkNode } from '@/nodes/BookmarkNode'
 import { ButtonNode } from '@/nodes/ButtonNode'
 import { CalloutNode } from '@/nodes/CalloutNode'
@@ -61,6 +63,7 @@ const MARKDOWN_NODES = [
   BookmarkNode,
   ToggleNode,
   CalloutNode,
+  MarkdownNode,
 ]
 
 const CARD_TRANSFORMERS = [
@@ -74,6 +77,7 @@ const CARD_TRANSFORMERS = [
   BOOKMARK_CARD_TRANSFORMER,
   TOGGLE_CARD_TRANSFORMER,
   CALLOUT_CARD_TRANSFORMER,
+  MARKDOWN_CARD_TRANSFORMER,
 ] as Transformer[]
 
 const TRANSFORMERS = [...CARD_TRANSFORMERS, ...DEFAULT_TRANSFORMERS] as Transformer[]

@@ -33,7 +33,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'cobertura'],
       include: ['src/**'],
-      thresholds: { lines: 56.05, functions: 53.87, branches: 49.86, statements: 56.04 },
+      thresholds: { lines: 56.17, functions: 54.12, branches: 49.91, statements: 56.16 },
     },
   },
 })

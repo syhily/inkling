@@ -2,6 +2,7 @@ import type { ElementTransformer, MultilineElementTransformer } from '@lexical/m
 import type { Klass, LexicalEditor, LexicalNode } from 'lexical'
 
 import { $createAudioNode, AudioNode } from '@/nodes/AudioNode'
+import { $createMarkdownNode, $isMarkdownNode, MarkdownNode } from '@/nodes/base/nodes/markdown/MarkdownNode'
 import { $createBookmarkNode, BookmarkNode } from '@/nodes/BookmarkNode'
 import { $createButtonNode, ButtonNode } from '@/nodes/ButtonNode'
 import { $createCalloutNode, CalloutNode } from '@/nodes/CalloutNode'
@@ -58,6 +59,26 @@ function createCardTransformer<T extends LexicalNode>({
     },
     type: 'multiline-element',
   }
+}
+
+export const MARKDOWN_CARD_TRANSFORMER: MultilineElementTransformer = {
+  dependencies: [MarkdownNode],
+  export: (node) => {
+    if (!$isMarkdownNode(node)) {
+      return null
+    }
+    return '```inkling:markdown\n' + node.markdown + '\n```'
+  },
+  regExpEnd: /^```\s*$/,
+  regExpStart: /^```inkling:markdown\s*$/,
+  replace: (rootNode, _children, _startMatch, _endMatch, linesInBetween, _isImport) => {
+    // `linesInBetween` includes the (always empty) remainder of the opening
+    // fence line and the (always empty) prefix of the closing fence line —
+    // strip both, like the built-in CODE transformer does.
+    const markdown = linesInBetween?.slice(1, -1).join('\n') ?? ''
+    rootNode.append($createMarkdownNode({ markdown }))
+  },
+  type: 'multiline-element',
 }
 
 export const HTML_CARD_TRANSFORMER = createCardTransformer({

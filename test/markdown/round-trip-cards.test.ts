@@ -204,4 +204,28 @@ describe('Markdown round-trip for decorator cards', function () {
     const exported = lexicalStateToMarkdown(state)
     expect(exported.trim()).toBe(markdown)
   })
+
+  it('round-trips a markdown card', function () {
+    const markdown = '```inkling:markdown\n# Inner heading\n\nSome **bold** text\n```'
+    const state = markdownToLexicalState(markdown)
+
+    const node = state.root.children[0] as unknown as { type: string; markdown: string }
+    expect(node.type).toBe('markdown')
+    expect(node.markdown).toBe('# Inner heading\n\nSome **bold** text')
+
+    const exported = lexicalStateToMarkdown(state)
+    expect(exported.trim()).toBe(markdown)
+  })
+
+  it('round-trips an empty markdown card', function () {
+    const markdown = '```inkling:markdown\n\n```'
+    const state = markdownToLexicalState(markdown)
+
+    const node = state.root.children[0] as unknown as { type: string; markdown: string }
+    expect(node.type).toBe('markdown')
+    expect(node.markdown).toBe('')
+
+    const exported = lexicalStateToMarkdown(state)
+    expect(exported.trim()).toBe(markdown)
+  })
 })
