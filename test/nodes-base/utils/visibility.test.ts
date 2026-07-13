@@ -32,7 +32,7 @@ describe('Utils: visibility', function () {
   describe('isOldVisibilityFormat', function () {
     it('returns true if visibility object does not have web property', function () {
       const visibility = { showOnWeb: true, email: { memberSegment: 'status:free,status:-free' } }
-      isOldVisibilityFormat(visibility).should.be.true()
+      expect(isOldVisibilityFormat(visibility)).toBe(true)
     })
 
     it('returns true if visibility does not have web.nonMember property', function () {
@@ -40,59 +40,59 @@ describe('Utils: visibility', function () {
         web: { memberSegment: 'status:free,status:-free' },
         email: { memberSegment: 'status:free,status:-free' },
       }
-      isOldVisibilityFormat(visibility).should.be.true()
+      expect(isOldVisibilityFormat(visibility)).toBe(true)
     })
 
     it('returns true if visibility object does not have email property', function () {
       const visibility = { web: { nonMember: true, memberSegment: 'status:free,status:-free' }, showOnEmail: true }
-      isOldVisibilityFormat(visibility).should.be.true()
+      expect(isOldVisibilityFormat(visibility)).toBe(true)
     })
 
     it('returns true for incorrectly migrated old format', function () {
       const visibility = { emailOnly: false, segment: '', web: { memberSegment: '' }, email: { memberSegment: '' } }
-      isOldVisibilityFormat(visibility).should.be.true()
+      expect(isOldVisibilityFormat(visibility)).toBe(true)
     })
 
     it('returns false if visibility object has web, web.nonMember, and email properties', function () {
       const visibility = { web: { nonMember: true, memberSegment: '' }, email: { memberSegment: '' } }
-      isOldVisibilityFormat(visibility).should.be.false()
+      expect(isOldVisibilityFormat(visibility)).toBe(false)
     })
   })
 
   describe('isVisibilityRestricted', function () {
     it('returns false if old showOnWeb/showOnEmail visibility format is visible to all', function () {
       const visibility = { showOnWeb: true, showOnEmail: true, segment: '' }
-      isVisibilityRestricted(visibility).should.be.false()
+      expect(isVisibilityRestricted(visibility)).toBe(false)
     })
 
     it('returns false if old emailOnly format is visible to all', function () {
       const visibility = { emailOnly: false, segment: '' }
-      isVisibilityRestricted(visibility).should.be.false()
+      expect(isVisibilityRestricted(visibility)).toBe(false)
     })
 
     it('returns false if old visibility format relies on default segment behavior', function () {
       const visibility = {}
-      isVisibilityRestricted(visibility).should.be.false()
+      expect(isVisibilityRestricted(visibility)).toBe(false)
     })
 
     it('returns true if old visibility format has showOnEmail === false', function () {
       const visibility = { showOnEmail: false }
-      isVisibilityRestricted(visibility).should.be.true()
+      expect(isVisibilityRestricted(visibility)).toBe(true)
     })
 
     it('returns true if old visibility format has showOnWeb === false', function () {
       const visibility = { showOnWeb: false }
-      isVisibilityRestricted(visibility).should.be.true()
+      expect(isVisibilityRestricted(visibility)).toBe(true)
     })
 
     it('returns true if old visibility format targets a specific email segment', function () {
       const visibility = { showOnEmail: true, segment: 'status:free' }
-      isVisibilityRestricted(visibility).should.be.true()
+      expect(isVisibilityRestricted(visibility)).toBe(true)
     })
 
     it('returns true if old visibility format has emailOnly === true', function () {
       const visibility = { emailOnly: true, segment: '' }
-      isVisibilityRestricted(visibility).should.be.true()
+      expect(isVisibilityRestricted(visibility)).toBe(true)
     })
 
     it('returns true if new visibility format has web.nonMember === false', function () {
@@ -100,7 +100,7 @@ describe('Utils: visibility', function () {
         web: { nonMember: false, memberSegment: 'status:free,status:-free' },
         email: { memberSegment: 'status:free,status:-free' },
       }
-      isVisibilityRestricted(visibility).should.be.true()
+      expect(isVisibilityRestricted(visibility)).toBe(true)
     })
 
     it('returns true if new visibility format has web.memberSegment !== ALL_MEMBERS_SEGMENT', function () {
@@ -108,7 +108,7 @@ describe('Utils: visibility', function () {
         web: { nonMember: true, memberSegment: 'status:free' },
         email: { memberSegment: 'status:free,status:-free' },
       }
-      isVisibilityRestricted(visibility).should.be.true()
+      expect(isVisibilityRestricted(visibility)).toBe(true)
     })
 
     it('returns true if new visibility format has email.memberSegment !== ALL_MEMBERS_SEGMENT', function () {
@@ -116,7 +116,7 @@ describe('Utils: visibility', function () {
         web: { nonMember: true, memberSegment: 'status:free,status:-free' },
         email: { memberSegment: 'status:free' },
       }
-      isVisibilityRestricted(visibility).should.be.true()
+      expect(isVisibilityRestricted(visibility)).toBe(true)
     })
 
     it('returns false if new visibility format is visible to all', function () {
@@ -124,7 +124,7 @@ describe('Utils: visibility', function () {
         web: { nonMember: true, memberSegment: 'status:free,status:-free' },
         email: { memberSegment: 'status:free,status:-free' },
       }
-      isVisibilityRestricted(visibility).should.be.false()
+      expect(isVisibilityRestricted(visibility)).toBe(false)
     })
   })
 
@@ -142,21 +142,21 @@ describe('Utils: visibility', function () {
       const after = migrateOldVisibilityFormat(before)
 
       // we get same reference back
-      Object.is(before, after).should.be.true()
+      expect(Object.is(before, after)).toBe(true)
       // original reference is unchanged
-      before.should.deepEqual(refCheck)
+      expect(before).toEqual(refCheck)
     })
 
     it('keeps original properties when migrating to new format', function () {
       const after = migrateOldVisibilityFormat({ showOnWeb: false })
-      after.showOnWeb.should.be.false()
+      expect(after.showOnWeb).toBe(false)
     })
 
     describe('web', function () {
       function testWebMigration(before: Visibility, after: Visibility['web']) {
         return function () {
           const result = migrateOldVisibilityFormat(before)
-          result.web.should.deepEqual(after)
+          expect(result.web).toEqual(after)
         }
       }
 
@@ -206,7 +206,7 @@ describe('Utils: visibility', function () {
       function testEmailMigration(before: Visibility, after: Visibility['email']) {
         return function () {
           const result = migrateOldVisibilityFormat(before)
-          result.email.should.deepEqual(after)
+          expect(result.email).toEqual(after)
         }
       }
 
@@ -281,28 +281,28 @@ describe('Utils: visibility', function () {
         const visibility = { email: { memberSegment: '' } }
         const result = runRender('testing', visibility, 'email')
 
-        getHTMLElement(result.element).tagName.should.equal('SPAN')
-        getHTMLElement(result.element).innerHTML.should.equal('')
-        result.type.should.equal('inner')
+        expect(getHTMLElement(result.element).tagName).toBe('SPAN')
+        expect(getHTMLElement(result.element).innerHTML).toBe('')
+        expect(result.type).toBe('inner')
       })
 
       it('returns original output when membersSegment === all members', function () {
         const visibility = { email: { memberSegment: 'status:free,status:-free' } }
         const result = runRender('testing', visibility, 'email')
 
-        getHTMLElement(result.element).tagName.should.eql('P')
-        getHTMLElement(result.element).innerHTML.should.equal('testing')
-        result.type.should.equal('html')
+        expect(getHTMLElement(result.element).tagName).toEqual('P')
+        expect(getHTMLElement(result.element).innerHTML).toBe('testing')
+        expect(result.type).toBe('html')
       })
 
       it('wraps original output when emailing a specific segment', function () {
         const visibility = { email: { memberSegment: 'status:free' } }
         const result = runRender('testing', visibility, 'email')
 
-        getHTMLElement(result.element).tagName.should.eql('DIV')
-        getHTMLElement(result.element).dataset.ghSegment!.should.equal('status:free')
-        getHTMLElement(result.element).innerHTML.should.equal('<p>testing</p>')
-        result.type.should.equal('html')
+        expect(getHTMLElement(result.element).tagName).toEqual('DIV')
+        expect(getHTMLElement(result.element).dataset.ghSegment!).toBe('status:free')
+        expect(getHTMLElement(result.element).innerHTML).toBe('<p>testing</p>')
+        expect(result.type).toBe('html')
       })
     })
 
@@ -311,17 +311,17 @@ describe('Utils: visibility', function () {
         const visibility = { web: { nonMember: true, memberSegment: 'status:free,status:-free' } }
         const result = runRender('testing', visibility, 'web')
 
-        getHTMLElement(result.element).tagName.should.eql('P')
-        getHTMLElement(result.element).innerHTML.should.equal('testing')
-        result.type.should.equal('html')
+        expect(getHTMLElement(result.element).tagName).toEqual('P')
+        expect(getHTMLElement(result.element).innerHTML).toBe('testing')
+        expect(result.type).toBe('html')
       })
 
       it('adds wrapping comments when anonymous is gated', function () {
         const visibility = { web: { nonMember: false, memberSegment: 'status:free,status:-free' } }
         const result = runRender('testing', visibility, 'web')
 
-        getHTMLTextAreaElement(result.element).tagName.should.equal('TEXTAREA')
-        getHTMLTextAreaElement(result.element).value.should.equal(
+        expect(getHTMLTextAreaElement(result.element).tagName).toBe('TEXTAREA')
+        expect(getHTMLTextAreaElement(result.element).value).toBe(
           '\n<!--inkling-gated-block:begin nonMember:false memberSegment:"status:free,status:-free" --><p>testing</p><!--inkling-gated-block:end-->\n',
         )
       })
@@ -330,8 +330,8 @@ describe('Utils: visibility', function () {
         const visibility = { web: { nonMember: true, memberSegment: 'status:free' } }
         const result = runRender('testing', visibility, 'web')
 
-        getHTMLTextAreaElement(result.element).tagName.should.equal('TEXTAREA')
-        getHTMLTextAreaElement(result.element).value.should.equal(
+        expect(getHTMLTextAreaElement(result.element).tagName).toBe('TEXTAREA')
+        expect(getHTMLTextAreaElement(result.element).value).toBe(
           '\n<!--inkling-gated-block:begin nonMember:true memberSegment:"status:free" --><p>testing</p><!--inkling-gated-block:end-->\n',
         )
       })
@@ -340,7 +340,7 @@ describe('Utils: visibility', function () {
         const visibility = { web: { nonMember: false, memberSegment: 'status:free,status:-free' } }
         const result = runRender('testing', visibility, 'web')
 
-        getHTMLTextAreaElement(result.element).value.should.equal(
+        expect(getHTMLTextAreaElement(result.element).value).toBe(
           '\n<!--inkling-gated-block:begin nonMember:false memberSegment:"status:free,status:-free" --><p>testing</p><!--inkling-gated-block:end-->\n',
         )
       })
@@ -350,20 +350,20 @@ describe('Utils: visibility', function () {
         const result = runRender('testing', visibility, 'web')
 
         const value = getHTMLTextAreaElement(result.element).value
-        value.should.equal(
+        expect(value).toBe(
           '\n<!--inkling-gated-block:begin nonMember:false memberSegment:"" --><p>testing</p><!--inkling-gated-block:end-->\n',
         )
-        value.should.not.containEql('<img')
+        expect(value).not.toContain('<img')
         // the first comment terminator is the begin marker's own close — the
         // injected `-->` did not terminate the comment early
-        value.indexOf('-->').should.equal(value.indexOf('memberSegment:"" -->') + 'memberSegment:"" '.length)
+        expect(value.indexOf('-->')).toBe(value.indexOf('memberSegment:"" -->') + 'memberSegment:"" '.length)
       })
 
       it('coerces a truthy non-boolean nonMember to false', function () {
         const visibility = { web: { nonMember: 'yes' as unknown as boolean, memberSegment: 'status:free' } }
         const result = runRender('testing', visibility, 'web')
 
-        getHTMLTextAreaElement(result.element).value.should.equal(
+        expect(getHTMLTextAreaElement(result.element).value).toBe(
           '\n<!--inkling-gated-block:begin nonMember:false memberSegment:"status:free" --><p>testing</p><!--inkling-gated-block:end-->\n',
         )
       })
@@ -377,8 +377,8 @@ describe('Utils: visibility', function () {
 
       const result = renderWithVisibility(originalOutput, buildVisibility(visibility), { target: 'web' })
 
-      getHTMLTextAreaElement(result.element).tagName.should.equal('TEXTAREA')
-      getHTMLTextAreaElement(result.element).value.should.equal(
+      expect(getHTMLTextAreaElement(result.element).tagName).toBe('TEXTAREA')
+      expect(getHTMLTextAreaElement(result.element).value).toBe(
         '\n<!--inkling-gated-block:begin nonMember:true memberSegment:"status:free" --><p>testing</p><!--inkling-gated-block:end-->\n',
       )
     })
@@ -391,8 +391,8 @@ describe('Utils: visibility', function () {
 
       const result = renderWithVisibility(originalOutput, buildVisibility(visibility), { target: 'web' })
 
-      getHTMLTextAreaElement(result.element).tagName.should.equal('TEXTAREA')
-      getHTMLTextAreaElement(result.element).value.should.equal(
+      expect(getHTMLTextAreaElement(result.element).tagName).toBe('TEXTAREA')
+      expect(getHTMLTextAreaElement(result.element).value).toBe(
         '\n<!--inkling-gated-block:begin nonMember:true memberSegment:"status:free" --><!--comment test--><span>testing</span><!--inkling-gated-block:end-->\n',
       )
     })
@@ -405,8 +405,8 @@ describe('Utils: visibility', function () {
 
       const result = renderWithVisibility(originalOutput, buildVisibility(visibility), { target: 'web' })
 
-      getHTMLTextAreaElement(result.element).tagName.should.equal('TEXTAREA')
-      getHTMLTextAreaElement(result.element).value.should.equal(
+      expect(getHTMLTextAreaElement(result.element).tagName).toBe('TEXTAREA')
+      expect(getHTMLTextAreaElement(result.element).value).toBe(
         '\n<!--inkling-gated-block:begin nonMember:true memberSegment:"status:free" --><!--comment test--><span>testing</span><!--inkling-gated-block:end-->\n',
       )
     })
@@ -427,10 +427,10 @@ describe('Utils: visibility', function () {
       } as VisibilityRenderOutput
       const result = renderWithVisibility(originalOutput, visibility, { target: 'email' })
 
-      getHTMLElement(result.element).tagName.should.eql('DIV')
-      getHTMLElement(result.element).dataset.ghSegment!.should.equal('status:free')
-      getHTMLElement(result.element).innerHTML.should.equal('<p>testing</p>')
-      result.type.should.equal('html')
+      expect(getHTMLElement(result.element).tagName).toEqual('DIV')
+      expect(getHTMLElement(result.element).dataset.ghSegment!).toBe('status:free')
+      expect(getHTMLElement(result.element).innerHTML).toBe('<p>testing</p>')
+      expect(result.type).toBe('html')
     })
   })
 })

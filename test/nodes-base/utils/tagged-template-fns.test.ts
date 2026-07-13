@@ -18,7 +18,7 @@ describe('Internal utils: oneline', function () {
             </div>
         `
 
-    result.should.equal(
+    expect(result).toBe(
       '<div class="btn btn-accent"><table border="0" cellspacing="0" cellpadding="0" align="center"><tr><td align="center"><a href="http://example.com">Click me</a></td></tr></table></div>',
     )
   })
@@ -30,6 +30,6 @@ describe('Internal utils: oneline', function () {
             </div>
         `)
 
-    result.should.equal('<div class="test"><p>Hello world</p></div>')
+    expect(result).toBe('<div class="test"><p>Hello world</p></div>')
   })
 })

@@ -2,7 +2,6 @@ import type { LexicalEditor, EditorConfig } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
 import { JSDOM } from 'jsdom'
-import should from 'should'
 
 import {
   AtLinkNode,
@@ -51,7 +50,7 @@ describe('AtLinkNode', function () {
     'matches node with $isAtLinkNode',
     editorTest(function () {
       const atLinkNode = $createAtLinkNode(null)
-      $isAtLinkNode(atLinkNode).should.be.true()
+      expect($isAtLinkNode(atLinkNode)).toBe(true)
     }),
   )
 
@@ -59,7 +58,7 @@ describe('AtLinkNode', function () {
     'can be constructed with link format',
     editorTest(function () {
       const atLinkNode = $createAtLinkNode(1)
-      atLinkNode.getLinkFormat()!.should.equal(1)
+      expect(atLinkNode.getLinkFormat()!).toBe(1)
     }),
   )
 
@@ -67,7 +66,7 @@ describe('AtLinkNode', function () {
     'defaults link format to null when called without args',
     editorTest(function () {
       const atLinkNode = $createAtLinkNode()
-      should.equal(atLinkNode.getLinkFormat(), null)
+      expect(atLinkNode.getLinkFormat()).toBe(null)
     }),
   )
 
@@ -77,8 +76,8 @@ describe('AtLinkNode', function () {
       const atLinkNode = $createAtLinkNode(1)
       const atLinkNodeClone = AtLinkNode.clone(atLinkNode)
 
-      atLinkNode.__key.should.equal(atLinkNodeClone.__key)
-      atLinkNodeClone.getLinkFormat()!.should.equal(1)
+      expect(atLinkNode.__key).toBe(atLinkNodeClone.__key)
+      expect(atLinkNodeClone.getLinkFormat()!).toBe(1)
     }),
   )
 
@@ -86,7 +85,7 @@ describe('AtLinkNode', function () {
     'exports all data via exportJSON()',
     editorTest(function () {
       const atLinkNode = $createAtLinkNode(1)
-      atLinkNode.exportJSON().should.deepEqual({
+      expect(atLinkNode.exportJSON()).toEqual({
         children: [],
         direction: null,
         format: '',
@@ -102,7 +101,7 @@ describe('AtLinkNode', function () {
     'imports all data via importJSON()',
     editorTest(function () {
       const atLinkNode = AtLinkNode.importJSON({ linkFormat: 1 } as ReturnType<AtLinkNode['exportJSON']>)
-      atLinkNode.getLinkFormat()!.should.equal(1)
+      expect(atLinkNode.getLinkFormat()!).toBe(1)
     }),
   )
 
@@ -111,8 +110,8 @@ describe('AtLinkNode', function () {
     editorTest(function () {
       const atLinkNode = $createAtLinkNode(null)
       const dom = atLinkNode.createDOM({ theme: { atLink: 'multiple classes' } } as unknown as EditorConfig)
-      dom.classList.contains('multiple').should.be.true()
-      dom.classList.contains('classes').should.be.true()
+      expect(dom.classList.contains('multiple')).toBe(true)
+      expect(dom.classList.contains('classes')).toBe(true)
     }),
   )
 
@@ -120,7 +119,7 @@ describe('AtLinkNode', function () {
     'never updates dom after creation',
     editorTest(function () {
       const atLinkNode = $createAtLinkNode(null)
-      atLinkNode.updateDOM().should.be.false()
+      expect(atLinkNode.updateDOM()).toBe(false)
     }),
   )
 
@@ -129,7 +128,7 @@ describe('AtLinkNode', function () {
     editorTest(function () {
       const atLinkNode = $createAtLinkNode(null)
       atLinkNode.setLinkFormat(1)
-      atLinkNode.getLinkFormat()!.should.equal(1)
+      expect(atLinkNode.getLinkFormat()!).toBe(1)
     }),
   )
 
@@ -141,11 +140,12 @@ describe('AtLinkNode', function () {
       atLinkNode.append(atLinkSearchNode)
       const { element, type } = atLinkNode.exportDOM()
 
-      should.exist(element)
-      should.equal(type, 'inner')
-      element.tagName.should.equal('SPAN')
-      element.innerHTML.should.equal('')
-      element.outerHTML.should.equal('<span></span>')
+      expect(element).toBeDefined()
+      expect(element).not.toBeNull()
+      expect(type).toBe('inner')
+      expect(element.tagName).toBe('SPAN')
+      expect(element.innerHTML).toBe('')
+      expect(element.outerHTML).toBe('<span></span>')
     }),
   )
 
@@ -155,7 +155,7 @@ describe('AtLinkNode', function () {
       const atLinkNode = $createAtLinkNode(null)
       const atLinkSearchNode = $createAtLinkSearchNode('test')
       atLinkNode.append(atLinkSearchNode)
-      atLinkNode.getTextContent().should.equal('')
+      expect(atLinkNode.getTextContent()).toBe('')
     }),
   )
 
@@ -163,7 +163,7 @@ describe('AtLinkNode', function () {
     'is inline',
     editorTest(function () {
       const atLinkNode = $createAtLinkNode(null)
-      atLinkNode.isInline().should.be.true()
+      expect(atLinkNode.isInline()).toBe(true)
     }),
   )
 
@@ -171,7 +171,7 @@ describe('AtLinkNode', function () {
     'cannot be empty',
     editorTest(function () {
       const atLinkNode = $createAtLinkNode(null)
-      atLinkNode.canBeEmpty().should.be.false()
+      expect(atLinkNode.canBeEmpty()).toBe(false)
     }),
   )
 })

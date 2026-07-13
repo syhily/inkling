@@ -1,14 +1,12 @@
 import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
 import { $getRoot, LexicalEditor } from 'lexical'
-import should from 'should'
 
+import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { ImageNode, $createImageNode, $isImageNode } from '@/nodes/base/index'
 
 const editorNodes = [ImageNode]
-
-void should
 
 describe('ImageNode', function () {
   let editor: LexicalEditor
@@ -61,7 +59,7 @@ describe('ImageNode', function () {
     'matches node with $isImageNode',
     editorTest(async function () {
       const imageNode = $createImageNode(dataset)
-      $isImageNode(imageNode).should.be.true()
+      expect($isImageNode(imageNode)).toBe(true)
     }),
   )
 
@@ -71,14 +69,14 @@ describe('ImageNode', function () {
       editorTest(async function () {
         const imageNode = $createImageNode(dataset)
 
-        imageNode.src.should.equal('/content/images/2022/11/inkling-lexical.jpg')
-        imageNode.width!.should.equal(3840)
-        imageNode.height!.should.equal(2160)
-        imageNode.title.should.equal('This is a title')
-        imageNode.alt.should.equal('This is some alt text')
-        imageNode.caption.should.equal('This is a <b>caption</b>')
-        imageNode.cardWidth.should.equal('regular')
-        imageNode.href.should.equal('')
+        expect(imageNode.src).toBe('/content/images/2022/11/inkling-lexical.jpg')
+        expect(imageNode.width!).toBe(3840)
+        expect(imageNode.height!).toBe(2160)
+        expect(imageNode.title).toBe('This is a title')
+        expect(imageNode.alt).toBe('This is some alt text')
+        expect(imageNode.caption).toBe('This is a <b>caption</b>')
+        expect(imageNode.cardWidth).toBe('regular')
+        expect(imageNode.href).toBe('')
       }),
     )
 
@@ -87,7 +85,7 @@ describe('ImageNode', function () {
       editorTest(async function () {
         const imageNode = $createImageNode()
 
-        imageNode.getDataset().should.deepEqual({
+        expect(imageNode.getDataset()).toEqual({
           src: '',
           caption: '',
           title: '',
@@ -105,37 +103,37 @@ describe('ImageNode', function () {
       editorTest(async function () {
         const imageNode = $createImageNode({} as Record<string, unknown>)
 
-        imageNode.src.should.equal('')
+        expect(imageNode.src).toBe('')
         imageNode.src = '/content/images/2022/11/inkling-lexical.jpg'
-        imageNode.src.should.equal('/content/images/2022/11/inkling-lexical.jpg')
+        expect(imageNode.src).toBe('/content/images/2022/11/inkling-lexical.jpg')
 
-        ;(should as unknown as (obj: unknown) => should.Assertion)(imageNode.width).equal(null)
+        expect(imageNode.width).toBe(null)
         imageNode.width = 3840
-        imageNode.width.should.equal(3840)
+        expect(imageNode.width).toBe(3840)
 
-        ;(should as unknown as (obj: unknown) => should.Assertion)(imageNode.height).equal(null)
+        expect(imageNode.height).toBe(null)
         imageNode.height = 2160
-        imageNode.height.should.equal(2160)
+        expect(imageNode.height).toBe(2160)
 
-        imageNode.title.should.equal('')
+        expect(imageNode.title).toBe('')
         imageNode.title = 'I am a title'
-        imageNode.title.should.equal('I am a title')
+        expect(imageNode.title).toBe('I am a title')
 
-        imageNode.alt.should.equal('')
+        expect(imageNode.alt).toBe('')
         imageNode.alt = 'I am alt text'
-        imageNode.alt.should.equal('I am alt text')
+        expect(imageNode.alt).toBe('I am alt text')
 
-        imageNode.caption.should.equal('')
+        expect(imageNode.caption).toBe('')
         imageNode.caption = 'I am a <b>Caption</b>'
-        imageNode.caption.should.equal('I am a <b>Caption</b>')
+        expect(imageNode.caption).toBe('I am a <b>Caption</b>')
 
-        imageNode.cardWidth.should.equal('regular')
+        expect(imageNode.cardWidth).toBe('regular')
         imageNode.cardWidth = 'wide'
-        imageNode.cardWidth.should.equal('wide')
+        expect(imageNode.cardWidth).toBe('wide')
 
-        imageNode.href.should.equal('')
+        expect(imageNode.href).toBe('')
         imageNode.href = 'https://example.com'
-        imageNode.href.should.equal('https://example.com')
+        expect(imageNode.href).toBe('https://example.com')
       }),
     )
 
@@ -145,7 +143,7 @@ describe('ImageNode', function () {
         const imageNode = $createImageNode(dataset)
         const imageNodeDataset = imageNode.getDataset()
 
-        imageNodeDataset.should.deepEqual({
+        expect(imageNodeDataset).toEqual({
           ...dataset,
           cardWidth: 'regular',
         })
@@ -160,59 +158,11 @@ describe('ImageNode', function () {
         const imageNode = $createImageNode(dataset)
         const { element } = imageNode.exportDOM(editor, exportOptions)
 
-        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
-          <figure class="inkling-card inkling-image-card inkling-card-hascaption">
-            <img
-              src="/content/images/2022/11/inkling-lexical.jpg"
-              class="inkling-image"
-              alt="This is some alt text"
-              loading="lazy"
-              title="This is a title"
-              width="3840"
-              height="2160"
-              srcset="
-                /content/images/size/w600/2022/11/inkling-lexical.jpg   600w,
-                /content/images/size/w1000/2022/11/inkling-lexical.jpg 1000w,
-                /content/images/size/w1600/2022/11/inkling-lexical.jpg 1600w,
-                /content/images/size/w2400/2022/11/inkling-lexical.jpg 2400w
-              "
-              sizes="(min-width: 720px) 720px"
-            />
-            <figcaption>This is a <b>caption</b></figcaption>
-          </figure>
-        `)
-      }),
-    )
-
-    it(
-      'sanitizes caption HTML',
-      editorTest(async function () {
-        const imageNode = $createImageNode({
-          ...dataset,
-          caption: 'Caption \u003cscript\u003ealert(1)\u003c/script\u003e \u003cimg src=x onerror=alert(1)\u003e',
-        })
-        const { element } = imageNode.exportDOM(editor, exportOptions)
-        const html = (element as HTMLElement).outerHTML
-
-        html.should.not.containEql('\u003cscript')
-        html.should.not.containEql('onerror')
-        html.should.containEql('Caption')
-      }),
-    )
-
-    it(
-      'creates a full-featured image card with link',
-      editorTest(async function () {
-        const imageNode = $createImageNode({
-          ...dataset,
-          href: 'https://example.com',
-        })
-        const { element } = imageNode.exportDOM(editor, exportOptions)
-
-        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
-          <figure class="inkling-card inkling-image-card inkling-card-hascaption">
-            <a href="https://example.com"
-              ><img
+        await expectPrettifiedHtml(
+          (element as HTMLElement).outerHTML,
+          html`
+            <figure class="inkling-card inkling-image-card inkling-card-hascaption">
+              <img
                 src="/content/images/2022/11/inkling-lexical.jpg"
                 class="inkling-image"
                 alt="This is some alt text"
@@ -227,10 +177,64 @@ describe('ImageNode', function () {
                   /content/images/size/w2400/2022/11/inkling-lexical.jpg 2400w
                 "
                 sizes="(min-width: 720px) 720px"
-            /></a>
-            <figcaption>This is a <b>caption</b></figcaption>
-          </figure>
-        `)
+              />
+              <figcaption>This is a <b>caption</b></figcaption>
+            </figure>
+          `,
+        )
+      }),
+    )
+
+    it(
+      'sanitizes caption HTML',
+      editorTest(async function () {
+        const imageNode = $createImageNode({
+          ...dataset,
+          caption: 'Caption \u003cscript\u003ealert(1)\u003c/script\u003e \u003cimg src=x onerror=alert(1)\u003e',
+        })
+        const { element } = imageNode.exportDOM(editor, exportOptions)
+        const html = (element as HTMLElement).outerHTML
+
+        expect(html).not.toContain('\u003cscript')
+        expect(html).not.toContain('onerror')
+        expect(html).toContain('Caption')
+      }),
+    )
+
+    it(
+      'creates a full-featured image card with link',
+      editorTest(async function () {
+        const imageNode = $createImageNode({
+          ...dataset,
+          href: 'https://example.com',
+        })
+        const { element } = imageNode.exportDOM(editor, exportOptions)
+
+        await expectPrettifiedHtml(
+          (element as HTMLElement).outerHTML,
+          html`
+            <figure class="inkling-card inkling-image-card inkling-card-hascaption">
+              <a href="https://example.com"
+                ><img
+                  src="/content/images/2022/11/inkling-lexical.jpg"
+                  class="inkling-image"
+                  alt="This is some alt text"
+                  loading="lazy"
+                  title="This is a title"
+                  width="3840"
+                  height="2160"
+                  srcset="
+                    /content/images/size/w600/2022/11/inkling-lexical.jpg   600w,
+                    /content/images/size/w1000/2022/11/inkling-lexical.jpg 1000w,
+                    /content/images/size/w1600/2022/11/inkling-lexical.jpg 1600w,
+                    /content/images/size/w2400/2022/11/inkling-lexical.jpg 2400w
+                  "
+                  sizes="(min-width: 720px) 720px"
+              /></a>
+              <figcaption>This is a <b>caption</b></figcaption>
+            </figure>
+          `,
+        )
       }),
     )
 
@@ -244,9 +248,9 @@ describe('ImageNode', function () {
         const { element } = imageNode.exportDOM(editor, exportOptions)
         const output = (element as HTMLElement).outerHTML
 
-        output.should.not.containEql('<a')
-        output.should.not.containEql('javascript:')
-        output.should.containEql('<img src="/image.png"')
+        expect(output).not.toContain('<a')
+        expect(output).not.toContain('javascript:')
+        expect(output).toContain('<img src="/image.png"')
       }),
     )
 
@@ -256,11 +260,14 @@ describe('ImageNode', function () {
         const imageNode = $createImageNode({ src: '/image.png' })
         const { element } = imageNode.exportDOM(editor, exportOptions)
 
-        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
-          <figure class="inkling-card inkling-image-card">
-            <img src="/image.png" class="inkling-image" alt="" loading="lazy" />
-          </figure>
-        `)
+        await expectPrettifiedHtml(
+          (element as HTMLElement).outerHTML,
+          html`
+            <figure class="inkling-card inkling-image-card">
+              <img src="/image.png" class="inkling-image" alt="" loading="lazy" />
+            </figure>
+          `,
+        )
       }),
     )
 
@@ -270,7 +277,7 @@ describe('ImageNode', function () {
         const imageNode = $createImageNode({} as Record<string, unknown>)
         const { element } = imageNode.exportDOM(editor, exportOptions)
 
-        ;(element as HTMLElement).outerHTML.should.equal('<span></span>')
+        expect((element as HTMLElement).outerHTML).toBe('<span></span>')
       }),
     )
 
@@ -281,7 +288,7 @@ describe('ImageNode', function () {
         const imageNode = $createImageNode(dataset)
         const { element } = imageNode.exportDOM(editor, exportOptions)
 
-        ;(element as HTMLElement).classList.contains('inkling-width-wide').should.be.true()
+        expect((element as HTMLElement).classList.contains('inkling-width-wide')).toBe(true)
       }),
     )
 
@@ -298,8 +305,8 @@ describe('ImageNode', function () {
         const { element } = imageNode.exportDOM(editor, exportOptions)
         const output = (element as HTMLElement).outerHTML
 
-        output.should.containEql('width="2000"')
-        output.should.containEql('height="4000"')
+        expect(output).toContain('width="2000"')
+        expect(output).toContain('height="4000"')
       }),
     )
 
@@ -314,7 +321,7 @@ describe('ImageNode', function () {
         const { element } = imageNode.exportDOM(editor, exportOptions)
         const output = (element as HTMLElement).outerHTML
 
-        output.should.containEql('width="3000" height="6000"')
+        expect(output).toContain('width="3000" height="6000"')
       }),
     )
 
@@ -328,7 +335,7 @@ describe('ImageNode', function () {
           const { element } = imageNode.exportDOM(editor, exportOptions)
           const output = (element as HTMLElement).outerHTML
 
-          output.should.not.containEql('srcset')
+          expect(output).not.toContain('srcset')
         }),
       )
 
@@ -354,7 +361,7 @@ describe('ImageNode', function () {
           const { element } = imageNode.exportDOM(editor, exportOptions)
           const output = (element as HTMLElement).outerHTML
 
-          output.should.containEql('sizes="(min-width: 720px) 720px"')
+          expect(output).toContain('sizes="(min-width: 720px) 720px"')
         }),
       )
 
@@ -369,7 +376,7 @@ describe('ImageNode', function () {
           const { element } = imageNode.exportDOM(editor, exportOptions)
           const output = (element as HTMLElement).outerHTML
 
-          output.should.containEql('sizes="(min-width: 1200px) 1200px"')
+          expect(output).toContain('sizes="(min-width: 1200px) 1200px"')
         }),
       )
 
@@ -400,12 +407,12 @@ describe('ImageNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].src.should.equal('/image.png')
-        nodes[0].alt.should.equal('Alt text')
-        nodes[0].title.should.equal('Title text')
-        nodes[0].width!.should.equal(3000)
-        nodes[0].height!.should.equal(2000)
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].src).toBe('/image.png')
+        expect(nodes[0].alt).toBe('Alt text')
+        expect(nodes[0].title).toBe('Title text')
+        expect(nodes[0].width!).toBe(3000)
+        expect(nodes[0].height!).toBe(2000)
       }),
     )
 
@@ -419,10 +426,10 @@ describe('ImageNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].src.should.equal('http://example.com/test.png')
-        nodes[0].alt.should.equal('Alt test')
-        nodes[0].title.should.equal('Title test')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].src).toBe('http://example.com/test.png')
+        expect(nodes[0].alt).toBe('Alt test')
+        expect(nodes[0].title).toBe('Title test')
       }),
     )
 
@@ -437,9 +444,9 @@ describe('ImageNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].src.should.equal('http://example.com/test.png')
-        nodes[0].caption.should.equal('<strong>Caption test</strong>')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].src).toBe('http://example.com/test.png')
+        expect(nodes[0].caption).toBe('<strong>Caption test</strong>')
       }),
     )
 
@@ -452,8 +459,8 @@ describe('ImageNode', function () {
           </figure>
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
-        nodes.length.should.equal(1)
-        nodes[0].cardWidth.should.equal('wide')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].cardWidth).toBe('wide')
       }),
     )
 
@@ -467,8 +474,8 @@ describe('ImageNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].cardWidth.should.equal('full')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].cardWidth).toBe('full')
       }),
     )
 
@@ -482,10 +489,10 @@ describe('ImageNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].src.should.equal('http://example.com/test.png')
-        nodes[0].width!.should.equal(640)
-        nodes[0].height!.should.equal(480)
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].src).toBe('http://example.com/test.png')
+        expect(nodes[0].width!).toBe(640)
+        expect(nodes[0].height!).toBe(480)
       }),
     )
 
@@ -499,10 +506,10 @@ describe('ImageNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].src.should.equal('http://example.com/test.png')
-        nodes[0].width!.should.equal(640)
-        nodes[0].height!.should.equal(480)
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].src).toBe('http://example.com/test.png')
+        expect(nodes[0].width!).toBe(640)
+        expect(nodes[0].height!).toBe(480)
       }),
     )
 
@@ -516,10 +523,10 @@ describe('ImageNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].src.should.equal('http://example.com/test.png')
-        nodes[0].width!.should.equal(640)
-        nodes[0].height!.should.equal(480)
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].src).toBe('http://example.com/test.png')
+        expect(nodes[0].width!).toBe(640)
+        expect(nodes[0].height!).toBe(480)
       }),
     )
 
@@ -535,9 +542,9 @@ describe('ImageNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].src.should.equal('http://example.com/test.png')
-        nodes[0].href.should.equal('https://example.com/link')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].src).toBe('http://example.com/test.png')
+        expect(nodes[0].href).toBe('https://example.com/link')
       }),
     )
 
@@ -551,9 +558,9 @@ describe('ImageNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].src.should.equal('http://example.com/test.png')
-        nodes[0].href.should.equal('https://example.com/link')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].src).toBe('http://example.com/test.png')
+        expect(nodes[0].href).toBe('https://example.com/link')
       }),
     )
   })
@@ -567,7 +574,7 @@ describe('ImageNode', function () {
         const imageNode = $createImageNode(dataset)
         const json = imageNode.exportJSON()
 
-        json.should.deepEqual({
+        expect(json).toEqual({
           type: 'image',
           version: 1,
           src: '/content/images/2022/11/inkling-lexical.jpg',
@@ -610,13 +617,13 @@ describe('ImageNode', function () {
           try {
             const [imageNode] = $getRoot().getChildren() as ImageNode[]
 
-            imageNode.src.should.equal('/content/images/2022/11/inkling-lexical.jpg')
-            imageNode.width!.should.equal(3840)
-            imageNode.height!.should.equal(2160)
-            imageNode.title.should.equal('This is a title')
-            imageNode.alt.should.equal('This is some alt text')
-            imageNode.caption.should.equal('This is a <b>caption</b>')
-            imageNode.cardWidth.should.equal('wide')
+            expect(imageNode.src).toBe('/content/images/2022/11/inkling-lexical.jpg')
+            expect(imageNode.width!).toBe(3840)
+            expect(imageNode.height!).toBe(2160)
+            expect(imageNode.title).toBe('This is a title')
+            expect(imageNode.alt).toBe('This is some alt text')
+            expect(imageNode.caption).toBe('This is a <b>caption</b>')
+            expect(imageNode.cardWidth).toBe('wide')
 
             resolve()
           } catch (e) {
@@ -631,10 +638,10 @@ describe('ImageNode', function () {
       'returns contents',
       editorTest(async function () {
         const node = $createImageNode({} as Record<string, unknown>)
-        node.getTextContent().should.equal('')
+        expect(node.getTextContent()).toBe('')
 
         node.caption = 'Test caption'
-        node.getTextContent().should.equal('Test caption\n\n')
+        expect(node.getTextContent()).toBe('Test caption\n\n')
       }),
     )
   })

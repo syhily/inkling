@@ -72,7 +72,7 @@ describe('Cards', function () {
   <figcaption>This is a caption</figcaption>
 </figure>
 `
-    output.should.equal(expected)
+    expect(output).toBe(expected)
   })
 
   it('renders HTML card with unclosed tags', async function () {
@@ -117,7 +117,7 @@ describe('Cards', function () {
 </div>
 <!--inkling-card-end: html-->
 `
-    renderedInput.should.equal(expected)
+    expect(renderedInput).toBe(expected)
   })
 
   it('renders HTML card with html entities and single-quote attributes', async function () {
@@ -135,7 +135,7 @@ describe('Cards', function () {
 <div data-graph-name='The "all-in" cost of a grant'>Test</div>
 <!--inkling-card-end: html-->
 `
-    renderedInput.should.equal(expected)
+    expect(renderedInput).toBe(expected)
   })
 
   // https://linear.app/inkling/issue/ONC-801/
@@ -160,6 +160,6 @@ describe('Cards', function () {
 <!--inkling-card-end: html-->
 `
 
-    renderedInput.should.equal(expected)
+    expect(renderedInput).toBe(expected)
   })
 })

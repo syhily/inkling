@@ -1,16 +1,14 @@
 import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
 import { $getRoot, LexicalEditor } from 'lexical'
-import should from 'should'
 
+import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { GalleryNode, $createGalleryNode, $isGalleryNode, ImageNode } from '@/nodes/base/index'
 
 // include ImageNode so we can make sure imported sibling nodes do not get
 // processed by other lower priority nodes when skipped with dataset.hasBeenProcessed
 const editorNodes = [GalleryNode, ImageNode]
-
-void should
 
 describe('GalleryNode', function () {
   let editor: LexicalEditor
@@ -119,7 +117,7 @@ describe('GalleryNode', function () {
     'matches node with $isGalleryNode',
     editorTest(async function () {
       const node = $createGalleryNode(dataset)
-      $isGalleryNode(node).should.be.true()
+      expect($isGalleryNode(node)).toBe(true)
     }),
   )
 
@@ -129,8 +127,8 @@ describe('GalleryNode', function () {
       editorTest(async function () {
         const galleryNode = $createGalleryNode(dataset)
 
-        galleryNode.images.should.deepEqual(dataset.images)
-        galleryNode.caption.should.equal(dataset.caption)
+        expect(galleryNode.images).toEqual(dataset.images)
+        expect(galleryNode.caption).toBe(dataset.caption)
       }),
     )
 
@@ -139,7 +137,7 @@ describe('GalleryNode', function () {
       editorTest(async function () {
         const galleryNode = $createGalleryNode()
 
-        galleryNode.getDataset().should.deepEqual({
+        expect(galleryNode.getDataset()).toEqual({
           images: [],
           caption: '',
         })
@@ -151,13 +149,13 @@ describe('GalleryNode', function () {
       editorTest(async function () {
         const galleryNode = $createGalleryNode({} as Record<string, unknown>)
 
-        galleryNode.images.should.deepEqual([])
+        expect(galleryNode.images).toEqual([])
         galleryNode.images = [{ src: 'image1.jpg' }]
-        galleryNode.images.should.deepEqual([{ src: 'image1.jpg' }])
+        expect(galleryNode.images).toEqual([{ src: 'image1.jpg' }])
 
-        galleryNode.caption.should.equal('')
+        expect(galleryNode.caption).toBe('')
         galleryNode.caption = 'New caption'
-        galleryNode.caption.should.equal('New caption')
+        expect(galleryNode.caption).toBe('New caption')
       }),
     )
 
@@ -166,7 +164,7 @@ describe('GalleryNode', function () {
       editorTest(async function () {
         const galleryNode = $createGalleryNode(dataset)
 
-        galleryNode.getDataset().should.deepEqual(dataset)
+        expect(galleryNode.getDataset()).toEqual(dataset)
       }),
     )
   })
@@ -175,7 +173,7 @@ describe('GalleryNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        GalleryNode.getType().should.equal('gallery')
+        expect(GalleryNode.getType()).toBe('gallery')
       }),
     )
   })
@@ -189,7 +187,7 @@ describe('GalleryNode', function () {
         const clone = GalleryNode.clone(galleryNode) as GalleryNode
         const cloneDataset = clone.getDataset()
 
-        cloneDataset.should.deepEqual({ ...galleryNodeDataset })
+        expect(cloneDataset).toEqual({ ...galleryNodeDataset })
       }),
     )
   })
@@ -198,7 +196,7 @@ describe('GalleryNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        GalleryNode.urlTransformMap.should.deepEqual({
+        expect(GalleryNode.urlTransformMap).toEqual({
           caption: 'html',
           images: {
             src: 'url',
@@ -214,7 +212,7 @@ describe('GalleryNode', function () {
       'returns false',
       editorTest(async function () {
         const galleryNode = $createGalleryNode(dataset)
-        galleryNode.hasEditMode().should.be.false()
+        expect(galleryNode.hasEditMode()).toBe(false)
       }),
     )
   })
@@ -245,8 +243,8 @@ describe('GalleryNode', function () {
           try {
             const [galleryNode] = $getRoot().getChildren() as GalleryNode[]
 
-            galleryNode.images.should.deepEqual(dataset.images)
-            galleryNode.caption.should.equal(dataset.caption)
+            expect(galleryNode.images).toEqual(dataset.images)
+            expect(galleryNode.caption).toBe(dataset.caption)
 
             resolve()
           } catch (e) {
@@ -263,7 +261,7 @@ describe('GalleryNode', function () {
         const galleryNode = $createGalleryNode(dataset)
         const json = galleryNode.exportJSON()
 
-        json.should.deepEqual({
+        expect(json).toEqual({
           type: 'gallery',
           version: 1,
           images: dataset.images,
@@ -306,9 +304,9 @@ describe('GalleryNode', function () {
             `)
 
         const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
-        nodes.length.should.equal(1)
+        expect(nodes.length).toBe(1)
 
-        nodes[0].images.should.deepEqual([
+        expect(nodes[0].images).toEqual([
           {
             fileName: 'jklm4567.jpeg',
             row: 0,
@@ -341,7 +339,7 @@ describe('GalleryNode', function () {
           },
         ])
 
-        nodes[0].caption.should.equal('My <em>exciting</em> caption')
+        expect(nodes[0].caption).toBe('My <em>exciting</em> caption')
       }),
     )
 
@@ -377,9 +375,9 @@ describe('GalleryNode', function () {
             `)
 
         const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
-        nodes.length.should.equal(1)
+        expect(nodes.length).toBe(1)
 
-        nodes[0].images.should.deepEqual([
+        expect(nodes[0].images).toEqual([
           {
             fileName: 'jklm4567.jpeg',
             row: 0,
@@ -410,7 +408,7 @@ describe('GalleryNode', function () {
           },
         ])
 
-        nodes[0].caption.should.equal('')
+        expect(nodes[0].caption).toBe('')
       }),
     )
 
@@ -447,9 +445,9 @@ describe('GalleryNode', function () {
             `)
 
         const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
-        nodes.length.should.equal(1)
+        expect(nodes.length).toBe(1)
 
-        nodes[0].caption.should.equal('First Caption / End Caption')
+        expect(nodes[0].caption).toBe('First Caption / End Caption')
       }),
     )
 
@@ -517,14 +515,15 @@ describe('GalleryNode', function () {
           `)
 
           const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
-          nodes.length.should.equal(1)
+          expect(nodes.length).toBe(1)
 
-          nodes[0].getType().should.equal('gallery')
+          expect(nodes[0].getType()).toBe('gallery')
 
           const images = nodes[0].images
 
-          images.should.be.an.Array().with.lengthOf(3)
-          images.should.deepEqual([
+          expect(images).toBeInstanceOf(Array)
+          expect(images).toHaveLength(3)
+          expect(images).toEqual([
             {
               fileName: 'test.jpg',
               row: 0,
@@ -551,7 +550,7 @@ describe('GalleryNode', function () {
             },
           ])
 
-          nodes[0].caption.should.equal('')
+          expect(nodes[0].caption).toBe('')
         }),
       )
 
@@ -615,11 +614,12 @@ describe('GalleryNode', function () {
           `)
 
           const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
-          nodes.length.should.equal(1)
+          expect(nodes.length).toBe(1)
 
           const images = nodes[0].images
-          images.should.be.an.Array().with.lengthOf(3)
-          images.should.deepEqual([
+          expect(images).toBeInstanceOf(Array)
+          expect(images).toHaveLength(3)
+          expect(images).toEqual([
             {
               fileName: 'test.jpg',
               row: 0,
@@ -646,7 +646,7 @@ describe('GalleryNode', function () {
             },
           ])
 
-          nodes[0].caption.should.eql('Image caption 1 / Image caption 2')
+          expect(nodes[0].caption).toEqual('Image caption 1 / Image caption 2')
         }),
       )
 
@@ -715,11 +715,12 @@ describe('GalleryNode', function () {
           `)
 
           const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
-          nodes.length.should.equal(1)
+          expect(nodes.length).toBe(1)
 
           const images = nodes[0].images
-          images.should.be.an.Array().with.lengthOf(4)
-          images.should.deepEqual([
+          expect(images).toBeInstanceOf(Array)
+          expect(images).toHaveLength(4)
+          expect(images).toEqual([
             {
               fileName: 'test.jpg',
               row: 0,
@@ -754,7 +755,7 @@ describe('GalleryNode', function () {
             },
           ])
 
-          nodes[0].caption.should.equal('')
+          expect(nodes[0].caption).toBe('')
         }),
       )
 
@@ -821,11 +822,12 @@ describe('GalleryNode', function () {
           `)
 
           const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
-          nodes.length.should.equal(1)
+          expect(nodes.length).toBe(1)
 
           const images = nodes[0].images
-          images.should.be.an.Array().with.lengthOf(2)
-          images.should.deepEqual([
+          expect(images).toBeInstanceOf(Array)
+          expect(images).toHaveLength(2)
+          expect(images).toEqual([
             {
               fileName: 'test-1.jpg',
               row: 0,
@@ -844,7 +846,7 @@ describe('GalleryNode', function () {
             },
           ])
 
-          nodes[0].caption.should.equal('')
+          expect(nodes[0].caption).toBe('')
         }),
       )
 
@@ -911,7 +913,7 @@ describe('GalleryNode', function () {
           `)
 
           const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
-          nodes.some((node) => node.getType() === 'gallery').should.be.false()
+          expect(nodes.some((node) => node.getType() === 'gallery')).toBe(false)
         }),
       )
     })
@@ -924,7 +926,7 @@ describe('GalleryNode', function () {
         const galleryNode = $createGalleryNode({ images: [], caption: null as unknown as string })
         const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-        ;(element as HTMLElement).outerHTML.should.equal('<span></span>')
+        expect((element as HTMLElement).outerHTML).toBe('<span></span>')
       }),
     )
 
@@ -937,7 +939,7 @@ describe('GalleryNode', function () {
         })
         const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-        ;(element as HTMLElement).outerHTML.should.equal('<span></span>')
+        expect((element as HTMLElement).outerHTML).toBe('<span></span>')
       }),
     )
 
@@ -951,9 +953,9 @@ describe('GalleryNode', function () {
         const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
         const html = (element as HTMLElement).outerHTML
 
-        html.should.not.containEql('\u003cscript')
-        html.should.not.containEql('onerror')
-        html.should.containEql('Gallery')
+        expect(html).not.toContain('\u003cscript')
+        expect(html).not.toContain('onerror')
+        expect(html).toContain('Gallery')
       }),
     )
 
@@ -977,8 +979,8 @@ describe('GalleryNode', function () {
         const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
         const html = (element as HTMLElement).outerHTML
 
-        should.not.exist((element as HTMLElement).querySelector('a'))
-        html.should.containEql('/content/images/2018/08/NatGeo01-9.jpg')
+        expect((element as HTMLElement).querySelector('a') ?? null).toBeNull()
+        expect(html).toContain('/content/images/2018/08/NatGeo01-9.jpg')
       }),
     )
 
@@ -988,58 +990,96 @@ describe('GalleryNode', function () {
         const galleryNode = $createGalleryNode(dataset)
         const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
 
-        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
-          <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
-            <div class="inkling-gallery-container">
-              <div class="inkling-gallery-row">
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo01-9.jpg" width="3200" height="1600" loading="lazy" alt="" />
+        await expectPrettifiedHtml(
+          (element as HTMLElement).outerHTML,
+          html`
+            <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
+              <div class="inkling-gallery-container">
+                <div class="inkling-gallery-row">
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-9.jpg"
+                      width="3200"
+                      height="1600"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo02-10.jpg"
+                      width="3200"
+                      height="1600"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo03-6.jpg"
+                      width="3200"
+                      height="1600"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
                 </div>
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo02-10.jpg" width="3200" height="1600" loading="lazy" alt="" />
+                <div class="inkling-gallery-row">
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo04-7.jpg"
+                      width="3200"
+                      height="1600"
+                      loading="lazy"
+                      alt="Alt test"
+                    />
+                  </div>
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo05-4.jpg"
+                      width="3200"
+                      height="1600"
+                      loading="lazy"
+                      alt=""
+                      title="Title test"
+                    />
+                  </div>
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo06-6.jpg"
+                      width="3200"
+                      height="1600"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
                 </div>
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo03-6.jpg" width="3200" height="1600" loading="lazy" alt="" />
+                <div class="inkling-gallery-row">
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo07-5.jpg"
+                      width="3200"
+                      height="1600"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
+                  <div class="inkling-gallery-image">
+                    <a href="https://example.com"
+                      ><img
+                        src="/content/images/2018/08/NatGeo09-8.jpg"
+                        width="3200"
+                        height="1600"
+                        loading="lazy"
+                        alt=""
+                    /></a>
+                  </div>
                 </div>
               </div>
-              <div class="inkling-gallery-row">
-                <div class="inkling-gallery-image">
-                  <img
-                    src="/content/images/2018/08/NatGeo04-7.jpg"
-                    width="3200"
-                    height="1600"
-                    loading="lazy"
-                    alt="Alt test"
-                  />
-                </div>
-                <div class="inkling-gallery-image">
-                  <img
-                    src="/content/images/2018/08/NatGeo05-4.jpg"
-                    width="3200"
-                    height="1600"
-                    loading="lazy"
-                    alt=""
-                    title="Title test"
-                  />
-                </div>
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo06-6.jpg" width="3200" height="1600" loading="lazy" alt="" />
-                </div>
-              </div>
-              <div class="inkling-gallery-row">
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo07-5.jpg" width="3200" height="1600" loading="lazy" alt="" />
-                </div>
-                <div class="inkling-gallery-image">
-                  <a href="https://example.com"
-                    ><img src="/content/images/2018/08/NatGeo09-8.jpg" width="3200" height="1600" loading="lazy" alt=""
-                  /></a>
-                </div>
-              </div>
-            </div>
-            <figcaption>Test caption</figcaption>
-          </figure>
-        `)
+              <figcaption>Test caption</figcaption>
+            </figure>
+          `,
+        )
       }),
     )
 
@@ -1061,24 +1101,27 @@ describe('GalleryNode', function () {
         })
         const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
 
-        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
-          <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
-            <div class="inkling-gallery-container">
-              <div class="inkling-gallery-row">
-                <div class="inkling-gallery-image">
-                  <img
-                    src="/content/images/2018/08/NatGeo01-9.jpg"
-                    width="3200"
-                    height="1600"
-                    loading="lazy"
-                    alt="alt test"
-                  />
+        await expectPrettifiedHtml(
+          (element as HTMLElement).outerHTML,
+          html`
+            <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
+              <div class="inkling-gallery-container">
+                <div class="inkling-gallery-row">
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-9.jpg"
+                      width="3200"
+                      height="1600"
+                      loading="lazy"
+                      alt="alt test"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-            <figcaption>Test caption</figcaption>
-          </figure>
-        `)
+              <figcaption>Test caption</figcaption>
+            </figure>
+          `,
+        )
       }),
     )
 
@@ -1099,18 +1142,27 @@ describe('GalleryNode', function () {
         })
         const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
 
-        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
-          <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
-            <div class="inkling-gallery-container">
-              <div class="inkling-gallery-row">
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo01-9.jpg" width="3200" height="1600" loading="lazy" alt="" />
+        await expectPrettifiedHtml(
+          (element as HTMLElement).outerHTML,
+          html`
+            <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
+              <div class="inkling-gallery-container">
+                <div class="inkling-gallery-row">
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-9.jpg"
+                      width="3200"
+                      height="1600"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-            <figcaption>Test caption</figcaption>
-          </figure>
-        `)
+              <figcaption>Test caption</figcaption>
+            </figure>
+          `,
+        )
       }),
     )
 
@@ -1187,21 +1239,36 @@ describe('GalleryNode', function () {
         })
         const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
 
-        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
-          <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
-            <div class="inkling-gallery-container">
-              <div class="inkling-gallery-row">
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo01-9.jpg" width="3200" height="1600" loading="lazy" alt="" />
-                </div>
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo03-6.jpg" width="3200" height="1600" loading="lazy" alt="" />
+        await expectPrettifiedHtml(
+          (element as HTMLElement).outerHTML,
+          html`
+            <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
+              <div class="inkling-gallery-container">
+                <div class="inkling-gallery-row">
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-9.jpg"
+                      width="3200"
+                      height="1600"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo03-6.jpg"
+                      width="3200"
+                      height="1600"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-            <figcaption>Test caption</figcaption>
-          </figure>
-        `)
+              <figcaption>Test caption</figcaption>
+            </figure>
+          `,
+        )
       }),
     )
 
@@ -1232,14 +1299,14 @@ describe('GalleryNode', function () {
         const output = (element as HTMLElement).outerHTML
 
         // local is resized
-        output.should.match(/width="2000"/)
-        output.should.match(/height="1000"/)
-        output.should.not.match(/width="3200"/)
-        output.should.not.match(/height="1600"/)
+        expect(output).toMatch(/width="2000"/)
+        expect(output).toMatch(/height="1000"/)
+        expect(output).not.toMatch(/width="3200"/)
+        expect(output).not.toMatch(/height="1600"/)
 
         // external is not
-        output.should.match(/width="2500"/)
-        output.should.match(/height="1800"/)
+        expect(output).toMatch(/width="2500"/)
+        expect(output).toMatch(/height="1800"/)
       }),
     )
 
@@ -1319,45 +1386,102 @@ describe('GalleryNode', function () {
         delete (exportOptions.imageOptimization as Record<string, unknown>).contentImageSizes
         const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-        await (element as HTMLElement).outerHTML.should.prettifyTo(html`
-          <figure class="inkling-card inkling-gallery-card inkling-width-wide">
-            <div class="inkling-gallery-container">
-              <div class="inkling-gallery-row">
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo01-1.jpg" width="2000" height="1000" loading="lazy" alt="" />
+        await expectPrettifiedHtml(
+          (element as HTMLElement).outerHTML,
+          html`
+            <figure class="inkling-card inkling-gallery-card inkling-width-wide">
+              <div class="inkling-gallery-container">
+                <div class="inkling-gallery-row">
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-1.jpg"
+                      width="2000"
+                      height="1000"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-2.jpg"
+                      width="2000"
+                      height="1000"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-3.jpg"
+                      width="2000"
+                      height="1000"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
                 </div>
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo01-2.jpg" width="2000" height="1000" loading="lazy" alt="" />
+                <div class="inkling-gallery-row">
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-4.jpg"
+                      width="2000"
+                      height="1000"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-5.jpg"
+                      width="2000"
+                      height="1000"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-6.jpg"
+                      width="2000"
+                      height="1000"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
                 </div>
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo01-3.jpg" width="2000" height="1000" loading="lazy" alt="" />
+                <div class="inkling-gallery-row">
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-7.jpg"
+                      width="2000"
+                      height="1000"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-8.jpg"
+                      width="2000"
+                      height="1000"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
+                  <div class="inkling-gallery-image">
+                    <img
+                      src="/content/images/2018/08/NatGeo01-9.jpg"
+                      width="2000"
+                      height="1000"
+                      loading="lazy"
+                      alt=""
+                    />
+                  </div>
                 </div>
               </div>
-              <div class="inkling-gallery-row">
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo01-4.jpg" width="2000" height="1000" loading="lazy" alt="" />
-                </div>
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo01-5.jpg" width="2000" height="1000" loading="lazy" alt="" />
-                </div>
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo01-6.jpg" width="2000" height="1000" loading="lazy" alt="" />
-                </div>
-              </div>
-              <div class="inkling-gallery-row">
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo01-7.jpg" width="2000" height="1000" loading="lazy" alt="" />
-                </div>
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo01-8.jpg" width="2000" height="1000" loading="lazy" alt="" />
-                </div>
-                <div class="inkling-gallery-image">
-                  <img src="/content/images/2018/08/NatGeo01-9.jpg" width="2000" height="1000" loading="lazy" alt="" />
-                </div>
-              </div>
-            </div>
-          </figure>
-        `)
+            </figure>
+          `,
+        )
       }),
     )
 
@@ -1387,46 +1511,49 @@ describe('GalleryNode', function () {
           delete (exportOptions.imageOptimization as Record<string, unknown>).defaultMaxWidth
           const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-          await (element as HTMLElement).outerHTML.should.prettifyTo(html`
-            <figure class="inkling-card inkling-gallery-card inkling-width-wide">
-              <div class="inkling-gallery-container">
-                <div class="inkling-gallery-row">
-                  <div class="inkling-gallery-image">
-                    <img
-                      src="/content/images/2018/08/NatGeo01-9.jpg"
-                      width="3200"
-                      height="1600"
-                      loading="lazy"
-                      alt=""
-                      srcset="
-                        /content/images/size/w600/2018/08/NatGeo01-9.jpg   600w,
-                        /content/images/size/w1000/2018/08/NatGeo01-9.jpg 1000w,
-                        /content/images/size/w1600/2018/08/NatGeo01-9.jpg 1600w,
-                        /content/images/size/w2400/2018/08/NatGeo01-9.jpg 2400w
-                      "
-                      sizes="(min-width: 720px) 720px"
-                    />
-                  </div>
-                  <div class="inkling-gallery-image">
-                    <img
-                      src="/subdir/support/content/images/2018/08/NatGeo01-9.jpg"
-                      width="3200"
-                      height="1600"
-                      loading="lazy"
-                      alt=""
-                      srcset="
-                        /subdir/support/content/images/size/w600/2018/08/NatGeo01-9.jpg   600w,
-                        /subdir/support/content/images/size/w1000/2018/08/NatGeo01-9.jpg 1000w,
-                        /subdir/support/content/images/size/w1600/2018/08/NatGeo01-9.jpg 1600w,
-                        /subdir/support/content/images/size/w2400/2018/08/NatGeo01-9.jpg 2400w
-                      "
-                      sizes="(min-width: 720px) 720px"
-                    />
+          await expectPrettifiedHtml(
+            (element as HTMLElement).outerHTML,
+            html`
+              <figure class="inkling-card inkling-gallery-card inkling-width-wide">
+                <div class="inkling-gallery-container">
+                  <div class="inkling-gallery-row">
+                    <div class="inkling-gallery-image">
+                      <img
+                        src="/content/images/2018/08/NatGeo01-9.jpg"
+                        width="3200"
+                        height="1600"
+                        loading="lazy"
+                        alt=""
+                        srcset="
+                          /content/images/size/w600/2018/08/NatGeo01-9.jpg   600w,
+                          /content/images/size/w1000/2018/08/NatGeo01-9.jpg 1000w,
+                          /content/images/size/w1600/2018/08/NatGeo01-9.jpg 1600w,
+                          /content/images/size/w2400/2018/08/NatGeo01-9.jpg 2400w
+                        "
+                        sizes="(min-width: 720px) 720px"
+                      />
+                    </div>
+                    <div class="inkling-gallery-image">
+                      <img
+                        src="/subdir/support/content/images/2018/08/NatGeo01-9.jpg"
+                        width="3200"
+                        height="1600"
+                        loading="lazy"
+                        alt=""
+                        srcset="
+                          /subdir/support/content/images/size/w600/2018/08/NatGeo01-9.jpg   600w,
+                          /subdir/support/content/images/size/w1000/2018/08/NatGeo01-9.jpg 1000w,
+                          /subdir/support/content/images/size/w1600/2018/08/NatGeo01-9.jpg 1600w,
+                          /subdir/support/content/images/size/w2400/2018/08/NatGeo01-9.jpg 2400w
+                        "
+                        sizes="(min-width: 720px) 720px"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </figure>
-          `)
+              </figure>
+            `,
+          )
         }),
       )
 
@@ -1456,46 +1583,49 @@ describe('GalleryNode', function () {
           exportOptions.siteUrl = 'https://localhost:2368'
           const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-          await (element as HTMLElement).outerHTML.should.prettifyTo(html`
-            <figure class="inkling-card inkling-gallery-card inkling-width-wide">
-              <div class="inkling-gallery-container">
-                <div class="inkling-gallery-row">
-                  <div class="inkling-gallery-image">
-                    <img
-                      src="https://localhost:2368/content/images/2018/08/NatGeo01-9.jpg"
-                      width="3200"
-                      height="1600"
-                      loading="lazy"
-                      alt=""
-                      srcset="
-                        https://localhost:2368/content/images/size/w600/2018/08/NatGeo01-9.jpg   600w,
-                        https://localhost:2368/content/images/size/w1000/2018/08/NatGeo01-9.jpg 1000w,
-                        https://localhost:2368/content/images/size/w1600/2018/08/NatGeo01-9.jpg 1600w,
-                        https://localhost:2368/content/images/size/w2400/2018/08/NatGeo01-9.jpg 2400w
-                      "
-                      sizes="(min-width: 720px) 720px"
-                    />
-                  </div>
-                  <div class="inkling-gallery-image">
-                    <img
-                      src="__INKLING_URL__/content/images/2018/08/NatGeo01-9.jpg"
-                      width="3200"
-                      height="1600"
-                      loading="lazy"
-                      alt=""
-                      srcset="
-                        __INKLING_URL__/content/images/size/w600/2018/08/NatGeo01-9.jpg   600w,
-                        __INKLING_URL__/content/images/size/w1000/2018/08/NatGeo01-9.jpg 1000w,
-                        __INKLING_URL__/content/images/size/w1600/2018/08/NatGeo01-9.jpg 1600w,
-                        __INKLING_URL__/content/images/size/w2400/2018/08/NatGeo01-9.jpg 2400w
-                      "
-                      sizes="(min-width: 720px) 720px"
-                    />
+          await expectPrettifiedHtml(
+            (element as HTMLElement).outerHTML,
+            html`
+              <figure class="inkling-card inkling-gallery-card inkling-width-wide">
+                <div class="inkling-gallery-container">
+                  <div class="inkling-gallery-row">
+                    <div class="inkling-gallery-image">
+                      <img
+                        src="https://localhost:2368/content/images/2018/08/NatGeo01-9.jpg"
+                        width="3200"
+                        height="1600"
+                        loading="lazy"
+                        alt=""
+                        srcset="
+                          https://localhost:2368/content/images/size/w600/2018/08/NatGeo01-9.jpg   600w,
+                          https://localhost:2368/content/images/size/w1000/2018/08/NatGeo01-9.jpg 1000w,
+                          https://localhost:2368/content/images/size/w1600/2018/08/NatGeo01-9.jpg 1600w,
+                          https://localhost:2368/content/images/size/w2400/2018/08/NatGeo01-9.jpg 2400w
+                        "
+                        sizes="(min-width: 720px) 720px"
+                      />
+                    </div>
+                    <div class="inkling-gallery-image">
+                      <img
+                        src="__INKLING_URL__/content/images/2018/08/NatGeo01-9.jpg"
+                        width="3200"
+                        height="1600"
+                        loading="lazy"
+                        alt=""
+                        srcset="
+                          __INKLING_URL__/content/images/size/w600/2018/08/NatGeo01-9.jpg   600w,
+                          __INKLING_URL__/content/images/size/w1000/2018/08/NatGeo01-9.jpg 1000w,
+                          __INKLING_URL__/content/images/size/w1600/2018/08/NatGeo01-9.jpg 1600w,
+                          __INKLING_URL__/content/images/size/w2400/2018/08/NatGeo01-9.jpg 2400w
+                        "
+                        sizes="(min-width: 720px) 720px"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </figure>
-          `)
+              </figure>
+            `,
+          )
         }),
       )
 
@@ -1518,7 +1648,7 @@ describe('GalleryNode', function () {
           exportOptions.target = 'email'
           const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-          ;(element as HTMLElement).outerHTML.should.not.containEql('srcset=')
+          expect((element as HTMLElement).outerHTML).not.toContain('srcset=')
         }),
       )
 
@@ -1540,7 +1670,7 @@ describe('GalleryNode', function () {
           delete (exportOptions.imageOptimization as Record<string, unknown>).contentImageSizes
           const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-          ;(element as HTMLElement).outerHTML.should.not.containEql('srcset=')
+          expect((element as HTMLElement).outerHTML).not.toContain('srcset=')
         }),
       )
 
@@ -1562,7 +1692,7 @@ describe('GalleryNode', function () {
           ;(exportOptions.imageOptimization as Record<string, unknown>).srcsets = false
           const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-          ;(element as HTMLElement).outerHTML.should.not.containEql('srcset=')
+          expect((element as HTMLElement).outerHTML).not.toContain('srcset=')
         }),
       )
     })
@@ -1595,9 +1725,9 @@ describe('GalleryNode', function () {
           const output = (element as HTMLElement).outerHTML
           const sizes = output.match(/sizes="(.*?)"/g)
 
-          sizes!.length.should.equal(1)
+          expect(sizes!.length).toBe(1)
 
-          output.should.match(/standard\.jpg 720w" sizes="\(min-width: 720px\) 720px"/)
+          expect(output).toMatch(/standard\.jpg 720w" sizes="\(min-width: 720px\) 720px"/)
         }),
       )
 
@@ -1618,7 +1748,9 @@ describe('GalleryNode', function () {
 
           const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-          ;(element as HTMLElement).outerHTML.should.match(/standard\.jpg 2000w" sizes="\(min-width: 1200px\) 1200px"/)
+          expect((element as HTMLElement).outerHTML).toMatch(
+            /standard\.jpg 2000w" sizes="\(min-width: 1200px\) 1200px"/,
+          )
         }),
       )
 
@@ -1639,7 +1771,7 @@ describe('GalleryNode', function () {
 
           const { element } = galleryNode.exportDOM(editor, exportOptions)
 
-          ;(element as HTMLElement).outerHTML.should.match(/standard\.jpg 1000w" sizes="\(min-width: 720px\) 720px"/)
+          expect((element as HTMLElement).outerHTML).toMatch(/standard\.jpg 1000w" sizes="\(min-width: 720px\) 720px"/)
         }),
       )
 
@@ -1671,7 +1803,7 @@ describe('GalleryNode', function () {
           const output = (element as HTMLElement).outerHTML
           const sizes = output.match(/sizes="(.*?)"/g)
 
-          should.not.exist(sizes)
+          expect(sizes ?? null).toBeNull()
         }),
       )
     })
@@ -1714,20 +1846,20 @@ describe('GalleryNode', function () {
           const output = (element as HTMLElement).outerHTML
 
           // 2 images wider than 600px template width resized to fit
-          output.match(/width="600"/g)!.length.should.equal(2)
+          expect(output.match(/width="600"/g)!.length).toBe(2)
           // 1 image smaller than template width
-          output.should.match(/width="300"/)
+          expect(output).toMatch(/width="300"/)
 
-          output.should.match(/height="1333"/)
-          output.should.match(/height="800"/)
-          output.should.match(/height="480"/)
+          expect(output).toMatch(/height="1333"/)
+          expect(output).toMatch(/height="800"/)
+          expect(output).toMatch(/height="480"/)
 
           // original because image is < 1600
-          output.should.match(/\/content\/images\/2018\/08\/standard\.jpg/)
+          expect(output).toMatch(/\/content\/images\/2018\/08\/standard\.jpg/)
           // original because image is < 300
-          output.should.match(/\/subdir\/support\/content\/images\/2018\/08\/small\.jpg/)
+          expect(output).toMatch(/\/subdir\/support\/content\/images\/2018\/08\/small\.jpg/)
           // resized because image is > 1600
-          output.should.match(/\/content\/images\/size\/w1600\/2018\/08\/photo\.jpg/)
+          expect(output).toMatch(/\/content\/images\/size\/w1600\/2018\/08\/photo\.jpg/)
         }),
       )
 
@@ -1751,12 +1883,12 @@ describe('GalleryNode', function () {
           const { element } = galleryNode.exportDOM(editor, exportOptions)
           const output = (element as HTMLElement).outerHTML
 
-          output.should.not.match(/width="3000"/)
-          output.should.match(/width="600"/)
-          output.should.not.match(/height="2000"/)
-          output.should.match(/height="400"/)
-          output.should.not.match(/\/content\/images\/size\/w1600\/2020\/06\/image\.png/)
-          output.should.match(/\/content\/images\/2020\/06\/image\.png/)
+          expect(output).not.toMatch(/width="3000"/)
+          expect(output).toMatch(/width="600"/)
+          expect(output).not.toMatch(/height="2000"/)
+          expect(output).toMatch(/height="400"/)
+          expect(output).not.toMatch(/\/content\/images\/size\/w1600\/2020\/06\/image\.png/)
+          expect(output).toMatch(/\/content\/images\/2020\/06\/image\.png/)
         }),
       )
     })
@@ -1767,10 +1899,10 @@ describe('GalleryNode', function () {
       'returns contents',
       editorTest(async function () {
         const node = $createGalleryNode({} as Record<string, unknown>)
-        node.getTextContent().should.equal('')
+        expect(node.getTextContent()).toBe('')
 
         node.caption = 'Test caption'
-        node.getTextContent().should.equal('Test caption\n\n')
+        expect(node.getTextContent()).toBe('Test caption\n\n')
       }),
     )
   })

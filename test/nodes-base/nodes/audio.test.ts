@@ -4,6 +4,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
 import { $getRoot } from 'lexical'
 
+import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { dom, createDocument, html } from '#/nodes-base/test-utils/index'
 import { AudioNode, $createAudioNode, $isAudioNode, type ExportDOMOptions } from '@/nodes/base/index'
 
@@ -63,7 +64,7 @@ describe('AudioNode', function () {
     'matches node with $isAudioNode',
     editorTest(async function () {
       const audioNode = $createAudioNode(dataset)
-      $isAudioNode(audioNode).should.be.true()
+      expect($isAudioNode(audioNode)).toBe(true)
     }),
   )
 
@@ -73,11 +74,11 @@ describe('AudioNode', function () {
       editorTest(async function () {
         const audioNode = $createAudioNode(dataset)
 
-        audioNode.src.should.equal(dataset.src)
-        audioNode.title.should.equal(dataset.title)
-        audioNode.duration.should.equal(dataset.duration)
-        audioNode.mimeType.should.equal(dataset.mimeType)
-        audioNode.thumbnailSrc.should.equal(dataset.thumbnailSrc)
+        expect(audioNode.src).toBe(dataset.src)
+        expect(audioNode.title).toBe(dataset.title)
+        expect(audioNode.duration).toBe(dataset.duration)
+        expect(audioNode.mimeType).toBe(dataset.mimeType)
+        expect(audioNode.thumbnailSrc).toBe(dataset.thumbnailSrc)
       }),
     )
 
@@ -86,25 +87,25 @@ describe('AudioNode', function () {
       editorTest(async function () {
         const audioNode = $createAudioNode({})
 
-        audioNode.src.should.equal('')
+        expect(audioNode.src).toBe('')
         audioNode.src = '/content/audio/2022/12/inkling-lexical.mp3'
-        audioNode.src.should.equal('/content/audio/2022/12/inkling-lexical.mp3')
+        expect(audioNode.src).toBe('/content/audio/2022/12/inkling-lexical.mp3')
 
-        audioNode.title.should.equal('')
+        expect(audioNode.title).toBe('')
         audioNode.title = 'Test Audio'
-        audioNode.title.should.equal('Test Audio')
+        expect(audioNode.title).toBe('Test Audio')
 
-        audioNode.duration.should.equal(0)
+        expect(audioNode.duration).toBe(0)
         audioNode.duration = 70
-        audioNode.duration.should.equal(70)
+        expect(audioNode.duration).toBe(70)
 
-        audioNode.mimeType.should.equal('')
+        expect(audioNode.mimeType).toBe('')
         audioNode.mimeType = 'audio/mp3'
-        audioNode.mimeType.should.equal('audio/mp3')
+        expect(audioNode.mimeType).toBe('audio/mp3')
 
-        audioNode.thumbnailSrc.should.equal('')
+        expect(audioNode.thumbnailSrc).toBe('')
         audioNode.thumbnailSrc = '/content/images/2022/12/inkling-lexical.png'
-        audioNode.thumbnailSrc.should.equal('/content/images/2022/12/inkling-lexical.png')
+        expect(audioNode.thumbnailSrc).toBe('/content/images/2022/12/inkling-lexical.png')
       }),
     )
 
@@ -113,7 +114,7 @@ describe('AudioNode', function () {
       editorTest(async function () {
         const audioNode = $createAudioNode()
 
-        audioNode.getDataset().should.deepEqual({
+        expect(audioNode.getDataset()).toEqual({
           duration: 0,
           mimeType: '',
           src: '',
@@ -129,7 +130,7 @@ describe('AudioNode', function () {
         const audioNode = $createAudioNode(dataset)
         const audioNodeDataset = audioNode.getDataset()
 
-        audioNodeDataset.should.deepEqual({
+        expect(audioNodeDataset).toEqual({
           ...dataset,
         })
       }),
@@ -140,7 +141,7 @@ describe('AudioNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        AudioNode.getType().should.equal('audio')
+        expect(AudioNode.getType()).toBe('audio')
       }),
     )
   })
@@ -154,7 +155,7 @@ describe('AudioNode', function () {
         const clone = AudioNode.clone(audioNode) as AudioNode
         const cloneDataset = clone.getDataset()
 
-        cloneDataset.should.deepEqual({ ...audioNodeDataset })
+        expect(cloneDataset).toEqual({ ...audioNodeDataset })
       }),
     )
   })
@@ -163,7 +164,7 @@ describe('AudioNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        AudioNode.urlTransformMap.should.deepEqual({
+        expect(AudioNode.urlTransformMap).toEqual({
           src: 'url',
         })
       }),
@@ -175,7 +176,7 @@ describe('AudioNode', function () {
       'returns true',
       editorTest(async function () {
         const audioNode = $createAudioNode(dataset)
-        audioNode.hasEditMode().should.be.true()
+        expect(audioNode.hasEditMode()).toBe(true)
       }),
     )
   })
@@ -187,7 +188,7 @@ describe('AudioNode', function () {
         const audioNode = $createAudioNode(dataset)
         const json = audioNode.exportJSON()
 
-        json.should.deepEqual({
+        expect(json).toEqual({
           type: 'audio',
           version: 1,
           src: dataset.src,
@@ -226,11 +227,11 @@ describe('AudioNode', function () {
           try {
             const [audioNode] = $getRoot().getChildren() as AudioNode[]
 
-            audioNode.src.should.equal(dataset.src)
-            audioNode.title.should.equal(dataset.title)
-            audioNode.duration.should.equal(dataset.duration)
-            audioNode.mimeType.should.equal(dataset.mimeType)
-            audioNode.thumbnailSrc.should.equal(dataset.thumbnailSrc)
+            expect(audioNode.src).toBe(dataset.src)
+            expect(audioNode.title).toBe(dataset.title)
+            expect(audioNode.duration).toBe(dataset.duration)
+            expect(audioNode.mimeType).toBe(dataset.mimeType)
+            expect(audioNode.thumbnailSrc).toBe(dataset.thumbnailSrc)
 
             resolve()
           } catch (e) {
@@ -247,7 +248,8 @@ describe('AudioNode', function () {
         const audioNode = $createAudioNode(dataset)
         const { element } = audioNode.exportDOM(editor, exportOptions)
 
-        await getHTMLElement(element).outerHTML.should.prettifyTo(
+        await expectPrettifiedHtml(
+          getHTMLElement(element).outerHTML,
           html`<div class="inkling-card inkling-audio-card">
             <img
               src="/content/images/2022/11/inkling-audio-lexical.jpg"
@@ -321,7 +323,7 @@ describe('AudioNode', function () {
         const audioNode = $createAudioNode({})
         const { element } = audioNode.exportDOM(editor, exportOptions)
 
-        getHTMLElement(element).outerHTML.should.equal('<span></span>')
+        expect(getHTMLElement(element).outerHTML).toBe('<span></span>')
       }),
     )
 
@@ -336,8 +338,8 @@ describe('AudioNode', function () {
         })
 
         const output = getHTMLElement(element).outerHTML
-        output.should.containEql('href="https://example.com/posts/test-audio"')
-        output.should.containEql('Click to play audio')
+        expect(output).toContain('href="https://example.com/posts/test-audio"')
+        expect(output).toContain('Click to play audio')
       }),
     )
 
@@ -346,8 +348,8 @@ describe('AudioNode', function () {
       editorTest(async function () {
         const audioNode = $createAudioNode(dataset)
 
-        ;(() => audioNode.exportDOM(editor, { ...exportOptions, target: 'email' })).should.throw(
-          'renderAudioNode requires options.postUrl when options.target is "email"',
+        expect(() => audioNode.exportDOM(editor, { ...exportOptions, target: 'email' })).toThrow(
+          /^renderAudioNode requires options\.postUrl when options\.target is "email"$/,
         )
       }),
     )
@@ -366,8 +368,8 @@ describe('AudioNode', function () {
         })
 
         const htmlElement = getHTMLElement(element)
-        htmlElement.outerHTML.should.containEql('&lt;script&gt;alert(1)&lt;/script&gt;')
-        ;(htmlElement.querySelector('script') === null).should.be.true()
+        expect(htmlElement.outerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
+        expect(htmlElement.querySelector('script') === null).toBe(true)
       }),
     )
   })
@@ -442,12 +444,12 @@ describe('AudioNode', function () {
           </div>
         `)
         const nodes = $generateNodesFromDOM(editor, document) as AudioNode[]
-        nodes.length.should.equal(1)
-        nodes[0].src.should.equal('/content/audio/2022/11/inkling-lexical.mp3')
-        nodes[0].thumbnailSrc.should.equal('/content/images/2022/11/inkling-audio-lexical.jpg')
-        nodes[0].duration.should.equal(3600)
-        nodes[0].title.should.equal('Test Audio')
-        nodes[0].mimeType.should.equal('')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].src).toBe('/content/audio/2022/11/inkling-lexical.mp3')
+        expect(nodes[0].thumbnailSrc).toBe('/content/images/2022/11/inkling-audio-lexical.jpg')
+        expect(nodes[0].duration).toBe(3600)
+        expect(nodes[0].title).toBe('Test Audio')
+        expect(nodes[0].mimeType).toBe('')
       }),
     )
 
@@ -467,8 +469,8 @@ describe('AudioNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as AudioNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].duration.should.equal(0)
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].duration).toBe(0)
       }),
     )
 
@@ -488,8 +490,8 @@ describe('AudioNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as AudioNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].duration.should.equal(62)
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].duration).toBe(62)
       }),
     )
   })
@@ -502,7 +504,7 @@ describe('AudioNode', function () {
         node.title = 'Testing'
 
         // audio nodes don't have text content
-        node.getTextContent().should.equal('')
+        expect(node.getTextContent()).toBe('')
       }),
     )
   })

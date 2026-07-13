@@ -2,7 +2,6 @@ import type { ElementNode, HTMLConfig, LexicalEditor } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
-import should from 'should'
 
 import { createDocument } from '#/nodes-base/test-utils/index'
 import { DEFAULT_CONFIG, DEFAULT_NODES } from '@/nodes/base/index'
@@ -35,10 +34,10 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 3)
-          should.equal(nodes[0].getType(), 'extended-text')
-          should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'extended-text')
+          expect(nodes.length).toBe(3)
+          expect(nodes[0].getType()).toBe('extended-text')
+          expect(nodes[1].getType()).toBe('linebreak')
+          expect(nodes[2].getType()).toBe('extended-text')
         }),
       )
 
@@ -49,12 +48,12 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 1)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal((nodes[0] as ElementNode).getChildren().length, 3)
-          should.equal((nodes[0] as ElementNode).getChildren()[0].getType(), 'extended-text')
-          should.equal((nodes[0] as ElementNode).getChildren()[1].getType(), 'linebreak')
-          should.equal((nodes[0] as ElementNode).getChildren()[2].getType(), 'extended-text')
+          expect(nodes.length).toBe(1)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect((nodes[0] as ElementNode).getChildren().length).toBe(3)
+          expect((nodes[0] as ElementNode).getChildren()[0].getType()).toBe('extended-text')
+          expect((nodes[0] as ElementNode).getChildren()[1].getType()).toBe('linebreak')
+          expect((nodes[0] as ElementNode).getChildren()[2].getType()).toBe('extended-text')
         }),
       )
     })
@@ -67,19 +66,19 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 3)
+          expect(nodes.length).toBe(3)
 
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal((nodes[0] as ElementNode).getChildren().length, 1)
-          should.equal((nodes[0] as ElementNode).getChildren()[0].getType(), 'extended-text')
-          should.equal((nodes[0] as ElementNode).getChildren()[0].getTextContent(), 'Before')
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect((nodes[0] as ElementNode).getChildren().length).toBe(1)
+          expect((nodes[0] as ElementNode).getChildren()[0].getType()).toBe('extended-text')
+          expect((nodes[0] as ElementNode).getChildren()[0].getTextContent()).toBe('Before')
 
-          should.equal(nodes[1].getType(), 'linebreak')
+          expect(nodes[1].getType()).toBe('linebreak')
 
-          should.equal(nodes[2].getType(), 'paragraph')
-          should.equal((nodes[2] as ElementNode).getChildren().length, 1)
-          should.equal((nodes[2] as ElementNode).getChildren()[0].getType(), 'extended-text')
-          should.equal((nodes[2] as ElementNode).getChildren()[0].getTextContent(), 'After')
+          expect(nodes[2].getType()).toBe('paragraph')
+          expect((nodes[2] as ElementNode).getChildren().length).toBe(1)
+          expect((nodes[2] as ElementNode).getChildren()[0].getType()).toBe('extended-text')
+          expect((nodes[2] as ElementNode).getChildren()[0].getTextContent()).toBe('After')
         }),
       )
 
@@ -90,16 +89,16 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 2)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal((nodes[0] as ElementNode).getChildren().length, 1)
-          should.equal((nodes[0] as ElementNode).getChildren()[0].getType(), 'extended-text')
-          should.equal((nodes[0] as ElementNode).getChildren()[0].getTextContent(), 'Before')
+          expect(nodes.length).toBe(2)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect((nodes[0] as ElementNode).getChildren().length).toBe(1)
+          expect((nodes[0] as ElementNode).getChildren()[0].getType()).toBe('extended-text')
+          expect((nodes[0] as ElementNode).getChildren()[0].getTextContent()).toBe('Before')
 
-          should.equal(nodes[1].getType(), 'paragraph')
-          should.equal((nodes[1] as ElementNode).getChildren().length, 1)
-          should.equal((nodes[1] as ElementNode).getChildren()[0].getType(), 'extended-text')
-          should.equal((nodes[1] as ElementNode).getChildren()[0].getTextContent(), 'After')
+          expect(nodes[1].getType()).toBe('paragraph')
+          expect((nodes[1] as ElementNode).getChildren().length).toBe(1)
+          expect((nodes[1] as ElementNode).getChildren()[0].getType()).toBe('extended-text')
+          expect((nodes[1] as ElementNode).getChildren()[0].getTextContent()).toBe('After')
         }),
       )
     })
@@ -112,12 +111,12 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 5)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'paragraph')
-          should.equal(nodes[3].getType(), 'linebreak')
-          should.equal(nodes[4].getType(), 'paragraph')
+          expect(nodes.length).toBe(5)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('linebreak')
+          expect(nodes[2].getType()).toBe('paragraph')
+          expect(nodes[3].getType()).toBe('linebreak')
+          expect(nodes[4].getType()).toBe('paragraph')
         }),
       )
 
@@ -129,10 +128,10 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 3)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'paragraph')
-          should.equal(nodes[2].getType(), 'paragraph')
+          expect(nodes.length).toBe(3)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('paragraph')
+          expect(nodes[2].getType()).toBe('paragraph')
         }),
       )
 
@@ -143,12 +142,12 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 5)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'paragraph')
-          should.equal(nodes[3].getType(), 'linebreak')
-          should.equal(nodes[4].getType(), 'paragraph')
+          expect(nodes.length).toBe(5)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('linebreak')
+          expect(nodes[2].getType()).toBe('paragraph')
+          expect(nodes[3].getType()).toBe('linebreak')
+          expect(nodes[4].getType()).toBe('paragraph')
         }),
       )
 
@@ -160,10 +159,10 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 3)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'paragraph')
-          should.equal(nodes[2].getType(), 'paragraph')
+          expect(nodes.length).toBe(3)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('paragraph')
+          expect(nodes[2].getType()).toBe('paragraph')
         }),
       )
 
@@ -174,12 +173,12 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 5)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'paragraph')
-          should.equal(nodes[3].getType(), 'linebreak')
-          should.equal(nodes[4].getType(), 'paragraph')
+          expect(nodes.length).toBe(5)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('linebreak')
+          expect(nodes[2].getType()).toBe('paragraph')
+          expect(nodes[3].getType()).toBe('linebreak')
+          expect(nodes[4].getType()).toBe('paragraph')
         }),
       )
 
@@ -191,10 +190,10 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 3)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'paragraph')
-          should.equal(nodes[2].getType(), 'paragraph')
+          expect(nodes.length).toBe(3)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('paragraph')
+          expect(nodes[2].getType()).toBe('paragraph')
         }),
       )
     })
@@ -207,12 +206,12 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 5)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'extended-heading')
-          should.equal(nodes[3].getType(), 'linebreak')
-          should.equal(nodes[4].getType(), 'paragraph')
+          expect(nodes.length).toBe(5)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('linebreak')
+          expect(nodes[2].getType()).toBe('extended-heading')
+          expect(nodes[3].getType()).toBe('linebreak')
+          expect(nodes[4].getType()).toBe('paragraph')
         }),
       )
 
@@ -224,10 +223,10 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 3)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'extended-heading')
-          should.equal(nodes[2].getType(), 'paragraph')
+          expect(nodes.length).toBe(3)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('extended-heading')
+          expect(nodes[2].getType()).toBe('paragraph')
         }),
       )
 
@@ -238,12 +237,12 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 5)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'extended-heading')
-          should.equal(nodes[3].getType(), 'linebreak')
-          should.equal(nodes[4].getType(), 'paragraph')
+          expect(nodes.length).toBe(5)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('linebreak')
+          expect(nodes[2].getType()).toBe('extended-heading')
+          expect(nodes[3].getType()).toBe('linebreak')
+          expect(nodes[4].getType()).toBe('paragraph')
         }),
       )
 
@@ -255,10 +254,10 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 3)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'extended-heading')
-          should.equal(nodes[2].getType(), 'paragraph')
+          expect(nodes.length).toBe(3)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('extended-heading')
+          expect(nodes[2].getType()).toBe('paragraph')
         }),
       )
 
@@ -269,12 +268,12 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 5)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'extended-heading')
-          should.equal(nodes[3].getType(), 'linebreak')
-          should.equal(nodes[4].getType(), 'paragraph')
+          expect(nodes.length).toBe(5)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('linebreak')
+          expect(nodes[2].getType()).toBe('extended-heading')
+          expect(nodes[3].getType()).toBe('linebreak')
+          expect(nodes[4].getType()).toBe('paragraph')
         }),
       )
 
@@ -286,10 +285,10 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 3)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'extended-heading')
-          should.equal(nodes[2].getType(), 'paragraph')
+          expect(nodes.length).toBe(3)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('extended-heading')
+          expect(nodes[2].getType()).toBe('paragraph')
         }),
       )
 
@@ -300,12 +299,12 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 5)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'extended-heading')
-          should.equal(nodes[3].getType(), 'linebreak')
-          should.equal(nodes[4].getType(), 'paragraph')
+          expect(nodes.length).toBe(5)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('linebreak')
+          expect(nodes[2].getType()).toBe('extended-heading')
+          expect(nodes[3].getType()).toBe('linebreak')
+          expect(nodes[4].getType()).toBe('paragraph')
         }),
       )
 
@@ -317,10 +316,10 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 3)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'extended-heading')
-          should.equal(nodes[2].getType(), 'paragraph')
+          expect(nodes.length).toBe(3)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('extended-heading')
+          expect(nodes[2].getType()).toBe('paragraph')
         }),
       )
 
@@ -331,12 +330,12 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 5)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'extended-heading')
-          should.equal(nodes[3].getType(), 'linebreak')
-          should.equal(nodes[4].getType(), 'paragraph')
+          expect(nodes.length).toBe(5)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('linebreak')
+          expect(nodes[2].getType()).toBe('extended-heading')
+          expect(nodes[3].getType()).toBe('linebreak')
+          expect(nodes[4].getType()).toBe('paragraph')
         }),
       )
 
@@ -348,10 +347,10 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 3)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'extended-heading')
-          should.equal(nodes[2].getType(), 'paragraph')
+          expect(nodes.length).toBe(3)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('extended-heading')
+          expect(nodes[2].getType()).toBe('paragraph')
         }),
       )
 
@@ -362,12 +361,12 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 5)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'extended-heading')
-          should.equal(nodes[3].getType(), 'linebreak')
-          should.equal(nodes[4].getType(), 'paragraph')
+          expect(nodes.length).toBe(5)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('linebreak')
+          expect(nodes[2].getType()).toBe('extended-heading')
+          expect(nodes[3].getType()).toBe('linebreak')
+          expect(nodes[4].getType()).toBe('paragraph')
         }),
       )
 
@@ -379,10 +378,10 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 3)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'extended-heading')
-          should.equal(nodes[2].getType(), 'paragraph')
+          expect(nodes.length).toBe(3)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('extended-heading')
+          expect(nodes[2].getType()).toBe('paragraph')
         }),
       )
     })
@@ -395,12 +394,12 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 5)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'linebreak')
-          should.equal(nodes[2].getType(), 'linebreak')
-          should.equal(nodes[3].getType(), 'linebreak')
-          should.equal(nodes[4].getType(), 'paragraph')
+          expect(nodes.length).toBe(5)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('linebreak')
+          expect(nodes[2].getType()).toBe('linebreak')
+          expect(nodes[3].getType()).toBe('linebreak')
+          expect(nodes[4].getType()).toBe('paragraph')
         }),
       )
 
@@ -411,9 +410,9 @@ describe('Serializers: linebreak', function () {
           const document = createDocument(htmlString)
           const nodes = $generateNodesFromDOM(editor, document)
 
-          should.equal(nodes.length, 2)
-          should.equal(nodes[0].getType(), 'paragraph')
-          should.equal(nodes[1].getType(), 'paragraph')
+          expect(nodes.length).toBe(2)
+          expect(nodes[0].getType()).toBe('paragraph')
+          expect(nodes[1].getType()).toBe('paragraph')
         }),
       )
     })

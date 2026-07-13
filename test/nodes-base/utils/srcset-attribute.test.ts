@@ -1,5 +1,3 @@
-import should from 'should'
-
 import { getSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 
 describe('srcsetAttribute', function () {
@@ -18,6 +16,6 @@ describe('srcsetAttribute', function () {
       },
     })
 
-    should(result).be.undefined()
+    expect(result).toBeUndefined()
   })
 })

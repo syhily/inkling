@@ -4,6 +4,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
 import { $getRoot } from 'lexical'
 
+import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { ButtonNode, $createButtonNode, $isButtonNode } from '@/nodes/base/index'
 
@@ -45,7 +46,7 @@ describe('ButtonNode', function () {
     'matches node with $isButtonNode',
     editorTest(async function () {
       const buttonNode = $createButtonNode(dataset)
-      $isButtonNode(buttonNode).should.be.true()
+      expect($isButtonNode(buttonNode)).toBe(true)
     }),
   )
 
@@ -55,9 +56,9 @@ describe('ButtonNode', function () {
       editorTest(async function () {
         const buttonNode = $createButtonNode(dataset)
 
-        buttonNode.buttonUrl.should.equal(dataset.buttonUrl)
-        buttonNode.buttonText.should.equal(dataset.buttonText)
-        buttonNode.alignment.should.equal(dataset.alignment)
+        expect(buttonNode.buttonUrl).toBe(dataset.buttonUrl)
+        expect(buttonNode.buttonText).toBe(dataset.buttonText)
+        expect(buttonNode.alignment).toBe(dataset.alignment)
       }),
     )
 
@@ -66,17 +67,17 @@ describe('ButtonNode', function () {
       editorTest(async function () {
         const buttonNode = $createButtonNode()
 
-        buttonNode.buttonUrl.should.equal('')
+        expect(buttonNode.buttonUrl).toBe('')
         buttonNode.buttonUrl = 'http://someblog.com/somepost'
-        buttonNode.buttonUrl.should.equal('http://someblog.com/somepost')
+        expect(buttonNode.buttonUrl).toBe('http://someblog.com/somepost')
 
-        buttonNode.buttonText.should.equal('')
+        expect(buttonNode.buttonText).toBe('')
         buttonNode.buttonText = 'button text'
-        buttonNode.buttonText.should.equal('button text')
+        expect(buttonNode.buttonText).toBe('button text')
 
-        buttonNode.alignment.should.equal('center')
+        expect(buttonNode.alignment).toBe('center')
         buttonNode.alignment = 'left'
-        buttonNode.alignment.should.equal('left')
+        expect(buttonNode.alignment).toBe('left')
       }),
     )
 
@@ -86,7 +87,7 @@ describe('ButtonNode', function () {
         const buttonNode = $createButtonNode(dataset)
         const buttonNodeDataset = buttonNode.getDataset()
 
-        buttonNodeDataset.should.deepEqual({
+        expect(buttonNodeDataset).toEqual({
           ...dataset,
         })
       }),
@@ -97,7 +98,7 @@ describe('ButtonNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        ButtonNode.getType().should.equal('button')
+        expect(ButtonNode.getType()).toBe('button')
       }),
     )
   })
@@ -111,7 +112,7 @@ describe('ButtonNode', function () {
         const clone = ButtonNode.clone(buttonNode) as ButtonNode
         const cloneDataset = clone.getDataset()
 
-        cloneDataset.should.deepEqual({ ...buttonNodeDataset })
+        expect(cloneDataset).toEqual({ ...buttonNodeDataset })
       }),
     )
   })
@@ -120,7 +121,7 @@ describe('ButtonNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        ButtonNode.urlTransformMap.should.deepEqual({
+        expect(ButtonNode.urlTransformMap).toEqual({
           buttonUrl: 'url',
         })
       }),
@@ -132,7 +133,7 @@ describe('ButtonNode', function () {
       'returns true',
       editorTest(async function () {
         const buttonNode = $createButtonNode(dataset)
-        buttonNode.hasEditMode().should.be.true()
+        expect(buttonNode.hasEditMode()).toBe(true)
       }),
     )
   })
@@ -145,7 +146,8 @@ describe('ButtonNode', function () {
         const result = buttonNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
-        await element.outerHTML.should.prettifyTo(
+        await expectPrettifiedHtml(
+          element.outerHTML,
           html`<div class="inkling-card inkling-button-card inkling-align-center">
             <a href="http://blog.com/post1" class="inkling-btn inkling-btn-accent">click me</a>
           </div>`,
@@ -164,10 +166,10 @@ describe('ButtonNode', function () {
         const element = result.element as HTMLElement
         const output = element.outerHTML
 
-        output.should.not.containEql('inkling-card')
-        output.should.containEql('<div class="btn btn-accent">')
-        output.should.containEql('<table border="0" cellspacing="0" cellpadding="0"')
-        output.should.containEql('<td align="center">')
+        expect(output).not.toContain('inkling-card')
+        expect(output).toContain('<div class="btn btn-accent">')
+        expect(output).toContain('<table border="0" cellspacing="0" cellpadding="0"')
+        expect(output).toContain('<td align="center">')
       }),
     )
 
@@ -185,25 +187,28 @@ describe('ButtonNode', function () {
         const element = result.element as HTMLElement
         const output = element.innerHTML
 
-        await output.should.prettifyTo(html`
-          <table border="0" cellpadding="0" cellspacing="0">
-            <tbody>
-              <tr>
-                <td>
-                  <table class="btn btn-accent" border="0" cellspacing="0" cellpadding="0" align="center">
-                    <tbody>
-                      <tr>
-                        <td align="center">
-                          <a href="http://blog.com/post1">click me</a>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        `)
+        await expectPrettifiedHtml(
+          output,
+          html`
+            <table border="0" cellpadding="0" cellspacing="0">
+              <tbody>
+                <tr>
+                  <td>
+                    <table class="btn btn-accent" border="0" cellspacing="0" cellpadding="0" align="center">
+                      <tbody>
+                        <tr>
+                          <td align="center">
+                            <a href="http://blog.com/post1">click me</a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          `,
+        )
       }),
     )
 
@@ -221,25 +226,28 @@ describe('ButtonNode', function () {
         const element = result.element as HTMLElement
         const output = element.innerHTML
 
-        await output.should.prettifyTo(html`
-          <table border="0" cellpadding="0" cellspacing="0">
-            <tbody>
-              <tr>
-                <td>
-                  <table class="btn btn-accent" border="0" cellspacing="0" cellpadding="0" align="center">
-                    <tbody>
-                      <tr>
-                        <td align="center">
-                          <a href="http://blog.com/post1">click me</a>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        `)
+        await expectPrettifiedHtml(
+          output,
+          html`
+            <table border="0" cellpadding="0" cellspacing="0">
+              <tbody>
+                <tr>
+                  <td>
+                    <table class="btn btn-accent" border="0" cellspacing="0" cellpadding="0" align="center">
+                      <tbody>
+                        <tr>
+                          <td align="center">
+                            <a href="http://blog.com/post1">click me</a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          `,
+        )
       }),
     )
 
@@ -250,7 +258,7 @@ describe('ButtonNode', function () {
         const result = buttonNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
-        element.outerHTML.should.equal('<span></span>')
+        expect(element.outerHTML).toBe('<span></span>')
       }),
     )
 
@@ -265,7 +273,7 @@ describe('ButtonNode', function () {
         const result = buttonNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
-        element.outerHTML.should.equal('<span></span>')
+        expect(element.outerHTML).toBe('<span></span>')
       }),
     )
 
@@ -280,7 +288,7 @@ describe('ButtonNode', function () {
         const result = buttonNode.exportDOM(editor, { ...exportOptions, target: 'email' })
         const element = result.element as HTMLElement
 
-        element.outerHTML.should.equal('<span></span>')
+        expect(element.outerHTML).toBe('<span></span>')
       }),
     )
 
@@ -295,8 +303,8 @@ describe('ButtonNode', function () {
         const result = buttonNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
-        element.innerHTML.should.containEql('&lt;script&gt;alert(1)&lt;/script&gt;')
-        element.innerHTML.should.not.containEql('<script>alert(1)</script>')
+        expect(element.innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
+        expect(element.innerHTML).not.toContain('<script>alert(1)</script>')
       }),
     )
 
@@ -313,8 +321,8 @@ describe('ButtonNode', function () {
           const result = buttonNode.exportDOM(editor, { ...exportOptions, target: 'email', feature })
           const element = result.element as HTMLElement
 
-          element.innerHTML.should.containEql('href="#/portal/&quot;quoted&quot;"')
-          element.querySelectorAll('a').length.should.equal(1)
+          expect(element.innerHTML).toContain('href="#/portal/&quot;quoted&quot;"')
+          expect(element.querySelectorAll('a').length).toBe(1)
         }
       }),
     )
@@ -327,7 +335,7 @@ describe('ButtonNode', function () {
         const buttonNode = $createButtonNode(dataset)
         const json = buttonNode.exportJSON()
 
-        json.should.deepEqual({
+        expect(json).toEqual({
           type: 'button',
           version: 1,
           buttonUrl: dataset.buttonUrl,
@@ -364,9 +372,9 @@ describe('ButtonNode', function () {
           try {
             const [buttonNode] = $getRoot().getChildren() as ButtonNode[]
 
-            buttonNode.buttonUrl.should.equal(dataset.buttonUrl)
-            buttonNode.buttonText.should.equal(dataset.buttonText)
-            buttonNode.alignment.should.equal(dataset.alignment)
+            expect(buttonNode.buttonUrl).toBe(dataset.buttonUrl)
+            expect(buttonNode.buttonText).toBe(dataset.buttonText)
+            expect(buttonNode.alignment).toBe(dataset.alignment)
 
             resolve()
           } catch (e) {
@@ -380,14 +388,14 @@ describe('ButtonNode', function () {
     it(
       'getType',
       editorTest(async function () {
-        ButtonNode.getType().should.equal('button')
+        expect(ButtonNode.getType()).toBe('button')
       }),
     )
 
     it(
       'urlTransformMap',
       editorTest(async function () {
-        ButtonNode.urlTransformMap.should.deepEqual({
+        expect(ButtonNode.urlTransformMap).toEqual({
           buttonUrl: 'url',
         })
       }),
@@ -404,10 +412,10 @@ describe('ButtonNode', function () {
           </div>
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ButtonNode[]
-        nodes.length.should.equal(1)
-        nodes[0].buttonUrl.should.equal('http://someblog.com/somepost')
-        nodes[0].buttonText.should.equal('click me')
-        nodes[0].alignment.should.equal('center')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].buttonUrl).toBe('http://someblog.com/somepost')
+        expect(nodes[0].buttonText).toBe('click me')
+        expect(nodes[0].alignment).toBe('center')
       }),
     )
 
@@ -420,10 +428,10 @@ describe('ButtonNode', function () {
           </div>
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ButtonNode[]
-        nodes.length.should.equal(1)
-        nodes[0].buttonUrl.should.equal('#/portal/signup')
-        nodes[0].buttonText.should.equal('Subscribe 1')
-        nodes[0].alignment.should.equal('center')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].buttonUrl).toBe('#/portal/signup')
+        expect(nodes[0].buttonText).toBe('Subscribe 1')
+        expect(nodes[0].alignment).toBe('center')
       }),
     )
   })
@@ -437,7 +445,7 @@ describe('ButtonNode', function () {
         node.buttonUrl = 'http://someblog.com/somepost'
 
         // button nodes don't have text content
-        node.getTextContent().should.equal('')
+        expect(node.getTextContent()).toBe('')
       }),
     )
   })

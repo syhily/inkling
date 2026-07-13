@@ -1,8 +1,8 @@
-import 'should'
 import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
 import { $getRoot, type LexicalEditor } from 'lexical'
 
+import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { HtmlNode, $createHtmlNode, $isHtmlNode, type ExportDOMOptions, utils } from '@/nodes/base/index'
 
@@ -50,7 +50,7 @@ describe('HtmlNode', function () {
     'matches node with $isImageNode',
     editorTest(async function () {
       const htmlNode = $createHtmlNode(dataset)
-      $isHtmlNode(htmlNode).should.be.true()
+      expect($isHtmlNode(htmlNode)).toBe(true)
     }),
   )
 
@@ -60,7 +60,7 @@ describe('HtmlNode', function () {
       editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
 
-        htmlNode.html.should.equal('<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>')
+        expect(htmlNode.html).toBe('<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>')
       }),
     )
 
@@ -69,9 +69,9 @@ describe('HtmlNode', function () {
       editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
 
-        htmlNode.html.should.equal('<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>')
+        expect(htmlNode.html).toBe('<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>')
         htmlNode.html = '<p>Paragraph 1</p><p>Paragraph 2</p>'
-        htmlNode.html.should.equal('<p>Paragraph 1</p><p>Paragraph 2</p>')
+        expect(htmlNode.html).toBe('<p>Paragraph 1</p><p>Paragraph 2</p>')
       }),
     )
 
@@ -81,7 +81,7 @@ describe('HtmlNode', function () {
         const htmlNode = $createHtmlNode(dataset)
         const htmlNodeDataset = htmlNode.getDataset()
 
-        htmlNodeDataset.should.deepEqual({
+        expect(htmlNodeDataset).toEqual({
           ...dataset,
           visibility: {
             web: {
@@ -101,9 +101,9 @@ describe('HtmlNode', function () {
       editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
 
-        htmlNode.isEmpty().should.be.false()
+        expect(htmlNode.isEmpty()).toBe(false)
         htmlNode.html = ''
-        htmlNode.isEmpty().should.be.true()
+        expect(htmlNode.isEmpty()).toBe(true)
       }),
     )
   })
@@ -114,9 +114,9 @@ describe('HtmlNode', function () {
       editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
 
-        htmlNode.isEmpty().should.be.false()
+        expect(htmlNode.isEmpty()).toBe(false)
         htmlNode.html = ''
-        htmlNode.isEmpty().should.be.true()
+        expect(htmlNode.isEmpty()).toBe(true)
       }),
     )
   })
@@ -125,7 +125,7 @@ describe('HtmlNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        HtmlNode.getType().should.equal('html')
+        expect(HtmlNode.getType()).toBe('html')
       }),
     )
   })
@@ -136,7 +136,7 @@ describe('HtmlNode', function () {
       editorTest(async function () {
         const defaults = HtmlNode.getPropertyDefaults()
 
-        defaults.should.deepEqual({
+        expect(defaults).toEqual({
           html: '',
           visibility: {
             web: {
@@ -161,7 +161,7 @@ describe('HtmlNode', function () {
         const clone = HtmlNode.clone(htmlNode) as HtmlNode
         const cloneDataset = clone.getDataset()
 
-        cloneDataset.should.deepEqual({ ...htmlNodeDataset })
+        expect(cloneDataset).toEqual({ ...htmlNodeDataset })
       }),
     )
   })
@@ -170,7 +170,7 @@ describe('HtmlNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        HtmlNode.urlTransformMap.should.deepEqual({
+        expect(HtmlNode.urlTransformMap).toEqual({
           html: 'html',
         })
       }),
@@ -182,7 +182,7 @@ describe('HtmlNode', function () {
       'returns true',
       editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
-        htmlNode.hasEditMode().should.be.true()
+        expect(htmlNode.hasEditMode()).toBe(true)
       }),
     )
   })
@@ -193,17 +193,20 @@ describe('HtmlNode', function () {
       editorTest(async function () {
         const htmlNode = $createHtmlNode(dataset)
         const result = htmlNode.exportDOM(editor, exportOptions)
-        result.type.should.equal('value')
+        expect(result.type).toBe('value')
         const element = result.element as HTMLTextAreaElement
-        await element.value.should.prettifyTo(html`
-          <!--inkling-card-begin: html-->
-          <p>Paragraph with:</p>
-          <ul>
-            <li>list</li>
-            <li>items</li>
-          </ul>
-          <!--inkling-card-end: html-->
-        `)
+        await expectPrettifiedHtml(
+          element.value,
+          html`
+            <!--inkling-card-begin: html-->
+            <p>Paragraph with:</p>
+            <ul>
+              <li>list</li>
+              <li>items</li>
+            </ul>
+            <!--inkling-card-end: html-->
+          `,
+        )
       }),
     )
 
@@ -212,10 +215,10 @@ describe('HtmlNode', function () {
       editorTest(async function () {
         const htmlNode = $createHtmlNode()
         const result = htmlNode.exportDOM(editor, exportOptions)
-        result.type.should.equal('inner')
+        expect(result.type).toBe('inner')
         const element = result.element as HTMLElement
 
-        element.outerHTML.should.equal('<span></span>')
+        expect(element.outerHTML).toBe('<span></span>')
       }),
     )
 
@@ -224,11 +227,11 @@ describe('HtmlNode', function () {
       editorTest(async function () {
         const htmlNode = $createHtmlNode({ html: '<div style="color:red">' })
         const result = htmlNode.exportDOM(editor, exportOptions)
-        result.type.should.equal('value')
+        expect(result.type).toBe('value')
         const element = result.element as HTMLTextAreaElement
 
         // do not prettify, it will add a closing tag to the compared string causing a false pass
-        element.value.should.equal(
+        expect(element.value).toBe(
           '\n<!--inkling-card-begin: html-->\n<div style="color:red">\n<!--inkling-card-end: html-->\n',
         )
       }),
@@ -239,10 +242,10 @@ describe('HtmlNode', function () {
       editorTest(async function () {
         const htmlNode = $createHtmlNode({ html: '<p>&lt;pre&gt;Test&lt;/pre&gt;</p>' })
         const result = htmlNode.exportDOM(editor, exportOptions)
-        result.type.should.equal('value')
+        expect(result.type).toBe('value')
         const element = result.element as HTMLTextAreaElement
 
-        element.value.should.equal(
+        expect(element.value).toBe(
           '\n<!--inkling-card-begin: html-->\n<p>&lt;pre&gt;Test&lt;/pre&gt;</p>\n<!--inkling-card-end: html-->\n',
         )
       }),
@@ -255,10 +258,10 @@ describe('HtmlNode', function () {
           html: '<div data-graph-name=\'The "all-in" cost of a grant\'>Test</div>',
         })
         const result = htmlNode.exportDOM(editor, exportOptions)
-        result.type.should.equal('value')
+        expect(result.type).toBe('value')
         const element = result.element as HTMLTextAreaElement
 
-        element.value.should.equal(
+        expect(element.value).toBe(
           '\n<!--inkling-card-begin: html-->\n<div data-graph-name=\'The "all-in" cost of a grant\'>Test</div>\n<!--inkling-card-end: html-->\n',
         )
       }),
@@ -269,9 +272,9 @@ describe('HtmlNode', function () {
         function testWebRender(visibility: Record<string, unknown>) {
           const htmlNode = $createHtmlNode({ html: '<div>Test</div>', visibility })
           const result = htmlNode.exportDOM(editor, exportOptions)
-          result.type.should.equal('value')
+          expect(result.type).toBe('value')
           const element = result.element as HTMLTextAreaElement
-          element.value.should.equal(
+          expect(element.value).toBe(
             '\n<!--inkling-card-begin: html-->\n<div>Test</div>\n<!--inkling-card-end: html-->\n',
           )
         }
@@ -282,22 +285,22 @@ describe('HtmlNode', function () {
           const expectedContents = '<!--inkling-card-begin: html-->\n<div>Test</div>\n<!--inkling-card-end: html-->'
 
           if (visibility.segment) {
-            result.type.should.equal('html')
+            expect(result.type).toBe('html')
             const element = result.element as HTMLElement
-            element.outerHTML.should.equal(`<div data-gh-segment="${visibility.segment}">\n${expectedContents}\n</div>`)
+            expect(element.outerHTML).toBe(`<div data-gh-segment="${visibility.segment}">\n${expectedContents}\n</div>`)
           } else {
-            result.type.should.equal('value')
+            expect(result.type).toBe('value')
             const element = result.element as HTMLTextAreaElement
-            element.value.should.equal(`\n${expectedContents}\n`)
+            expect(element.value).toBe(`\n${expectedContents}\n`)
           }
         }
 
         function testBlankRender(visibility: Record<string, unknown>, target: string) {
           const htmlNode = $createHtmlNode({ html: '<div>Test</div>', visibility })
           const result = htmlNode.exportDOM(editor, { ...exportOptions, target })
-          result.type.should.equal('inner')
+          expect(result.type).toBe('inner')
           const element = result.element as HTMLElement
-          element.innerHTML.should.equal('')
+          expect(element.innerHTML).toBe('')
         }
 
         it(
@@ -332,11 +335,11 @@ describe('HtmlNode', function () {
         function testWebRender(visibility: Record<string, unknown>, expectedGateParams?: string | null) {
           const htmlNode = $createHtmlNode({ html: '<div>Test</div>', visibility })
           const result = htmlNode.exportDOM(editor, exportOptions)
-          result.type.should.equal('value')
+          expect(result.type).toBe('value')
           const element = result.element as HTMLTextAreaElement
           const baseExpectedContents =
             '\n<!--inkling-card-begin: html-->\n<div>Test</div>\n<!--inkling-card-end: html-->\n'
-          element.value.should.equal(
+          expect(element.value).toBe(
             expectedGateParams
               ? `\n<!--inkling-gated-block:begin ${expectedGateParams} -->${baseExpectedContents}<!--inkling-gated-block:end-->\n`
               : baseExpectedContents,
@@ -349,13 +352,13 @@ describe('HtmlNode', function () {
           const expectedContents = '<!--inkling-card-begin: html-->\n<div>Test</div>\n<!--inkling-card-end: html-->'
 
           if (!expectedSegment) {
-            result.type.should.equal('value')
+            expect(result.type).toBe('value')
             const element = result.element as HTMLTextAreaElement
-            element.value.should.equal(`\n${expectedContents}\n`)
+            expect(element.value).toBe(`\n${expectedContents}\n`)
           } else {
-            result.type.should.equal('html')
+            expect(result.type).toBe('html')
             const element = result.element as HTMLElement
-            element.outerHTML.should.equal(
+            expect(element.outerHTML).toBe(
               `<div data-gh-segment="${expectedSegment}" class="inkling-visibility-wrapper">\n${expectedContents}\n</div>`,
             )
           }
@@ -364,9 +367,9 @@ describe('HtmlNode', function () {
         function testBlankRender(visibility: Record<string, unknown>, target: string) {
           const htmlNode = $createHtmlNode({ html: '<div>Test</div>', visibility })
           const result = htmlNode.exportDOM(editor, { ...exportOptions, target })
-          result.type.should.equal('inner')
+          expect(result.type).toBe('inner')
           const element = result.element as HTMLElement
-          element.innerHTML.should.equal('')
+          expect(element.innerHTML).toBe('')
         }
 
         it(
@@ -499,8 +502,8 @@ describe('HtmlNode', function () {
           >
         `)
         const nodes = $generateNodesFromDOM(editor, document)
-        nodes.length.should.equal(1)
-        nodes[0].should.be.instanceof(HtmlNode)
+        expect(nodes.length).toBe(1)
+        expect(nodes[0]).toBeInstanceOf(HtmlNode)
       }),
     )
 
@@ -521,7 +524,7 @@ describe('HtmlNode', function () {
           return node.nodeType === 8 && node.nodeValue?.trim() === 'inkling-card-end: html'
         })
 
-        hasEndComment.should.be.false()
+        expect(hasEndComment).toBe(false)
       }),
     )
 
@@ -539,10 +542,10 @@ describe('HtmlNode', function () {
         const nodes = $generateNodesFromDOM(editor, document) as HtmlNode[]
         const htmlNodes = nodes.filter((node) => node instanceof HtmlNode)
 
-        htmlNodes.length.should.equal(1)
-        htmlNodes[0].html.should.equal('')
-        document.querySelector('p')?.outerHTML.should.equal("<p>here's html</p>")
-        document.querySelector('div')?.outerHTML.should.equal('<div>keep me</div>')
+        expect(htmlNodes.length).toBe(1)
+        expect(htmlNodes[0].html).toBe('')
+        expect(document.querySelector('p')?.outerHTML).toBe("<p>here's html</p>")
+        expect(document.querySelector('div')?.outerHTML).toBe('<div>keep me</div>')
       }),
     )
 
@@ -566,8 +569,8 @@ describe('HtmlNode', function () {
           </table>
         `)
         const nodes = $generateNodesFromDOM(editor, document)
-        nodes.length.should.equal(1)
-        nodes[0].should.be.instanceof(HtmlNode)
+        expect(nodes.length).toBe(1)
+        expect(nodes[0]).toBeInstanceOf(HtmlNode)
       }),
     )
 
@@ -602,8 +605,8 @@ describe('HtmlNode', function () {
           </table>
         `)
         const nodes = $generateNodesFromDOM(editor, document)
-        nodes.length.should.equal(1)
-        nodes[0].should.be.instanceof(HtmlNode)
+        expect(nodes.length).toBe(1)
+        expect(nodes[0]).toBeInstanceOf(HtmlNode)
       }),
     )
   })
@@ -615,7 +618,7 @@ describe('HtmlNode', function () {
         const htmlNode = $createHtmlNode(dataset)
         const json = htmlNode.exportJSON()
 
-        json.should.deepEqual({
+        expect(json).toEqual({
           type: 'html',
           version: 1,
           html: '<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>',
@@ -659,7 +662,7 @@ describe('HtmlNode', function () {
           try {
             const [htmlNode] = $getRoot().getChildren() as HtmlNode[]
 
-            htmlNode.html.should.equal('<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>')
+            expect(htmlNode.html).toBe('<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>')
 
             resolve()
           } catch (e) {
@@ -697,7 +700,7 @@ describe('HtmlNode', function () {
           try {
             const [htmlNode] = $getRoot().getChildren() as HtmlNode[]
 
-            ;(htmlNode.visibility as Record<string, unknown>).should.deepEqual({
+            expect(htmlNode.visibility as Record<string, unknown>).toEqual({
               showOnWeb: true,
               showOnEmail: true,
               web: {
@@ -722,11 +725,11 @@ describe('HtmlNode', function () {
       'returns contents',
       editorTest(async function () {
         const node = $createHtmlNode()
-        node.getTextContent().should.equal('')
+        expect(node.getTextContent()).toBe('')
 
         node.html = '<script>const test = true;</script>'
 
-        node.getTextContent().should.equal('<script>const test = true;</script>\n\n')
+        expect(node.getTextContent()).toBe('<script>const test = true;</script>\n\n')
       }),
     )
   })
@@ -735,7 +738,7 @@ describe('HtmlNode', function () {
     function testIsVisibilityActive(expected: boolean, visibility: Record<string, unknown>) {
       const node = $createHtmlNode()
       node.visibility = visibility
-      node.getIsVisibilityActive().should.equal(expected)
+      expect(node.getIsVisibilityActive()).toBe(expected)
     }
 
     describe('with old visibility format', function () {

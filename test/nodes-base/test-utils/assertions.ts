@@ -1,17 +1,15 @@
 import Prettier from '@prettier/sync'
 import { minify } from 'html-minifier-terser'
 import assert from 'node:assert/strict'
-import should from 'should'
 
 const minifyOpts = { collapseWhitespace: true, collapseInlineTagWhitespace: true }
 
-;(
-  should as unknown as { Assertion: { add(name: string, fn: (this: should.Assertion, str: string) => void): void } }
-).Assertion.add('prettifyTo', async function (this: should.Assertion, str: string) {
-  const expected = Prettier.format(await minify(str, minifyOpts), { parser: 'html' })
+// Replaces the old `should.prettifyTo` custom assertion: minifies and
+// prettifies both sides, then asserts string equality.
+export async function expectPrettifiedHtml(actual: string, expected: string): Promise<void> {
+  const expectedFormatted = Prettier.format(await minify(expected, minifyOpts), { parser: 'html' })
 
-  const assertion = this as should.Assertion & { obj: unknown }
-  assert.equal(typeof assertion.obj, 'string', 'expected a string')
-  const result = Prettier.format(await minify(assertion.obj as string, minifyOpts), { parser: 'html' })
-  assert.equal(result, expected)
-})
+  assert.equal(typeof actual, 'string', 'expected a string')
+  const result = Prettier.format(await minify(actual, minifyOpts), { parser: 'html' })
+  assert.equal(result, expectedFormatted)
+}

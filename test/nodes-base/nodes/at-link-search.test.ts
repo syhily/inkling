@@ -2,7 +2,6 @@ import type { LexicalEditor, EditorConfig } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
 import { JSDOM } from 'jsdom'
-import should from 'should'
 
 import { AtLinkSearchNode, $createAtLinkSearchNode, $isAtLinkSearchNode } from '@/nodes/base/index'
 
@@ -45,7 +44,7 @@ describe('AtLinkSearchNode', function () {
     'matches node with $isAtLinkSearchNode',
     editorTest(function () {
       const atLinkSearchNode = $createAtLinkSearchNode()
-      $isAtLinkSearchNode(atLinkSearchNode).should.be.true()
+      expect($isAtLinkSearchNode(atLinkSearchNode)).toBe(true)
     }),
   )
 
@@ -53,8 +52,8 @@ describe('AtLinkSearchNode', function () {
     'can be constructed with text and placeholder',
     editorTest(function () {
       const atLinkNode = $createAtLinkSearchNode('test', 'placeholder')
-      atLinkNode.getTextContent().should.equal('test')
-      atLinkNode.getPlaceholder()!.should.equal('placeholder')
+      expect(atLinkNode.getTextContent()).toBe('test')
+      expect(atLinkNode.getPlaceholder()!).toBe('placeholder')
     }),
   )
 
@@ -64,9 +63,9 @@ describe('AtLinkSearchNode', function () {
       const atLinkSearch = $createAtLinkSearchNode('test', 'placeholder')
       const atLinkSearchClone = AtLinkSearchNode.clone(atLinkSearch)
 
-      atLinkSearch.__key.should.equal(atLinkSearchClone.__key)
-      atLinkSearchClone.getTextContent().should.equal('test')
-      atLinkSearchClone.getPlaceholder()!.should.equal('placeholder')
+      expect(atLinkSearch.__key).toBe(atLinkSearchClone.__key)
+      expect(atLinkSearchClone.getTextContent()).toBe('test')
+      expect(atLinkSearchClone.getPlaceholder()!).toBe('placeholder')
     }),
   )
 
@@ -74,7 +73,7 @@ describe('AtLinkSearchNode', function () {
     'exports all data via exportJSON()',
     editorTest(function () {
       const atLinkSearch = $createAtLinkSearchNode('test', 'placeholder')
-      atLinkSearch.exportJSON().should.deepEqual({
+      expect(atLinkSearch.exportJSON()).toEqual({
         detail: 0,
         format: 0,
         mode: 'normal',
@@ -93,8 +92,8 @@ describe('AtLinkSearchNode', function () {
       const atLinkSearch = AtLinkSearchNode.importJSON({ text: 'test', placeholder: 'placeholder' } as ReturnType<
         AtLinkSearchNode['exportJSON']
       >)
-      atLinkSearch.getTextContent().should.equal('test')
-      atLinkSearch.getPlaceholder()!.should.equal('placeholder')
+      expect(atLinkSearch.getTextContent()).toBe('test')
+      expect(atLinkSearch.getPlaceholder()!).toBe('placeholder')
     }),
   )
 
@@ -103,9 +102,9 @@ describe('AtLinkSearchNode', function () {
     editorTest(function () {
       const atLinkNode = $createAtLinkSearchNode()
       const dom = atLinkNode.createDOM(config)
-      dom.classList.contains('multiple').should.be.true()
-      dom.classList.contains('classes').should.be.true()
-      dom.dataset.placeholder!.should.equal('Find a post, tag or author')
+      expect(dom.classList.contains('multiple')).toBe(true)
+      expect(dom.classList.contains('classes')).toBe(true)
+      expect(dom.dataset.placeholder!).toBe('Find a post, tag or author')
     }),
   )
 
@@ -114,7 +113,7 @@ describe('AtLinkSearchNode', function () {
     editorTest(function () {
       const atLinkNode = $createAtLinkSearchNode('test')
       const dom = atLinkNode.createDOM(config)
-      dom.dataset.placeholder!.should.equal('')
+      expect(dom.dataset.placeholder!).toBe('')
     }),
   )
 
@@ -123,7 +122,7 @@ describe('AtLinkSearchNode', function () {
     editorTest(function () {
       const atLinkNode = $createAtLinkSearchNode('', 'custom')
       const dom = atLinkNode.createDOM(config)
-      dom.dataset.placeholder!.should.equal('custom')
+      expect(dom.dataset.placeholder!).toBe('custom')
     }),
   )
 
@@ -132,7 +131,7 @@ describe('AtLinkSearchNode', function () {
     editorTest(function () {
       const atLinkNode = $createAtLinkSearchNode('test', 'custom')
       const dom = atLinkNode.createDOM(config)
-      dom.dataset.placeholder!.should.equal('custom')
+      expect(dom.dataset.placeholder!).toBe('custom')
     }),
   )
 
@@ -141,13 +140,13 @@ describe('AtLinkSearchNode', function () {
     editorTest(function () {
       const atLinkNode = $createAtLinkSearchNode()
       const dom = atLinkNode.createDOM(config)
-      dom.dataset.placeholder!.should.equal('Find a post, tag or author')
+      expect(dom.dataset.placeholder!).toBe('Find a post, tag or author')
 
       const prevNode = AtLinkSearchNode.clone(atLinkNode)
 
       atLinkNode.setTextContent('test')
       atLinkNode.updateDOM(prevNode, dom, config)
-      dom.dataset.placeholder!.should.equal('')
+      expect(dom.dataset.placeholder!).toBe('')
     }),
   )
 
@@ -156,13 +155,13 @@ describe('AtLinkSearchNode', function () {
     editorTest(function () {
       const atLinkNode = $createAtLinkSearchNode('test', 'custom')
       const dom = atLinkNode.createDOM(config)
-      dom.dataset.placeholder!.should.equal('custom')
+      expect(dom.dataset.placeholder!).toBe('custom')
 
       const prevNode = AtLinkSearchNode.clone(atLinkNode)
 
       atLinkNode.setTextContent('test2')
       atLinkNode.updateDOM(prevNode, dom, config)
-      dom.dataset.placeholder!.should.equal('custom')
+      expect(dom.dataset.placeholder!).toBe('custom')
     }),
   )
 
@@ -171,14 +170,14 @@ describe('AtLinkSearchNode', function () {
     editorTest(function () {
       const atLinkNode = $createAtLinkSearchNode('test', 'custom')
       const dom = atLinkNode.createDOM(config)
-      dom.dataset.placeholder!.should.equal('custom')
+      expect(dom.dataset.placeholder!).toBe('custom')
 
       const prevNode = AtLinkSearchNode.clone(atLinkNode)
 
       atLinkNode.setTextContent('')
       atLinkNode.setPlaceholder('updated')
       atLinkNode.updateDOM(prevNode, dom, config)
-      dom.dataset.placeholder!.should.equal('updated')
+      expect(dom.dataset.placeholder!).toBe('updated')
     }),
   )
 
@@ -187,13 +186,13 @@ describe('AtLinkSearchNode', function () {
     editorTest(function () {
       const atLinkNode = $createAtLinkSearchNode('test')
       const dom = atLinkNode.createDOM(config)
-      dom.dataset.placeholder!.should.equal('')
+      expect(dom.dataset.placeholder!).toBe('')
 
       const prevNode = AtLinkSearchNode.clone(atLinkNode)
 
       atLinkNode.setTextContent('')
       atLinkNode.updateDOM(prevNode, dom, config)
-      dom.dataset.placeholder!.should.equal('Find a post, tag or author')
+      expect(dom.dataset.placeholder!).toBe('Find a post, tag or author')
     }),
   )
 
@@ -203,11 +202,12 @@ describe('AtLinkSearchNode', function () {
       const atLinkSearchNode = $createAtLinkSearchNode('test')
       const { element, type } = atLinkSearchNode.exportDOM()
 
-      should.exist(element)
-      should.equal(type, 'inner')
-      element.tagName.should.equal('SPAN')
-      element.innerHTML.should.equal('')
-      element.outerHTML.should.equal('<span></span>')
+      expect(element).toBeDefined()
+      expect(element).not.toBeNull()
+      expect(type).toBe('inner')
+      expect(element.tagName).toBe('SPAN')
+      expect(element.innerHTML).toBe('')
+      expect(element.outerHTML).toBe('<span></span>')
     }),
   )
 
@@ -215,7 +215,7 @@ describe('AtLinkSearchNode', function () {
     'cannot have format',
     editorTest(function () {
       const atLinkSearchNode = $createAtLinkSearchNode()
-      atLinkSearchNode.canHaveFormat().should.be.false()
+      expect(atLinkSearchNode.canHaveFormat()).toBe(false)
     }),
   )
 
@@ -224,7 +224,7 @@ describe('AtLinkSearchNode', function () {
     editorTest(function () {
       const atLinkNode = $createAtLinkSearchNode()
       atLinkNode.setPlaceholder('test')
-      atLinkNode.getPlaceholder()!.should.equal('test')
+      expect(atLinkNode.getPlaceholder()!).toBe('test')
     }),
   )
 
@@ -232,10 +232,10 @@ describe('AtLinkSearchNode', function () {
     'returns contents from .getTextContent()',
     editorTest(function () {
       const atLinkNode = $createAtLinkSearchNode()
-      atLinkNode.getTextContent().should.equal('')
+      expect(atLinkNode.getTextContent()).toBe('')
 
       atLinkNode.setTextContent('test')
-      atLinkNode.getTextContent().should.equal('test')
+      expect(atLinkNode.getTextContent()).toBe('test')
     }),
   )
 
@@ -243,8 +243,8 @@ describe('AtLinkSearchNode', function () {
     'has "element"-like methods',
     editorTest(function () {
       const atLinkNode = $createAtLinkSearchNode()
-      atLinkNode.getChildrenSize().should.equal(0)
-      should.equal(atLinkNode.getChildAtIndex(), null)
+      expect(atLinkNode.getChildrenSize()).toBe(0)
+      expect(atLinkNode.getChildAtIndex()).toBe(null)
     }),
   )
 })

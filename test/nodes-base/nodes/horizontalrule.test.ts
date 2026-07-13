@@ -4,6 +4,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
 import { $getRoot } from 'lexical'
 
+import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { HorizontalRuleNode, $createHorizontalRuleNode, $isHorizontalRuleNode } from '@/nodes/base/index'
 
@@ -43,7 +44,7 @@ describe('HorizontalNode', function () {
     'matches node with $isHorizontalRuleNode',
     editorTest(async function () {
       const hrNode = $createHorizontalRuleNode()
-      $isHorizontalRuleNode(hrNode).should.be.true()
+      expect($isHorizontalRuleNode(hrNode)).toBe(true)
     }),
   )
 
@@ -54,7 +55,7 @@ describe('HorizontalNode', function () {
         const hrNode = $createHorizontalRuleNode()
         const { element } = hrNode.exportDOM(editor, exportOptions)
 
-        await (element as HTMLElement).outerHTML.should.prettifyTo(html` <hr /> `)
+        await expectPrettifiedHtml((element as HTMLElement).outerHTML, html` <hr /> `)
       }),
     )
   })
@@ -66,8 +67,8 @@ describe('HorizontalNode', function () {
         const document = createDocument(html` <hr /> `)
         const nodes = $generateNodesFromDOM(editor, document)
 
-        nodes.length.should.equal(1)
-        nodes[0].should.be.instanceof(HorizontalRuleNode)
+        expect(nodes.length).toBe(1)
+        expect(nodes[0]).toBeInstanceOf(HorizontalRuleNode)
       }),
     )
   })
@@ -81,7 +82,7 @@ describe('HorizontalNode', function () {
         const asideNode = $createHorizontalRuleNode()
         const json = asideNode.exportJSON()
 
-        json.should.deepEqual({
+        expect(json).toEqual({
           type: 'horizontalrule',
           version: 1,
         })
@@ -110,7 +111,7 @@ describe('HorizontalNode', function () {
         editor.getEditorState().read(() => {
           try {
             const [hrNode] = $getRoot().getChildren()
-            hrNode.should.be.instanceof(HorizontalRuleNode)
+            expect(hrNode).toBeInstanceOf(HorizontalRuleNode)
 
             resolve()
           } catch (e) {
@@ -125,7 +126,7 @@ describe('HorizontalNode', function () {
       'returns plaintext representation',
       editorTest(async function () {
         const node = $createHorizontalRuleNode()
-        node.getTextContent().should.equal('---\n\n')
+        expect(node.getTextContent()).toBe('---\n\n')
       }),
     )
   })
@@ -135,7 +136,7 @@ describe('HorizontalNode', function () {
       'returns false (has no visibility property)',
       editorTest(async function () {
         const node = $createHorizontalRuleNode()
-        node.getIsVisibilityActive().should.be.false()
+        expect(node.getIsVisibilityActive()).toBe(false)
       }),
     )
   })

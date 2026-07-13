@@ -1,4 +1,3 @@
-import 'should'
 import type { LexicalEditor } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
@@ -6,6 +5,7 @@ import { $generateNodesFromDOM } from '@lexical/html'
 import Prettier from '@prettier/sync'
 import { $getRoot } from 'lexical'
 
+import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { BookmarkNode, $createBookmarkNode, $isBookmarkNode, type BookmarkData } from '@/nodes/base/index'
 
@@ -56,7 +56,7 @@ describe('BookmarkNode', function () {
     'matches node with $isBookmarkNode',
     editorTest(async function () {
       const bookmarkNode = $createBookmarkNode(dataset)
-      $isBookmarkNode(bookmarkNode).should.be.true()
+      expect($isBookmarkNode(bookmarkNode)).toBe(true)
     }),
   )
 
@@ -67,14 +67,14 @@ describe('BookmarkNode', function () {
         const bookmarkNode = $createBookmarkNode(dataset)
 
         const metadata = dataset.metadata as Record<string, unknown>
-        bookmarkNode.url.should.equal(dataset.url)
-        bookmarkNode.icon.should.equal(metadata.icon)
-        bookmarkNode.title.should.equal(metadata.title)
-        bookmarkNode.description.should.equal(metadata.description)
-        bookmarkNode.author.should.equal(metadata.author)
-        bookmarkNode.publisher.should.equal(metadata.publisher)
-        bookmarkNode.thumbnail.should.equal(metadata.thumbnail)
-        bookmarkNode.caption.should.equal(dataset.caption)
+        expect(bookmarkNode.url).toBe(dataset.url)
+        expect(bookmarkNode.icon).toBe(metadata.icon)
+        expect(bookmarkNode.title).toBe(metadata.title)
+        expect(bookmarkNode.description).toBe(metadata.description)
+        expect(bookmarkNode.author).toBe(metadata.author)
+        expect(bookmarkNode.publisher).toBe(metadata.publisher)
+        expect(bookmarkNode.thumbnail).toBe(metadata.thumbnail)
+        expect(bookmarkNode.caption).toBe(dataset.caption)
       }),
     )
 
@@ -83,37 +83,37 @@ describe('BookmarkNode', function () {
       editorTest(async function () {
         const bookmarkNode = $createBookmarkNode()
 
-        bookmarkNode.url.should.equal('')
+        expect(bookmarkNode.url).toBe('')
         bookmarkNode.url = 'https://inkling.local/'
-        bookmarkNode.url.should.equal('https://inkling.local/')
+        expect(bookmarkNode.url).toBe('https://inkling.local/')
 
-        bookmarkNode.icon.should.equal('')
+        expect(bookmarkNode.icon).toBe('')
         bookmarkNode.icon = 'https://inkling.local/favicon.ico'
-        bookmarkNode.icon.should.equal('https://inkling.local/favicon.ico')
+        expect(bookmarkNode.icon).toBe('https://inkling.local/favicon.ico')
 
-        bookmarkNode.title.should.equal('')
+        expect(bookmarkNode.title).toBe('')
         bookmarkNode.title = 'Inkling: The Creator Economy Platform'
-        bookmarkNode.title.should.equal('Inkling: The Creator Economy Platform')
+        expect(bookmarkNode.title).toBe('Inkling: The Creator Economy Platform')
 
-        bookmarkNode.description.should.equal('')
+        expect(bookmarkNode.description).toBe('')
         bookmarkNode.description = 'doing kewl stuff'
-        bookmarkNode.description.should.equal('doing kewl stuff')
+        expect(bookmarkNode.description).toBe('doing kewl stuff')
 
-        bookmarkNode.author.should.equal('')
+        expect(bookmarkNode.author).toBe('')
         bookmarkNode.author = 'inkling'
-        bookmarkNode.author.should.equal('inkling')
+        expect(bookmarkNode.author).toBe('inkling')
 
-        bookmarkNode.publisher.should.equal('')
+        expect(bookmarkNode.publisher).toBe('')
         bookmarkNode.publisher = 'Inkling - The Professional Publishing Platform'
-        bookmarkNode.publisher.should.equal('Inkling - The Professional Publishing Platform')
+        expect(bookmarkNode.publisher).toBe('Inkling - The Professional Publishing Platform')
 
-        bookmarkNode.thumbnail.should.equal('')
+        expect(bookmarkNode.thumbnail).toBe('')
         bookmarkNode.thumbnail = 'https://inkling.local/images/meta/inkling.png'
-        bookmarkNode.thumbnail.should.equal('https://inkling.local/images/meta/inkling.png')
+        expect(bookmarkNode.thumbnail).toBe('https://inkling.local/images/meta/inkling.png')
 
-        bookmarkNode.caption.should.equal('')
+        expect(bookmarkNode.caption).toBe('')
         bookmarkNode.caption = 'caption here'
-        bookmarkNode.caption.should.equal('caption here')
+        expect(bookmarkNode.caption).toBe('caption here')
       }),
     )
 
@@ -123,7 +123,7 @@ describe('BookmarkNode', function () {
         const bookmarkNode = $createBookmarkNode(dataset)
         const bookmarkNodeDataset = bookmarkNode.getDataset()
 
-        bookmarkNodeDataset.should.deepEqual({
+        expect(bookmarkNodeDataset).toEqual({
           ...dataset,
         })
       }),
@@ -134,7 +134,7 @@ describe('BookmarkNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        BookmarkNode.getType().should.equal('bookmark')
+        expect(BookmarkNode.getType()).toBe('bookmark')
       }),
     )
   })
@@ -148,7 +148,7 @@ describe('BookmarkNode', function () {
         const clone = BookmarkNode.clone(bookmarkNode) as BookmarkNode
         const cloneDataset = clone.getDataset()
 
-        cloneDataset.should.deepEqual({ ...bookmarkNodeDataset })
+        expect(cloneDataset).toEqual({ ...bookmarkNodeDataset })
       }),
     )
   })
@@ -157,7 +157,7 @@ describe('BookmarkNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        BookmarkNode.urlTransformMap.should.deepEqual({
+        expect(BookmarkNode.urlTransformMap).toEqual({
           url: 'url',
           'metadata.icon': 'url',
           'metadata.thumbnail': 'url',
@@ -171,7 +171,7 @@ describe('BookmarkNode', function () {
       'returns true',
       editorTest(async function () {
         const bookmarkNode = $createBookmarkNode(dataset)
-        bookmarkNode.hasEditMode().should.be.true()
+        expect(bookmarkNode.hasEditMode()).toBe(true)
       }),
     )
   })
@@ -182,9 +182,9 @@ describe('BookmarkNode', function () {
       editorTest(async function () {
         const bookmarkNode = $createBookmarkNode(dataset)
 
-        bookmarkNode.isEmpty().should.be.false()
+        expect(bookmarkNode.isEmpty()).toBe(false)
         bookmarkNode.url = ''
-        bookmarkNode.isEmpty().should.be.true()
+        expect(bookmarkNode.isEmpty()).toBe(true)
       }),
     )
   })
@@ -220,7 +220,7 @@ describe('BookmarkNode', function () {
 
         const prettyExpectedHtml = Prettier.format(expectedHtml, { parser: 'html' })
 
-        await element.outerHTML.should.prettifyTo(prettyExpectedHtml)
+        await expectPrettifiedHtml(element.outerHTML, prettyExpectedHtml)
       }),
     )
 
@@ -234,10 +234,10 @@ describe('BookmarkNode', function () {
         const result = bookmarkNode.exportDOM(editor, { ...exportOptions, ...options })
         const element = result.element as HTMLElement
 
-        element.innerHTML.should.containEql('<!--[if !mso !vml]-->')
-        element.innerHTML.should.containEql('<figure class="inkling-card inkling-bookmark-card')
-        element.innerHTML.should.containEql('<!--[if vml]>')
-        element.innerHTML.should.containEql('<table class="inkling-card inkling-bookmark-card--outlook"')
+        expect(element.innerHTML).toContain('<!--[if !mso !vml]-->')
+        expect(element.innerHTML).toContain('<figure class="inkling-card inkling-bookmark-card')
+        expect(element.innerHTML).toContain('<!--[if vml]>')
+        expect(element.innerHTML).toContain('<table class="inkling-card inkling-bookmark-card--outlook"')
       }),
     )
 
@@ -248,7 +248,7 @@ describe('BookmarkNode', function () {
         const result = bookmarkNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
-        element.outerHTML.should.equal('<span></span>')
+        expect(element.outerHTML).toBe('<span></span>')
       }),
     )
 
@@ -273,15 +273,15 @@ describe('BookmarkNode', function () {
         const element = result.element as HTMLElement
 
         // Check that text fields are escaped
-        element.innerHTML.should.containEql(
+        expect(element.innerHTML).toContain(
           'Inkling: Independent technology &lt;script&gt;alert("XSS")&lt;/script&gt; for modern publishing.',
         )
-        element.innerHTML.should.containEql('doing "kewl" stuff')
-        element.innerHTML.should.containEql("fa'ker")
-        element.innerHTML.should.containEql('Fake &lt;script&gt;alert("XSS")&lt;/script&gt;')
+        expect(element.innerHTML).toContain('doing "kewl" stuff')
+        expect(element.innerHTML).toContain("fa'ker")
+        expect(element.innerHTML).toContain('Fake &lt;script&gt;alert("XSS")&lt;/script&gt;')
 
         // Check that caption is sanitized before insertion
-        element.innerHTML.should.containEql(
+        expect(element.innerHTML).toContain(
           '<p><span style="white-space: pre-wrap;">This is a </span><b><strong style="white-space: pre-wrap;">caption</strong></b></p>',
         )
       }),
@@ -311,18 +311,18 @@ describe('BookmarkNode', function () {
         const element = result.element as HTMLElement
 
         // Check that email template is used
-        element.innerHTML.should.containEql('<!--[if !mso !vml]-->')
+        expect(element.innerHTML).toContain('<!--[if !mso !vml]-->')
 
         // Check that text fields are escaped
-        element.innerHTML.should.containEql(
+        expect(element.innerHTML).toContain(
           'Inkling: Independent technology &lt;script&gt;alert("XSS")&lt;/script&gt; for modern publishing.',
         )
-        element.innerHTML.should.containEql('doing "kewl" stuff')
-        element.innerHTML.should.containEql("fa'ker")
-        element.innerHTML.should.containEql('Fake &lt;script&gt;alert("XSS")&lt;/script&gt;')
+        expect(element.innerHTML).toContain('doing "kewl" stuff')
+        expect(element.innerHTML).toContain("fa'ker")
+        expect(element.innerHTML).toContain('Fake &lt;script&gt;alert("XSS")&lt;/script&gt;')
 
         // Check that caption is escaped
-        element.innerHTML.should.containEql(
+        expect(element.innerHTML).toContain(
           '&lt;p dir="ltr"&gt;&lt;span style="white-space: pre-wrap;"&gt;This is a &lt;/span&gt;&lt;b&gt;&lt;strong style="white-space: pre-wrap;"&gt;caption&lt;/strong&gt;&lt;/b&gt;&lt;/p&gt;',
         )
       }),
@@ -346,7 +346,7 @@ describe('BookmarkNode', function () {
         const result = bookmarkNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
-        element.outerHTML.should.equal('<span></span>')
+        expect(element.outerHTML).toBe('<span></span>')
       }),
     )
 
@@ -369,13 +369,13 @@ describe('BookmarkNode', function () {
 
         const webResult = bookmarkNode.exportDOM(editor, exportOptions)
         const webHtml = (webResult.element as HTMLElement).outerHTML
-        webHtml.should.not.containEql('<img src=x onerror=alert(1)>')
-        webHtml.should.not.containEql('onerror=alert(1)')
+        expect(webHtml).not.toContain('<img src=x onerror=alert(1)>')
+        expect(webHtml).not.toContain('onerror=alert(1)')
 
         const emailResult = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
         const emailHtml = (emailResult.element as HTMLElement).innerHTML
-        emailHtml.should.containEql('&lt;img src=x onerror=alert(1)&gt;')
-        emailHtml.should.not.containEql('<img src=x onerror=alert(1)>')
+        expect(emailHtml).toContain('&lt;img src=x onerror=alert(1)&gt;')
+        expect(emailHtml).not.toContain('<img src=x onerror=alert(1)>')
       }),
     )
 
@@ -397,9 +397,9 @@ describe('BookmarkNode', function () {
         const result = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
         const element = result.element as HTMLElement
 
-        element.innerHTML.should.containEql('Fish &amp; Chips &lt;3')
-        element.innerHTML.should.not.containEql('&amp;amp;')
-        element.innerHTML.should.not.containEql('&amp;lt;')
+        expect(element.innerHTML).toContain('Fish &amp; Chips &lt;3')
+        expect(element.innerHTML).not.toContain('&amp;amp;')
+        expect(element.innerHTML).not.toContain('&amp;lt;')
       }),
     )
 
@@ -421,10 +421,10 @@ describe('BookmarkNode', function () {
         const result = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
         const element = result.element as HTMLElement
 
-        element.innerHTML.should.containEql('href="/x&quot;')
-        ;(element.querySelector('svg') === null).should.be.true()
+        expect(element.innerHTML).toContain('href="/x&quot;')
+        expect(element.querySelector('svg') === null).toBe(true)
         element.querySelectorAll('a').forEach((anchor) => {
-          anchor.getAttribute('href')!.should.equal('/x"><svg/onload=alert(1)>')
+          expect(anchor.getAttribute('href')!).toBe('/x"><svg/onload=alert(1)>')
         })
       }),
     )
@@ -438,7 +438,7 @@ describe('BookmarkNode', function () {
         const json = bookmarkNode.exportJSON()
         const metadata = dataset.metadata as Record<string, unknown>
 
-        json.should.deepEqual({
+        expect(json).toEqual({
           type: 'bookmark',
           version: 1,
           url: dataset.url,
@@ -482,14 +482,14 @@ describe('BookmarkNode', function () {
           try {
             const [bookmarkNode] = $getRoot().getChildren() as BookmarkNode[]
 
-            bookmarkNode.url.should.equal(dataset.url)
-            bookmarkNode.icon.should.equal((dataset.metadata as Record<string, unknown>).icon)
-            bookmarkNode.title.should.equal((dataset.metadata as Record<string, unknown>).title)
-            bookmarkNode.description.should.equal((dataset.metadata as Record<string, unknown>).description)
-            bookmarkNode.author.should.equal((dataset.metadata as Record<string, unknown>).author)
-            bookmarkNode.publisher.should.equal((dataset.metadata as Record<string, unknown>).publisher)
-            bookmarkNode.thumbnail.should.equal((dataset.metadata as Record<string, unknown>).thumbnail)
-            bookmarkNode.caption.should.equal(dataset.caption)
+            expect(bookmarkNode.url).toBe(dataset.url)
+            expect(bookmarkNode.icon).toBe((dataset.metadata as Record<string, unknown>).icon)
+            expect(bookmarkNode.title).toBe((dataset.metadata as Record<string, unknown>).title)
+            expect(bookmarkNode.description).toBe((dataset.metadata as Record<string, unknown>).description)
+            expect(bookmarkNode.author).toBe((dataset.metadata as Record<string, unknown>).author)
+            expect(bookmarkNode.publisher).toBe((dataset.metadata as Record<string, unknown>).publisher)
+            expect(bookmarkNode.thumbnail).toBe((dataset.metadata as Record<string, unknown>).thumbnail)
+            expect(bookmarkNode.caption).toBe(dataset.caption)
 
             resolve()
           } catch (e) {
@@ -503,14 +503,14 @@ describe('BookmarkNode', function () {
     it(
       'getType',
       editorTest(async function () {
-        BookmarkNode.getType().should.equal('bookmark')
+        expect(BookmarkNode.getType()).toBe('bookmark')
       }),
     )
 
     it(
       'urlTransformMap',
       editorTest(async function () {
-        BookmarkNode.urlTransformMap.should.deepEqual({
+        expect(BookmarkNode.urlTransformMap).toEqual({
           url: 'url',
           'metadata.icon': 'url',
           'metadata.thumbnail': 'url',
@@ -545,16 +545,16 @@ describe('BookmarkNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document)
 
-        nodes.length.should.equal(1)
+        expect(nodes.length).toBe(1)
         const node = nodes[0] as BookmarkNode
-        node.url.should.equal(dataset.url)
-        node.icon.should.equal((dataset.metadata as Record<string, unknown>).icon)
-        node.title.should.equal((dataset.metadata as Record<string, unknown>).title)
-        node.description.should.equal((dataset.metadata as Record<string, unknown>).description)
-        node.author.should.equal((dataset.metadata as Record<string, unknown>).author)
-        node.publisher.should.equal((dataset.metadata as Record<string, unknown>).publisher)
-        node.thumbnail.should.equal((dataset.metadata as Record<string, unknown>).thumbnail)
-        node.caption.should.equal(dataset.caption)
+        expect(node.url).toBe(dataset.url)
+        expect(node.icon).toBe((dataset.metadata as Record<string, unknown>).icon)
+        expect(node.title).toBe((dataset.metadata as Record<string, unknown>).title)
+        expect(node.description).toBe((dataset.metadata as Record<string, unknown>).description)
+        expect(node.author).toBe((dataset.metadata as Record<string, unknown>).author)
+        expect(node.publisher).toBe((dataset.metadata as Record<string, unknown>).publisher)
+        expect(node.thumbnail).toBe((dataset.metadata as Record<string, unknown>).thumbnail)
+        expect(node.caption).toBe(dataset.caption)
       }),
     )
 
@@ -589,14 +589,14 @@ describe('BookmarkNode', function () {
           )
           const nodes = $generateNodesFromDOM(editor, document)
 
-          nodes.length.should.equal(1)
+          expect(nodes.length).toBe(1)
           const bookmarkNode = nodes[0] as BookmarkNode
 
-          bookmarkNode.url.should.equal('https://slack.engineering/typescript-at-slack-a81307fa288d')
-          bookmarkNode.title.should.equal('TypeScript at Slack')
-          bookmarkNode.description.should.equal('Or, How I Learned to Stop Worrying &amp; Trust the Compiler')
-          bookmarkNode.publisher.should.equal('slack.engineering')
-          bookmarkNode.thumbnail.should.equal(
+          expect(bookmarkNode.url).toBe('https://slack.engineering/typescript-at-slack-a81307fa288d')
+          expect(bookmarkNode.title).toBe('TypeScript at Slack')
+          expect(bookmarkNode.description).toBe('Or, How I Learned to Stop Worrying &amp; Trust the Compiler')
+          expect(bookmarkNode.publisher).toBe('slack.engineering')
+          expect(bookmarkNode.thumbnail).toBe(
             'https://cdn-images-1.medium.com/fit/c/160/160/1*-h1bH8gB3I7gPh5AG1HmsQ.png',
           )
         }),
@@ -626,14 +626,14 @@ describe('BookmarkNode', function () {
           )
           const nodes = $generateNodesFromDOM(editor, document)
 
-          nodes.length.should.equal(1)
+          expect(nodes.length).toBe(1)
           const bookmarkNode = nodes[0] as BookmarkNode
 
-          bookmarkNode.url.should.equal('https://slack.engineering/typescript-at-slack-a81307fa288d')
-          bookmarkNode.title.should.equal('')
-          bookmarkNode.description.should.equal('Or, How I Learned to Stop Worrying &amp; Trust the Compiler')
-          bookmarkNode.publisher.should.equal('slack.engineering')
-          bookmarkNode.thumbnail.should.equal(
+          expect(bookmarkNode.url).toBe('https://slack.engineering/typescript-at-slack-a81307fa288d')
+          expect(bookmarkNode.title).toBe('')
+          expect(bookmarkNode.description).toBe('Or, How I Learned to Stop Worrying &amp; Trust the Compiler')
+          expect(bookmarkNode.publisher).toBe('slack.engineering')
+          expect(bookmarkNode.thumbnail).toBe(
             'https://cdn-images-1.medium.com/fit/c/160/160/1*-h1bH8gB3I7gPh5AG1HmsQ.png',
           )
         }),
@@ -666,14 +666,14 @@ describe('BookmarkNode', function () {
           )
           const nodes = $generateNodesFromDOM(editor, document)
 
-          nodes.length.should.equal(1)
+          expect(nodes.length).toBe(1)
           const bookmarkNode = nodes[0] as BookmarkNode
 
-          bookmarkNode.url.should.equal('https://slack.engineering/typescript-at-slack-a81307fa288d')
-          bookmarkNode.title.should.equal('TypeScript at Slack')
-          bookmarkNode.description.should.equal('Or, How I Learned to Stop Worrying &amp; Trust the Compiler')
-          bookmarkNode.publisher.should.containEql('slack.engineering')
-          bookmarkNode.thumbnail.should.equal(
+          expect(bookmarkNode.url).toBe('https://slack.engineering/typescript-at-slack-a81307fa288d')
+          expect(bookmarkNode.title).toBe('TypeScript at Slack')
+          expect(bookmarkNode.description).toBe('Or, How I Learned to Stop Worrying &amp; Trust the Compiler')
+          expect(bookmarkNode.publisher).toContain('slack.engineering')
+          expect(bookmarkNode.thumbnail).toBe(
             'https://cdn-images-1.medium.com/fit/c/160/160/1*-h1bH8gB3I7gPh5AG1HmsQ.png',
           )
         }),
@@ -686,16 +686,16 @@ describe('BookmarkNode', function () {
       'returns contents',
       editorTest(async function () {
         const node = $createBookmarkNode()
-        node.getTextContent().should.equal('')
+        expect(node.getTextContent()).toBe('')
 
         node.title = 'Test'
         node.description = 'Test description'
         node.url = 'https://example.com'
         node.caption = 'Test <strong>caption</strong>'
 
-        node
-          .getTextContent()
-          .should.equal('Test\nTest description\nhttps://example.com\nTest <strong>caption</strong>\n\n')
+        expect(node.getTextContent()).toBe(
+          'Test\nTest description\nhttps://example.com\nTest <strong>caption</strong>\n\n',
+        )
       }),
     )
   })

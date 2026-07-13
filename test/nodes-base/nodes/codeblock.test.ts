@@ -1,8 +1,8 @@
 import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
 import { $getRoot, type ElementNode, type LexicalEditor } from 'lexical'
-import should from 'should'
 
+import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { CodeBlockNode, $createCodeBlockNode, $isCodeBlockNode } from '@/nodes/base/index'
 
@@ -61,7 +61,7 @@ describe('CodeBlockNode', function () {
     'matches node with $isCodeBlockNode',
     editorTest(async function () {
       const codeBlockNode = $createCodeBlockNode({ language, code, caption })
-      $isCodeBlockNode(codeBlockNode).should.be.true()
+      expect($isCodeBlockNode(codeBlockNode)).toBe(true)
     }),
   )
 
@@ -93,9 +93,9 @@ describe('CodeBlockNode', function () {
         editorState.read(() => {
           try {
             const codeBlockNode = $getRoot().getChildren()[0] as CodeBlockNode
-            should(codeBlockNode.code).equal(`<?php echo 'Hello World'; ?>`)
-            should(codeBlockNode.language).equal('php')
-            should(codeBlockNode.caption).equal('Your first PHP enabled page')
+            expect(codeBlockNode.code).toBe(`<?php echo 'Hello World'; ?>`)
+            expect(codeBlockNode.language).toBe('php')
+            expect(codeBlockNode.caption).toBe('Your first PHP enabled page')
             resolve()
           } catch (e) {
             reject(e)
@@ -121,7 +121,7 @@ describe('CodeBlockNode', function () {
 
         const parsedExport = JSON.parse(JSON.stringify(editor.getEditorState()))
 
-        parsedExport.root.children.should.deepEqual([
+        expect(parsedExport.root.children).toEqual([
           {
             type: 'codeblock',
             version: 1,
@@ -140,9 +140,9 @@ describe('CodeBlockNode', function () {
       editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode({ language, code, caption })
 
-        codeBlockNode.code.should.equal('<script></script>')
-        codeBlockNode.language.should.equal('javascript')
-        codeBlockNode.caption.should.equal('A code block')
+        expect(codeBlockNode.code).toBe('<script></script>')
+        expect(codeBlockNode.language).toBe('javascript')
+        expect(codeBlockNode.caption).toBe('A code block')
       }),
     )
 
@@ -151,17 +151,17 @@ describe('CodeBlockNode', function () {
       editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode({ language: '', code: '', caption: '' })
 
-        codeBlockNode.language.should.equal('')
+        expect(codeBlockNode.language).toBe('')
         codeBlockNode.language = 'javascript'
-        codeBlockNode.language.should.equal('javascript')
+        expect(codeBlockNode.language).toBe('javascript')
 
-        codeBlockNode.code.should.equal('')
+        expect(codeBlockNode.code).toBe('')
         codeBlockNode.code = '<script></script>'
-        codeBlockNode.code.should.equal('<script></script>')
+        expect(codeBlockNode.code).toBe('<script></script>')
 
-        codeBlockNode.caption.should.equal('')
+        expect(codeBlockNode.caption).toBe('')
         codeBlockNode.caption = 'A code block'
-        codeBlockNode.caption.should.equal('A code block')
+        expect(codeBlockNode.caption).toBe('A code block')
       }),
     )
 
@@ -171,7 +171,7 @@ describe('CodeBlockNode', function () {
         const codeBlockNode = $createCodeBlockNode({ language, code, caption })
         const codeBlockNodeDataset = codeBlockNode.getDataset()
 
-        codeBlockNodeDataset.should.deepEqual({
+        expect(codeBlockNodeDataset).toEqual({
           code: '<script></script>',
           language: 'javascript',
           caption: 'A code block',
@@ -186,9 +186,9 @@ describe('CodeBlockNode', function () {
       editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode(dataset)
 
-        codeBlockNode.isEmpty().should.be.false()
+        expect(codeBlockNode.isEmpty()).toBe(false)
         codeBlockNode.code = ''
-        codeBlockNode.isEmpty().should.be.true()
+        expect(codeBlockNode.isEmpty()).toBe(true)
       }),
     )
   })
@@ -197,7 +197,7 @@ describe('CodeBlockNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        CodeBlockNode.getType().should.equal('codeblock')
+        expect(CodeBlockNode.getType()).toBe('codeblock')
       }),
     )
   })
@@ -211,7 +211,7 @@ describe('CodeBlockNode', function () {
         const clone = CodeBlockNode.clone(codeBlockNode) as CodeBlockNode
         const cloneDataset = clone.getDataset()
 
-        cloneDataset.should.deepEqual({ ...codeBlockNodeDataset })
+        expect(cloneDataset).toEqual({ ...codeBlockNodeDataset })
       }),
     )
   })
@@ -220,7 +220,7 @@ describe('CodeBlockNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        CodeBlockNode.urlTransformMap.should.deepEqual({
+        expect(CodeBlockNode.urlTransformMap).toEqual({
           caption: 'html',
         })
       }),
@@ -232,7 +232,7 @@ describe('CodeBlockNode', function () {
       'returns true',
       editorTest(async function () {
         const codeBlockNode = $createCodeBlockNode(dataset)
-        codeBlockNode.hasEditMode().should.be.true()
+        expect(codeBlockNode.hasEditMode()).toBe(true)
       }),
     )
   })
@@ -245,7 +245,7 @@ describe('CodeBlockNode', function () {
         const { element } = codeBlockNode.exportDOM(editor, exportOptions)
         const el = element as HTMLElement
 
-        await el.outerHTML.should.prettifyTo(html` <pre><code>&lt;script&gt;&lt;/script&gt;</code></pre> `)
+        await expectPrettifiedHtml(el.outerHTML, html` <pre><code>&lt;script&gt;&lt;/script&gt;</code></pre> `)
       }),
     )
 
@@ -256,9 +256,10 @@ describe('CodeBlockNode', function () {
         const { element } = codeBlockNode.exportDOM(editor, exportOptions)
         const el = element as HTMLElement
 
-        await el.outerHTML.should.prettifyTo(html`
-          <pre><code class="language-javascript">&lt;script&gt;&lt;/script&gt;</code></pre>
-        `)
+        await expectPrettifiedHtml(
+          el.outerHTML,
+          html` <pre><code class="language-javascript">&lt;script&gt;&lt;/script&gt;</code></pre> `,
+        )
       }),
     )
 
@@ -269,7 +270,7 @@ describe('CodeBlockNode', function () {
         const { element } = codeBlockNode.exportDOM(editor, exportOptions)
         const el = element as HTMLElement
 
-        el.outerHTML.should.equal('<span></span>')
+        expect(el.outerHTML).toBe('<span></span>')
       }),
     )
 
@@ -280,12 +281,15 @@ describe('CodeBlockNode', function () {
         const { element } = codeBlockNode.exportDOM(editor, exportOptions)
         const el = element as HTMLElement
 
-        await el.outerHTML.should.prettifyTo(html`
-          <figure class="inkling-card inkling-code-card">
-            <pre><code class="language-javascript">&lt;script&gt;&lt;/script&gt;</code></pre>
-            <figcaption>A code block</figcaption>
-          </figure>
-        `)
+        await expectPrettifiedHtml(
+          el.outerHTML,
+          html`
+            <figure class="inkling-card inkling-code-card">
+              <pre><code class="language-javascript">&lt;script&gt;&lt;/script&gt;</code></pre>
+              <figcaption>A code block</figcaption>
+            </figure>
+          `,
+        )
       }),
     )
   })
@@ -301,9 +305,9 @@ describe('CodeBlockNode', function () {
       const { element } = codeBlockNode.exportDOM(editor, exportOptions)
       const html = (element as HTMLElement).outerHTML
 
-      html.should.not.containEql('\u003cscript')
-      html.should.not.containEql('onerror')
-      html.should.containEql('Caption')
+      expect(html).not.toContain('\u003cscript')
+      expect(html).not.toContain('onerror')
+      expect(html).toContain('Caption')
     }),
   )
 
@@ -318,11 +322,11 @@ describe('CodeBlockNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document)
 
-        nodes.length.should.equal(1)
+        expect(nodes.length).toBe(1)
         const codeBlock = unwrapCodeBlock(nodes)
-        codeBlock.code.should.equal('Test code')
-        codeBlock.language.should.equal('')
-        codeBlock.caption.should.equal('')
+        expect(codeBlock.code).toBe('Test code')
+        expect(codeBlock.language).toBe('')
+        expect(codeBlock.caption).toBe('')
       }),
     )
 
@@ -337,10 +341,10 @@ describe('CodeBlockNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as CodeBlockNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].code.should.equal('Test code')
-        nodes[0].caption.should.equal('Test caption')
-        nodes[0].language.should.equal('')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].code).toBe('Test code')
+        expect(nodes[0].caption).toBe('Test caption')
+        expect(nodes[0].language).toBe('')
       }),
     )
 
@@ -355,10 +359,10 @@ describe('CodeBlockNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as CodeBlockNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].code.should.equal('Test code')
-        nodes[0].caption.should.equal('Test caption')
-        nodes[0].language.should.equal('js')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].code).toBe('Test code')
+        expect(nodes[0].caption).toBe('Test caption')
+        expect(nodes[0].language).toBe('js')
       }),
     )
 
@@ -373,10 +377,10 @@ describe('CodeBlockNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document) as CodeBlockNode[]
 
-        nodes.length.should.equal(1)
-        nodes[0].code.should.equal('Test code')
-        nodes[0].caption.should.equal('Test caption')
-        nodes[0].language.should.equal('js')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].code).toBe('Test code')
+        expect(nodes[0].caption).toBe('Test caption')
+        expect(nodes[0].language).toBe('js')
       }),
     )
 
@@ -390,10 +394,10 @@ describe('CodeBlockNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document)
 
-        nodes.length.should.equal(1)
-        nodes[0].getType().should.equal('paragraph')
-        ;(nodes[0] as ElementNode).getChildren().length.should.equal(1)
-        ;(nodes[0] as ElementNode).getChildren()[0].getType().should.equal('linebreak')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].getType()).toBe('paragraph')
+        expect((nodes[0] as ElementNode).getChildren().length).toBe(1)
+        expect((nodes[0] as ElementNode).getChildren()[0].getType()).toBe('linebreak')
       }),
     )
 
@@ -407,11 +411,11 @@ describe('CodeBlockNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document)
 
-        nodes.length.should.equal(1)
+        expect(nodes.length).toBe(1)
         const codeBlock = unwrapCodeBlock(nodes)
-        codeBlock.code.should.equal('Test code')
-        codeBlock.language.should.equal('')
-        codeBlock.caption.should.equal('')
+        expect(codeBlock.code).toBe('Test code')
+        expect(codeBlock.language).toBe('')
+        expect(codeBlock.caption).toBe('')
       }),
     )
 
@@ -425,11 +429,11 @@ describe('CodeBlockNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document)
 
-        nodes.length.should.equal(1)
+        expect(nodes.length).toBe(1)
         const codeBlock = unwrapCodeBlock(nodes)
-        codeBlock.code.should.equal('Test code')
-        codeBlock.language.should.equal('javascript')
-        codeBlock.caption.should.equal('')
+        expect(codeBlock.code).toBe('Test code')
+        expect(codeBlock.language).toBe('javascript')
+        expect(codeBlock.caption).toBe('')
       }),
     )
 
@@ -443,11 +447,11 @@ describe('CodeBlockNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document)
 
-        nodes.length.should.equal(1)
+        expect(nodes.length).toBe(1)
         const codeBlock = unwrapCodeBlock(nodes)
-        codeBlock.code.should.equal('Test code')
-        codeBlock.language.should.equal('ruby')
-        codeBlock.caption.should.equal('')
+        expect(codeBlock.code).toBe('Test code')
+        expect(codeBlock.language).toBe('ruby')
+        expect(codeBlock.caption).toBe('')
       }),
     )
   })
@@ -457,12 +461,12 @@ describe('CodeBlockNode', function () {
       'returns contents',
       editorTest(async function () {
         const node = $createCodeBlockNode()
-        node.getTextContent().should.equal('')
+        expect(node.getTextContent()).toBe('')
 
         node.code = '<script>const test = true;</script>'
         node.caption = 'Test caption'
 
-        node.getTextContent().should.equal('<script>const test = true;</script>\nTest caption\n\n')
+        expect(node.getTextContent()).toBe('<script>const test = true;</script>\nTest caption\n\n')
       }),
     )
   })

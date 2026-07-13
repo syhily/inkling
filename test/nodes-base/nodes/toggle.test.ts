@@ -4,6 +4,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
 import { $getRoot } from 'lexical'
 
+import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { ToggleNode, $createToggleNode, $isToggleNode } from '@/nodes/base/index'
 
@@ -49,7 +50,7 @@ describe('ToggleNode', function () {
     'matches node with $isToggleNode',
     editorTest(async function () {
       const toggleNode = $createToggleNode(dataset)
-      $isToggleNode(toggleNode).should.be.true()
+      expect($isToggleNode(toggleNode)).toBe(true)
     }),
   )
 
@@ -59,8 +60,8 @@ describe('ToggleNode', function () {
       editorTest(async function () {
         const toggleNode = $createToggleNode(dataset)
 
-        toggleNode.heading.should.equal(dataset.heading)
-        toggleNode.content.should.equal(dataset.content)
+        expect(toggleNode.heading).toBe(dataset.heading)
+        expect(toggleNode.content).toBe(dataset.content)
       }),
     )
 
@@ -69,13 +70,13 @@ describe('ToggleNode', function () {
       editorTest(async function () {
         const toggleNode = $createToggleNode()
 
-        toggleNode.heading.should.equal('')
+        expect(toggleNode.heading).toBe('')
         toggleNode.heading = 'Heading'
-        toggleNode.heading.should.equal('Heading')
+        expect(toggleNode.heading).toBe('Heading')
 
-        toggleNode.content.should.equal('')
+        expect(toggleNode.content).toBe('')
         toggleNode.content = 'Content'
-        toggleNode.content.should.equal('Content')
+        expect(toggleNode.content).toBe('Content')
       }),
     )
 
@@ -85,7 +86,7 @@ describe('ToggleNode', function () {
         const toggleNode = $createToggleNode(dataset)
         const toggleNodeDataset = toggleNode.getDataset()
 
-        toggleNodeDataset.should.deepEqual({
+        expect(toggleNodeDataset).toEqual({
           ...dataset,
         })
       }),
@@ -96,7 +97,7 @@ describe('ToggleNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        ToggleNode.getType().should.equal('toggle')
+        expect(ToggleNode.getType()).toBe('toggle')
       }),
     )
   })
@@ -110,7 +111,7 @@ describe('ToggleNode', function () {
         const clone = ToggleNode.clone(toggleNode) as ToggleNode
         const cloneDataset = clone.getDataset()
 
-        cloneDataset.should.deepEqual({ ...toggleNodeDataset })
+        expect(cloneDataset).toEqual({ ...toggleNodeDataset })
       }),
     )
   })
@@ -119,7 +120,7 @@ describe('ToggleNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        ToggleNode.urlTransformMap.should.deepEqual({
+        expect(ToggleNode.urlTransformMap).toEqual({
           heading: 'html',
           content: 'html',
         })
@@ -132,7 +133,7 @@ describe('ToggleNode', function () {
       'returns true',
       editorTest(async function () {
         const toggleNode = $createToggleNode(dataset)
-        toggleNode.hasEditMode().should.be.true()
+        expect(toggleNode.hasEditMode()).toBe(true)
       }),
     )
   })
@@ -144,7 +145,7 @@ describe('ToggleNode', function () {
         const toggleNode = $createToggleNode(dataset)
         const json = toggleNode.exportJSON()
 
-        json.should.deepEqual({
+        expect(json).toEqual({
           type: 'toggle',
           version: 1,
           heading: dataset.heading,
@@ -180,8 +181,8 @@ describe('ToggleNode', function () {
           try {
             const [toggleNode] = $getRoot().getChildren() as ToggleNode[]
 
-            toggleNode.heading.should.equal(dataset.heading)
-            toggleNode.content.should.equal(dataset.content)
+            expect(toggleNode.heading).toBe(dataset.heading)
+            expect(toggleNode.content).toBe(dataset.content)
 
             resolve()
           } catch (e) {
@@ -203,19 +204,22 @@ describe('ToggleNode', function () {
         const result = toggleNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
-        await element.outerHTML.should.prettifyTo(html`
-          <div class="inkling-card inkling-toggle-card" data-inkling-toggle-state="close">
-            <div class="inkling-toggle-heading">
-              <h4 class="inkling-toggle-heading-text">Heading</h4>
-              <button class="inkling-toggle-card-icon" aria-label="Expand toggle to read content">
-                <svg id="Regular" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path class="cls-1" d="M23.25,7.311,12.53,18.03a.749.749,0,0,1-1.06,0L.75,7.311"></path>
-                </svg>
-              </button>
+        await expectPrettifiedHtml(
+          element.outerHTML,
+          html`
+            <div class="inkling-card inkling-toggle-card" data-inkling-toggle-state="close">
+              <div class="inkling-toggle-heading">
+                <h4 class="inkling-toggle-heading-text">Heading</h4>
+                <button class="inkling-toggle-card-icon" aria-label="Expand toggle to read content">
+                  <svg id="Regular" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path class="cls-1" d="M23.25,7.311,12.53,18.03a.749.749,0,0,1-1.06,0L.75,7.311"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="inkling-toggle-content">Content</div>
             </div>
-            <div class="inkling-toggle-content">Content</div>
-          </div>
-        `)
+          `,
+        )
       }),
     )
 
@@ -235,15 +239,18 @@ describe('ToggleNode', function () {
         const result = toggleNode.exportDOM(editor, { ...exportOptions, ...options })
         const element = result.element as HTMLElement
 
-        await element.outerHTML.should.prettifyTo(html`
-          <div
-            style="background: transparent;
+        await expectPrettifiedHtml(
+          element.outerHTML,
+          html`
+            <div
+              style="background: transparent;
                 border: 1px solid rgba(124, 139, 154, 0.25); border-radius: 4px; padding: 20px; margin-bottom: 1.5em;"
-          >
-            <h4 style="font-size: 1.375rem; font-weight: 600; margin-bottom: 8px; margin-top:0px">Heading</h4>
-            <div style="font-size: 1rem; line-height: 1.5; margin-bottom: -1.5em;">Content</div>
-          </div>
-        `)
+            >
+              <h4 style="font-size: 1.375rem; font-weight: 600; margin-bottom: 8px; margin-top:0px">Heading</h4>
+              <div style="font-size: 1rem; line-height: 1.5; margin-bottom: -1.5em;">Content</div>
+            </div>
+          `,
+        )
       }),
     )
 
@@ -266,20 +273,23 @@ describe('ToggleNode', function () {
         const result = toggleNode.exportDOM(editor, { ...exportOptions, ...options })
         const element = result.element as HTMLElement
 
-        await element.outerHTML.should.prettifyTo(html`
-          <table cellspacing="0" cellpadding="0" border="0" width="100%" class="inkling-toggle-card">
-            <tbody>
-              <tr>
-                <td class="inkling-toggle-heading">
-                  <h4>Heading</h4>
-                </td>
-              </tr>
-              <tr>
-                <td class="inkling-toggle-content">Content</td>
-              </tr>
-            </tbody>
-          </table>
-        `)
+        await expectPrettifiedHtml(
+          element.outerHTML,
+          html`
+            <table cellspacing="0" cellpadding="0" border="0" width="100%" class="inkling-toggle-card">
+              <tbody>
+                <tr>
+                  <td class="inkling-toggle-heading">
+                    <h4>Heading</h4>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="inkling-toggle-content">Content</td>
+                </tr>
+              </tbody>
+            </table>
+          `,
+        )
       }),
     )
 
@@ -294,7 +304,7 @@ describe('ToggleNode', function () {
         const toggleNode = $createToggleNode(payload)
         const result = toggleNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
-        element.outerHTML.should.containEql('<h4 class="inkling-toggle-heading-text">Heading</h4>')
+        expect(element.outerHTML).toContain('<h4 class="inkling-toggle-heading-text">Heading</h4>')
       }),
     )
 
@@ -309,7 +319,7 @@ describe('ToggleNode', function () {
         const toggleNode = $createToggleNode(payload)
         const result = toggleNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
-        element.outerHTML.should.containEql('<div class="inkling-toggle-content">Content</div>')
+        expect(element.outerHTML).toContain('<div class="inkling-toggle-content">Content</div>')
       }),
     )
   })
@@ -332,9 +342,9 @@ describe('ToggleNode', function () {
           </div>
         `)
         const nodes = $generateNodesFromDOM(editor, document) as ToggleNode[]
-        nodes.length.should.equal(1)
-        nodes[0].heading.should.equal('Heading')
-        nodes[0].content.should.equal('Content')
+        expect(nodes.length).toBe(1)
+        expect(nodes[0].heading).toBe('Heading')
+        expect(nodes[0].content).toBe('Content')
       }),
     )
   })
@@ -344,13 +354,13 @@ describe('ToggleNode', function () {
       'returns contents',
       editorTest(async function () {
         const node = $createToggleNode()
-        node.getTextContent().should.equal('')
+        expect(node.getTextContent()).toBe('')
 
         node.heading = 'header'
-        node.getTextContent().should.equal('header\n\n')
+        expect(node.getTextContent()).toBe('header\n\n')
 
         node.content = 'content'
-        node.getTextContent().should.equal('header\ncontent\n\n')
+        expect(node.getTextContent()).toBe('header\ncontent\n\n')
       }),
     )
   })

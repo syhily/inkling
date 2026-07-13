@@ -1,7 +1,6 @@
 // Switch these lines once there are useful utils
 // import testUtils from './utils/index';
 import { JSDOM } from 'jsdom'
-import should from 'should'
 
 import { cleanBasicHtml } from '@/html/clean-basic-html/clean-basic-html'
 
@@ -19,10 +18,10 @@ describe('cleanBasicHtml', function () {
   // Skipped: in jsdom environment `document` is globally available so
   // cleanBasicHtml() no longer throws when createDocument is omitted
   it.skip('errors in Node.js env without a `createDocument` option', function () {
-    should(function () {
+    expect(function () {
       cleanBasicHtml('Test')
-    }).throw(
-      'cleanBasicHtml() must be passed a `createDocument` function as an option when used in a non-browser environment',
+    }).toThrow(
+      /^cleanBasicHtml\(\) must be passed a `createDocument` function as an option when used in a non-browser environment$/,
     )
   })
 
@@ -30,49 +29,49 @@ describe('cleanBasicHtml', function () {
     const html = '  <br>&nbsp;&nbsp; &nbsp;'
     const result = cleanBasicHtml(html, options)
 
-    result.should.equal('')
+    expect(result).toBe('')
   })
 
   it('trims trailing non-breaking space entities', function () {
     const html = 'Hello&nbsp;'
     const result = cleanBasicHtml(html, options)
 
-    result.should.equal('Hello')
+    expect(result).toBe('Hello')
   })
 
   it('keeps whitespace between text', function () {
     const html = '&nbsp; <br>Testing &nbsp;Significant Whitespace<br />&nbsp;'
     const result = cleanBasicHtml(html, options)
 
-    result.should.equal('Testing Significant Whitespace')
+    expect(result).toBe('Testing Significant Whitespace')
   })
 
   it('removes DOM elements with blank text content', function () {
     const html = '&nbsp; <p> &nbsp;&nbsp;<br></p>'
     const result = cleanBasicHtml(html, options)
 
-    result.should.equal('')
+    expect(result).toBe('')
   })
 
   it('keeps elements with text content', function () {
     const html = ' &nbsp;<strong> Test&nbsp;</strong> '
     const result = cleanBasicHtml(html, options)
 
-    result.should.equal('<strong> Test&nbsp;</strong>')
+    expect(result).toBe('<strong> Test&nbsp;</strong>')
   })
 
   it('can extract first element content', function () {
     const html = '<p><span>Headline</span> <em>italic</em></p>'
     const result = cleanBasicHtml(html, { ...options, firstChildInnerContent: true })
 
-    result.should.equal('<span>Headline</span> <em>italic</em>')
+    expect(result).toBe('<span>Headline</span> <em>italic</em>')
   })
 
   it('return empty string if firstChildInnerContent option enabled and there is no first child element ', function () {
     const html = ''
     const result = cleanBasicHtml(html, { ...options, firstChildInnerContent: true })
 
-    result.should.equal('')
+    expect(result).toBe('')
   })
 
   describe('options.removeCodeWrappers', function () {
@@ -80,21 +79,21 @@ describe('cleanBasicHtml', function () {
       const html = '<code><span>{foo}</span></code>'
       const result = cleanBasicHtml(html, { ...options, removeCodeWrappers: true })
 
-      result.should.equal('<span>{foo}</span>')
+      expect(result).toBe('<span>{foo}</span>')
     })
 
     it('removes any <code> wrappers around replacement strings <span>{foo}</span>', function () {
       const html = '<code><span>{foo}</span></code>'
       const result = cleanBasicHtml(html, { ...options, removeCodeWrappers: true })
 
-      result.should.equal('<span>{foo}</span>')
+      expect(result).toBe('<span>{foo}</span>')
     })
 
     it('removes any <code> wrappers around replacement strings {foo, "default"}', function () {
       const html = '<p>Hey <code>{first_name, "there"}</code>,</p>'
       const result = cleanBasicHtml(html, { ...options, removeCodeWrappers: true })
 
-      result.should.equal('<p>Hey {first_name, "there"},</p>')
+      expect(result).toBe('<p>Hey {first_name, "there"},</p>')
     })
   })
 })

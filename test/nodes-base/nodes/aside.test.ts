@@ -35,7 +35,7 @@ describe('AsideNode', function () {
     'matches node with $isAsideNode',
     editorTest(function () {
       const asideNode = $createAsideNode()
-      $isAsideNode(asideNode).should.be.true()
+      expect($isAsideNode(asideNode)).toBe(true)
     }),
   )
 
@@ -46,8 +46,8 @@ describe('AsideNode', function () {
         const document = createDocument(html` <blockquote class="inkling-blockquote-alt">Hello</blockquote> `)
         const nodes = $generateNodesFromDOM(editor, document)
 
-        nodes.length.should.equal(1)
-        nodes[0].should.be.instanceof(AsideNode)
+        expect(nodes.length).toBe(1)
+        expect(nodes[0]).toBeInstanceOf(AsideNode)
       }),
     )
   })
@@ -59,7 +59,7 @@ describe('AsideNode', function () {
         const asideNode = $createAsideNode()
         const json = asideNode.exportJSON()
 
-        json.should.deepEqual({
+        expect(json).toEqual({
           type: 'aside',
           version: 1,
           children: [],
@@ -95,7 +95,7 @@ describe('AsideNode', function () {
         editor.getEditorState().read(() => {
           try {
             const [asideNode] = $getRoot().getChildren()
-            asideNode.should.be.instanceof(AsideNode)
+            expect(asideNode).toBeInstanceOf(AsideNode)
 
             resolve()
           } catch (e) {
@@ -110,14 +110,14 @@ describe('AsideNode', function () {
       'returns contents',
       editorTest(function () {
         const node = $createAsideNode()
-        node.getTextContent().should.equal('')
+        expect(node.getTextContent()).toBe('')
 
         const paragraph = $createParagraphNode()
         paragraph.append($createTextNode('Hello'))
 
         node.append(paragraph)
 
-        node.getTextContent().should.equal('Hello')
+        expect(node.getTextContent()).toBe('Hello')
       }),
     )
   })

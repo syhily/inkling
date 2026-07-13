@@ -32,7 +32,7 @@ describe('ZWNJNode', function () {
     'matches node with $isZWNJNode',
     editorTest(function () {
       const zwnjNode = $createZWNJNode()
-      $isZWNJNode(zwnjNode).should.be.true()
+      expect($isZWNJNode(zwnjNode)).toBe(true)
     }),
   )
 })

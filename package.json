@@ -140,7 +140,6 @@
     "react-dom": "19.2.7",
     "react-router-dom": "7.18.1",
     "react-slider": "2.0.6",
-    "should": "13.2.3",
     "storybook": "10.4.6",
     "stylelint": "17.14.0",
     "tailwindcss": "4.3.2",

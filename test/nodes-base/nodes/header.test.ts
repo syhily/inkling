@@ -1,4 +1,3 @@
-import 'should'
 import type { LexicalEditor } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
@@ -66,7 +65,7 @@ describe('HeaderNode', function () {
       'matches node with $isHeaderNode',
       editorTest(function () {
         const headerNode = $createHeaderNode(dataset)
-        $isHeaderNode(headerNode).should.be.true()
+        expect($isHeaderNode(headerNode)).toBe(true)
       }),
     )
 
@@ -75,21 +74,21 @@ describe('HeaderNode', function () {
         'has getters for all properties',
         editorTest(function () {
           const node = $createHeaderNode(dataset)
-          node.version.should.equal(2)
-          node.backgroundImageSrc.should.equal('https://example.com/image.jpg')
-          node.buttonEnabled.should.be.true()
-          node.buttonText.should.equal('The button')
-          node.buttonUrl.should.equal('https://example.com/')
-          node.header.should.equal('This is the header card')
-          node.subheader.should.equal('hello')
-          node.alignment.should.equal('center')
-          node.backgroundColor.should.equal('#F0F0F0')
-          node.backgroundSize.should.equal('cover')
-          node.textColor.should.equal('#000000')
-          node.buttonColor.should.equal('#000000')
-          node.buttonTextColor.should.equal('#FFFFFF')
-          node.layout.should.equal('full')
-          node.swapped.should.be.false()
+          expect(node.version).toBe(2)
+          expect(node.backgroundImageSrc).toBe('https://example.com/image.jpg')
+          expect(node.buttonEnabled).toBe(true)
+          expect(node.buttonText).toBe('The button')
+          expect(node.buttonUrl).toBe('https://example.com/')
+          expect(node.header).toBe('This is the header card')
+          expect(node.subheader).toBe('hello')
+          expect(node.alignment).toBe('center')
+          expect(node.backgroundColor).toBe('#F0F0F0')
+          expect(node.backgroundSize).toBe('cover')
+          expect(node.textColor).toBe('#000000')
+          expect(node.buttonColor).toBe('#000000')
+          expect(node.buttonTextColor).toBe('#FFFFFF')
+          expect(node.layout).toBe('full')
+          expect(node.swapped).toBe(false)
         }),
       )
 
@@ -112,20 +111,20 @@ describe('HeaderNode', function () {
           node.layout = 'full'
           node.swapped = true
 
-          node.backgroundImageSrc.should.equal('https://example.com/image2.jpg')
-          node.buttonEnabled.should.be.false()
-          node.buttonText.should.equal('The button 2')
-          node.buttonUrl.should.equal('https://example.com/2')
-          node.header.should.equal('This is the header card 2')
-          node.subheader.should.equal('hello 2')
-          node.alignment.should.equal('left')
-          node.backgroundColor.should.equal('#F0F0F1')
-          node.backgroundSize.should.equal('contain')
-          node.textColor.should.equal('#000001')
-          node.buttonColor.should.equal('#000001')
-          node.buttonTextColor.should.equal('#FFFFFF')
-          node.layout.should.equal('full')
-          node.swapped.should.be.true()
+          expect(node.backgroundImageSrc).toBe('https://example.com/image2.jpg')
+          expect(node.buttonEnabled).toBe(false)
+          expect(node.buttonText).toBe('The button 2')
+          expect(node.buttonUrl).toBe('https://example.com/2')
+          expect(node.header).toBe('This is the header card 2')
+          expect(node.subheader).toBe('hello 2')
+          expect(node.alignment).toBe('left')
+          expect(node.backgroundColor).toBe('#F0F0F1')
+          expect(node.backgroundSize).toBe('contain')
+          expect(node.textColor).toBe('#000001')
+          expect(node.buttonColor).toBe('#000001')
+          expect(node.buttonTextColor).toBe('#FFFFFF')
+          expect(node.layout).toBe('full')
+          expect(node.swapped).toBe(true)
         }),
       )
     })
@@ -147,20 +146,20 @@ describe('HeaderNode', function () {
                     </div>`
           const document = createDocument(htmlstring)
           const nodes = $generateNodesFromDOM(editor, document) as HeaderNode[]
-          nodes.length.should.equal(1)
+          expect(nodes.length).toBe(1)
           const node = nodes[0]
-          node.backgroundColor.should.equal('accent')
-          node.buttonColor.should.equal('#abcdef')
-          node.alignment.should.equal('center')
-          node.backgroundImageSrc.should.equal('https://example.com/image.jpg')
-          node.layout.should.equal('split')
-          node.textColor.should.equal('#abcdef')
-          node.header.should.equal('Header')
-          node.subheader.should.equal('Subheader')
-          node.buttonEnabled.should.be.true()
-          node.buttonUrl.should.equal('https://example.com')
-          node.buttonText.should.equal('Button')
-          node.buttonTextColor.should.equal('#abcdef')
+          expect(node.backgroundColor).toBe('accent')
+          expect(node.buttonColor).toBe('#abcdef')
+          expect(node.alignment).toBe('center')
+          expect(node.backgroundImageSrc).toBe('https://example.com/image.jpg')
+          expect(node.layout).toBe('split')
+          expect(node.textColor).toBe('#abcdef')
+          expect(node.header).toBe('Header')
+          expect(node.subheader).toBe('Subheader')
+          expect(node.buttonEnabled).toBe(true)
+          expect(node.buttonUrl).toBe('https://example.com')
+          expect(node.buttonText).toBe('Button')
+          expect(node.buttonTextColor).toBe('#abcdef')
         }),
       )
 
@@ -177,7 +176,7 @@ describe('HeaderNode', function () {
           const document = createDocument(htmlstring)
           const nodes = $generateNodesFromDOM(editor, document) as HeaderNode[]
           const headerNodes = nodes.filter((node) => $isHeaderNode(node))
-          headerNodes.length.should.equal(0)
+          expect(headerNodes.length).toBe(0)
         }),
       )
     })
@@ -187,7 +186,7 @@ describe('HeaderNode', function () {
         'returns correct node type',
         editorTest(function () {
           const node = $createHeaderNode(dataset)
-          node.getType().should.equal('header')
+          expect(node.getType()).toBe('header')
         }),
       )
     })
@@ -200,7 +199,7 @@ describe('HeaderNode', function () {
           const headerNodeDataset = headerNode.getDataset()
           const clone = HeaderNode.clone(headerNode) as HeaderNode
           const cloneDataset = clone.getDataset()
-          cloneDataset.should.deepEqual({ ...headerNodeDataset })
+          expect(cloneDataset).toEqual({ ...headerNodeDataset })
         }),
       )
     })
@@ -209,7 +208,7 @@ describe('HeaderNode', function () {
       it(
         'contains the expected URL mapping',
         editorTest(function () {
-          HeaderNode.urlTransformMap.should.deepEqual({
+          expect(HeaderNode.urlTransformMap).toEqual({
             buttonUrl: 'url',
             backgroundImageSrc: 'url',
             header: 'html',
@@ -224,7 +223,7 @@ describe('HeaderNode', function () {
         'returns true',
         editorTest(function () {
           const headerNode = $createHeaderNode(dataset)
-          headerNode.hasEditMode().should.be.true()
+          expect(headerNode.hasEditMode()).toBe(true)
         }),
       )
     })
@@ -252,7 +251,7 @@ describe('HeaderNode', function () {
                 </div>
                 `
           const cleanedExpectedHtml = expectedHtml.replace(/\s/g, '')
-          renderedHtml.should.equal(cleanedExpectedHtml)
+          expect(renderedHtml).toBe(cleanedExpectedHtml)
         }),
       )
 
@@ -265,10 +264,11 @@ describe('HeaderNode', function () {
           node.buttonEnabled = false
           const { element } = node.exportDOM(editor, exportOptions)
           // v2 renderer has no empty check — it always returns a card element
-          should.exist(element)
-          should.not.exist((element as HTMLElement).querySelector('.inkling-header-card-heading'))
-          should.not.exist((element as HTMLElement).querySelector('.inkling-header-card-subheading'))
-          should.not.exist((element as HTMLElement).querySelector('.inkling-header-card-button'))
+          expect(element).toBeDefined()
+          expect(element).not.toBeNull()
+          expect((element as HTMLElement).querySelector('.inkling-header-card-heading') ?? null).toBeNull()
+          expect((element as HTMLElement).querySelector('.inkling-header-card-subheading') ?? null).toBeNull()
+          expect((element as HTMLElement).querySelector('.inkling-header-card-button') ?? null).toBeNull()
         }),
       )
 
@@ -302,7 +302,7 @@ describe('HeaderNode', function () {
                 `
 
           const cleanedExpectedHtml = expectedHtml.replace(/\s/g, '')
-          renderedHtml.should.equal(cleanedExpectedHtml)
+          expect(renderedHtml).toBe(cleanedExpectedHtml)
         }),
       )
 
@@ -339,7 +339,7 @@ describe('HeaderNode', function () {
                 `
 
           const cleanedExpectedHtml = expectedHtml.replace(/\s/g, '')
-          renderedHtml.should.equal(cleanedExpectedHtml)
+          expect(renderedHtml).toBe(cleanedExpectedHtml)
         }),
       )
 
@@ -367,12 +367,13 @@ describe('HeaderNode', function () {
           const { element } = node.exportDOM(editor, exportOptions)
           const html = (element as HTMLElement).outerHTML
 
-          html.should.containEql('&lt;script&gt;alert(1)&lt;/script&gt;')
-          html.should.containEql('&lt;img src=x onerror=alert(1)&gt;')
-          html.should.containEql('&lt;em&gt;Button&lt;/em&gt;')
-          html.should.not.containEql('<script>alert(1)</script>')
-          html.should.not.containEql('javascript:alert(1)')
-          should.exist((element as HTMLElement).querySelector('.inkling-header-card-button'))
+          expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
+          expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;')
+          expect(html).toContain('&lt;em&gt;Button&lt;/em&gt;')
+          expect(html).not.toContain('<script>alert(1)</script>')
+          expect(html).not.toContain('javascript:alert(1)')
+          expect((element as HTMLElement).querySelector('.inkling-header-card-button')).toBeDefined()
+          expect((element as HTMLElement).querySelector('.inkling-header-card-button')).not.toBeNull()
         }),
       )
 
@@ -387,12 +388,13 @@ describe('HeaderNode', function () {
           const el = element as HTMLElement
           const html = el.outerHTML
 
-          html.should.not.containEql('onerror')
-          html.should.not.containEql('<img src=x')
+          expect(html).not.toContain('onerror')
+          expect(html).not.toContain('<img src=x')
           const heading = el.querySelector('.inkling-header-card-heading') as HTMLElement
-          should.exist(heading)
-          heading.getAttribute('data-text-color')!.should.equal('#000000')
-          heading.getAttribute('style')!.should.containEql('color: #000000')
+          expect(heading).toBeDefined()
+          expect(heading).not.toBeNull()
+          expect(heading.getAttribute('data-text-color')!).toBe('#000000')
+          expect(heading.getAttribute('style')!).toContain('color: #000000')
         }),
       )
 
@@ -407,9 +409,9 @@ describe('HeaderNode', function () {
           const el = element as HTMLElement
           const html = el.outerHTML
 
-          html.should.not.containEql('evil.example')
-          html.should.not.containEql('url(')
-          el.getAttribute('data-background-color')!.should.equal('transparent')
+          expect(html).not.toContain('evil.example')
+          expect(html).not.toContain('url(')
+          expect(el.getAttribute('data-background-color')!).toBe('transparent')
         }),
       )
 
@@ -424,11 +426,12 @@ describe('HeaderNode', function () {
           const el = element as HTMLElement
           const html = el.outerHTML
 
-          html.should.not.containEql('expression')
+          expect(html).not.toContain('expression')
           const button = el.querySelector('.inkling-header-card-button') as HTMLElement
-          should.exist(button)
-          button.getAttribute('data-button-color')!.should.equal('transparent')
-          button.getAttribute('style')!.should.containEql('background-color: transparent')
+          expect(button).toBeDefined()
+          expect(button).not.toBeNull()
+          expect(button.getAttribute('data-button-color')!).toBe('transparent')
+          expect(button.getAttribute('style')!).toContain('background-color: transparent')
         }),
       )
 
@@ -446,12 +449,12 @@ describe('HeaderNode', function () {
             const { element } = node.exportDOM(editor, exportOptions)
             const el = element as HTMLElement
 
-            el.getAttribute('data-background-color')!.should.equal(color)
+            expect(el.getAttribute('data-background-color')!).toBe(color)
             const heading = el.querySelector('.inkling-header-card-heading') as HTMLElement
-            heading.getAttribute('data-text-color')!.should.equal(color)
+            expect(heading.getAttribute('data-text-color')!).toBe(color)
             const button = el.querySelector('.inkling-header-card-button') as HTMLElement
-            button.getAttribute('data-button-color')!.should.equal(color)
-            button.getAttribute('data-button-text-color')!.should.equal(color)
+            expect(button.getAttribute('data-button-color')!).toBe(color)
+            expect(button.getAttribute('data-button-text-color')!).toBe(color)
           }
         }),
       )
@@ -467,13 +470,14 @@ describe('HeaderNode', function () {
           const { element } = node.exportDOM(editor, exportOptions)
           const el = element as HTMLElement
 
-          el.getAttribute('data-background-color')!.should.equal('accent')
-          el.className.should.containEql('inkling-style-accent')
+          expect(el.getAttribute('data-background-color')!).toBe('accent')
+          expect(el.className).toContain('inkling-style-accent')
           const button = el.querySelector('.inkling-header-card-button') as HTMLElement
-          should.exist(button)
-          button.getAttribute('data-button-color')!.should.equal('accent')
-          button.className.should.containEql('inkling-style-accent')
-          button.getAttribute('style')!.should.not.containEql('background-color')
+          expect(button).toBeDefined()
+          expect(button).not.toBeNull()
+          expect(button.getAttribute('data-button-color')!).toBe('accent')
+          expect(button.className).toContain('inkling-style-accent')
+          expect(button.getAttribute('style')!).not.toContain('background-color')
         }),
       )
 
@@ -489,11 +493,11 @@ describe('HeaderNode', function () {
           const { element } = node.exportDOM(editor, { ...exportOptions, target: 'email' })
           const html = (element as HTMLElement).outerHTML
 
-          html.should.not.containEql('onerror')
-          html.should.not.containEql('<img src=x')
-          html.should.not.containEql('evil.example')
-          html.should.containEql('color:#000000')
-          html.should.containEql('background-color: transparent')
+          expect(html).not.toContain('onerror')
+          expect(html).not.toContain('<img src=x')
+          expect(html).not.toContain('evil.example')
+          expect(html).toContain('color:#000000')
+          expect(html).toContain('background-color: transparent')
         }),
       )
     })

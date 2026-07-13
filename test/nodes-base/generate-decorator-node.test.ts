@@ -1,4 +1,3 @@
-import 'should'
 import type { LexicalEditor, LexicalNodeConfig } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
@@ -94,8 +93,8 @@ describe('Utils: generateDecoratorNode', function () {
         const node = $createNodeWithRender()
         const result = node.exportDOM(editor)
 
-        result.type.should.equal('inner')
-        expectHtmlElement(result).outerHTML.should.equal('<div>default render</div>')
+        expect(result.type).toBe('inner')
+        expect(expectHtmlElement(result).outerHTML).toBe('<div>default render</div>')
       }),
     )
 
@@ -118,8 +117,8 @@ describe('Utils: generateDecoratorNode', function () {
           const node = new NodeClass() as unknown as GeneratedNodeInstance
           const result = node.exportDOM(testEditor)
 
-          result.type.should.equal('inner')
-          expectHtmlElement(result).outerHTML.should.equal('<div>version 2</div>')
+          expect(result.type).toBe('inner')
+          expect(expectHtmlElement(result).outerHTML).toBe('<div>version 2</div>')
         },
       ),
     )
@@ -143,8 +142,8 @@ describe('Utils: generateDecoratorNode', function () {
           const node = new NodeClass({ version: 2 }) as unknown as GeneratedNodeInstance
           const result = node.exportDOM(testEditor)
 
-          result.type.should.equal('inner')
-          expectHtmlElement(result).outerHTML.should.equal('<div>version 2</div>')
+          expect(result.type).toBe('inner')
+          expect(expectHtmlElement(result).outerHTML).toBe('<div>version 2</div>')
         },
       ),
     )
@@ -161,8 +160,8 @@ describe('Utils: generateDecoratorNode', function () {
         function (testEditor, [NodeWithoutRender]) {
           const NodeClass = NodeWithoutRender as GeneratedNodeClass
           const node = new NodeClass() as unknown as GeneratedNodeInstance
-          ;(() => node.exportDOM(testEditor)).should.throw(
-            '[generateDecoratorNode] no-render-test: "defaultRenderFn" is required',
+          expect(() => node.exportDOM(testEditor)).toThrow(
+            /^\[generateDecoratorNode\] no-render-test: "defaultRenderFn" is required$/,
           )
         },
       ),
@@ -184,8 +183,8 @@ describe('Utils: generateDecoratorNode', function () {
         function (testEditor, [VersionedNode]) {
           const NodeClass = VersionedNode as GeneratedNodeClass
           const node = new NodeClass() as unknown as GeneratedNodeInstance
-          ;(() => node.exportDOM(testEditor)).should.throw(
-            '[generateDecoratorNode] versioned-render-test: "defaultRenderFn" for version 2 is required',
+          expect(() => node.exportDOM(testEditor)).toThrow(
+            /^\[generateDecoratorNode\] versioned-render-test: "defaultRenderFn" for version 2 is required$/,
           )
         },
       ),
@@ -208,8 +207,8 @@ describe('Utils: generateDecoratorNode', function () {
             },
           })
 
-          result.type.should.equal('inner')
-          expectHtmlElement(result).outerHTML.should.equal('<span>custom render</span>')
+          expect(result.type).toBe('inner')
+          expect(expectHtmlElement(result).outerHTML).toBe('<span>custom render</span>')
         }),
       )
     })
@@ -232,7 +231,7 @@ describe('Utils: generateDecoratorNode', function () {
           const NodeClass = VersionedNode as GeneratedNodeClass
           const node = new NodeClass({ version: 2 }) as unknown as GeneratedNodeInstance
 
-          ;(() =>
+          expect(() =>
             node.exportDOM(testEditor, {
               feature: {
                 emailCustomizationAlpha: true,
@@ -242,8 +241,9 @@ describe('Utils: generateDecoratorNode', function () {
                   1: () => createRenderResult('div', 'version 1'),
                 },
               },
-            })).should.throw(
-            "[generateDecoratorNode] versioned-render-test: options.nodeRenderers['versioned-render-test'] for version 2 is required",
+            }),
+          ).toThrow(
+            /^\[generateDecoratorNode\] versioned-render-test: options\.nodeRenderers\['versioned-render-test'\] for version 2 is required$/,
           )
         },
       ),
@@ -275,10 +275,10 @@ describe('Utils: generateDecoratorNode', function () {
       editorTest(function () {
         const node = $createFalsyAwareNode({ count: 0, label: '' })
 
-        node.getDataset().count!.should.equal(0)
-        node.getDataset().label!.should.equal('')
-        node.exportJSON().count!.should.equal(0)
-        node.exportJSON().label!.should.equal('')
+        expect(node.getDataset().count!).toBe(0)
+        expect(node.getDataset().label!).toBe('')
+        expect(node.exportJSON().count!).toBe(0)
+        expect(node.exportJSON().label!).toBe('')
       }),
     )
   })
@@ -306,9 +306,9 @@ describe('Utils: generateDecoratorNode', function () {
       editorTest(function () {
         const node = $createNodeWithVisibility()
 
-        node.visibility.should.deepEqual(defaultVisibility, 'node.visibility')
-        node.getDataset().visibility!.should.deepEqual(defaultVisibility, 'node.getDataset().visibility')
-        node.exportJSON().visibility!.should.deepEqual(defaultVisibility, 'node.exportJSON().visibility')
+        expect(node.visibility, 'node.visibility').toEqual(defaultVisibility)
+        expect(node.getDataset().visibility!, 'node.getDataset().visibility').toEqual(defaultVisibility)
+        expect(node.exportJSON().visibility!, 'node.exportJSON().visibility').toEqual(defaultVisibility)
       }),
     )
 
@@ -329,9 +329,9 @@ describe('Utils: generateDecoratorNode', function () {
 
         node.visibility = newVisibility
 
-        node.visibility.should.deepEqual(newVisibility, 'node.visibility')
-        node.getDataset().visibility!.should.deepEqual(newVisibility, 'node.getDataset().visibility')
-        node.exportJSON().visibility!.should.deepEqual(newVisibility, 'node.exportJSON().visibility')
+        expect(node.visibility, 'node.visibility').toEqual(newVisibility)
+        expect(node.getDataset().visibility!, 'node.getDataset().visibility').toEqual(newVisibility)
+        expect(node.exportJSON().visibility!, 'node.exportJSON().visibility').toEqual(newVisibility)
       }),
     )
 
@@ -344,7 +344,7 @@ describe('Utils: generateDecoratorNode', function () {
         // that the default can't be accidentally changed by reference
         ;(node.visibility as { web: { nonMember: boolean } }).web.nonMember = false
 
-        NodeWithVisibility.getPropertyDefaults().visibility!.should.deepEqual(defaultVisibility)
+        expect(NodeWithVisibility.getPropertyDefaults().visibility!).toEqual(defaultVisibility)
       }),
     )
 
@@ -362,7 +362,7 @@ describe('Utils: generateDecoratorNode', function () {
         }) as unknown as GeneratedNodeInstance
 
         // old values are kept, new values are added
-        node.visibility.should.deepEqual({
+        expect(node.visibility).toEqual({
           showOnWeb: false,
           showOnEmail: true,
           segment: 'status:free',
@@ -392,7 +392,7 @@ describe('Utils: generateDecoratorNode', function () {
           },
         })
 
-        node.visibility.should.deepEqual({
+        expect(node.visibility).toEqual({
           web: {
             nonMember: false,
             memberSegment: 'status:free',
