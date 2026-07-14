@@ -55,7 +55,7 @@ Repo quick reference (verification gates used by every plan):
 | 027  | Fix the packed ESM/CommonJS runtime contract                      | P1       | L      | —                                | DONE (`7d3eb96`) |
 | 028  | Publish bundled TypeScript declaration files                      | P1       | M      | 025, 026, 027                    | TODO             |
 | 029  | Align HTML importer/renderer default node sets                    | P2       | M      | —                                | DONE (`e201d66`) |
-| 030  | Validate every exported media URL                                 | P1       | M      | —                                | TODO             |
+| 030  | Validate every exported media URL                                 | P1       | M      | —                                | DONE (`66a31dd`) |
 | 031  | Centralize remaining Lexical private-field access                 | P2       | M      | —                                | TODO             |
 | 032  | Restore semantic/scoped GIF keyboard interaction                  | P2       | M      | —                                | TODO             |
 | 033  | Cancel settings-panel resize work on cleanup                      | P2       | S      | —                                | TODO             |
