@@ -53,7 +53,8 @@
     "test:slowmo": "TIMEOUT=100000 PLAYWRIGHT_SLOWMO=100 pnpm test:e2e:headed",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:package": "node scripts/verify-packed-package.mjs"
   },
   "dependencies": {
     "clsx": "2.1.1",
