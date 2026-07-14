@@ -53,3 +53,25 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm test:e2e
+
+  # Packaging gate (plan 027): the packed tarball must load with only the
+  # react/react-dom peers installed, in both ESM and CJS consumers.
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - run: pnpm verify:package

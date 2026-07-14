@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* oxlint-disable no-console -- CLI script: stdout is its output channel */
 // Packed-package verifier: packs @inkling/editor into a temp dir, installs the
 // tarball with ONLY the react/react-dom peers, and exercises both published
 // entry conditions (ESM `import` and CJS `require`) from throwaway consumers.
@@ -52,13 +53,25 @@ function run(label, command, args, options = {}) {
 }
 
 // Minimal DOM shim: the bundles inject their CSS at module evaluation via
-// document.createElement('style') + document.head.appendChild. This is a
+// document.createElement('style') + document.head.appendChild, and CodeMirror
+// sniffs document.documentElement.style at import time. This is a
 // module-resolution harness, not SSR support.
 const DOM_SHIM = `
-const styleElement = () => ({ setAttribute() {}, appendChild() {}, style: {} })
+const shimElement = () => ({
+  style: {},
+  parentNode: null,
+  firstChild: null,
+  setAttribute() {},
+  getAttribute() {
+    return null
+  },
+  appendChild() {},
+  insertBefore() {},
+})
 globalThis.document = {
-  createElement: styleElement,
-  head: { appendChild() {} },
+  documentElement: { style: {} },
+  createElement: shimElement,
+  head: { appendChild() {}, insertBefore() {}, firstChild: null },
 }
 `
 
@@ -147,7 +160,10 @@ assertExports(inkling)
 `,
   )
   if (run('install esm consumer', 'pnpm', ['install', '--no-frozen-lockfile'], { cwd: esmDir })) {
-    run('execute esm consumer', NODE, ['check.mjs'], { cwd: esmDir })
+    const output = run('execute esm consumer', NODE, ['check.mjs'], { cwd: esmDir })
+    if (output) {
+      process.stdout.write(output)
+    }
   }
 
   phase('cjs consumer')
@@ -171,7 +187,10 @@ assertExports(inkling)
 `,
   )
   if (run('install cjs consumer', 'pnpm', ['install', '--no-frozen-lockfile'], { cwd: cjsDir })) {
-    run('execute cjs consumer', NODE, ['check.cjs'], { cwd: cjsDir })
+    const output = run('execute cjs consumer', NODE, ['check.cjs'], { cwd: cjsDir })
+    if (output) {
+      process.stdout.write(output)
+    }
   }
 } finally {
   rmSync(tempRoot, { recursive: true, force: true })

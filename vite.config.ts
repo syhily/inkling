@@ -69,7 +69,7 @@ export default defineConfig(({ mode }) => {
         name: pkg.name,
         fileName(format: string) {
           if (format === 'umd') {
-            return `${outputFileName}.umd.js`
+            return `${outputFileName}.umd.cjs`
           }
 
           return `${outputFileName}.js`
@@ -82,48 +82,24 @@ export default defineConfig(({ mode }) => {
         checks: {
           invalidAnnotation: false,
         },
-        external: [
-          /^markdown-it/,
-          /^@uiw\/react-codemirror/,
-          /^@uiw\/codemirror-extensions-basic-setup/,
-          /^@codemirror\//,
-          /^emoji-mart/,
-          /^@emoji-mart\//,
-          'fast-average-color',
-          'yjs',
-          'y-websocket',
-        ],
+        // Dependency policy (plan 027): feature runtimes (markdown-it and
+        // plugins, CodeMirror, emoji-mart, fast-average-color, yjs,
+        // y-websocket) are BUNDLED into the dist artifacts so the packed ESM
+        // and CJS entries load with only React installed — see
+        // scripts/verify-packed-package.mjs, the packed-consumer gate.
+        // react/react-dom are the only true runtime peers and stay external
+        // (including their jsx-runtime/client entry points). Do NOT add
+        // feature packages back to this list without a packed-consumer test.
+        external: [/^react($|\/)/, /^react-dom($|\/)/],
         output: {
           globals: function (id: string) {
-            // Provide explicit global names for optional peer dependencies
-            // that are externalized from the UMD build.
+            // Global names for the externalized React peer dependencies in
+            // the UMD build.
             const globals: Record<string, string> = {
               react: 'React',
               'react/jsx-runtime': 'React',
               'react-dom': 'ReactDOM',
               'react-dom/client': 'ReactDOM',
-              'markdown-it': 'markdownit',
-              'markdown-it-footnote': 'markdownitFootnote',
-              'markdown-it-image-lazy-loading': 'markdownitImageLazyLoading',
-              'markdown-it-lazy-headers': 'markdownitLazyHeaders',
-              'markdown-it-mark': 'markdownitMark',
-              'markdown-it-sub': 'markdownitSub',
-              'markdown-it-sup': 'markdownitSup',
-              'emoji-mart': 'EmojiMart',
-              '@emoji-mart/data': 'EmojiMartData',
-              '@emoji-mart/react': 'EmojiMartReact',
-              'fast-average-color': 'FastAverageColor',
-              '@uiw/react-codemirror': 'UIWReactCodemirror',
-              '@uiw/codemirror-extensions-basic-setup': 'UIWCodemirrorExtensionsBasicSetup',
-              '@codemirror/autocomplete': 'CMAutocomplete',
-              '@codemirror/commands': 'CMCommands',
-              '@codemirror/lang-css': 'CMLangCss',
-              '@codemirror/lang-html': 'CMLangHtml',
-              '@codemirror/lang-javascript': 'CMLangJavascript',
-              '@codemirror/language': 'CMLanguage',
-              '@codemirror/view': 'CMView',
-              yjs: 'Y',
-              'y-websocket': 'yWebsocket',
             }
             if (id in globals) {
               return globals[id]
