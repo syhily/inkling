@@ -7,20 +7,30 @@ Inkling editor, based on the Lexical framework.
 The package is published as **`@inkling/editor`**.
 
 ```bash
-pnpm add @inkling/editor
+pnpm add @inkling/editor react react-dom
 ```
 
-## Installing peer dependencies
+## Peer dependencies and bundled runtimes
 
-The following dependencies are externalized from the bundle and declared as optional peer dependencies. Install the ones that match the features you use:
+`react` and `react-dom` (^19) are the only peer dependencies — install them in your app; they are externalized from the bundle and resolve from the consumer.
 
-- `markdown-it` and its plugins (`markdown-it-footnote`, `markdown-it-image-lazy-loading`, `markdown-it-lazy-headers`, `markdown-it-mark`, `markdown-it-sub`, `markdown-it-sup`) — required by the Markdown card.
-- `@uiw/react-codemirror`, `@uiw/codemirror-extensions-basic-setup`, and `@codemirror/*` packages — required by the CodeBlock and HTML cards.
-- `emoji-mart`, `@emoji-mart/data`, and `@emoji-mart/react` — required by the emoji picker.
-- `fast-average-color` — required by the Header card for automatic color extraction.
-- `yjs` and `y-websocket` — required by the multiplayer/collaboration mode (`enableMultiplayer` on `InklingComposer`).
+All card and collaboration runtimes are **bundled** into the published artifacts, so importing the package root never requires installing card-specific packages:
 
-Because these are optional peer dependencies, the editor will still install without them; only the specific cards that rely on them need the corresponding packages present in your app.
+- `markdown-it` and its plugins (Markdown card)
+- `@uiw/react-codemirror`, `@uiw/codemirror-extensions-basic-setup`, and `@codemirror/*` (CodeBlock and HTML cards)
+- `emoji-mart`, `@emoji-mart/data`, and `@emoji-mart/react` (emoji picker)
+- `fast-average-color` (Header card color extraction)
+- `yjs` and `y-websocket` (multiplayer/collaboration via `enableMultiplayer` on `InklingComposer`)
+
+Optional features remain inactive until used, but no consumer package installation is required to activate them. The tradeoff is a larger distribution bundle; cards are not individually tree-shakeable from the root entry.
+
+## Module formats
+
+The package exposes both ESM and CommonJS entry conditions:
+
+- `import { InklingEditor } from '@inkling/editor'` resolves to `dist/editor.js` (ESM).
+- `require('@inkling/editor')` resolves to `dist/editor.umd.cjs` (CommonJS).
+- `dist/editor.umd.js` remains as a legacy browser/direct-path artifact, byte-equivalent to the `.cjs` file; Node's `require` condition resolves the `.cjs` file.
 
 ## Public API
 
@@ -201,4 +211,4 @@ lets you run and debug individual unit tests/groups directly inside vscode.
 
 ## Deployment
 
-The `@inkling/editor` package is built from this repository. Run `pnpm build` to produce the distributable files (`dist/editor.js` for ESM and `dist/editor.umd.js` for UMD) and `pnpm pack` to preview the package contents.
+The `@inkling/editor` package is built from this repository. Run `pnpm build` to produce the distributable files (`dist/editor.js` for ESM, `dist/editor.umd.cjs` for CommonJS, plus the legacy `dist/editor.umd.js` copy) and `pnpm pack` to preview the package contents. `pnpm verify:package` packs the tarball and loads both entry conditions in clean consumers with only `react`/`react-dom` installed — it is the release gate for the install contract documented above.
