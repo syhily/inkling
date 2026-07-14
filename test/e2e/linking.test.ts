@@ -211,12 +211,17 @@ test.describe('Linking', async () => {
                       bridge.
                     </div>
                     <div>
-                      <img alt="" src="https://inkling.local/favicon.ico" />
+                      <img
+                        alt=""
+                        src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                      />
                       <span>Inkling - The Professional Publishing Platform</span>
                       <span>Author McAuthory</span>
                     </div>
                   </div>
-                  <div><img alt="" src="https://inkling.local/images/meta/inkling.png" /></div>
+                  <div>
+                    <img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
+                  </div>
                   <div></div>
                 </div>
               </div>

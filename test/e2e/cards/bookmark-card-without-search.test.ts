@@ -38,12 +38,12 @@ test.describe('Bookmark card', async () => {
               url: 'https://inkling.local/',
               caption: 'caption here',
               metadata: {
-                icon: 'https://inkling.local/favicon.ico',
+                icon: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
                 title: 'Inkling: The Creator Economy Platform',
                 description: 'lorem ipsum dolor amet lorem ipsum dolor amet',
                 author: 'inkling',
                 publisher: 'Inkling - The Professional Publishing Platform',
-                thumbnail: 'https://inkling.local/images/meta/inkling.png',
+                thumbnail: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
               },
             },
           ],
@@ -69,12 +69,14 @@ test.describe('Bookmark card', async () => {
                   <div>Inkling: The Creator Economy Platform</div>
                   <div>lorem ipsum dolor amet lorem ipsum dolor amet</div>
                   <div>
-                    <img alt="" src="https://inkling.local/favicon.ico" />
+                    <img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
                     <span>Inkling - The Professional Publishing Platform</span>
                     <span>inkling</span>
                   </div>
                 </div>
-                <div><img alt="" src="https://inkling.local/images/meta/inkling.png" /></div>
+                <div>
+                  <img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
+                </div>
                 <div></div>
               </div>
               <figcaption>
@@ -305,12 +307,14 @@ test.describe('Bookmark card', async () => {
                     bridge.
                   </div>
                   <div>
-                    <img alt="" src="https://inkling.local/favicon.ico" />
+                    <img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
                     <span>Inkling - The Professional Publishing Platform</span>
                     <span>Author McAuthory</span>
                   </div>
                 </div>
-                <div><img alt="" src="https://inkling.local/images/meta/inkling.png" /></div>
+                <div>
+                  <img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
+                </div>
                 <div></div>
               </div>
               <figcaption>

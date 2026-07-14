@@ -15,14 +15,14 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 4 : undefined,
+  workers: process.env.CI ? 2 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI
     ? [['github'], ['html']]
     : process.env.PLAYWRIGHT_HTML_REPORT
       ? [['html'], ['list']]
       : [['list']],
-  timeout: 10000,
+  timeout: process.env.CI ? 15000 : 10000,
   expect: {
     timeout: 5000,
   },
