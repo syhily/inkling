@@ -58,7 +58,7 @@ Repo quick reference (verification gates used by every plan):
 | 030  | Validate every exported media URL                                 | P1       | M      | —                                | DONE (`66a31dd`) |
 | 031  | Centralize remaining Lexical private-field access                 | P2       | M      | —                                | DONE (`cd9628c`) |
 | 032  | Restore semantic/scoped GIF keyboard interaction                  | P2       | M      | —                                | DONE (`db419e2`) |
-| 033  | Cancel settings-panel resize work on cleanup                      | P2       | S      | —                                | TODO             |
+| 033  | Cancel settings-panel resize work on cleanup                      | P2       | S      | —                                | DONE (`07a01f5`) |
 | 034  | Stabilize modifier-Backspace beside cards                         | P2       | M      | —                                | TODO             |
 | 035  | Unify typed fill/outline email-button rendering                   | P3       | M      | 030                              | TODO             |
 
