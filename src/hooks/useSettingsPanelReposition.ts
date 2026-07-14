@@ -316,6 +316,7 @@ export default function useSettingsPanelReposition(
     resizeObserver.observe(container)
 
     return () => {
+      panelRepositionDebounced.cancel()
       resizeObserver.disconnect()
     }
   }, [onResize, ref])
