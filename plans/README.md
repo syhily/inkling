@@ -59,8 +59,8 @@ Repo quick reference (verification gates used by every plan):
 | 031  | Centralize remaining Lexical private-field access                 | P2       | M      | —                                | DONE (`cd9628c`) |
 | 032  | Restore semantic/scoped GIF keyboard interaction                  | P2       | M      | —                                | DONE (`db419e2`) |
 | 033  | Cancel settings-panel resize work on cleanup                      | P2       | S      | —                                | DONE (`07a01f5`) |
-| 034  | Stabilize modifier-Backspace beside cards                         | P2       | M      | —                                | TODO             |
-| 035  | Unify typed fill/outline email-button rendering                   | P3       | M      | 030                              | TODO             |
+| 034  | Stabilize modifier-Backspace beside cards                         | P2       | M      | —                                | DONE             |
+| 035  | Unify typed fill/outline email-button rendering                   | P3       | M      | 030                              | DONE             |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale — finding fixed independently or approach
