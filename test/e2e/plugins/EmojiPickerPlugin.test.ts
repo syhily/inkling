@@ -242,7 +242,7 @@ test.describe('Emoji Picker Plugin', async function () {
     // shortcut is dispatched.
     await expect(page.locator('.cm-editor.cm-focused')).toBeVisible()
 
-    await page.keyboard.press(`${ctrlOrCmd(page)}+Enter`)
+    await page.keyboard.press('Escape')
     await page.keyboard.type('enjoy :ta', { delay: 10 })
     await page.keyboard.press('ArrowDown') // make sure we test arrow key use
     await page.keyboard.press('ArrowDown')

@@ -39,6 +39,7 @@ export function KeyboardSelectionWithGroups({
   )
   const [selectedIndex, setSelectedIndex] = React.useState(defaultIndex)
   const [scrollSelectedIntoView, setScrollSelectedIntoView] = React.useState(false)
+  const [hasNavigated, setHasNavigated] = React.useState(false)
 
   // If items change, check if the selectedIndex is still valid, and if not, reset it to 0
   React.useEffect(() => {
@@ -47,9 +48,10 @@ export function KeyboardSelectionWithGroups({
     }
   }, [items, selectedIndex, defaultIndex])
 
-  // If the default index changes, select it again
+  // If the default index changes, select it again and reset navigation state
   React.useEffect(() => {
     setSelectedIndex(defaultIndex)
+    setHasNavigated(false)
   }, [defaultIndex])
 
   const handleKeydown = React.useCallback(
@@ -58,6 +60,7 @@ export function KeyboardSelectionWithGroups({
         // The stop propagation is required for Safari
         event.preventDefault()
         event.stopPropagation()
+        setHasNavigated(true)
         setSelectedIndex((i) => {
           return Math.min(i + 1, items.length - 1)
         })
@@ -67,19 +70,28 @@ export function KeyboardSelectionWithGroups({
         // The stop propagation is required for Safari
         event.preventDefault()
         event.stopPropagation()
+        setHasNavigated(true)
         setSelectedIndex((i) => {
           return Math.max(i - 1, 0)
         })
         setScrollSelectedIntoView(true)
       }
       if (event.key === 'Enter') {
+        // When the link input is focused and the user hasn't explicitly navigated
+        // the suggestion list, let the input's own Enter handler submit the typed
+        // URL instead of selecting the default suggestion.
+        const target = event.target
+        if (!hasNavigated && target instanceof HTMLInputElement && target.dataset.inklingLinkInput !== undefined) {
+          return
+        }
+
         // The stop propagation is required for Safari
         event.preventDefault()
         event.stopPropagation()
         onSelect(items[selectedIndex])
       }
     },
-    [items, selectedIndex, onSelect],
+    [items, selectedIndex, onSelect, hasNavigated],
   )
 
   React.useEffect(() => {

@@ -85,10 +85,34 @@ export function LinkInputWithSearch({ href, update, cancel }: LinkInputWithSearc
 
   const showSuggestions = isSearching || (listOptions && !!listOptions.length)
 
+  const handleContainerKeyDownCapture = React.useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key !== 'Enter') {
+        return
+      }
+
+      const target = event.target
+      if (!(target instanceof HTMLInputElement) || target.dataset.inklingLinkInput === undefined) {
+        return
+      }
+
+      // The suggestion list's global capture listener runs before this handler.
+      // If the user navigated the list it will already have stopped propagation,
+      // so reaching here means no suggestion was selected. Submit the typed URL
+      // directly and stop the event so the input's own bubble handler doesn't
+      // duplicate the update.
+      event.preventDefault()
+      event.stopPropagation()
+      update(target.value || '')
+    },
+    [update],
+  )
+
   return (
     <div
       ref={containerRef}
       className="relative m-0 flex w-full flex-col rounded-lg bg-white p-1 px-2 font-sans text-sm font-medium shadow-md dark:bg-grey-950"
+      onKeyDownCapture={handleContainerKeyDownCapture}
     >
       <Input
         autoFocus={true}

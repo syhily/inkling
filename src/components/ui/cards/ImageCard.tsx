@@ -84,10 +84,15 @@ function PopulatedImageCard({
       ? `upload in progress, ${imageUploader.progress}`
       : ''
 
-  function setRef(element: HTMLElement | null) {
-    imageFileDragHandler?.setRef?.(element)
-    imageCardDragHandler?.setRef?.(element)
-  }
+  const setRef = React.useCallback(
+    (element: HTMLElement | null) => {
+      imageFileDragHandler?.setRef?.(element)
+      imageCardDragHandler?.setRef?.(element)
+    },
+    // setRef dispatchers are stable and should not trigger re-registration
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
 
   return (
     <div ref={setRef} className="not-inkling-prose group/image relative">

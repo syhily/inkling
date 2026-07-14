@@ -5,10 +5,12 @@ import type { EditorState, LexicalEditor } from 'lexical'
 import { css } from '@codemirror/lang-css'
 import { html } from '@codemirror/lang-html'
 import { javascript } from '@codemirror/lang-javascript'
+import { EditorView as CodeMirrorEditorView } from '@codemirror/view'
 import CodeMirror from '@uiw/react-codemirror'
 import React from 'react'
 
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
+import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { darkBaseExtensions, lightBaseExtensions } from '@/utils/codemirror-config'
 
@@ -24,9 +26,10 @@ interface CodeEditorProps {
   language?: string
   updateCode?: (value: string) => void
   updateLanguage?: (value: string) => void
+  onEscape?: () => void
 }
 
-export function CodeEditor({ code, language, updateCode, updateLanguage }: CodeEditorProps) {
+export function CodeEditor({ code, language, updateCode, updateLanguage, onEscape }: CodeEditorProps) {
   const [showLanguage, setShowLanguage] = React.useState(true)
   const { darkMode } = React.useContext(InklingComposerContext)
   const viewRef = React.useRef<EditorView | null>(null)
@@ -89,8 +92,17 @@ export function CodeEditor({ code, language, updateCode, updateLanguage }: CodeE
   const extensions = React.useMemo(() => {
     const base = darkMode ? darkBaseExtensions : lightBaseExtensions
     const highlighter = languageMap.get((language ?? '').toLowerCase().trim())
-    return highlighter ? [...base, highlighter()] : base
-  }, [darkMode, language])
+    const escapeHandler = CodeMirrorEditorView.domEventHandlers({
+      keydown: (event: Event, _view: EditorView) => {
+        if (event instanceof KeyboardEvent && event.key === 'Escape') {
+          onEscape?.()
+          return true
+        }
+        return false
+      },
+    })
+    return highlighter ? [...base, highlighter(), escapeHandler] : [...base, escapeHandler]
+  }, [darkMode, language, onEscape])
 
   return (
     <div className="not-inkling-prose min-h-[170px]">
@@ -160,8 +172,18 @@ export function CodeBlockCard({
   updateCode,
   updateLanguage,
 }: CodeBlockCardProps) {
+  const { setEditing } = React.useContext(CardContext)
+
   if (isEditing) {
-    return <CodeEditor code={code} language={language} updateCode={updateCode} updateLanguage={updateLanguage} />
+    return (
+      <CodeEditor
+        code={code}
+        language={language}
+        onEscape={() => setEditing(false)}
+        updateCode={updateCode}
+        updateLanguage={updateLanguage}
+      />
+    )
   } else {
     return (
       <>
