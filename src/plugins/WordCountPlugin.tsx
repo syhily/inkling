@@ -12,6 +12,7 @@ import React from 'react'
 
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { countWords, throttle } from '@/utils'
+import { getTopLevelEditor, isNestedEditor } from '@/utils/lexical-internals'
 
 interface WordCountState {
   nodeWordCounts: Map<string, number>
@@ -72,22 +73,14 @@ export const WordCountPlugin = ({
 
     // store onChange in context so that we can use it in the InklingNestedComposer
     // to render nested <WordCountPlugin /> without needing to pass onChange down
-    if (!editor._parentEditor) {
+    if (!isNestedEditor(editor)) {
       onWordCountChangeRef.current = onChange
     }
 
     let pendingDirtyKeys = new Set<string>()
 
-    const getTopLevelEditor = (): LexicalEditor => {
-      let topLevelEditor = editor
-      while (topLevelEditor._parentEditor) {
-        topLevelEditor = topLevelEditor._parentEditor
-      }
-      return topLevelEditor
-    }
-
     const emitCount = (count: number) => {
-      const topLevelEditor = getTopLevelEditor()
+      const topLevelEditor = getTopLevelEditor(editor)
       const state = getWordCountState(topLevelEditor)
       if (count !== state.lastWordCount) {
         state.lastWordCount = count
@@ -96,7 +89,7 @@ export const WordCountPlugin = ({
     }
 
     const countEditorWords = () => {
-      const topLevelEditor = getTopLevelEditor()
+      const topLevelEditor = getTopLevelEditor(editor)
       const state = getWordCountState(topLevelEditor)
 
       topLevelEditor.getEditorState().read(() => {
@@ -125,7 +118,7 @@ export const WordCountPlugin = ({
         return
       }
 
-      const topLevelEditor = getTopLevelEditor()
+      const topLevelEditor = getTopLevelEditor(editor)
       const state = getWordCountState(topLevelEditor)
       const keysToRecompute = new Set<string>()
 
@@ -187,7 +180,7 @@ export const WordCountPlugin = ({
         // Nested editors don't receive top-level dirty maps, so fall back to a
         // full recompute. The shared node count cache keeps subsequent top-level
         // updates incremental.
-        if (editor._parentEditor) {
+        if (isNestedEditor(editor)) {
           pendingDirtyKeys.clear()
           throttledCount()
           return
@@ -209,7 +202,7 @@ export const WordCountPlugin = ({
       throttledIncrementalCount.cancel()
       cleanupRegister()
 
-      if (!editor._parentEditor) {
+      if (!isNestedEditor(editor)) {
         onWordCountChangeRef.current = null
       }
     }

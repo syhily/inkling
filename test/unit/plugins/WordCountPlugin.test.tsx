@@ -18,11 +18,12 @@ vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
 
-function createTestEditor(nodes?: Array<typeof DecoratorNode>) {
+function createTestEditor(overrides: { nodes?: Array<typeof DecoratorNode>; parentEditor?: LexicalEditor } = {}) {
   const editor = createEditor({
     namespace: 'test',
-    nodes,
+    nodes: overrides.nodes,
     onError: () => {},
+    parentEditor: overrides.parentEditor,
   })
   editor.setRootElement(document.createElement('div'))
   editor.update(
@@ -195,9 +196,10 @@ describe('WordCountPlugin', () => {
   })
 
   it('counts words from nested editors', async () => {
-    const topLevelEditor = createTestEditor([TestDecoratorNode as unknown as typeof DecoratorNode])
-    const nestedEditor = createTestEditor()
-    ;(nestedEditor as unknown as { _parentEditor: LexicalEditor })._parentEditor = topLevelEditor
+    const topLevelEditor = createTestEditor({
+      nodes: [TestDecoratorNode as unknown as typeof DecoratorNode],
+    })
+    const nestedEditor = createTestEditor({ parentEditor: topLevelEditor })
 
     // Set up the top-level state before mounting the nested plugin so the
     // initial full count includes the top-level paragraph.
