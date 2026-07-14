@@ -52,7 +52,7 @@ Repo quick reference (verification gates used by every plan):
 | 024  | koenig 对齐重构（对比回流 + 回归修复）                            | P1       | L      | —                                | DONE (`e693962`) |
 | 025  | Type wrapper-node datasets and insert-command payloads            | P1       | L      | —                                | DONE (`de9f674`) |
 | 026  | Make exported editor prop contracts honest                        | P1       | M      | —                                | DONE (`3892705`) |
-| 027  | Fix the packed ESM/CommonJS runtime contract                      | P1       | L      | —                                | TODO             |
+| 027  | Fix the packed ESM/CommonJS runtime contract                      | P1       | L      | —                                | DONE (`7d3eb96`) |
 | 028  | Publish bundled TypeScript declaration files                      | P1       | M      | 025, 026, 027                    | TODO             |
 | 029  | Align HTML importer/renderer default node sets                    | P2       | M      | —                                | TODO             |
 | 030  | Validate every exported media URL                                 | P1       | M      | —                                | TODO             |
