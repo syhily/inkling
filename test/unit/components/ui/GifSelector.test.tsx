@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -85,11 +86,38 @@ describe('GifSelector', () => {
     expect(defaultProps.updateSearch).toHaveBeenLastCalledWith('cats')
   })
 
-  it('calls onGifInsert when gif is clicked', () => {
+  it('renders every result as a semantic button with accessible name', () => {
+    const gif0 = createGif(0)
+    const gif1 = createGif(1)
+    render(<GifSelector {...defaultProps} gifs={[gif0, gif1]} columns={[[gif0], [gif1]]} />)
+
+    expect(screen.getByRole('button', { name: 'Gif 0' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Gif 1' })).toBeInTheDocument()
+  })
+
+  it('result buttons have type button', () => {
+    const gif0 = createGif(0)
+    render(<GifSelector {...defaultProps} gifs={[gif0]} columns={[[gif0]]} />)
+
+    const button = screen.getByRole('button', { name: 'Gif 0' })
+    expect(button).toHaveAttribute('type', 'button')
+  })
+
+  it('does not render a button for a gif without usable media', () => {
+    const gif0 = createGif(0)
+    const broken = createGif(1, { media_formats: {} })
+    render(<GifSelector {...defaultProps} gifs={[gif0, broken]} columns={[[gif0], [broken]]} />)
+
+    expect(screen.getByRole('button', { name: 'Gif 0' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Gif 1' })).not.toBeInTheDocument()
+  })
+
+  it('calls onGifInsert when gif is clicked', async () => {
     const gif = createGif(0)
     render(<GifSelector {...defaultProps} gifs={[gif]} columns={[[gif]]} />)
 
-    fireEvent.click(screen.getByTestId('gif-item'))
+    await userEvent.click(screen.getByRole('button', { name: 'Gif 0' }))
+    expect(defaultProps.onGifInsert).toHaveBeenCalledTimes(1)
     expect(defaultProps.onGifInsert).toHaveBeenCalledWith({
       src: 'https://example.com/gif-0.gif',
       width: 100,
@@ -97,11 +125,195 @@ describe('GifSelector', () => {
     })
   })
 
-  it('does not call onGifInsert for gif without url', () => {
+  it('does not call onGifInsert for gif without url', async () => {
     const gif = createGif(0, { media_formats: { gif: { url: undefined, dims: [100, 100] } } })
     render(<GifSelector {...defaultProps} gifs={[gif]} columns={[[gif]]} />)
 
-    fireEvent.click(screen.getByTestId('gif-item'))
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+    expect(defaultProps.onGifInsert).not.toHaveBeenCalled()
+  })
+
+  it('focuses and highlights the first gif on ArrowDown from search', async () => {
+    const gif0 = createGif(0)
+    const gif1 = createGif(1)
+    render(<GifSelector {...defaultProps} gifs={[gif0, gif1]} columns={[[gif0], [gif1]]} />)
+
+    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
+    await userEvent.click(input)
+    await userEvent.keyboard('{ArrowDown}')
+
+    const button = screen.getByRole('button', { name: 'Gif 0' })
+    expect(button).toHaveFocus()
+    expect(button).toHaveClass('border-green')
+  })
+
+  it('focuses and highlights the first gif on Tab from search', async () => {
+    const gif0 = createGif(0)
+    render(<GifSelector {...defaultProps} gifs={[gif0]} columns={[[gif0]]} />)
+
+    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
+    await userEvent.click(input)
+    await userEvent.keyboard('{Tab}')
+
+    expect(screen.getByRole('button', { name: 'Gif 0' })).toHaveFocus()
+  })
+
+  it('moves highlight and focus down with ArrowDown', async () => {
+    const gif0 = createGif(0)
+    const gif1 = createGif(1, { columnIndex: 0, columnRowIndex: 1 })
+    render(<GifSelector {...defaultProps} gifs={[gif0, gif1]} columns={[[gif0, gif1]]} />)
+
+    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
+    await userEvent.click(input)
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}')
+
+    const button = screen.getByRole('button', { name: 'Gif 1' })
+    expect(button).toHaveFocus()
+    expect(button).toHaveClass('border-green')
+  })
+
+  it('moves highlight and focus up with ArrowUp', async () => {
+    const gif0 = createGif(0)
+    const gif1 = createGif(1, { columnIndex: 0, columnRowIndex: 1 })
+    render(<GifSelector {...defaultProps} gifs={[gif0, gif1]} columns={[[gif0, gif1]]} />)
+
+    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
+    await userEvent.click(input)
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowUp}')
+
+    const button = screen.getByRole('button', { name: 'Gif 0' })
+    expect(button).toHaveFocus()
+    expect(button).toHaveClass('border-green')
+  })
+
+  it('focuses search when arrow up on first gif', async () => {
+    const gif0 = createGif(0)
+    render(<GifSelector {...defaultProps} gifs={[gif0]} columns={[[gif0]]} />)
+
+    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
+    await userEvent.click(input)
+    await userEvent.keyboard('{ArrowDown}{ArrowUp}')
+
+    expect(input).toHaveFocus()
+  })
+
+  it('moves highlight and focus horizontally without error', async () => {
+    const gif0 = createGif(0)
+    const gif1 = createGif(1, { columnIndex: 1, columnRowIndex: 0 })
+    render(<GifSelector {...defaultProps} gifs={[gif0, gif1]} columns={[[gif0], [gif1]]} />)
+
+    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
+    await userEvent.click(input)
+    await userEvent.keyboard('{ArrowDown}{ArrowRight}')
+
+    const button = screen.getByRole('button', { name: 'Gif 1' })
+    expect(button).toHaveFocus()
+    expect(button).toHaveClass('border-green')
+  })
+
+  it('selects highlighted gif with Enter on focused button', async () => {
+    const gif0 = createGif(0)
+    render(<GifSelector {...defaultProps} gifs={[gif0]} columns={[[gif0]]} />)
+
+    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
+    await userEvent.click(input)
+    await userEvent.keyboard('{ArrowDown}{Enter}')
+
+    expect(defaultProps.onGifInsert).toHaveBeenCalledTimes(1)
+    expect(defaultProps.onGifInsert).toHaveBeenCalledWith({
+      src: 'https://example.com/gif-0.gif',
+      width: 100,
+      height: 100,
+    })
+  })
+
+  it('selects highlighted gif with Space on focused button', async () => {
+    const gif0 = createGif(0)
+    render(<GifSelector {...defaultProps} gifs={[gif0]} columns={[[gif0]]} />)
+
+    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
+    await userEvent.click(input)
+    await userEvent.keyboard('{ArrowDown} ')
+
+    expect(defaultProps.onGifInsert).toHaveBeenCalledTimes(1)
+    expect(defaultProps.onGifInsert).toHaveBeenCalledWith({
+      src: 'https://example.com/gif-0.gif',
+      width: 100,
+      height: 100,
+    })
+  })
+
+  it('does not select or prevent default when Enter is pressed outside selector', () => {
+    const gif0 = createGif(0)
+    render(
+      <>
+        <input data-testid="outside-input" type="text" />
+        <GifSelector {...defaultProps} gifs={[gif0]} columns={[[gif0]]} />
+      </>,
+    )
+
+    const outsideInput = screen.getByTestId('outside-input')
+    outsideInput.focus()
+    const event = fireEvent.keyDown(outsideInput, { key: 'Enter' })
+
+    expect(event).toBe(true)
+    expect(defaultProps.onGifInsert).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Gif 0' })).not.toHaveClass('border-green')
+  })
+
+  it('does not change highlight or prevent default when arrow keys pressed outside selector', () => {
+    const gif0 = createGif(0)
+    render(
+      <>
+        <input data-testid="outside-input" type="text" />
+        <GifSelector {...defaultProps} gifs={[gif0]} columns={[[gif0]]} />
+      </>,
+    )
+
+    const outsideInput = screen.getByTestId('outside-input')
+    outsideInput.focus()
+
+    const downEvent = fireEvent.keyDown(outsideInput, { key: 'ArrowDown' })
+    expect(downEvent).toBe(true)
+
+    const rightEvent = fireEvent.keyDown(outsideInput, { key: 'ArrowRight' })
+    expect(rightEvent).toBe(true)
+
+    expect(defaultProps.onGifInsert).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Gif 0' })).not.toHaveClass('border-green')
+  })
+
+  it('does nothing when arrow keys pressed without highlighted gif', async () => {
+    render(<GifSelector {...defaultProps} />)
+
+    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
+    await userEvent.click(input)
+    await userEvent.keyboard('{ArrowLeft}{ArrowRight}{ArrowUp}{ArrowDown}')
+
+    expect(screen.getByTestId('gif-selector')).toBeInTheDocument()
+    expect(input).toHaveFocus()
+  })
+
+  it('handles shift+tab navigation', async () => {
+    const gif0 = createGif(0)
+    const gif1 = createGif(1)
+    render(<GifSelector {...defaultProps} gifs={[gif0, gif1]} columns={[[gif0], [gif1]]} />)
+
+    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
+    await userEvent.click(input)
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{Shift>}{Tab}{/Shift}')
+
+    expect(input).toHaveFocus()
+  })
+
+  it('removes all selector keyboard handling on unmount', () => {
+    const gif0 = createGif(0)
+    const { unmount } = render(<GifSelector {...defaultProps} gifs={[gif0]} columns={[[gif0]]} />)
+
+    unmount()
+
+    const event = fireEvent.keyDown(document, { key: 'Enter' })
+    expect(event).toBe(true)
     expect(defaultProps.onGifInsert).not.toHaveBeenCalled()
   })
 
@@ -175,105 +387,5 @@ describe('GifSelector', () => {
 
     callback([entry3], {} as ResizeObserver)
     expect(defaultProps.changeColumnCount).toHaveBeenCalledWith(4)
-  })
-
-  it('handles keyboard navigation with arrow keys', () => {
-    const gif0 = createGif(0)
-    const gif1 = createGif(1)
-    const gifs = [gif0, gif1]
-    render(<GifSelector {...defaultProps} gifs={gifs} columns={[[gif0], [gif1]]} />)
-
-    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
-    fireEvent.keyDown(input, { key: 'ArrowDown' })
-    expect(screen.getAllByTestId('gif-item')[0].className).toContain('border-green')
-  })
-
-  it('handles enter to select highlighted gif', () => {
-    const gif0 = createGif(0)
-    render(<GifSelector {...defaultProps} gifs={[gif0]} columns={[[gif0]]} />)
-
-    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
-    fireEvent.keyDown(input, { key: 'ArrowDown' })
-    fireEvent.keyDown(document, { key: 'Enter' })
-
-    expect(defaultProps.onGifInsert).toHaveBeenCalledWith({
-      src: 'https://example.com/gif-0.gif',
-      width: 100,
-      height: 100,
-    })
-  })
-
-  it('handles tab navigation', () => {
-    const gif0 = createGif(0)
-    render(<GifSelector {...defaultProps} gifs={[gif0]} columns={[[gif0]]} />)
-
-    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
-    fireEvent.keyDown(input, { key: 'Tab' })
-    expect(screen.getAllByTestId('gif-item')[0].className).toContain('border-green')
-  })
-
-  it('handles shift+tab navigation', () => {
-    const gif0 = createGif(0)
-    const gif1 = createGif(1)
-    render(<GifSelector {...defaultProps} gifs={[gif0, gif1]} columns={[[gif0], [gif1]]} />)
-
-    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
-    fireEvent.keyDown(input, { key: 'ArrowDown' })
-    fireEvent.keyDown(input, { key: 'ArrowDown' })
-    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
-    expect(input).toHaveFocus()
-  })
-
-  it('handles escape key without error', () => {
-    render(<GifSelector {...defaultProps} />)
-    fireEvent.keyDown(document, { key: 'Escape' })
-    // No assertion needed, just ensures no error is thrown
-    expect(screen.getByTestId('gif-selector')).toBeInTheDocument()
-  })
-
-  it('moves highlight down and up', () => {
-    const gif0 = createGif(0)
-    const gif1 = createGif(1, { columnIndex: 0, columnRowIndex: 1 })
-    render(<GifSelector {...defaultProps} gifs={[gif0, gif1]} columns={[[gif0, gif1]]} />)
-
-    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
-    fireEvent.keyDown(input, { key: 'ArrowDown' })
-    fireEvent.keyDown(document, { key: 'ArrowDown' })
-
-    expect(screen.getAllByTestId('gif-item')[1].className).toContain('border-green')
-  })
-
-  it('moves highlight left and right without error', () => {
-    const gif0 = createGif(0)
-    const gif1 = createGif(1, { columnIndex: 1, columnRowIndex: 0 })
-    render(<GifSelector {...defaultProps} gifs={[gif0, gif1]} columns={[[gif0], [gif1]]} />)
-
-    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
-    fireEvent.keyDown(input, { key: 'ArrowDown' })
-    fireEvent.keyDown(document, { key: 'ArrowRight' })
-
-    expect(screen.getByTestId('gif-selector')).toBeInTheDocument()
-  })
-
-  it('focuses search when arrow left on first gif', () => {
-    const gif0 = createGif(0)
-    render(<GifSelector {...defaultProps} gifs={[gif0]} columns={[[gif0]]} />)
-
-    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
-    fireEvent.keyDown(input, { key: 'ArrowDown' })
-    fireEvent.keyDown(document, { key: 'ArrowLeft' })
-
-    expect(input).toHaveFocus()
-  })
-
-  it('does nothing when arrow keys pressed without highlighted gif', () => {
-    render(<GifSelector {...defaultProps} />)
-
-    fireEvent.keyDown(document, { key: 'ArrowLeft' })
-    fireEvent.keyDown(document, { key: 'ArrowRight' })
-    fireEvent.keyDown(document, { key: 'ArrowUp' })
-    fireEvent.keyDown(document, { key: 'ArrowDown' })
-
-    expect(screen.getByTestId('gif-selector')).toBeInTheDocument()
   })
 })
