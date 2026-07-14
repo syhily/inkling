@@ -1,4 +1,4 @@
-import type { LexicalEditor } from 'lexical'
+import type { EditorState, LexicalEditor } from 'lexical'
 
 import ArrowDownIcon from '@/assets/icons/inkling-toggle-arrow.svg?react'
 import InklingNestedEditor from '@/components/InklingNestedEditor'
@@ -14,10 +14,10 @@ export function ToggleCard({
   isEditing = false,
 }: {
   contentEditor: LexicalEditor
-  contentEditorInitialState?: string
+  contentEditorInitialState?: EditorState
   contentPlaceholder?: string
   headingEditor: LexicalEditor
-  headingEditorInitialState?: string
+  headingEditorInitialState?: EditorState
   headingPlaceholder?: string
   isEditing?: boolean
 }) {

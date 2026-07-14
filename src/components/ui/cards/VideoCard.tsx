@@ -146,8 +146,8 @@ function PopulatedVideoCard({
 }
 
 interface EmptyVideoCardProps {
-  onFileChange: (e: React.ChangeEvent<HTMLFormElement>) => void
-  fileInputRef: RefObject<HTMLInputElement>
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  fileInputRef: RefObject<HTMLInputElement | null>
   errors?: Array<{ message?: string }>
   videoMimeTypes?: string[]
   videoDragHandler?: DragHandlerLike
@@ -172,7 +172,7 @@ function EmptyVideoCard({
         isDraggedOver={videoDragHandler.isDraggedOver}
         placeholderRef={videoDragHandler.setRef as (node: HTMLElement | null) => void}
       />
-      <form onChange={onFileChange}>
+      <form>
         <input
           // oxlint-disable-next-line typescript/no-explicit-any
           ref={fileInputRef}
@@ -180,6 +180,7 @@ function EmptyVideoCard({
           hidden={true}
           name="image-input"
           type="file"
+          onChange={onFileChange}
         />
       </form>
     </>
@@ -187,8 +188,8 @@ function EmptyVideoCard({
 }
 
 interface VideoHolderProps {
-  fileInputRef: RefObject<HTMLInputElement>
-  onVideoFileChange: (e: React.ChangeEvent<HTMLFormElement>) => void
+  fileInputRef: RefObject<HTMLInputElement | null>
+  onVideoFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   videoDragHandler: DragHandlerLike
   videoUploader?: FileUploaderLike
   videoUploadErrors?: Array<{ message?: string }>
@@ -238,8 +239,8 @@ export interface VideoCardProps {
   captionEditorInitialState: import('lexical').EditorState | undefined
   isSelected?: boolean
   isEditing?: boolean
-  fileInputRef: RefObject<HTMLInputElement>
-  onVideoFileChange: (e: React.ChangeEvent<HTMLFormElement>) => void
+  fileInputRef: RefObject<HTMLInputElement | null>
+  onVideoFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   videoDragHandler: DragHandlerLike
   videoUploader?: FileUploaderLike
   videoUploadErrors?: Array<{ message?: string }>

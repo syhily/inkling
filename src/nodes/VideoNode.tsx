@@ -1,20 +1,28 @@
 import { $generateHtmlFromNodes } from '@lexical/html'
 import { createCommand } from 'lexical'
 
+import type { CaptionEditorDataset } from '@/types/card-node-datasets'
+
 import VideoCardIcon from '@/assets/icons/inkling-card-type-video.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
-import { normalizeCardWidth, VideoNode as BaseVideoNode } from '@/nodes/base'
+import { normalizeCardWidth, VideoNode as BaseVideoNode, type VideoData } from '@/nodes/base'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { VideoNodeComponent } from '@/nodes/VideoNodeComponent'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
-export const INSERT_VIDEO_COMMAND = createCommand()
+export type VideoNodeDataset = VideoData &
+  CaptionEditorDataset & {
+    initialFile?: File
+    triggerFileDialog?: boolean
+  }
+
+export const INSERT_VIDEO_COMMAND = createCommand<VideoNodeDataset>()
 
 export class VideoNode extends BaseVideoNode {
   // transient properties used to control node behaviour
   __triggerFileDialog = false
-  __initialFile: File | undefined = undefined
+  __initialFile: File | null = null
   __captionEditor!: import('lexical').LexicalEditor | null
   __captionEditorInitialState!: import('lexical').EditorState | undefined
 
@@ -39,14 +47,13 @@ export class VideoNode extends BaseVideoNode {
     return VideoCardIcon
   }
 
-  // oxlint-disable-next-line typescript/no-explicit-any
-  constructor(dataset: Record<string, any> = {}, key?: string) {
+  constructor(dataset: VideoNodeDataset = {}, key?: string) {
     super(dataset, key)
 
     const { triggerFileDialog, initialFile } = dataset
 
     // don't trigger the file dialog when rendering if we've already been given a url
-    this.__triggerFileDialog = !dataset.src && triggerFileDialog
+    this.__triggerFileDialog = (!dataset.src && triggerFileDialog) || false
 
     this.__initialFile = initialFile || null
 
@@ -99,7 +106,7 @@ export class VideoNode extends BaseVideoNode {
           captionEditorInitialState={this.__captionEditorInitialState}
           cardWidth={cardWidth}
           customThumbnail={this.customThumbnailSrc}
-          initialFile={this.__initialFile ?? null}
+          initialFile={this.__initialFile}
           isLoopChecked={this.loop}
           nodeKey={this.getKey()}
           thumbnail={this.thumbnailSrc}
@@ -111,8 +118,7 @@ export class VideoNode extends BaseVideoNode {
   }
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-export const $createVideoNode = (dataset: Record<string, any>) => {
+export const $createVideoNode = (dataset: VideoNodeDataset) => {
   return new VideoNode(dataset)
 }
 

@@ -3,9 +3,14 @@ import { createCommand } from 'lexical'
 import AudioCardIcon from '@/assets/icons/inkling-card-type-audio.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { AudioNodeComponent } from '@/nodes/AudioNodeComponent'
-import { AudioNode as BaseAudioNode } from '@/nodes/base'
+import { AudioNode as BaseAudioNode, type AudioData } from '@/nodes/base'
 
-export const INSERT_AUDIO_COMMAND = createCommand()
+export type AudioNodeDataset = AudioData & {
+  initialFile?: File
+  triggerFileDialog?: boolean
+}
+
+export const INSERT_AUDIO_COMMAND = createCommand<AudioNodeDataset>()
 
 export class AudioNode extends BaseAudioNode {
   __triggerFileDialog = false
@@ -28,15 +33,14 @@ export class AudioNode extends BaseAudioNode {
 
   static uploadType = 'audio'
 
-  // oxlint-disable-next-line typescript/no-explicit-any
-  constructor(dataset: Record<string, any> = {}, key?: string) {
+  constructor(dataset: AudioNodeDataset = {}, key?: string) {
     super(dataset, key)
 
     const { triggerFileDialog, initialFile } = dataset
 
     // don't trigger the file dialog when rendering if we've already been given a url
     this.__triggerFileDialog = (!dataset.src && triggerFileDialog) || false
-    this.__initialFile = initialFile || null
+    this.__initialFile = initialFile
   }
 
   getIcon() {
@@ -65,8 +69,7 @@ export class AudioNode extends BaseAudioNode {
   }
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-export const $createAudioNode = (dataset: Record<string, any>) => {
+export const $createAudioNode = (dataset: AudioNodeDataset) => {
   return new AudioNode(dataset)
 }
 

@@ -5,12 +5,19 @@ import { createCommand, type EditorState, type LexicalEditor } from 'lexical'
 import HeaderCardIcon from '@/assets/icons/inkling-card-type-header.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
-import { HeaderNode as BaseHeaderNode, normalizeCardWidth, type CardWidth } from '@/nodes/base'
+import { HeaderNode as BaseHeaderNode, normalizeCardWidth, type CardWidth, type HeaderData } from '@/nodes/base'
 import HeaderNodeComponent from '@/nodes/header/v2/HeaderNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
-export const INSERT_HEADER_COMMAND = createCommand()
+export type HeaderNodeDataset = HeaderData & {
+  headerTextEditor?: LexicalEditor
+  headerTextEditorInitialState?: EditorState
+  subheaderTextEditor?: LexicalEditor
+  subheaderTextEditorInitialState?: EditorState
+}
+
+export const INSERT_HEADER_COMMAND = createCommand<HeaderNodeDataset>()
 
 export class HeaderNode extends BaseHeaderNode {
   __headerTextEditor!: LexicalEditor | null
@@ -37,8 +44,7 @@ export class HeaderNode extends BaseHeaderNode {
     return HeaderCardIcon
   }
 
-  // oxlint-disable-next-line typescript/no-explicit-any
-  constructor(dataset: Record<string, any> = {}, key?: string) {
+  constructor(dataset: HeaderNodeDataset = {}, key?: string) {
     super(dataset, key)
 
     setupNestedEditor(this, '__headerTextEditor', { editor: dataset.headerTextEditor, nodes: MINIMAL_NODES })
@@ -136,8 +142,7 @@ export class HeaderNode extends BaseHeaderNode {
   }
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-export const $createHeaderNode = (dataset: Record<string, any>) => {
+export const $createHeaderNode = (dataset: HeaderNodeDataset) => {
   return new HeaderNode(dataset)
 }
 

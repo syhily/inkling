@@ -1,18 +1,21 @@
 import { $generateHtmlFromNodes } from '@lexical/html'
 import { createCommand } from 'lexical'
 
+import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 import type { GalleryImage } from '@/types/gallery'
 
 import GalleryCardIcon from '@/assets/icons/inkling-card-type-gallery.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
-import { GalleryNode as BaseGalleryNode } from '@/nodes/base'
+import { GalleryNode as BaseGalleryNode, type GalleryData } from '@/nodes/base'
 import { GalleryNodeComponent } from '@/nodes/GalleryNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { pick } from '@/utils'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
-export const INSERT_GALLERY_COMMAND = createCommand()
+export type GalleryNodeDataset = GalleryData & CaptionEditorDataset
+
+export const INSERT_GALLERY_COMMAND = createCommand<GalleryNodeDataset>()
 
 export const MAX_IMAGES = 9
 export const MAX_PER_ROW = 3
@@ -45,8 +48,7 @@ export class GalleryNode extends BaseGalleryNode {
     },
   ]
 
-  // oxlint-disable-next-line typescript/no-explicit-any
-  constructor(dataset: Record<string, any> = {}, key?: string) {
+  constructor(dataset: GalleryNodeDataset = {}, key?: string) {
     super(dataset, key)
 
     const { caption } = dataset
@@ -119,8 +121,7 @@ export class GalleryNode extends BaseGalleryNode {
   }
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-export const $createGalleryNode = (dataset: Record<string, any>) => {
+export const $createGalleryNode = (dataset: GalleryNodeDataset) => {
   return new GalleryNode(dataset)
 }
 

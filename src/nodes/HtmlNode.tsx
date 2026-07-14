@@ -3,10 +3,12 @@ import { createCommand } from 'lexical'
 import HtmlCardIcon from '@/assets/icons/inkling-card-type-html.svg?react'
 import HtmlIndicatorIcon from '@/assets/icons/inkling-indicator-html.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
-import { HtmlNode as BaseHtmlNode } from '@/nodes/base'
+import { HtmlNode as BaseHtmlNode, type HtmlData } from '@/nodes/base'
 import { HtmlNodeComponent } from '@/nodes/HtmlNodeComponent'
 
-export const INSERT_HTML_COMMAND = createCommand()
+export type HtmlNodeDataset = HtmlData
+
+export const INSERT_HTML_COMMAND = createCommand<HtmlNodeDataset>()
 
 export class HtmlNode extends BaseHtmlNode {
   static cardMenu = {
@@ -23,8 +25,7 @@ export class HtmlNode extends BaseHtmlNode {
     return HtmlCardIcon
   }
 
-  // oxlint-disable-next-line typescript/no-explicit-any
-  constructor(dataset: Record<string, any> = {}, key?: string) {
+  constructor(dataset: HtmlNodeDataset = {}, key?: string) {
     super(dataset, key)
   }
 
@@ -36,15 +37,13 @@ export class HtmlNode extends BaseHtmlNode {
         nodeKey={this.getKey()}
         wrapperStyle="wide"
       >
-        {/* oxlint-disable-next-line typescript/no-explicit-any */}
-        <HtmlNodeComponent {...({ html: this.__html as string, nodeKey: this.getKey() } as any)} />
+        <HtmlNodeComponent html={this.html} nodeKey={this.getKey()} />
       </InklingCardWrapper>
     )
   }
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-export function $createHtmlNode(dataset: Record<string, any>) {
+export function $createHtmlNode(dataset: HtmlNodeDataset) {
   return new HtmlNode(dataset)
 }
 

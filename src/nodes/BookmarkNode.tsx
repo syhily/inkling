@@ -1,15 +1,24 @@
 import { $generateHtmlFromNodes } from '@lexical/html'
 import { createCommand } from 'lexical'
 
+import type { CaptionEditorDataset } from '@/types/card-node-datasets'
+
 import BookmarkCardIcon from '@/assets/icons/inkling-card-type-bookmark.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
-import { BookmarkNode as BaseBookmarkNode } from '@/nodes/base'
+import { BookmarkNode as BaseBookmarkNode, type BookmarkData } from '@/nodes/base'
 import { BookmarkNodeComponent } from '@/nodes/BookmarkNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
-export const INSERT_BOOKMARK_COMMAND = createCommand()
+export type BookmarkNodeDataset = BookmarkData &
+  CaptionEditorDataset & {
+    // AtLinkPlugin passes a top-level `title` alongside `url`; the base node
+    // constructor only reads `metadata.title`, so this is a tolerated no-op field.
+    title?: string
+  }
+
+export const INSERT_BOOKMARK_COMMAND = createCommand<BookmarkNodeDataset>()
 
 export class BookmarkNode extends BaseBookmarkNode {
   __captionEditor!: import('lexical').LexicalEditor | null
@@ -33,8 +42,7 @@ export class BookmarkNode extends BaseBookmarkNode {
     return BookmarkCardIcon
   }
 
-  // oxlint-disable-next-line typescript/no-explicit-any
-  constructor(dataset: Record<string, any> = {}, key?: string) {
+  constructor(dataset: BookmarkNodeDataset = {}, key?: string) {
     super(dataset, key)
 
     this.__createdWithUrl = !!dataset.url && !dataset.metadata
@@ -96,8 +104,7 @@ export class BookmarkNode extends BaseBookmarkNode {
   }
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-export const $createBookmarkNode = (dataset: Record<string, any>) => {
+export const $createBookmarkNode = (dataset: BookmarkNodeDataset) => {
   return new BookmarkNode(dataset)
 }
 

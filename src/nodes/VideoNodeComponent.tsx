@@ -2,6 +2,8 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React, { useState } from 'react'
 
+import type { FileChangeEvent } from '@/components/ui/cards/AudioCard'
+
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { VideoCard } from '@/components/ui/cards/VideoCard'
 import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
@@ -189,7 +191,7 @@ export function VideoNodeComponent({
     }
   }
 
-  const onCustomThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onCustomThumbnailChange = async (e: FileChangeEvent) => {
     await handleCustomThumbnailChange(e.target.files ? Array.from(e.target.files) : [])
   }
 
@@ -271,37 +273,33 @@ export function VideoNodeComponent({
 
   return (
     <>
-      {/* oxlint-disable-next-line typescript/no-explicit-any */}
       <VideoCard
-        {...({
-          captionEditor,
-          captionEditorInitialState,
-          cardWidth,
-          customThumbnail,
-          customThumbnailUploader,
-          fileInputRef: videoFileInputRef,
-          isEditing: cardContext.isEditing,
-          isLoopChecked,
-          isSelected: cardContext.isSelected,
-          thumbnail: previewThumbnail || thumbnail,
-          thumbnailDragHandler,
-          thumbnailMimeTypes: fileUploader.fileTypes?.image?.mimeTypes ?? [],
-          totalDuration,
-          videoDragHandler,
-          videoMimeTypes,
-          videoUploader,
-          videoUploadErrors: [
-            ...(thumbnailUploader.errors ?? []),
-            ...metadataExtractionErrors,
-            ...(videoUploader.errors ?? []),
-          ],
-          onCardWidthChange,
-          onCustomThumbnailChange,
-          onLoopChange,
-          onRemoveCustomThumbnail,
-          onVideoFileChange,
-          // oxlint-disable-next-line typescript/no-explicit-any
-        } as any)}
+        captionEditor={captionEditor}
+        captionEditorInitialState={captionEditorInitialState}
+        cardWidth={cardWidth}
+        customThumbnail={customThumbnail}
+        customThumbnailUploader={customThumbnailUploader}
+        fileInputRef={videoFileInputRef}
+        isEditing={cardContext.isEditing}
+        isLoopChecked={isLoopChecked}
+        isSelected={cardContext.isSelected}
+        thumbnail={previewThumbnail || thumbnail}
+        thumbnailDragHandler={thumbnailDragHandler}
+        thumbnailMimeTypes={fileUploader.fileTypes?.image?.mimeTypes ?? []}
+        totalDuration={totalDuration}
+        videoDragHandler={videoDragHandler}
+        videoMimeTypes={videoMimeTypes}
+        videoUploader={videoUploader}
+        videoUploadErrors={[
+          ...(thumbnailUploader.errors ?? []),
+          ...metadataExtractionErrors,
+          ...(videoUploader.errors ?? []),
+        ]}
+        onCardWidthChange={onCardWidthChange}
+        onCustomThumbnailChange={onCustomThumbnailChange}
+        onLoopChange={onLoopChange}
+        onRemoveCustomThumbnail={onRemoveCustomThumbnail}
+        onVideoFileChange={onVideoFileChange}
       />
       <ActionToolbar data-inkling-card-toolbar="video" isVisible={showSnippetToolbar}>
         <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />

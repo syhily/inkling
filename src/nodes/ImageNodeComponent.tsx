@@ -2,6 +2,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $createNodeSelection, $getNodeByKey, $setSelection, type NodeKey } from 'lexical'
 import React from 'react'
 
+import type { GalleryImage } from '@/types/gallery'
 import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
@@ -82,7 +83,9 @@ export function ImageNodeComponent({
             (targetImageDataset?.fileName as string | undefined) ||
             getImageFilenameFromSrc(String(targetImageDataset.src))
 
-          galleryNode.addImages([targetImageDataset, dataset])
+          // image datasets allow null dimensions while GalleryImage keeps them
+          // optional; the conversion only carries keys allowed by addImages
+          galleryNode.addImages([targetImageDataset as GalleryImage, dataset])
 
           targetImageNode.replace(galleryNode)
           droppedImageNode.remove()

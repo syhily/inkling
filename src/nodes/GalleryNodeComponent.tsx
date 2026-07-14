@@ -200,11 +200,7 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
   }
 
   const hideToolbar =
-    !isSelected || imageFilesDropper.isDraggedOver || galleryReorder.isDraggedOver || images.length <= 0 // oxlint-disable-next-line typescript/no-explicit-any
-
-  // oxlint-disable-next-line typescript/no-explicit-any
-
-  // oxlint-disable-next-line typescript/no-explicit-any
+    !isSelected || imageFilesDropper.isDraggedOver || galleryReorder.isDraggedOver || images.length <= 0
 
   return (
     <>

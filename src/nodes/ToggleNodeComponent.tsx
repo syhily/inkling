@@ -1,4 +1,4 @@
-import type { LexicalEditor } from 'lexical'
+import type { EditorState, LexicalEditor } from 'lexical'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import React from 'react'
@@ -20,9 +20,9 @@ export function ToggleNodeComponent({
 }: {
   nodeKey: string
   headingEditor: LexicalEditor
-  headingEditorInitialState?: string
+  headingEditorInitialState?: EditorState
   contentEditor: LexicalEditor
-  contentEditorInitialState?: string
+  contentEditorInitialState?: EditorState
 }) {
   const [editor] = useLexicalComposerContext()
   const cardContext = React.useContext(CardContext)

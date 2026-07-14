@@ -2,14 +2,12 @@ import { createCommand } from 'lexical'
 
 import ButtonCardIcon from '@/assets/icons/inkling-card-type-button.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
-import { ButtonNode as BaseButtonNode } from '@/nodes/base'
+import { ButtonNode as BaseButtonNode, type ButtonData } from '@/nodes/base'
 import { ButtonNodeComponent } from '@/nodes/ButtonNodeComponent'
 
-export const INSERT_BUTTON_COMMAND = createCommand('INSERT_BUTTON_COMMAND')
+export type ButtonNodeDataset = ButtonData
 
-interface ButtonDataset {
-  [key: string]: unknown
-}
+export const INSERT_BUTTON_COMMAND = createCommand<ButtonNodeDataset>('INSERT_BUTTON_COMMAND')
 
 export class ButtonNode extends BaseButtonNode {
   static cardMenu = [
@@ -25,9 +23,8 @@ export class ButtonNode extends BaseButtonNode {
     },
   ]
 
-  constructor(dataset: ButtonDataset = {}, key?: string) {
-    // oxlint-disable-next-line typescript/no-explicit-any
-    super(dataset as Partial<Record<string, unknown>>, key)
+  constructor(dataset: ButtonNodeDataset = {}, key?: string) {
+    super(dataset, key)
   }
 
   getIcon() {
@@ -48,7 +45,7 @@ export class ButtonNode extends BaseButtonNode {
   }
 }
 
-export const $createButtonNode = (dataset?: ButtonDataset): ButtonNode => {
+export const $createButtonNode = (dataset?: ButtonNodeDataset): ButtonNode => {
   return new ButtonNode(dataset)
 }
 

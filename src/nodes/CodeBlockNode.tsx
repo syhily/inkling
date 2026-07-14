@@ -1,15 +1,22 @@
 import { $generateHtmlFromNodes } from '@lexical/html'
 import { createCommand } from 'lexical'
 
+import type { CaptionEditorDataset } from '@/types/card-node-datasets'
+
 import CodeBlockIcon from '@/assets/icons/inkling-card-type-gen-embed.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
-import { CodeBlockNode as BaseCodeBlockNode } from '@/nodes/base'
+import { CodeBlockNode as BaseCodeBlockNode, type CodeBlockData } from '@/nodes/base'
 import { CodeBlockNodeComponent } from '@/nodes/CodeBlockNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
-export const INSERT_CODE_BLOCK_COMMAND = createCommand()
+export type CodeBlockNodeDataset = CodeBlockData &
+  CaptionEditorDataset & {
+    _openInEditMode?: boolean
+  }
+
+export const INSERT_CODE_BLOCK_COMMAND = createCommand<CodeBlockNodeDataset>()
 
 export class CodeBlockNode extends BaseCodeBlockNode {
   // transient properties used to control node behaviour
@@ -17,8 +24,7 @@ export class CodeBlockNode extends BaseCodeBlockNode {
   __captionEditor!: import('lexical').LexicalEditor | null
   __captionEditorInitialState!: import('lexical').EditorState | undefined
 
-  // oxlint-disable-next-line typescript/no-explicit-any
-  constructor(dataset: Record<string, any> = {}, key?: string) {
+  constructor(dataset: CodeBlockNodeDataset = {}, key?: string) {
     super(dataset, key)
 
     const { _openInEditMode } = dataset
@@ -83,8 +89,7 @@ export class CodeBlockNode extends BaseCodeBlockNode {
   }
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-export function $createCodeBlockNode(dataset: Record<string, any>) {
+export function $createCodeBlockNode(dataset: CodeBlockNodeDataset) {
   return new CodeBlockNode(dataset)
 }
 

@@ -2,10 +2,15 @@ import { createCommand } from 'lexical'
 
 import FileCardIcon from '@/assets/icons/inkling-card-type-file.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
-import { FileNode as BaseFileNode } from '@/nodes/base'
+import { FileNode as BaseFileNode, type FileData } from '@/nodes/base'
 import FileNodeComponent from '@/nodes/FileNodeComponent'
 
-export const INSERT_FILE_COMMAND = createCommand()
+export type FileNodeDataset = FileData & {
+  initialFile?: File
+  triggerFileDialog?: boolean
+}
+
+export const INSERT_FILE_COMMAND = createCommand<FileNodeDataset>()
 
 export class FileNode extends BaseFileNode {
   __triggerFileDialog = false
@@ -28,15 +33,14 @@ export class FileNode extends BaseFileNode {
 
   static uploadType = 'file'
 
-  // oxlint-disable-next-line typescript/no-explicit-any
-  constructor(dataset: Record<string, any> = {}, key?: string) {
+  constructor(dataset: FileNodeDataset = {}, key?: string) {
     super(dataset, key)
 
     const { triggerFileDialog, initialFile } = dataset
 
     // don't trigger the file dialog when rendering if we've already been given a url
     this.__triggerFileDialog = (!dataset.src && triggerFileDialog) || false
-    this.__initialFile = initialFile || null
+    this.__initialFile = initialFile
   }
 
   getIcon() {
@@ -68,8 +72,7 @@ export class FileNode extends BaseFileNode {
   }
 }
 
-// oxlint-disable-next-line typescript/no-explicit-any
-export const $createFileNode = (dataset: Record<string, any>) => {
+export const $createFileNode = (dataset: FileNodeDataset) => {
   return new FileNode(dataset)
 }
 

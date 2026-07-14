@@ -3,31 +3,31 @@ import { createCommand, type LexicalEditor, type LexicalNode, type NodeKey } fro
 import React from 'react'
 
 import type { CardConfig } from '@/context/InklingComposerContext'
+import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
 import GIFIcon from '@/assets/icons/inkling-card-type-gif.svg?react'
 import ImageCardIcon from '@/assets/icons/inkling-card-type-image.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
-import { ImageNode as BaseImageNode, normalizeCardWidth } from '@/nodes/base'
+import { ImageNode as BaseImageNode, normalizeCardWidth, type ImageData } from '@/nodes/base'
 import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { OPEN_GIF_SELECTOR_COMMAND } from '@/plugins/InklingSelectorPlugin'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
-export const INSERT_IMAGE_COMMAND = createCommand()
+export const INSERT_IMAGE_COMMAND = createCommand<ImageNodeDataset>()
 
-export interface ImageNodeDataset {
-  src?: string
-  previewSrc?: string
-  triggerFileDialog?: boolean
-  initialFile?: File
-  selector?: React.ComponentType<{ nodeKey: NodeKey }>
-  isImageHidden?: boolean
-  captionEditor?: LexicalEditor
-  captionEditorInitialState?: import('lexical').EditorState
-  caption?: string
-  [key: string]: unknown
-}
+export type ImageNodeDataset = ImageData &
+  CaptionEditorDataset & {
+    previewSrc?: string
+    triggerFileDialog?: boolean
+    initialFile?: File
+    selector?: React.ComponentType<{ nodeKey: NodeKey }>
+    isImageHidden?: boolean
+    // image datasets also flow through drag-and-drop payloads that carry
+    // extra keys; keep the record open for those transient fields
+    [key: string]: unknown
+  }
 
 export class ImageNode extends BaseImageNode {
   // transient properties used to control node behaviour
