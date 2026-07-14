@@ -30,7 +30,7 @@ The package exposes both ESM and CommonJS entry conditions:
 
 - `import { InklingEditor } from '@inkling/editor'` resolves to `dist/editor.js` (ESM).
 - `require('@inkling/editor')` resolves to `dist/editor.umd.cjs` (CommonJS).
-- `dist/editor.umd.js` remains as a legacy browser/direct-path artifact, byte-equivalent to the `.cjs` file; Node's `require` condition resolves the `.cjs` file.
+- `dist/editor.umd.js` remains as a legacy browser/direct-path artifact with a runtime body identical to the `.cjs` file (only its sourcemap trailer differs); Node's `require` condition resolves the `.cjs` file.
 
 ## Public API
 
