@@ -236,6 +236,12 @@ test.describe('Emoji Picker Plugin', async function () {
 
     await page.keyboard.type('```js ', { delay: 10 })
     await page.keyboard.type(`sample code`, { delay: 10 })
+
+    // Ensure the CodeMirror editor is focused before trying to exit edit mode;
+    // on CI the nested editor may not have received focus yet when the keyboard
+    // shortcut is dispatched.
+    await expect(page.locator('.cm-editor.cm-focused')).toBeVisible()
+
     await page.keyboard.press(`${ctrlOrCmd(page)}+Enter`)
     await page.keyboard.type('enjoy :ta', { delay: 10 })
     await page.keyboard.press('ArrowDown') // make sure we test arrow key use

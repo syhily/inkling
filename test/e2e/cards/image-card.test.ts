@@ -1171,10 +1171,19 @@ test.describe('Image card', async () => {
       { ignoreCardContents: true },
     )
 
+    // Wait for both images to finish loading/rendering before dragging so the
+    // drag preview and droppable hit-testing are stable on CI.
+    await expect(page.locator('[data-testid="image-card-populated"]')).toHaveCount(2)
+    await page.waitForFunction(() => document.querySelectorAll('[data-inkling-card="image"] img').length === 2)
+
     const imageCard1BBox = await page.locator('[data-inkling-card="image"]').nth(0).boundingBox()
     const imageCard2BBox = await page.locator('[data-inkling-card="image"]').nth(1).boundingBox()
 
-    await dragMouse(page, imageCard2BBox, imageCard1BBox, 'middle', 'middle', true, 100, 100)
+    await dragMouse(page, imageCard2BBox, imageCard1BBox, 'middle', 'middle', true, 300, 100)
+
+    // Give React a moment to replace the two image cards with a gallery card
+    // before asserting the final DOM structure.
+    await page.waitForTimeout(100)
 
     await assertHTML(
       page,

@@ -11,6 +11,8 @@ import {
   html,
   initialize,
   insertCard,
+  waitForCardContentSynced,
+  waitForHistoryGroupBoundary,
 } from '#/utils/e2e'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -412,12 +414,50 @@ test.describe('Video card', async () => {
     await focusEditor(page)
     // Upload video
     await uploadVideo(page)
-    await page.waitForSelector('[data-testid="media-upload-placeholder"]')
+    // Wait for the upload to fully complete (play button appears) before editing
+    // the caption so that upload-related editor updates are done and won't land
+    // in the history stack after the card is deleted.
+    await expect(page.locator('[data-testid="video-card-populated"] button').first()).toBeVisible()
+    // Ensure the async upload has fully populated the node state (video src and
+    // thumbnail src) before we edit the caption. On Firefox the thumbnail upload
+    // can finish after the video upload, leaving history entries that undo past
+    // the populated state.
+    await page.waitForFunction(() => {
+      const rootElement = document.querySelector('div[contenteditable="true"]')
+      if (!rootElement) {
+        return false
+      }
+      const editor = (rootElement as HTMLElement & { __lexicalEditor?: import('lexical').LexicalEditor })
+        .__lexicalEditor
+      if (!editor) {
+        return false
+      }
+      const state = editor.getEditorState().toJSON()
+      const video = state.root.children.find(
+        (child: { type?: string; src?: string; thumbnailSrc?: string }) => child.type === 'video',
+      )
+      return video && video.src && video.thumbnailSrc
+    })
 
     await page.click('[data-testid="video-card-caption"]')
     await page.keyboard.type('Test caption')
     await page.keyboard.press('Escape')
+    await waitForCardContentSynced(page, 'video', 'Test caption')
+
+    // Wait for any async upload state to settle before deleting the card so the
+    // undo history only contains the deletion to revert.
+    await page.waitForTimeout(500)
+
+    // Lexical's history plugin can merge a decorator node's deletion with the
+    // preceding property updates if they fall inside the 1000 ms merge window.
+    // Insert and remove a temporary paragraph so the card deletion becomes its
+    // own undo group (matches the toggle card undo/redo pattern).
+    await page.keyboard.press('Enter')
     await page.keyboard.press('Backspace')
+    await waitForHistoryGroupBoundary(page)
+
+    await page.keyboard.press('Backspace')
+
     await page.keyboard.press(`${ctrlOrCmd(page)}+z`)
 
     await assertHTML(

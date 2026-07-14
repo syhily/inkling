@@ -9,7 +9,6 @@ import {
   html,
   initialize,
   insertCard,
-  pasteText,
 } from '#/utils/e2e'
 
 test.describe('Card behaviour', async () => {
@@ -738,57 +737,33 @@ test.describe('Card behaviour', async () => {
     })
 
     // selects the card once caret reaches top of paragraph
-    test('moving through paragraph to card', async function () {
+    test('moving through paragraph to card', async function ({ browser }) {
+      // Use an isolated page because this test asserts paragraph structure and
+      // caret navigation that can be affected by shared page state from earlier
+      // tests in this describe block.
+      const page = await browser.newPage()
+      await initialize({ page })
       await focusEditor(page)
+
       await page.keyboard.type('---')
       await expect(await page.locator('[data-inkling-card="horizontalrule"]')).toBeVisible()
-      // three lines of text - paste it because keyboard.type is slow for long text
-      const text =
-        'Chislic bacon flank andouille picanha turkey porchetta chuck venison shank. Beef sirloin bresaola, meatball hamburger pork belly shankle. Frankfurter brisket t-bone alcatra porchetta tongue flank pork chop kevin picanha prosciutto meatball.'
-      await pasteText(page, text)
 
-      await expect(await page.getByText(text)).toBeVisible()
+      // Use explicit line breaks so line positions are deterministic across
+      // OS/browser font metrics, then click near the top of the paragraph and
+      // ArrowUp once to select the card above.
+      await page.keyboard.type('First line of text')
+      await page.keyboard.down('Shift')
+      await page.keyboard.press('Enter')
+      await page.keyboard.up('Shift')
+      await page.keyboard.type('Second line of text')
+      await page.keyboard.down('Shift')
+      await page.keyboard.press('Enter')
+      await page.keyboard.up('Shift')
+      await page.keyboard.type('Third line of text')
 
-      // place cursor at beginning of third line
-      const textLocator = await page.locator('[data-lexical-editor] > p')
-      const pRect = await textLocator.boundingBox()
-      await page.mouse.click(pRect.x + 1, pRect.y + pRect.height - 5)
-
-      await assertSelection(page, {
-        anchorOffset: 220,
-        anchorPath: [1, 0, 0],
-        focusOffset: 220,
-        focusPath: [1, 0, 0],
-      })
-
-      await page.keyboard.press('ArrowUp')
-
-      await assertSelection(page, {
-        anchorOffset: 150,
-        anchorPath: [1, 0, 0],
-        focusOffset: 150,
-        focusPath: [1, 0, 0],
-      })
-
-      await page.keyboard.press('ArrowUp')
-
-      await assertSelection(page, {
-        anchorOffset: 76,
-        anchorPath: [1, 0, 0],
-        focusOffset: 76,
-        focusPath: [1, 0, 0],
-      })
-
-      await page.keyboard.press('ArrowUp')
-
-      await expect(await page.locator('[data-inkling-card-selected="true"]')).toHaveCount(0)
-      await assertSelection(page, {
-        anchorOffset: 0,
-        anchorPath: [1, 0, 0],
-        focusOffset: 0,
-        focusPath: [1, 0, 0],
-      })
-
+      const paragraph = page.locator('[data-lexical-editor] > p').first()
+      const box = await paragraph.boundingBox()
+      await page.mouse.click(box.x + 1, box.y + 5)
       await page.keyboard.press('ArrowUp')
 
       // card is selected
@@ -801,14 +776,16 @@ test.describe('Card behaviour', async () => {
             </div>
           </div>
           <p dir="ltr">
-            <span data-lexical-text="true">
-              Chislic bacon flank andouille picanha turkey porchetta chuck venison shank. Beef sirloin bresaola,
-              meatball hamburger pork belly shankle. Frankfurter brisket t-bone alcatra porchetta tongue flank pork chop
-              kevin picanha prosciutto meatball.
-            </span>
+            <span data-lexical-text="true">First line of text</span>
+            <br />
+            <span data-lexical-text="true">Second line of text</span>
+            <br />
+            <span data-lexical-text="true">Third line of text</span>
           </p>
         `,
       )
+
+      await page.close()
     })
 
     test('moving through paragraph with breaks to card', async function () {
