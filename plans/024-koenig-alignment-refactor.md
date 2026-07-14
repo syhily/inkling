@@ -32,7 +32,7 @@ inkling 是 koenig 的衍生单包重构版，两者各自完成 JS→TS 转换�
 | 3    | 节点层修复                         | `0db022d` | DONE |
 | 4    | 组件层回归修复                     | `0b21585` | DONE |
 | 5    | 插件层修复                         | `8192600` | DONE |
-| 6    | 邮件渲染回流                       | —         | TODO |
+| 6    | 邮件渲染回流                       | `da03885` | DONE |
 | 7    | 死代码与存疑项清理                 | —         | TODO |
 
 ### 批 1（DONE `cdbbf8c`）
@@ -75,7 +75,7 @@ inkling 是 koenig 的衍生单包重构版，两者各自完成 JS→TS 转换�
 5. 核实项：`src/plugins/AtLinkPlugin.tsx` `handleItemSelected` 中 koenig 对非文本链接有 `linkNode.setFormat(...)`，inkling 只保留 `textNode.setFormat(... ?? 0)`——核实是否为格式应用回退，若是则恢复。
 6. 核实项：`src/plugins/behaviour/keyboard-navigation/escape.ts:16` 的 `editor._parentEditor` 裸访问（plan 011/023 已分类为遗留项）——顺手评估是否应走 `lexical-internals` 封装，不值得就记录不动。
 
-### 批 6：邮件渲染回流（TODO）
+### 批 6：邮件渲染回流（DONE `da03885`）
 
 1. header v2 Outlook VML：koenig `kg-default-nodes/src/nodes/header/renderers/v2/header-renderer.ts` 的 `generateMSOSplitHeaderImage`/`generateMSOContentWrapper`/`generateMSOContentClosing`（约 70 行）+ `hasDarkBg` → `kg-header-card-dark-bg/light-bg` class（class 名按 inkling 命名改）。移植时保持 inkling 的 `safeColor`/`isSafeUrl` 安全模式。补 email target 的渲染测试。
 2. horizontalrule 邮件模板：koenig `kg-default-nodes/src/nodes/horizontalrule/horizontalrule-renderer.ts:7-51` 在 `target === 'email'` 时输出 Outlook 兼容的 table+边框模拟 hr；inkling 当前一律 `document.createElement('hr')`。移植 + 测试。
