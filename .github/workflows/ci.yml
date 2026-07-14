@@ -52,6 +52,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - run: pnpm exec playwright install --with-deps
+
       - run: pnpm test:e2e
 
   # Packaging gate (plan 027): the packed tarball must load with only the
