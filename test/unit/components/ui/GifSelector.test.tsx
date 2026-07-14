@@ -112,6 +112,21 @@ describe('GifSelector', () => {
     expect(screen.queryByRole('button', { name: 'Gif 1' })).not.toBeInTheDocument()
   })
 
+  it('skips invalid gifs when navigating with ArrowDown', async () => {
+    const gif0 = createGif(0)
+    const broken = createGif(1, { columnIndex: 0, columnRowIndex: 1, media_formats: {} })
+    const gif2 = createGif(2, { columnIndex: 0, columnRowIndex: 2 })
+    render(<GifSelector {...defaultProps} gifs={[gif0, broken, gif2]} columns={[[gif0, broken, gif2]]} />)
+
+    const input = screen.getByPlaceholderText('Search Tenor for GIFs')
+    await userEvent.click(input)
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}')
+
+    const button = screen.getByRole('button', { name: 'Gif 2' })
+    expect(button).toHaveFocus()
+    expect(button).toHaveClass('border-green')
+  })
+
   it('calls onGifInsert when gif is clicked', async () => {
     const gif = createGif(0)
     render(<GifSelector {...defaultProps} gifs={[gif]} columns={[[gif]]} />)

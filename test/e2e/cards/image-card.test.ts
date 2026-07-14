@@ -848,7 +848,7 @@ test.describe('Image card', async () => {
 
     await page.keyboard.press('Enter')
 
-    await expect(await page.getByTestId('image-card-populated')).toBeAttached()
+    await expect(page.getByTestId('image-card-populated')).toBeAttached()
     await expect(page.locator('[data-inkling-card="image"]')).toHaveCount(1)
     await expect(page.getByTestId('gif-selector')).toBeHidden()
 

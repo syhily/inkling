@@ -117,6 +117,32 @@ const GifSelector = ({
     setHighlightedGif(gif)
   }
 
+  function hasUsableMedia(gif: GifData | undefined) {
+    if (!gif) {
+      return false
+    }
+    const media = gif.media_formats?.gif || gif.media_formats?.tinygif
+    return !!media?.url && !!media.dims
+  }
+
+  function findNextValidGif(startIndex: number): GifData | undefined {
+    for (let i = startIndex; i < gifs.length; i += 1) {
+      if (hasUsableMedia(gifs[i])) {
+        return gifs[i]
+      }
+    }
+    return undefined
+  }
+
+  function findPrevValidGif(startIndex: number): GifData | undefined {
+    for (let i = startIndex; i >= 0; i -= 1) {
+      if (hasUsableMedia(gifs[i])) {
+        return gifs[i]
+      }
+    }
+    return undefined
+  }
+
   function handleGifSelect(selectedGif: GifData) {
     const gif = selectedGif.media_formats.gif
     if (!gif?.url || !gif.dims) {
@@ -146,14 +172,17 @@ const GifSelector = ({
   }
 
   function highlightFirst() {
-    requestHighlight(gifs[0])
+    requestHighlight(findNextValidGif(0))
   }
 
   function highlightNext() {
-    if (highlightedGif?.index === undefined || highlightedGif.index >= gifs.length - 1) {
+    if (highlightedGif?.index === undefined) {
       return
     }
-    requestHighlight(gifs[highlightedGif.index + 1])
+    const next = findNextValidGif(highlightedGif.index + 1)
+    if (next) {
+      requestHighlight(next)
+    }
   }
 
   function highlightPrev() {
@@ -161,17 +190,28 @@ const GifSelector = ({
       focusSearch()
       return
     }
-    requestHighlight(gifs[highlightedGif.index - 1])
+    const prev = findPrevValidGif(highlightedGif.index - 1)
+    if (prev) {
+      requestHighlight(prev)
+    } else {
+      focusSearch()
+    }
   }
 
   function moveHighlightDown() {
     if (!highlightedGif || highlightedGif.columnIndex === undefined || highlightedGif.columnRowIndex === undefined) {
       return
     }
-    const nextGif = columns[highlightedGif.columnIndex]?.[highlightedGif.columnRowIndex + 1]
-
-    if (nextGif) {
-      requestHighlight(nextGif)
+    const column = columns[highlightedGif.columnIndex]
+    if (!column) {
+      return
+    }
+    for (let row = highlightedGif.columnRowIndex + 1; row < column.length; row += 1) {
+      const nextGif = column[row]
+      if (nextGif && hasUsableMedia(nextGif)) {
+        requestHighlight(nextGif)
+        return
+      }
     }
   }
 
@@ -179,13 +219,18 @@ const GifSelector = ({
     if (!highlightedGif || highlightedGif.columnIndex === undefined || highlightedGif.columnRowIndex === undefined) {
       return
     }
-    const nextGif = columns[highlightedGif.columnIndex]?.[highlightedGif.columnRowIndex - 1]
-
-    if (nextGif) {
-      requestHighlight(nextGif)
-    } else {
-      focusSearch()
+    const column = columns[highlightedGif.columnIndex]
+    if (!column) {
+      return
     }
+    for (let row = highlightedGif.columnRowIndex - 1; row >= 0; row -= 1) {
+      const nextGif = column[row]
+      if (nextGif && hasUsableMedia(nextGif)) {
+        requestHighlight(nextGif)
+        return
+      }
+    }
+    focusSearch()
   }
 
   function moveToNextHorizontalGif(direction: 'left' | 'right') {
@@ -239,7 +284,7 @@ const GifSelector = ({
 
     if (foundGifElem) {
       const nextGif = gifs[Number((foundGifElem as HTMLElement).dataset.gifIndex)]
-      if (nextGif) {
+      if (nextGif && hasUsableMedia(nextGif)) {
         requestHighlight(nextGif)
       }
     }
