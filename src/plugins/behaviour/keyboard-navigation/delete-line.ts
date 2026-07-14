@@ -1,13 +1,6 @@
 import type { LexicalEditor } from 'lexical'
 
-import {
-  $getSelection,
-  $isDecoratorNode,
-  $isLineBreakNode,
-  $isRangeSelection,
-  COMMAND_PRIORITY_LOW,
-  DELETE_LINE_COMMAND,
-} from 'lexical'
+import { $getSelection, $isDecoratorNode, $isRangeSelection, COMMAND_PRIORITY_LOW, DELETE_LINE_COMMAND } from 'lexical'
 
 import { $isAtTopOfNode, $selectDecoratorNode } from '@/utils'
 
@@ -32,9 +25,12 @@ export function registerDeleteLineCommand(editor: LexicalEditor, deps: KeyboardN
       }
 
       // Avoid deleting a card accidentally:
-      // If a paragraph contains only one line and is next to a card, then by default CMD + Backspace deletes the line + the sibling card
-      // In that case, we avoid using the default `selection.deleteLine()` from Lexical
-      // Instead, we remove the topLevelElement and put the selection on the sibling card
+      // If a paragraph is on the first visual line and adjacent to a card,
+      // Lexical's default DELETE_LINE behaviour can pull the card in. For backward
+      // deletion we delete from the paragraph start to the caret, preserving any
+      // text after the caret and later lines; we only remove the block and select
+      // the card when the paragraph becomes empty. Forward deletion beside a
+      // following card removes the whole block and selects the card.
       const selection = $getSelection()
       if ($isRangeSelection(selection)) {
         if (selection.isCollapsed()) {
@@ -50,13 +46,27 @@ export function registerDeleteLineCommand(editor: LexicalEditor, deps: KeyboardN
           const isFirstLine = nativeSelection && $isAtTopOfNode(nativeSelection, RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX)
 
           if (sibling && $isDecoratorNode(sibling) && isFirstLine) {
-            if (isBackward && $isLineBreakNode(anchorNode.getNextSibling())) {
-              anchorNode.remove()
-              return true
+            if (!topLevelElement) {
+              return false
             }
-            topLevelElement?.remove()
-            $selectDecoratorNode(sibling)
-
+            if (isBackward) {
+              // Delete from the paragraph start to the caret, preserving any text
+              // after the caret and any later lines. If the paragraph becomes empty,
+              // remove it and select the adjacent card.
+              const anchor = selection.anchor
+              anchor.set(topLevelElement.getKey(), 0, 'element')
+              selection.removeText()
+              if (topLevelElement.getChildrenSize() === 0) {
+                topLevelElement.remove()
+                $selectDecoratorNode(sibling)
+              }
+            } else {
+              // Forward delete-line beside a following card: remove the whole block
+              // and select the card. The existing E2E coverage only exercises the
+              // one-line case; multi-line forward deletion can be added separately.
+              topLevelElement.remove()
+              $selectDecoratorNode(sibling)
+            }
             return true
           }
         }

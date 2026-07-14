@@ -1704,64 +1704,175 @@ test.describe('Card behaviour', async () => {
     })
   })
 
-  // CMD/CTRL+Backspace behaviour differs by platform (macOS deletes to line
-  // start, Windows/Linux deletes a word), so a single expected HTML can't hold
-  // on both local macOS and Ubuntu CI; additionally the multi-line case
-  // currently deletes the whole paragraph and selects the card on macOS —
-  // suspected product bug in paragraph deletion at line start after a
-  // decorator card; needs per-platform expectations and a product fix.
-  // SKIP-REASON: platform-dependent deletion semantics + suspected product bug, see above
-  test.describe.skip('CMD+BACKSPACE', function () {
-    test('on an populated paragraph after a card', async function () {
-      await focusEditor(page)
-      await page.keyboard.type('---')
-      await page.keyboard.type('Some content')
+  test.describe('modifier Backspace beside cards', () => {
+    test.describe('macOS delete-line semantics', () => {
+      test.beforeEach(async ({ page }) => {
+        const isMac = await page.evaluate(() => navigator.platform.includes('Mac'))
+        // SKIP-REASON: Meta+Backspace maps to delete-line only on macOS; other platforms use Control+Backspace for delete-word.
+        test.skip(!isMac, 'macOS Meta+Backspace semantics only')
+      })
 
-      await page.keyboard.press(`${ctrlOrCmd(page)}+Backspace`)
+      test('removes a one-line paragraph after a card and selects the card', async function () {
+        await focusEditor(page)
+        await page.keyboard.type('---')
+        await page.keyboard.type('Some content')
 
-      await assertHTML(
-        page,
-        html`
-          <div data-lexical-decorator="true" contenteditable="false">
-            <div data-inkling-card-editing="false" data-inkling-card-selected="true" data-inkling-card="horizontalrule">
-              <hr />
+        await page.keyboard.press('Meta+Backspace')
+
+        await assertHTML(
+          page,
+          html`
+            <div data-lexical-decorator="true" contenteditable="false">
+              <div
+                data-inkling-card-editing="false"
+                data-inkling-card-selected="true"
+                data-inkling-card="horizontalrule"
+              >
+                <hr />
+              </div>
             </div>
-          </div>
-        `,
-      )
+          `,
+        )
+      })
+
+      test('removes the first line of a multi-line paragraph and keeps the card unselected', async function () {
+        await focusEditor(page)
+        await page.keyboard.type('---')
+        await page.keyboard.type('Some content')
+        await page.keyboard.press('Shift+Enter')
+        await page.keyboard.press('Shift+Enter')
+        await page.keyboard.type('Some more content')
+
+        // Place the caret at the end of the first visual line deterministically
+        // (ArrowUp can mis-fire in headless browsers with zero-height line breaks).
+        await page.evaluate(() => {
+          const editor = (window as unknown as { lexicalEditor: { getRootElement: () => HTMLElement | null } })
+            .lexicalEditor
+          const paragraph = editor.getRootElement().querySelector('p')
+          const span = paragraph?.querySelector('span[data-lexical-text="true"]')
+          const textNode = span?.firstChild
+          if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
+            throw new Error('Expected first paragraph text node')
+          }
+          const offset = textNode.textContent?.length ?? 0
+          const range = document.createRange()
+          range.setStart(textNode, offset)
+          range.setEnd(textNode, offset)
+          const sel = window.getSelection()
+          sel?.removeAllRanges()
+          sel?.addRange(range)
+          document.dispatchEvent(new Event('selectionchange'))
+        })
+        await page.waitForTimeout(50)
+
+        await page.keyboard.press('Meta+Backspace')
+
+        await assertHTML(
+          page,
+          html`
+            <div data-lexical-decorator="true" contenteditable="false">
+              <div
+                data-inkling-card-editing="false"
+                data-inkling-card-selected="false"
+                data-inkling-card="horizontalrule"
+              >
+                <hr />
+              </div>
+            </div>
+            <p dir="ltr">
+              <br />
+              <br />
+              <span data-lexical-text="true">Some more content</span>
+            </p>
+          `,
+        )
+      })
     })
 
-    test('on the first line of a multi-line paragraph after a card', async function () {
-      await focusEditor(page)
-      await page.keyboard.type('---')
-      await page.keyboard.type('Some content')
-      await page.keyboard.press('Shift+Enter')
-      await page.keyboard.press('Shift+Enter')
-      await page.keyboard.type('Some more content')
-      await page.keyboard.press('ArrowUp')
-      await page.keyboard.press('ArrowUp')
+    test.describe('Linux/Windows delete-word semantics', () => {
+      test.beforeEach(async ({ page }) => {
+        const isMac = await page.evaluate(() => navigator.platform.includes('Mac'))
+        // SKIP-REASON: Control+Backspace maps to delete-word on Linux/Windows; macOS uses Meta+Backspace for delete-line.
+        test.skip(isMac, 'Control+Backspace semantics on non-macOS')
+      })
 
-      await page.keyboard.press(`${ctrlOrCmd(page)}+Backspace`)
+      test('removes the last word and preserves the previous card', async function () {
+        await focusEditor(page)
+        await page.keyboard.type('---')
+        await page.keyboard.type('Some content')
 
-      await assertHTML(
-        page,
-        html`
-          <div data-lexical-decorator="true" contenteditable="false">
-            <div
-              data-inkling-card-editing="false"
-              data-inkling-card-selected="false"
-              data-inkling-card="horizontalrule"
-            >
-              <hr />
+        await page.keyboard.press('Control+Backspace')
+
+        await assertHTML(
+          page,
+          html`
+            <div data-lexical-decorator="true" contenteditable="false">
+              <div
+                data-inkling-card-editing="false"
+                data-inkling-card-selected="false"
+                data-inkling-card="horizontalrule"
+              >
+                <hr />
+              </div>
             </div>
-          </div>
-          <p dir="ltr">
-            <br />
-            <br />
-            <span data-lexical-text="true">Some more content</span>
-          </p>
-        `,
-      )
+            <p dir="ltr"><span data-lexical-text="true">Some </span></p>
+          `,
+        )
+      })
+
+      test('removes the last word on the first line and preserves the paragraph', async function () {
+        await focusEditor(page)
+        await page.keyboard.type('---')
+        await page.keyboard.type('first line')
+        await page.keyboard.press('Shift+Enter')
+        await page.keyboard.press('Shift+Enter')
+        await page.keyboard.type('later line')
+
+        // Place the caret at the end of the first visual line deterministically
+        // (ArrowUp can mis-fire in headless browsers with zero-height line breaks).
+        await page.evaluate(() => {
+          const editor = (window as unknown as { lexicalEditor: { getRootElement: () => HTMLElement | null } })
+            .lexicalEditor
+          const paragraph = editor.getRootElement().querySelector('p')
+          const span = paragraph?.querySelector('span[data-lexical-text="true"]')
+          const textNode = span?.firstChild
+          if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
+            throw new Error('Expected first paragraph text node')
+          }
+          const offset = textNode.textContent?.length ?? 0
+          const range = document.createRange()
+          range.setStart(textNode, offset)
+          range.setEnd(textNode, offset)
+          const sel = window.getSelection()
+          sel?.removeAllRanges()
+          sel?.addRange(range)
+          document.dispatchEvent(new Event('selectionchange'))
+        })
+        await page.waitForTimeout(50)
+
+        await page.keyboard.press('Control+Backspace')
+
+        await assertHTML(
+          page,
+          html`
+            <div data-lexical-decorator="true" contenteditable="false">
+              <div
+                data-inkling-card-editing="false"
+                data-inkling-card-selected="false"
+                data-inkling-card="horizontalrule"
+              >
+                <hr />
+              </div>
+            </div>
+            <p dir="ltr">
+              <span data-lexical-text="true">first </span>
+              <br />
+              <br />
+              <span data-lexical-text="true">later line</span>
+            </p>
+          `,
+        )
+      })
     })
   })
 
