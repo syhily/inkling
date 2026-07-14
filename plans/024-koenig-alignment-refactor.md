@@ -33,7 +33,7 @@ inkling 是 koenig 的衍生单包重构版，两者各自完成 JS→TS 转换�
 | 4    | 组件层回归修复                     | `0b21585` | DONE |
 | 5    | 插件层修复                         | `8192600` | DONE |
 | 6    | 邮件渲染回流                       | `da03885` | DONE |
-| 7    | 死代码与存疑项清理                 | —         | TODO |
+| 7    | 死代码与存疑项清理                 | `e693962` | DONE |
 
 ### 批 1（DONE `cdbbf8c`）
 
@@ -82,7 +82,7 @@ inkling 是 koenig 的衍生单包重构版，两者各自完成 JS→TS 转换�
 3. 图片 `<picture>`/现代格式支持（较大，先做可行性评估再实现，评估不通过则 STOP 报告）：koenig `image-renderer.ts:14-22,104-177` 的 `pictureImageFormats` feature flag 下 `<picture><source type=image/avif|webp>` 输出、`isAnimatedImage`（gif 跳过）、`utils/srcset-attribute.ts` 的 `format` 参数与 `getSrcsetAttribute`、`export-dom.ts` 的 `imageBaseUrl`/`canTransformImageToFormat` 选项、`utils/is-content-image.ts` 的 `imageBaseUrl` 参数（inkling 改名为 `is-local-content-image.ts` 时砍掉）。注意保持 inkling 的 `isSafeUrl` 插值防护。
 4. 评估项（先评估后决定）：koenig `email-button.ts` 接口化重写（`EmailButtonOptions` + `style: 'fill'|'outline'`，依赖 `@tryghost/color-utils`）。inkling 有本地 `colorUtils.ts` 可替代依赖；若改造收益不大则记录不动。
 
-### 批 7：死代码与存疑项清理（TODO）
+### 批 7：死代码与存疑项清理（DONE `e693962`）
 
 1. `src/utils/set-src-background-from-parent.ts` — src 内零调用方（仅自身测试引用）。核实后删除（含测试）或接线，二选一并记录理由。
 2. `src/nodes/ButtonNode.tsx:41-75` — `__textEditor` 嵌套编辑器序列化为 `json.text` 但 `decorate()` 未接入组件。核实用途：接线或移除，记录理由。
@@ -108,3 +108,5 @@ inkling 是 koenig 的衍生单包重构版，两者各自完成 JS→TS 转换�
 ## 最终验收
 
 全部批次完成后：所有门禁 + 完整 `pnpm test:e2e` 一遍（已知 flake 除外），并将本文件状态列更新为 DONE。
+
+**验收记录（2026-07-14）**：`pnpm typecheck` ✅ / `pnpm lint`（含 SKIP-REASON 守卫）✅ / `pnpm format:check` ✅ / `pnpm test:unit` 190 文件 1449 通过 ✅ / 全量 `pnpm test:e2e` 588 通过、8 个带 SKIP-REASON 的跳过、0 失败 ✅（含批 7 根因修复的 code-block undo/redo 用例）。
