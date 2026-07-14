@@ -204,9 +204,12 @@ describe('GifSelector', () => {
 
     const input = screen.getByPlaceholderText('Search Tenor for GIFs')
     await userEvent.click(input)
-    await userEvent.keyboard('{ArrowDown}{ArrowRight}')
+    await userEvent.keyboard('{ArrowDown}')
 
     const button = screen.getByRole('button', { name: 'Gif 1' })
+    document.elementFromPoint = () => button as unknown as Element
+    await userEvent.keyboard('{ArrowRight}')
+
     expect(button).toHaveFocus()
     expect(button).toHaveClass('border-green')
   })
