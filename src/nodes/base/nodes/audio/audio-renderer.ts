@@ -28,21 +28,22 @@ export function renderAudioNode(node: AudioNodeData, options: AudioExportDOMOpti
   addCreateDocumentOption(options)
   const document = options.createDocument!()
 
-  if (!node.src || node.src.trim() === '') {
+  if (!node.src || node.src.trim() === '' || !isSafeMediaUrl(node.src)) {
     return renderEmptyContainer(document)
   }
 
-  const thumbnailCls = getThumbnailCls(node)
-  const emptyThumbnailCls = getEmptyThumbnailCls(node)
+  const safeThumbnailSrc = isSafeMediaUrl(node.thumbnailSrc) ? node.thumbnailSrc : ''
+  const thumbnailCls = getThumbnailCls(safeThumbnailSrc)
+  const emptyThumbnailCls = getEmptyThumbnailCls(safeThumbnailSrc)
 
   if (options.target === 'email') {
     if (!isEmailExportDOMOptions(options)) {
       throw new Error('renderAudioNode requires options.postUrl when options.target is "email"')
     }
 
-    return emailTemplate(node, document, options, thumbnailCls, emptyThumbnailCls)
+    return emailTemplate(node, document, options, thumbnailCls, emptyThumbnailCls, safeThumbnailSrc)
   } else {
-    return frontendTemplate(node, document, thumbnailCls, emptyThumbnailCls)
+    return frontendTemplate(node, document, thumbnailCls, emptyThumbnailCls, safeThumbnailSrc)
   }
 }
 
@@ -50,11 +51,17 @@ function isEmailExportDOMOptions(options: AudioExportDOMOptions): options is Ema
   return options.target === 'email' && typeof options.postUrl === 'string' && options.postUrl.trim() !== ''
 }
 
-function frontendTemplate(node: AudioNodeData, document: Document, thumbnailCls: string, emptyThumbnailCls: string) {
+function frontendTemplate(
+  node: AudioNodeData,
+  document: Document,
+  thumbnailCls: string,
+  emptyThumbnailCls: string,
+  safeThumbnailSrc: string,
+) {
   const element = document.createElement('div')
   element.setAttribute('class', 'inkling-card inkling-audio-card')
   const img = document.createElement('img')
-  img.src = node.thumbnailSrc
+  img.src = safeThumbnailSrc
   img.alt = 'audio-thumbnail'
   img.setAttribute('class', thumbnailCls)
   element.appendChild(img)
@@ -221,9 +228,8 @@ function emailTemplate(
   options: EmailAudioExportDOMOptions,
   thumbnailCls: string,
   emptyThumbnailCls: string,
+  safeThumbnailSrc: string,
 ) {
-  const safeThumbnailSrc = isSafeMediaUrl(node.thumbnailSrc) ? node.thumbnailSrc : ''
-
   const html = `
         <table cellspacing="0" cellpadding="0" border="0" class="inkling-audio-card">
                 <tr>
@@ -279,20 +285,20 @@ function emailTemplate(
   return { element: container.firstElementChild as HTMLTableElement, type: 'outer' as const }
 }
 
-function getThumbnailCls(node: AudioNodeData) {
+function getThumbnailCls(thumbnailSrc: string) {
   let thumbnailCls = 'inkling-audio-thumbnail'
 
-  if (!node.thumbnailSrc) {
+  if (!thumbnailSrc) {
     thumbnailCls += ' inkling-audio-hide'
   }
 
   return thumbnailCls
 }
 
-function getEmptyThumbnailCls(node: AudioNodeData) {
+function getEmptyThumbnailCls(thumbnailSrc: string) {
   let emptyThumbnailCls = 'inkling-audio-thumbnail placeholder'
 
-  if (node.thumbnailSrc) {
+  if (thumbnailSrc) {
     emptyThumbnailCls += ' inkling-audio-hide'
   }
 

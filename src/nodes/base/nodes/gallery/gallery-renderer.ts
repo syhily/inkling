@@ -4,7 +4,7 @@ import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-
 import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { isLocalContentImage } from '@/nodes/base/utils/is-local-content-image'
-import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
+import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 import { sanitizeHtml } from '@/utils/sanitize-html'
@@ -49,7 +49,7 @@ function isValidImage(image: unknown): image is GalleryImage {
     typeof candidate.fileName === 'string' &&
     candidate.fileName.trim() !== '' &&
     typeof candidate.src === 'string' &&
-    candidate.src.trim() !== '' &&
+    isSafeMediaUrl(candidate.src) &&
     typeof width === 'number' &&
     Number.isFinite(width) &&
     width > 0 &&

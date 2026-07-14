@@ -18,6 +18,13 @@ interface BookmarkNodeData {
   caption: string
 }
 
+function getSafeMediaUrls(node: BookmarkNodeData) {
+  return {
+    safeIcon: isSafeMediaUrl(node.icon) ? node.icon : '',
+    safeThumbnail: isSafeMediaUrl(node.thumbnail) ? node.thumbnail : '',
+  }
+}
+
 export function renderBookmarkNode(node: BookmarkNodeData, options: ExportDOMOptions = {}) {
   addCreateDocumentOption(options)
 
@@ -41,8 +48,7 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
   const description = node.description
 
   const safeUrl = isSafeUrl(node.url) ? node.url : ''
-  const safeIcon = isSafeMediaUrl(node.icon) ? node.icon : ''
-  const safeThumbnail = isSafeMediaUrl(node.thumbnail) ? node.thumbnail : ''
+  const { safeIcon, safeThumbnail } = getSafeMediaUrls(node)
   const caption = escapeHtml(node.caption)
 
   const element = document.createElement('div')
@@ -129,6 +135,8 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
 }
 
 function frontendTemplate(node: BookmarkNodeData, document: Document) {
+  const { safeIcon, safeThumbnail } = getSafeMediaUrls(node)
+
   const element = document.createElement('figure')
   const caption = node.caption
   let cardClass = 'inkling-card inkling-bookmark-card'
@@ -160,11 +168,10 @@ function frontendTemplate(node: BookmarkNodeData, document: Document) {
   metadata.setAttribute('class', 'inkling-bookmark-metadata')
   content.appendChild(metadata)
 
-  const nodeIcon = node.icon
-  if (nodeIcon) {
+  if (safeIcon) {
     const icon = document.createElement('img')
     icon.setAttribute('class', 'inkling-bookmark-icon')
-    icon.src = nodeIcon
+    icon.src = safeIcon
     icon.alt = ''
     metadata.appendChild(icon)
   }
@@ -185,14 +192,13 @@ function frontendTemplate(node: BookmarkNodeData, document: Document) {
     metadata.appendChild(author)
   }
 
-  const nodeThumbnail = node.thumbnail
-  if (nodeThumbnail) {
+  if (safeThumbnail) {
     const thumbnailDiv = document.createElement('div')
     thumbnailDiv.setAttribute('class', 'inkling-bookmark-thumbnail')
     container.appendChild(thumbnailDiv)
 
     const thumbnail = document.createElement('img')
-    thumbnail.src = nodeThumbnail
+    thumbnail.src = safeThumbnail
     thumbnail.alt = ''
     thumbnail.setAttribute('onerror', `this.style.display = 'none'`) // Hide thumbnail div if image fails to load
     thumbnailDiv.appendChild(thumbnail)
