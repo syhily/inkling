@@ -17,6 +17,11 @@ export interface ExportDOMDom {
   window: { document: Document }
 }
 
+export interface ExportDOMDesignOptions {
+  buttonStyle?: 'fill' | 'outline'
+  [key: string]: unknown
+}
+
 export interface ExportDOMOptionsBase {
   createDocument?: () => Document
   dom?: ExportDOMDom
@@ -29,7 +34,7 @@ export interface ExportDOMOptionsBase {
   canTransformImageToFormat?: (format: string) => boolean
   imageOptimization?: Record<string, unknown>
   feature?: ExportDOMFeatureOptions
-  design?: Record<string, unknown>
+  design?: ExportDOMDesignOptions
   [key: string]: unknown
 }
 

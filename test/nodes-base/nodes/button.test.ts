@@ -252,6 +252,43 @@ describe('ButtonNode', function () {
     )
 
     it(
+      'renders for email target with explicit design outline',
+      editorTest(async function () {
+        const buttonNode = $createButtonNode(dataset)
+        const result = buttonNode.exportDOM(editor, {
+          ...exportOptions,
+          target: 'email',
+          design: { buttonStyle: 'outline' },
+        })
+        const element = result.element as HTMLElement
+        const output = element.innerHTML
+
+        await expectPrettifiedHtml(
+          output,
+          html`
+            <table border="0" cellpadding="0" cellspacing="0">
+              <tbody>
+                <tr>
+                  <td>
+                    <table class="btn btn-accent" border="0" cellspacing="0" cellpadding="0" align="center">
+                      <tbody>
+                        <tr>
+                          <td align="center">
+                            <a href="http://blog.com/post1">click me</a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          `,
+        )
+      }),
+    )
+
+    it(
       'renders an empty span with a missing buttonUrl',
       editorTest(async function () {
         const buttonNode = $createButtonNode()

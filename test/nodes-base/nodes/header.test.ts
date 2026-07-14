@@ -585,5 +585,112 @@ describe('HeaderNode', function () {
         }),
       )
     })
+
+    describe('email target with design options', function () {
+      it(
+        'renders outline button with empty feature bag',
+        editorTest(function () {
+          const node = $createHeaderNode({
+            ...dataset,
+            backgroundImageSrc: '',
+            buttonColor: '#FF0000',
+          })
+          const { element } = node.exportDOM(editor, {
+            ...exportOptions,
+            target: 'email',
+            feature: {},
+            design: { buttonStyle: 'outline' },
+          })
+          const html = (element as HTMLElement).outerHTML
+
+          expect(html).toContain('class="inkling-header-button-wrapper"')
+          expect(html).toContain('background-color: transparent')
+          expect(html).toContain('border: 1px solid currentColor')
+          expect(html).toContain('color: #FF0000')
+        }),
+      )
+
+      it(
+        'renders fill button with empty feature bag',
+        editorTest(function () {
+          const node = $createHeaderNode({
+            ...dataset,
+            backgroundImageSrc: '',
+            buttonColor: '#FF0000',
+          })
+          const { element } = node.exportDOM(editor, {
+            ...exportOptions,
+            target: 'email',
+            feature: {},
+            design: { buttonStyle: 'fill' },
+          })
+          const html = (element as HTMLElement).outerHTML
+
+          expect(html).toContain('class="inkling-header-button-wrapper"')
+          expect(html).toContain('background-color: #FF0000')
+        }),
+      )
+
+      it(
+        'chooses white text for a dark custom fill',
+        editorTest(function () {
+          const node = $createHeaderNode({
+            ...dataset,
+            backgroundImageSrc: '',
+            buttonColor: '#000000',
+          })
+          const { element } = node.exportDOM(editor, {
+            ...exportOptions,
+            target: 'email',
+            design: { buttonStyle: 'fill' },
+          })
+          const html = (element as HTMLElement).outerHTML
+
+          expect(html).toContain('background-color: #000000')
+          expect(html).toContain('color: #FFFFFF')
+        }),
+      )
+
+      it(
+        'chooses black text for a light custom fill',
+        editorTest(function () {
+          const node = $createHeaderNode({
+            ...dataset,
+            backgroundImageSrc: '',
+            buttonColor: '#FFFFFF',
+          })
+          const { element } = node.exportDOM(editor, {
+            ...exportOptions,
+            target: 'email',
+            design: { buttonStyle: 'fill' },
+          })
+          const html = (element as HTMLElement).outerHTML
+
+          expect(html).toContain('background-color: #FFFFFF')
+          expect(html).toContain('color: #000000')
+        }),
+      )
+
+      it(
+        'resolves accent color to a concrete value',
+        editorTest(function () {
+          const node = $createHeaderNode({
+            ...dataset,
+            backgroundImageSrc: '',
+            buttonColor: 'accent',
+            accentColor: '#FF0000',
+          })
+          const { element } = node.exportDOM(editor, {
+            ...exportOptions,
+            target: 'email',
+            design: { buttonStyle: 'fill' },
+          })
+          const html = (element as HTMLElement).outerHTML
+
+          expect(html).not.toContain('color: accent')
+          expect(html).toContain('background-color: #FF0000')
+        }),
+      )
+    })
   })
 })

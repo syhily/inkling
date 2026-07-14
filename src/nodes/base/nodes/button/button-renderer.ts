@@ -45,38 +45,19 @@ function frontendTemplate(node: ButtonNodeData, document: Document) {
 }
 
 function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document: Document) {
-  const { buttonText } = node
   const safeButtonUrl = isSafeUrl(node.buttonUrl) ? node.buttonUrl : ''
-  const escapedButtonText = escapeHtml(buttonText || 'Button Title')
+  const buttonText = node.buttonText || 'Button Title'
 
-  let cardHtml
-  if (options.feature?.emailCustomization) {
-    cardHtml = html` <table border="0" cellpadding="0" cellspacing="0">
-      <tr>
-        <td>
-          <table class="btn btn-accent" border="0" cellspacing="0" cellpadding="0" align="${node.alignment}">
-            <tr>
-              <td align="center">
-                <a href="${escapeHtml(safeButtonUrl)}">${escapedButtonText}</a>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>`
-
-    const element = document.createElement('p')
-    element.innerHTML = cardHtml
-    return { element, type: 'outer' as const }
-  } else if (options.feature?.emailCustomizationAlpha) {
+  if (usesModernEmailButton(options)) {
     const buttonHtml = renderEmailButton({
       alignment: node.alignment,
       color: 'accent',
-      url: escapeHtml(safeButtonUrl),
-      text: escapedButtonText,
+      style: options.design?.buttonStyle,
+      text: buttonText,
+      url: safeButtonUrl,
     })
 
-    cardHtml = html`
+    const cardHtml = html`
       <table border="0" cellpadding="0" cellspacing="0">
         <tbody>
           <tr>
@@ -86,26 +67,41 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
       </table>
     `
 
-    const element = document.createElement('div')
-    element.innerHTML = cardHtml
-    return { element, type: 'inner' as const }
-  } else {
-    cardHtml = html`
-      <div class="btn btn-accent">
-        <table border="0" cellspacing="0" cellpadding="0" align="${node.alignment}">
-          <tr>
-            <td align="center">
-              <a href="${escapeHtml(safeButtonUrl)}">${escapedButtonText}</a>
-            </td>
-          </tr>
-        </table>
-      </div>
-    `
+    if (options.feature?.emailCustomizationAlpha) {
+      const element = document.createElement('div')
+      element.innerHTML = cardHtml
+      return { element, type: 'inner' as const }
+    }
 
     const element = document.createElement('p')
     element.innerHTML = cardHtml
     return { element, type: 'outer' as const }
   }
+
+  // Legacy branch preserved byte-for-byte when no customization/design option
+  // is supplied.
+  const escapedButtonText = escapeHtml(buttonText)
+  const cardHtml = html`
+    <div class="btn btn-accent">
+      <table border="0" cellspacing="0" cellpadding="0" align="${node.alignment}">
+        <tr>
+          <td align="center">
+            <a href="${escapeHtml(safeButtonUrl)}">${escapedButtonText}</a>
+          </td>
+        </tr>
+      </table>
+    </div>
+  `
+
+  const element = document.createElement('p')
+  element.innerHTML = cardHtml
+  return { element, type: 'outer' as const }
+}
+
+function usesModernEmailButton(options: ExportDOMOptions): boolean {
+  return Boolean(
+    options.feature?.emailCustomization || options.feature?.emailCustomizationAlpha || options.design?.buttonStyle,
+  )
 }
 
 function getCardClasses(node: ButtonNodeData) {

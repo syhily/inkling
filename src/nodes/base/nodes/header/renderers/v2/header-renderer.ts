@@ -4,6 +4,7 @@ import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
+import { renderEmailButton } from '@/nodes/base/utils/render-helpers/email-button'
 import { getSrcsetAttribute, type ImageRenderOptions } from '@/nodes/base/utils/srcset-attribute'
 import { slugify } from '@/utils/slugify'
 
@@ -47,9 +48,7 @@ interface HeaderV2DatasetNode {
   __accentColor: string
 }
 
-interface HeaderV2RenderOptions extends ExportDOMOptions {
-  design?: { buttonStyle?: string }
-}
+interface HeaderV2RenderOptions extends ExportDOMOptions {}
 
 // Colors come from document JSON, not just the color picker — constrain to
 // values the picker can produce before interpolating into style/attributes.
@@ -236,9 +235,9 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
   const accentColor = safeColor(nodeData.accentColor, 'transparent')
 
   const backgroundAccent = nodeData.backgroundColor === 'accent' ? `background-color: ${accentColor};` : ''
-  let buttonAccent = nodeData.buttonColor === 'accent' ? `background-color: ${accentColor};` : buttonColor
-  let buttonStyle = nodeData.buttonColor !== 'accent' ? `background-color: ${buttonColor};` : ''
-  let buttonTextColor = safeColor(nodeData.buttonTextColor, '#000000')
+  const buttonAccent = nodeData.buttonColor === 'accent' ? `background-color: ${accentColor};` : buttonColor
+  const buttonStyle = nodeData.buttonColor !== 'accent' ? `background-color: ${buttonColor};` : ''
+  const buttonTextColor = safeColor(nodeData.buttonTextColor, '#000000')
   const alignment = nodeData.alignment === 'center' ? 'text-align: center;' : ''
   const backgroundImageStyle = safeBackgroundImageSrc
     ? nodeData.layout !== 'split'
@@ -256,29 +255,11 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
     layout: nodeData.layout,
   }
 
-  if (
-    (options?.feature?.emailCustomization || options?.feature?.emailCustomizationAlpha) &&
-    options?.design?.buttonStyle === 'outline'
-  ) {
-    if (nodeData.buttonColor === 'accent') {
-      buttonAccent = ''
-      buttonStyle = `
-                border: 1px solid ${accentColor};
-                background-color: transparent;
-                color: ${accentColor} !important;
-            `
-      buttonTextColor = accentColor
-    } else {
-      buttonStyle = `
-                border: 1px solid ${buttonColor};
-                background-color: transparent;
-                color: ${buttonColor} !important;
-            `
-      buttonTextColor = buttonColor
-    }
-  }
+  const useModernButton = Boolean(
+    options.feature?.emailCustomization || options.feature?.emailCustomizationAlpha || options.design?.buttonStyle,
+  )
 
-  if (options?.feature?.emailCustomization || options?.feature?.emailCustomizationAlpha) {
+  if (useModernButton) {
     return `
             <div class="inkling-header-card inkling-v2 ${backgroundClass}" style="color:${textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
                 ${
@@ -313,13 +294,16 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
                                       nodeData.buttonEnabled && safeButtonUrl
                                         ? `
                                         <td class="inkling-header-button-wrapper">
-                                            <table class="btn" border="0" cellspacing="0" cellpadding="0" align="${nodeData.alignment}">
-                                                <tr>
-                                                    <td align="center" style="${buttonStyle} ${buttonAccent}">
-                                                        <a href="${safeButtonUrl}" style="color: ${buttonTextColor};">${buttonText}</a>
-                                                    </td>
-                                                </tr>
-                                            </table>
+                                            ${renderEmailButton({
+                                              alignment: nodeData.alignment,
+                                              color:
+                                                nodeData.buttonColor === 'accent'
+                                                  ? accentColor
+                                                  : safeColor(nodeData.buttonColor, 'transparent'),
+                                              style: options.design?.buttonStyle === 'outline' ? 'outline' : 'fill',
+                                              text: nodeData.buttonText || '',
+                                              url: safeButtonUrl,
+                                            })}
                                         </td>
                                     `
                                         : ''
