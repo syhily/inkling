@@ -2,10 +2,17 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { mergeRegister, $getSelection, $isRangeSelection, COMMAND_PRIORITY_HIGH } from 'lexical'
 import React from 'react'
 
-import { $createBookmarkNode, BookmarkNode, INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
+import {
+  $createBookmarkNode,
+  BookmarkNode,
+  type BookmarkNodeDataset,
+  INSERT_BOOKMARK_COMMAND,
+} from '@/nodes/BookmarkNode'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+// command payloads cross an untyped runtime boundary (menu dispatch, external
+// consumers), so narrow before constructing the node
+function isBookmarkNodeDataset(value: unknown): value is BookmarkNodeDataset {
   return typeof value === 'object' && value !== null
 }
 
@@ -26,7 +33,7 @@ export const BookmarkPlugin = () => {
             return false
           }
 
-          if (!isRecord(dataset)) {
+          if (!isBookmarkNodeDataset(dataset)) {
             return false
           }
 

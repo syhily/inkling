@@ -2,11 +2,13 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { mergeRegister, COMMAND_PRIORITY_HIGH, COMMAND_PRIORITY_LOW } from 'lexical'
 import React from 'react'
 
-import { $createAudioNode, AudioNode, INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
+import { $createAudioNode, AudioNode, type AudioNodeDataset, INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
 import { INSERT_MEDIA_COMMAND } from '@/plugins/DragDropPastePlugin'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+// command payloads cross an untyped runtime boundary (menu dispatch, external
+// consumers), so narrow before constructing the node
+function isAudioNodeDataset(value: unknown): value is AudioNodeDataset {
   return typeof value === 'object' && value !== null
 }
 
@@ -21,7 +23,7 @@ export const AudioPlugin = () => {
       editor.registerCommand(
         INSERT_AUDIO_COMMAND,
         (dataset) => {
-          if (!isRecord(dataset)) {
+          if (!isAudioNodeDataset(dataset)) {
             return false
           }
           const cardNode = $createAudioNode(dataset)

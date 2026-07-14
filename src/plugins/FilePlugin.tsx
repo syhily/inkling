@@ -2,10 +2,12 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { mergeRegister, COMMAND_PRIORITY_LOW } from 'lexical'
 import React from 'react'
 
-import { $createFileNode, FileNode, INSERT_FILE_COMMAND } from '@/nodes/FileNode'
+import { $createFileNode, FileNode, type FileNodeDataset, INSERT_FILE_COMMAND } from '@/nodes/FileNode'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+// command payloads cross an untyped runtime boundary (menu dispatch, external
+// consumers), so narrow before constructing the node
+function isFileNodeDataset(value: unknown): value is FileNodeDataset {
   return typeof value === 'object' && value !== null
 }
 
@@ -20,7 +22,7 @@ export const FilePlugin = () => {
       editor.registerCommand(
         INSERT_FILE_COMMAND,
         (dataset) => {
-          if (!isRecord(dataset)) {
+          if (!isFileNodeDataset(dataset)) {
             return false
           }
           const cardNode = $createFileNode(dataset)

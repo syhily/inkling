@@ -2,10 +2,12 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { mergeRegister, COMMAND_PRIORITY_LOW } from 'lexical'
 import React from 'react'
 
-import { $createToggleNode, INSERT_TOGGLE_COMMAND, ToggleNode } from '@/nodes/ToggleNode'
+import { $createToggleNode, INSERT_TOGGLE_COMMAND, ToggleNode, type ToggleNodeDataset } from '@/nodes/ToggleNode'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+// command payloads cross an untyped runtime boundary (menu dispatch, external
+// consumers), so narrow before constructing the node
+function isToggleNodeDataset(value: unknown): value is ToggleNodeDataset {
   return typeof value === 'object' && value !== null
 }
 
@@ -20,7 +22,7 @@ export const TogglePlugin = () => {
       editor.registerCommand(
         INSERT_TOGGLE_COMMAND,
         (dataset) => {
-          if (!isRecord(dataset)) {
+          if (!isToggleNodeDataset(dataset)) {
             return false
           }
           const cardNode = $createToggleNode(dataset)

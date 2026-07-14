@@ -5,7 +5,7 @@ import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { HorizontalRuleCard } from '@/components/ui/cards/HorizontalRuleCard'
 import { HorizontalRuleNode as BaseHorizontalRuleNode } from '@/nodes/base'
 
-export const INSERT_HORIZONTAL_RULE_COMMAND = createCommand()
+export const INSERT_HORIZONTAL_RULE_COMMAND = createCommand<void>()
 
 export class HorizontalRuleNode extends BaseHorizontalRuleNode {
   static cardMenu = {

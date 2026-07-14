@@ -144,6 +144,10 @@ function useSlashCardMenu(editor: LexicalEditor) {
         focusPNode.remove()
         paragraph.select()
 
+        // deliberate boundary: the card menu is a heterogeneous registry of
+        // command/payload pairs built from each node's static `cardMenu`, so
+        // the specific payload type is erased here. Each plugin handler
+        // re-narrows the payload with its own dataset type guard.
         editor.dispatchCommand(insertCommand as LexicalCommand<unknown>, dataset)
       })
 

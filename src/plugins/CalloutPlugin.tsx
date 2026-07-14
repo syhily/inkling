@@ -2,10 +2,12 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { mergeRegister, COMMAND_PRIORITY_LOW } from 'lexical'
 import React from 'react'
 
-import { $createCalloutNode, CalloutNode, INSERT_CALLOUT_COMMAND } from '@/nodes/CalloutNode'
+import { $createCalloutNode, CalloutNode, type CalloutNodeDataset, INSERT_CALLOUT_COMMAND } from '@/nodes/CalloutNode'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+// command payloads cross an untyped runtime boundary (menu dispatch, external
+// consumers), so narrow before constructing the node
+function isCalloutNodeDataset(value: unknown): value is CalloutNodeDataset {
   return typeof value === 'object' && value !== null
 }
 
@@ -20,7 +22,7 @@ export const CalloutPlugin = () => {
       editor.registerCommand(
         INSERT_CALLOUT_COMMAND,
         (dataset) => {
-          if (!isRecord(dataset)) {
+          if (!isCalloutNodeDataset(dataset)) {
             return false
           }
           const cardNode = $createCalloutNode(dataset)

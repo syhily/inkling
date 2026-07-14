@@ -2,11 +2,13 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { mergeRegister, COMMAND_PRIORITY_HIGH, COMMAND_PRIORITY_LOW } from 'lexical'
 import React from 'react'
 
-import { $createVideoNode, INSERT_VIDEO_COMMAND, VideoNode } from '@/nodes/VideoNode'
+import { $createVideoNode, INSERT_VIDEO_COMMAND, VideoNode, type VideoNodeDataset } from '@/nodes/VideoNode'
 import { INSERT_MEDIA_COMMAND } from '@/plugins/DragDropPastePlugin'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+// command payloads cross an untyped runtime boundary (menu dispatch, external
+// consumers), so narrow before constructing the node
+function isVideoNodeDataset(value: unknown): value is VideoNodeDataset {
   return typeof value === 'object' && value !== null
 }
 
@@ -21,7 +23,7 @@ export const VideoPlugin = () => {
       editor.registerCommand(
         INSERT_VIDEO_COMMAND,
         (dataset) => {
-          if (!isRecord(dataset)) {
+          if (!isVideoNodeDataset(dataset)) {
             return false
           }
           const cardNode = $createVideoNode(dataset)
