@@ -3,7 +3,7 @@ import type { ExportDOMOutput } from '@/nodes/base/export-dom'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 export const ALL_MEMBERS_SEGMENT = 'status:free,status:-free'
-export const PAID_MEMBERS_SEGMENT = 'status:-free' // paid + comped
+export const PAID_MEMBERS_SEGMENT = 'status:-free' // paid + comped + gift
 export const FREE_MEMBERS_SEGMENT = 'status:free'
 export const NO_MEMBERS_SEGMENT = ''
 
@@ -65,9 +65,9 @@ export function isVisibilityRestricted(visibility: Visibility) {
 //
 // segment: '' = everyone
 // segment: 'status:free' = free members
-// segment: 'status:paid' = paid members (incorrect, misses comped)
-// segment: 'status:-free' = paid members (correct, includes comped)
-// segment: 'status:-free+status:-paid' = no-one (incorrect, misses comped)
+// segment: 'status:paid' = paid members (incorrect, misses comped + gift)
+// segment: 'status:-free' = paid members (correct, includes comped + gift)
+// segment: 'status:-free+status:-paid' = no-one (incorrect, misses comped + gift)
 //
 // new format...
 //
@@ -84,7 +84,7 @@ export function isVisibilityRestricted(visibility: Visibility) {
 // memberSegment: '' = no-one
 // memberSegment: 'status:free,status:-free' = everyone
 // memberSegment: 'status:free' = free members
-// memberSegment: 'status:-free' = paid + comped members
+// memberSegment: 'status:-free' = paid + comped + gift members
 export function migrateOldVisibilityFormat(visibility: Visibility) {
   if (!visibility || !isOldVisibilityFormat(visibility)) {
     return visibility

@@ -45,11 +45,15 @@ describe('dataSrcToFile', () => {
     expect(file!.type).toBe('image/gif')
   })
 
-  it('falls back to a random string when crypto is unavailable', async () => {
+  it('falls back to getRandomValues when randomUUID is unavailable', async () => {
     Object.defineProperty(globalThis, 'crypto', {
       value: {
         randomUUID: () => {
           throw new Error('not supported')
+        },
+        getRandomValues: (array: Uint8Array) => {
+          array.fill(0xab)
+          return array
         },
       },
       configurable: true,
@@ -58,6 +62,6 @@ describe('dataSrcToFile', () => {
     const file = await dataSrcToFile('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD')
 
     expect(file).toBeInstanceOf(File)
-    expect(file!.name).toMatch(/^data-src-image-[a-z0-9]+\.jpeg$/)
+    expect(file!.name).toBe('data-src-image-abababababababab.jpeg')
   })
 })

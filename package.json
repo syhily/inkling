@@ -27,7 +27,7 @@
     "coverage": "vitest run --coverage",
     "dev": "concurrently \"vite --host --force\" \"pnpm build --watch\" \"pnpm preview -l silent --host\"",
     "dev:multiplayer": "concurrently \"vite\" \"pnpm multiplayer\"",
-    "dev:test": "concurrently \"vite --port 5174\" \"pnpm multiplayer\"",
+    "dev:test": "concurrently \"VITE_TEST=true vite --port 5174\" \"pnpm multiplayer\"",
     "fix": "pnpm store prune && rm -rf node_modules && pnpm install",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",

@@ -6,6 +6,7 @@ import ToggleIcon from '@/assets/icons/inkling-card-type-toggle.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
 import { ToggleNode as BaseToggleNode } from '@/nodes/base'
+import BASIC_NODES from '@/nodes/BasicNodes'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { ToggleNodeComponent } from '@/nodes/ToggleNodeComponent'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
@@ -44,7 +45,7 @@ export class ToggleNode extends BaseToggleNode {
     super(dataset as Partial<Record<string, unknown>>, key)
 
     setupNestedEditor(this, '__titleEditor', { editor: dataset.titleEditor, nodes: MINIMAL_NODES })
-    setupNestedEditor(this, '__contentEditor', { editor: dataset.contentEditor, nodes: MINIMAL_NODES })
+    setupNestedEditor(this, '__contentEditor', { editor: dataset.contentEditor, nodes: BASIC_NODES })
 
     if (!dataset.titleEditor && dataset.heading) {
       populateNestedEditor(this, '__titleEditor', `${dataset.heading}`)

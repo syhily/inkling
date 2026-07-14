@@ -1,26 +1,17 @@
-import { $generateHtmlFromNodes } from '@lexical/html'
-import { createCommand, type EditorState, type LexicalEditor, type SerializedLexicalNode } from 'lexical'
+import { createCommand } from 'lexical'
 
 import ButtonCardIcon from '@/assets/icons/inkling-card-type-button.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
-import { cleanBasicHtml } from '@/html/clean-basic-html'
 import { ButtonNode as BaseButtonNode } from '@/nodes/base'
 import { ButtonNodeComponent } from '@/nodes/ButtonNodeComponent'
-import MINIMAL_NODES from '@/nodes/MinimalNodes'
-import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 export const INSERT_BUTTON_COMMAND = createCommand('INSERT_BUTTON_COMMAND')
 
 interface ButtonDataset {
-  textEditor?: LexicalEditor
-  text?: string
   [key: string]: unknown
 }
 
 export class ButtonNode extends BaseButtonNode {
-  __textEditor!: LexicalEditor | null
-  __textEditorInitialState!: EditorState | undefined
-
   static cardMenu = [
     {
       label: 'Button',
@@ -37,41 +28,10 @@ export class ButtonNode extends BaseButtonNode {
   constructor(dataset: ButtonDataset = {}, key?: string) {
     // oxlint-disable-next-line typescript/no-explicit-any
     super(dataset as Partial<Record<string, unknown>>, key)
-
-    setupNestedEditor(this, '__textEditor', { editor: dataset.textEditor, nodes: MINIMAL_NODES })
-
-    if (!dataset.textEditor && dataset.text) {
-      populateNestedEditor(this, '__textEditor', `${dataset.text}`)
-    }
   }
 
   getIcon() {
     return ButtonCardIcon
-  }
-
-  getDataset() {
-    const dataset = super.getDataset() as Record<string, unknown>
-    const self = this.getLatest()
-
-    dataset.textEditor = self.__textEditor
-    dataset.textEditorInitialState = self.__textEditorInitialState
-
-    return dataset
-  }
-
-  exportJSON() {
-    const json: Record<string, unknown> = super.exportJSON() as Record<string, unknown>
-
-    if (this.__textEditor) {
-      this.__textEditor.getEditorState().read(() => {
-        const html = $generateHtmlFromNodes(this.__textEditor as LexicalEditor, null)
-        const cleanedHtml = cleanBasicHtml(html, { firstChildInnerContent: true, allowBr: true })
-        json.text = cleanedHtml
-      })
-    }
-
-    // oxlint-disable-next-line typescript/no-explicit-any
-    return json as any as SerializedLexicalNode
   }
 
   decorate() {

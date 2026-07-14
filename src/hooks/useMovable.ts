@@ -63,9 +63,11 @@ export default function useMovable({ adjustOnResize, adjustOnDrag }: UseMovableO
   const moveThreshold = 3
 
   // Use refs to avoid re-renders, see https://reactjs.org/docs/hooks-faq.html#is-there-something-like-instance-variables
+  // currentX/Y start undefined (not 0) so the resize observer can distinguish
+  // "never positioned" from a legitimate position on the (0,0) axes
   const active = useRef<boolean>(false)
-  const currentX = useRef<number>(0)
-  const currentY = useRef<number>(0)
+  const currentX = useRef<number | undefined>(undefined)
+  const currentY = useRef<number | undefined>(undefined)
 
   /**
    * Cursor offset from the left top side of the panel on touchstart/mousedown
@@ -140,8 +142,8 @@ export default function useMovable({ adjustOnResize, adjustOnDrag }: UseMovableO
 
   const getPosition = useCallback((): MovablePositionWithSpacing => {
     return {
-      x: currentX.current,
-      y: currentY.current,
+      x: currentX.current ?? 0,
+      y: currentY.current ?? 0,
       lastSpacing: lastSpacing.current,
     }
   }, [])
@@ -208,8 +210,8 @@ export default function useMovable({ adjustOnResize, adjustOnDrag }: UseMovableO
 
       if (!active.current) {
         if (
-          Math.abs(eventX - offsetX.current - currentX.current) > moveThreshold ||
-          Math.abs(eventY - offsetY.current - currentY.current) > moveThreshold
+          Math.abs(eventX - offsetX.current - (currentX.current ?? 0)) > moveThreshold ||
+          Math.abs(eventY - offsetY.current - (currentY.current ?? 0)) > moveThreshold
         ) {
           disableScroll()
           disableSelection()
@@ -335,22 +337,24 @@ export default function useMovable({ adjustOnResize, adjustOnDrag }: UseMovableO
 
     if (adjustOnResize) {
       _resizeObserver = new ResizeObserver(() => {
-        if (currentX.current === 0 || currentY.current === 0) {
+        const x = currentX.current
+        const y = currentY.current
+        if (x === undefined || y === undefined) {
           return
         }
 
         const position = adjustOnResize(elem, {
-          x: currentX.current,
-          y: currentY.current,
+          x,
+          y,
           lastSpacing: lastSpacing.current,
         })
 
-        if (position.x !== currentX.current || position.y !== currentY.current) {
+        if (position.x !== x || position.y !== y) {
           // Adjust offsetX and offsetY to account for the difference in position moved
           // This is to make sure we don't jump drag position if the element is resized just after touch start
           // Say you start dragging on a button that opens a collapsible section, if the section is resized -> this fixes glitches
-          offsetX.current = offsetX.current - (position.x - currentX.current)
-          offsetY.current = offsetY.current - (position.y - currentY.current)
+          offsetX.current = offsetX.current - (position.x - x)
+          offsetY.current = offsetY.current - (position.y - y)
           setPosition(position)
         }
       })

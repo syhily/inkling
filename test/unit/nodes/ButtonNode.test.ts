@@ -1,5 +1,6 @@
+import type { LexicalEditor } from 'lexical'
+
 import { createHeadlessEditor } from '@lexical/headless'
-import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { ButtonNode, $createButtonNode, $isButtonNode, INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
@@ -38,37 +39,20 @@ describe('ButtonNode', () => {
     })
   })
 
-  it('getDataset includes text editor state', async () => {
+  it('imports JSON with a legacy text field without failing', async () => {
     await updateEditor(editor, () => {
-      const node = $createButtonNode({ text: 'Click me' })
-      const dataset = node.getDataset()
-
-      expect(dataset.text).toBe('Click me')
-      expect(dataset.textEditor).toBeDefined()
-      expect(dataset.textEditorInitialState).toBeDefined()
-    })
-  })
-
-  it('exports button text as html when a text editor exists', async () => {
-    await updateEditor(editor, () => {
-      const node = $createButtonNode({})
-      node.__textEditor = createHeadlessEditor({
-        nodes: editorNodes,
-        onError: () => {},
+      const node = ButtonNode.importJSON({
+        type: 'button',
+        version: 1,
+        buttonText: 'Click me',
+        buttonUrl: 'https://example.com',
+        alignment: 'center',
+        // legacy field written by an earlier version of this node; no consumer
+        // remains but existing documents must still import cleanly
+        text: '<p>Click me</p>',
       })
 
-      node.__textEditor.update(
-        () => {
-          const root = $getRoot()
-          root.clear()
-          const paragraph = root.append($createParagraphNode())
-          paragraph.append($createTextNode('Subscribe'))
-        },
-        { onUpdate: () => {} },
-      )
-
-      const json = node.exportJSON() as Record<string, unknown>
-      expect(json.text).toContain('Subscribe')
+      expect(node.buttonText).toBe('Click me')
     })
   })
 })
