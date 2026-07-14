@@ -350,6 +350,74 @@ describe('BookmarkNode', function () {
       }),
     )
 
+    describe('media URL policy', function () {
+      const allowedMediaSources = [
+        'https://example.com/icon.png',
+        '/relative/path/icon.png',
+        'data:image/png;base64,AAAA',
+        'blob:https://example.com/9b1d4f2a',
+      ]
+
+      allowedMediaSources.forEach((src) => {
+        it(
+          `renders optional media for allowed media source ${src}`,
+          editorTest(async function () {
+            const bookmarkNode = $createBookmarkNode({
+              ...dataset,
+              metadata: { ...(dataset.metadata as Record<string, unknown>), icon: src, thumbnail: src },
+            })
+            const { element } = bookmarkNode.exportDOM(editor, exportOptions)
+            const el = element as HTMLElement
+
+            expect(el.querySelector('img.inkling-bookmark-icon')!.getAttribute('src')).toBe(src)
+            expect(el.querySelector('.inkling-bookmark-thumbnail img')!.getAttribute('src')).toBe(src)
+          }),
+        )
+      })
+
+      it(
+        'omits unsupported optional media in web output',
+        editorTest(async function () {
+          const bookmarkNode = $createBookmarkNode({
+            ...dataset,
+            metadata: {
+              ...(dataset.metadata as Record<string, unknown>),
+              icon: 'unsupported-scheme:payload',
+              thumbnail: 'unsupported-scheme:payload',
+            },
+          })
+          const { element } = bookmarkNode.exportDOM(editor, exportOptions)
+          const el = element as HTMLElement
+          const output = el.outerHTML
+
+          expect(output).not.toContain('unsupported-scheme:payload')
+          expect(el.querySelector('img.inkling-bookmark-icon')).toBeNull()
+          expect(el.querySelector('.inkling-bookmark-thumbnail')).toBeNull()
+          expect(el.querySelector('.inkling-bookmark-title')!.textContent).toBe('Inkling: The Creator Economy Platform')
+          expect(el.querySelector('a.inkling-bookmark-container')!.getAttribute('href')).toBe('https://inkling.local/')
+        }),
+      )
+
+      it(
+        'omits unsupported optional media in email output',
+        editorTest(async function () {
+          const bookmarkNode = $createBookmarkNode({
+            ...dataset,
+            metadata: {
+              ...(dataset.metadata as Record<string, unknown>),
+              icon: 'unsupported-scheme:payload',
+              thumbnail: 'unsupported-scheme:payload',
+            },
+          })
+          const { element } = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
+          const el = element as HTMLElement
+
+          expect(el.innerHTML).not.toContain('unsupported-scheme:payload')
+          expect(el.innerHTML).toContain('inkling-bookmark-title')
+        }),
+      )
+    })
+
     it(
       'sanitizes a malicious caption in web and email',
       editorTest(function () {

@@ -327,6 +327,84 @@ describe('AudioNode', function () {
       }),
     )
 
+    describe('media URL policy', function () {
+      const allowedMediaSources = [
+        'https://example.com/audio.mp3',
+        '/relative/path/audio.mp3',
+        'data:audio/mpeg;base64,AAAA',
+        'blob:https://example.com/9b1d4f2a',
+      ]
+
+      allowedMediaSources.forEach((src) => {
+        it(
+          `renders an audio card for allowed media source ${src}`,
+          editorTest(async function () {
+            const audioNode = $createAudioNode({ ...dataset, src })
+            const { element } = audioNode.exportDOM(editor, exportOptions)
+
+            expect(getHTMLElement(element).querySelector('audio')!.getAttribute('src')).toBe(src)
+          }),
+        )
+      })
+
+      it(
+        'renders an empty span with an unsupported primary source',
+        editorTest(async function () {
+          const audioNode = $createAudioNode({ ...dataset, src: 'unsupported-scheme:payload' })
+          const { element } = audioNode.exportDOM(editor, exportOptions)
+
+          expect(getHTMLElement(element).outerHTML).toBe('<span></span>')
+        }),
+      )
+
+      it(
+        'renders an empty span for the email target with an unsupported primary source',
+        editorTest(async function () {
+          const audioNode = $createAudioNode({ ...dataset, src: 'unsupported-scheme:payload' })
+          const { element } = audioNode.exportDOM(editor, {
+            ...exportOptions,
+            target: 'email',
+            postUrl: 'https://example.com/posts/test-audio',
+          })
+
+          expect(getHTMLElement(element).outerHTML).toBe('<span></span>')
+        }),
+      )
+
+      it(
+        'hides an unsupported thumbnail and shows the placeholder',
+        editorTest(async function () {
+          const audioNode = $createAudioNode({ ...dataset, thumbnailSrc: 'unsupported-scheme:payload' })
+          const { element } = audioNode.exportDOM(editor, exportOptions)
+          const el = getHTMLElement(element)
+          const output = el.outerHTML
+
+          expect(output).not.toContain('unsupported-scheme:payload')
+          expect(el.querySelector('audio')!.getAttribute('src')).toBe('/content/audio/2022/11/inkling-lexical.mp3')
+          expect(el.querySelector('img.inkling-audio-thumbnail')!.classList.contains('inkling-audio-hide')).toBe(true)
+          expect(
+            el.querySelector('.inkling-audio-thumbnail.placeholder')!.classList.contains('inkling-audio-hide'),
+          ).toBe(false)
+        }),
+      )
+
+      it(
+        'uses the placeholder icon for an unsupported email thumbnail',
+        editorTest(async function () {
+          const audioNode = $createAudioNode({ ...dataset, thumbnailSrc: 'unsupported-scheme:payload' })
+          const { element } = audioNode.exportDOM(editor, {
+            ...exportOptions,
+            target: 'email',
+            postUrl: 'https://example.com/posts/test-audio',
+          })
+          const output = getHTMLElement(element).outerHTML
+
+          expect(output).not.toContain('unsupported-scheme:payload')
+          expect(output).toContain('audio-file-icon.png')
+        }),
+      )
+    })
+
     it(
       'renders email links with postUrl',
       editorTest(async function () {

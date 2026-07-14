@@ -943,6 +943,90 @@ describe('GalleryNode', function () {
       }),
     )
 
+    describe('media URL policy', function () {
+      const galleryImage = (overrides: Record<string, unknown>) => ({
+        row: 0,
+        fileName: 'NatGeo01.jpg',
+        src: '/content/images/2018/08/NatGeo01-9.jpg',
+        width: 3200,
+        height: 1600,
+        ...overrides,
+      })
+
+      const allowedMediaSources = [
+        'https://example.com/image.png',
+        '/relative/path/image.png',
+        'data:image/png;base64,AAAA',
+        'blob:https://example.com/9b1d4f2a',
+      ]
+
+      allowedMediaSources.forEach((src) => {
+        it(
+          `renders gallery items with allowed media source ${src}`,
+          editorTest(async function () {
+            const galleryNode = $createGalleryNode({
+              images: [galleryImage({ src })],
+              caption: '',
+            })
+            const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
+
+            expect((element as HTMLElement).querySelector('img')!.getAttribute('src')).toBe(src)
+          }),
+        )
+      })
+
+      it(
+        'excludes images with unsupported media sources from a mixed gallery',
+        editorTest(async function () {
+          const galleryNode = $createGalleryNode({
+            images: [galleryImage({}), galleryImage({ fileName: 'Bad.jpg', src: 'unsupported-scheme:payload' })],
+            caption: '',
+          })
+          const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
+          const el = element as HTMLElement
+          const output = el.outerHTML
+
+          expect(output).not.toContain('unsupported-scheme:payload')
+          const images = el.querySelectorAll('img')
+          expect(images.length).toBe(1)
+          expect(images[0].getAttribute('src')).toBe('/content/images/2018/08/NatGeo01-9.jpg')
+        }),
+      )
+
+      it(
+        'leaves no empty row when the rejected image was the only row member',
+        editorTest(async function () {
+          const galleryNode = $createGalleryNode({
+            images: [
+              galleryImage({}),
+              galleryImage({ row: 1, fileName: 'Bad.jpg', src: 'unsupported-scheme:payload' }),
+            ],
+            caption: '',
+          })
+          const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
+          const el = element as HTMLElement
+          const rows = el.querySelectorAll('.inkling-gallery-row')
+
+          expect(rows.length).toBe(1)
+          expect(rows[0].querySelectorAll('img').length).toBe(1)
+          expect(rows[0].querySelector('img')!.getAttribute('src')).toBe('/content/images/2018/08/NatGeo01-9.jpg')
+        }),
+      )
+
+      it(
+        'renders an empty span when every image source is unsupported',
+        editorTest(async function () {
+          const galleryNode = $createGalleryNode({
+            images: [galleryImage({ fileName: 'Bad.jpg', src: 'unsupported-scheme:payload' })],
+            caption: '',
+          })
+          const { element } = galleryNode.exportDOM(editor, exportOptions)
+
+          expect((element as HTMLElement).outerHTML).toBe('<span></span>')
+        }),
+      )
+    })
+
     it(
       'sanitizes caption HTML',
       editorTest(async function () {

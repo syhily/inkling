@@ -281,6 +281,51 @@ describe('ImageNode', function () {
       }),
     )
 
+    describe('media URL policy', function () {
+      const allowedMediaSources = [
+        'https://example.com/image.png',
+        '/relative/path/image.png',
+        'data:image/png;base64,AAAA',
+        'blob:https://example.com/9b1d4f2a',
+      ]
+
+      allowedMediaSources.forEach((src) => {
+        it(
+          `renders an image card for allowed media source ${src}`,
+          editorTest(async function () {
+            const imageNode = $createImageNode({ src })
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+
+            expect((element as HTMLElement).querySelector('img')!.getAttribute('src')).toBe(src)
+          }),
+        )
+      })
+
+      it(
+        'renders an empty span with an unsupported media source and skips transform callbacks',
+        editorTest(async function () {
+          const canTransformImage = vi.fn(() => true)
+          const canTransformImageToFormat = vi.fn(() => true)
+          const imageNode = $createImageNode({
+            ...dataset,
+            src: 'unsupported-scheme:payload',
+          })
+          const { element } = imageNode.exportDOM(editor, {
+            ...exportOptions,
+            feature: { pictureImageFormats: true },
+            canTransformImage,
+            canTransformImageToFormat,
+          })
+          const output = (element as HTMLElement).outerHTML
+
+          expect(output).toBe('<span></span>')
+          expect(output).not.toContain('unsupported-scheme:payload')
+          expect(canTransformImage).not.toHaveBeenCalled()
+          expect(canTransformImageToFormat).not.toHaveBeenCalled()
+        }),
+      )
+    })
+
     it(
       'renders a wide image',
       editorTest(async function () {
