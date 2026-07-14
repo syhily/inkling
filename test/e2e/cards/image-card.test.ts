@@ -828,6 +828,35 @@ test.describe('Image card', async () => {
     )
   })
 
+  test('can insert a focused gif with ArrowDown and Enter', async () => {
+    await mockTenorApi(page)
+    await focusEditor(page)
+    await page.click('[data-inkling-plus-button]')
+
+    await page.click('button[data-inkling-card-menu-item="GIF"]')
+
+    await expect(page.locator('[data-testid="gif-item"]')).toHaveCount(3)
+
+    const searchInput = page.locator('[data-testid="gif-selector"] input')
+    await expect(searchInput).toBeFocused()
+
+    await page.keyboard.press('ArrowDown')
+
+    const firstButton = page.locator('[data-gif-index="0"]')
+    await expect(firstButton).toBeFocused()
+    await expect(firstButton).toHaveClass(/border-green/)
+
+    await page.keyboard.press('Enter')
+
+    await expect(await page.getByTestId('image-card-populated')).toBeAttached()
+    await expect(page.locator('[data-inkling-card="image"]')).toHaveCount(1)
+    await expect(page.getByTestId('gif-selector')).toBeHidden()
+
+    await focusEditor(page)
+    await page.keyboard.type('hello')
+    await expect(page.locator('.inkling-lexical > [data-inkling="editor"] > div > p span')).toHaveText('hello')
+  })
+
   test('can close the gif selector on Esc', async () => {
     await mockTenorApi(page)
     await focusEditor(page)
