@@ -6,8 +6,19 @@ import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-
 import { isLocalContentImage } from '@/nodes/base/utils/is-local-content-image'
 import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
-import { setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
+import { getSrcsetAttribute, setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 import { sanitizeHtml } from '@/utils/sanitize-html'
+
+const MODERN_IMAGE_FORMATS = ['avif', 'webp']
+
+function isAnimatedImage(url = '') {
+  try {
+    const parsedUrl = new URL(url, 'http://localhost')
+    return parsedUrl.pathname.toLowerCase().endsWith('.gif')
+  } catch {
+    return false
+  }
+}
 
 interface ImageNodeData {
   src: string
@@ -72,7 +83,7 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
   if (
     defaultMaxWidth &&
     node.width > defaultMaxWidth &&
-    isLocalContentImage(node.src, options.siteUrl) &&
+    isLocalContentImage(node.src, options.siteUrl, options.imageBaseUrl) &&
     canTransformImage &&
     canTransformImage(node.src)
   ) {
@@ -85,6 +96,8 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
     img.setAttribute('height', String(height))
   }
 
+  let picture: HTMLPictureElement | null = null
+
   if (options.target !== 'email') {
     const imgAttributes = {
       src: node.src,
@@ -93,14 +106,67 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
     }
     setSrcsetAttribute(img, imgAttributes, options)
 
+    let sizes: string | undefined
     if (img.getAttribute('srcset') && node.width && node.width >= 720) {
       // standard size
       if (!node.cardWidth || node.cardWidth === 'regular') {
-        img.setAttribute('sizes', '(min-width: 720px) 720px')
+        sizes = '(min-width: 720px) 720px'
       }
 
       if (node.cardWidth === 'wide' && node.width >= 1200) {
-        img.setAttribute('sizes', '(min-width: 1200px) 1200px')
+        sizes = '(min-width: 1200px) 1200px'
+      }
+    }
+
+    if (sizes) {
+      img.setAttribute('sizes', sizes)
+    }
+
+    const shouldRenderPicture = Boolean(
+      options.feature?.pictureImageFormats &&
+      img.getAttribute('srcset') &&
+      !isAnimatedImage(node.src) &&
+      isLocalContentImage(node.src, options.siteUrl, options.imageBaseUrl) &&
+      options.canTransformImage?.(node.src) &&
+      typeof options.canTransformImageToFormat === 'function',
+    )
+
+    if (shouldRenderPicture) {
+      picture = document.createElement('picture')
+      let sourcesAdded = false
+
+      MODERN_IMAGE_FORMATS.forEach((format) => {
+        if (!options.canTransformImageToFormat!(format)) {
+          return
+        }
+
+        const formattedSrcset = getSrcsetAttribute({
+          src: node.src,
+          width: node.width,
+          options,
+          format,
+        })
+
+        if (!formattedSrcset) {
+          return
+        }
+
+        const source = document.createElement('source')
+        source.setAttribute('srcset', formattedSrcset)
+        source.setAttribute('type', `image/${format}`)
+
+        if (sizes) {
+          source.setAttribute('sizes', sizes)
+        }
+
+        picture!.appendChild(source)
+        sourcesAdded = true
+      })
+
+      if (sourcesAdded) {
+        picture.appendChild(img)
+      } else {
+        picture = null
       }
     }
   }
@@ -120,7 +186,11 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
     img.setAttribute('height', String(imageDimensions.height))
 
     const contentImageSizes = options.imageOptimization?.contentImageSizes
-    if (contentImageSizes && isLocalContentImage(node.src, options.siteUrl) && options.canTransformImage?.(node.src)) {
+    if (
+      contentImageSizes &&
+      isLocalContentImage(node.src, options.siteUrl, options.imageBaseUrl) &&
+      options.canTransformImage?.(node.src)
+    ) {
       // find available image size next up from 2x600 so we can use it for the "retina" src
       const availableImageWidths = getAvailableImageWidths(node, contentImageSizes)
       const srcWidth = availableImageWidths.find((width) => width >= 1200)
@@ -141,10 +211,10 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
   if (href && isSafeUrl(href)) {
     const a = document.createElement('a')
     a.setAttribute('href', href)
-    a.appendChild(img)
+    a.appendChild(picture || img)
     figure.appendChild(a)
   } else {
-    figure.appendChild(img)
+    figure.appendChild(picture || img)
   }
 
   if (node.caption) {

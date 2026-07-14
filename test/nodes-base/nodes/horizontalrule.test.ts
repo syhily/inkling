@@ -58,6 +58,21 @@ describe('HorizontalNode', function () {
         await expectPrettifiedHtml((element as HTMLElement).outerHTML, html` <hr /> `)
       }),
     )
+
+    it(
+      'creates an Outlook-compatible table with hidden hr when target is email',
+      editorTest(async function () {
+        const hrNode = $createHorizontalRuleNode()
+        const { element } = hrNode.exportDOM(editor, { ...exportOptions, target: 'email' })
+        const output = (element as HTMLElement).outerHTML
+
+        expect(output).toContain('class="inkling-card inkling-hr-card"')
+        expect(output).toContain('role="presentation"')
+        expect(output).toContain('class="inkling-hr"')
+        // hr is kept (hidden) for html-to-plaintext conversion
+        expect(output).toContain('<hr style="display: none;">')
+      }),
+    )
   })
 
   describe('importDOM', function () {

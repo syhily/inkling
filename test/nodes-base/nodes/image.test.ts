@@ -396,6 +396,102 @@ describe('ImageNode', function () {
       it('skips width/height and resize if payload is missing dimensions')
       it('omits srcset attribute')
     })
+
+    describe('picture element', function () {
+      const pictureOptions = () => ({
+        ...exportOptions,
+        feature: { pictureImageFormats: true },
+        canTransformImageToFormat: () => true,
+      })
+
+      it(
+        'wraps the image in a picture element with avif/webp sources when the feature flag is on',
+        editorTest(async function () {
+          const imageNode = $createImageNode(dataset)
+          const { element } = imageNode.exportDOM(editor, pictureOptions())
+          const el = element as HTMLElement
+
+          const picture = el.querySelector('picture')
+          expect(picture).not.toBeNull()
+
+          const sources = picture!.querySelectorAll('source')
+          expect(sources.length).toBe(2)
+          expect(sources[0].getAttribute('type')).toBe('image/avif')
+          expect(sources[0].getAttribute('srcset')).toContain('/content/images/size/w600/format/avif/')
+          expect(sources[0].getAttribute('sizes')).toBe('(min-width: 720px) 720px')
+          expect(sources[1].getAttribute('type')).toBe('image/webp')
+          expect(sources[1].getAttribute('srcset')).toContain('/content/images/size/w600/format/webp/')
+
+          const img = picture!.querySelector('img')
+          expect(img).not.toBeNull()
+          expect(img!.getAttribute('src')).toBe('/content/images/2022/11/inkling-lexical.jpg')
+        }),
+      )
+
+      it(
+        'wraps the picture inside the link when href is set',
+        editorTest(async function () {
+          const imageNode = $createImageNode({ ...dataset, href: 'https://example.com' })
+          const { element } = imageNode.exportDOM(editor, pictureOptions())
+          const el = element as HTMLElement
+
+          const link = el.querySelector('a[href="https://example.com"]')
+          expect(link).not.toBeNull()
+          expect(link!.querySelector('picture')).not.toBeNull()
+        }),
+      )
+
+      it(
+        'is omitted for animated (gif) images',
+        editorTest(async function () {
+          const imageNode = $createImageNode({ ...dataset, src: '/content/images/2022/11/animation.gif' })
+          const { element } = imageNode.exportDOM(editor, pictureOptions())
+          const el = element as HTMLElement
+
+          expect(el.querySelector('picture')).toBeNull()
+          expect(el.querySelector('img')).not.toBeNull()
+        }),
+      )
+
+      it(
+        'is omitted when canTransformImageToFormat rejects every format',
+        editorTest(async function () {
+          const imageNode = $createImageNode(dataset)
+          const { element } = imageNode.exportDOM(editor, {
+            ...exportOptions,
+            feature: { pictureImageFormats: true },
+            canTransformImageToFormat: () => false,
+          })
+          const el = element as HTMLElement
+
+          expect(el.querySelector('picture')).toBeNull()
+          expect(el.querySelector('img')).not.toBeNull()
+        }),
+      )
+
+      it(
+        'is omitted when the feature flag is off',
+        editorTest(async function () {
+          const imageNode = $createImageNode(dataset)
+          const { element } = imageNode.exportDOM(editor, exportOptions)
+          const el = element as HTMLElement
+
+          expect(el.querySelector('picture')).toBeNull()
+        }),
+      )
+
+      it(
+        'is omitted when target is email',
+        editorTest(async function () {
+          const imageNode = $createImageNode(dataset)
+          const { element } = imageNode.exportDOM(editor, { ...pictureOptions(), target: 'email' })
+          const el = element as HTMLElement
+
+          expect(el.querySelector('picture')).toBeNull()
+          expect(el.querySelector('source')).toBeNull()
+        }),
+      )
+    })
   })
 
   describe('importDOM', function () {

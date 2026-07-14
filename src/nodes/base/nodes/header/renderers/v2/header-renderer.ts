@@ -145,6 +145,84 @@ function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions
         `
 }
 
+interface MSOHeaderData {
+  backgroundSize: string
+  backgroundImageSrc: string
+  backgroundColor: string
+  layout: string
+}
+
+// Callers must pass sanitized values (isSafeMediaUrl/safeColor) — these
+// helpers interpolate directly into VML attributes.
+function generateMSOSplitHeaderImage(nodeData: MSOHeaderData) {
+  const { backgroundSize, backgroundImageSrc, backgroundColor } = nodeData
+
+  if (backgroundSize === 'contain') {
+    return `
+            <!--[if mso]>
+                <v:rect xmlns:v="urn:schemas-microsoft-com:vml" stroke="false" style="width:600px;height:320px;">
+                    <v:fill type="frame" aspect="atmost" size="225pt,120pt" src="${backgroundImageSrc}" color="${backgroundColor}" />
+                    <v:textbox inset="0,0,0,0">
+                    </v:textbox>
+                </v:rect>
+            <![endif]-->
+            `
+  } else {
+    return `
+            <!--[if mso]>
+                <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;height:320px;">
+                    <v:fill type="frame" aspect="atleast" src="${backgroundImageSrc}" color="${backgroundColor}" />
+                    <v:textbox inset="0,0,0,0">
+                    </v:textbox>
+                </v:rect>
+            <![endif]-->
+            `
+  }
+}
+
+function generateMSOContentWrapper(nodeData: MSOHeaderData) {
+  const { backgroundImageSrc, backgroundColor } = nodeData
+  const hasContainAndSplit = nodeData.backgroundSize === 'contain' && nodeData.layout === 'split'
+  const hasImageWithoutSplit = Boolean(backgroundImageSrc) && nodeData.layout !== 'split'
+
+  // Outlook clients will return the first td, all other clients will return the second td
+  const msoOpenTag = `
+                    <!--[if mso]>
+                        <td class="inkling-header-card-content" style="${hasImageWithoutSplit ? 'padding: 0;' : 'padding: 40px;'}${hasContainAndSplit ? 'padding-top: 0;' : ''}">
+                    <![endif]-->
+                    <!--[if !mso]><!-->
+                        <td class="inkling-header-card-content" style="${hasContainAndSplit ? 'padding-top: 0;' : ''}">
+                    <!--<![endif]-->
+                    `
+
+  const msoImageVML = hasImageWithoutSplit
+    ? `
+                    <!--[if mso]>
+                        <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;">
+                            <v:fill src="${backgroundImageSrc}" color="${backgroundColor}" type="frame" aspect="atleast" focusposition="0.5,0.5" />
+                            <v:textbox inset="30pt,30pt,30pt,30pt" style="mso-fit-shape-to-text:true;">
+                    <![endif]-->
+                    `
+    : ''
+
+  return msoOpenTag + msoImageVML
+}
+
+function generateMSOContentClosing(nodeData: MSOHeaderData) {
+  const hasImageWithoutSplit = Boolean(nodeData.backgroundImageSrc) && nodeData.layout !== 'split'
+
+  if (!hasImageWithoutSplit) {
+    return ''
+  }
+
+  return `
+        <!--[if mso]>
+            </v:textbox>
+        </v:rect>
+        <![endif]-->
+        `
+}
+
 function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions) {
   const safeBackgroundImageSrc = isSafeMediaUrl(nodeData.backgroundImageSrc) ? nodeData.backgroundImageSrc : ''
   const safeButtonUrl = isSafeUrl(nodeData.buttonUrl) ? nodeData.buttonUrl : ''
@@ -168,6 +246,15 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
       : `background-color: ${backgroundColor};`
     : `background-color: ${backgroundColor};`
   const splitImageStyle = `background-image: url(${safeBackgroundImageSrc}); background-size: ${nodeData.backgroundSize !== 'contain' ? 'cover' : '50%'}; background-position: center`
+
+  const hasDarkBg = textColor.toLowerCase() === '#ffffff'
+  const backgroundClass = hasDarkBg ? 'inkling-header-card-dark-bg' : 'inkling-header-card-light-bg'
+  const msoData: MSOHeaderData = {
+    backgroundSize: nodeData.backgroundSize,
+    backgroundImageSrc: safeBackgroundImageSrc,
+    backgroundColor,
+    layout: nodeData.layout,
+  }
 
   if (
     (options?.feature?.emailCustomization || options?.feature?.emailCustomizationAlpha) &&
@@ -193,13 +280,15 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
 
   if (options?.feature?.emailCustomization || options?.feature?.emailCustomizationAlpha) {
     return `
-            <div class="inkling-header-card inkling-v2" style="color:${textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
+            <div class="inkling-header-card inkling-v2 ${backgroundClass}" style="color:${textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
                 ${
                   nodeData.layout === 'split' && safeBackgroundImageSrc
                     ? `
                     <table border="0" cellpadding="0" cellspacing="0" width="100%">
                         <tr>
-                            <td background="${safeBackgroundImageSrc}" style="${splitImageStyle}" class="inkling-header-card-image"></td>
+                            <td background="${safeBackgroundImageSrc}" style="${splitImageStyle}" class="inkling-header-card-image" bgcolor="${backgroundColor}" align="center">
+                                ${generateMSOSplitHeaderImage(msoData) /* mso-only img, no shared markup */}
+                            </td>
                         </tr>
                     </table>
                 `
@@ -207,7 +296,7 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
                 }
                 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="color:${textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
                     <tr>
-                        <td class="inkling-header-card-content" style="${nodeData.layout === 'split' && nodeData.backgroundSize === 'contain' ? 'padding-top: 0;' : ''}">
+                        ${generateMSOContentWrapper(msoData) /* creates correct opening td tag for any platform */}
                             <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
                                     <td align="${nodeData.alignment}">
@@ -237,6 +326,7 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
                                     }
                                 </tr>
                             </table>
+                ${generateMSOContentClosing(msoData) /* mso-only closing tags, no shared markup */}
                         </td>
                     </tr>
                 </table>
@@ -245,7 +335,7 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
   }
 
   return `
-        <div class="inkling-header-card inkling-v2" style="color:${textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
+        <div class="inkling-header-card inkling-v2 ${backgroundClass}" style="color:${textColor}; ${alignment} ${backgroundImageStyle} ${backgroundAccent}">
             ${
               nodeData.layout === 'split' && safeBackgroundImageSrc
                 ? `

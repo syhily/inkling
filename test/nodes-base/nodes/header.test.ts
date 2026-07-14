@@ -501,5 +501,89 @@ describe('HeaderNode', function () {
         }),
       )
     })
+
+    describe('email target (Outlook compatibility)', function () {
+      const emailOptions = () => ({
+        ...exportOptions,
+        target: 'email',
+        feature: { emailCustomization: true },
+      })
+
+      it(
+        'adds a dark/light background class based on the text color',
+        editorTest(function () {
+          const darkNode = $createHeaderNode({ ...dataset, backgroundImageSrc: '', textColor: '#FFFFFF' })
+          const { element: darkElement } = darkNode.exportDOM(editor, emailOptions())
+          expect((darkElement as HTMLElement).className).toContain('inkling-header-card-dark-bg')
+
+          const lightNode = $createHeaderNode({ ...dataset, backgroundImageSrc: '', textColor: '#000000' })
+          const { element: lightElement } = lightNode.exportDOM(editor, emailOptions())
+          expect((lightElement as HTMLElement).className).toContain('inkling-header-card-light-bg')
+        }),
+      )
+
+      it(
+        'adds the background class to the legacy (non-customization) email output too',
+        editorTest(function () {
+          const node = $createHeaderNode({ ...dataset, backgroundImageSrc: '', textColor: '#FFFFFF' })
+          const { element } = node.exportDOM(editor, { ...exportOptions, target: 'email' })
+          expect((element as HTMLElement).className).toContain('inkling-header-card-dark-bg')
+        }),
+      )
+
+      it(
+        'renders a VML background image for Outlook in split layout',
+        editorTest(function () {
+          const node = $createHeaderNode({ ...dataset, layout: 'split', backgroundSize: 'contain' })
+          const { element } = node.exportDOM(editor, emailOptions())
+          const html = (element as HTMLElement).outerHTML
+
+          expect(html).toContain('<!--[if mso]>')
+          expect(html).toContain('urn:schemas-microsoft-com:vml')
+          expect(html).toContain('size="225pt,120pt"')
+          expect(html).toContain('src="https://example.com/image.jpg"')
+          expect(html).toContain('bgcolor="#F0F0F0"')
+        }),
+      )
+
+      it(
+        'wraps the content in a VML image rect when a background image is used without split layout',
+        editorTest(function () {
+          const node = $createHeaderNode({ ...dataset, layout: 'full' })
+          const { element } = node.exportDOM(editor, emailOptions())
+          const html = (element as HTMLElement).outerHTML
+
+          expect(html).toContain('mso-fit-shape-to-text:true;')
+          expect(html).toContain('</v:textbox>')
+          expect(html).toContain('</v:rect>')
+          // non-Outlook clients still get a plain td without padding overrides
+          expect(html).toContain('<!--[if !mso]><!-->')
+        }),
+      )
+
+      it(
+        'omits VML content wrappers when there is no background image',
+        editorTest(function () {
+          const node = $createHeaderNode({ ...dataset, backgroundImageSrc: '' })
+          const { element } = node.exportDOM(editor, emailOptions())
+          const html = (element as HTMLElement).outerHTML
+
+          expect(html).not.toContain('urn:schemas-microsoft-com:vml')
+          expect(html).toContain('inkling-header-card-content')
+        }),
+      )
+
+      it(
+        'does not interpolate an unsafe background image src into VML',
+        editorTest(function () {
+          const node = $createHeaderNode({ ...dataset, backgroundImageSrc: 'javascript:alert(1)' })
+          const { element } = node.exportDOM(editor, emailOptions())
+          const html = (element as HTMLElement).outerHTML
+
+          expect(html).not.toContain('javascript:')
+          expect(html).not.toContain('urn:schemas-microsoft-com:vml')
+        }),
+      )
+    })
   })
 })

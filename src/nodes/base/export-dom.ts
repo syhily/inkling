@@ -24,7 +24,9 @@ export interface ExportDOMOptionsBase {
   postUrl?: string
   siteUrl?: string
   siteUuid?: string
+  imageBaseUrl?: string
   canTransformImage?: (src: string) => boolean
+  canTransformImageToFormat?: (format: string) => boolean
   imageOptimization?: Record<string, unknown>
   feature?: ExportDOMFeatureOptions
   design?: Record<string, unknown>

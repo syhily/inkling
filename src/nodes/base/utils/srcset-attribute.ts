@@ -16,10 +16,12 @@ export const getSrcsetAttribute = function ({
   src,
   width,
   options,
+  format,
 }: {
   src: string
   width: number
   options: ImageRenderOptions
+  format?: string
 }) {
   if (
     !options.imageOptimization ||
@@ -30,14 +32,18 @@ export const getSrcsetAttribute = function ({
     return
   }
 
-  if (isLocalContentImage(src, options.siteUrl) && options.canTransformImage && !options.canTransformImage(src)) {
+  if (
+    isLocalContentImage(src, options.siteUrl, options.imageBaseUrl) &&
+    options.canTransformImage &&
+    !options.canTransformImage(src)
+  ) {
     return
   }
 
   const srcsetWidths = getAvailableImageWidths({ width }, options.imageOptimization.contentImageSizes)
 
   // apply srcset if this is a relative image that matches Inkling's image url structure
-  if (isLocalContentImage(src, options.siteUrl)) {
+  if (isLocalContentImage(src, options.siteUrl, options.imageBaseUrl)) {
     const match = src.match(/(.*\/content\/images)\/(.*)/)
     if (!match) {
       return
@@ -49,10 +55,19 @@ export const getSrcsetAttribute = function ({
     srcsetWidths.forEach((srcsetWidth) => {
       if (srcsetWidth === width) {
         // use original image path if width matches exactly (avoids 302s from size->original)
-        srcs.push(`${src} ${srcsetWidth}w`)
+        // unless a specific output format was requested
+        if (format) {
+          srcs.push(`${imagesPath}/size/w${srcsetWidth}/format/${format}/${filename} ${srcsetWidth}w`)
+        } else {
+          srcs.push(`${src} ${srcsetWidth}w`)
+        }
       } else if (srcsetWidth <= width) {
         // avoid creating srcset sizes larger than intrinsic image width
-        srcs.push(`${imagesPath}/size/w${srcsetWidth}/${filename} ${srcsetWidth}w`)
+        if (format) {
+          srcs.push(`${imagesPath}/size/w${srcsetWidth}/format/${format}/${filename} ${srcsetWidth}w`)
+        } else {
+          srcs.push(`${imagesPath}/size/w${srcsetWidth}/${filename} ${srcsetWidth}w`)
+        }
       }
     })
 
