@@ -102,7 +102,7 @@ const InklingComposableEditor = ({
         onChange(json)
       }
     },
-    [onChange, sharedOnChange, editor],
+    [onChange, sharedOnChange, editor, parentEditor],
   )
 
   const onWrapperRef = (wrapperElem: HTMLElement | null) => {
