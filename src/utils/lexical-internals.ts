@@ -1,17 +1,56 @@
-import type { Klass, LexicalEditor, LexicalNode } from 'lexical'
+import type { EditorThemeClasses, Klass, LexicalEditor, LexicalNode } from 'lexical'
 
-import type { InklingEditorInternals } from '@/types/lexical-internals'
+// Minimal structural view of Lexical editor internals. Verified against Lexical 0.46
+// (node_modules/lexical/dist/LexicalEditor.d.ts). Public alternatives checked:
+// - editor.isEditable() exists for editability, but no public parent-editor accessor.
+// - hasNode/hasNodes/getRegisteredNode exist, but require already knowing the class;
+//   there is no public way to enumerate the complete registered node map.
+// - There is no public "update in progress" flag.
+// - EditorThemeClasses is public, but the theme config object that owns it is not.
+// Keep every private access here so a Lexical upgrade touches exactly one place.
+type InklingLexicalEditorInternals = LexicalEditor & {
+  _config: { theme: EditorThemeClasses }
+  _editable: boolean
+  _nodes: Map<string, { klass: Klass<LexicalNode> }>
+  _parentEditor: LexicalEditor | null
+  _updating: boolean
+}
 
-// Typed accessors for Lexical's private fields. Verified against Lexical 0.46
-// (node_modules/lexical/dist/LexicalEditor.d.ts): there is no public accessor
-// to enumerate registered nodes (hasNode/hasNodes/getRegisteredNode all require
-// already knowing the class) and no public "update in progress" flag. Keep every
-// private access here so a Lexical upgrade touches exactly one place.
+export function getParentEditor(editor: LexicalEditor): LexicalEditor | null {
+  return (editor as InklingLexicalEditorInternals)._parentEditor
+}
+
+export function isNestedEditor(editor: LexicalEditor): boolean {
+  return getParentEditor(editor) !== null
+}
+
+export function getTopLevelEditor(editor: LexicalEditor): LexicalEditor {
+  const visited = new Set<LexicalEditor>()
+  let current: LexicalEditor = editor
+
+  while (true) {
+    if (visited.has(current)) {
+      throw new Error('Lexical editor hierarchy contains a cycle; cannot resolve top-level editor')
+    }
+    visited.add(current)
+
+    const parent = getParentEditor(current)
+    if (parent === null) {
+      return current
+    }
+    current = parent
+  }
+}
+
+export function getEditorTheme(editor: LexicalEditor): EditorThemeClasses {
+  return (editor as InklingLexicalEditorInternals)._config.theme
+}
+
 export function getRegisteredNodeMap(editor: LexicalEditor): Map<string, { klass: Klass<LexicalNode> }> {
   // TODO: open upstream PR to add a public method of getting nodes
-  return (editor as InklingEditorInternals & { _nodes: Map<string, { klass: Klass<LexicalNode> }> })._nodes
+  return (editor as InklingLexicalEditorInternals)._nodes
 }
 
 export function isEditorUpdating(editor: LexicalEditor): boolean {
-  return (editor as InklingEditorInternals)._updating
+  return (editor as InklingLexicalEditorInternals)._updating
 }
