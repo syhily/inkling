@@ -1,13 +1,11 @@
-import type { SerializedEditorState, LexicalEditor, LexicalNode, Klass } from 'lexical'
+import type { SerializedEditorState, LexicalEditor, LexicalNodeConfig } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
-import { LinkNode } from '@lexical/link'
-import { ListItemNode, ListNode } from '@lexical/list'
-import { HeadingNode, QuoteNode } from '@lexical/rich-text'
 
 import type { RendererOptions } from '@/html/renderer/types'
 import type { ExportDOMDom } from '@/nodes/base'
 
+import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
 import getDynamicDataNodes from '@/html/renderer/get-dynamic-data-nodes'
 import { registerRemoveAtLinkNodesTransform } from '@/transforms'
@@ -26,14 +24,14 @@ function defaultOnError(error: Error) {
 
 export default class LexicalHTMLRenderer {
   dom?: ExportDOMDom
-  nodes: Klass<LexicalNode>[]
+  nodes: LexicalNodeConfig[]
   onError: (error: Error) => void
 
   constructor({
     dom,
     nodes,
     onError,
-  }: { dom?: ExportDOMDom; nodes?: Klass<LexicalNode>[]; onError?: (error: Error) => void } = {}) {
+  }: { dom?: ExportDOMDom; nodes?: LexicalNodeConfig[]; onError?: (error: Error) => void } = {}) {
     this.dom = dom
     this.nodes = nodes || []
     this.onError = onError || defaultOnError
@@ -46,17 +44,11 @@ export default class LexicalHTMLRenderer {
     }
     const options: RendererOptions = Object.assign({}, defaultOptions, userOptions)
 
-    const DEFAULT_NODES: Array<Klass<LexicalNode>> = [
-      HeadingNode,
-      ListNode,
-      ListItemNode,
-      QuoteNode,
-      LinkNode,
-      ...this.nodes,
-    ]
-
+    // Custom nodes are additive: they are registered AFTER the complete
+    // Inkling HTML defaults, so a custom entry with the same node type as a
+    // default overrides it (Lexical keeps the last registration per type).
     const editor: LexicalEditor = createHeadlessEditor({
-      nodes: DEFAULT_NODES,
+      nodes: [...DEFAULT_HTML_NODES, ...this.nodes],
       onError: this.onError,
     })
 

@@ -3,14 +3,12 @@ import type { CreateEditorArgs, SerializedEditorState, SerializedParagraphNode }
 import { $insertGeneratedNodes } from '@lexical/clipboard'
 import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
-import { LinkNode } from '@lexical/link'
-import { ListItemNode, ListNode } from '@lexical/list'
-import { HeadingNode, QuoteNode } from '@lexical/rich-text'
 import { JSDOM } from 'jsdom'
 /* c8 ignore start -- V8 creates phantom branches for ESM imports */
 import { $createParagraphNode, $getRoot } from 'lexical'
 
-import { DEFAULT_NODES, DEFAULT_CONFIG } from '@/nodes/base'
+import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
+import { DEFAULT_CONFIG } from '@/nodes/base'
 import { registerDefaultTransforms } from '@/transforms'
 /* c8 ignore stop */
 
@@ -40,26 +38,17 @@ export interface htmlToLexicalOptions {
   editorConfig: CreateEditorArgs
 }
 
-const defaultNodes = [
-  // basic HTML nodes
-  HeadingNode,
-  LinkNode,
-  ListItemNode,
-  ListNode,
-  QuoteNode,
-
-  // Inkling nodes
-  ...DEFAULT_NODES,
-]
-
 /* c8 ignore next -- V8 creates a phantom branch for the export */
 export function htmlToLexical(html: string, options?: htmlToLexicalOptions): SerializedEditorState {
   if (!html) {
     return BLANK_DOCUMENT
   }
 
+  // The importer replaces these defaults wholesale when the caller passes
+  // editorConfig.nodes; the renderer intentionally uses additive semantics
+  // instead — do not "unify" the two behaviors.
   const defaultEditorConfig = {
-    nodes: defaultNodes,
+    nodes: [...DEFAULT_HTML_NODES],
     html: DEFAULT_CONFIG.html,
   }
   const editorConfig = Object.assign({}, defaultEditorConfig, options?.editorConfig)
