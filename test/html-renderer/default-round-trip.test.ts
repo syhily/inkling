@@ -18,12 +18,12 @@ class CustomBlockNode extends ParagraphNode {
     return 'custom-block'
   }
 
-  static clone(_node: CustomBlockNode) {
-    return new CustomBlockNode()
+  static clone(node: CustomBlockNode) {
+    return new CustomBlockNode(node.__key)
   }
 
-  static importJSON(_serializedNode: SerializedParagraphNode) {
-    return new CustomBlockNode()
+  static importJSON(serializedNode: SerializedParagraphNode) {
+    return new CustomBlockNode().updateFromJSON(serializedNode)
   }
 }
 
