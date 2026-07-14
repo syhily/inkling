@@ -58,6 +58,13 @@ import WordCountPlugin from '@/plugins/WordCountPlugin'
 
 /* Exports ------------------------------------------------------------------ */
 
+export type { EmailEditorProps } from '@/components/EmailEditor'
+export type { InklingComposableEditorProps } from '@/components/InklingComposableEditor'
+export type { InklingComposerProps, InklingInitialEditorState } from '@/components/InklingComposer'
+export type { InklingEditorProps } from '@/components/InklingEditor'
+export type { InklingNestedComposerProps } from '@/components/InklingNestedComposer'
+export type { ExternalControlAPI } from '@/plugins/ExternalControlPlugin'
+
 export * from '@/utils'
 export { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown'
 

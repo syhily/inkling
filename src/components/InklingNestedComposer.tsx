@@ -1,6 +1,8 @@
+import type { InitialEditorStateType } from '@lexical/react/LexicalComposer'
+
 import { useCollaborationContext } from '@lexical/react/LexicalCollaborationContext'
 import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin'
-import { LexicalNestedComposer } from '@lexical/react/LexicalNestedComposer'
+import { LexicalNestedComposer, type LexicalNestedComposerProps } from '@lexical/react/LexicalNestedComposer'
 import React from 'react'
 
 import InklingComposerContext from '@/context/InklingComposerContext'
@@ -8,16 +10,13 @@ import ReplacementStringsPlugin from '@/plugins/ReplacementStringsPlugin'
 import TKPlugin from '@/plugins/TKPlugin'
 import WordCountPlugin from '@/plugins/WordCountPlugin'
 
-interface InklingNestedComposerProps {
-  initialEditor: import('lexical').LexicalEditor
-  // oxlint-disable-next-line typescript/no-explicit-any
-  initialEditorState?: any
-  // oxlint-disable-next-line typescript/no-explicit-any
-  initialNodes?: ReadonlyArray<any>
-  // oxlint-disable-next-line typescript/no-explicit-any
-  initialTheme?: any
-  skipCollabChecks?: true
-  children?: React.ReactNode
+// mirrors LexicalNestedComposer; initialEditorState is only used to bootstrap
+// the collaboration plugin when collab is active
+export interface InklingNestedComposerProps extends Pick<
+  LexicalNestedComposerProps,
+  'initialEditor' | 'initialNodes' | 'initialTheme' | 'skipCollabChecks' | 'skipEditableListener' | 'children'
+> {
+  initialEditorState?: InitialEditorStateType
 }
 
 const InklingNestedComposer = ({
@@ -26,6 +25,7 @@ const InklingNestedComposer = ({
   initialNodes,
   initialTheme,
   skipCollabChecks,
+  skipEditableListener,
   children,
 }: InklingNestedComposerProps) => {
   const { isCollabActive } = useCollaborationContext()
@@ -37,13 +37,13 @@ const InklingNestedComposer = ({
       initialNodes={initialNodes}
       initialTheme={initialTheme}
       skipCollabChecks={skipCollabChecks}
+      skipEditableListener={skipEditableListener}
     >
       {isCollabActive ? (
         <CollaborationPlugin
           id={initialEditor.getKey()}
           initialEditorState={initialEditorState}
-          // oxlint-disable-next-line typescript/no-explicit-any
-          providerFactory={createWebsocketProvider as any}
+          providerFactory={createWebsocketProvider}
           shouldBootstrap={true}
         />
       ) : null}

@@ -1,3 +1,4 @@
+import type { InitialEditorStateType } from '@lexical/react/LexicalComposer'
 import type { LexicalEditor } from 'lexical'
 
 import clsx from 'clsx'
@@ -66,9 +67,9 @@ interface HeaderCardProps {
   openImageEditor: (options: { image: string; handleSave: (blob: Blob) => void }) => void
   imageDragHandler: { isDraggedOver?: boolean; setRef?: (element: HTMLElement | null) => void }
   headerTextEditor: LexicalEditor
-  headerTextEditorInitialState?: unknown
+  headerTextEditorInitialState?: InitialEditorStateType
   subheaderTextEditor: LexicalEditor
-  subheaderTextEditorInitialState?: unknown
+  subheaderTextEditorInitialState?: InitialEditorStateType
   isSwapped?: boolean
   handleSwapLayout: () => void
   handleBackgroundSize: (size: string) => void

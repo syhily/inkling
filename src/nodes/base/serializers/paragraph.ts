@@ -1,6 +1,8 @@
+import type { DOMConversion } from 'lexical'
+
 export default {
   import: {
-    p: (node: HTMLElement) => {
+    p: (node: HTMLElement): DOMConversion | null => {
       const isGoogleDocs = !!node.closest('[id^="docs-internal-guid-"]')
 
       // Google docs wraps dividers in paragraphs, without text content

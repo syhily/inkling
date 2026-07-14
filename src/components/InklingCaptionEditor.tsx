@@ -154,7 +154,7 @@ function CaptionPlugin({ parentEditor }: { parentEditor: import('lexical').Lexic
 interface InklingCaptionEditorProps {
   paragraphs?: number
   captionEditor: import('lexical').LexicalEditor
-  captionEditorInitialState?: unknown
+  captionEditorInitialState?: import('@lexical/react/LexicalComposer').InitialEditorStateType
   placeholderText?: string
   className?: string
 }

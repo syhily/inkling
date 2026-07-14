@@ -1,8 +1,11 @@
 import '@/styles/index.css'
+import type { SerializedEditorState } from 'lexical'
+
 import { ListPlugin } from '@lexical/react/LexicalListPlugin'
 import React from 'react'
 
-import type { FileUploader } from '@/context/InklingComposerContext'
+import type { InklingComposableEditorProps } from '@/components/InklingComposableEditor'
+import type { InklingComposerProps } from '@/components/InklingComposer'
 
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingComposer from '@/components/InklingComposer'
@@ -50,30 +53,31 @@ export function getEmailEditorCardConfig(cardConfig: Record<string, unknown> = {
   }
 }
 
-interface EmailEditorProps {
+export interface EmailEditorProps
+  extends
+    Omit<InklingComposerProps, 'cardConfig' | 'children' | 'nodes'>,
+    Omit<InklingComposableEditorProps, 'onChange'> {
   cardConfig?: Record<string, unknown>
-  darkMode?: boolean
-  fileUploader?: FileUploader
-  initialEditorState?: unknown
-  onChange?: (editorState: unknown) => void
-  onError?: (error: unknown, info?: React.ErrorInfo) => void
-  children?: React.ReactNode
-  markdownTransformers?: unknown[]
-  placeholderText?: string
-  [key: string]: unknown
+  onChange?: (editorState: SerializedEditorState) => void
 }
 
 const EmailEditor = ({
   cardConfig = {},
-  darkMode = false,
+  children,
+  darkMode,
+  enableMultiplayer,
   fileUploader,
   initialEditorState,
+  isTKEnabled,
+  markdownTransformers = EMAIL_TRANSFORMERS,
+  multiplayerDebug,
+  multiplayerDocId,
+  multiplayerEndpoint,
+  multiplayerUsername,
   onChange,
   onError,
-  children,
-  markdownTransformers = EMAIL_TRANSFORMERS,
   placeholderText = 'Begin writing your email...',
-  ...props
+  ...editorProps
 }: EmailEditorProps) => {
   const mergedCardConfig = getEmailEditorCardConfig(cardConfig)
 
@@ -81,16 +85,21 @@ const EmailEditor = ({
     <InklingComposer
       cardConfig={mergedCardConfig}
       darkMode={darkMode}
+      enableMultiplayer={enableMultiplayer}
       fileUploader={fileUploader}
-      // oxlint-disable-next-line typescript/no-explicit-any
-      initialEditorState={initialEditorState as any}
+      initialEditorState={initialEditorState}
+      isTKEnabled={isTKEnabled}
+      multiplayerDebug={multiplayerDebug}
+      multiplayerDocId={multiplayerDocId}
+      multiplayerEndpoint={multiplayerEndpoint}
+      multiplayerUsername={multiplayerUsername}
       nodes={EMAIL_EDITOR_NODES}
       onError={onError}
     >
       <SharedHistoryContext>
         <SharedOnChangeContext onChange={onChange}>
           <InklingComposableEditor
-            {...props}
+            {...editorProps}
             markdownTransformers={markdownTransformers}
             placeholderText={placeholderText}
           >

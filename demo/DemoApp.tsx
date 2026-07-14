@@ -222,19 +222,11 @@ interface DemoEditorProps {
   editorType?: string
   registerAPI: (api: object | null) => void
   cursorDidExitAtTop: () => void
-  darkMode: boolean
   setWordCount: (count: number) => void
   setTKCount: (count: number) => void
 }
 
-function DemoEditor({
-  editorType,
-  registerAPI,
-  cursorDidExitAtTop,
-  darkMode,
-  setWordCount,
-  setTKCount,
-}: DemoEditorProps) {
+function DemoEditor({ editorType, registerAPI, cursorDidExitAtTop, setWordCount, setTKCount }: DemoEditorProps) {
   if (editorType === 'basic') {
     return (
       <InklingComposableEditor
@@ -260,7 +252,7 @@ function DemoEditor({
   }
 
   return (
-    <InklingEditor cursorDidExitAtTop={cursorDidExitAtTop} darkMode={darkMode} registerAPI={registerAPI}>
+    <InklingEditor cursorDidExitAtTop={cursorDidExitAtTop} registerAPI={registerAPI}>
       <WordCountPlugin onChange={setWordCount} />
       <TKCountPlugin onChange={setTKCount} />
     </InklingEditor>
@@ -528,7 +520,6 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
       {demoLayout(
         <DemoEditor
           cursorDidExitAtTop={focusTitle}
-          darkMode={darkMode}
           editorType={editorType}
           registerAPI={handleRegisterAPI}
           setTKCount={setTKCount}

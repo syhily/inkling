@@ -6,7 +6,7 @@ import React from 'react'
 
 import { $selectDecoratorNode } from '@/utils/$selectDecoratorNode'
 
-interface ExternalControlAPI {
+export interface ExternalControlAPI {
   editorInstance: ReturnType<typeof useLexicalComposerContext>[0]
   serialize: () => string
   editorIsEmpty: () => boolean | undefined

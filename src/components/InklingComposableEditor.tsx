@@ -1,4 +1,7 @@
 import '@/styles/index.css'
+import type { Transformer } from '@lexical/markdown'
+import type { EditorState, SerializedEditorState } from 'lexical'
+
 import { useCollaborationContext } from '@lexical/react/LexicalCollaborationContext'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { ContentEditable } from '@lexical/react/LexicalContentEditable'
@@ -7,6 +10,8 @@ import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin'
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
 import React from 'react'
+
+import type { ExternalControlAPI } from '@/plugins/ExternalControlPlugin'
 
 import InklingErrorBoundary from '@/components/InklingErrorBoundary'
 import { EditorPlaceholder } from '@/components/ui/EditorPlaceholder'
@@ -25,12 +30,12 @@ import MarkdownPastePlugin from '@/plugins/MarkdownPastePlugin'
 import MarkdownShortcutPlugin from '@/plugins/MarkdownShortcutPlugin'
 import TKPlugin from '@/plugins/TKPlugin'
 
-interface InklingComposableEditorProps {
-  onChange?: (editorState: unknown) => void
+export interface InklingComposableEditorProps {
+  onChange?: (editorState: SerializedEditorState) => void
   onBlur?: () => void
   onFocus?: () => void
-  markdownTransformers?: unknown[]
-  registerAPI?: (api: object | null) => void
+  markdownTransformers?: readonly Transformer[]
+  registerAPI?: (api: ExternalControlAPI | null) => void
   cursorDidExitAtTop?: () => void
   children?: React.ReactNode
   placeholder?: React.ReactNode
@@ -78,7 +83,7 @@ const InklingComposableEditor = ({
 
   const { onChange: sharedOnChange } = useSharedOnChangeContext()
   const _onChange = React.useCallback(
-    (editorState: { toJSON: () => unknown }) => {
+    (editorState: EditorState) => {
       if (sharedOnChange) {
         // sharedOnChange is called for the main editor and nested editors, we want to
         // make sure we don't accidentally serialize only the contents of the nested
@@ -113,8 +118,6 @@ const InklingComposableEditor = ({
     }
   }
 
-  // oxlint-disable-next-line typescript/no-explicit-any
-  const markdownTransformersAny = markdownTransformers as any
   return (
     <div
       ref={onWrapperRef}
@@ -144,7 +147,7 @@ const InklingComposableEditor = ({
         cursorDidExitAtTop={cursorDidExitAtTop}
         isNested={isNested}
       />
-      <MarkdownShortcutPlugin transformers={markdownTransformersAny as never[]} />
+      <MarkdownShortcutPlugin transformers={markdownTransformers} />
       {floatingAnchorElem && (
         <FloatingToolbarPlugin
           anchorElem={floatingAnchorElem}

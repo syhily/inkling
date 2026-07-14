@@ -46,7 +46,7 @@ export const CODE_BLOCK = {
     return '```' + (node.language || '') + (textContent ? '\n' + textContent : '') + '\n' + '```'
   },
   regExp: /^```(\w{1,10})?\s/,
-  replace: (parentNode: ElementNode, _children: LexicalNode[], match: RegExpMatchArray) => {
+  replace: (parentNode: ElementNode, _children: LexicalNode[], match: string[]) => {
     const language = match[1]
     const codeBlockNode = $createCodeBlockNode({ language, _openInEditMode: true })
     const replacementNode = parentNode.replace(codeBlockNode)
@@ -72,24 +72,24 @@ export const SUPERSCRIPT = {
   type: 'text-format' as const,
 }
 
-export const ELEMENT_TRANSFORMERS = [HEADING, QUOTE, UNORDERED_LIST, ORDERED_LIST, HR, CODE_BLOCK]
+export const ELEMENT_TRANSFORMERS: Transformer[] = [HEADING, QUOTE, UNORDERED_LIST, ORDERED_LIST, HR, CODE_BLOCK]
 
 export const CUSTOM_TEXT_FORMAT_TRANSFORMERS = [SUBSCRIPT, SUPERSCRIPT]
 
-export const DEFAULT_TRANSFORMERS = [
+export const DEFAULT_TRANSFORMERS: Transformer[] = [
   ...ELEMENT_TRANSFORMERS,
   ...TEXT_FORMAT_TRANSFORMERS,
   ...CUSTOM_TEXT_FORMAT_TRANSFORMERS,
   ...TEXT_MATCH_TRANSFORMERS,
 ]
 
-export const MINIMAL_TRANSFORMERS = [
+export const MINIMAL_TRANSFORMERS: Transformer[] = [
   ...TEXT_FORMAT_TRANSFORMERS,
   ...CUSTOM_TEXT_FORMAT_TRANSFORMERS,
   ...TEXT_MATCH_TRANSFORMERS,
 ]
 
-export const BASIC_TRANSFORMERS = [
+export const BASIC_TRANSFORMERS: Transformer[] = [
   UNORDERED_LIST,
   ORDERED_LIST,
   ...TEXT_FORMAT_TRANSFORMERS,
@@ -97,7 +97,7 @@ export const BASIC_TRANSFORMERS = [
   ...TEXT_MATCH_TRANSFORMERS,
 ]
 
-export const EMAIL_TRANSFORMERS = [
+export const EMAIL_TRANSFORMERS: Transformer[] = [
   HEADING,
   QUOTE,
   UNORDERED_LIST,
@@ -109,7 +109,8 @@ export const EMAIL_TRANSFORMERS = [
 ]
 
 export default function MarkdownShortcutPlugin({
-  transformers = DEFAULT_TRANSFORMERS as Transformer[],
-}: { transformers?: Transformer[] } = {}) {
-  return LexicalMarkdownShortcutPlugin({ transformers: transformers })
+  transformers = DEFAULT_TRANSFORMERS,
+}: { transformers?: readonly Transformer[] } = {}) {
+  // Lexical's plugin takes a mutable array; copy so readonly caller arrays are accepted
+  return LexicalMarkdownShortcutPlugin({ transformers: [...transformers] })
 }

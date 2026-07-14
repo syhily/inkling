@@ -1,9 +1,16 @@
 import { LexicalCollaboration } from '@lexical/react/LexicalCollaborationContext'
 import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin'
-import { LexicalComposer } from '@lexical/react/LexicalComposer'
+import { LexicalComposer, type InitialConfigType } from '@lexical/react/LexicalComposer'
 import React from 'react'
 import { WebsocketProvider } from 'y-websocket'
 import { Doc } from 'yjs'
+
+import type {
+  CardConfig,
+  FileUploader,
+  FileUploaderInput,
+  LexicalProviderFactory,
+} from '@/context/InklingComposerContext'
 
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
@@ -11,6 +18,9 @@ import { TKContext } from '@/context/TKContext'
 import { DEFAULT_CONFIG } from '@/nodes/base'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import defaultTheme from '@/themes/default'
+import { type InklingInitialEditorState, normalizeInitialEditorState } from '@/utils/normalizeInitialEditorState'
+
+export type { InklingInitialEditorState }
 
 // Catch any errors that occur during Lexical updates and log them
 // or throw them as needed. If you don't throw them, Lexical will
@@ -28,12 +38,16 @@ const defaultConfig = {
   html: DEFAULT_CONFIG.html,
 }
 
-interface InklingComposerProps {
-  initialEditorState?: string | Record<string, unknown> | null
-  nodes?: typeof DEFAULT_NODES
+function hasFileUploadHook(fileUploader: FileUploaderInput): fileUploader is FileUploader {
+  return 'useFileUpload' in fileUploader && typeof fileUploader.useFileUpload === 'function'
+}
+
+export interface InklingComposerProps {
+  initialEditorState?: InklingInitialEditorState
+  nodes?: InitialConfigType['nodes']
   onError?: (error: unknown, info?: React.ErrorInfo) => void
-  fileUploader?: import('@/context/InklingComposerContext').FileUploader | Record<string, unknown>
-  cardConfig?: import('@/context/InklingComposerContext').CardConfig
+  fileUploader?: FileUploaderInput
+  cardConfig?: CardConfig
   darkMode?: boolean
   enableMultiplayer?: boolean
   isTKEnabled?: boolean
@@ -59,53 +73,47 @@ const InklingComposer = ({
   multiplayerUsername,
   children,
 }: InklingComposerProps) => {
-  const initialConfig = React.useMemo(() => {
-    let editorState: string | Record<string, unknown> | null | undefined = initialEditorState
+  const normalizedInitialEditorState = React.useMemo(
+    () => normalizeInitialEditorState(initialEditorState),
+    [initialEditorState],
+  )
 
-    // root needs to have at least one paragraph node for the editor to work
-    if (editorState) {
-      if (typeof editorState === 'string') {
-        editorState = JSON.parse(editorState) as Record<string, unknown>
-      }
-
-      const state = editorState as { root?: { children?: unknown[] } }
-      if (state.root?.children?.length === 0) {
-        state.root.children.push({
-          children: [],
-          direction: null,
-          format: '',
-          indent: 0,
-          type: 'paragraph',
-          version: 1,
-        })
-      }
-
-      editorState = JSON.stringify(editorState) as string
-    }
-
-    return Object.assign({}, defaultConfig, {
-      nodes,
-      editorState: enableMultiplayer ? null : editorState,
-      onError,
-    })
-  }, [enableMultiplayer, initialEditorState, nodes, onError])
+  const initialConfig = React.useMemo(
+    () =>
+      ({
+        ...defaultConfig,
+        nodes,
+        // collaboration owns the bootstrap state via the plugin below
+        editorState: enableMultiplayer ? null : normalizedInitialEditorState,
+        // Lexical calls its onError with (Error, LexicalEditor); the public
+        // callback follows the React error-boundary shape, so only the error is
+        // forwarded — the original callback stays in context for the boundary
+        onError: (error: Error) => onError(error),
+      }) satisfies InitialConfigType,
+    [enableMultiplayer, normalizedInitialEditorState, nodes, onError],
+  )
 
   const editorContainerRef = React.useRef(null)
   const onWordCountChangeRef = React.useRef(null)
 
-  const _fileUploader = fileUploader as import('@/context/InklingComposerContext').FileUploader
-  if (!_fileUploader.useFileUpload) {
-    // oxlint-disable-next-line typescript/no-explicit-any
-    ;(_fileUploader as any).useFileUpload = function (): { upload: () => Promise<undefined> } {
-      console.error(
-        '<InklingComposer> requires a `fileUploader` prop object to be passed containing a `useFileUpload` custom hook',
-      )
-      return { upload: () => Promise.resolve(undefined) }
+  const normalizedFileUploader = React.useMemo<FileUploader>(() => {
+    if (hasFileUploadHook(fileUploader)) {
+      return fileUploader
     }
-  }
 
-  const createWebsocketProvider = React.useCallback(
-    (id: string, yjsDocMap: Map<string, import('yjs').Doc>) => {
+    return {
+      ...fileUploader,
+      useFileUpload(): ReturnType<FileUploader['useFileUpload']> {
+        console.error(
+          '<InklingComposer> requires a `fileUploader` prop object to be passed containing a `useFileUpload` custom hook',
+        )
+        return { upload: () => Promise.resolve(undefined) }
+      },
+    }
+  }, [fileUploader])
+
+  const createWebsocketProvider = React.useCallback<LexicalProviderFactory>(
+    (id, yjsDocMap) => {
       let doc = yjsDocMap.get(id)
 
       if (doc === undefined) {
@@ -125,15 +133,18 @@ const InklingComposer = ({
         })
       }
 
-      // oxlint-disable-next-line typescript/no-explicit-any
-      return provider as InstanceType<typeof WebsocketProvider>
+      // WebsocketProvider implements every Provider method Lexical calls at runtime
+      // (awareness, connect, disconnect, on, off), but its `on`/`off` overloads only
+      // accept the event names y-websocket itself emits, so it is not structurally
+      // assignable to Lexical's Provider and needs a single assertion at this boundary
+      return provider as unknown as ReturnType<LexicalProviderFactory>
     },
     [multiplayerEndpoint, multiplayerDocId, multiplayerDebug],
   )
 
   const composerContextValue = React.useMemo(
     () => ({
-      fileUploader: _fileUploader,
+      fileUploader: normalizedFileUploader,
       editorContainerRef,
       cardConfig,
       darkMode,
@@ -142,13 +153,12 @@ const InklingComposer = ({
       multiplayerEndpoint,
       multiplayerDocId,
       multiplayerUsername,
-      // oxlint-disable-next-line typescript/no-explicit-any
-      createWebsocketProvider: createWebsocketProvider as any,
+      createWebsocketProvider,
       onWordCountChangeRef,
       onError,
     }),
     [
-      _fileUploader,
+      normalizedFileUploader,
       cardConfig,
       createWebsocketProvider,
       darkMode,
@@ -164,8 +174,7 @@ const InklingComposer = ({
   )
 
   return (
-    // oxlint-disable-next-line typescript/no-explicit-any
-    <LexicalComposer initialConfig={initialConfig as any}>
+    <LexicalComposer initialConfig={initialConfig}>
       <InklingComposerContext.Provider value={composerContextValue}>
         <InklingSelectedCardContext>
           <TKContext>
@@ -173,10 +182,8 @@ const InklingComposer = ({
               {enableMultiplayer ? (
                 <CollaborationPlugin
                   id="main"
-                  // oxlint-disable-next-line typescript/no-explicit-any
-                  initialEditorState={initialEditorState as any}
-                  // oxlint-disable-next-line typescript/no-explicit-any
-                  providerFactory={createWebsocketProvider as any}
+                  initialEditorState={normalizedInitialEditorState}
+                  providerFactory={createWebsocketProvider}
                   shouldBootstrap={true}
                   username={multiplayerUsername}
                 />

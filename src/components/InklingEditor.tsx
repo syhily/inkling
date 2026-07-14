@@ -1,15 +1,17 @@
 import '@/styles/index.css'
+import type { SerializedEditorState } from 'lexical'
+
 import React from 'react'
+
+import type { InklingComposableEditorProps } from '@/components/InklingComposableEditor'
 
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import { SharedHistoryContext } from '@/context/SharedHistoryContext'
 import { SharedOnChangeContext } from '@/context/SharedOnChangeContext'
 import { AllDefaultPlugins } from '@/plugins/AllDefaultPlugins'
 
-interface InklingEditorProps {
-  onChange?: (editorState: unknown) => void
-  children?: React.ReactNode
-  [key: string]: unknown
+export interface InklingEditorProps extends InklingComposableEditorProps {
+  onChange?: (editorState: SerializedEditorState) => void
 }
 
 const InklingEditor = ({ onChange, children, ...props }: InklingEditorProps) => {

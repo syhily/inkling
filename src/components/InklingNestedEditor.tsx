@@ -19,12 +19,15 @@ const Placeholder = ({ text = 'Type here', className = '' }) => {
   )
 }
 
+import type { InitialEditorStateType } from '@lexical/react/LexicalComposer'
+import type { EditorThemeClasses } from 'lexical'
+
 import React from 'react'
 
 interface InklingNestedEditorProps {
   initialEditor: import('lexical').LexicalEditor
-  initialEditorState?: unknown
-  initialTheme?: unknown
+  initialEditorState?: InitialEditorStateType
+  initialTheme?: EditorThemeClasses
   nodes?: 'basic' | 'minimal'
   placeholderText?: string
   textClassName?: string

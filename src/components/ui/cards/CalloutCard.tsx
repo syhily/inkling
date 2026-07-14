@@ -1,3 +1,4 @@
+import type { InitialEditorStateType } from '@lexical/react/LexicalComposer'
 import type { LexicalEditor } from 'lexical'
 
 import React from 'react'
@@ -96,7 +97,7 @@ interface CalloutCardProps {
   changeEmoji?: (emoji: unknown) => void
   calloutEmoji?: string
   textEditor?: LexicalEditor
-  textEditorInitialState?: unknown
+  textEditorInitialState?: InitialEditorStateType
   nodeKey?: string
   toggleEmojiPicker?: () => void
   showEmojiPicker?: boolean
