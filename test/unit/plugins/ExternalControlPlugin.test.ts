@@ -105,6 +105,26 @@ describe('ExternalControlPlugin', () => {
     })
   })
 
+  it('passes rootStart default selection to editor.focus for position top', async () => {
+    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
+    useLexicalComposerContext.mockReturnValue([editor])
+
+    const registerAPI = vi.fn()
+    renderHook(() => ExternalControlPlugin({ registerAPI }))
+    const api = registerAPI.mock.calls[0][0]
+
+    const focusSpy = vi.spyOn(editor, 'focus')
+
+    api.focusEditor({ position: 'top' })
+    expect(focusSpy).toHaveBeenCalledWith(expect.any(Function), { defaultSelection: 'rootStart' })
+
+    focusSpy.mockClear()
+    api.focusEditor({ position: 'bottom' })
+    expect(focusSpy).toHaveBeenCalledWith(expect.any(Function), { defaultSelection: undefined })
+
+    focusSpy.mockRestore()
+  })
+
   it('reports lastNodeIsDecorator for decorator nodes', async () => {
     editor = createEditor({ namespace: 'test', nodes: [HorizontalRuleNode], onError: () => {} })
     const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')

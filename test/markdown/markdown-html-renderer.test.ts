@@ -15,6 +15,18 @@ describe('Markdown HTML renderer', function () {
       expect(result).toMatch(/<h1 id="hello2">/)
     })
 
+    it('does not leak heading dedup state across render() calls', function () {
+      const first = render('# Hello', { inklingVersion: '4.0' })
+      const second = render('# Hello', { inklingVersion: '4.0' })
+      expect(first).toMatch(/<h1 id="hello">/)
+      expect(second).toMatch(/<h1 id="hello">/)
+
+      const firstLegacy = render('# Hello', { inklingVersion: '3.0' })
+      const secondLegacy = render('# Hello', { inklingVersion: '3.0' })
+      expect(firstLegacy).toMatch(/<h1 id="hello">/)
+      expect(secondLegacy).toMatch(/<h1 id="hello">/)
+    })
+
     it('outputs `loading="lazy"` on images', function () {
       const markdown = `![](https://mysite.com/content/images/lazy.png)`
       const result = render(markdown, { inklingVersion: '3.0' })

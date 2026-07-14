@@ -43,7 +43,7 @@ export const ExternalControlPlugin = ({ registerAPI }: { registerAPI: (api: Exte
         return editor.getEditorState().read(() => $canShowPlaceholder(false))
       },
       focusEditor({ position = 'bottom' } = {}) {
-        editor.focus(() => {})
+        editor.focus(() => {}, { defaultSelection: position === 'top' ? 'rootStart' : undefined })
 
         if (position === 'top') {
           // Lexical does not automatically select a decorator node

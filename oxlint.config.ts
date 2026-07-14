@@ -4,7 +4,7 @@ import { defineConfig } from 'oxlint'
 // via docs/audit/oxlint-gatekeeping-methodology.md.
 //
 // SKIPPED vs yufan.me (reasons):
-//  - react/react-compiler      : React 18.3.1, no babel-plugin-react-compiler.
+//  - react/react-compiler      : React 19, no babel-plugin-react-compiler.
 //  - oxc/no-barrel-file        : src/index.ts is a public barrel.
 //  - react formComponents/linkComponents : no React Router in src (demo-only).
 //  - node/no-process-env       : not a server.
@@ -37,7 +37,7 @@ export default defineConfig({
   ],
   settings: {
     react: {
-      version: '18.3.1',
+      version: '19.2.7',
     },
   },
   categories: {
