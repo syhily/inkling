@@ -10,9 +10,8 @@ import {
 } from 'lexical'
 import React from 'react'
 
-import type { InklingEditorInternals } from '@/types/lexical-internals'
-
 import CardContext from '@/context/CardContext'
+import { getParentEditor } from '@/utils/lexical-internals'
 
 function InklingNestedEditorPlugin({
   autoFocus,
@@ -76,6 +75,8 @@ function InklingNestedEditorPlugin({
       editor.registerCommand(
         KEY_ENTER_COMMAND,
         (event) => {
+          const parentEditor = getParentEditor(editor)
+
           // Lexical 0.46.0 added `commandPriority` to typeahead menus, but the
           // project's menus still register at the default `COMMAND_PRIORITY_LOW`.
           // Until they are configured to register at a higher priority, this
@@ -89,7 +90,7 @@ function InklingNestedEditorPlugin({
           if (event && (event.metaKey || event.ctrlKey)) {
             // oxlint-disable-next-line typescript/no-explicit-any
             ;(event as Event & { _fromNested?: boolean })._fromNested = true
-            ;(editor as InklingEditorInternals)._parentEditor?.dispatchCommand(KEY_ENTER_COMMAND, event)
+            parentEditor?.dispatchCommand(KEY_ENTER_COMMAND, event)
             return true
           }
 
@@ -115,7 +116,10 @@ function InklingNestedEditorPlugin({
             if (event) {
               ;(event as Event & { _fromNested?: boolean })._fromNested = true
             }
-            ;(editor as InklingEditorInternals)._parentEditor!.dispatchCommand(KEY_ENTER_COMMAND, event)
+            if (!parentEditor) {
+              return false
+            }
+            parentEditor.dispatchCommand(KEY_ENTER_COMMAND, event)
 
             // prevent normal/InklingBehaviourPlugin enter key behaviour
             return true
@@ -127,11 +131,13 @@ function InklingNestedEditorPlugin({
       editor.registerCommand(
         BLUR_COMMAND,
         () => {
+          const parentEditor = getParentEditor(editor)
+
           // when the nested editor is selected, the parent editor clears its selection so we need to
           //   return parent editor selection to the card when the nested editor loses focus
-          if (hasSettingsPanel && (editor as InklingEditorInternals)._parentEditor!) {
-            ;(editor as InklingEditorInternals)._parentEditor!.getEditorState().read(() => {
-              ;(editor as InklingEditorInternals)._parentEditor!.update(
+          if (hasSettingsPanel && parentEditor) {
+            parentEditor.getEditorState().read(() => {
+              parentEditor.update(
                 () => {
                   if (!$getSelection()) {
                     const selection = $createNodeSelection()

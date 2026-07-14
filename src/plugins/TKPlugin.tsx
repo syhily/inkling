@@ -10,13 +10,12 @@ import {
 import { useCallback, useContext, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-import type { InklingEditorInternals } from '@/types/lexical-internals'
-
 import CardContext from '@/context/CardContext'
 import { useTKContext } from '@/context/TKContext'
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
 import { $createTKNode, $isTKNode, ExtendedTextNode, TKNode } from '@/nodes/base'
 import { SELECT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
+import { getEditorTheme } from '@/utils/lexical-internals'
 
 const REGEX = new RegExp(/(^|.)([^\p{L}\p{N}\s]*(TK|Tk|tk)+[^\p{L}\p{N}\s]*)(.)?/u)
 const WORD_CHAR_REGEX = new RegExp(/\p{L}|\p{N}/u)
@@ -32,10 +31,9 @@ function TKIndicator({
   parentKey: string
   nodeKeys: string[]
 }) {
-  // oxlint-disable-next-line typescript/no-explicit-any
-  const editorInternals = editor as unknown as InklingEditorInternals
-  const tkClasses = editorInternals._config.theme.tk?.split(' ') || []
-  const tkHighlightClasses = editorInternals._config.theme.tkHighlighted?.split(' ') || []
+  const theme = getEditorTheme(editor)
+  const tkClasses = theme.tk?.split(' ') || []
+  const tkHighlightClasses = theme.tkHighlighted?.split(' ') || []
 
   const containingElement = editor.getElementByKey(parentKey) as HTMLElement | null
 

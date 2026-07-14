@@ -18,12 +18,11 @@ import {
 } from 'lexical'
 import React from 'react'
 
-import type { InklingEditorInternals } from '@/types/lexical-internals'
-
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { $createAsideNode } from '@/nodes/AsideNode'
 import { getSelectedNode } from '@/utils/getSelectedNode'
+import { isNestedEditor } from '@/utils/lexical-internals'
 import { altOrOption, ctrlOrCmdSymbol, ctrlOrSymbol } from '@/utils/shortcutSymbols'
 
 const blockTypeToBlockName: Record<string, string> = {
@@ -88,7 +87,7 @@ export default function FormatToolbar({
   }
 
   let hideSnippets = !isSnippetsEnabled || !createSnippet // don't show snippet toolbar if we can't create them
-  if ((editor as InklingEditorInternals)._parentEditor) {
+  if (isNestedEditor(editor)) {
     hideSnippets = true
   }
 

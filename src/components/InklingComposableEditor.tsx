@@ -29,6 +29,7 @@ import { InklingFocusPlugin } from '@/plugins/InklingFocusPlugin'
 import MarkdownPastePlugin from '@/plugins/MarkdownPastePlugin'
 import MarkdownShortcutPlugin from '@/plugins/MarkdownShortcutPlugin'
 import TKPlugin from '@/plugins/TKPlugin'
+import { getParentEditor, isNestedEditor } from '@/utils/lexical-internals'
 
 export interface InklingComposableEditorProps {
   onChange?: (editorState: SerializedEditorState) => void
@@ -78,7 +79,8 @@ const InklingComposableEditor = ({
   const { isCollabActive } = useCollaborationContext()
   const { editorContainerRef, darkMode, isTKEnabled } = React.useContext(InklingComposerContext)
 
-  const isNested = !!editor._parentEditor
+  const parentEditor = getParentEditor(editor)
+  const isNested = isNestedEditor(editor)
   const isDragReorderEnabled = isDragEnabled && !readOnly && !isNested
 
   const { onChange: sharedOnChange } = useSharedOnChangeContext()
@@ -88,7 +90,7 @@ const InklingComposableEditor = ({
         // sharedOnChange is called for the main editor and nested editors, we want to
         // make sure we don't accidentally serialize only the contents of the nested
         // editor so we need to use the parent editor when it exists
-        const primaryEditorState = (editor._parentEditor || editor).getEditorState()
+        const primaryEditorState = (parentEditor || editor).getEditorState()
         const json = primaryEditorState.toJSON()
         sharedOnChange(json)
       }

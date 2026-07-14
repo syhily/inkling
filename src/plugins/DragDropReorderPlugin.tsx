@@ -29,7 +29,7 @@ interface DragPreviewElement extends HTMLDivElement {
   __reactRoot?: Root
 }
 
-function useDragDropReorder(editor: LexicalEditor, isEditable: boolean): void {
+function useDragDropReorder(editor: LexicalEditor): void {
   const inkling = React.useContext(InklingComposerContext)
   const { setIsDragging, isEditingCard } = useInklingSelectedCardContext()
 
@@ -338,13 +338,10 @@ function useDragDropReorder(editor: LexicalEditor, isEditable: boolean): void {
       cardContainer.current?.enableDrag()
     }
   }, [isEditingCard])
-
-  // isEditable parameter unused but kept for API consistency
-  void isEditable
 }
 
 export default function DragDropReorderPlugin(): null {
   const [editor] = useLexicalComposerContext()
-  useDragDropReorder(editor, editor._editable)
+  useDragDropReorder(editor)
   return null
 }

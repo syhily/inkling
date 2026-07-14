@@ -12,7 +12,6 @@ import {
 import React, { useCallback, useContext } from 'react'
 
 import type { NestedKeyboardEvent } from '@/types/events'
-import type { InklingEditorInternals } from '@/types/lexical-internals'
 
 import CardContext from '@/context/CardContext'
 import {
@@ -104,7 +103,10 @@ function CaptionPlugin({ parentEditor }: { parentEditor: import('lexical').Lexic
           // - with ctrl/cmd+enter toggles edit mode
           // - or creates paragraph after card and moves cursor
           ;(event as NestedKeyboardEvent)._fromNested = true
-          ;(editor as InklingEditorInternals)._parentEditor!.dispatchCommand(KEY_ENTER_COMMAND, event)
+          if (!parentEditor) {
+            return false
+          }
+          parentEditor.dispatchCommand(KEY_ENTER_COMMAND, event)
 
           // prevent normal/InklingBehaviourPlugin enter key behaviour
           return true
@@ -123,7 +125,10 @@ function CaptionPlugin({ parentEditor }: { parentEditor: import('lexical').Lexic
           }
           // handle moving focus at the parent editor level (select next card)
           ;(event as NestedKeyboardEvent)._fromCaptionEditor = true
-          ;(editor as InklingEditorInternals)._parentEditor!.dispatchCommand(KEY_ARROW_DOWN_COMMAND, event)
+          if (!parentEditor) {
+            return false
+          }
+          parentEditor.dispatchCommand(KEY_ARROW_DOWN_COMMAND, event)
           return true
         },
         COMMAND_PRIORITY_HIGH,
@@ -140,7 +145,10 @@ function CaptionPlugin({ parentEditor }: { parentEditor: import('lexical').Lexic
           }
           // handle moving focus at the parent editor level (select next card)
           ;(event as NestedKeyboardEvent)._fromCaptionEditor = true
-          ;(editor as InklingEditorInternals)._parentEditor!.dispatchCommand(KEY_ARROW_UP_COMMAND, event)
+          if (!parentEditor) {
+            return false
+          }
+          parentEditor.dispatchCommand(KEY_ARROW_UP_COMMAND, event)
           return true
         },
         COMMAND_PRIORITY_HIGH,
