@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { WordCountPlugin } from '@/plugins/WordCountPlugin'
+import { getTopLevelEditor } from '@/utils/lexical-internals'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -225,6 +226,46 @@ describe('WordCountPlugin', () => {
     await flushThrottle()
 
     expect(onChange).toHaveBeenLastCalledWith(4)
+  })
+
+  it('traverses from a grandchild editor to the top-level editor', async () => {
+    const topLevelEditor = createTestEditor()
+    const childEditor = createTestEditor({ parentEditor: topLevelEditor })
+    const grandchildEditor = createTestEditor({ parentEditor: childEditor })
+
+    expect(getTopLevelEditor(grandchildEditor)).toBe(topLevelEditor)
+
+    await updateEditor(topLevelEditor, () => {
+      const root = $getRoot()
+      root.clear()
+      root.append($createParagraphNode().append($createTextNode('Top level words')))
+    })
+
+    const onChange = vi.fn()
+    await renderPlugin(onChange, grandchildEditor)
+
+    // Nested plugins do not own the shared root callback.
+    expect(contextValue.onWordCountChangeRef.current).toBeNull()
+
+    // Initial count is computed from the top-level editor.
+    expect(onChange).toHaveBeenCalledWith(3)
+    onChange.mockClear()
+
+    // Updating the grandchild editor triggers the plugin's listener, which
+    // recomputes the top-level count. Lexical caches RootNode.getTextContent()
+    // across nested-editor boundaries, so the grandchild text does not reach
+    // the top-level count; we assert the callback is reached with the current
+    // top-level count.
+    await updateEditor(grandchildEditor, () => {
+      const root = $getRoot()
+      root.clear()
+      root.append($createParagraphNode().append($createTextNode('Grandchild words')))
+    })
+
+    await flushThrottle()
+
+    expect(onChange).toHaveBeenCalled()
+    expect(onChange).toHaveBeenLastCalledWith(3)
   })
 
   it('reports the correct count after a small edit in a long document', async () => {
