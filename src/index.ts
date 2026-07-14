@@ -1,5 +1,10 @@
 import { ListPlugin } from '@lexical/react/LexicalListPlugin'
 
+/* Types re-exported from bundled runtimes so consumers can name the shapes
+ * that appear in public prop/command signatures without installing Lexical. */
+export type { Transformer } from '@lexical/markdown'
+export type { EditorState, LexicalEditor, SerializedEditorState } from 'lexical'
+
 /* Components */
 import DesignSandbox from '@/components/DesignSandbox'
 import EmailEditor, { EMAIL_EDITOR_CARD_CONFIG, getEmailEditorCardConfig } from '@/components/EmailEditor'
@@ -64,6 +69,14 @@ export type { InklingComposerProps, InklingInitialEditorState } from '@/componen
 export type { InklingEditorProps } from '@/components/InklingEditor'
 export type { InklingNestedComposerProps } from '@/components/InklingNestedComposer'
 export type { ExternalControlAPI } from '@/plugins/ExternalControlPlugin'
+
+export type { AudioNodeDataset } from '@/nodes/AudioNode'
+export { INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
+export type { CodeBlockNodeDataset } from '@/nodes/CodeBlockNode'
+export { INSERT_CODE_BLOCK_COMMAND } from '@/nodes/CodeBlockNode'
+export type { HtmlNodeDataset } from '@/nodes/HtmlNode'
+export { INSERT_HTML_COMMAND } from '@/nodes/HtmlNode'
+export { INSERT_HORIZONTAL_RULE_COMMAND } from '@/nodes/HorizontalRuleNode'
 
 export * from '@/utils'
 export { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown'

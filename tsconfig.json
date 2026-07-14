@@ -21,5 +21,11 @@
     }
   },
   "include": ["src/**/*", "test/**/*", "demo/**/*"],
-  "exclude": ["test/e2e/**/*", "test/unit/**/*", "test/utils/**/*", "test/test-setup.ts"]
+  "exclude": [
+    "test/e2e/**/*",
+    "test/unit/**/*",
+    "test/utils/**/*",
+    "test/test-setup.ts",
+    "test/typecheck-consumer/**/*"
+  ]
 }

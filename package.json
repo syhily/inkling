@@ -54,7 +54,8 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "verify:package": "node scripts/verify-packed-package.mjs"
+    "verify:package": "node scripts/verify-packed-package.mjs",
+    "verify:types": "node scripts/verify-packed-types.mjs"
   },
   "dependencies": {
     "clsx": "2.1.1",
