@@ -10,7 +10,6 @@ import type { EditorThemeClasses, Klass, LexicalEditor, LexicalNode } from 'lexi
 // Keep every private access here so a Lexical upgrade touches exactly one place.
 type InklingLexicalEditorInternals = LexicalEditor & {
   _config: { theme: EditorThemeClasses }
-  _editable: boolean
   _nodes: Map<string, { klass: Klass<LexicalNode> }>
   _parentEditor: LexicalEditor | null
   _updating: boolean
@@ -25,6 +24,9 @@ export function isNestedEditor(editor: LexicalEditor): boolean {
 }
 
 export function getTopLevelEditor(editor: LexicalEditor): LexicalEditor {
+  // Lexical's createEditor factory guarantees an acyclic parent chain, so the
+  // cycle guard below is defensive: it prevents an infinite loop if an external
+  // mutation ever corrupts the hierarchy.
   const visited = new Set<LexicalEditor>()
   let current: LexicalEditor = editor
 

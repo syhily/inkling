@@ -88,9 +88,12 @@ function InklingNestedEditorPlugin({
 
           // let the parent editor handle the edit mode product
           if (event && (event.metaKey || event.ctrlKey)) {
+            if (!parentEditor) {
+              return true
+            }
             // oxlint-disable-next-line typescript/no-explicit-any
             ;(event as Event & { _fromNested?: boolean })._fromNested = true
-            parentEditor?.dispatchCommand(KEY_ENTER_COMMAND, event)
+            parentEditor.dispatchCommand(KEY_ENTER_COMMAND, event)
             return true
           }
 
@@ -112,12 +115,12 @@ function InklingNestedEditorPlugin({
             // otherwise, let the parent editor handle the enter key
             // - with ctrl/cmd+enter toggles edit mode
             // - or creates paragraph after card and moves cursor
+            if (!parentEditor) {
+              return false
+            }
             // oxlint-disable-next-line typescript/no-explicit-any
             if (event) {
               ;(event as Event & { _fromNested?: boolean })._fromNested = true
-            }
-            if (!parentEditor) {
-              return false
             }
             parentEditor.dispatchCommand(KEY_ENTER_COMMAND, event)
 

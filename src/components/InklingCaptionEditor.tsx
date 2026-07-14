@@ -102,10 +102,10 @@ function CaptionPlugin({ parentEditor }: { parentEditor: import('lexical').Lexic
           // otherwise, let the parent editor handle the enter key
           // - with ctrl/cmd+enter toggles edit mode
           // - or creates paragraph after card and moves cursor
-          ;(event as NestedKeyboardEvent)._fromNested = true
           if (!parentEditor) {
             return false
           }
+          ;(event as NestedKeyboardEvent)._fromNested = true
           parentEditor.dispatchCommand(KEY_ENTER_COMMAND, event)
 
           // prevent normal/InklingBehaviourPlugin enter key behaviour
@@ -124,10 +124,10 @@ function CaptionPlugin({ parentEditor }: { parentEditor: import('lexical').Lexic
             return false
           }
           // handle moving focus at the parent editor level (select next card)
-          ;(event as NestedKeyboardEvent)._fromCaptionEditor = true
           if (!parentEditor) {
             return false
           }
+          ;(event as NestedKeyboardEvent)._fromCaptionEditor = true
           parentEditor.dispatchCommand(KEY_ARROW_DOWN_COMMAND, event)
           return true
         },
@@ -144,10 +144,10 @@ function CaptionPlugin({ parentEditor }: { parentEditor: import('lexical').Lexic
             return false
           }
           // handle moving focus at the parent editor level (select next card)
-          ;(event as NestedKeyboardEvent)._fromCaptionEditor = true
           if (!parentEditor) {
             return false
           }
+          ;(event as NestedKeyboardEvent)._fromCaptionEditor = true
           parentEditor.dispatchCommand(KEY_ARROW_UP_COMMAND, event)
           return true
         },

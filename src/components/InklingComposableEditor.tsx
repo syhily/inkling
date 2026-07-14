@@ -29,7 +29,7 @@ import { InklingFocusPlugin } from '@/plugins/InklingFocusPlugin'
 import MarkdownPastePlugin from '@/plugins/MarkdownPastePlugin'
 import MarkdownShortcutPlugin from '@/plugins/MarkdownShortcutPlugin'
 import TKPlugin from '@/plugins/TKPlugin'
-import { getParentEditor, isNestedEditor } from '@/utils/lexical-internals'
+import { getParentEditor } from '@/utils/lexical-internals'
 
 export interface InklingComposableEditorProps {
   onChange?: (editorState: SerializedEditorState) => void
@@ -80,7 +80,7 @@ const InklingComposableEditor = ({
   const { editorContainerRef, darkMode, isTKEnabled } = React.useContext(InklingComposerContext)
 
   const parentEditor = getParentEditor(editor)
-  const isNested = isNestedEditor(editor)
+  const isNested = parentEditor !== null
   const isDragReorderEnabled = isDragEnabled && !readOnly && !isNested
 
   const { onChange: sharedOnChange } = useSharedOnChangeContext()
