@@ -31,7 +31,7 @@ inkling 是 koenig 的衍生单包重构版，两者各自完成 JS→TS 转换�
 | 2    | generateDecoratorNode 泛型类型回流 | `40dcf89` | DONE |
 | 3    | 节点层修复                         | `0db022d` | DONE |
 | 4    | 组件层回归修复                     | `0b21585` | DONE |
-| 5    | 插件层修复                         | —         | TODO |
+| 5    | 插件层修复                         | `8192600` | DONE |
 | 6    | 邮件渲染回流                       | —         | TODO |
 | 7    | 死代码与存疑项清理                 | —         | TODO |
 
@@ -66,7 +66,7 @@ inkling 是 koenig 的衍生单包重构版，两者各自完成 JS→TS 转换�
 9. 核实项（先验证再动）：`src/nodes/CalloutNodeComponent.tsx` 的 `textEditor.setEditable(isEditing)` 同步、`toggleEmoji` 时 `setEditing(true)` 保持选中、`handleToolbarEdit` 派 `EDIT_CARD_COMMAND {focusEditor: false}`（koenig :33-45,:83-86）——确认 inkling 重写后这些行为是否真回退，若是则恢复。
 10. e2e：针对性跑 code-block / snippet / header 相关 spec；已知 flake `test/e2e/cards/video-card.firefox.test.ts` 的 undo/redo 用例失败可重跑一次确认。
 
-### 批 5：插件层修复（TODO）
+### 批 5：插件层修复（DONE `8192600`）
 
 1. `src/plugins/behaviour/keyboard-navigation/key-down.ts:10-14` — 恢复 `shouldIgnoreEvent(event)` 判断并 `return true`（koenig `KoenigBehaviourPlugin.tsx:418-430`）。现状无条件 `return false`，卡片内嵌编辑器（input/textarea/CodeMirror）中的键盘 cut/copy 会被 Lexical preventDefault。`shouldIgnoreEvent` 在 `src/utils/shouldIgnoreEvent.ts`，仍被 paste/cut 路径使用。
 2. `src/plugins/ExternalControlPlugin.tsx` — `focusEditor` 恢复 `{defaultSelection: 'rootStart'}` 传参（`position` 参数当前失效）；保留 inkling 的 firstChild 空值守卫。
