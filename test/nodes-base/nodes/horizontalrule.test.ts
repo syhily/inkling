@@ -73,6 +73,47 @@ describe('HorizontalNode', function () {
         expect(output).toContain('<hr style="display: none;">')
       }),
     )
+
+    it(
+      'pins the full email output byte-for-byte',
+      editorTest(async function () {
+        const hrNode = $createHorizontalRuleNode()
+        const { element } = hrNode.exportDOM(editor, { ...exportOptions, target: 'email' })
+
+        await expectPrettifiedHtml(
+          (element as HTMLElement).outerHTML,
+          html`
+            <div>
+              <table
+                class="inkling-card inkling-hr-card"
+                role="presentation"
+                width="100%"
+                border="0"
+                cellpadding="0"
+                cellspacing="0"
+              >
+                <tbody>
+                  <tr>
+                    <td>
+                      <!--[if !mso]><!-- -->
+                      <hr style="display: none;" />
+                      <!--<![endif]-->
+                      <table class="inkling-hr" role="presentation" border="0" cellpadding="0" cellspacing="0">
+                        <tbody>
+                          <tr>
+                            <td>&nbsp;</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          `,
+        )
+      }),
+    )
   })
 
   describe('importDOM', function () {

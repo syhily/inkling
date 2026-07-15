@@ -373,6 +373,48 @@ describe('CalloutNode', function () {
         )
       }),
     )
+
+    it(
+      'unwraps disallowed tags nested inside an allowed tag',
+      editorTest(async function () {
+        dataset.calloutText = '<strong>keep<div><span>deep</span></div></strong>'
+
+        const node = $createCalloutNode(dataset)
+        const result = node.exportDOM(editor, exportOptions)
+        const element = result.element as HTMLElement
+
+        await expectPrettifiedHtml(
+          element.outerHTML,
+          html`
+            <div class="inkling-card inkling-callout-card inkling-callout-card-blue">
+              <div class="inkling-callout-emoji">💡</div>
+              <div class="inkling-callout-text"><strong>keepdeep</strong></div>
+            </div>
+          `,
+        )
+      }),
+    )
+
+    it(
+      'unwraps deeply nested disallowed tags and keeps their text',
+      editorTest(async function () {
+        dataset.calloutText = '<div><span><script>alert(1)</script>text</span></div>'
+
+        const node = $createCalloutNode(dataset)
+        const result = node.exportDOM(editor, exportOptions)
+        const element = result.element as HTMLElement
+
+        await expectPrettifiedHtml(
+          element.outerHTML,
+          html`
+            <div class="inkling-card inkling-callout-card inkling-callout-card-blue">
+              <div class="inkling-callout-emoji">💡</div>
+              <div class="inkling-callout-text">alert(1)text</div>
+            </div>
+          `,
+        )
+      }),
+    )
   })
 
   describe('importDOM', function () {

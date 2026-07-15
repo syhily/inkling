@@ -242,6 +242,114 @@ describe('BookmarkNode', function () {
     )
 
     it(
+      'pins the full email output',
+      editorTest(async function () {
+        const bookmarkNode = $createBookmarkNode(dataset)
+        const result = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
+        const element = result.element as HTMLElement
+
+        await expectPrettifiedHtml(
+          element.outerHTML,
+          html`
+            <div>
+              <!--[if !mso !vml]-->
+              <figure class="inkling-card inkling-bookmark-card inkling-card-hascaption">
+                <a class="inkling-bookmark-container" href="https://inkling.local/">
+                  <div class="inkling-bookmark-content">
+                    <div class="inkling-bookmark-title">Inkling: The Creator Economy Platform</div>
+                    <div class="inkling-bookmark-description">doing kewl stuff</div>
+                    <div class="inkling-bookmark-metadata">
+                      <img class="inkling-bookmark-icon" src="https://inkling.local/favicon.ico" alt="" /><span
+                        class="inkling-bookmark-author"
+                        src="Inkling - The Professional Publishing Platform"
+                        >Inkling - The Professional Publishing Platform</span
+                      ><span class="inkling-bookmark-publisher" src="inkling">inkling</span>
+                    </div>
+                  </div>
+                  <div
+                    class="inkling-bookmark-thumbnail"
+                    style="background-image: url('https://inkling.local/images/meta/inkling.png')"
+                  >
+                    <img
+                      src="https://inkling.local/images/meta/inkling.png"
+                      alt=""
+                      onerror="this.style.display='none'"
+                    />
+                  </div>
+                </a>
+                <figcaption>caption here</figcaption>
+              </figure>
+              <!--[endif]-->
+              <!--[if vml]>
+                <table
+                  class="inkling-card inkling-bookmark-card--outlook"
+                  style="margin: 0; padding: 0; width: 100%; border: 1px solid #e5eff5; background: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; border-collapse: collapse; border-spacing: 0;"
+                  width="100%"
+                >
+                  <tr>
+                    <td width="100%" style="padding: 20px;">
+                      <table style="margin: 0; padding: 0; border-collapse: collapse; border-spacing: 0;">
+                        <tr>
+                          <td class="inkling-bookmark-title--outlook">
+                            <a
+                              href="https://inkling.local/"
+                              style="text-decoration: none; color: #15212A; font-size: 15px; line-height: 1.5em; font-weight: 600;"
+                            >
+                              Inkling: The Creator Economy Platform
+                            </a>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="inkling-bookmark-description--outlook">
+                              <a
+                                href="https://inkling.local/"
+                                style="text-decoration: none; margin-top: 12px; color: #738A94; font-size: 13px; line-height: 1.5em; font-weight: 400;"
+                              >
+                                doing kewl stuff
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            class="inkling-bookmark-metadata--outlook"
+                            style="padding-top: 14px; color: #15212A; font-size: 13px; font-weight: 400; line-height: 1.5em;"
+                          >
+                            <table style="margin: 0; padding: 0; border-collapse: collapse; border-spacing: 0;">
+                              <tr>
+                                <td
+                                  valign="middle"
+                                  class="inkling-bookmark-icon--outlook"
+                                  style="padding-right: 8px; font-size: 0; line-height: 1.5em;"
+                                >
+                                  <a href="https://inkling.local/" style="text-decoration: none; color: #15212A;">
+                                    <img src="https://inkling.local/favicon.ico" width="22" height="22" alt=" " />
+                                  </a>
+                                </td>
+
+                                <td valign="middle" class="inkling-bookmark-byline--outlook">
+                                  <a href="https://inkling.local/" style="text-decoration: none; color: #15212A;">
+                                    Inkling - The Professional Publishing Platform &nbsp;&#x2022;&nbsp; inkling
+                                  </a>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                <div class="inkling-bookmark-spacer--outlook" style="height: 1.5em;">&nbsp;</div>
+              <![endif]-->
+            </div>
+          `,
+        )
+      }),
+    )
+
+    it(
       'renders an empty span with a missing src',
       editorTest(async function () {
         const bookmarkNode = $createBookmarkNode()

@@ -3,7 +3,8 @@ import type { LexicalEditor } from 'lexical'
 import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
 
-import { createDocument, dom } from '#/nodes-base/test-utils/index'
+import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
+import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { HeaderNode, $createHeaderNode, $isHeaderNode } from '@/nodes/base/index'
 
 const editorNodes = [HeaderNode]
@@ -14,12 +15,12 @@ describe('HeaderNode', function () {
     let dataset: Record<string, unknown>
     let exportOptions: Record<string, unknown>
 
-    const editorTest = (testFn: () => void) => () =>
+    const editorTest = (testFn: () => Promise<void> | void) => () =>
       new Promise<void>((resolve, reject) => {
         editor.update(() => {
           try {
-            testFn()
-            resolve()
+            const result = testFn()
+            Promise.resolve(result).then(resolve).catch(reject)
           } catch (e) {
             reject(e)
           }
@@ -498,6 +499,115 @@ describe('HeaderNode', function () {
           expect(html).not.toContain('evil.example')
           expect(html).toContain('color:#000000')
           expect(html).toContain('background-color: transparent')
+        }),
+      )
+    })
+
+    describe('email target full output', function () {
+      it(
+        'pins the full modern email output (useModernButton)',
+        editorTest(async function () {
+          const headerNode = $createHeaderNode(dataset)
+          const { element } = headerNode.exportDOM(editor, {
+            ...exportOptions,
+            target: 'email',
+            feature: { emailCustomization: true },
+          })
+
+          await expectPrettifiedHtml(
+            (element as HTMLElement).outerHTML,
+            html`
+              <div
+                class="inkling-header-card inkling-v2 inkling-header-card-light-bg"
+                style="color:#000000; text-align: center; background-image: url(https://example.com/image.jpg); background-size: cover; background-position: center center; "
+              >
+                <table
+                  border="0"
+                  cellpadding="0"
+                  cellspacing="0"
+                  width="100%"
+                  style="color:#000000; text-align: center; background-image: url(https://example.com/image.jpg); background-size: cover; background-position: center center; "
+                >
+                  <tbody>
+                    <tr>
+                      <!--[if mso]>
+                        <td class="inkling-header-card-content" style="padding: 0;">
+                    <![endif]-->
+                      <!--[if !mso]><!--><td class="inkling-header-card-content" style=""><!--<![endif]-->
+                        <!--[if mso]>
+                        <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;">
+                            <v:fill src="https://example.com/image.jpg" color="#F0F0F0" type="frame" aspect="atleast" focusposition="0.5,0.5" />
+                            <v:textbox inset="30pt,30pt,30pt,30pt" style="mso-fit-shape-to-text:true;">
+                    <![endif]-->
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                          <tbody>
+                            <tr>
+                              <td align="center">
+                                <h2 class="inkling-header-card-heading" style="color:#000000;">
+                                  This is the header card
+                                </h2>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="inkling-header-card-subheading-wrapper" align="center">
+                                <p class="inkling-header-card-subheading" style="color:#000000;">hello</p>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="inkling-header-button-wrapper">
+                                <table class="btn" border="0" cellspacing="0" cellpadding="0" align="center">
+                                  <tbody>
+                                    <tr>
+                                      <td align="center" style="background-color: #000000;">
+                                        <a href="https://example.com/" style="color: #ffffff;">The button</a>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <!--[if mso]>
+            </v:textbox>
+        </v:rect>
+        <![endif]-->
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            `,
+          )
+        }),
+      )
+
+      it(
+        'pins the full legacy email output (no customization flags)',
+        editorTest(async function () {
+          const headerNode = $createHeaderNode(dataset)
+          const { element } = headerNode.exportDOM(editor, { ...exportOptions, target: 'email' })
+
+          await expectPrettifiedHtml(
+            (element as HTMLElement).outerHTML,
+            html`
+              <div
+                class="inkling-header-card inkling-v2 inkling-header-card-light-bg"
+                style="color:#000000; text-align: center; background-image: url(https://example.com/image.jpg); background-size: cover; background-position: center center; "
+              >
+                <div class="inkling-header-card-content" style="">
+                  <h2 class="inkling-header-card-heading" style="color:#000000;">This is the header card</h2>
+                  <p class="inkling-header-card-subheading" style="color:#000000;">hello</p>
+                  <a
+                    class="inkling-header-card-button"
+                    href="https://example.com/"
+                    style="color: #FFFFFF; background-color: #000000; #000000"
+                    >The button</a
+                  >
+                </div>
+              </div>
+            `,
+          )
         }),
       )
     })

@@ -387,6 +387,101 @@ describe('VideoNode', function () {
     )
 
     it(
+      'pins the full email output with an escaped caption',
+      editorTest(async function () {
+        const payload = {
+          src: '/content/images/2022/11/inkling-lexical.mp4',
+          width: 200,
+          height: 100,
+          duration: 60,
+          thumbnailSrc: '/content/images/2022/11/inkling-lexical.jpg',
+          caption: 'This is a <b>caption</b>',
+        }
+
+        const options = {
+          target: 'email',
+          postUrl: 'https://example.com/my-post',
+        }
+        const videoNode = $createVideoNode(payload)
+        const { element } = videoNode.exportDOM(editor, { ...exportOptions, ...options })
+
+        await expectPrettifiedHtml(
+          (element as HTMLElement).outerHTML,
+          html`
+            <figure class="inkling-card inkling-video-card inkling-width-regular inkling-card-hascaption">
+              <!--[if !mso !vml]-->
+              <a
+                class="inkling-video-preview"
+                href="https://example.com/my-post"
+                aria-label="Play video"
+                style="mso-hide: all"
+                ><table
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  width="100%"
+                  background="/content/images/2022/11/inkling-lexical.jpg"
+                  role="presentation"
+                  style="background: url('/content/images/2022/11/inkling-lexical.jpg') left top / cover; mso-hide: all"
+                >
+                  <tbody>
+                    <tr style="mso-hide: all">
+                      <td width="25%" style="visibility: hidden; mso-hide: all">
+                        <img
+                          src="https://img.spacergif.org/v1/150x300/0a/spacer.png"
+                          alt=""
+                          width="100%"
+                          border="0"
+                          style="display:block; height: auto; opacity: 0; visibility: hidden; mso-hide: all;"
+                        />
+                      </td>
+                      <td width="50%" align="center" valign="middle" style="vertical-align: middle; mso-hide: all;">
+                        <div class="inkling-video-play-button" style="mso-hide: all">
+                          <div style="mso-hide: all"></div>
+                        </div>
+                      </td>
+                      <td width="25%" style="mso-hide: all">&nbsp;</td>
+                    </tr>
+                  </tbody>
+                </table></a
+              >
+              <!--[endif]-->
+              <!--[if vml]>
+                <v:group
+                  xmlns:v="urn:schemas-microsoft-com:vml"
+                  xmlns:w="urn:schemas-microsoft-com:office:word"
+                  coordsize="600,300"
+                  coordorigin="0,0"
+                  href="https://example.com/my-post"
+                  style="width:600px;height:300px;"
+                >
+                  <v:rect fill="t" stroked="f" style="position:absolute;width:600;height:300;"
+                    ><v:fill src="/content/images/2022/11/inkling-lexical.jpg" type="frame"
+                  /></v:rect>
+                  <v:oval
+                    fill="t"
+                    strokecolor="white"
+                    strokeweight="4px"
+                    style="position:absolute;left:261;top:111;width:78;height:78"
+                    ><v:fill color="black" opacity="30%"
+                  /></v:oval>
+                  <v:shape
+                    coordsize="24,32"
+                    path="m,l,32,24,16,xe"
+                    fillcolor="white"
+                    stroked="f"
+                    style="position:absolute;left:289;top:133;width:30;height:34;"
+                  />
+                </v:group>
+              <![endif]-->
+              <figcaption>This is a &lt;b&gt;caption&lt;/b&gt;</figcaption>
+            </figure>
+          `,
+        )
+      }),
+    )
+
+    it(
       'throws when rendering email without postUrl',
       editorTest(async function () {
         const payload = {

@@ -422,6 +422,88 @@ describe('BaseAudioNode', function () {
     )
 
     it(
+      'pins the full email output',
+      editorTest(async function () {
+        const audioNode = $createAudioNode(dataset)
+        const { element } = audioNode.exportDOM(editor, {
+          ...exportOptions,
+          target: 'email',
+          postUrl: 'https://example.com/posts/test-audio',
+        })
+
+        await expectPrettifiedHtml(
+          getHTMLElement(element).outerHTML,
+          html`
+            <table cellspacing="0" cellpadding="0" border="0" class="inkling-audio-card">
+              <tbody>
+                <tr>
+                  <td>
+                    <table cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tbody>
+                        <tr>
+                          <td width="60">
+                            <a
+                              href="https://example.com/posts/test-audio"
+                              style="display: block; width: 60px; height: 60px; padding-top: 4px; padding-right: 16px; padding-bottom: 4px; padding-left: 4px; border-radius: 2px;"
+                              ><img
+                                src="/content/images/2022/11/inkling-audio-lexical.jpg"
+                                class="inkling-audio-thumbnail"
+                                style="width: 60px; height: 60px; object-fit: cover; border: 0; border-radius: 2px;"
+                            /></a>
+                          </td>
+                          <td style="position: relative; vertical-align: center;" valign="middle">
+                            <a
+                              href="https://example.com/posts/test-audio"
+                              style="position: absolute; display: block; top: 0; right: 0; bottom: 0; left: 0;"
+                            ></a>
+                            <table cellspacing="0" cellpadding="0" border="0" width="100%">
+                              <tbody>
+                                <tr>
+                                  <td>
+                                    <a href="https://example.com/posts/test-audio" class="inkling-audio-title"
+                                      >Test Audio</a
+                                    >
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td>
+                                    <table cellspacing="0" cellpadding="0" border="0" width="100%">
+                                      <tbody>
+                                        <tr>
+                                          <td width="24" style="vertical-align: middle;" valign="middle">
+                                            <a
+                                              href="https://example.com/posts/test-audio"
+                                              class="inkling-audio-play-button"
+                                            ></a>
+                                          </td>
+                                          <td style="vertical-align: middle;" valign="middle">
+                                            <a
+                                              href="https://example.com/posts/test-audio"
+                                              class="inkling-audio-duration"
+                                              >1:00<span class="inkling-audio-link">• Click to play audio</span></a
+                                            >
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          `,
+        )
+      }),
+    )
+
+    it(
       'throws when rendering email without postUrl',
       editorTest(async function () {
         const audioNode = $createAudioNode(dataset)

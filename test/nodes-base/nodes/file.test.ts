@@ -2,7 +2,8 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
 import { $getRoot, type LexicalEditor } from 'lexical'
 
-import { dom, createDocument } from '#/nodes-base/test-utils/index'
+import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
+import { dom, createDocument, html } from '#/nodes-base/test-utils/index'
 import { FileNode, $createFileNode, $isFileNode } from '@/nodes/base/index'
 
 const editorNodes = [FileNode]
@@ -15,12 +16,12 @@ describe('FileNode', function () {
   // NOTE: all tests should use this function, without it you need manual
   // try/catch and done handling to avoid assertion failures not triggering
   // failed tests
-  const editorTest = (testFn: () => void) => () =>
+  const editorTest = (testFn: () => Promise<void> | void) => () =>
     new Promise<void>((resolve, reject) => {
       editor.update(() => {
         try {
-          testFn()
-          resolve()
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
         } catch (e) {
           reject(e)
         }
@@ -154,6 +155,78 @@ describe('FileNode', function () {
           const icon = el.querySelector('img') as HTMLImageElement
           expect(icon.src).toBe('https://static.inkling.local/v4.0.0/images/download-icon-darkmode.png')
           expect(icon.style.height).toBe('24px')
+        }),
+      )
+
+      it(
+        'pins the full email output byte-for-byte',
+        editorTest(async function () {
+          const fileNode = $createFileNode(dataset)
+          const { element } = fileNode.exportDOM(editor, exportOptions)
+
+          await expectPrettifiedHtml(
+            (element as HTMLElement).outerHTML,
+            html`
+              <table cellspacing="0" cellpadding="4" border="0" class="inkling-file-card" width="100%">
+                <tbody>
+                  <tr>
+                    <td>
+                      <table cellspacing="0" cellpadding="0" border="0" width="100%">
+                        <tbody>
+                          <tr>
+                            <td valign="middle" style="vertical-align: middle;">
+                              <table cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tbody>
+                                  <tr>
+                                    <td>
+                                      <a href="https://example.com/post" class="inkling-file-title"
+                                        >Cool image to download</a
+                                      >
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                              <table cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tbody>
+                                  <tr>
+                                    <td>
+                                      <a href="https://example.com/post" class="inkling-file-description"
+                                        >This is a description</a
+                                      >
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                              <table cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tbody>
+                                  <tr>
+                                    <td>
+                                      <a href="https://example.com/post" class="inkling-file-meta"
+                                        ><span class="inkling-file-name">IMG_0196.jpeg</span> • 121 KB</a
+                                      >
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </td>
+                            <td width="80" valign="middle" class="inkling-file-thumbnail">
+                              <a
+                                href="https://example.com/post"
+                                style="display: block; top: 0; right: 0; bottom: 0; left: 0;"
+                                ><img
+                                  src="https://static.inkling.local/v4.0.0/images/download-icon-darkmode.png"
+                                  style="margin-top: 6px; height: 24px; width: 24px; max-width: 24px;"
+                              /></a>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            `,
+          )
         }),
       )
 

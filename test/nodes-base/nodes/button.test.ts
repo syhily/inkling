@@ -174,6 +174,34 @@ describe('ButtonNode', function () {
     )
 
     it(
+      'pins the full legacy email output',
+      editorTest(async function () {
+        const buttonNode = $createButtonNode(dataset)
+        const result = buttonNode.exportDOM(editor, { ...exportOptions, target: 'email' })
+        const element = result.element as HTMLElement
+
+        // legacy email wraps the button table in a <p> element
+        expect(element.tagName).toBe('P')
+        await expectPrettifiedHtml(
+          element.innerHTML,
+          html`
+            <div class="btn btn-accent">
+              <table border="0" cellspacing="0" cellpadding="0" align="center">
+                <tbody>
+                  <tr>
+                    <td align="center">
+                      <a href="http://blog.com/post1">click me</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          `,
+        )
+      }),
+    )
+
+    it(
       'renders for email target (emailCustomization)',
       editorTest(async function () {
         const buttonNode = $createButtonNode(dataset)

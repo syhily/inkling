@@ -434,6 +434,32 @@ describe('ImageNode', function () {
     })
 
     describe('email target', function () {
+      it(
+        'pins the full email output',
+        editorTest(async function () {
+          const imageNode = $createImageNode(dataset)
+          const { element } = imageNode.exportDOM(editor, { ...exportOptions, target: 'email' })
+
+          await expectPrettifiedHtml(
+            (element as HTMLElement).outerHTML,
+            html`
+              <figure class="inkling-card inkling-image-card inkling-card-hascaption">
+                <img
+                  src="/content/images/size/w1600/2022/11/inkling-lexical.jpg"
+                  class="inkling-image"
+                  alt="This is some alt text"
+                  loading="lazy"
+                  title="This is a title"
+                  width="600"
+                  height="338"
+                />
+                <figcaption>This is a <b>caption</b></figcaption>
+              </figure>
+            `,
+          )
+        }),
+      )
+
       it('adds width/height and uses resized local image')
       it('adds width/height and uses original src when local image cannot be transformed')
       it('uses original image if size is smaller than "retina" size')

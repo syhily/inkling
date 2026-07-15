@@ -1898,6 +1898,64 @@ describe('GalleryNode', function () {
       })
 
       it(
+        'pins the full email output',
+        editorTest(async function () {
+          const galleryNode = $createGalleryNode({
+            images: [
+              {
+                row: 0,
+                fileName: 'NatGeo01.jpg',
+                src: '/content/images/2018/08/NatGeo01-9.jpg',
+                width: 3200,
+                height: 1600,
+              },
+              {
+                row: 0,
+                fileName: 'NatGeo02.jpg',
+                src: '/content/images/2018/08/NatGeo02-10.jpg',
+                width: 3200,
+                height: 1600,
+              },
+            ],
+            caption: 'This is a <b>caption</b>',
+          })
+
+          const { element } = galleryNode.exportDOM(editor, exportOptions)
+
+          await expectPrettifiedHtml(
+            (element as HTMLElement).outerHTML,
+            html`
+              <figure class="inkling-card inkling-gallery-card inkling-width-wide inkling-card-hascaption">
+                <div class="inkling-gallery-container">
+                  <div class="inkling-gallery-row">
+                    <div class="inkling-gallery-image">
+                      <img
+                        src="/content/images/size/w1600/2018/08/NatGeo01-9.jpg"
+                        width="600"
+                        height="300"
+                        loading="lazy"
+                        alt=""
+                      />
+                    </div>
+                    <div class="inkling-gallery-image">
+                      <img
+                        src="/content/images/size/w1600/2018/08/NatGeo02-10.jpg"
+                        width="600"
+                        height="300"
+                        loading="lazy"
+                        alt=""
+                      />
+                    </div>
+                  </div>
+                </div>
+                <figcaption>This is a <b>caption</b></figcaption>
+              </figure>
+            `,
+          )
+        }),
+      )
+
+      it(
         'adds width/height and uses resized images',
         editorTest(async function () {
           const galleryNode = $createGalleryNode({

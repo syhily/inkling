@@ -294,6 +294,163 @@ describe('ToggleNode', function () {
     )
 
     it(
+      'renders for email target (emailCustomization)',
+      editorTest(async function () {
+        const payload = {
+          heading: 'Heading',
+          content: 'Content',
+        }
+
+        const options = {
+          target: 'email',
+          postUrl: 'https://example.com/my-post',
+          feature: {
+            emailCustomization: true,
+          },
+        }
+        const toggleNode = $createToggleNode(payload)
+        const result = toggleNode.exportDOM(editor, { ...exportOptions, ...options })
+        const element = result.element as HTMLElement
+
+        await expectPrettifiedHtml(
+          element.outerHTML,
+          html`
+            <table cellspacing="0" cellpadding="0" border="0" width="100%" class="inkling-toggle-card">
+              <tbody>
+                <tr>
+                  <td class="inkling-toggle-heading">
+                    <h4>Heading</h4>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="inkling-toggle-content">Content</td>
+                </tr>
+              </tbody>
+            </table>
+          `,
+        )
+      }),
+    )
+
+    describe('current unsanitized output (Step 4 will change)', function () {
+      // The toggle renderer interpolates heading/content into HTML strings
+      // with no escaping or sanitization. These pins record that raw
+      // passthrough byte-for-byte; plan 040 Step 4 sanitizes these exact
+      // cases and updates the expectations with before/after evidence.
+      const adversarialPayload = {
+        heading: '<script>alert(1)</script>',
+        content: '<script>alert(2)</script>',
+      }
+
+      it(
+        'passes heading and content markup through unsanitized in web output',
+        editorTest(async function () {
+          const toggleNode = $createToggleNode(adversarialPayload)
+          const result = toggleNode.exportDOM(editor, exportOptions)
+          const element = result.element as HTMLElement
+
+          await expectPrettifiedHtml(
+            element.outerHTML,
+            html`
+              <div class="inkling-card inkling-toggle-card" data-inkling-toggle-state="close">
+                <div class="inkling-toggle-heading">
+                  <h4 class="inkling-toggle-heading-text">
+                    <script>
+                      alert(1)
+                    </script>
+                  </h4>
+                  <button class="inkling-toggle-card-icon" aria-label="Expand toggle to read content">
+                    <svg id="Regular" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                      <path class="cls-1" d="M23.25,7.311,12.53,18.03a.749.749,0,0,1-1.06,0L.75,7.311"></path>
+                    </svg>
+                  </button>
+                </div>
+                <div class="inkling-toggle-content">
+                  <script>
+                    alert(2)
+                  </script>
+                </div>
+              </div>
+            `,
+          )
+        }),
+      )
+
+      it(
+        'passes heading and content markup through unsanitized in legacy email output',
+        editorTest(async function () {
+          const toggleNode = $createToggleNode(adversarialPayload)
+          const result = toggleNode.exportDOM(editor, {
+            ...exportOptions,
+            target: 'email',
+            postUrl: 'https://example.com/my-post',
+          })
+          const element = result.element as HTMLElement
+
+          await expectPrettifiedHtml(
+            element.outerHTML,
+            html`
+              <div
+                style="background: transparent; border: 1px solid rgba(124, 139, 154, 0.25); border-radius: 4px; padding: 20px; margin-bottom: 1.5em;"
+              >
+                <h4 style="font-size: 1.375rem; font-weight: 600; margin-bottom: 8px; margin-top:0px">
+                  <script>
+                    alert(1)
+                  </script>
+                </h4>
+                <div style="font-size: 1rem; line-height: 1.5; margin-bottom: -1.5em;">
+                  <script>
+                    alert(2)
+                  </script>
+                </div>
+              </div>
+            `,
+          )
+        }),
+      )
+
+      it(
+        'passes heading and content markup through unsanitized in email customization output',
+        editorTest(async function () {
+          const toggleNode = $createToggleNode(adversarialPayload)
+          const result = toggleNode.exportDOM(editor, {
+            ...exportOptions,
+            target: 'email',
+            postUrl: 'https://example.com/my-post',
+            feature: { emailCustomizationAlpha: true },
+          })
+          const element = result.element as HTMLElement
+
+          await expectPrettifiedHtml(
+            element.outerHTML,
+            html`
+              <table cellspacing="0" cellpadding="0" border="0" width="100%" class="inkling-toggle-card">
+                <tbody>
+                  <tr>
+                    <td class="inkling-toggle-heading">
+                      <h4>
+                        <script>
+                          alert(1)
+                        </script>
+                      </h4>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="inkling-toggle-content">
+                      <script>
+                        alert(2)
+                      </script>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            `,
+          )
+        }),
+      )
+    })
+
+    it(
       'renders heading',
       editorTest(async function () {
         const payload = {
