@@ -48,14 +48,12 @@ describe('InklingSelectedCardContext', () => {
       wrapper: InklingSelectedCardContext,
     })
 
-    expect(result.current.selectedCardKey).toBeNull()
-    expect(result.current.isEditingCard).toBe(false)
     expect(result.current.isDragging).toBe(false)
     expect(result.current.showVisibilitySettings).toBe(false)
 
-    result.current.setSelectedCardKey('card-1')
+    result.current.setIsDragging(true)
     await waitFor(() => {
-      expect(result.current.selectedCardKey).toBe('card-1')
+      expect(result.current.isDragging).toBe(true)
     })
   })
 })

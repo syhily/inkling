@@ -96,7 +96,7 @@ describe('InklingCardWrapper', () => {
     expect(card).toHaveClass('z-10')
   })
 
-  it('toggles the selected state with the selected card context', async () => {
+  it('toggles the selected state with the card selection store', async () => {
     const nodeKey = await addHtmlNode(editor)
 
     const { container } = renderWrapper(nodeKey, { select: true })
