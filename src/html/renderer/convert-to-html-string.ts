@@ -84,7 +84,7 @@ function exportChildren(node: ElementNode, options: RendererOptions, context: Re
   const output: string[] = []
   const children = node.getChildren()
 
-  const textContent = new TextContent(exportChildren, options, context)
+  const textContent = new TextContent((_node) => exportChildren(_node, options, context), options, context)
 
   for (const child of children) {
     if (!textContent.isEmpty() && !$isLineBreakNode(child) && !$isTextNode(child) && !$isLinkNode(child)) {

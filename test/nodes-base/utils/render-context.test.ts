@@ -152,6 +152,14 @@ describe('createRenderContext', () => {
         /^renderAudioNode requires options\.postUrl when options\.target is "email"$/,
       )
     })
+
+    it('throws for a whitespace-only postUrl, matching the video/audio renderer guards', () => {
+      const context = createRenderContext({ dom, target: 'email', postUrl: '   ' })
+
+      expect(() => context.requirePostUrl('renderVideoNode')).toThrow(
+        /^renderVideoNode requires options\.postUrl when options\.target is "email"$/,
+      )
+    })
   })
 
   describe('sanitization', () => {

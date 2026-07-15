@@ -24,10 +24,12 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  *   deletes that function and folds the remaining options-bag state in).
  *
  * The context is read-only: scalar fields are copied, `feature`/`design` are
- * frozen snapshots, and the object itself is frozen. It is cheap to build, so
- * callers construct it once per render pass (per `exportDOM` call in the card
- * dispatch, per `$convertToHtmlString` run in the string layer) and never
- * share it across renders.
+ * frozen snapshots, and the object itself is frozen. The freeze is shallow —
+ * nested values inside `feature`/`design` stay shared references and must not
+ * carry mutable state. The context is cheap to build, so callers construct it
+ * once per render pass (per `exportDOM` call in the card dispatch, per
+ * `$convertToHtmlString` run in the string layer) and never share it across
+ * renders.
  */
 
 export type SafeUrlKind = 'navigation' | 'media'
@@ -91,7 +93,10 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
       return target === 'email' ? email : web
     },
     requirePostUrl(caller) {
-      if (!postUrl) {
+      // Predicate matches the video/audio renderer guards this absorbs in
+      // Step 5 (`typeof postUrl === 'string' && postUrl.trim() !== ''`) — a
+      // whitespace-only postUrl must throw, not pass through.
+      if (!postUrl || postUrl.trim() === '') {
         throw new Error(`${caller} requires options.postUrl when options.target is "email"`)
       }
       return postUrl
