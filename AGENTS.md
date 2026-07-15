@@ -33,6 +33,7 @@ pnpm format:check   # oxfmt --check
 
 ## Architecture notes
 
+- `CONTEXT.md` is the domain glossary (card, card adjacency, card spec, card declaration, render target). Keep it current as terms crystallize.
 - `src/index.ts` is the public barrel. Do **not** import from `@/index` inside `src/nodes/*Node.tsx` wrapper files; import shared primitives directly (`@/components/InklingCardWrapper`, `@/nodes/MinimalNodes`).
 - Wrapper nodes (`src/nodes/*Node.tsx`) extend base nodes (`src/nodes/base/nodes/*/`).
 - Each card has a renderer under `src/nodes/base/nodes/<card>/`.
