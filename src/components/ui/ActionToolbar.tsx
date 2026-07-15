@@ -15,10 +15,7 @@ export function ActionToolbar({
 
   if (isVisible && !isDragging) {
     return (
-      <div
-        className="not-inkling-prose pointer-events-none absolute top-[-46px] left-1/2 z-[1000] -translate-x-1/2"
-        {...props}
-      >
+      <div className="not-inkling-prose absolute top-[-46px] left-1/2 z-[1000] -translate-x-1/2" {...props}>
         {children}
       </div>
     )
