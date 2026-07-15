@@ -337,3 +337,32 @@ must be abandoned entirely, revert the branch's commits in reverse order;
 the Step 1 characterization tests and the new module tests are written
 against current behaviour and remain valid, so keep them (re-point imports
 if the module itself is reverted) as the net for the next attempt.
+
+## Execution notes
+
+Controller rulings made during execution, for reconciling the acceptance
+criteria against what was actually built:
+
+1. **Ruling 1 (from-mode).** The logical query gained an optional
+   `from?: LexicalNode` parameter: selection-anchored WITH offset gates
+   when omitted; ungated sibling lookup from a reference node when
+   provided. It serves registerCardCommands (payload node), the arrows'
+   node-selection branches, delete-line (top-level element), and (decided
+   during T4a) the delete.ts:47-53 and backspace.ts:76-85 sites, whose
+   original derivations have no offset gate.
+2. **Ruling 2 (delete-line).** `isFirstLine` is a direction-independent
+   bare geometry verdict, not an adjacency query — it went through the
+   geometry seam as `$isCaretAtBlockTop()` instead.
+3. **Ruling 3 (modifier).** modifier.ts:40-70 is a document-boundary
+   child check (`$isDecoratorNode(getFirst/LastChild())`),
+   selection-independent, with no `$isDecoratorNode(sibling)` ladder —
+   declared out of query-migration scope. The acceptance criterion "every
+   in-scope derivation site reads from card-adjacency.ts" is satisfied as
+   "16 sites minus modifier's boundary checks".
+
+The module's final surface: two queries (`$getVisuallyAdjacentCard`,
+`$getLogicallyAdjacentCard`), the `CardAdjacencyGeometry` seam (incl.
+`hasNativeSelection`), `$isCaretAtBlockTop`, `editorOwnsFocus`, the
+operations (`$selectCard`, `$deselectCard`,
+`$removeOrReplaceNodeWithParagraph`), and the
+`RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX` const.

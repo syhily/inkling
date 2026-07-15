@@ -21,7 +21,13 @@ import type { KeyboardNavigationDeps } from './types'
 
 import { $getLogicallyAdjacentCard, editorOwnsFocus } from '../card-adjacency'
 import { DELETE_CARD_COMMAND } from '../commands'
-import { SPECIAL_MARKUPS } from '../utils'
+
+const SPECIAL_MARKUPS = {
+  code: '`',
+  superscript: '^',
+  subscript: '~',
+  strikethrough: '~~',
+}
 
 export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
   const { selectedCardKey, isNested } = deps
