@@ -612,7 +612,7 @@ describe('card-adjacency', () => {
         }
         expect($getNodeByKey(cardKey)).toBeNull()
       })
-      expect(focusSpy).toHaveBeenCalled()
+      expect(focusSpy).toHaveBeenCalledWith()
     })
 
     it('selects the start of the next sibling when it is not a card', async () => {
@@ -738,6 +738,41 @@ describe('card-adjacency', () => {
 
       read(() => {
         expect($getNodeByKey(cardKey)).not.toBeNull()
+      })
+    })
+
+    it('does nothing for a card without an isEmpty method', async () => {
+      let cardKey = ''
+      await updateEditor(editor, () => {
+        const image = $createImageNode({ src: '/image.png' })
+        $getRoot().append(image)
+        cardKey = image.getKey()
+      })
+
+      await updateEditor(editor, () => {
+        $deselectCard(editor, cardKey)
+      })
+
+      read(() => {
+        expect($getNodeByKey(cardKey)).not.toBeNull()
+      })
+    })
+
+    it('does nothing for a stale key that resolves to no node', async () => {
+      await updateEditor(editor, () => {
+        const paragraph = $createParagraphNode()
+        paragraph.append($createTextNode('Some content'))
+        $getRoot().append(paragraph)
+      })
+
+      await updateEditor(editor, () => {
+        expect(() => $deselectCard(editor, 'stale-key')).not.toThrow()
+      })
+
+      read(() => {
+        const root = $getRoot()
+        expect(root.getChildrenSize()).toBe(1)
+        expect(root.getFirstChild()?.getTextContent()).toBe('Some content')
       })
     })
   })

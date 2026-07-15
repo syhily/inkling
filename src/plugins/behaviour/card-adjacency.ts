@@ -190,6 +190,7 @@ export function editorOwnsFocus(editor: LexicalEditor): boolean {
   return document.activeElement === editor.getRootElement()
 }
 
+// Card selection operations — the commands half of the module; the queries above find the cards these act on.
 export function $selectCard(editor: LexicalEditor, nodeKey: string) {
   const selection = $createNodeSelection()
   selection.add(nodeKey)
@@ -204,6 +205,7 @@ export function $selectCard(editor: LexicalEditor, nodeKey: string) {
 }
 
 // remove empty cards when they are deselected
+// (cards without an isEmpty method are never auto-removed)
 export function $deselectCard(editor: LexicalEditor, nodeKey: string) {
   const cardNode = $getNodeByKey(nodeKey) as CardNode | null
   if (cardNode?.isEmpty?.()) {
