@@ -122,7 +122,7 @@ Verified fresh against commit `1cad78b`:
 
 - A typed, read-only render-context module (illustrative path:
   `src/nodes/base/render-context.ts`; illustrative methods `safeUrl(kind,
-  value)`, `sanitizeCaption(html)`, `sanitizeCardHtml(html, config)`,
+value)`, `sanitizeCaption(html)`, `sanitizeCardHtml(html, config)`,
   `variant({ web, email })`, `requirePostUrl()`) plus read-only `target`,
   `imageBaseUrl`, `siteUrl`, and feature/design flag accessors.
 - Threading the context through `exportDOM` in generate-decorator-node.ts and
@@ -152,14 +152,14 @@ Verified fresh against commit `1cad78b`:
 
 ## Commands you will need
 
-| Purpose                   | Command                                                    | Expected on success                        |
-| ------------------------- | ---------------------------------------------------------- | ------------------------------------------ |
-| Characterization baseline | `pnpm vitest run test/nodes-base test/html-renderer`       | all green before any migration             |
-| Single renderer group     | `pnpm vitest run test/nodes-base/nodes/<card>.test.ts`     | green, byte-identical expectations         |
-| Seam unit tests           | `pnpm vitest run test/nodes-base/utils`                    | green                                      |
-| Static + full gates       | `pnpm typecheck && pnpm lint && pnpm test:unit`            | all pass (unit builds via `pretest:unit`)  |
-| Format                    | `pnpm format && pnpm format:check`                         | exits 0                                    |
-| E2E (only if demo-visible)| `pnpm test:e2e:quiet test/e2e/<spec>`                      | no e2e currently asserts exported markup   |
+| Purpose                    | Command                                                | Expected on success                       |
+| -------------------------- | ------------------------------------------------------ | ----------------------------------------- |
+| Characterization baseline  | `pnpm vitest run test/nodes-base test/html-renderer`   | all green before any migration            |
+| Single renderer group      | `pnpm vitest run test/nodes-base/nodes/<card>.test.ts` | green, byte-identical expectations        |
+| Seam unit tests            | `pnpm vitest run test/nodes-base/utils`                | green                                     |
+| Static + full gates        | `pnpm typecheck && pnpm lint && pnpm test:unit`        | all pass (unit builds via `pretest:unit`) |
+| Format                     | `pnpm format && pnpm format:check`                     | exits 0                                   |
+| E2E (only if demo-visible) | `pnpm test:e2e:quiet test/e2e/<spec>`                  | no e2e currently asserts exported markup  |
 
 ## Git workflow
 
@@ -202,7 +202,7 @@ Create the seam module (path illustrative, e.g.
 `src/nodes/base/render-context.ts`):
 
 - The `RenderContext` interface and a `createRenderContext(options:
-  ExportDOMOptions)` factory (names illustrative) with the shape from Scope.
+ExportDOMOptions)` factory (names illustrative) with the shape from Scope.
   The factory absorbs `addCreateDocumentOption`'s job: resolve
   `createDocument` once (browser global / `options.dom` /
   `options.createDocument`, preserving the exact non-browser throw at
@@ -266,7 +266,7 @@ implementation — renderers must no longer import it.
 - Move the missing-postUrl throws into the seam: the email branch of
   `variant` (or `requirePostUrl()`, illustrative) performs the check.
   Preserve the exact error messages (`renderVideoNode requires
-  options.postUrl when options.target is "email"`, audio equivalent) — tests
+options.postUrl when options.target is "email"`, audio equivalent) — tests
   pin them at video.test.ts:403 and audio.test.ts:430.
 - Collapse the duplicated `usesModernEmailButton` (button-renderer.ts:101-105,
   header-renderer.ts:258-260) and the ad-hoc feature/design flag reads into
@@ -313,16 +313,16 @@ LexicalHTMLRenderer.ts:73 / `RendererOptions`).
 
 ## Test plan
 
-| Scenario                        | Command                                                 | Required invariant                             |
-| ------------------------------- | ------------------------------------------------------- | ---------------------------------------------- |
-| Characterization baseline       | `pnpm vitest run test/nodes-base test/html-renderer`    | green; adversarial corpus recorded             |
-| Per-group URL migration         | `pnpm vitest run test/nodes-base/nodes/<card>.test.ts`  | byte-identical output per group                |
-| Toggle sanitization fix         | `pnpm vitest run test/nodes-base/nodes/toggle.test.ts`  | benign inputs unchanged; markup neutralized    |
-| Callout DOMPurify config        | `pnpm vitest run test/nodes-base/nodes/callout.test.ts` | corpus-identical to `cleanDOM` output          |
-| Video/audio caption convergence | `pnpm vitest run test/nodes-base/nodes/video.test.ts`   | corpus-identical, or STOP and record           |
-| postUrl guard messages          | video.test.ts:403, audio.test.ts:430                    | exact error messages preserved                 |
-| Seam policy unit tests          | `pnpm vitest run test/nodes-base/utils`                 | drift-guard cases covered at the seam          |
-| Full gates                      | `pnpm typecheck && pnpm lint && pnpm test:unit`         | all pass                                       |
+| Scenario                        | Command                                                 | Required invariant                          |
+| ------------------------------- | ------------------------------------------------------- | ------------------------------------------- |
+| Characterization baseline       | `pnpm vitest run test/nodes-base test/html-renderer`    | green; adversarial corpus recorded          |
+| Per-group URL migration         | `pnpm vitest run test/nodes-base/nodes/<card>.test.ts`  | byte-identical output per group             |
+| Toggle sanitization fix         | `pnpm vitest run test/nodes-base/nodes/toggle.test.ts`  | benign inputs unchanged; markup neutralized |
+| Callout DOMPurify config        | `pnpm vitest run test/nodes-base/nodes/callout.test.ts` | corpus-identical to `cleanDOM` output       |
+| Video/audio caption convergence | `pnpm vitest run test/nodes-base/nodes/video.test.ts`   | corpus-identical, or STOP and record        |
+| postUrl guard messages          | video.test.ts:403, audio.test.ts:430                    | exact error messages preserved              |
+| Seam policy unit tests          | `pnpm vitest run test/nodes-base/utils`                 | drift-guard cases covered at the seam       |
+| Full gates                      | `pnpm typecheck && pnpm lint && pnpm test:unit`         | all pass                                    |
 
 ## Acceptance criteria
 

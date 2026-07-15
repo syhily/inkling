@@ -130,14 +130,14 @@ makes handlers unit-testable without mocking a React tree.
 
 ## Commands you will need
 
-| Purpose                      | Command                                                                            | Expected on success                          |
-| ---------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------- |
-| Store/hook unit tests        | `pnpm vitest run test/unit/plugins/behaviour/cardSelectionStore.test.ts`           | new suite passes (path illustrative)         |
-| Selection characterization   | `pnpm vitest run test/unit/plugins/behaviour/registerCardSelection.test.ts`        | undo-restore matrix passes before and after  |
-| Plugin registration gate     | `pnpm vitest run test/unit/plugins/InklingBehaviourPlugin.test.ts`                 | registration-count assertion passes          |
-| Card-selection e2e           | `pnpm test:e2e:quiet test/e2e/card-behaviour.test.ts test/e2e/selection.test.ts`   | green without expectation edits              |
-| Full gates                   | `pnpm typecheck && pnpm lint && pnpm test:unit`                                    | all pass                                     |
-| Format                       | `pnpm format && pnpm format:check`                                                 | exits 0                                      |
+| Purpose                    | Command                                                                          | Expected on success                         |
+| -------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------- |
+| Store/hook unit tests      | `pnpm vitest run test/unit/plugins/behaviour/cardSelectionStore.test.ts`         | new suite passes (path illustrative)        |
+| Selection characterization | `pnpm vitest run test/unit/plugins/behaviour/registerCardSelection.test.ts`      | undo-restore matrix passes before and after |
+| Plugin registration gate   | `pnpm vitest run test/unit/plugins/InklingBehaviourPlugin.test.ts`               | registration-count assertion passes         |
+| Card-selection e2e         | `pnpm test:e2e:quiet test/e2e/card-behaviour.test.ts test/e2e/selection.test.ts` | green without expectation edits             |
+| Full gates                 | `pnpm typecheck && pnpm lint && pnpm test:unit`                                  | all pass                                    |
+| Format                     | `pnpm format && pnpm format:check`                                               | exits 0                                     |
 
 ## Git workflow
 
@@ -276,18 +276,18 @@ over cards — they must pass without expectation edits.
 
 ## Test plan
 
-| Scenario                                   | Layer | Assertion                                                            |
-| ------------------------------------------ | ----- | -------------------------------------------------------------------- |
-| store set/get/subscribe                    | unit  | listeners fire on change only; unsubscribe works                      |
-| hook selector subscription                 | unit  | re-render only when the selected slice changes                        |
-| undo restores card selection               | unit  | `historic` + transient clear → exactly one re-selection               |
-| guard consumed once                        | unit  | subsequent legitimate deselection is not blocked                      |
-| guard cleared on stable selection          | unit  | non-historic update with card selected clears without re-select       |
-| collab/export tags, nested guard           | unit  | listener ignores tagged / nested updates                              |
-| handler reads fresh value without re-render| unit  | change store, dispatch command on un-rerendered plugin → fresh read   |
-| hub plugin registration count              | unit  | constant across forced re-renders                                     |
-| card click/select/edit/escape flows        | e2e   | `card-behaviour.test.ts` green, no expectation edits                  |
-| range selection covering a card            | e2e   | `selection.test.ts` green, no expectation edits                       |
+| Scenario                                    | Layer | Assertion                                                           |
+| ------------------------------------------- | ----- | ------------------------------------------------------------------- |
+| store set/get/subscribe                     | unit  | listeners fire on change only; unsubscribe works                    |
+| hook selector subscription                  | unit  | re-render only when the selected slice changes                      |
+| undo restores card selection                | unit  | `historic` + transient clear → exactly one re-selection             |
+| guard consumed once                         | unit  | subsequent legitimate deselection is not blocked                    |
+| guard cleared on stable selection           | unit  | non-historic update with card selected clears without re-select     |
+| collab/export tags, nested guard            | unit  | listener ignores tagged / nested updates                            |
+| handler reads fresh value without re-render | unit  | change store, dispatch command on un-rerendered plugin → fresh read |
+| hub plugin registration count               | unit  | constant across forced re-renders                                   |
+| card click/select/edit/escape flows         | e2e   | `card-behaviour.test.ts` green, no expectation edits                |
+| range selection covering a card             | e2e   | `selection.test.ts` green, no expectation edits                     |
 
 ## Acceptance criteria
 

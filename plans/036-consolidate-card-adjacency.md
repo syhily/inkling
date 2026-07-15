@@ -131,14 +131,14 @@ rects instead of stubbing jsdom layout.
 
 ## Commands you will need
 
-| Purpose                  | Command                                                                          | Expected on success              |
-| ------------------------ | -------------------------------------------------------------------------------- | -------------------------------- |
-| Unit (keyboard)          | `pnpm vitest run test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts` | all pass, no expectation edits   |
-| Unit (new module)        | `pnpm vitest run test/unit/plugins/behaviour/card-adjacency.test.ts`             | all pass                         |
-| Full unit suite          | `pnpm test:unit`                                                                 | all pass                         |
-| Card-behaviour e2e       | `pnpm test:e2e:quiet test/e2e/card-behaviour.test.ts`                            | all pass, no expectation edits   |
-| Typecheck + lint         | `pnpm typecheck && pnpm lint`                                                    | exit 0                           |
-| Format                   | `pnpm format && pnpm format:check`                                               | exits 0                          |
+| Purpose            | Command                                                                          | Expected on success            |
+| ------------------ | -------------------------------------------------------------------------------- | ------------------------------ |
+| Unit (keyboard)    | `pnpm vitest run test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts` | all pass, no expectation edits |
+| Unit (new module)  | `pnpm vitest run test/unit/plugins/behaviour/card-adjacency.test.ts`             | all pass                       |
+| Full unit suite    | `pnpm test:unit`                                                                 | all pass                       |
+| Card-behaviour e2e | `pnpm test:e2e:quiet test/e2e/card-behaviour.test.ts`                            | all pass, no expectation edits |
+| Typecheck + lint   | `pnpm typecheck && pnpm lint`                                                    | exit 0                         |
+| Format             | `pnpm format && pnpm format:check`                                               | exits 0                        |
 
 ## Git workflow
 
@@ -286,16 +286,16 @@ this may be a no-op — executor detail).
 
 ## Test plan
 
-| Scenario                                   | How tested                                                        | Required invariant                          |
-| ------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------- |
-| Visual query: caret rects vs threshold     | new `card-adjacency.test.ts` with fake adapter                    | matches `$isAtTopOfNode`/arrows inline math |
-| Visual query: two-rect caret, empty node   | new unit tests                                                    | existing arrow shortcuts preserved          |
-| Logical query: start/end offsets, siblings | new unit tests                                                    | matches backspace/delete derivations        |
-| Operations: select/deselect/remove branches | new unit tests + existing `registerCardCommands.test.ts`         | verbatim move, same focus behaviour         |
-| Arrow/backspace/delete/delete-line near cards | existing `registerKeyboardNavigation.test.ts` (unmodified)     | all pass                                    |
-| Card commands                              | existing `registerCardCommands.test.ts` (unmodified)              | all pass                                    |
-| Paste normalization                        | existing `registerPasteHandler.test.ts` + e2e paste-behaviour     | all pass (move only)                        |
-| Full keyboard behaviour                    | `pnpm test:e2e:quiet test/e2e/card-behaviour.test.ts`             | all pass, zero expectation edits            |
+| Scenario                                      | How tested                                                    | Required invariant                          |
+| --------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------- |
+| Visual query: caret rects vs threshold        | new `card-adjacency.test.ts` with fake adapter                | matches `$isAtTopOfNode`/arrows inline math |
+| Visual query: two-rect caret, empty node      | new unit tests                                                | existing arrow shortcuts preserved          |
+| Logical query: start/end offsets, siblings    | new unit tests                                                | matches backspace/delete derivations        |
+| Operations: select/deselect/remove branches   | new unit tests + existing `registerCardCommands.test.ts`      | verbatim move, same focus behaviour         |
+| Arrow/backspace/delete/delete-line near cards | existing `registerKeyboardNavigation.test.ts` (unmodified)    | all pass                                    |
+| Card commands                                 | existing `registerCardCommands.test.ts` (unmodified)          | all pass                                    |
+| Paste normalization                           | existing `registerPasteHandler.test.ts` + e2e paste-behaviour | all pass (move only)                        |
+| Full keyboard behaviour                       | `pnpm test:e2e:quiet test/e2e/card-behaviour.test.ts`         | all pass, zero expectation edits            |
 
 ## Acceptance criteria
 

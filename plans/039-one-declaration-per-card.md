@@ -3,7 +3,7 @@
 > **Executor instructions**: This plan is a five-batch refactor; land one
 > conventional commit per batch and run the batch gates before moving on. The
 > card declarations are the new source of truth, but every registry must
-> remain a *derived view* that is byte-for-byte identical to today's arrays —
+> remain a _derived view_ that is byte-for-byte identical to today's arrays —
 > capture the pre-refactor node sets in a diff test in Batch 1 and never edit
 > expectations to match drift. The generator
 > (`src/nodes/base/generate-decorator-node.ts`) stays React-free: the
@@ -56,7 +56,7 @@ derived view over the declarations. This plan makes that real.
   (`ToggleNode.tsx:90,98`); Header both `{firstChildInnerContent: true, allowBr: true}`
   (`HeaderNode.tsx:68,76`).
 - Dataset-shape wrinkles to preserve exactly: Header's `getDataset` exposes the
-  editors but *not* the `*InitialState` keys (`HeaderNode.tsx:84-92`) while
+  editors but _not_ the `*InitialState` keys (`HeaderNode.tsx:84-92`) while
   Toggle exposes all four (`ToggleNode.tsx:72-82`); Image's `getDataset` also
   exposes transient `__previewSrc`/`__triggerFileDialog` (`ImageNode.tsx:101-113`);
   Audio and File have no `getDataset` override at all.
@@ -146,16 +146,16 @@ derived view over the declarations. This plan makes that real.
 
 ## Commands you will need
 
-| Purpose                  | Command                                                          | Expected on success                          |
-| ------------------------ | ---------------------------------------------------------------- | -------------------------------------------- |
-| Node-set diff guard      | `pnpm vitest run test/unit/nodes/derived-node-sets.test.ts`      | derived arrays identical to captured literals |
-| Markdown round-trip      | `pnpm vitest run test/markdown`                                  | all pass                                     |
-| Base-node unit (example) | `pnpm vitest run test/nodes-base/nodes/button.test.ts`           | all pass                                     |
-| Targeted card e2e        | `pnpm test:e2e:quiet test/e2e/cards/image-card.test.ts`          | green without expectation edits              |
-| Full card e2e            | `pnpm test:e2e:quiet test/e2e/cards`                             | green without expectation edits              |
-| Full gates               | `pnpm typecheck && pnpm lint && pnpm test:unit`                  | all pass                                     |
-| Format                   | `pnpm format && pnpm format:check`                               | exits 0                                      |
-| Packaging smoke          | `pnpm build && pnpm verify:package`                              | pass (surfaces module-cycle breakage)        |
+| Purpose                  | Command                                                     | Expected on success                           |
+| ------------------------ | ----------------------------------------------------------- | --------------------------------------------- |
+| Node-set diff guard      | `pnpm vitest run test/unit/nodes/derived-node-sets.test.ts` | derived arrays identical to captured literals |
+| Markdown round-trip      | `pnpm vitest run test/markdown`                             | all pass                                      |
+| Base-node unit (example) | `pnpm vitest run test/nodes-base/nodes/button.test.ts`      | all pass                                      |
+| Targeted card e2e        | `pnpm test:e2e:quiet test/e2e/cards/image-card.test.ts`     | green without expectation edits               |
+| Full card e2e            | `pnpm test:e2e:quiet test/e2e/cards`                        | green without expectation edits               |
+| Full gates               | `pnpm typecheck && pnpm lint && pnpm test:unit`             | all pass                                      |
+| Format                   | `pnpm format && pnpm format:check`                          | exits 0                                       |
+| Packaging smoke          | `pnpm build && pnpm verify:package`                         | pass (surfaces module-cycle breakage)         |
 
 ## Git workflow
 
@@ -225,7 +225,7 @@ derived view over the declarations. This plan makes that real.
   Bookmark, CodeBlock, Callout, Toggle, Header. Preserve the exact wrinkles:
   per-card flag matrix, Header's missing `*InitialState` dataset keys
   (`HeaderNode.tsx:84-92`), Image's transient keys in `getDataset`.
-- Hand-written behaviour that is *not* the trilogy stays put: `isEmpty()`
+- Hand-written behaviour that is _not_ the trilogy stays put: `isEmpty()`
   overrides (`ToggleNode.tsx:66-70`, `HeaderNode.tsx:133-142`), Bookmark's
   `__createdWithUrl` (`BookmarkNode.tsx:26,48`), Header's layout→width
   (`HeaderNode.tsx:94-97`), Gallery's `setImages`/`addImages`
@@ -242,8 +242,8 @@ derived view over the declarations. This plan makes that real.
   Image, plus CodeBlock's `_openInEditMode`), and the decorate-target:
   component + wrapper props (`width`/`wrapperStyle`/`className`/
   `IndicatorIcon`, including the per-card constants in the evidence above)
-  + a node→props mapper. Card width defaults move into the spec (executor
-  detail; `b60bd7c` is the regression this split caused).
+  - a node→props mapper. Card width defaults move into the spec (executor
+    detail; `b60bd7c` is the regression this split caused).
 - Add the one shared adapter `src/nodes/decorate-card.tsx` (illustrative
   name) that reads any spec'd card's decorate-target and renders via
   `InklingCardWrapper`. Replace all 13 `decorate()` bodies with delegation to
@@ -278,15 +278,15 @@ derived view over the declarations. This plan makes that real.
 
 ## Test plan
 
-| Scenario                     | Command                                             | Required invariant                              |
-| ---------------------------- | --------------------------------------------------- | ----------------------------------------------- |
-| Derived node sets            | `pnpm vitest run test/unit/nodes/derived-node-sets.test.ts` | identical `getType()`/transformer order to `1cad78b` |
-| Markdown round-trip          | `pnpm vitest run test/markdown`                     | byte-identical markdown output                  |
-| Nested-editor serialization  | `pnpm vitest run test/nodes-base test/unit`         | per-card `cleanBasicHtml` matrix unchanged      |
-| Each collapsed card          | `pnpm test:e2e:quiet test/e2e/cards/<card>.test.ts` | green without expectation edits                 |
-| All cards after Batch 5      | `pnpm test:e2e:quiet test/e2e/cards`                | green without expectation edits                 |
-| Static gates (every batch)   | `pnpm typecheck && pnpm lint && pnpm format:check`  | all pass                                        |
-| Packaging (Batch 5)          | `pnpm build && pnpm verify:package`                 | pass; no module-cycle breakage                  |
+| Scenario                    | Command                                                     | Required invariant                                   |
+| --------------------------- | ----------------------------------------------------------- | ---------------------------------------------------- |
+| Derived node sets           | `pnpm vitest run test/unit/nodes/derived-node-sets.test.ts` | identical `getType()`/transformer order to `1cad78b` |
+| Markdown round-trip         | `pnpm vitest run test/markdown`                             | byte-identical markdown output                       |
+| Nested-editor serialization | `pnpm vitest run test/nodes-base test/unit`                 | per-card `cleanBasicHtml` matrix unchanged           |
+| Each collapsed card         | `pnpm test:e2e:quiet test/e2e/cards/<card>.test.ts`         | green without expectation edits                      |
+| All cards after Batch 5     | `pnpm test:e2e:quiet test/e2e/cards`                        | green without expectation edits                      |
+| Static gates (every batch)  | `pnpm typecheck && pnpm lint && pnpm format:check`          | all pass                                             |
+| Packaging (Batch 5)         | `pnpm build && pnpm verify:package`                         | pass; no module-cycle breakage                       |
 
 ## Acceptance criteria
 

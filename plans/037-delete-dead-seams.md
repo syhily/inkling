@@ -119,7 +119,7 @@ All citations re-verified on `1cad78b`.
 - The serialization `version` option of `generateDecoratorNode`
   (`generate-decorator-node.ts:189,195,343`) — it feeds `exportJSON`'s
   Lexical node version and stays.
-- The header node's `version` *property* (`HeaderNode.ts:19`, parser-set at
+- The header node's `version` _property_ (`HeaderNode.ts:19`, parser-set at
   `header-parser.ts:46`, defaulted in `src/nodes/HeaderNode.tsx:37`) —
   serialized data, not dispatch.
 - Renaming `renderHeaderNodeV2` or the `describe('v2')` block in
@@ -128,16 +128,16 @@ All citations re-verified on `1cad78b`.
 
 ## Commands you will need
 
-| Purpose                 | Command                                                                                                                        | Expected on success            |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
-| Types                   | `pnpm typecheck`                                                                                                               | passes after every cluster     |
-| Lint                    | `pnpm lint`                                                                                                                    | passes (no unused-type debris) |
-| Single test file        | `pnpm vitest run test/nodes-base/generate-decorator-node.test.ts` (or the cluster's file)                                      | passes                         |
-| Full unit suite         | `pnpm test:unit`                                                                                                               | passes, no expectation edits   |
-| Format                  | `pnpm format:check` (run `pnpm format` first if imports moved)                                                                 | exits 0                        |
-| Packed-consumer gate    | `pnpm verify:package`                                                                                                          | passes                         |
-| Storybook build (moves) | `pnpm build-storybook`                                                                                                         | builds with the flattened path |
-| Header card e2e (moves) | `pnpm test:e2e:quiet test/e2e/cards/header-card.test.ts`                                                                       | passes                         |
+| Purpose                 | Command                                                                                   | Expected on success            |
+| ----------------------- | ----------------------------------------------------------------------------------------- | ------------------------------ |
+| Types                   | `pnpm typecheck`                                                                          | passes after every cluster     |
+| Lint                    | `pnpm lint`                                                                               | passes (no unused-type debris) |
+| Single test file        | `pnpm vitest run test/nodes-base/generate-decorator-node.test.ts` (or the cluster's file) | passes                         |
+| Full unit suite         | `pnpm test:unit`                                                                          | passes, no expectation edits   |
+| Format                  | `pnpm format:check` (run `pnpm format` first if imports moved)                            | exits 0                        |
+| Packed-consumer gate    | `pnpm verify:package`                                                                     | passes                         |
+| Storybook build (moves) | `pnpm build-storybook`                                                                    | builds with the flattened path |
+| Header card e2e (moves) | `pnpm test:e2e:quiet test/e2e/cards/header-card.test.ts`                                  | passes                         |
 
 ## Git workflow
 
@@ -169,7 +169,7 @@ All citations re-verified on `1cad78b`.
   implementations (`:163-165`, `:424-429` including the doc comment).
 - `test/html-renderer/default-round-trip.test.ts`: remove the `DynamicDataNode`
   fixture (`:40-90`) and the `'fetches dynamic data for cards registered
-  through the constructor'` test (`:164-171`). This fixture is the only
+through the constructor'` test (`:164-171`). This fixture is the only
   implementer of the seam anywhere; it dies with it.
 - `docs/html-api.md`: rewrite the "3. Async" section (`:69-94`) — the
   dynamic-data reason and the "Verified fact" paragraph no longer describe
@@ -271,14 +271,14 @@ Run the full gate set: `pnpm format`, `pnpm format:check`, `pnpm typecheck`,
 
 ## Test plan
 
-| Scenario                                   | Command                                                                       | Required invariant                                            |
-| ------------------------------------------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| HTML renderer suite after cluster 1        | `pnpm vitest run test/html-renderer`                                          | green without the dynamic-data fixture/test                   |
-| generateDecoratorNode after clusters 2+3   | `pnpm vitest run test/nodes-base/generate-decorator-node.test.ts`             | green with seam tests removed, all kept tests unedited        |
-| Visibility after cluster 4                 | `pnpm vitest run test/nodes-base/utils/visibility.test.ts`                    | green; only `'html'` → `'outer'` literal changes              |
-| Header after flatten                       | `pnpm vitest run test/nodes-base/nodes/header.test.ts` + e2e spec below       | green; `version: 2` dataset expectations unchanged            |
-| Header card component/stories after flatten| `pnpm build-storybook` and `pnpm test:e2e:quiet test/e2e/cards/header-card.test.ts` | build and spec pass on flattened paths                   |
-| Full suite after each cluster              | `pnpm test:unit` (final: plus `pnpm typecheck`, `pnpm lint`)                  | green; zero surviving references to deleted symbols           |
+| Scenario                                    | Command                                                                             | Required invariant                                     |
+| ------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| HTML renderer suite after cluster 1         | `pnpm vitest run test/html-renderer`                                                | green without the dynamic-data fixture/test            |
+| generateDecoratorNode after clusters 2+3    | `pnpm vitest run test/nodes-base/generate-decorator-node.test.ts`                   | green with seam tests removed, all kept tests unedited |
+| Visibility after cluster 4                  | `pnpm vitest run test/nodes-base/utils/visibility.test.ts`                          | green; only `'html'` → `'outer'` literal changes       |
+| Header after flatten                        | `pnpm vitest run test/nodes-base/nodes/header.test.ts` + e2e spec below             | green; `version: 2` dataset expectations unchanged     |
+| Header card component/stories after flatten | `pnpm build-storybook` and `pnpm test:e2e:quiet test/e2e/cards/header-card.test.ts` | build and spec pass on flattened paths                 |
+| Full suite after each cluster               | `pnpm test:unit` (final: plus `pnpm typecheck`, `pnpm lint`)                        | green; zero surviving references to deleted symbols    |
 
 ## Acceptance criteria
 
