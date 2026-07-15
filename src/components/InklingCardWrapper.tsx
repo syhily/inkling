@@ -22,7 +22,6 @@ interface InklingCardWrapperProps {
   width?: string
   wrapperStyle?: string
   IndicatorIcon?: React.ComponentType<Record<string, unknown>>
-  className?: string
   children?: React.ReactNode
   [key: string]: unknown
 }

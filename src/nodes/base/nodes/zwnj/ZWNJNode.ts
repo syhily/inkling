@@ -1,4 +1,4 @@
-import type { EditorConfig } from 'lexical'
+import type { EditorConfig, SerializedTextNode, TextModeType } from 'lexical'
 
 import { TextNode } from 'lexical'
 
@@ -12,6 +12,15 @@ export class ZWNJNode extends TextNode {
 
   static clone(node: ZWNJNode) {
     return new ZWNJNode('', node.__key)
+  }
+
+  static importJSON(serializedNode: SerializedTextNode): ZWNJNode {
+    const node = new ZWNJNode(serializedNode.text)
+    node.setFormat(serializedNode.format as number)
+    node.setDetail(serializedNode.detail as number)
+    node.setMode(serializedNode.mode as TextModeType)
+    node.setStyle(serializedNode.style)
+    return node
   }
 
   createDOM(config: EditorConfig) {

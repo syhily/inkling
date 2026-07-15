@@ -23,7 +23,7 @@ export type CardNodeClass<TNode extends LexicalNode> = KlassConstructor<typeof L
   prototype: TNode & { decorate(): ReactNode }
   readonly nestedEditors: readonly NestedEditorSpec[] | undefined
   readonly transientProps: readonly TransientPropSpec[] | undefined
-  readonly cardMenu: MenuItem[]
+  readonly cardMenu: MenuItem[] | undefined
 }
 
 /**

@@ -58,6 +58,8 @@ export class GalleryNode extends generateDecoratorNode({
   // Image-list mutation helpers the card spec doesn't cover live on the base
   // node (plan 039, Batch 5): the registered card class is assembled from the
   // declaration and inherits them; renderer surfaces never invoke them.
+  // TODO: move to inkling-default-nodes? — packaging decision about where
+  // `setImages` lives (tracked in docs/tech-debt-triage.md).
   setImages(images: GalleryImage[]) {
     const datasetImages = images.slice(0, MAX_IMAGES).map((image) => pick(image, ALLOWED_IMAGE_PROPS))
 
