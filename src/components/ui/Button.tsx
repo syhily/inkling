@@ -3,7 +3,7 @@ import React from 'react'
 export interface ButtonProps {
   children?: React.ReactNode
   className?: string
-  color?: string
+  color?: 'white' | 'grey' | 'black' | 'accent' | (string & {})
   dataTestId?: string
   disabled?: boolean
   href?: string
@@ -11,6 +11,8 @@ export interface ButtonProps {
   isActive?: boolean
   label?: string
   placeholder?: string
+  rounded?: boolean
+  shrink?: boolean
   size?: 'small' | 'medium' | 'large'
   style?: React.CSSProperties
   target?: string
@@ -24,7 +26,7 @@ export interface ButtonProps {
 export function Button({
   children,
   className,
-  color,
+  color = 'accent',
   dataTestId,
   disabled,
   href,
@@ -32,6 +34,8 @@ export function Button({
   isActive,
   label,
   placeholder,
+  rounded = true,
+  shrink = false,
   size = 'medium',
   style,
   target,
@@ -48,11 +52,16 @@ export function Button({
   }
 
   const buttonClasses = `
-        inline-flex items-center justify-center rounded-md font-medium transition-colors
+        not-inkling-prose inline-flex items-center justify-center font-medium transition-colors
+        ${rounded ? 'rounded-md' : ''}
         ${sizeClasses[size]}
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+        ${shrink ? '' : 'shrink-0'}
+        ${value || children || label ? 'opacity-100' : 'opacity-50'}
+        ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
         ${color === 'white' ? 'bg-white text-black border border-grey-300 hover:bg-grey-100' : ''}
         ${color === 'grey' ? 'bg-grey-200 text-grey-700 hover:bg-grey-300 dark:bg-grey-800 dark:text-grey-300 dark:hover:bg-grey-700' : ''}
+        ${color === 'black' ? 'bg-black text-white' : ''}
+        ${color === 'accent' ? 'bg-accent text-white' : ''}
         ${width === 'full' ? 'w-full' : ''}
         ${className ?? ''}
     `
