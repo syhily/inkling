@@ -1,10 +1,9 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
-import { isLocalContentImage } from '@/nodes/base/utils/is-local-content-image'
-import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { getSrcsetAttribute, setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 import { sanitizeHtml } from '@/utils/sanitize-html'
@@ -39,12 +38,12 @@ interface ImageRenderOptions extends ExportDOMOptions {
   }
 }
 
-export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions = {}) {
+export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions = {}, context: RenderContext) {
   addCreateDocumentOption(options)
 
   const document = options.createDocument!()
 
-  if (!node.src || node.src.trim() === '' || !isSafeMediaUrl(node.src)) {
+  if (!node.src || node.src.trim() === '' || context.safeUrl('media', node.src) === '') {
     return renderEmptyContainer(document)
   }
 
@@ -83,7 +82,7 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
   if (
     defaultMaxWidth &&
     node.width > defaultMaxWidth &&
-    isLocalContentImage(node.src, options.siteUrl, options.imageBaseUrl) &&
+    context.isLocalContentImage(node.src) &&
     canTransformImage &&
     canTransformImage(node.src)
   ) {
@@ -104,7 +103,7 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
       width: node.width,
       height: node.height,
     }
-    setSrcsetAttribute(img, imgAttributes, options)
+    setSrcsetAttribute(img, imgAttributes, options, context)
 
     let sizes: string | undefined
     if (img.getAttribute('srcset') && node.width && node.width >= 720) {
@@ -126,7 +125,7 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
       options.feature?.pictureImageFormats &&
       img.getAttribute('srcset') &&
       !isAnimatedImage(node.src) &&
-      isLocalContentImage(node.src, options.siteUrl, options.imageBaseUrl) &&
+      context.isLocalContentImage(node.src) &&
       options.canTransformImage?.(node.src) &&
       typeof options.canTransformImageToFormat === 'function',
     )
@@ -145,6 +144,7 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
           width: node.width,
           options,
           format,
+          context,
         })
 
         if (!formattedSrcset) {
@@ -186,11 +186,7 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
     img.setAttribute('height', String(imageDimensions.height))
 
     const contentImageSizes = options.imageOptimization?.contentImageSizes
-    if (
-      contentImageSizes &&
-      isLocalContentImage(node.src, options.siteUrl, options.imageBaseUrl) &&
-      options.canTransformImage?.(node.src)
-    ) {
+    if (contentImageSizes && context.isLocalContentImage(node.src) && options.canTransformImage?.(node.src)) {
       // find available image size next up from 2x600 so we can use it for the "retina" src
       const availableImageWidths = getAvailableImageWidths(node, contentImageSizes)
       const srcWidth = availableImageWidths.find((width) => width >= 1200)
@@ -207,8 +203,8 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
     }
   }
 
-  const href = node.href
-  if (href && isSafeUrl(href)) {
+  const href = context.safeUrl('navigation', node.href)
+  if (href) {
     const a = document.createElement('a')
     a.setAttribute('href', href)
     a.appendChild(picture || img)

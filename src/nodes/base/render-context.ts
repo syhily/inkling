@@ -3,6 +3,7 @@ import DOMPurify, { type Config as DOMPurifyConfig } from 'dompurify'
 import type { ExportDOMDesignOptions, ExportDOMFeatureOptions, ExportDOMOptions } from '@/nodes/base/export-dom'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
+import { isLocalContentImage as isLocalContentImageImpl } from '@/nodes/base/utils/is-local-content-image'
 import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 
@@ -16,6 +17,8 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  * - `safeUrl` is the URL policy (Step 3 migrates the hand-rolled
  *   `isSafeUrl`/`isSafeMediaUrl` call sites; `is-safe-url.ts` stays as the
  *   seam's private implementation).
+ * - `isLocalContentImage` folds the `siteUrl`/`imageBaseUrl` forwarding into
+ *   the context (Step 3b), so renderers can't drop an argument.
  * - `sanitizeCaption`/`sanitizeCardHtml` converge sanitization on DOMPurify
  *   (Step 4; named configs such as callout's land here).
  * - `variant`/`requirePostUrl` unify the email/web branch idioms (Step 5;
@@ -47,6 +50,11 @@ export interface RenderContext {
   readonly createDocument: () => Document
   /** URL policy: returns `value` when it is safe for `kind`, `''` otherwise. */
   safeUrl(kind: SafeUrlKind, value: string): string
+  /**
+   * Local-content check using the context's own `siteUrl`/`imageBaseUrl` —
+   * callers can no longer forget to forward them (the `b87ecc1` bug class).
+   */
+  isLocalContentImage(url: string): boolean
   /** Caption sanitization, routed through the DOMPurify-backed `sanitizeHtml`. */
   sanitizeCaption(html: string): string
   /** Card-HTML sanitization with an explicit DOMPurify config (Step 4 names the configs). */
@@ -71,17 +79,24 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
 
   const target = options.target
   const postUrl = options.postUrl
+  const siteUrl = options.siteUrl
+  const imageBaseUrl = options.imageBaseUrl
 
   const context: RenderContext = {
     target,
-    imageBaseUrl: options.imageBaseUrl,
-    siteUrl: options.siteUrl,
+    imageBaseUrl,
+    siteUrl,
     postUrl,
     feature: options.feature ? Object.freeze({ ...options.feature }) : undefined,
     design: options.design ? Object.freeze({ ...options.design }) : undefined,
     createDocument,
     safeUrl(kind, value) {
       return (kind === 'media' ? isSafeMediaUrl(value) : isSafeUrl(value)) ? value : ''
+    },
+    isLocalContentImage(url) {
+      // `undefined` siteUrl/imageBaseUrl hit the same `''` defaults inside
+      // is-local-content-image as the old per-call-site forwarding did.
+      return isLocalContentImageImpl(url, siteUrl, imageBaseUrl)
     },
     sanitizeCaption(html) {
       return sanitizeHtml(html)

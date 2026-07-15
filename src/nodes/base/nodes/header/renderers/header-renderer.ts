@@ -1,4 +1,5 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
@@ -59,7 +60,7 @@ function safeColor(value: string, fallback: string): string {
   return COLOR_REGEX.test(value) ? value : fallback
 }
 
-function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions = {}) {
+function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions = {}, context: RenderContext) {
   const cardClasses = getCardClasses(nodeData).join(' ')
 
   const safeBackgroundImageSrc = isSafeMediaUrl(nodeData.backgroundImageSrc) ? nodeData.backgroundImageSrc : ''
@@ -97,6 +98,7 @@ function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions
             src: bgImage.src,
             width: bgImage.width,
             options: options as ImageRenderOptions,
+            context,
           })
         : ''
     const srcset = srcsetValue ? `srcset="${srcsetValue}"` : ''
@@ -342,7 +344,11 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
         `
 }
 
-export function renderHeaderNodeV2(dataset: HeaderV2DatasetNode, options: HeaderV2RenderOptions = {}) {
+export function renderHeaderNodeV2(
+  dataset: HeaderV2DatasetNode,
+  options: HeaderV2RenderOptions = {},
+  context: RenderContext,
+) {
   addCreateDocumentOption(options)
   const document = options.createDocument!()
 
@@ -378,7 +384,7 @@ export function renderHeaderNodeV2(dataset: HeaderV2DatasetNode, options: Header
     }
   }
 
-  const htmlString = cardTemplate(node, options)
+  const htmlString = cardTemplate(node, options, context)
 
   const element = document.createElement('div')
   element.innerHTML = htmlString?.trim()

@@ -1,10 +1,9 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
-import { isLocalContentImage } from '@/nodes/base/utils/is-local-content-image'
-import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 import { sanitizeHtml } from '@/utils/sanitize-html'
@@ -35,7 +34,7 @@ interface GalleryRenderOptions extends ExportDOMOptions {
 
 const MAX_IMG_PER_ROW = 3
 
-function isValidImage(image: unknown): image is GalleryImage {
+function isValidImage(image: unknown, context: RenderContext): image is GalleryImage {
   if (typeof image !== 'object' || image === null) {
     return false
   }
@@ -49,7 +48,7 @@ function isValidImage(image: unknown): image is GalleryImage {
     typeof candidate.fileName === 'string' &&
     candidate.fileName.trim() !== '' &&
     typeof candidate.src === 'string' &&
-    isSafeMediaUrl(candidate.src) &&
+    context.safeUrl('media', candidate.src) !== '' &&
     typeof width === 'number' &&
     Number.isFinite(width) &&
     width > 0 &&
@@ -82,11 +81,11 @@ function buildStructure(images: GalleryImage[]) {
   return rows
 }
 
-export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderOptions = {}) {
+export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderOptions = {}, context: RenderContext) {
   addCreateDocumentOption(options)
   const document = options.createDocument!()
 
-  const validImages = node.images.filter(isValidImage)
+  const validImages = node.images.filter((image) => isValidImage(image, context))
   if (!validImages.length) {
     return renderEmptyContainer(document)
   }
@@ -126,7 +125,7 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
       if (
         defaultMaxWidth &&
         image.width > defaultMaxWidth &&
-        isLocalContentImage(image.src, options.siteUrl, options.imageBaseUrl) &&
+        context.isLocalContentImage(image.src) &&
         canTransformImage &&
         canTransformImage(image.src)
       ) {
@@ -137,7 +136,7 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
 
       // add srcset+sizes except for email clients which do not have good support for either
       if (options.target !== 'email') {
-        setSrcsetAttribute(img, image, options)
+        setSrcsetAttribute(img, image, options, context)
 
         if (img.getAttribute('srcset') && image.width >= 720) {
           if (rows.length === 1 && row.length === 1 && image.width >= 1200) {
@@ -160,11 +159,7 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
         }
 
         const contentImageSizes = options.imageOptimization?.contentImageSizes
-        if (
-          contentImageSizes &&
-          isLocalContentImage(image.src, options.siteUrl, options.imageBaseUrl) &&
-          options.canTransformImage?.(image.src)
-        ) {
+        if (contentImageSizes && context.isLocalContentImage(image.src) && options.canTransformImage?.(image.src)) {
           // find available image size next up from 2x600 so we can use it for the "retina" src
           const availableImageWidths = getAvailableImageWidths(image, contentImageSizes)
           const srcWidth = availableImageWidths.find((width) => width >= 1200)
@@ -181,9 +176,10 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
         }
       }
 
-      if (image.href && isSafeUrl(image.href)) {
+      const safeHref = context.safeUrl('navigation', image.href || '')
+      if (safeHref) {
         const a = document.createElement('a')
-        a.setAttribute('href', image.href)
+        a.setAttribute('href', safeHref)
         a.appendChild(img)
         imgDiv.appendChild(a)
       } else {

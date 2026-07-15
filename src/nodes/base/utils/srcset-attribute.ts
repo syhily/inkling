@@ -1,4 +1,5 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
 import { isLocalContentImage } from '@/nodes/base/utils/is-local-content-image'
@@ -17,11 +18,13 @@ export const getSrcsetAttribute = function ({
   width,
   options,
   format,
+  context,
 }: {
   src: string
   width: number
   options: ImageRenderOptions
   format?: string
+  context?: RenderContext
 }) {
   if (
     !options.imageOptimization ||
@@ -32,18 +35,20 @@ export const getSrcsetAttribute = function ({
     return
   }
 
-  if (
-    isLocalContentImage(src, options.siteUrl, options.imageBaseUrl) &&
-    options.canTransformImage &&
-    !options.canTransformImage(src)
-  ) {
+  // Renderers pass the render context so the local-content check reads
+  // siteUrl/imageBaseUrl from the context; direct callers without a context
+  // keep the legacy options forwarding (pinned by srcset-attribute.test.ts).
+  const isLocalImage = (url: string) =>
+    context ? context.isLocalContentImage(url) : isLocalContentImage(url, options.siteUrl, options.imageBaseUrl)
+
+  if (isLocalImage(src) && options.canTransformImage && !options.canTransformImage(src)) {
     return
   }
 
   const srcsetWidths = getAvailableImageWidths({ width }, options.imageOptimization.contentImageSizes)
 
   // apply srcset if this is a relative image that matches Inkling's image url structure
-  if (isLocalContentImage(src, options.siteUrl, options.imageBaseUrl)) {
+  if (isLocalImage(src)) {
     const match = src.match(/(.*\/content\/images)\/(.*)/)
     if (!match) {
       return
@@ -81,13 +86,14 @@ export const setSrcsetAttribute = function (
   elem: Element | null,
   image: { src: string; width: number },
   options: ImageRenderOptions,
+  context?: RenderContext,
 ) {
   if (!elem || !['IMG', 'SOURCE'].includes(elem.tagName) || !elem.getAttribute('src') || !image) {
     return
   }
 
   const { src, width } = image
-  const srcset = getSrcsetAttribute({ src, width, options })
+  const srcset = getSrcsetAttribute({ src, width, options, context })
 
   if (srcset) {
     elem.setAttribute('srcset', srcset)
