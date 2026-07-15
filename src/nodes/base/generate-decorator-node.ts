@@ -1,8 +1,11 @@
-import type { LexicalEditor, SerializedLexicalNode } from 'lexical'
+import type { Klass, LexicalEditor, LexicalNode, LexicalNodeReplacement, SerializedLexicalNode } from 'lexical'
+
+import { $generateHtmlFromNodes } from '@lexical/html'
 
 import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { Visibility } from '@/nodes/base/utils/visibility'
 
+import { cleanBasicHtml, type CleanBasicHtmlOptions } from '@/html/clean-basic-html'
 import { InklingDecoratorNode } from '@/nodes/base/InklingDecoratorNode'
 import readTextContent from '@/nodes/base/utils/read-text-content'
 import {
@@ -10,6 +13,7 @@ import {
   isVisibilityRestricted,
   migrateOldVisibilityFormat,
 } from '@/nodes/base/utils/visibility'
+import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 // Bivariant method syntax so that a render function declared with a concrete
 // node type can be assigned to `RenderFn<TRenderNode, TOutput>`.
@@ -72,6 +76,49 @@ export interface DecoratorNodeProperty<Name extends string = string, Default = u
   privateName?: string
 }
 
+/**
+ * One nested editor of a card spec (CONTEXT.md: "card spec"). Each entry
+ * drives the full nested-editor trilogy on the generated node:
+ *
+ * - constructor: `setupNestedEditor` creates (or adopts a passed-in) editor
+ *   instance on `__<name>`, and `populateNestedEditor` fills it from the
+ *   `serializedKey` property's HTML when no editor instance was passed.
+ * - `getDataset`: appends the client-side `<name>` / `<name>InitialState`
+ *   keys (`<name>InitialState` only unless `exposeInitialStateInDataset` is
+ *   false — Header exposes the editors but not their initial states).
+ * - `exportJSON`: re-serializes the editor's content back into the
+ *   `serializedKey` property via `$generateHtmlFromNodes` + `cleanBasicHtml`
+ *   (the editor's content may not be reflected in the data property).
+ *
+ * The spec is adopted per node class through the static `nestedEditors`
+ * property, so a base node class stays editor-free while a wrapper subclass
+ * (or a generated class passed the `nestedEditors` option) turns the trilogy
+ * on. `nodes` are Lexical node-class arrays — the spec stays React-free.
+ */
+export interface NestedEditorSpec {
+  /** Dataset key for the editor instance; the node field is `__<name>` and the initial-state keys derive from it. */
+  name: string
+  /** The node's data property holding this editor's serialized HTML (e.g. `caption`). */
+  serializedKey: string
+  /** Node classes registered on the nested editor. */
+  nodes: ReadonlyArray<Klass<LexicalNode> | LexicalNodeReplacement>
+  /** `cleanBasicHtml` options used when re-serializing the editor on `exportJSON`. */
+  cleanBasicHtml?: CleanBasicHtmlOptions
+  /** Whether `getDataset` exposes the `<name>InitialState` key (default true). */
+  exposeInitialStateInDataset?: boolean
+}
+
+const NO_NESTED_EDITORS: readonly NestedEditorSpec[] = []
+
+/**
+ * Reads the nested-editor spec off the node's actual class, so a subclass
+ * adopts its own spec via `static nestedEditors` while the generated base
+ * class (and spec-less subclasses) run no nested-editor behaviour.
+ */
+function getNestedEditorSpecs(node: LexicalNode): readonly NestedEditorSpec[] {
+  return (node.constructor as { nestedEditors?: readonly NestedEditorSpec[] }).nestedEditors ?? NO_NESTED_EDITORS
+}
+
 export type DecoratorNodeValueMap<
   Props extends readonly DecoratorNodeProperty[],
   HasVisibility extends boolean = false,
@@ -110,6 +157,7 @@ export interface GeneratedDecoratorNodeClass<
   clone(node: GeneratedDecoratorNodeInstance<TDataset, TOutput>): GeneratedDecoratorNodeInstance<TDataset, TOutput>
   transform(): null
   getPropertyDefaults(): TDataset
+  readonly nestedEditors?: readonly NestedEditorSpec[]
   readonly urlTransformMap: Record<string, string | Record<string, string>>
   importJSON(serializedNode: Record<string, unknown>): GeneratedDecoratorNodeInstance<TDataset, TOutput>
 }
@@ -128,6 +176,14 @@ export class GeneratedDecoratorNodeBase<
 
   getDataset(): Record<string, unknown> {
     return {}
+  }
+
+  appendNestedEditorDataset<T extends Record<string, unknown>>(dataset: T): T {
+    return dataset
+  }
+
+  serializeNestedEditorHtml<T extends Record<string, unknown>>(json: T): T {
+    return json
   }
 
   exportJSON(): { type: string; version: number; [key: string]: unknown } {
@@ -177,12 +233,14 @@ export function generateDecoratorNode<
   defaultRenderFn,
   version = 1,
   hasVisibility,
+  nestedEditors,
 }: {
   nodeType: string
   properties?: Props
   defaultRenderFn?: RenderFn<TRenderNode, TOutput>
   version?: number
   hasVisibility?: HasVisibility
+  nestedEditors?: readonly NestedEditorSpec[]
 }): GeneratedDecoratorNodeClass<DecoratorNodeValueMap<Props, HasVisibility>, TOutput> {
   type GeneratedDataset = DecoratorNodeValueMap<Props, HasVisibility>
 
@@ -222,11 +280,35 @@ export function generateDecoratorNode<
   class GeneratedDecoratorNode extends InklingDecoratorNode {
     [key: string]: unknown
 
+    /**
+     * The card's nested-editor spec entries (CONTEXT.md: "card spec"). Read
+     * off the node's actual class at runtime, so subclasses adopt a spec by
+     * redeclaring this static while the generated class itself (and spec-less
+     * subclasses) run no nested-editor behaviour.
+     */
+    static nestedEditors: readonly NestedEditorSpec[] | undefined = nestedEditors
+
     constructor(data: Partial<DecoratorNodeValueMap<Props, HasVisibility>> = {}, key?: string) {
       super(key)
       const dataset = data as Record<string, unknown>
       internalProps.forEach((prop) => {
         this[prop.privateName] = dataset[prop.name] ?? prop.default
+      })
+
+      // set up nested editor instances, then populate them on initial
+      // construction from their serialized HTML property when no editor
+      // instance was passed in
+      getNestedEditorSpecs(this).forEach((spec) => {
+        const editorProperty = `__${spec.name}`
+        setupNestedEditor(this, editorProperty, {
+          editor: dataset[spec.name] as LexicalEditor | undefined,
+          nodes: spec.nodes,
+        })
+
+        const serialized = dataset[spec.serializedKey]
+        if (!dataset[spec.name] && serialized) {
+          populateNestedEditor(this, editorProperty, `${serialized}`) // we serialize with no wrapper
+        }
       })
     }
 
@@ -301,6 +383,28 @@ export function generateDecoratorNode<
         dataset[prop.name] = self[prop.privateName]
       })
 
+      return this.appendNestedEditorDataset(dataset)
+    }
+
+    /**
+     * Appends the client-side nested-editor keys (`<name>` and, unless the
+     * spec opts out, `<name>InitialState`) to a dataset. Mutates and returns
+     * the passed-in dataset; a no-op when the node's class has no
+     * `nestedEditors` spec. Also called by hand-written `getDataset`
+     * overrides (e.g. Bookmark's metadata remap).
+     */
+    appendNestedEditorDataset<T extends Record<string, unknown>>(dataset: T): T {
+      const specs = getNestedEditorSpecs(this)
+      if (specs.length > 0) {
+        const target = dataset as Record<string, unknown>
+        const self = this.getLatest()
+        specs.forEach((spec) => {
+          target[spec.name] = self[`__${spec.name}`]
+          if (spec.exposeInitialStateInDataset !== false) {
+            target[`${spec.name}InitialState`] = self[`__${spec.name}InitialState`]
+          }
+        })
+      }
       return dataset
     }
 
@@ -337,7 +441,29 @@ export function generateDecoratorNode<
           return obj
         }, {}),
       } as SerializedGeneratedDecoratorNode<GeneratedDataset>
-      return dataset
+      return this.serializeNestedEditorHtml(dataset)
+    }
+
+    /**
+     * Converts nested editor instances back into cleaned HTML on their
+     * `serializedKey` properties, because their content may not be
+     * automatically updated when the nested editor changes. Mutates and
+     * returns the passed-in JSON; a no-op when the node's class has no
+     * `nestedEditors` spec. Also called by hand-written `exportJSON`
+     * overrides (e.g. Image/Video blob-src guards, Bookmark's metadata remap).
+     */
+    serializeNestedEditorHtml<T extends Record<string, unknown>>(json: T): T {
+      const target = json as Record<string, unknown>
+      getNestedEditorSpecs(this).forEach((spec) => {
+        const editor = this[`__${spec.name}`] as LexicalEditor | null | undefined
+        if (editor) {
+          editor.getEditorState().read(() => {
+            const html = $generateHtmlFromNodes(editor, null)
+            target[spec.serializedKey] = cleanBasicHtml(html, spec.cleanBasicHtml)
+          })
+        }
+      })
+      return json
     }
 
     exportDOM(_editor: LexicalEditor, options: ExportDOMOptions = {}): TOutput {

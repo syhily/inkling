@@ -52,7 +52,9 @@ export class VideoNode extends generateDecoratorNode({
     // checks if src is a data string
     const isBlob = src && src.startsWith('data:')
 
-    const dataset = {
+    // serializeNestedEditorHtml re-serializes the caption editor for wrapper
+    // subclasses that adopt a `nestedEditors` spec; a no-op on the base class
+    return this.serializeNestedEditorHtml({
       type: 'video',
       version: 1,
       src: isBlob ? '<base64String>' : src,
@@ -68,8 +70,7 @@ export class VideoNode extends generateDecoratorNode({
       thumbnailHeight,
       cardWidth,
       loop,
-    }
-    return dataset
+    })
   }
 
   static importDOM() {

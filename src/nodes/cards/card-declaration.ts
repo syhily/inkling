@@ -1,5 +1,7 @@
 import type { Klass, LexicalNode } from 'lexical'
 
+import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
+
 /**
  * The editor surfaces a card can join (CONTEXT.md: "card declaration" names
  * "which editor surfaces it joins (node sets, markdown, email)"):
@@ -36,5 +38,13 @@ export interface CardSurfaces {
 export interface CardDeclaration<NodeType extends string = string> {
   nodeType: NodeType
   baseNode: Klass<LexicalNode>
+  /**
+   * The card's nested editors (CONTEXT.md: "card spec"), for cards that keep
+   * rich-text content in nested Lexical editors. The wrapper node class
+   * adopts this as its static `nestedEditors`; the generated node machinery
+   * (`@/nodes/base/generate-decorator-node`) drives constructor setup,
+   * `getDataset` appends, and `exportJSON` re-serialization from it.
+   */
+  nestedEditors?: readonly NestedEditorSpec[]
   surfaces: CardSurfaces
 }

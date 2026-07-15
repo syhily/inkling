@@ -1,4 +1,3 @@
-import { $generateHtmlFromNodes } from '@lexical/html'
 import { createCommand, type LexicalEditor, type LexicalNode, type NodeKey } from 'lexical'
 import React from 'react'
 
@@ -8,12 +7,10 @@ import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 import GIFIcon from '@/assets/icons/inkling-card-type-gif.svg?react'
 import ImageCardIcon from '@/assets/icons/inkling-card-type-image.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
-import { cleanBasicHtml } from '@/html/clean-basic-html'
 import { ImageNode as BaseImageNode, normalizeCardWidth, type ImageData } from '@/nodes/base'
+import { imageDeclaration } from '@/nodes/cards/image.declaration'
 import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
-import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { OPEN_GIF_SELECTOR_COMMAND } from '@/plugins/InklingSelectorPlugin'
-import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 export const INSERT_IMAGE_COMMAND = createCommand<ImageNodeDataset>()
 
@@ -33,11 +30,19 @@ export class ImageNode extends BaseImageNode {
   // transient properties used to control node behaviour
   __triggerFileDialog = false
   __previewSrc: string | null = null
-  __captionEditor!: LexicalEditor | undefined
-  __captionEditorInitialState!: import('lexical').EditorState | undefined
+  // nested editors live on the generated base class (static `nestedEditors`);
+  // `declare` keeps these type-only so the field initializers don't clobber
+  // the instances the base constructor sets up
+  declare __captionEditor: LexicalEditor | undefined
+  declare __captionEditorInitialState: import('lexical').EditorState | undefined
   __initialFile: File | undefined
   __selector: React.ComponentType<{ nodeKey: NodeKey }> | undefined
   __isImageHidden: boolean | undefined
+
+  // adopt the card declaration's nested-editor spec (drives constructor
+  // setup/populate, getDataset appends, and exportJSON re-serialization on
+  // the generated base class)
+  static nestedEditors = imageDeclaration.nestedEditors
 
   static cardMenu = [
     {
@@ -85,13 +90,6 @@ export class ImageNode extends BaseImageNode {
 
     this.__selector = selector
     this.__isImageHidden = isImageHidden
-
-    setupNestedEditor(this, '__captionEditor', { editor: dataset.captionEditor, nodes: MINIMAL_NODES })
-
-    // populate nested editors on initial construction
-    if (!dataset.captionEditor && dataset.caption) {
-      populateNestedEditor(this, '__captionEditor', `${dataset.caption}`) // we serialize with no wrapper
-    }
   }
 
   getIcon() {
@@ -103,11 +101,6 @@ export class ImageNode extends BaseImageNode {
 
     dataset.__previewSrc = this.__previewSrc
     dataset.__triggerFileDialog = this.__triggerFileDialog
-
-    // client-side only data properties such as nested editors
-    const self = this.getLatest()
-    dataset.captionEditor = self.__captionEditor
-    dataset.captionEditorInitialState = self.__captionEditorInitialState
 
     return dataset
   }
@@ -129,23 +122,6 @@ export class ImageNode extends BaseImageNode {
 
   createDOM() {
     return document.createElement('div')
-  }
-
-  exportJSON() {
-    const json = super.exportJSON()
-
-    // convert nested editor instances back into HTML because their content may not
-    // be automatically updated when the nested editor changes
-    const captionEditor = this.__captionEditor
-    if (captionEditor) {
-      captionEditor.getEditorState().read(() => {
-        const html = $generateHtmlFromNodes(captionEditor, null)
-        const cleanedHtml = cleanBasicHtml(html, { firstChildInnerContent: true })
-        json.caption = cleanedHtml
-      })
-    }
-
-    return json
   }
 
   decorate() {

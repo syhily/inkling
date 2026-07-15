@@ -1,14 +1,11 @@
-import { $generateHtmlFromNodes } from '@lexical/html'
 import { $canShowPlaceholderCurry } from '@lexical/text'
 import { createCommand, type EditorState, type LexicalEditor } from 'lexical'
 
 import HeaderCardIcon from '@/assets/icons/inkling-card-type-header.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
-import { cleanBasicHtml } from '@/html/clean-basic-html'
 import { HeaderNode as BaseHeaderNode, normalizeCardWidth, type CardWidth, type HeaderData } from '@/nodes/base'
+import { headerDeclaration } from '@/nodes/cards/header.declaration'
 import HeaderNodeComponent from '@/nodes/header/HeaderNodeComponent'
-import MINIMAL_NODES from '@/nodes/MinimalNodes'
-import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 export type HeaderNodeDataset = HeaderData & {
   headerTextEditor?: LexicalEditor
@@ -20,10 +17,16 @@ export type HeaderNodeDataset = HeaderData & {
 export const INSERT_HEADER_COMMAND = createCommand<HeaderNodeDataset>()
 
 export class HeaderNode extends BaseHeaderNode {
-  __headerTextEditor!: LexicalEditor | null
-  __subheaderTextEditor!: LexicalEditor | null
-  __headerTextEditorInitialState!: EditorState | undefined
-  __subheaderTextEditorInitialState!: EditorState | undefined
+  // nested editors live on the generated base class (static `nestedEditors`);
+  // `declare` keeps these type-only so the field initializers don't clobber
+  // the instances the base constructor sets up
+  declare __headerTextEditor: LexicalEditor | null
+  declare __subheaderTextEditor: LexicalEditor | null
+  declare __headerTextEditorInitialState: EditorState | undefined
+  declare __subheaderTextEditorInitialState: EditorState | undefined
+
+  // adopt the card declaration's nested-editor spec
+  static nestedEditors = headerDeclaration.nestedEditors
 
   static cardMenu = [
     {
@@ -42,53 +45,6 @@ export class HeaderNode extends BaseHeaderNode {
 
   getIcon() {
     return HeaderCardIcon
-  }
-
-  constructor(dataset: HeaderNodeDataset = {}, key?: string) {
-    super(dataset, key)
-
-    setupNestedEditor(this, '__headerTextEditor', { editor: dataset.headerTextEditor, nodes: MINIMAL_NODES })
-    setupNestedEditor(this, '__subheaderTextEditor', { editor: dataset.subheaderTextEditor, nodes: MINIMAL_NODES })
-
-    // populate nested editors on initial construction
-    if (!dataset.headerTextEditor && dataset.header) {
-      populateNestedEditor(this, '__headerTextEditor', `${dataset.header}`) // we serialize with no wrapper
-    }
-    if (!dataset.subheaderTextEditor && dataset.subheader) {
-      populateNestedEditor(this, '__subheaderTextEditor', `${dataset.subheader}`) // we serialize with no wrapper
-    }
-  }
-
-  exportJSON() {
-    const json = super.exportJSON()
-
-    if (this.__headerTextEditor) {
-      this.__headerTextEditor.getEditorState().read(() => {
-        const html = $generateHtmlFromNodes(this.__headerTextEditor!, null)
-        const cleanedHtml = cleanBasicHtml(html, { firstChildInnerContent: true, allowBr: true })
-        json.header = cleanedHtml
-      })
-    }
-
-    if (this.__subheaderTextEditor) {
-      this.__subheaderTextEditor.getEditorState().read(() => {
-        const html = $generateHtmlFromNodes(this.__subheaderTextEditor!, null)
-        const cleanedHtml = cleanBasicHtml(html, { firstChildInnerContent: true, allowBr: true })
-        json.subheader = cleanedHtml
-      })
-    }
-
-    return json
-  }
-
-  getDataset() {
-    const dataset = super.getDataset()
-
-    // client-side only data properties such as nested editors
-    const self = this.getLatest()
-    dataset.headerTextEditor = self.__headerTextEditor
-    dataset.subheaderTextEditor = self.__subheaderTextEditor
-    return dataset
   }
 
   getCardWidth(): CardWidth | undefined {

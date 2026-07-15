@@ -1,13 +1,10 @@
-import { $generateHtmlFromNodes } from '@lexical/html'
 import { createCommand, type EditorState, type LexicalEditor } from 'lexical'
 
 import CalloutCardIcon from '@/assets/icons/inkling-card-type-callout.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
-import { cleanBasicHtml } from '@/html/clean-basic-html'
 import { CalloutNode as BaseCalloutNode, type CalloutData } from '@/nodes/base'
 import { CalloutNodeComponent } from '@/nodes/CalloutNodeComponent'
-import MINIMAL_NODES from '@/nodes/MinimalNodes'
-import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
+import { calloutDeclaration } from '@/nodes/cards/callout.declaration'
 
 export type CalloutNodeDataset = CalloutData & {
   calloutTextEditor?: LexicalEditor
@@ -17,8 +14,14 @@ export type CalloutNodeDataset = CalloutData & {
 export const INSERT_CALLOUT_COMMAND = createCommand<CalloutNodeDataset>()
 
 export class CalloutNode extends BaseCalloutNode {
-  __calloutTextEditor!: import('lexical').LexicalEditor | null
-  __calloutTextEditorInitialState!: import('lexical').EditorState | undefined
+  // nested editors live on the generated base class (static `nestedEditors`);
+  // `declare` keeps these type-only so the field initializers don't clobber
+  // the instances the base constructor sets up
+  declare __calloutTextEditor: LexicalEditor | null
+  declare __calloutTextEditorInitialState: EditorState | undefined
+
+  // adopt the card declaration's nested-editor spec
+  static nestedEditors = calloutDeclaration.nestedEditors
 
   static cardMenu = [
     {
@@ -34,44 +37,6 @@ export class CalloutNode extends BaseCalloutNode {
 
   getIcon() {
     return CalloutCardIcon
-  }
-
-  constructor(dataset: CalloutNodeDataset = {}, key?: string) {
-    super(dataset, key)
-
-    // set up nested editor instances
-    setupNestedEditor(this, '__calloutTextEditor', { editor: dataset.calloutTextEditor, nodes: MINIMAL_NODES })
-
-    // populate nested editors on initial construction
-    if (!dataset.calloutTextEditor && dataset.calloutText) {
-      populateNestedEditor(this, '__calloutTextEditor', `${dataset.calloutText}`) // we serialize with no wrapper
-    }
-  }
-
-  exportJSON() {
-    const json = super.exportJSON()
-
-    // convert nested editor instance back into HTML because `text` may not
-    // be automatically updated when the nested editor changes
-    if (this.__calloutTextEditor) {
-      this.__calloutTextEditor.getEditorState().read(() => {
-        const html = $generateHtmlFromNodes(this.__calloutTextEditor!, null)
-        const cleanedHtml = cleanBasicHtml(html, { allowBr: true })
-        json.calloutText = cleanedHtml
-      })
-    }
-
-    return json
-  }
-
-  getDataset() {
-    const dataset = super.getDataset()
-    // client-side only data properties such as nested editors
-    const self = this.getLatest()
-    dataset.calloutTextEditor = self.__calloutTextEditor
-    dataset.calloutTextEditorInitialState = self.__calloutTextEditorInitialState
-
-    return dataset
   }
 
   decorate() {

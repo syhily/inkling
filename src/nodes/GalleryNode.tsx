@@ -1,17 +1,14 @@
-import { $generateHtmlFromNodes } from '@lexical/html'
-import { createCommand } from 'lexical'
+import { createCommand, type LexicalEditor } from 'lexical'
 
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 import type { GalleryImage } from '@/types/gallery'
 
 import GalleryCardIcon from '@/assets/icons/inkling-card-type-gallery.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
-import { cleanBasicHtml } from '@/html/clean-basic-html'
 import { GalleryNode as BaseGalleryNode, type GalleryData } from '@/nodes/base'
+import { galleryDeclaration } from '@/nodes/cards/gallery.declaration'
 import { GalleryNodeComponent } from '@/nodes/GalleryNodeComponent'
-import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { pick } from '@/utils'
-import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 export type GalleryNodeDataset = GalleryData & CaptionEditorDataset
 
@@ -30,8 +27,14 @@ export function recalculateImageRows(images: GalleryImage[]) {
 }
 
 export class GalleryNode extends BaseGalleryNode {
-  __captionEditor!: import('lexical').LexicalEditor | null
-  __captionEditorInitialState!: import('lexical').EditorState | undefined
+  // nested editors live on the generated base class (static `nestedEditors`);
+  // `declare` keeps these type-only so the field initializers don't clobber
+  // the instances the base constructor sets up
+  declare __captionEditor: LexicalEditor | null
+  declare __captionEditorInitialState: import('lexical').EditorState | undefined
+
+  // adopt the card declaration's nested-editor spec
+  static nestedEditors = galleryDeclaration.nestedEditors
 
   static cardMenu = [
     {
@@ -48,47 +51,8 @@ export class GalleryNode extends BaseGalleryNode {
     },
   ]
 
-  constructor(dataset: GalleryNodeDataset = {}, key?: string) {
-    super(dataset, key)
-
-    const { caption } = dataset
-
-    setupNestedEditor(this, '__captionEditor', { editor: dataset.captionEditor, nodes: MINIMAL_NODES })
-    // populate nested editors on initial construction
-    if (!dataset.captionEditor && caption) {
-      populateNestedEditor(this, '__captionEditor', `${caption}`)
-    }
-  }
-
   getIcon() {
     return GalleryCardIcon
-  }
-
-  getDataset() {
-    const dataset = super.getDataset()
-
-    // client-side only data properties such as nested editors
-    const self = this.getLatest()
-    dataset.captionEditor = self.__captionEditor
-    dataset.captionEditorInitialState = self.__captionEditorInitialState
-
-    return dataset
-  }
-
-  exportJSON() {
-    const json = super.exportJSON()
-
-    // convert nested editor instances back into HTML because their content may not
-    // be automatically updated when the nested editor changes
-    if (this.__captionEditor) {
-      this.__captionEditor.getEditorState().read(() => {
-        const html = $generateHtmlFromNodes(this.__captionEditor!, null)
-        const cleanedHtml = cleanBasicHtml(html)
-        json.caption = cleanedHtml
-      })
-    }
-
-    return json
   }
 
   decorate() {

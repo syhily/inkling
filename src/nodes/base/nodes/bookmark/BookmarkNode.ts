@@ -1,3 +1,5 @@
+import type { CaptionEditorDataset } from '@/types/card-node-datasets'
+
 import { generateDecoratorNode, type DecoratorNodeProperty } from '@/nodes/base/generate-decorator-node'
 import { parseBookmarkNode } from '@/nodes/base/nodes/bookmark/bookmark-parser'
 import { renderBookmarkNode } from '@/nodes/base/nodes/bookmark/bookmark-renderer'
@@ -49,8 +51,11 @@ export class BookmarkNode extends generateDecoratorNode({
   }
 
   /* override */
-  constructor({ url, metadata, caption }: BookmarkData = {}, key?: string) {
-    super({}, key)
+  constructor({ url, metadata, caption, captionEditor }: BookmarkData & CaptionEditorDataset = {}, key?: string) {
+    // Forward the caption and a passed-in caption editor so the generated
+    // constructor can run the nested-editor setup/populate for wrapper
+    // subclasses that adopt a `nestedEditors` spec (a no-op on this class).
+    super({ caption, captionEditor } as Partial<BookmarkData>, key)
     this.__url = url || ''
     this.__icon = metadata?.icon || ''
     this.__title = metadata?.title || ''
@@ -64,7 +69,9 @@ export class BookmarkNode extends generateDecoratorNode({
   /* @override */
   getDataset(): Record<string, unknown> {
     const self = this.getLatest()
-    return {
+    // appendNestedEditorDataset adds the caption editor keys for wrapper
+    // subclasses that adopt a `nestedEditors` spec; a no-op on this class
+    return this.appendNestedEditorDataset({
       url: self.__url as string,
       metadata: {
         icon: self.__icon as string,
@@ -75,7 +82,7 @@ export class BookmarkNode extends generateDecoratorNode({
         thumbnail: self.__thumbnail as string,
       },
       caption: self.__caption as string,
-    }
+    })
   }
 
   /* @override */
@@ -91,7 +98,9 @@ export class BookmarkNode extends generateDecoratorNode({
 
   /* @override */
   exportJSON() {
-    const dataset = {
+    // serializeNestedEditorHtml re-serializes the caption editor for wrapper
+    // subclasses that adopt a `nestedEditors` spec; a no-op on this class
+    return this.serializeNestedEditorHtml({
       type: 'bookmark',
       version: 1,
       url: this.url,
@@ -104,8 +113,7 @@ export class BookmarkNode extends generateDecoratorNode({
         thumbnail: this.thumbnail,
       },
       caption: this.caption,
-    }
-    return dataset
+    })
   }
 
   isEmpty() {

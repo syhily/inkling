@@ -1,15 +1,11 @@
-import { $generateHtmlFromNodes } from '@lexical/html'
 import { $canShowPlaceholderCurry } from '@lexical/text'
 import { createCommand, type EditorState, type LexicalEditor } from 'lexical'
 
 import ToggleIcon from '@/assets/icons/inkling-card-type-toggle.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
-import { cleanBasicHtml } from '@/html/clean-basic-html'
 import { ToggleNode as BaseToggleNode, type ToggleData } from '@/nodes/base'
-import BASIC_NODES from '@/nodes/BasicNodes'
-import MINIMAL_NODES from '@/nodes/MinimalNodes'
+import { toggleDeclaration } from '@/nodes/cards/toggle.declaration'
 import { ToggleNodeComponent } from '@/nodes/ToggleNodeComponent'
-import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 export const INSERT_TOGGLE_COMMAND = createCommand<ToggleNodeDataset>('INSERT_TOGGLE_COMMAND')
 
@@ -26,10 +22,16 @@ export type SerializedToggleNode = ReturnType<BaseToggleNode['exportJSON']> & {
 }
 
 export class ToggleNode extends BaseToggleNode {
-  __titleEditor!: LexicalEditor | null
-  __titleEditorInitialState!: EditorState | undefined
-  __contentEditor!: LexicalEditor | null
-  __contentEditorInitialState!: EditorState | undefined
+  // nested editors live on the generated base class (static `nestedEditors`);
+  // `declare` keeps these type-only so the field initializers don't clobber
+  // the instances the base constructor sets up
+  declare __titleEditor: LexicalEditor | null
+  declare __titleEditorInitialState: EditorState | undefined
+  declare __contentEditor: LexicalEditor | null
+  declare __contentEditorInitialState: EditorState | undefined
+
+  // adopt the card declaration's nested-editor spec
+  static nestedEditors = toggleDeclaration.nestedEditors
 
   static cardMenu = [
     {
@@ -44,21 +46,6 @@ export class ToggleNode extends BaseToggleNode {
     },
   ]
 
-  constructor(dataset: ToggleNodeDataset = {}, key?: string) {
-    super(dataset, key)
-
-    setupNestedEditor(this, '__titleEditor', { editor: dataset.titleEditor, nodes: MINIMAL_NODES })
-    setupNestedEditor(this, '__contentEditor', { editor: dataset.contentEditor, nodes: BASIC_NODES })
-
-    if (!dataset.titleEditor && dataset.heading) {
-      populateNestedEditor(this, '__titleEditor', `${dataset.heading}`)
-    }
-
-    if (!dataset.contentEditor && dataset.content) {
-      populateNestedEditor(this, '__contentEditor', `${dataset.content}`)
-    }
-  }
-
   getIcon() {
     return ToggleIcon
   }
@@ -67,40 +54,6 @@ export class ToggleNode extends BaseToggleNode {
     const isTitleEmpty = this.__titleEditor!.getEditorState().read($canShowPlaceholderCurry(false))
     const isContentEmpty = this.__contentEditor!.getEditorState().read($canShowPlaceholderCurry(false))
     return isTitleEmpty && isContentEmpty
-  }
-
-  getDataset() {
-    const dataset = super.getDataset() as Record<string, unknown>
-    const self = this.getLatest()
-
-    dataset.titleEditor = self.__titleEditor
-    dataset.titleEditorInitialState = self.__titleEditorInitialState
-    dataset.contentEditor = self.__contentEditor
-    dataset.contentEditorInitialState = self.__contentEditorInitialState
-
-    return dataset
-  }
-
-  exportJSON(): SerializedToggleNode {
-    const json = super.exportJSON() as SerializedToggleNode
-
-    if (this.__titleEditor) {
-      this.__titleEditor.getEditorState().read(() => {
-        const html = $generateHtmlFromNodes(this.__titleEditor!, null)
-        const cleanedHtml = cleanBasicHtml(html, { firstChildInnerContent: true, allowBr: true })
-        json.heading = cleanedHtml
-      })
-    }
-
-    if (this.__contentEditor) {
-      this.__contentEditor.getEditorState().read(() => {
-        const html = $generateHtmlFromNodes(this.__contentEditor!, null)
-        const cleanedHtml = cleanBasicHtml(html, { allowBr: true })
-        json.content = cleanedHtml
-      })
-    }
-
-    return json
   }
 
   decorate() {

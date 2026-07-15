@@ -33,7 +33,9 @@ export class ImageNode extends generateDecoratorNode({
     const { src, width, height, title, alt, caption, cardWidth, href } = this
     const isBlob = src && src.startsWith('data:')
 
-    const dataset = {
+    // serializeNestedEditorHtml re-serializes the caption editor for wrapper
+    // subclasses that adopt a `nestedEditors` spec; a no-op on the base class
+    return this.serializeNestedEditorHtml({
       type: 'image',
       version: 1,
       src: isBlob ? '<base64String>' : src,
@@ -44,8 +46,7 @@ export class ImageNode extends generateDecoratorNode({
       caption,
       cardWidth,
       href,
-    }
-    return dataset
+    })
   }
 
   static importDOM() {

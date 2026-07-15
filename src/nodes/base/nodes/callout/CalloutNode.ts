@@ -1,3 +1,5 @@
+import type { LexicalEditor } from 'lexical'
+
 import { generateDecoratorNode, type DecoratorNodeProperty } from '@/nodes/base/generate-decorator-node'
 import { parseCalloutNode } from '@/nodes/base/nodes/callout/callout-parser'
 import { renderCalloutNode } from '@/nodes/base/nodes/callout/callout-renderer'
@@ -6,6 +8,11 @@ export interface CalloutData {
   calloutText?: string
   calloutEmoji?: string
   backgroundColor?: string
+}
+
+/** Transient nested-editor fields the wrapper layer passes through the constructor. */
+interface CalloutEditorDataset {
+  calloutTextEditor?: LexicalEditor
 }
 
 export interface CalloutNode {
@@ -26,8 +33,14 @@ export class CalloutNode extends generateDecoratorNode({
   defaultRenderFn: renderCalloutNode,
 }) {
   /* override */
-  constructor({ calloutText, calloutEmoji, backgroundColor }: CalloutData = {}, key?: string) {
-    super({}, key)
+  constructor(
+    { calloutText, calloutEmoji, backgroundColor, calloutTextEditor }: CalloutData & CalloutEditorDataset = {},
+    key?: string,
+  ) {
+    // Forward the callout text and a passed-in editor so the generated
+    // constructor can run the nested-editor setup/populate for wrapper
+    // subclasses that adopt a `nestedEditors` spec (a no-op on this class).
+    super({ calloutText, calloutTextEditor } as Partial<CalloutData>, key)
     this.__calloutText = calloutText || ''
     this.__calloutEmoji = calloutEmoji ?? '💡'
     this.__backgroundColor = backgroundColor || 'blue'
