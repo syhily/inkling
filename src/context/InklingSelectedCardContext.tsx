@@ -1,5 +1,9 @@
 import React from 'react'
 
+import { createCardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
+
+import { CardSelectionStoreContext } from './CardSelectionStoreContext'
+
 export interface InklingSelectedCardContextValue {
   selectedCardKey: string | null
   setSelectedCardKey: React.Dispatch<React.SetStateAction<string | null>>
@@ -23,6 +27,9 @@ const Context = React.createContext<InklingSelectedCardContextValue>({
 })
 
 export const InklingSelectedCardContext = ({ children }: { children: React.ReactNode }) => {
+  // one card selection store per top-level composer (plan 038); the useState
+  // initializer keeps the instance stable for the provider's lifetime
+  const [cardSelectionStore] = React.useState(createCardSelectionStore)
   const [selectedCardKey, setSelectedCardKey] = React.useState<string | null>(null)
   const [isEditingCard, setIsEditingCard] = React.useState<boolean>(false)
   const [isDragging, setIsDragging] = React.useState<boolean>(false)
@@ -49,7 +56,11 @@ export const InklingSelectedCardContext = ({ children }: { children: React.React
     setShowVisibilitySettings,
   ])
 
-  return <Context.Provider value={contextValue}>{children}</Context.Provider>
+  return (
+    <CardSelectionStoreContext.Provider value={cardSelectionStore}>
+      <Context.Provider value={contextValue}>{children}</Context.Provider>
+    </CardSelectionStoreContext.Provider>
+  )
 }
 
 export const useInklingSelectedCardContext = () => React.useContext(Context)
