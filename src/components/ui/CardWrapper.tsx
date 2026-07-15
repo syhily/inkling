@@ -78,7 +78,6 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
     const position = {
       ...DEFAULT_INDICATOR_POSITION,
       ...indicatorPosition,
-      ...(cardType === 'call-to-action' && { top: '1.4rem' }),
     }
 
     let indicatorIcon

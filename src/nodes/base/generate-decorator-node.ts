@@ -267,6 +267,10 @@ export function generateDecoratorNode<
     /**
      * Transforms URLs contained in the payload to relative paths (`__INKLING_URL__/relative/path/`),
      * so that URLs to be changed without having to update the database
+     *
+     * Write-only in-repo: the consumer is an out-of-repo URL-rebasing pass that rewrites payload
+     * URLs to `__INKLING_URL__/...` paths — the marker `src/nodes/base/utils/is-local-content-image.ts:4`
+     * matches. Kept for that consumer; do not flag as dead.
      * @see upstream URL utilities
      */
     static get urlTransformMap() {

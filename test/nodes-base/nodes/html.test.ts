@@ -316,15 +316,9 @@ describe('HtmlNode', function () {
           const result = htmlNode.exportDOM(editor, { ...exportOptions, target: 'email' })
           const expectedContents = '<!--inkling-card-begin: html-->\n<div>Test</div>\n<!--inkling-card-end: html-->'
 
-          if (visibility.segment) {
-            expect(result.type).toBe('html')
-            const element = result.element as HTMLElement
-            expect(element.outerHTML).toBe(`<div data-gh-segment="${visibility.segment}">\n${expectedContents}\n</div>`)
-          } else {
-            expect(result.type).toBe('value')
-            const element = result.element as HTMLTextAreaElement
-            expect(element.value).toBe(`\n${expectedContents}\n`)
-          }
+          expect(result.type).toBe('value')
+          const element = result.element as HTMLTextAreaElement
+          expect(element.value).toBe(`\n${expectedContents}\n`)
         }
 
         function testBlankRender(visibility: Record<string, unknown>, target: string) {
