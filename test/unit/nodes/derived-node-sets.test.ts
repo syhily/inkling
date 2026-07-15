@@ -3,9 +3,9 @@ import type { Transformer } from '@lexical/markdown'
 import { describe, expect, it } from 'vitest'
 
 // Import the public barrel first: it is the package/demo entry point, so the
-// module graph evaluates in the same order as in the app. Registry modules
-// imported before it can observe wrapper classes mid-cycle (pre-existing
-// `@/index` import inside `InklingCaptionEditor`) as `undefined`.
+// module graph evaluates in the same order as in the app. Defensive: registry
+// modules imported before it could observe wrapper classes mid-cycle as
+// `undefined` if a wrapper→barrel edge is ever reintroduced.
 import '@/index'
 import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import { CARD_TRANSFORMERS, MARKDOWN_NODES } from '@/markdown/round-trip'
