@@ -57,10 +57,12 @@ describe('ButtonNode', () => {
   })
 
   describe('decorate', () => {
-    it('decorates with the wide wrapper style', () => {
-      const node = $createButtonNode({ buttonText: 'Click', buttonUrl: 'https://example.com' })
-      const decorated = node.decorate() as React.ReactElement<{ wrapperStyle?: string }>
-      expect(decorated.props.wrapperStyle).toBe('wide')
+    it('decorates with the wide wrapper style', async () => {
+      await updateEditor(editor, () => {
+        const node = $createButtonNode({ buttonText: 'Click', buttonUrl: 'https://example.com' })
+        const decorated = node.decorate() as React.ReactElement<{ wrapperStyle?: string }>
+        expect(decorated.props.wrapperStyle).toBe('wide')
+      })
     })
   })
 })
