@@ -11,10 +11,10 @@ describe('Gif Error', () => {
     expect(screen.getByText(/Trouble reaching the GIF service/i)).toBeInTheDocument()
   })
 
-  it('renders the invalid api key message with a documentation link', () => {
+  it('renders the invalid api key message without a dead documentation link', () => {
     render(<Error error={ERROR_TYPE.INVALID_API_KEY} />)
     expect(screen.getByText(/GIF API key is not valid/i)).toBeInTheDocument()
-    expect(screen.getByRole('link')).toHaveAttribute('href', 'https://inkling.local/docs/config/')
+    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('renders a generic error string', () => {
