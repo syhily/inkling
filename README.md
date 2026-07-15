@@ -32,6 +32,23 @@ The package exposes both ESM and CommonJS entry conditions:
 - `require('@inkling/editor')` resolves to `dist/editor.umd.cjs` (CommonJS).
 - `dist/editor.umd.js` remains as a legacy browser/direct-path artifact with a runtime body identical to the `.cjs` file (only its sourcemap trailer differs); Node's `require` condition resolves the `.cjs` file.
 
+## TypeScript
+
+The package publishes a single bundled declaration file at `dist/editor.d.ts`, wired through both the top-level `types` field and the `exports["."].types` condition, so it resolves under `moduleResolution: "Bundler"` and `"NodeNext"` alike.
+
+Types for every bundled runtime (Lexical, markdown-it, CodeMirror, emoji-mart, etc.) are **inlined** into the declaration, so consumers only need their own React types — no second Lexical or card-runtime install for the type checker:
+
+```tsx
+import { InklingEditor, type InklingEditorProps } from '@inkling/editor'
+
+const props = {
+  placeholderText: 'Start writing…',
+  onChange: (state) => console.log(state),
+} satisfies InklingEditorProps
+```
+
+The only type-level externals are the `react`/`react-dom` peer family. Import everything — components, hooks, node factories, datasets, and command payloads — from the package root; deep `dist/*` or source paths are not part of the supported API.
+
 ## Public API
 
 Everything below is exported from the package entry point.

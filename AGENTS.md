@@ -41,6 +41,7 @@ pnpm format:check   # oxfmt --check
 
 - The public markdown round-trip API (`src/markdown/round-trip.ts`) intentionally uses a constrained node set and does not round-trip decorator cards. See `docs/markdown-api.md` and `docs/markdown-card-transformers.md`.
 - Feature runtimes (markdown-it, CodeMirror, emoji-mart, fast-average-color, yjs/y-websocket) are bundled into the dist artifacts; only `react`/`react-dom` are external peers. The CJS artifact is `dist/editor.umd.cjs`; `dist/editor.umd.js` is a legacy copy with an identical runtime body made by `scripts/copy-legacy-umd.mjs`. `pnpm verify:package` (`scripts/verify-packed-package.mjs`) is the packed-consumer gate — do not re-externalize feature packages without it.
+- `pnpm build` also emits the single bundled declaration `dist/editor.d.ts` via `scripts/build-types.mjs` (dts-bundle-generator on the repo's own TypeScript; unplugin-dts/API Extractor cannot parse TS 6 output). Types of bundled runtimes are inlined; the `react`/`react-dom` family is the only type-level external. `pnpm verify:types` (`scripts/verify-packed-types.mjs`) is the packed type-consumer gate. Base node classes must not reuse DOM global names (e.g. `BaseAudioNode`, not `AudioNode`) — declaration bundlers collide with lib.dom.d.ts.
 
 ## Testing
 

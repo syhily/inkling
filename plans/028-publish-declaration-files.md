@@ -54,6 +54,17 @@ not a promise that every source file is a public subpath.
 
 ## Tool choice and version guard
 
+> **Execution note (2026-07-15, batch 5)**: `unplugin-dts` + API Extractor
+> hit this plan's STOP condition — API Extractor 7.58.9 bundles the TS 5.9
+> compiler and crashes on this repo's TypeScript 6 declaration output
+> (`AstSymbolTable` "Cannot assign isExternal=true" on the Lexical re-export
+> graph; upstream microsoft/rushstack#3614). The bundle is instead produced
+> by `scripts/build-types.mjs` using `dts-bundle-generator@9.5.1`, which runs
+> on the repo's own TypeScript. Two of its collision bugs are handled in the
+> script/source: React default-vs-namespace alias rewriting, and renaming the
+> base `AudioNode` class to `BaseAudioNode` (lib.dom occupies the global
+> name). All other contract points are unchanged.
+
 Use the current official declaration plugin, `unplugin-dts` (the project
 formerly known as `vite-plugin-dts`), with its Vite entry:
 
