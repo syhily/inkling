@@ -332,18 +332,23 @@ describe('ToggleNode', function () {
       }),
     )
 
-    describe('current unsanitized output (Step 4 will change)', function () {
-      // The toggle renderer interpolates heading/content into HTML strings
-      // with no escaping or sanitization. These pins record that raw
-      // passthrough byte-for-byte; plan 040 Step 4 sanitizes these exact
-      // cases and updates the expectations with before/after evidence.
+    describe('sanitized heading and content output (plan 040 Step 4)', function () {
+      // The toggle renderer interpolates heading/content into HTML strings.
+      // Plan 040 Step 4 routes both through the render context: the heading
+      // is escaped (context.escapeText) and the nested-editor content is
+      // DOMPurify-sanitized (context.sanitizeCaption), so markup-bearing
+      // inputs are neutralized while benign inputs render byte-identically.
+      // A standalone leading <script> parses into the document <head> inside
+      // sanitizeHtml's placeholder pass, so the pinned content below
+      // sanitizes to an empty string. Before/after evidence: the Step-4 fix
+      // commit message.
       const adversarialPayload = {
         heading: '<script>alert(1)</script>',
         content: '<script>alert(2)</script>',
       }
 
       it(
-        'passes heading and content markup through unsanitized in web output',
+        'escapes the heading and sanitizes the content in web output',
         editorTest(async function () {
           const toggleNode = $createToggleNode(adversarialPayload)
           const result = toggleNode.exportDOM(editor, exportOptions)
@@ -354,22 +359,14 @@ describe('ToggleNode', function () {
             html`
               <div class="inkling-card inkling-toggle-card" data-inkling-toggle-state="close">
                 <div class="inkling-toggle-heading">
-                  <h4 class="inkling-toggle-heading-text">
-                    <script>
-                      alert(1)
-                    </script>
-                  </h4>
+                  <h4 class="inkling-toggle-heading-text">&lt;script&gt;alert(1)&lt;/script&gt;</h4>
                   <button class="inkling-toggle-card-icon" aria-label="Expand toggle to read content">
                     <svg id="Regular" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                       <path class="cls-1" d="M23.25,7.311,12.53,18.03a.749.749,0,0,1-1.06,0L.75,7.311"></path>
                     </svg>
                   </button>
                 </div>
-                <div class="inkling-toggle-content">
-                  <script>
-                    alert(2)
-                  </script>
-                </div>
+                <div class="inkling-toggle-content"></div>
               </div>
             `,
           )
@@ -377,7 +374,7 @@ describe('ToggleNode', function () {
       )
 
       it(
-        'passes heading and content markup through unsanitized in legacy email output',
+        'escapes the heading and sanitizes the content in legacy email output',
         editorTest(async function () {
           const toggleNode = $createToggleNode(adversarialPayload)
           const result = toggleNode.exportDOM(editor, {
@@ -394,15 +391,9 @@ describe('ToggleNode', function () {
                 style="background: transparent; border: 1px solid rgba(124, 139, 154, 0.25); border-radius: 4px; padding: 20px; margin-bottom: 1.5em;"
               >
                 <h4 style="font-size: 1.375rem; font-weight: 600; margin-bottom: 8px; margin-top:0px">
-                  <script>
-                    alert(1)
-                  </script>
+                  &lt;script&gt;alert(1)&lt;/script&gt;
                 </h4>
-                <div style="font-size: 1rem; line-height: 1.5; margin-bottom: -1.5em;">
-                  <script>
-                    alert(2)
-                  </script>
-                </div>
+                <div style="font-size: 1rem; line-height: 1.5; margin-bottom: -1.5em;"></div>
               </div>
             `,
           )
@@ -410,7 +401,7 @@ describe('ToggleNode', function () {
       )
 
       it(
-        'passes heading and content markup through unsanitized in email customization output',
+        'escapes the heading and sanitizes the content in email customization output',
         editorTest(async function () {
           const toggleNode = $createToggleNode(adversarialPayload)
           const result = toggleNode.exportDOM(editor, {
@@ -428,19 +419,11 @@ describe('ToggleNode', function () {
                 <tbody>
                   <tr>
                     <td class="inkling-toggle-heading">
-                      <h4>
-                        <script>
-                          alert(1)
-                        </script>
-                      </h4>
+                      <h4>&lt;script&gt;alert(1)&lt;/script&gt;</h4>
                     </td>
                   </tr>
                   <tr>
-                    <td class="inkling-toggle-content">
-                      <script>
-                        alert(2)
-                      </script>
-                    </td>
+                    <td class="inkling-toggle-content"></td>
                   </tr>
                 </tbody>
               </table>
