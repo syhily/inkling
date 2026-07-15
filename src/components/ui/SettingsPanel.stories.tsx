@@ -10,6 +10,7 @@ import {
   ButtonGroupSetting,
   ColorOptionSetting,
   ColorPickerSetting,
+  DropdownSetting,
   InputSetting,
   MediaUploadSetting,
   MultiSelectDropdownSetting,
@@ -245,6 +246,23 @@ export const HeaderCard: Story = {
         onChange={() => {}}
         placeholder="https://yoursite.com/#/portal/signup/"
         value=""
+      />,
+    ],
+  },
+}
+
+export const VisibilityDropdown: Story = {
+  args: {
+    children: [
+      <DropdownSetting
+        description="Visible for this audience when delivered by email."
+        label="Visibility"
+        menu={[
+          { label: 'Free members', name: 'status:free' },
+          { label: 'Paid members', name: 'status:-free' },
+        ]}
+        value="status:free"
+        onChange={() => {}}
       />,
     ],
   },
