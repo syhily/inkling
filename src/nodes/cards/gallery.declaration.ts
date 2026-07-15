@@ -17,6 +17,9 @@ export const galleryDeclaration = {
   nodeType: 'gallery',
   baseNode: GalleryNode,
   nestedEditors,
+  decorateTarget: {
+    width: 'wide',
+  },
   surfaces: {
     default: true,
     emailEditor: false,

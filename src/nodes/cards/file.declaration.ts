@@ -1,10 +1,22 @@
+import type { TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+
 import { FileNode } from '@/nodes/base/nodes/file/FileNode'
 
 import type { CardDeclaration } from './card-declaration'
 
+const transientProps: readonly TransientPropSpec[] = [
+  {
+    name: 'triggerFileDialog',
+    // don't trigger the file dialog when rendering if we've already been given a url
+    initial: (dataset) => (!dataset.src && dataset.triggerFileDialog) || false,
+  },
+  { name: 'initialFile' },
+]
+
 export const fileDeclaration = {
   nodeType: 'file',
   baseNode: FileNode,
+  transientProps,
   surfaces: {
     default: true,
     emailEditor: false,

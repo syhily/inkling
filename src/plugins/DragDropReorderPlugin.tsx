@@ -17,6 +17,7 @@ import type { CardNode } from '@/types/lexical-internals'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { $createImageNode } from '@/nodes/ImageNode'
 import { type DraggableInfo, type DroppablePosition } from '@/utils/draggable/DragDropContainer'
 import { DragDropHandler } from '@/utils/draggable/DragDropHandler'
@@ -70,9 +71,9 @@ function useDragDropReorder(editor: LexicalEditor): void {
           mousePosition: { x: 0, y: 0 },
           dataset: (((cardNode as CardNode).getDataset() as Record<string, string | number | undefined>) ??
             {}) as Record<string, string | number | undefined>,
-          Icon: (
-            (cardNode as CardNode).getIcon as (() => React.ComponentType<React.SVGProps<SVGSVGElement>>) | undefined
-          )?.(),
+          // what the per-card getIcon() copies returned: the first cardMenu
+          // entry's icon (menu-less cards fall back inside getCardDragIcon)
+          Icon: getCardDragIcon(cardNode.getType()),
         }
       }
     })

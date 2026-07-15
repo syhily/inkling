@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { ToggleNode, $createToggleNode, $isToggleNode, INSERT_TOGGLE_COMMAND } from '@/nodes/ToggleNode'
 
 const editorNodes = [ToggleNode]
@@ -31,11 +32,8 @@ describe('ToggleNode', () => {
     expect(ToggleNode.cardMenu[0].insertCommand).toBe(INSERT_TOGGLE_COMMAND)
   })
 
-  it('returns the toggle icon', async () => {
-    await updateEditor(editor, () => {
-      const node = $createToggleNode()
-      expect(typeof node.getIcon()).toBe('function')
-    })
+  it('resolves the toggle drag icon from the card menu', () => {
+    expect(typeof getCardDragIcon('toggle')).toBe('function')
   })
 
   it('getDataset includes nested editor references', async () => {

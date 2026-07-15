@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { FileNode, $createFileNode, $isFileNode, INSERT_FILE_COMMAND } from '@/nodes/FileNode'
 
 const editorNodes = [FileNode]
@@ -31,11 +32,8 @@ describe('FileNode', () => {
     expect(FileNode.cardMenu[0].insertCommand).toBe(INSERT_FILE_COMMAND)
   })
 
-  it('returns the file icon', async () => {
-    await updateEditor(editor, () => {
-      const node = $createFileNode({})
-      expect(typeof node.getIcon()).toBe('function')
-    })
+  it('resolves the file drag icon from the card menu', () => {
+    expect(typeof getCardDragIcon('file')).toBe('function')
   })
 
   it('sets __triggerFileDialog when no src is provided', async () => {

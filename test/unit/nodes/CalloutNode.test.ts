@@ -3,6 +3,7 @@ import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } f
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { CalloutNode, $createCalloutNode, $isCalloutNode, INSERT_CALLOUT_COMMAND } from '@/nodes/CalloutNode'
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 
 const editorNodes = [CalloutNode]
 
@@ -31,11 +32,8 @@ describe('CalloutNode', () => {
     expect(CalloutNode.cardMenu[0].insertCommand).toBe(INSERT_CALLOUT_COMMAND)
   })
 
-  it('returns the callout icon', async () => {
-    await updateEditor(editor, () => {
-      const node = $createCalloutNode()
-      expect(typeof node.getIcon()).toBe('function')
-    })
+  it('resolves the callout drag icon from the card menu', () => {
+    expect(typeof getCardDragIcon('callout')).toBe('function')
   })
 
   it('getDataset includes callout text editor state', async () => {

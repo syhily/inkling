@@ -4,6 +4,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { ButtonNode, $createButtonNode, $isButtonNode, INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 
 const editorNodes = [ButtonNode]
 
@@ -32,11 +33,8 @@ describe('ButtonNode', () => {
     expect(ButtonNode.cardMenu[0].insertCommand).toBe(INSERT_BUTTON_COMMAND)
   })
 
-  it('returns the button icon', async () => {
-    await updateEditor(editor, () => {
-      const node = $createButtonNode()
-      expect(typeof node.getIcon()).toBe('function')
-    })
+  it('resolves the button drag icon from the card menu', () => {
+    expect(typeof getCardDragIcon('button')).toBe('function')
   })
 
   it('imports JSON with a legacy text field without failing', async () => {

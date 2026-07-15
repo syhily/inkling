@@ -1,13 +1,12 @@
 import { $canShowPlaceholderCurry } from '@lexical/text'
-import { createCommand, type EditorState, type LexicalEditor } from 'lexical'
+import { type EditorState, type LexicalEditor } from 'lexical'
 
-import ToggleIcon from '@/assets/icons/inkling-card-type-toggle.svg?react'
-import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { ToggleNode as BaseToggleNode, type ToggleData } from '@/nodes/base'
+import { CARD_MENUS } from '@/nodes/cards/card-menus'
 import { toggleDeclaration } from '@/nodes/cards/toggle.declaration'
-import { ToggleNodeComponent } from '@/nodes/ToggleNodeComponent'
+import { decorateCard } from '@/nodes/decorate-card'
 
-export const INSERT_TOGGLE_COMMAND = createCommand<ToggleNodeDataset>('INSERT_TOGGLE_COMMAND')
+export { INSERT_TOGGLE_COMMAND } from '@/nodes/cards/card-menus'
 
 export type ToggleNodeDataset = ToggleData & {
   titleEditor?: LexicalEditor
@@ -33,22 +32,7 @@ export class ToggleNode extends BaseToggleNode {
   // adopt the card declaration's nested-editor spec
   static nestedEditors = toggleDeclaration.nestedEditors
 
-  static cardMenu = [
-    {
-      label: 'Toggle',
-      desc: 'Collapsible content block',
-      Icon: ToggleIcon,
-      insertCommand: INSERT_TOGGLE_COMMAND,
-      insertParams: {},
-      matches: ['toggle', 'collapsible', 'accordion'],
-      priority: 16,
-      shortcut: '/toggle',
-    },
-  ]
-
-  getIcon() {
-    return ToggleIcon
-  }
+  static cardMenu = CARD_MENUS.toggle
 
   isEmpty() {
     const isTitleEmpty = this.__titleEditor!.getEditorState().read($canShowPlaceholderCurry(false))
@@ -57,17 +41,7 @@ export class ToggleNode extends BaseToggleNode {
   }
 
   decorate() {
-    return (
-      <InklingCardWrapper nodeKey={this.getKey()} width="regular">
-        <ToggleNodeComponent
-          contentEditor={this.__contentEditor!}
-          contentEditorInitialState={this.__contentEditorInitialState}
-          headingEditor={this.__titleEditor!}
-          headingEditorInitialState={this.__titleEditorInitialState}
-          nodeKey={this.getKey()}
-        />
-      </InklingCardWrapper>
-    )
+    return decorateCard(this)
   }
 }
 

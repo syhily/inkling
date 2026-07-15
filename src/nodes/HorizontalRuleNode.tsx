@@ -1,33 +1,14 @@
-import { createCommand } from 'lexical'
-
-import DividerCardIcon from '@/assets/icons/inkling-card-type-divider.svg?react'
-import InklingCardWrapper from '@/components/InklingCardWrapper'
-import { HorizontalRuleCard } from '@/components/ui/cards/HorizontalRuleCard'
 import { HorizontalRuleNode as BaseHorizontalRuleNode } from '@/nodes/base'
+import { CARD_MENUS } from '@/nodes/cards/card-menus'
+import { decorateCard } from '@/nodes/decorate-card'
 
-export const INSERT_HORIZONTAL_RULE_COMMAND = createCommand<void>()
+export { INSERT_HORIZONTAL_RULE_COMMAND } from '@/nodes/cards/card-menus'
 
 export class HorizontalRuleNode extends BaseHorizontalRuleNode {
-  static cardMenu = {
-    label: 'Divider',
-    desc: 'Insert a dividing line',
-    Icon: DividerCardIcon,
-    insertCommand: INSERT_HORIZONTAL_RULE_COMMAND,
-    matches: ['divider', 'horizontal-rule', 'hr'],
-    priority: 2,
-    shortcut: '/hr',
-  }
-
-  getIcon() {
-    return DividerCardIcon
-  }
+  static cardMenu = CARD_MENUS.horizontalrule
 
   decorate() {
-    return (
-      <InklingCardWrapper className="inline-block" nodeKey={this.getKey()}>
-        <HorizontalRuleCard />
-      </InklingCardWrapper>
-    )
+    return decorateCard(this)
   }
 }
 

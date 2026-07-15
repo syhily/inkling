@@ -5,6 +5,10 @@ import type { CardDeclaration } from './card-declaration'
 export const buttonDeclaration = {
   nodeType: 'button',
   baseNode: ButtonNode,
+  decorateTarget: {
+    width: 'regular',
+    wrapperStyle: 'wide',
+  },
   surfaces: {
     default: true,
     emailEditor: true,

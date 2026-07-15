@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { CodeBlockNode, $createCodeBlockNode, $isCodeBlockNode } from '@/nodes/CodeBlockNode'
 
 const editorNodes = [CodeBlockNode]
@@ -26,11 +27,8 @@ describe('CodeBlockNode', () => {
     })
   })
 
-  it('returns the code block icon', async () => {
-    await updateEditor(editor, () => {
-      const node = $createCodeBlockNode({})
-      expect(typeof node.getIcon()).toBe('function')
-    })
+  it('resolves the code block drag icon despite having no cardMenu entry', () => {
+    expect(typeof getCardDragIcon('codeblock')).toBe('function')
   })
 
   it('stores open in edit mode flag', async () => {

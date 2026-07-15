@@ -1,6 +1,7 @@
 import type { Klass, LexicalNode } from 'lexical'
 
-import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
 /**
  * The editor surfaces a card can join (CONTEXT.md: "card declaration" names
@@ -21,6 +22,30 @@ export interface CardSurfaces {
   emailEditor: boolean
   emailRenderer: boolean
   markdown: boolean
+}
+
+/**
+ * The card's decorate-target wrapper props (CONTEXT.md: "card spec") — the
+ * React-free half of what a card's `decorate()` passes to
+ * `InklingCardWrapper`. The component render and the `IndicatorIcon`
+ * component attach one layer up (`@/nodes/cards/card-decorate`) because they
+ * are React-bearing; the shared adapter (`@/nodes/decorate-card`) merges both
+ * halves. Cards with no wrapper props (Audio, Bookmark, Callout, File) omit
+ * this entry.
+ *
+ * `width` is either a constant or a node→width mapper for cards whose width
+ * is runtime node state (Image/Video read `cardWidth`; Header maps its
+ * `layout`). Per-card width defaults live here — the split of this knowledge
+ * across thirteen decorate bodies is what caused the `b60bd7c` regression.
+ * `hasIndicatorIcon` is the React-free record that the card renders an
+ * indicator icon; the projection only attaches the icon component when this
+ * flag is set (Html is the only card that does).
+ */
+export interface DecorateTargetSpec {
+  width?: CardWidth | ((node: LexicalNode) => CardWidth | undefined)
+  wrapperStyle?: string
+  className?: string
+  hasIndicatorIcon?: boolean
 }
 
 /**
@@ -46,5 +71,18 @@ export interface CardDeclaration<NodeType extends string = string> {
    * `getDataset` appends, and `exportJSON` re-serialization from it.
    */
   nestedEditors?: readonly NestedEditorSpec[]
+  /**
+   * The card's transient props (CONTEXT.md: "card spec") — client-side-only
+   * fields (upload flow state, edit-mode flags) read from the construction
+   * dataset, initialized by the generated node machinery, and never
+   * serialized. The wrapper node class adopts this as its static
+   * `transientProps`; see `TransientPropSpec` in
+   * `@/nodes/base/generate-decorator-node`.
+   */
+  transientProps?: readonly TransientPropSpec[]
+  /**
+   * The card's decorate-target wrapper props; see `DecorateTargetSpec`.
+   */
+  decorateTarget?: DecorateTargetSpec
   surfaces: CardSurfaces
 }

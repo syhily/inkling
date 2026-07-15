@@ -3,10 +3,14 @@ import { mergeRegister, $getSelection, COMMAND_PRIORITY_LOW, createCommand } fro
 import React from 'react'
 
 import GifPlugin from '@/components/ui/GifPlugin'
+import { OPEN_GIF_SELECTOR_COMMAND } from '@/nodes/cards/card-menus'
 import { $createImageNode, ImageNode, type ImageNodeDataset } from '@/nodes/ImageNode'
 import { INSERT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
-export const OPEN_GIF_SELECTOR_COMMAND = createCommand<ImageNodeDataset>()
+// defined next to the card menus that reference it (`@/nodes/cards/card-menus`);
+// re-exported here to keep this module's public surface unchanged
+export { OPEN_GIF_SELECTOR_COMMAND } from '@/nodes/cards/card-menus'
+
 export const INSERT_FROM_GIF_COMMAND = createCommand<ImageNodeDataset>()
 
 export const InklingSelectorPlugin = () => {

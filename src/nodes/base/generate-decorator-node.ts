@@ -119,6 +119,47 @@ function getNestedEditorSpecs(node: LexicalNode): readonly NestedEditorSpec[] {
   return (node.constructor as { nestedEditors?: readonly NestedEditorSpec[] }).nestedEditors ?? NO_NESTED_EDITORS
 }
 
+/**
+ * One transient prop of a card spec (CONTEXT.md: "card spec") — a
+ * client-side-only field that controls node behaviour (upload flow state
+ * like `triggerFileDialog`/`initialFile`/`previewSrc`, or CodeBlock's
+ * `_openInEditMode` edit-mode flag). Transient props are read from the
+ * construction dataset, are never serialized to JSON, and are exposed in
+ * `getDataset` only when the spec names a `datasetKey` (Image exposes
+ * `__previewSrc`/`__triggerFileDialog`; its datasets flow through the
+ * drag-and-drop payload path).
+ *
+ * The spec is adopted per node class through the static `transientProps`
+ * property, so a base node class stays free of upload-flow state while a
+ * wrapper subclass turns the props on — the generated constructor
+ * initializes each `__<name>` field from the dataset it receives.
+ */
+export interface TransientPropSpec {
+  /** The construction-dataset key the initial value is read from (e.g. `triggerFileDialog`, `_openInEditMode`). */
+  name: string
+  /** The node's private field; defaults to `__${name}`. */
+  privateName?: string
+  /** Computes the field's initial value from the construction dataset (defaults to `dataset[name]`). */
+  initial?: (dataset: Record<string, unknown>) => unknown
+  /** Key under which `getDataset` re-exposes the current field value, if any. */
+  datasetKey?: string
+}
+
+const NO_TRANSIENT_PROPS: readonly TransientPropSpec[] = []
+
+/**
+ * Reads the transient-prop spec off the node's actual class, so a subclass
+ * adopts its own spec via `static transientProps` while the generated base
+ * class (and spec-less subclasses) run no transient-prop behaviour.
+ */
+function getTransientPropSpecs(node: LexicalNode): readonly TransientPropSpec[] {
+  return (node.constructor as { transientProps?: readonly TransientPropSpec[] }).transientProps ?? NO_TRANSIENT_PROPS
+}
+
+function getTransientPropPrivateName(spec: TransientPropSpec): string {
+  return spec.privateName ?? `__${spec.name}`
+}
+
 export type DecoratorNodeValueMap<
   Props extends readonly DecoratorNodeProperty[],
   HasVisibility extends boolean = false,
@@ -158,6 +199,7 @@ export interface GeneratedDecoratorNodeClass<
   transform(): null
   getPropertyDefaults(): TDataset
   readonly nestedEditors?: readonly NestedEditorSpec[]
+  readonly transientProps?: readonly TransientPropSpec[]
   readonly urlTransformMap: Record<string, string | Record<string, string>>
   importJSON(serializedNode: Record<string, unknown>): GeneratedDecoratorNodeInstance<TDataset, TOutput>
 }
@@ -179,6 +221,10 @@ export class GeneratedDecoratorNodeBase<
   }
 
   appendNestedEditorDataset<T extends Record<string, unknown>>(dataset: T): T {
+    return dataset
+  }
+
+  appendTransientDataset<T extends Record<string, unknown>>(dataset: T): T {
     return dataset
   }
 
@@ -288,6 +334,14 @@ export function generateDecoratorNode<
      */
     static nestedEditors: readonly NestedEditorSpec[] | undefined = nestedEditors
 
+    /**
+     * The card's transient-prop spec entries (CONTEXT.md: "card spec"). Read
+     * off the node's actual class at runtime, so subclasses adopt a spec by
+     * redeclaring this static while the generated class itself (and spec-less
+     * subclasses) run no transient-prop behaviour.
+     */
+    static transientProps: readonly TransientPropSpec[] | undefined = undefined
+
     constructor(data: Partial<DecoratorNodeValueMap<Props, HasVisibility>> = {}, key?: string) {
       super(key)
       const dataset = data as Record<string, unknown>
@@ -309,6 +363,13 @@ export function generateDecoratorNode<
         if (!dataset[spec.name] && serialized) {
           populateNestedEditor(this, editorProperty, `${serialized}`) // we serialize with no wrapper
         }
+      })
+
+      // initialize transient (client-side-only) props from the dataset;
+      // runs after the nested editors, matching the historical order in
+      // which wrapper constructors assigned these fields after super()
+      getTransientPropSpecs(this).forEach((spec) => {
+        this[getTransientPropPrivateName(spec)] = spec.initial ? spec.initial(dataset) : dataset[spec.name]
       })
     }
 
@@ -383,7 +444,7 @@ export function generateDecoratorNode<
         dataset[prop.name] = self[prop.privateName]
       })
 
-      return this.appendNestedEditorDataset(dataset)
+      return this.appendTransientDataset(this.appendNestedEditorDataset(dataset))
     }
 
     /**
@@ -402,6 +463,27 @@ export function generateDecoratorNode<
           target[spec.name] = self[`__${spec.name}`]
           if (spec.exposeInitialStateInDataset !== false) {
             target[`${spec.name}InitialState`] = self[`__${spec.name}InitialState`]
+          }
+        })
+      }
+      return dataset
+    }
+
+    /**
+     * Appends the transient-prop keys a spec exposes (only specs naming a
+     * `datasetKey`) to a dataset, reading the current field off `this` —
+     * mirroring the hand-written `getDataset` overrides this replaces
+     * (Image exposed `dataset.__previewSrc = this.__previewSrc`). Mutates and
+     * returns the passed-in dataset; a no-op when the node's class has no
+     * `transientProps` spec.
+     */
+    appendTransientDataset<T extends Record<string, unknown>>(dataset: T): T {
+      const specs = getTransientPropSpecs(this)
+      if (specs.length > 0) {
+        const target = dataset as Record<string, unknown>
+        specs.forEach((spec) => {
+          if (spec.datasetKey) {
+            target[spec.datasetKey] = this[getTransientPropPrivateName(spec)]
           }
         })
       }

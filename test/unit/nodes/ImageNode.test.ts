@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { ImageNode, $createImageNode, $isImageNode, INSERT_IMAGE_COMMAND } from '@/nodes/ImageNode'
 
 const editorNodes = [ImageNode]
@@ -84,11 +85,9 @@ describe('ImageNode', () => {
     expect(ImageNode.cardMenu[0].insertCommand).toBe(INSERT_IMAGE_COMMAND)
   })
 
-  it('returns the image icon', async () => {
-    await updateEditor(editor, () => {
-      const imageNode = $createImageNode({ src: '/image.png' })
-      expect(typeof imageNode.getIcon()).toBe('function')
-    })
+  it('resolves the drag icon from the first cardMenu entry (Image, not GIF)', () => {
+    expect(getCardDragIcon('image')).toBe(ImageNode.cardMenu[0].Icon)
+    expect(typeof getCardDragIcon('image')).toBe('function')
   })
 
   it('creates a div DOM element', async () => {

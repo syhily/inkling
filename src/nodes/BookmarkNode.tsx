@@ -1,12 +1,13 @@
-import { createCommand, type LexicalEditor } from 'lexical'
+import { type LexicalEditor } from 'lexical'
 
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
-import BookmarkCardIcon from '@/assets/icons/inkling-card-type-bookmark.svg?react'
-import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { BookmarkNode as BaseBookmarkNode, type BookmarkData } from '@/nodes/base'
-import { BookmarkNodeComponent } from '@/nodes/BookmarkNodeComponent'
 import { bookmarkDeclaration } from '@/nodes/cards/bookmark.declaration'
+import { CARD_MENUS } from '@/nodes/cards/card-menus'
+import { decorateCard } from '@/nodes/decorate-card'
+
+export { INSERT_BOOKMARK_COMMAND } from '@/nodes/cards/card-menus'
 
 export type BookmarkNodeDataset = BookmarkData &
   CaptionEditorDataset & {
@@ -14,8 +15,6 @@ export type BookmarkNodeDataset = BookmarkData &
     // constructor only reads `metadata.title`, so this is a tolerated no-op field.
     title?: string
   }
-
-export const INSERT_BOOKMARK_COMMAND = createCommand<BookmarkNodeDataset>()
 
 export class BookmarkNode extends BaseBookmarkNode {
   // nested editors live on the generated base class (static `nestedEditors`);
@@ -28,22 +27,7 @@ export class BookmarkNode extends BaseBookmarkNode {
   // adopt the card declaration's nested-editor spec
   static nestedEditors = bookmarkDeclaration.nestedEditors
 
-  static cardMenu = [
-    {
-      label: 'Bookmark',
-      desc: 'Embed a link as a visual bookmark',
-      Icon: BookmarkCardIcon,
-      insertCommand: INSERT_BOOKMARK_COMMAND,
-      matches: ['bookmark'],
-      queryParams: ['url'],
-      priority: 4,
-      shortcut: '/bookmark [url]',
-    },
-  ]
-
-  getIcon() {
-    return BookmarkCardIcon
-  }
+  static cardMenu = CARD_MENUS.bookmark
 
   constructor(dataset: BookmarkNodeDataset = {}, key?: string) {
     super(dataset, key)
@@ -52,23 +36,7 @@ export class BookmarkNode extends BaseBookmarkNode {
   }
 
   decorate() {
-    return (
-      <InklingCardWrapper nodeKey={this.getKey()}>
-        <BookmarkNodeComponent
-          author={this.author}
-          captionEditor={this.__captionEditor}
-          captionEditorInitialState={this.__captionEditorInitialState}
-          createdWithUrl={this.__createdWithUrl}
-          description={this.description}
-          icon={this.icon}
-          nodeKey={this.getKey()}
-          publisher={this.publisher}
-          thumbnail={this.thumbnail}
-          title={this.title}
-          url={this.url}
-        />
-      </InklingCardWrapper>
-    )
+    return decorateCard(this)
   }
 }
 

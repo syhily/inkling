@@ -1,11 +1,12 @@
 import { $canShowPlaceholderCurry } from '@lexical/text'
-import { createCommand, type EditorState, type LexicalEditor } from 'lexical'
+import { type EditorState, type LexicalEditor } from 'lexical'
 
-import HeaderCardIcon from '@/assets/icons/inkling-card-type-header.svg?react'
-import InklingCardWrapper from '@/components/InklingCardWrapper'
-import { HeaderNode as BaseHeaderNode, normalizeCardWidth, type CardWidth, type HeaderData } from '@/nodes/base'
-import { headerDeclaration } from '@/nodes/cards/header.declaration'
-import HeaderNodeComponent from '@/nodes/header/HeaderNodeComponent'
+import { HeaderNode as BaseHeaderNode, type CardWidth, type HeaderData } from '@/nodes/base'
+import { CARD_MENUS } from '@/nodes/cards/card-menus'
+import { headerCardWidth, headerDeclaration } from '@/nodes/cards/header.declaration'
+import { decorateCard } from '@/nodes/decorate-card'
+
+export { INSERT_HEADER_COMMAND } from '@/nodes/cards/card-menus'
 
 export type HeaderNodeDataset = HeaderData & {
   headerTextEditor?: LexicalEditor
@@ -13,8 +14,6 @@ export type HeaderNodeDataset = HeaderData & {
   subheaderTextEditor?: LexicalEditor
   subheaderTextEditorInitialState?: EditorState
 }
-
-export const INSERT_HEADER_COMMAND = createCommand<HeaderNodeDataset>()
 
 export class HeaderNode extends BaseHeaderNode {
   // nested editors live on the generated base class (static `nestedEditors`);
@@ -28,60 +27,14 @@ export class HeaderNode extends BaseHeaderNode {
   // adopt the card declaration's nested-editor spec
   static nestedEditors = headerDeclaration.nestedEditors
 
-  static cardMenu = [
-    {
-      label: 'Header',
-      desc: 'Add a header',
-      Icon: HeaderCardIcon,
-      insertCommand: INSERT_HEADER_COMMAND,
-      matches: ['header', 'heading'],
-      priority: 11,
-      insertParams: () => ({
-        version: 2,
-      }),
-      shortcut: '/header',
-    },
-  ]
-
-  getIcon() {
-    return HeaderCardIcon
-  }
+  static cardMenu = CARD_MENUS.header
 
   getCardWidth(): CardWidth | undefined {
-    const layout = this.layout
-    return normalizeCardWidth(layout === 'split' ? 'full' : layout)
+    return headerCardWidth(this)
   }
 
   decorate() {
-    return (
-      <InklingCardWrapper nodeKey={this.getKey()} width={this.getCardWidth()}>
-        <HeaderNodeComponent
-          accentColor={this.accentColor}
-          alignment={this.alignment}
-          backgroundColor={this.backgroundColor}
-          backgroundImageHeight={this.backgroundImageHeight}
-          backgroundImageSrc={this.backgroundImageSrc}
-          backgroundImageWidth={this.backgroundImageWidth}
-          backgroundSize={this.backgroundSize}
-          buttonColor={this.buttonColor}
-          buttonEnabled={this.buttonEnabled}
-          buttonText={this.buttonText}
-          buttonTextColor={this.buttonTextColor}
-          buttonUrl={this.buttonUrl}
-          header={this.header}
-          headerTextEditor={this.__headerTextEditor}
-          headerTextEditorState={this.__headerTextEditorInitialState}
-          isSwapped={this.swapped}
-          layout={this.layout}
-          nodeKey={this.getKey()}
-          subheader={this.subheader}
-          subheaderTextEditor={this.__subheaderTextEditor}
-          subheaderTextEditorInitialState={this.__subheaderTextEditorInitialState}
-          subheaderTextEditorState={this.__subheaderTextEditorInitialState}
-          textColor={this.textColor}
-        />
-      </InklingCardWrapper>
-    )
+    return decorateCard(this)
   }
 
   // override the default `isEmpty` check because we need to check the nested editors

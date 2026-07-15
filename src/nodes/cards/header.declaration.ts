@@ -1,6 +1,9 @@
+import type { LexicalNode } from 'lexical'
+
 import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
 
 import { HeaderNode } from '@/nodes/base/nodes/header/HeaderNode'
+import { normalizeCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
@@ -23,10 +26,24 @@ const nestedEditors: readonly NestedEditorSpec[] = [
   },
 ]
 
+/**
+ * Header's layout→width mapping: a `split` layout renders at `full` width,
+ * every other layout is itself the card width (or undefined when the layout
+ * is not a valid width). Kept as a named export so the wrapper's
+ * `getCardWidth()` delegates to the spec mapper instead of duplicating it.
+ */
+export const headerCardWidth = (node: LexicalNode): CardWidth | undefined => {
+  const layout = (node as HeaderNode).layout
+  return normalizeCardWidth(layout === 'split' ? 'full' : layout)
+}
+
 export const headerDeclaration = {
   nodeType: 'header',
   baseNode: HeaderNode,
   nestedEditors,
+  decorateTarget: {
+    width: headerCardWidth,
+  },
   surfaces: {
     default: true,
     emailEditor: false,

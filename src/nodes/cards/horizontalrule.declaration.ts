@@ -5,6 +5,9 @@ import type { CardDeclaration } from './card-declaration'
 export const horizontalRuleDeclaration = {
   nodeType: 'horizontalrule',
   baseNode: HorizontalRuleNode,
+  decorateTarget: {
+    className: 'inline-block',
+  },
   surfaces: {
     default: true,
     emailEditor: true,

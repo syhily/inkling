@@ -25,6 +25,9 @@ export const toggleDeclaration = {
   nodeType: 'toggle',
   baseNode: ToggleNode,
   nestedEditors,
+  decorateTarget: {
+    width: 'regular',
+  },
   surfaces: {
     default: true,
     emailEditor: false,

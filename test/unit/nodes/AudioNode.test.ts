@@ -3,6 +3,7 @@ import { type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { AudioNode, $createAudioNode, $isAudioNode, INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 
 const editorNodes = [AudioNode]
 
@@ -31,11 +32,8 @@ describe('AudioNode', () => {
     expect(AudioNode.cardMenu[0].insertCommand).toBe(INSERT_AUDIO_COMMAND)
   })
 
-  it('returns the audio icon', async () => {
-    await updateEditor(editor, () => {
-      const node = $createAudioNode({})
-      expect(typeof node.getIcon()).toBe('function')
-    })
+  it('resolves the audio drag icon from the card menu', () => {
+    expect(typeof getCardDragIcon('audio')).toBe('function')
   })
 
   it('sets __triggerFileDialog when no src is provided', async () => {

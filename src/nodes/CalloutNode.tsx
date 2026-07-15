@@ -1,17 +1,16 @@
-import { createCommand, type EditorState, type LexicalEditor } from 'lexical'
+import { type EditorState, type LexicalEditor } from 'lexical'
 
-import CalloutCardIcon from '@/assets/icons/inkling-card-type-callout.svg?react'
-import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { CalloutNode as BaseCalloutNode, type CalloutData } from '@/nodes/base'
-import { CalloutNodeComponent } from '@/nodes/CalloutNodeComponent'
 import { calloutDeclaration } from '@/nodes/cards/callout.declaration'
+import { CARD_MENUS } from '@/nodes/cards/card-menus'
+import { decorateCard } from '@/nodes/decorate-card'
+
+export { INSERT_CALLOUT_COMMAND } from '@/nodes/cards/card-menus'
 
 export type CalloutNodeDataset = CalloutData & {
   calloutTextEditor?: LexicalEditor
   calloutTextEditorInitialState?: EditorState
 }
-
-export const INSERT_CALLOUT_COMMAND = createCommand<CalloutNodeDataset>()
 
 export class CalloutNode extends BaseCalloutNode {
   // nested editors live on the generated base class (static `nestedEditors`);
@@ -23,34 +22,10 @@ export class CalloutNode extends BaseCalloutNode {
   // adopt the card declaration's nested-editor spec
   static nestedEditors = calloutDeclaration.nestedEditors
 
-  static cardMenu = [
-    {
-      label: 'Callout',
-      desc: 'Info boxes that stand out',
-      Icon: CalloutCardIcon,
-      insertCommand: INSERT_CALLOUT_COMMAND,
-      matches: ['callout'],
-      priority: 9,
-      shortcut: '/callout',
-    },
-  ]
-
-  getIcon() {
-    return CalloutCardIcon
-  }
+  static cardMenu = CARD_MENUS.callout
 
   decorate() {
-    return (
-      <InklingCardWrapper nodeKey={this.getKey()}>
-        <CalloutNodeComponent
-          backgroundColor={this.backgroundColor}
-          calloutEmoji={this.calloutEmoji}
-          calloutTextEditor={this.__calloutTextEditor}
-          calloutTextEditorInitialState={this.__calloutTextEditorInitialState}
-          nodeKey={this.getKey()}
-        />
-      </InklingCardWrapper>
-    )
+    return decorateCard(this)
   }
 }
 

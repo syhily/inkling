@@ -1,4 +1,4 @@
-import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
 import { CodeBlockNode } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
@@ -13,10 +13,25 @@ const nestedEditors: readonly NestedEditorSpec[] = [
   },
 ]
 
+const transientProps: readonly TransientPropSpec[] = [
+  // the `_openInEditMode` edit-mode flag is the same shape as the upload
+  // cards' transient props: read from the construction dataset, never
+  // serialized, cleared via the node's `clearOpenInEditMode`
+  {
+    name: '_openInEditMode',
+    privateName: '__openInEditMode',
+    initial: (dataset) => dataset._openInEditMode || false,
+  },
+]
+
 export const codeBlockDeclaration = {
   nodeType: 'codeblock',
   baseNode: CodeBlockNode,
   nestedEditors,
+  transientProps,
+  decorateTarget: {
+    wrapperStyle: 'code-card',
+  },
   surfaces: {
     default: true,
     emailEditor: false,

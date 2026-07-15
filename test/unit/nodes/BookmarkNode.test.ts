@@ -3,6 +3,7 @@ import { $createParagraphNode, $getRoot, $createTextNode, type LexicalEditor } f
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { BookmarkNode, $createBookmarkNode, $isBookmarkNode, INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 
 const editorNodes = [BookmarkNode]
 
@@ -31,11 +32,8 @@ describe('BookmarkNode', () => {
     expect(BookmarkNode.cardMenu[0].insertCommand).toBe(INSERT_BOOKMARK_COMMAND)
   })
 
-  it('returns the bookmark icon', async () => {
-    await updateEditor(editor, () => {
-      const node = $createBookmarkNode()
-      expect(typeof node.getIcon()).toBe('function')
-    })
+  it('resolves the bookmark drag icon from the card menu', () => {
+    expect(typeof getCardDragIcon('bookmark')).toBe('function')
   })
 
   it('flags __createdWithUrl when constructed with a url and no metadata', async () => {

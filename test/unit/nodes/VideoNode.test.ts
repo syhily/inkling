@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { VideoNode, $createVideoNode, $isVideoNode, INSERT_VIDEO_COMMAND } from '@/nodes/VideoNode'
 
 const editorNodes = [VideoNode]
@@ -31,11 +32,8 @@ describe('VideoNode', () => {
     expect(VideoNode.cardMenu[0].insertCommand).toBe(INSERT_VIDEO_COMMAND)
   })
 
-  it('returns the video icon', async () => {
-    await updateEditor(editor, () => {
-      const node = $createVideoNode({})
-      expect(typeof node.getIcon()).toBe('function')
-    })
+  it('resolves the video drag icon from the card menu', () => {
+    expect(typeof getCardDragIcon('video')).toBe('function')
   })
 
   it('sets __triggerFileDialog when no src is provided', async () => {

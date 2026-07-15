@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import {
   GalleryNode,
   $createGalleryNode,
@@ -38,11 +39,8 @@ describe('GalleryNode', () => {
     expect(GalleryNode.cardMenu[0].insertCommand).toBe(INSERT_GALLERY_COMMAND)
   })
 
-  it('returns the gallery icon', async () => {
-    await updateEditor(editor, () => {
-      const node = $createGalleryNode({})
-      expect(typeof node.getIcon()).toBe('function')
-    })
+  it('resolves the gallery drag icon from the card menu', () => {
+    expect(typeof getCardDragIcon('gallery')).toBe('function')
   })
 
   it('getDataset includes caption editor state', async () => {

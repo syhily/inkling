@@ -2,11 +2,9 @@ import { createCommand, type LexicalEditor } from 'lexical'
 
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
-import CodeBlockIcon from '@/assets/icons/inkling-card-type-gen-embed.svg?react'
-import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { CodeBlockNode as BaseCodeBlockNode, type CodeBlockData } from '@/nodes/base'
 import { codeBlockDeclaration } from '@/nodes/cards/codeblock.declaration'
-import { CodeBlockNodeComponent } from '@/nodes/CodeBlockNodeComponent'
+import { decorateCard } from '@/nodes/decorate-card'
 
 export type CodeBlockNodeDataset = CodeBlockData &
   CaptionEditorDataset & {
@@ -16,27 +14,19 @@ export type CodeBlockNodeDataset = CodeBlockData &
 export const INSERT_CODE_BLOCK_COMMAND = createCommand<CodeBlockNodeDataset>()
 
 export class CodeBlockNode extends BaseCodeBlockNode {
-  // transient properties used to control node behaviour
-  __openInEditMode = false
+  // transient props live on the generated base class (static `transientProps`);
+  // `declare` keeps these type-only so no field initializer clobbers the
+  // values the base constructor computes from the dataset
+  declare __openInEditMode: boolean
   // nested editors live on the generated base class (static `nestedEditors`);
   // `declare` keeps these type-only so the field initializers don't clobber
   // the instances the base constructor sets up
   declare __captionEditor: LexicalEditor | null
   declare __captionEditorInitialState: import('lexical').EditorState | undefined
 
-  // adopt the card declaration's nested-editor spec
+  // adopt the card declaration's nested-editor and transient-prop specs
   static nestedEditors = codeBlockDeclaration.nestedEditors
-
-  constructor(dataset: CodeBlockNodeDataset = {}, key?: string) {
-    super(dataset, key)
-
-    const { _openInEditMode } = dataset
-    this.__openInEditMode = _openInEditMode || false
-  }
-
-  getIcon() {
-    return CodeBlockIcon
-  }
+  static transientProps = codeBlockDeclaration.transientProps
 
   clearOpenInEditMode() {
     const self = this.getWritable()
@@ -44,17 +34,7 @@ export class CodeBlockNode extends BaseCodeBlockNode {
   }
 
   decorate() {
-    return (
-      <InklingCardWrapper nodeKey={this.getKey()} wrapperStyle="code-card">
-        <CodeBlockNodeComponent
-          captionEditor={this.__captionEditor}
-          captionEditorInitialState={this.__captionEditorInitialState}
-          code={this.code}
-          language={this.language}
-          nodeKey={this.getKey()}
-        />
-      </InklingCardWrapper>
-    )
+    return decorateCard(this)
   }
 }
 
