@@ -3,7 +3,7 @@ import { createCommand } from 'lexical'
 import AudioCardIcon from '@/assets/icons/inkling-card-type-audio.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { AudioNodeComponent } from '@/nodes/AudioNodeComponent'
-import { AudioNode as BaseAudioNode, type AudioData } from '@/nodes/base'
+import { type AudioData, BaseAudioNode } from '@/nodes/base'
 
 export type AudioNodeDataset = AudioData & {
   initialFile?: File

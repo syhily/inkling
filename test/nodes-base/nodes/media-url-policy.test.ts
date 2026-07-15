@@ -6,7 +6,7 @@ import type { ExportDOMOptions } from '@/nodes/base/index'
 
 import { dom } from '#/nodes-base/test-utils/index'
 import {
-  AudioNode,
+  BaseAudioNode,
   BookmarkNode,
   GalleryNode,
   ImageNode,
@@ -49,7 +49,7 @@ describe('media URL policy consistency', function () {
     [
       'audio (web)',
       () =>
-        exportCardHtml([AudioNode], () =>
+        exportCardHtml([BaseAudioNode], () =>
           $createAudioNode({ src: rejectedMediaSource, title: 'title', duration: 60, thumbnailSrc: '' }),
         ),
     ],
@@ -57,7 +57,7 @@ describe('media URL policy consistency', function () {
       'audio (email)',
       () =>
         exportCardHtml(
-          [AudioNode],
+          [BaseAudioNode],
           () => $createAudioNode({ src: rejectedMediaSource, title: 'title', duration: 60, thumbnailSrc: '' }),
           { target: 'email', postUrl: 'https://example.com/posts/test-audio' },
         ),

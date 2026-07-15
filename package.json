@@ -11,17 +11,19 @@
   "type": "module",
   "main": "./dist/editor.umd.cjs",
   "module": "./dist/editor.js",
+  "types": "./dist/editor.d.ts",
   "imports": {
     "#/*": "./test/*"
   },
   "exports": {
     ".": {
+      "types": "./dist/editor.d.ts",
       "import": "./dist/editor.js",
       "require": "./dist/editor.umd.cjs"
     }
   },
   "scripts": {
-    "build": "vite build && node scripts/copy-legacy-umd.mjs",
+    "build": "vite build && node scripts/copy-legacy-umd.mjs && node scripts/build-types.mjs",
     "build-storybook": "storybook build",
     "build:demo": "vite build --config vite.config.demo.ts",
     "coverage": "vitest run --coverage",
@@ -113,6 +115,7 @@
     "concurrently": "10.0.3",
     "dompurify": "3.4.11",
     "dotenv": "17.4.2",
+    "dts-bundle-generator": "9.5.1",
     "emoji-mart": "5.6.0",
     "eventemitter3": "5.0.4",
     "fast-average-color": "9.5.2",

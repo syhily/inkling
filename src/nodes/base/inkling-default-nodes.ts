@@ -5,7 +5,7 @@ export { CARD_WIDTHS, isCardWidth, normalizeCardWidth, type CardWidth } from '@/
 
 import { AsideNode } from '@/nodes/base/nodes/aside/AsideNode'
 import { AtLinkNode, AtLinkSearchNode } from '@/nodes/base/nodes/at-link/index'
-import { AudioNode } from '@/nodes/base/nodes/audio/AudioNode'
+import { BaseAudioNode } from '@/nodes/base/nodes/audio/AudioNode'
 import { BookmarkNode } from '@/nodes/base/nodes/bookmark/BookmarkNode'
 import { ButtonNode } from '@/nodes/base/nodes/button/ButtonNode'
 import { CalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
@@ -111,7 +111,7 @@ export const DEFAULT_NODES = [
   ImageNode,
   MarkdownNode,
   VideoNode,
-  AudioNode,
+  BaseAudioNode,
   CalloutNode,
   AsideNode,
   HorizontalRuleNode,

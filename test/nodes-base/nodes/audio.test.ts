@@ -6,9 +6,9 @@ import { $getRoot } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { dom, createDocument, html } from '#/nodes-base/test-utils/index'
-import { AudioNode, $createAudioNode, $isAudioNode, type ExportDOMOptions } from '@/nodes/base/index'
+import { BaseAudioNode, $createAudioNode, $isAudioNode, type ExportDOMOptions } from '@/nodes/base/index'
 
-const editorNodes = [AudioNode]
+const editorNodes = [BaseAudioNode]
 
 function getHTMLElement(element: HTMLElement | DocumentFragment | Text | null): HTMLElement {
   if (element instanceof DocumentFragment) {
@@ -24,7 +24,7 @@ function getHTMLElement(element: HTMLElement | DocumentFragment | Text | null): 
   return element as HTMLElement
 }
 
-describe('AudioNode', function () {
+describe('BaseAudioNode', function () {
   let editor: LexicalEditor
   let dataset: { src: string; title: string; duration: number; mimeType: string; thumbnailSrc: string }
   let exportOptions: ExportDOMOptions
@@ -141,7 +141,7 @@ describe('AudioNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        expect(AudioNode.getType()).toBe('audio')
+        expect(BaseAudioNode.getType()).toBe('audio')
       }),
     )
   })
@@ -152,7 +152,7 @@ describe('AudioNode', function () {
       editorTest(async function () {
         const audioNode = $createAudioNode(dataset)
         const audioNodeDataset = audioNode.getDataset()
-        const clone = AudioNode.clone(audioNode) as AudioNode
+        const clone = BaseAudioNode.clone(audioNode) as BaseAudioNode
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...audioNodeDataset })
@@ -164,7 +164,7 @@ describe('AudioNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        expect(AudioNode.urlTransformMap).toEqual({
+        expect(BaseAudioNode.urlTransformMap).toEqual({
           src: 'url',
         })
       }),
@@ -225,7 +225,7 @@ describe('AudioNode', function () {
 
         editor.getEditorState().read(() => {
           try {
-            const [audioNode] = $getRoot().getChildren() as AudioNode[]
+            const [audioNode] = $getRoot().getChildren() as BaseAudioNode[]
 
             expect(audioNode.src).toBe(dataset.src)
             expect(audioNode.title).toBe(dataset.title)
@@ -521,7 +521,7 @@ describe('AudioNode', function () {
             </div>
           </div>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as AudioNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseAudioNode[]
         expect(nodes.length).toBe(1)
         expect(nodes[0].src).toBe('/content/audio/2022/11/inkling-lexical.mp3')
         expect(nodes[0].thumbnailSrc).toBe('/content/images/2022/11/inkling-audio-lexical.jpg')
@@ -545,7 +545,7 @@ describe('AudioNode', function () {
             </div>
           </div>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as AudioNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseAudioNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].duration).toBe(0)
@@ -566,7 +566,7 @@ describe('AudioNode', function () {
             </div>
           </div>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as AudioNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseAudioNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].duration).toBe(62)

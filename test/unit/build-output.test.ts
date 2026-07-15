@@ -90,3 +90,54 @@ describe('Build output', function () {
     expect(legacy).toBe(canonical)
   })
 })
+
+describe('Published declarations (plan 028)', function () {
+  const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../package.json'), 'utf-8'))
+
+  it('every entry declared in package.json exists after build', function () {
+    const declared = [
+      pkg.main,
+      pkg.module,
+      pkg.types,
+      pkg.exports['.'].types,
+      pkg.exports['.'].import,
+      pkg.exports['.'].require,
+    ]
+
+    for (const entry of declared) {
+      expect(typeof entry, 'declared entry must be a path string').toBe('string')
+      expect(fs.existsSync(path.resolve(distDir, '..', entry)), `${entry} must exist`).toBe(true)
+    }
+  })
+
+  it('root declaration references only the React peer family as externals', function () {
+    const declaration = readDist('editor.d.ts')
+    const externals = new Set<string>()
+
+    for (const match of declaration.matchAll(/from '([^']+)'/g)) {
+      externals.add(match[1])
+    }
+    for (const match of declaration.matchAll(/import\('([^']+)'\)/g)) {
+      externals.add(match[1])
+    }
+
+    expect(externals.size).toBeGreaterThan(0)
+    for (const name of externals) {
+      expect(name, `unexpected non-peer external: ${name}`).toMatch(/^react($|\/)|^react-dom($|\/)/)
+    }
+  })
+
+  it('root declaration contains no workspace aliases or local paths', function () {
+    const declaration = readDist('editor.d.ts')
+
+    expect(declaration).not.toMatch(/(?:from|import\()\s*['"](@\/|\/Users\/|\.\.\/src|src\/|test\/|demo\/)/)
+  })
+
+  it('root declaration exposes the public editor surface', function () {
+    const declaration = readDist('editor.d.ts')
+
+    for (const symbol of ['InklingEditor', 'InklingComposer', 'markdownToLexicalState']) {
+      expect(declaration).toContain(symbol)
+    }
+  })
+})

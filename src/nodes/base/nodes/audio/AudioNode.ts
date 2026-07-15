@@ -17,9 +17,12 @@ const audioProperties = [
 
 export type AudioData = DecoratorNodeData<typeof audioProperties>
 
-export interface AudioNode extends DecoratorNodeValueMap<typeof audioProperties> {}
+// Named `BaseAudioNode` (not `AudioNode`) so the base class never shares a
+// name with the DOM's global Web Audio `AudioNode` interface — declaration
+// bundlers merge the global into their collision scope and mis-rename both.
+export interface BaseAudioNode extends DecoratorNodeValueMap<typeof audioProperties> {}
 
-export class AudioNode extends generateDecoratorNode({
+export class BaseAudioNode extends generateDecoratorNode({
   nodeType: 'audio',
   properties: audioProperties,
   defaultRenderFn: renderAudioNode,
@@ -30,9 +33,9 @@ export class AudioNode extends generateDecoratorNode({
 }
 
 export const $createAudioNode = (dataset: AudioData = {}) => {
-  return new AudioNode(dataset)
+  return new BaseAudioNode(dataset)
 }
 
-export function $isAudioNode(node: unknown): node is AudioNode {
-  return node instanceof AudioNode
+export function $isAudioNode(node: unknown): node is BaseAudioNode {
+  return node instanceof BaseAudioNode
 }
