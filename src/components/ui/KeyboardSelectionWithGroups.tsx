@@ -16,6 +16,7 @@ export interface KeyboardSelectionWithGroupsProps {
   ) => React.ReactElement
   getGroup: (group: ListOptionSection, options?: { showSpinner?: boolean }) => React.ReactElement
   onSelect: (item: ListOptionItem) => void
+  onEnterWithoutSelection?: () => void
   defaultSelected?: ListOptionItem
   isLoading?: boolean
 }
@@ -29,6 +30,7 @@ export function KeyboardSelectionWithGroups({
   getItem,
   getGroup,
   onSelect,
+  onEnterWithoutSelection,
   defaultSelected,
   isLoading,
 }: KeyboardSelectionWithGroupsProps) {
@@ -77,6 +79,11 @@ export function KeyboardSelectionWithGroups({
         setScrollSelectedIntoView(true)
       }
       if (event.key === 'Enter') {
+        const selectedItem = items[selectedIndex]
+        if (!selectedItem && !onEnterWithoutSelection) {
+          return
+        }
+
         // When the link input is focused and the user hasn't explicitly navigated
         // the suggestion list, let the input's own Enter handler submit the typed
         // URL instead of selecting the default suggestion.
@@ -88,10 +95,15 @@ export function KeyboardSelectionWithGroups({
         // The stop propagation is required for Safari
         event.preventDefault()
         event.stopPropagation()
-        onSelect(items[selectedIndex])
+
+        if (selectedItem) {
+          onSelect(selectedItem)
+        } else {
+          onEnterWithoutSelection?.()
+        }
       }
     },
-    [items, selectedIndex, onSelect, hasNavigated],
+    [items, selectedIndex, onSelect, onEnterWithoutSelection, hasNavigated],
   )
 
   React.useEffect(() => {
