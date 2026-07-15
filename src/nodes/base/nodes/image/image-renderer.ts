@@ -6,7 +6,6 @@ import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { getSrcsetAttribute, setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
-import { sanitizeHtml } from '@/utils/sanitize-html'
 
 const MODERN_IMAGE_FORMATS = ['avif', 'webp']
 
@@ -215,7 +214,7 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
 
   if (node.caption) {
     const caption = document.createElement('figcaption')
-    caption.innerHTML = sanitizeHtml(node.caption)
+    caption.innerHTML = context.sanitizeCaption(node.caption)
     figure.appendChild(caption)
   }
 

@@ -89,7 +89,7 @@ export function cardTemplate({
   const safeThumbnailSrc = context.safeUrl('media', node.thumbnailSrc)
   const safeCustomThumbnailSrc = context.safeUrl('media', node.customThumbnailSrc)
   const thumbnailSrc = safeCustomThumbnailSrc || safeThumbnailSrc
-  const escapedCaption = node.caption ? escapeHtml(node.caption) : ''
+  const escapedCaption = node.caption ? context.escapeText(node.caption) : ''
   const hideControlsClass = node.loop ? ' inkling-video-hide' : ''
 
   return `
@@ -165,7 +165,7 @@ export function emailCardTemplate({
   const safeCustomThumbnailSrc = context.safeUrl('media', node.customThumbnailSrc)
   const thumbnailSrc = safeCustomThumbnailSrc || safeThumbnailSrc
   const safePostUrl = context.safeUrl('navigation', options.postUrl)
-  const escapedCaption = node.caption ? escapeHtml(node.caption) : ''
+  const escapedCaption = node.caption ? context.escapeText(node.caption) : ''
   const emailTemplateMaxWidth = 600
   const aspectRatio = hasVideoDimensions(node) ? node.width / node.height : DEFAULT_EMAIL_ASPECT_RATIO
   const emailSpacerWidth = Math.round(emailTemplateMaxWidth / 4)

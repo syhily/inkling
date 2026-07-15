@@ -45,7 +45,7 @@ export function renderAudioNode(
       throw new Error('renderAudioNode requires options.postUrl when options.target is "email"')
     }
 
-    return emailTemplate(node, document, options, thumbnailCls, emptyThumbnailCls, safeThumbnailSrc)
+    return emailTemplate(node, document, options, thumbnailCls, emptyThumbnailCls, safeThumbnailSrc, context)
   } else {
     return frontendTemplate(node, document, thumbnailCls, emptyThumbnailCls, safeThumbnailSrc)
   }
@@ -233,6 +233,7 @@ function emailTemplate(
   thumbnailCls: string,
   emptyThumbnailCls: string,
   safeThumbnailSrc: string,
+  context: RenderContext,
 ) {
   const html = `
         <table cellspacing="0" cellpadding="0" border="0" class="inkling-audio-card">
@@ -258,7 +259,7 @@ function emailTemplate(
                                     <table cellspacing="0" cellpadding="0" border="0" width="100%">
                                         <tr>
                                             <td>
-                                                <a href="${escapeHtml(options.postUrl)}" class="inkling-audio-title">${escapeHtml(node.title)}</a>
+                                                <a href="${escapeHtml(options.postUrl)}" class="inkling-audio-title">${context.escapeText(node.title)}</a>
                                             </td>
                                         </tr>
                                         <tr>

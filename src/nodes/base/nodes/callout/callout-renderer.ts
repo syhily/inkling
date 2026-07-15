@@ -1,8 +1,8 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
+import { CALLOUT_HTML_CONFIG } from '@/nodes/base/render-context'
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
-import { cleanDOM } from '@/nodes/base/utils/clean-dom'
 
 interface CalloutNodeData {
   backgroundColor: string
@@ -33,14 +33,7 @@ export function renderCalloutNode(node: CalloutNodeData, options: ExportDOMOptio
 
   const textElement = document.createElement('div')
   textElement.classList.add('inkling-callout-text')
-
-  const temporaryContainer = document.createElement('div')
-  temporaryContainer.innerHTML = node.calloutText
-
-  const allowedTags = ['A', 'STRONG', 'EM', 'B', 'I', 'BR', 'CODE', 'MARK', 'S', 'DEL', 'U', 'SUP', 'SUB']
-  cleanDOM(temporaryContainer, allowedTags, context)
-
-  textElement.innerHTML = temporaryContainer.innerHTML
+  textElement.innerHTML = context.sanitizeCardHtml(node.calloutText, CALLOUT_HTML_CONFIG)
   element.appendChild(textElement)
 
   return { element, type: 'outer' as const }

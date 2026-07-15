@@ -1,8 +1,8 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
-import { sanitizeHtml } from '@/utils/sanitize-html'
 
 interface CodeBlockNodeData {
   code: string
@@ -10,7 +10,7 @@ interface CodeBlockNodeData {
   caption: string
 }
 
-export function renderCodeBlockNode(node: CodeBlockNodeData, options: ExportDOMOptions = {}) {
+export function renderCodeBlockNode(node: CodeBlockNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
   addCreateDocumentOption(options)
   const document = options.createDocument!()
 
@@ -34,7 +34,7 @@ export function renderCodeBlockNode(node: CodeBlockNodeData, options: ExportDOMO
     figure.appendChild(pre)
 
     const figcaption = document.createElement('figcaption')
-    figcaption.innerHTML = sanitizeHtml(node.caption)
+    figcaption.innerHTML = context.sanitizeCaption(node.caption)
     figure.appendChild(figcaption)
 
     return { element: figure, type: 'outer' as const }

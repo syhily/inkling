@@ -19,8 +19,15 @@ export default function $convertToHtmlString(editor: LexicalEditor, options: Ren
 
   // One read-only render context per string render, threaded to the element
   // transformers and TextContent so they can migrate onto it (plan 040). Card
-  // exportDOM builds its own context per call. The string layer itself stays
-  // verbatim — sanitization happens inside card renderers, never here.
+  // exportDOM builds its own context per call.
+  //
+  // The string layer itself stays verbatim — that is a deliberate design
+  // decision, not an oversight. Sanitization happens inside the card
+  // renderers via the render context (`sanitizeCaption` / `sanitizeCardHtml`
+  // / `escapeText`) before markup reaches this layer, so the innerHTML /
+  // outerHTML / value concatenation below needs no sanitize pass of its own.
+  // Do NOT add a blanket sanitize here: it would double-escape markup the
+  // renderers already sanitized.
   const context = createRenderContext(options)
 
   for (const child of children) {

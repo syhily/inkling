@@ -5,7 +5,6 @@ import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { truncateHtml } from '@/nodes/base/utils/truncate'
-import { sanitizeHtml } from '@/utils/sanitize-html'
 
 interface BookmarkNodeData {
   url: string
@@ -206,7 +205,7 @@ function frontendTemplate(node: BookmarkNodeData, document: Document, context: R
 
   if (caption) {
     const figCaption = document.createElement('figcaption')
-    figCaption.innerHTML = sanitizeHtml(caption)
+    figCaption.innerHTML = context.sanitizeCaption(caption)
     element.appendChild(figCaption)
   }
 

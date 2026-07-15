@@ -6,7 +6,6 @@ import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
-import { sanitizeHtml } from '@/utils/sanitize-html'
 
 interface GalleryImage {
   fileName: string
@@ -193,7 +192,7 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
 
   if (node.caption) {
     const figcaption = document.createElement('figcaption')
-    figcaption.innerHTML = sanitizeHtml(node.caption)
+    figcaption.innerHTML = context.sanitizeCaption(node.caption)
     figure.appendChild(figcaption)
     figure.setAttribute('class', `${figure.getAttribute('class')} inkling-card-hascaption`)
   }
