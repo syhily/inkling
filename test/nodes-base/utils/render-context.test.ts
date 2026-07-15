@@ -1,0 +1,200 @@
+import { createHeadlessEditor } from '@lexical/headless'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { dom } from '#/nodes-base/test-utils/index'
+import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
+import { createRenderContext, type RenderContext } from '@/nodes/base/render-context'
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+describe('createRenderContext', () => {
+  describe('createDocument resolution', () => {
+    it('uses options.createDocument when provided', () => {
+      const createDocument = () => dom.window.document
+      const context = createRenderContext({ createDocument })
+
+      expect(context.createDocument).toBe(createDocument)
+    })
+
+    it('derives createDocument from options.dom', () => {
+      const context = createRenderContext({ dom })
+
+      expect(context.createDocument()).toBe(dom.window.document)
+    })
+
+    it('prefers options.createDocument over options.dom', () => {
+      const createDocument = () => dom.window.document
+      const context = createRenderContext({ dom, createDocument })
+
+      expect(context.createDocument).toBe(createDocument)
+    })
+
+    it('prefers options.dom over the browser global document', () => {
+      const context = createRenderContext({ dom })
+
+      expect(context.createDocument()).not.toBe(window.document)
+    })
+
+    it('falls back to the browser global document', () => {
+      const context = createRenderContext({})
+
+      expect(context.createDocument()).toBe(window.document)
+    })
+
+    it('throws the exact non-browser error without any document source', () => {
+      vi.stubGlobal('window', undefined)
+
+      expect(() => createRenderContext({})).toThrow(
+        /^Must be passed a `createDocument` function as an option when used in a non-browser environment$/,
+      )
+    })
+  })
+
+  describe('read-only guarantee', () => {
+    it('freezes the context', () => {
+      const context = createRenderContext({ dom })
+
+      expect(Object.isFrozen(context)).toBe(true)
+      expect(() => {
+        ;(context as unknown as Record<string, unknown>).target = 'email'
+      }).toThrow(TypeError)
+      expect(() => {
+        ;(context as unknown as Record<string, unknown>).safeUrl = () => ''
+      }).toThrow(TypeError)
+    })
+
+    it('exposes feature and design as frozen snapshots', () => {
+      const feature = { emailCustomization: false }
+      const design = { buttonStyle: 'fill' as const }
+      const context = createRenderContext({ dom, feature, design })
+
+      expect(Object.isFrozen(context.feature)).toBe(true)
+      expect(Object.isFrozen(context.design)).toBe(true)
+
+      feature.emailCustomization = true
+      expect(context.feature?.emailCustomization).toBe(false)
+    })
+
+    it('leaves feature and design undefined when not passed', () => {
+      const context = createRenderContext({ dom })
+
+      expect(context.feature).toBeUndefined()
+      expect(context.design).toBeUndefined()
+    })
+
+    it('copies the scalar option fields', () => {
+      const context = createRenderContext({
+        dom,
+        target: 'email',
+        imageBaseUrl: 'https://img.example.com',
+        siteUrl: 'https://example.com',
+        postUrl: 'https://example.com/post',
+      })
+
+      expect(context.target).toBe('email')
+      expect(context.imageBaseUrl).toBe('https://img.example.com')
+      expect(context.siteUrl).toBe('https://example.com')
+      expect(context.postUrl).toBe('https://example.com/post')
+    })
+  })
+
+  describe('safeUrl', () => {
+    const context = createRenderContext({ dom })
+
+    it('returns the value when safe, empty string otherwise', () => {
+      expect(context.safeUrl('navigation', 'https://example.com')).toBe('https://example.com')
+      expect(context.safeUrl('navigation', '/relative/path')).toBe('/relative/path')
+      expect(context.safeUrl('navigation', 'javascript:alert(1)')).toBe('')
+    })
+
+    it('rejects data/blob URLs for navigation but allows them for media', () => {
+      expect(context.safeUrl('navigation', 'data:image/png;base64,abc')).toBe('')
+      expect(context.safeUrl('navigation', 'blob:https://example.com/1234')).toBe('')
+      expect(context.safeUrl('media', 'data:image/png;base64,abc')).toBe('data:image/png;base64,abc')
+      expect(context.safeUrl('media', 'blob:https://example.com/1234')).toBe('blob:https://example.com/1234')
+    })
+
+    it('rejects unsupported schemes for both kinds', () => {
+      expect(context.safeUrl('navigation', 'unsupported-scheme:payload')).toBe('')
+      expect(context.safeUrl('media', 'unsupported-scheme:payload')).toBe('')
+    })
+  })
+
+  describe('variant', () => {
+    it('picks the email branch when target is email', () => {
+      const context = createRenderContext({ dom, target: 'email' })
+
+      expect(context.variant({ web: 'web', email: 'email' })).toBe('email')
+    })
+
+    it('picks the web branch for any other target', () => {
+      expect(createRenderContext({ dom }).variant({ web: 'web', email: 'email' })).toBe('web')
+      expect(createRenderContext({ dom, target: 'html' }).variant({ web: 'web', email: 'email' })).toBe('web')
+    })
+  })
+
+  describe('requirePostUrl', () => {
+    it('returns postUrl when present', () => {
+      const context = createRenderContext({ dom, postUrl: 'https://example.com/post' })
+
+      expect(context.requirePostUrl('renderVideoNode')).toBe('https://example.com/post')
+    })
+
+    it('throws the pinned message naming the caller when postUrl is missing', () => {
+      const context = createRenderContext({ dom, target: 'email' })
+
+      expect(() => context.requirePostUrl('renderVideoNode')).toThrow(
+        /^renderVideoNode requires options\.postUrl when options\.target is "email"$/,
+      )
+      expect(() => context.requirePostUrl('renderAudioNode')).toThrow(
+        /^renderAudioNode requires options\.postUrl when options\.target is "email"$/,
+      )
+    })
+  })
+
+  describe('sanitization', () => {
+    const context = createRenderContext({ dom })
+
+    it('sanitizeCaption keeps allowed markup and neutralizes scripts', () => {
+      const output = context.sanitizeCaption('<b>bold</b><script>alert(1)</script>')
+
+      expect(output).toContain('<b>bold</b>')
+      expect(output).not.toContain('<script>')
+      expect(output).toContain('js-embed-placeholder')
+    })
+
+    it('sanitizeCardHtml applies the given DOMPurify config', () => {
+      const output = context.sanitizeCardHtml('<b>x</b><i>y</i><script>alert(1)</script>', { ALLOWED_TAGS: ['b'] })
+
+      expect(output).toBe('<b>x</b>y')
+    })
+  })
+})
+
+describe('exportDOM dispatch threading', () => {
+  it('passes a frozen render context as the third render-fn argument', () => {
+    let received: RenderContext | undefined
+
+    const TestNode = generateDecoratorNode({
+      nodeType: 'render-context-dispatch-test',
+      defaultRenderFn: (_node, _options, context) => {
+        received = context
+        return { element: null, type: 'inner' as const }
+      },
+    })
+
+    const editor = createHeadlessEditor({ nodes: [TestNode] })
+    let output: unknown
+    editor.update(() => {
+      const node = new TestNode()
+      output = node.exportDOM(editor, { dom })
+    })
+
+    expect(output).toEqual({ element: null, type: 'inner' })
+    expect(received).toBeDefined()
+    expect(Object.isFrozen(received)).toBe(true)
+    expect(received!.createDocument()).toBe(dom.window.document)
+  })
+})

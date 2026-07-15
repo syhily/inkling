@@ -2,6 +2,7 @@
 import type { ElementNode } from 'lexical'
 
 import type { RendererOptions } from '@/html/renderer/types'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import asideTransformer from '@/html/renderer/transformers/element/aside'
 import blockquoteTransformer from '@/html/renderer/transformers/element/blockquote'
@@ -12,7 +13,12 @@ import paragraphTransformer from '@/html/renderer/transformers/element/paragraph
 
 export type ExportChildren = (node: ElementNode, options?: RendererOptions) => string
 export type ElementTransformer = {
-  export: (node: ElementNode, options: RendererOptions, exportChildren: ExportChildren) => string | null
+  export: (
+    node: ElementNode,
+    options: RendererOptions,
+    exportChildren: ExportChildren,
+    context: RenderContext,
+  ) => string | null
 }
 
 const elementTransformers: ElementTransformer[] = [

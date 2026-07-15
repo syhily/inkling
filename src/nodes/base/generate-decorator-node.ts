@@ -3,10 +3,12 @@ import type { Klass, LexicalEditor, LexicalNode, LexicalNodeReplacement, Seriali
 import { $generateHtmlFromNodes } from '@lexical/html'
 
 import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 import type { Visibility } from '@/nodes/base/utils/visibility'
 
 import { cleanBasicHtml, type CleanBasicHtmlOptions } from '@/html/clean-basic-html'
 import { InklingDecoratorNode } from '@/nodes/base/InklingDecoratorNode'
+import { createRenderContext } from '@/nodes/base/render-context'
 import readTextContent from '@/nodes/base/utils/read-text-content'
 import {
   buildDefaultVisibility,
@@ -16,9 +18,11 @@ import {
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 // Bivariant method syntax so that a render function declared with a concrete
-// node type can be assigned to `RenderFn<TRenderNode, TOutput>`.
+// node type can be assigned to `RenderFn<TRenderNode, TOutput>`. The render
+// context is passed alongside the legacy options bag; renderers migrate off
+// `options` incrementally (plan 040), so most don't read the third arg yet.
 type RenderFn<TNode = unknown, TOutput extends ExportDOMOutput = ExportDOMOutput> = {
-  bivarianceHack(node: TNode, options: ExportDOMOptions): TOutput
+  bivarianceHack(node: TNode, options: ExportDOMOptions, context: RenderContext): TOutput
 }['bivarianceHack']
 type WidenLiteral<T> = T extends string
   ? string
@@ -554,7 +558,10 @@ export function generateDecoratorNode<
         throw new Error(`[generateDecoratorNode] ${nodeType}: "defaultRenderFn" is required`)
       }
 
-      return defaultRenderFn(this as unknown as TRenderNode, options)
+      // One read-only render context per export, passed alongside the options
+      // bag until renderers migrate onto it (plan 040).
+      const context = createRenderContext(options)
+      return defaultRenderFn(this as unknown as TRenderNode, options, context)
     }
 
     /* c8 ignore start */

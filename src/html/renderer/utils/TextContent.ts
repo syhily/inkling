@@ -5,11 +5,12 @@ import { $isLinkNode } from '@lexical/link'
 import { $isTextNode, $isLineBreakNode, TextNode } from 'lexical'
 
 import type { RendererOptions } from '@/html/renderer/types'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 
 type TextFormatAbbreviation = 'STRONG' | 'EM' | 'S' | 'U' | 'CODE' | 'SUB' | 'SUP' | 'MARK' | 'SPAN'
-type ExportChildren = (node: ElementNode, options: RendererOptions) => string
+type ExportChildren = (node: ElementNode, options: RendererOptions, context: RenderContext) => string
 
 const FORMAT_TAG_MAP: Record<TextFormatType, TextFormatAbbreviation> = {
   bold: 'STRONG',
@@ -41,13 +42,17 @@ export default class TextContent {
   nodes: LexicalNode[]
   exportChildren: ExportChildren
   options: RequiredKeys<RendererOptions, 'dom'>
+  // Carried for the render-context seam (plan 040); link-href policy migrates
+  // onto it in Step 3 — the class still reads `isSafeUrl` directly for now.
+  context: RenderContext
 
-  constructor(exportChildren: ExportChildren, options: RendererOptions) {
+  constructor(exportChildren: ExportChildren, options: RendererOptions, context: RenderContext) {
     if (ensureDomProperty(options) === false) {
       throw new Error('TextContent requires a dom property in the options argument')
     }
     this.exportChildren = exportChildren
     this.options = options as RequiredKeys<RendererOptions, 'dom'>
+    this.context = context
 
     this.nodes = []
   }
@@ -168,6 +173,6 @@ export default class TextContent {
     if (node.getRel()) {
       anchor.setAttribute('rel', node.getRel() || '')
     }
-    anchor.innerHTML = this.exportChildren(node, this.options)
+    anchor.innerHTML = this.exportChildren(node, this.options, this.context)
   }
 }
