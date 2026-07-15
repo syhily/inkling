@@ -24,7 +24,7 @@ export function renderFileNode(node: FileNodeData, options: ExportDOMOptions = {
     return renderEmptyContainer(document)
   }
 
-  if (options.target === 'email') {
+  if (context.variant({ web: false, email: true })) {
     return emailTemplate(node, document, options, context)
   } else {
     return cardTemplate(node, document, context)

@@ -21,8 +21,8 @@ export function renderButtonNode(node: ButtonNodeData, options: ExportDOMOptions
     return renderEmptyContainer(document)
   }
 
-  if (options.target === 'email') {
-    return emailTemplate(node, options, document, context)
+  if (context.variant({ web: false, email: true })) {
+    return emailTemplate(node, document, context)
   } else {
     return frontendTemplate(node, document, context)
   }
@@ -44,16 +44,16 @@ function frontendTemplate(node: ButtonNodeData, document: Document, context: Ren
   return { element: cardDiv, type: 'outer' as const }
 }
 
-function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document: Document, context: RenderContext) {
+function emailTemplate(node: ButtonNodeData, document: Document, context: RenderContext) {
   const safeButtonUrl = context.safeUrl('navigation', node.buttonUrl)
   const buttonText = node.buttonText || 'Button Title'
 
-  if (usesModernEmailButton(options)) {
+  if (context.usesModernEmailButton()) {
     const buttonHtml = renderEmailButton(
       {
         alignment: node.alignment,
         color: 'accent',
-        style: options.design?.buttonStyle,
+        style: context.design?.buttonStyle,
         text: buttonText,
         url: safeButtonUrl,
       },
@@ -70,7 +70,7 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
       </table>
     `
 
-    if (options.feature?.emailCustomizationAlpha) {
+    if (context.feature?.emailCustomizationAlpha) {
       const element = document.createElement('div')
       element.innerHTML = cardHtml
       return { element, type: 'inner' as const }
@@ -99,12 +99,6 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
   const element = document.createElement('p')
   element.innerHTML = cardHtml
   return { element, type: 'outer' as const }
-}
-
-function usesModernEmailButton(options: ExportDOMOptions): boolean {
-  return Boolean(
-    options.feature?.emailCustomization || options.feature?.emailCustomizationAlpha || options.design?.buttonStyle,
-  )
 }
 
 function getCardClasses(node: ButtonNodeData) {

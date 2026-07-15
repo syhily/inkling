@@ -5,24 +5,20 @@ import { $isQuoteNode } from '@lexical/rich-text'
 
 import type { ExportChildren } from '@/html/renderer/transformers/index'
 import type { RendererOptions } from '@/html/renderer/types'
+import type { RenderContext } from '@/nodes/base/render-context'
 /* c8 ignore stop */
 
 export default {
-  export(node: ElementNode, options: RendererOptions, exportChildren: ExportChildren) {
+  export(node: ElementNode, options: RendererOptions, exportChildren: ExportChildren, context: RenderContext) {
     if (!$isQuoteNode(node)) {
       return null
     }
 
-    if (options.target === 'email') {
-      let children = exportChildren(node)
+    const children = exportChildren(node)
 
-      if (!children.startsWith('<p>')) {
-        children = `<p>${children}</p>`
-      }
-
-      return `<blockquote>${children}</blockquote>`
-    }
-
-    return `<blockquote>${exportChildren(node)}</blockquote>`
+    return context.variant({
+      web: `<blockquote>${children}</blockquote>`,
+      email: `<blockquote>${children.startsWith('<p>') ? children : `<p>${children}</p>`}</blockquote>`,
+    })
   },
 }

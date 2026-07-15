@@ -19,8 +19,9 @@ import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 // Bivariant method syntax so that a render function declared with a concrete
 // node type can be assigned to `RenderFn<TRenderNode, TOutput>`. The render
-// context is passed alongside the legacy options bag; renderers migrate off
-// `options` incrementally (plan 040), so most don't read the third arg yet.
+// context is passed alongside the legacy options bag; renderers read render
+// policy (target, URL, sanitization, feature/design flags) through it
+// (plan 040), and Step 6 folds the remaining options-bag state in.
 type RenderFn<TNode = unknown, TOutput extends ExportDOMOutput = ExportDOMOutput> = {
   bivarianceHack(node: TNode, options: ExportDOMOptions, context: RenderContext): TOutput
 }['bivarianceHack']

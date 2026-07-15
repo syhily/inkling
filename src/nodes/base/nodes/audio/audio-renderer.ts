@@ -12,21 +12,9 @@ interface AudioNodeData {
   duration: number
 }
 
-interface EmailAudioExportDOMOptions extends ExportDOMOptions {
-  target: 'email'
-  postUrl: string
-}
-
-interface DefaultAudioExportDOMOptions extends ExportDOMOptions {
-  target?: string
-  postUrl?: string
-}
-
-type AudioExportDOMOptions = EmailAudioExportDOMOptions | DefaultAudioExportDOMOptions
-
 export function renderAudioNode(
   node: AudioNodeData,
-  options: AudioExportDOMOptions = {},
+  options: ExportDOMOptions = {},
   context: RenderContext,
 ): ExportDOMOutput {
   addCreateDocumentOption(options)
@@ -40,19 +28,17 @@ export function renderAudioNode(
   const thumbnailCls = getThumbnailCls(safeThumbnailSrc)
   const emptyThumbnailCls = getEmptyThumbnailCls(safeThumbnailSrc)
 
-  if (options.target === 'email') {
-    if (!isEmailExportDOMOptions(options)) {
-      throw new Error('renderAudioNode requires options.postUrl when options.target is "email"')
-    }
+  if (context.variant({ web: false, email: true })) {
+    // Throws the pinned missing-postUrl error when postUrl is absent/blank.
+    // Note the email template interpolates the escaped postUrl verbatim —
+    // routing it through context.safeUrl would drop unsafe postUrls to '',
+    // changing pinned output (T3 review nit, deliberately left as-is).
+    const postUrl = context.requirePostUrl('renderAudioNode')
 
-    return emailTemplate(node, document, options, thumbnailCls, emptyThumbnailCls, safeThumbnailSrc, context)
+    return emailTemplate(node, document, postUrl, thumbnailCls, emptyThumbnailCls, safeThumbnailSrc, context)
   } else {
     return frontendTemplate(node, document, thumbnailCls, emptyThumbnailCls, safeThumbnailSrc)
   }
-}
-
-function isEmailExportDOMOptions(options: AudioExportDOMOptions): options is EmailAudioExportDOMOptions {
-  return options.target === 'email' && typeof options.postUrl === 'string' && options.postUrl.trim() !== ''
 }
 
 function frontendTemplate(
@@ -229,7 +215,7 @@ function frontendTemplate(
 function emailTemplate(
   node: AudioNodeData,
   document: Document,
-  options: EmailAudioExportDOMOptions,
+  postUrl: string,
   thumbnailCls: string,
   emptyThumbnailCls: string,
   safeThumbnailSrc: string,
@@ -242,7 +228,7 @@ function emailTemplate(
                         <table cellspacing="0" cellpadding="0" border="0" width="100%">
                             <tr>
                                 <td width="60">
-                                    <a href="${escapeHtml(options.postUrl)}" style="display: block; width: 60px; height: 60px; padding-top: 4px; padding-right: 16px; padding-bottom: 4px; padding-left: 4px; border-radius: 2px;">
+                                    <a href="${escapeHtml(postUrl)}" style="display: block; width: 60px; height: 60px; padding-top: 4px; padding-right: 16px; padding-bottom: 4px; padding-left: 4px; border-radius: 2px;">
                                         ${
                                           safeThumbnailSrc
                                             ? `
@@ -255,11 +241,11 @@ function emailTemplate(
                                     </a>
                                 </td>
                                 <td style="position: relative; vertical-align: center;" valign="middle">
-                                    <a href="${escapeHtml(options.postUrl)}" style="position: absolute; display: block; top: 0; right: 0; bottom: 0; left: 0;"></a>
+                                    <a href="${escapeHtml(postUrl)}" style="position: absolute; display: block; top: 0; right: 0; bottom: 0; left: 0;"></a>
                                     <table cellspacing="0" cellpadding="0" border="0" width="100%">
                                         <tr>
                                             <td>
-                                                <a href="${escapeHtml(options.postUrl)}" class="inkling-audio-title">${context.escapeText(node.title)}</a>
+                                                <a href="${escapeHtml(postUrl)}" class="inkling-audio-title">${context.escapeText(node.title)}</a>
                                             </td>
                                         </tr>
                                         <tr>
@@ -267,10 +253,10 @@ function emailTemplate(
                                                 <table cellspacing="0" cellpadding="0" border="0" width="100%">
                                                     <tr>
                                                         <td width="24" style="vertical-align: middle;" valign="middle">
-                                                            <a href="${escapeHtml(options.postUrl)}" class="inkling-audio-play-button"></a>
+                                                            <a href="${escapeHtml(postUrl)}" class="inkling-audio-play-button"></a>
                                                         </td>
                                                         <td style="vertical-align: middle;" valign="middle">
-                                                            <a href="${escapeHtml(options.postUrl)}" class="inkling-audio-duration">${getFormattedDuration(node.duration)}<span class="inkling-audio-link"> • Click to play audio</span></a>
+                                                            <a href="${escapeHtml(postUrl)}" class="inkling-audio-duration">${getFormattedDuration(node.duration)}<span class="inkling-audio-link"> • Click to play audio</span></a>
                                                         </td>
                                                     </tr>
                                                 </table>

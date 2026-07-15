@@ -1,6 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
-import type { RenderContext } from '@/nodes/base/render-context'
 
+import { isSafeColorValue, type RenderContext } from '@/nodes/base/render-context'
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
@@ -52,11 +52,11 @@ interface HeaderV2RenderOptions extends ExportDOMOptions {}
 
 // Colors come from document JSON, not just the color picker — constrain to
 // values the picker can produce before interpolating into style/attributes.
-const COLOR_REGEX =
-  /^#[0-9a-fA-F]{3,8}$|^rgba?\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*(?:,\s*[\d.]+\s*)?\)$|^[a-zA-Z]+$/
-
+// The predicate is single-sourced in the render-context module; note header
+// legitimately falls back to 'transparent', so it must NOT use the stricter
+// email-button predicate.
 function safeColor(value: string, fallback: string): string {
-  return COLOR_REGEX.test(value) ? value : fallback
+  return isSafeColorValue(value) ? value : fallback
 }
 
 function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions = {}, context: RenderContext) {
@@ -223,7 +223,7 @@ function generateMSOContentClosing(nodeData: MSOHeaderData) {
         `
 }
 
-function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions, context: RenderContext) {
+function emailTemplate(nodeData: HeaderV2NodeData, context: RenderContext) {
   const safeBackgroundImageSrc = context.safeUrl('media', nodeData.backgroundImageSrc)
   const safeButtonUrl = context.safeUrl('navigation', nodeData.buttonUrl)
   const headerText = nodeData.header ? escapeHtml(nodeData.header) : ''
@@ -256,9 +256,7 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
     layout: nodeData.layout,
   }
 
-  const useModernButton = Boolean(
-    options.feature?.emailCustomization || options.feature?.emailCustomizationAlpha || options.design?.buttonStyle,
-  )
+  const useModernButton = context.usesModernEmailButton()
 
   if (useModernButton) {
     return `
@@ -302,7 +300,7 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
                                                   nodeData.buttonColor === 'accent'
                                                     ? accentColor
                                                     : safeColor(nodeData.buttonColor, 'transparent'),
-                                                style: options.design?.buttonStyle === 'outline' ? 'outline' : 'fill',
+                                                style: context.design?.buttonStyle === 'outline' ? 'outline' : 'fill',
                                                 text: nodeData.buttonText || '',
                                                 url: safeButtonUrl,
                                               },
@@ -374,11 +372,11 @@ export function renderHeaderNodeV2(
     accentColor: dataset.__accentColor,
   }
 
-  if (options.target === 'email') {
+  if (context.variant({ web: false, email: true })) {
     const emailDoc = options.createDocument!()
     const emailDiv = emailDoc.createElement('div')
 
-    emailDiv.innerHTML = emailTemplate(node, options, context)?.trim()
+    emailDiv.innerHTML = emailTemplate(node, context)?.trim()
 
     return {
       element: getFirstHtmlElement(emailDiv, 'renderHeaderV2Node email') as HTMLDivElement,

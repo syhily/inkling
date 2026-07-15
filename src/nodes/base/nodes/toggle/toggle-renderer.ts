@@ -37,13 +37,10 @@ function cardTemplate({ node, context }: { node: ToggleNodeData; context: Render
         `
 }
 
-function emailCardTemplate(
-  { node, context }: { node: ToggleNodeData; context: RenderContext },
-  options: ExportDOMOptions = {},
-) {
+function emailCardTemplate({ node, context }: { node: ToggleNodeData; context: RenderContext }) {
   const { safeHeading, safeContent } = sanitize(node, context)
 
-  if (options.feature?.emailCustomization || options.feature?.emailCustomizationAlpha) {
+  if (context.feature?.emailCustomization || context.feature?.emailCustomizationAlpha) {
     return html`
       <table cellspacing="0" cellpadding="0" border="0" width="100%" class="inkling-toggle-card">
         <tbody>
@@ -74,8 +71,9 @@ export function renderToggleNode(node: ToggleNodeData, options: ExportDOMOptions
 
   const document = options.createDocument!()
 
-  const htmlString =
-    options.target === 'email' ? emailCardTemplate({ node, context }, options) : cardTemplate({ node, context })
+  const htmlString = context.variant({ web: false, email: true })
+    ? emailCardTemplate({ node, context })
+    : cardTemplate({ node, context })
 
   const container = document.createElement('div')
   container.innerHTML = htmlString.trim()

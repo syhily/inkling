@@ -33,7 +33,7 @@ export function renderBookmarkNode(node: BookmarkNodeData, options: ExportDOMOpt
     return renderEmptyContainer(document)
   }
 
-  if (options.target === 'email') {
+  if (context.variant({ web: false, email: true })) {
     return emailTemplate(node, document, context)
   } else {
     return frontendTemplate(node, document, context)

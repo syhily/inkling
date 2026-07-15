@@ -1,4 +1,5 @@
 import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
@@ -12,7 +13,11 @@ interface HtmlNodeData {
 
 export type HtmlExportDOMOutput = ExportDOMOutput<'inner' | 'value' | 'outer'>
 
-export function renderHtmlNode(node: HtmlNodeData, options: ExportDOMOptions = {}): HtmlExportDOMOutput {
+export function renderHtmlNode(
+  node: HtmlNodeData,
+  options: ExportDOMOptions = {},
+  context: RenderContext,
+): HtmlExportDOMOutput {
   addCreateDocumentOption(options)
   const document = options.createDocument!()
 
@@ -25,7 +30,7 @@ export function renderHtmlNode(node: HtmlNodeData, options: ExportDOMOptions = {
   // Wrap replacement strings like {uniqueid} with %% for email processing
   // Only wrap if emailUniqueid feature flag is enabled
   let processedHtml = html
-  if (options.feature?.emailUniqueid) {
+  if (context.feature?.emailUniqueid) {
     processedHtml = wrapReplacementStrings(html)
   }
 
@@ -36,7 +41,9 @@ export function renderHtmlNode(node: HtmlNodeData, options: ExportDOMOptions = {
 
   if (node.visibility) {
     const renderOutput: ExportDOMOutput<'value'> = { element: textarea, type: 'value' }
-    return renderWithVisibility(renderOutput, node.visibility, options) as HtmlExportDOMOutput
+    // The context satisfies renderWithVisibility's `{ target?: string }`
+    // shape, so the visibility target check reads the frozen context.
+    return renderWithVisibility(renderOutput, node.visibility, context) as HtmlExportDOMOutput
   }
 
   // `type: 'value'` will render the value of the textarea element

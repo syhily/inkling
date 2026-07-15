@@ -1,5 +1,4 @@
-import type { RenderContext } from '@/nodes/base/render-context'
-
+import { isEmailButtonColorValue, type RenderContext } from '@/nodes/base/render-context'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { textColorForBackgroundColor } from '@/utils/colorUtils'
@@ -13,15 +12,6 @@ export interface EmailButtonOptions {
   buttonWidth?: string
   color?: string
   style?: 'fill' | 'outline'
-}
-
-// Accepts hex, rgb/rgba, and CSS named colors. Rejects arbitrary strings to
-// keep style values safe in email clients.
-const SAFE_COLOR_REGEX =
-  /^#[0-9a-fA-F]{3,8}$|^rgba?\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*(?:,\s*[\d.]+\s*)?\)$|^[a-zA-Z]+$/
-
-function isValidColor(value: string): boolean {
-  return SAFE_COLOR_REGEX.test(value) && value !== 'transparent'
 }
 
 function buildButtonStyles(color: string, style: 'fill' | 'outline'): { td: string; a: string } {
@@ -53,7 +43,7 @@ export function renderEmailButton(options: EmailButtonOptions = {}, context?: Re
   const safeUrl = escapeHtml(url)
   const safeText = escapeHtml(text)
   const isAccent = color === 'accent'
-  const hasCustomColor = color !== '' && !isAccent && isValidColor(color)
+  const hasCustomColor = color !== '' && !isAccent && isEmailButtonColorValue(color)
   const effectiveStyle = style === 'outline' ? 'outline' : 'fill'
 
   const buttonClasses = clsx('btn', isAccent && 'btn-accent')

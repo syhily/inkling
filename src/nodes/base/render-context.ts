@@ -30,6 +30,9 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  *   at its definition.
  * - `variant`/`requirePostUrl` unify the email/web branch idioms (Step 5;
  *   `requirePostUrl` preserves the pinned missing-postUrl error messages).
+ *   `usesModernEmailButton` and the `isSafeColorValue`/`isEmailButtonColorValue`
+ *   color predicates single-source the feature/design-flag and color checks
+ *   that button and header previously duplicated inline.
  * - `createDocument` resolution absorbs `addCreateDocumentOption` (Step 6
  *   deletes that function and folds the remaining options-bag state in).
  *
@@ -82,6 +85,30 @@ function isUnwrapAllowlistConfig(config: CardHtmlConfig): config is UnwrapAllowl
   return 'implementation' in config && config.implementation === 'unwrap-allowlist'
 }
 
+/**
+ * Color validation, single-sourced here (plan 040 Step 5): one regex shared
+ * by two documented predicates. Accepts hex, rgb/rgba, and CSS named colors;
+ * rejects arbitrary strings to keep style values safe in email clients.
+ *
+ * `isSafeColorValue` is the general check. `isEmailButtonColorValue`
+ * additionally rejects `'transparent'` — that rejection is email-button-only
+ * on purpose: the header renderer uses `'transparent'` as a legitimate
+ * fallback value (header/renderers/header-renderer.ts), so it must not move
+ * into the shared regex.
+ */
+const COLOR_VALUE_REGEX =
+  /^#[0-9a-fA-F]{3,8}$|^rgba?\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*(?:,\s*[\d.]+\s*)?\)$|^[a-zA-Z]+$/
+
+/** The general color-value check (header's `safeColor` fallback helper). */
+export function isSafeColorValue(value: string): boolean {
+  return COLOR_VALUE_REGEX.test(value)
+}
+
+/** The email-button check: the general predicate plus a `'transparent'` rejection. */
+export function isEmailButtonColorValue(value: string): boolean {
+  return COLOR_VALUE_REGEX.test(value) && value !== 'transparent'
+}
+
 export interface RenderContext {
   /** The render target exactly as passed via `options.target` (e.g. `'email'`) — never normalized. */
   readonly target: string | undefined
@@ -123,6 +150,13 @@ export interface RenderContext {
   variant<T>(branches: { web: T; email: T }): T
   /** Returns `postUrl`, or throws the pinned missing-postUrl error naming `caller`. */
   requirePostUrl(caller: string): string
+  /**
+   * The modern email-button predicate, single-sourced here (plan 040 Step 5)
+   * from the copies button-renderer and header-renderer previously kept
+   * inline: true when the `emailCustomization`/`emailCustomizationAlpha`
+   * feature flags or a `design.buttonStyle` are set.
+   */
+  usesModernEmailButton(): boolean
 }
 
 /**
@@ -141,14 +175,16 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
   const postUrl = options.postUrl
   const siteUrl = options.siteUrl
   const imageBaseUrl = options.imageBaseUrl
+  const feature = options.feature ? Object.freeze({ ...options.feature }) : undefined
+  const design = options.design ? Object.freeze({ ...options.design }) : undefined
 
   const context: RenderContext = {
     target,
     imageBaseUrl,
     siteUrl,
     postUrl,
-    feature: options.feature ? Object.freeze({ ...options.feature }) : undefined,
-    design: options.design ? Object.freeze({ ...options.design }) : undefined,
+    feature,
+    design,
     createDocument,
     safeUrl(kind, value) {
       return (kind === 'media' ? isSafeMediaUrl(value) : isSafeUrl(value)) ? value : ''
@@ -184,6 +220,9 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
         throw new Error(`${caller} requires options.postUrl when options.target is "email"`)
       }
       return postUrl
+    },
+    usesModernEmailButton() {
+      return Boolean(feature?.emailCustomization || feature?.emailCustomizationAlpha || design?.buttonStyle)
     },
   }
 

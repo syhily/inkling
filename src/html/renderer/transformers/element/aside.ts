@@ -2,25 +2,21 @@ import type { ElementNode } from 'lexical'
 
 import type { ExportChildren } from '@/html/renderer/transformers/index'
 import type { RendererOptions } from '@/html/renderer/types'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { $isAsideNode } from '@/nodes/base'
 
 export default {
-  export(node: ElementNode, options: RendererOptions, exportChildren: ExportChildren) {
+  export(node: ElementNode, options: RendererOptions, exportChildren: ExportChildren, context: RenderContext) {
     if (!$isAsideNode(node)) {
       return null
     }
 
-    if (options.target === 'email') {
-      let children = exportChildren(node)
+    const children = exportChildren(node)
 
-      if (!children.startsWith('<p>')) {
-        children = `<p>${children}</p>`
-      }
-
-      return `<blockquote class="inkling-blockquote-alt">${children}</blockquote>`
-    }
-
-    return `<blockquote class="inkling-blockquote-alt">${exportChildren(node)}</blockquote>`
+    return context.variant({
+      web: `<blockquote class="inkling-blockquote-alt">${children}</blockquote>`,
+      email: `<blockquote class="inkling-blockquote-alt">${children.startsWith('<p>') ? children : `<p>${children}</p>`}</blockquote>`,
+    })
   },
 }

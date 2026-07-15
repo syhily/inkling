@@ -18,19 +18,6 @@ interface VideoNodeData {
   cardWidth: string
 }
 
-interface BaseVideoRenderOptions extends ExportDOMOptions {}
-
-interface EmailVideoRenderOptions extends BaseVideoRenderOptions {
-  target: 'email'
-  postUrl: string
-}
-
-interface DefaultVideoRenderOptions extends BaseVideoRenderOptions {
-  target?: string
-  postUrl?: string
-}
-
-type VideoRenderOptions = EmailVideoRenderOptions | DefaultVideoRenderOptions
 const DEFAULT_EMAIL_ASPECT_RATIO = 16 / 9
 
 function hasVideoDimensions(node: VideoNodeData): node is VideoNodeData & { width: number; height: number } {
@@ -41,11 +28,7 @@ function getPosterSpacerSrc(width: number, height: number) {
   return `https://img.spacergif.org/v1/${width}x${height}/0a/spacer.png`
 }
 
-function isEmailRenderOptions(options: VideoRenderOptions): options is EmailVideoRenderOptions {
-  return options.target === 'email' && typeof options.postUrl === 'string' && options.postUrl.trim() !== ''
-}
-
-export function renderVideoNode(node: VideoNodeData, options: VideoRenderOptions = {}, context: RenderContext) {
+export function renderVideoNode(node: VideoNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
   addCreateDocumentOption(options)
 
   const document = options.createDocument!()
@@ -56,16 +39,11 @@ export function renderVideoNode(node: VideoNodeData, options: VideoRenderOptions
 
   const cardClasses = getCardClasses(node).join(' ')
 
-  const htmlString =
-    options.target === 'email'
-      ? (() => {
-          if (!isEmailRenderOptions(options)) {
-            throw new Error('renderVideoNode requires options.postUrl when options.target is "email"')
-          }
-
-          return emailCardTemplate({ node, options, cardClasses, context })
-        })()
-      : cardTemplate({ node, cardClasses, context })
+  // The email branch throws the pinned missing-postUrl error via the seam
+  // when postUrl is absent/blank.
+  const htmlString = context.variant({ web: false, email: true })
+    ? emailCardTemplate({ node, postUrl: context.requirePostUrl('renderVideoNode'), cardClasses, context })
+    : cardTemplate({ node, cardClasses, context })
 
   const element = document.createElement('div')
   element.innerHTML = htmlString.trim()
@@ -152,19 +130,19 @@ export function cardTemplate({
 
 export function emailCardTemplate({
   node,
-  options,
+  postUrl,
   cardClasses,
   context,
 }: {
   node: VideoNodeData
-  options: EmailVideoRenderOptions
+  postUrl: string
   cardClasses: string
   context: RenderContext
 }) {
   const safeThumbnailSrc = context.safeUrl('media', node.thumbnailSrc)
   const safeCustomThumbnailSrc = context.safeUrl('media', node.customThumbnailSrc)
   const thumbnailSrc = safeCustomThumbnailSrc || safeThumbnailSrc
-  const safePostUrl = context.safeUrl('navigation', options.postUrl)
+  const safePostUrl = context.safeUrl('navigation', postUrl)
   const escapedCaption = node.caption ? context.escapeText(node.caption) : ''
   const emailTemplateMaxWidth = 600
   const aspectRatio = hasVideoDimensions(node) ? node.width / node.height : DEFAULT_EMAIL_ASPECT_RATIO

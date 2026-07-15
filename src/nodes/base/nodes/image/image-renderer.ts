@@ -96,7 +96,7 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
 
   let picture: HTMLPictureElement | null = null
 
-  if (options.target !== 'email') {
+  if (context.variant({ web: true, email: false })) {
     const imgAttributes = {
       src: node.src,
       width: node.width,
@@ -121,7 +121,7 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
     }
 
     const shouldRenderPicture = Boolean(
-      options.feature?.pictureImageFormats &&
+      context.feature?.pictureImageFormats &&
       img.getAttribute('srcset') &&
       !isAnimatedImage(node.src) &&
       context.isLocalContentImage(node.src) &&
@@ -173,7 +173,7 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
   // Outlook is unable to properly resize images without a width/height
   // so we add that at the expected size in emails (600px) and use a higher
   // resolution image to keep images looking good on retina screens
-  if (options.target === 'email' && node.width && node.height) {
+  if (context.variant({ web: false, email: true }) && node.width && node.height) {
     let imageDimensions = {
       width: node.width,
       height: node.height,

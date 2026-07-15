@@ -134,7 +134,7 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
       }
 
       // add srcset+sizes except for email clients which do not have good support for either
-      if (options.target !== 'email') {
+      if (context.variant({ web: true, email: false })) {
         setSrcsetAttribute(img, image, options, context)
 
         if (img.getAttribute('srcset') && image.width >= 720) {
@@ -149,7 +149,7 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
       // Outlook is unable to properly resize images without a width/height
       // so we modify those to fit max width (600px) and use appropriately
       // resized images if available
-      if (options.target === 'email') {
+      if (context.variant({ web: false, email: true })) {
         // only resize if needed, width/height always exists for gallery image unline image cards
         if (image.width > 600) {
           const newImageDimensions = getResizedImageDimensions(image, { width: 600 })!
