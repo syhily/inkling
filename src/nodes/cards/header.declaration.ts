@@ -9,6 +9,7 @@ export const headerDeclaration = {
     default: true,
     emailEditor: false,
     emailRenderer: false,
+    // Not markdown-eligible: the header card has no markdown representation.
     markdown: false,
   },
 } satisfies CardDeclaration<'header'>
