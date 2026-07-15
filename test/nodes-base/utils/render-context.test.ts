@@ -116,9 +116,50 @@ describe('createRenderContext', () => {
       expect(context.safeUrl('media', 'blob:https://example.com/1234')).toBe('blob:https://example.com/1234')
     })
 
-    it('rejects unsupported schemes for both kinds', () => {
+    it('rejects non-allowlisted schemes for both kinds', () => {
+      // `unsupported-scheme:payload` was the rejected media source pinned per
+      // card by the retired test/nodes-base/nodes/media-url-policy.test.ts
+      // drift guard; the seam makes the policy structural, so the adversarial
+      // input is pinned here directly.
       expect(context.safeUrl('navigation', 'unsupported-scheme:payload')).toBe('')
       expect(context.safeUrl('media', 'unsupported-scheme:payload')).toBe('')
+      expect(context.safeUrl('media', 'javascript:alert(1)')).toBe('')
+    })
+  })
+
+  describe('isLocalContentImage', () => {
+    it("forwards the context's own siteUrl and imageBaseUrl", () => {
+      // The seam property (plan 040 Step 3b): renderers cannot forget to
+      // forward the site config — the b87ecc1 bug class — because the context
+      // carries it.
+      const context = createRenderContext({
+        dom,
+        siteUrl: 'https://example.com',
+        imageBaseUrl: 'https://cdn.example.com',
+      })
+
+      expect(context.isLocalContentImage('https://example.com/content/images/test.jpg')).toBe(true)
+      expect(context.isLocalContentImage('https://cdn.example.com/content/images/test.jpg')).toBe(true)
+    })
+
+    it('treats the CDN URL as external when the context has no imageBaseUrl', () => {
+      const context = createRenderContext({ dom, siteUrl: 'https://example.com' })
+
+      expect(context.isLocalContentImage('https://cdn.example.com/content/images/test.jpg')).toBe(false)
+    })
+
+    it('matches local content paths without any site config', () => {
+      const context = createRenderContext({ dom })
+
+      expect(context.isLocalContentImage('/content/images/test.jpg')).toBe(true)
+      expect(context.isLocalContentImage('__INKLING_URL__/content/images/test.jpg')).toBe(true)
+    })
+
+    it('rejects external and site-prefix-lookalike URLs', () => {
+      const context = createRenderContext({ dom, siteUrl: 'https://example.com' })
+
+      expect(context.isLocalContentImage('https://other.example.com/photos/test.jpg')).toBe(false)
+      expect(context.isLocalContentImage('https://example.com.evil.com/content/images/test.jpg')).toBe(false)
     })
   })
 
@@ -159,6 +200,30 @@ describe('createRenderContext', () => {
       expect(() => context.requirePostUrl('renderVideoNode')).toThrow(
         /^renderVideoNode requires options\.postUrl when options\.target is "email"$/,
       )
+    })
+  })
+
+  describe('trackIdAttribute', () => {
+    it('returns the base id on first use and <id>-<n> on repeats', () => {
+      const context = createRenderContext({ dom })
+
+      expect(context.trackIdAttribute('heading-one')).toBe('heading-one')
+      expect(context.trackIdAttribute('heading-one')).toBe('heading-one-1')
+      expect(context.trackIdAttribute('heading-one')).toBe('heading-one-2')
+    })
+
+    it('deduplicates ids independently of each other', () => {
+      const context = createRenderContext({ dom })
+
+      expect(context.trackIdAttribute('heading-one')).toBe('heading-one')
+      expect(context.trackIdAttribute('heading-two')).toBe('heading-two')
+      expect(context.trackIdAttribute('heading-one')).toBe('heading-one-1')
+      expect(context.trackIdAttribute('heading-two')).toBe('heading-two-1')
+    })
+
+    it('does not share the id map across contexts (one context per render pass)', () => {
+      expect(createRenderContext({ dom }).trackIdAttribute('heading-one')).toBe('heading-one')
+      expect(createRenderContext({ dom }).trackIdAttribute('heading-one')).toBe('heading-one')
     })
   })
 
