@@ -554,7 +554,7 @@ export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps)
 
   // when a search result is selected, replace the at-link node with a link node
   const onItemSelect = React.useCallback(
-    (item: ListOptionItem) => {
+    (item?: ListOptionItem) => {
       editor.update(() => {
         if (!item?.value || !focusedAtLinkNode) {
           if (focusedAtLinkNode) {

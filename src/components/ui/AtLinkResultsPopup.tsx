@@ -17,7 +17,7 @@ interface AtLinkResultsPopupProps {
   isSearching?: boolean
   listOptions: ListOptionSection[]
   query?: string
-  onSelect: (item: ListOptionItem) => void
+  onSelect: (item?: ListOptionItem) => void
 }
 
 export function AtLinkResultsPopup({ atLinkNode, isSearching, listOptions, query, onSelect }: AtLinkResultsPopupProps) {
@@ -145,6 +145,7 @@ export function AtLinkResultsPopup({ atLinkNode, isSearching, listOptions, query
             getItem={getItem}
             groups={listOptions}
             isLoading={isSearching}
+            onEnterWithoutSelection={onSelect}
             onSelect={onSelect}
           />
         </ul>
