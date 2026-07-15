@@ -16,12 +16,12 @@ import {
 } from 'lexical'
 
 import { $isInklingCard } from '@/nodes/base'
-import { $isAtStartOfDocument, $isAtTopOfNode, $selectDecoratorNode, getTopLevelNativeElement } from '@/utils'
+import { $isAtStartOfDocument, $selectDecoratorNode } from '@/utils'
 
 import type { CardKeyboardEvent } from '../types'
 import type { KeyboardNavigationDeps } from './types'
 
-import { $selectCard, RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX } from '../card-adjacency'
+import { $getLogicallyAdjacentCard, $getVisuallyAdjacentCard, $selectCard, editorOwnsFocus } from '../card-adjacency'
 
 export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
   const { selectedCardKey, cursorDidExitAtTop } = deps
@@ -90,7 +90,7 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
       }
 
       // avoid processing card behaviours when an inner element has focus (e.g. nested editors)
-      if (document.activeElement !== editor.getRootElement()) {
+      if (!editorOwnsFocus(editor)) {
         return true
       }
 
@@ -104,8 +104,9 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
           return true
         }
 
-        if (previousSibling && $isDecoratorNode(previousSibling)) {
-          $selectDecoratorNode(previousSibling)
+        const previousCard = $getLogicallyAdjacentCard('previous', currentNode)
+        if (previousCard) {
+          $selectDecoratorNode(previousCard)
           return true
         }
 
@@ -117,35 +118,15 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
 
       if ($isRangeSelection(selection)) {
         if (selection.isCollapsed()) {
-          const topLevelElement = selection?.anchor.getNode().getTopLevelElement()
-          const nativeSelection: Selection | null = window.getSelection()
-
           if (cursorDidExitAtTop && $isAtStartOfDocument(selection)) {
             cursorDidExitAtTop()
             return true
           }
 
-          // empty paragraphs are odd because the native range won't
-          // have a rect to compare positioning
-          const onEmptyNode = topLevelElement?.getTextContent().trim() === '' && selection?.anchor.offset === 0
-
-          const atStartOfElement = selection?.anchor.offset === 0 && selection.focus.offset === 0
-
-          if (onEmptyNode || atStartOfElement) {
-            const previousSibling = topLevelElement?.getPreviousSibling()
-            if (previousSibling && $isDecoratorNode(previousSibling)) {
-              $selectDecoratorNode(previousSibling)
-              return true
-            }
-          } else if (nativeSelection) {
-            const atTopOfNode = $isAtTopOfNode(nativeSelection, RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX)
-            if (atTopOfNode) {
-              const previousSibling = topLevelElement?.getPreviousSibling()
-              if (previousSibling && $isDecoratorNode(previousSibling)) {
-                $selectDecoratorNode(previousSibling)
-                return true
-              }
-            }
+          const previousCard = $getVisuallyAdjacentCard('up')
+          if (previousCard) {
+            $selectDecoratorNode(previousCard)
+            return true
           }
         }
       }
@@ -224,7 +205,7 @@ export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNa
       }
 
       // avoid processing card behaviours when an inner element has focus (e.g. nested editors)
-      if (document.activeElement !== editor.getRootElement()) {
+      if (!editorOwnsFocus(editor)) {
         return true
       }
 
@@ -241,8 +222,9 @@ export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNa
         }
 
         // if next sibling is a card, select it (default Lexical behaviour skips over cards)
-        if ($isDecoratorNode(nextSibling)) {
-          $selectDecoratorNode(nextSibling)
+        const nextCard = $getLogicallyAdjacentCard('next', currentNode)
+        if (nextCard) {
+          $selectDecoratorNode(nextCard)
           return true
         }
 
@@ -254,54 +236,10 @@ export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNa
 
       if ($isRangeSelection(selection)) {
         if (selection.isCollapsed()) {
-          const topLevelElement = selection?.anchor.getNode().getTopLevelElement()
-          const nativeSelection: Selection | null = window.getSelection()
-          if (!nativeSelection) {
-            return false
-          }
-          const nativeTopLevelElement = getTopLevelNativeElement(nativeSelection.anchorNode)
-
-          // empty paragraphs are odd because the native range won't
-          // have a rect to compare positioning
-          const onEmptyNode = topLevelElement?.getTextContent().trim() === '' && selection?.anchor.offset === 0
-
-          const atEndOfElement =
-            nativeSelection?.rangeCount !== 0 &&
-            nativeSelection.anchorNode === nativeTopLevelElement &&
-            nativeTopLevelElement &&
-            nativeSelection.anchorOffset === nativeTopLevelElement.children.length - 1 &&
-            nativeSelection.focusOffset === nativeTopLevelElement.children.length - 1
-
-          if (onEmptyNode || atEndOfElement) {
-            const nextSibling = topLevelElement?.getNextSibling()
-            if (nextSibling && $isDecoratorNode(nextSibling)) {
-              $selectDecoratorNode(nextSibling)
-              return true
-            }
-          } else {
-            const range = nativeSelection?.getRangeAt(0)?.cloneRange()
-            if (!range) {
-              return false
-            }
-            const rects = range.getClientRects()
-
-            if (rects.length > 0) {
-              // rects.length will be 2 if at the start/end of a line and we should default to the new/second line for
-              //  determining if a card is below the cursor
-              const rangeRect = rects.length > 1 ? rects[1] : rects[0]
-              if (!nativeTopLevelElement) {
-                return false
-              }
-              const elemRect = nativeTopLevelElement.getBoundingClientRect()
-
-              if (Math.abs(rangeRect.bottom - elemRect.bottom) < RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX) {
-                const nextSibling = topLevelElement?.getNextSibling()
-                if (nextSibling && $isDecoratorNode(nextSibling)) {
-                  $selectDecoratorNode(nextSibling)
-                  return true
-                }
-              }
-            }
+          const nextCard = $getVisuallyAdjacentCard('down')
+          if (nextCard) {
+            $selectDecoratorNode(nextCard)
+            return true
           }
         }
       }
@@ -319,7 +257,7 @@ export function registerArrowLeftCommand(editor: LexicalEditor, deps: KeyboardNa
     KEY_ARROW_LEFT_COMMAND,
     (event) => {
       // avoid processing card behaviours when an inner element has focus
-      if (document.activeElement !== editor.getRootElement()) {
+      if (!editorOwnsFocus(editor)) {
         return true
       }
 
@@ -348,18 +286,13 @@ export function registerArrowLeftCommand(editor: LexicalEditor, deps: KeyboardNa
       }
 
       const firstNode = selection.getNodes()[0]
-      let previousSibling
+      // non-card selections resolve their top-level element; cards resolve themselves
+      const referenceNode = $isInklingCard(firstNode) ? firstNode : firstNode.getTopLevelElement()
+      const previousCard = referenceNode ? $getLogicallyAdjacentCard('previous', referenceNode) : null
 
-      if (!$isInklingCard(firstNode)) {
-        const topLevelElement = firstNode.getTopLevelElement()
-        previousSibling = topLevelElement?.getPreviousSibling()
-      } else {
-        previousSibling = firstNode.getPreviousSibling()
-      }
-
-      if (previousSibling && $isDecoratorNode(previousSibling)) {
+      if (previousCard) {
         event?.preventDefault()
-        $selectDecoratorNode(previousSibling)
+        $selectDecoratorNode(previousCard)
         return true
       }
 
@@ -374,7 +307,7 @@ export function registerArrowRightCommand(editor: LexicalEditor, _deps: Keyboard
     KEY_ARROW_RIGHT_COMMAND,
     (event) => {
       // avoid processing card behaviours when an inner element has focus
-      if (document.activeElement !== editor.getRootElement()) {
+      if (!editorOwnsFocus(editor)) {
         return true
       }
 
@@ -387,17 +320,13 @@ export function registerArrowRightCommand(editor: LexicalEditor, _deps: Keyboard
       const selectedNodes = selection.getNodes()
       const lastNode = selectedNodes[selectedNodes.length - 1]
 
-      let nextSibling
-      if ($isInklingCard(lastNode)) {
-        nextSibling = lastNode.getNextSibling()
-      } else {
-        const topLevelElement = lastNode.getTopLevelElement()
-        nextSibling = topLevelElement?.getNextSibling()
-      }
+      // cards resolve themselves; other selections resolve their top-level element
+      const referenceNode = $isInklingCard(lastNode) ? lastNode : lastNode.getTopLevelElement()
+      const nextCard = referenceNode ? $getLogicallyAdjacentCard('next', referenceNode) : null
 
-      if (nextSibling && $isDecoratorNode(nextSibling)) {
+      if (nextCard) {
         event?.preventDefault()
-        $selectDecoratorNode(nextSibling)
+        $selectDecoratorNode(nextCard)
         return true
       }
 
