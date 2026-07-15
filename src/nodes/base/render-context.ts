@@ -79,7 +79,7 @@ export const CALLOUT_HTML_CONFIG: UnwrapAllowlistConfig = {
 }
 
 function isUnwrapAllowlistConfig(config: CardHtmlConfig): config is UnwrapAllowlistConfig {
-  return (config as UnwrapAllowlistConfig).implementation === 'unwrap-allowlist'
+  return 'implementation' in config && config.implementation === 'unwrap-allowlist'
 }
 
 export interface RenderContext {
