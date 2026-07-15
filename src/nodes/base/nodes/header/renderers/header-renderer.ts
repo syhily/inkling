@@ -4,7 +4,6 @@ import type { RenderContext } from '@/nodes/base/render-context'
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
-import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmailButton } from '@/nodes/base/utils/render-helpers/email-button'
 import { getSrcsetAttribute, type ImageRenderOptions } from '@/nodes/base/utils/srcset-attribute'
 import { slugify } from '@/utils/slugify'
@@ -63,8 +62,8 @@ function safeColor(value: string, fallback: string): string {
 function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions = {}, context: RenderContext) {
   const cardClasses = getCardClasses(nodeData).join(' ')
 
-  const safeBackgroundImageSrc = isSafeMediaUrl(nodeData.backgroundImageSrc) ? nodeData.backgroundImageSrc : ''
-  const safeButtonUrl = isSafeUrl(nodeData.buttonUrl) ? nodeData.buttonUrl : ''
+  const safeBackgroundImageSrc = context.safeUrl('media', nodeData.backgroundImageSrc)
+  const safeButtonUrl = context.safeUrl('navigation', nodeData.buttonUrl)
   const headerText = nodeData.header ? escapeHtml(nodeData.header) : ''
   const subheaderText = nodeData.subheader ? escapeHtml(nodeData.subheader) : ''
   const buttonText = nodeData.buttonText ? escapeHtml(nodeData.buttonText) : ''
@@ -153,7 +152,7 @@ interface MSOHeaderData {
   layout: string
 }
 
-// Callers must pass sanitized values (isSafeMediaUrl/safeColor) — these
+// Callers must pass sanitized values (context.safeUrl/safeColor) — these
 // helpers interpolate directly into VML attributes.
 function generateMSOSplitHeaderImage(nodeData: MSOHeaderData) {
   const { backgroundSize, backgroundImageSrc, backgroundColor } = nodeData
@@ -224,9 +223,9 @@ function generateMSOContentClosing(nodeData: MSOHeaderData) {
         `
 }
 
-function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions) {
-  const safeBackgroundImageSrc = isSafeMediaUrl(nodeData.backgroundImageSrc) ? nodeData.backgroundImageSrc : ''
-  const safeButtonUrl = isSafeUrl(nodeData.buttonUrl) ? nodeData.buttonUrl : ''
+function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions, context: RenderContext) {
+  const safeBackgroundImageSrc = context.safeUrl('media', nodeData.backgroundImageSrc)
+  const safeButtonUrl = context.safeUrl('navigation', nodeData.buttonUrl)
   const headerText = nodeData.header ? escapeHtml(nodeData.header) : ''
   const subheaderText = nodeData.subheader ? escapeHtml(nodeData.subheader) : ''
   const buttonText = nodeData.buttonText ? escapeHtml(nodeData.buttonText) : ''
@@ -376,7 +375,7 @@ export function renderHeaderNodeV2(
     const emailDoc = options.createDocument!()
     const emailDiv = emailDoc.createElement('div')
 
-    emailDiv.innerHTML = emailTemplate(node, options)?.trim()
+    emailDiv.innerHTML = emailTemplate(node, options, context)?.trim()
 
     return {
       element: getFirstHtmlElement(emailDiv, 'renderHeaderV2Node email') as HTMLDivElement,
