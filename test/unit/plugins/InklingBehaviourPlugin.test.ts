@@ -2,16 +2,13 @@ import { renderHook } from '@testing-library/react'
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import InklingBehaviourPlugin, { INSERT_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
-}))
-
-vi.mock('../../../src/context/InklingSelectedCardContext', () => ({
-  useInklingSelectedCardContext: vi.fn(),
 }))
 
 function createTestEditor(nodes: Array<unknown> = []) {
@@ -22,34 +19,25 @@ function createTestEditor(nodes: Array<unknown> = []) {
   })
 }
 
-async function setupContextMocks() {
-  const { useInklingSelectedCardContext } = await import('@/context/InklingSelectedCardContext')
-  useInklingSelectedCardContext.mockReturnValue({
-    selectedCardKey: null,
-    setSelectedCardKey: vi.fn(),
-    isEditingCard: false,
-    setIsEditingCard: vi.fn(),
-    isDragging: false,
-    setIsDragging: vi.fn(),
-    showVisibilitySettings: false,
-    setShowVisibilitySettings: vi.fn(),
-  })
+// Mount the plugin under the real InklingSelectedCardContext provider: it
+// creates the per-composer card selection store and the drag/visibility
+// context the plugin consumes (plan 038 — no whole-context mock).
+function renderPlugin() {
+  return renderHook(() => InklingBehaviourPlugin({}), { wrapper: InklingSelectedCardContext })
 }
 
 describe('InklingBehaviourPlugin', () => {
   let editor: LexicalEditor
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
     editor = createTestEditor()
+    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
+    useLexicalComposerContext.mockReturnValue([editor])
   })
 
   it('renders and registers commands as an aggregator', async () => {
-    await setupContextMocks()
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
-
-    renderHook(() => InklingBehaviourPlugin({}))
+    renderPlugin()
 
     // Smoke test: ensure the plugin registered the command listeners by
     // dispatching a few commands with valid editor state.
@@ -85,5 +73,24 @@ describe('InklingBehaviourPlugin', () => {
     expect(editor.dispatchCommand(SELECT_CARD_COMMAND, { cardKey: imageNode!.getKey() })).toBe(true)
 
     removeListener()
+  })
+
+  it('registers its command listeners once per mount, not per render', () => {
+    const registerCommandSpy = vi.spyOn(editor, 'registerCommand')
+
+    const { rerender, unmount } = renderPlugin()
+    const registrationsAfterMount = registerCommandSpy.mock.calls.length
+    expect(registrationsAfterMount).toBeGreaterThan(0)
+
+    rerender()
+    rerender()
+    rerender()
+
+    // Handlers read card selection synchronously from the store, so forced
+    // re-renders must not tear down and re-register the listeners (plan 038
+    // step 5).
+    expect(registerCommandSpy.mock.calls.length).toBe(registrationsAfterMount)
+
+    unmount()
   })
 })
