@@ -6,7 +6,7 @@ import type { CardNode } from '@/types/lexical-internals'
 
 import { $isInklingCard } from '@/nodes/base'
 
-import { $deselectCard } from './utils'
+import { $deselectCard } from './card-adjacency'
 
 interface CardSelectionDeps {
   selectedCardKey: string | null

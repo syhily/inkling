@@ -1,10 +1,22 @@
 import type { LexicalEditor, LexicalNode } from 'lexical'
 
-import { $getSelection, $isDecoratorNode, $isElementNode, $isRangeSelection } from 'lexical'
+import {
+  $createNodeSelection,
+  $createParagraphNode,
+  $getNodeByKey,
+  $getRoot,
+  $getSelection,
+  $isDecoratorNode,
+  $isElementNode,
+  $isRangeSelection,
+  $setSelection,
+} from 'lexical'
 
-import { $isAtTopOfNode, getTopLevelNativeElement } from '@/utils'
+import type { CardNode } from '@/types/lexical-internals'
 
-import { RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX } from './utils'
+import { $isAtTopOfNode, $selectDecoratorNode, getTopLevelNativeElement } from '@/utils'
+
+export const RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX = 10
 
 // Card adjacency (see CONTEXT.md) comes in two notions: visual adjacency — the
 // caret's rendered position, derived from geometry, which arrow keys use — and
@@ -176,4 +188,49 @@ export function $isCaretAtBlockTop(geometry: CardAdjacencyGeometry = defaultCard
 /** Single home for the "editor root has focus" guard copied across the behaviour handlers. */
 export function editorOwnsFocus(editor: LexicalEditor): boolean {
   return document.activeElement === editor.getRootElement()
+}
+
+export function $selectCard(editor: LexicalEditor, nodeKey: string) {
+  const selection = $createNodeSelection()
+  selection.add(nodeKey)
+  $setSelection(selection)
+  // selecting a decorator node does not change the
+  // window selection (there's no caret) so we need
+  // to manually move focus to the editor element
+  const rootElement = editor.getRootElement()
+  if (rootElement && document.activeElement !== rootElement) {
+    rootElement.focus({ preventScroll: true })
+  }
+}
+
+// remove empty cards when they are deselected
+export function $deselectCard(editor: LexicalEditor, nodeKey: string) {
+  const cardNode = $getNodeByKey(nodeKey) as CardNode | null
+  if (cardNode?.isEmpty?.()) {
+    $removeOrReplaceNodeWithParagraph(editor, cardNode)
+  }
+}
+
+export function $removeOrReplaceNodeWithParagraph(editor: LexicalEditor, node: CardNode) {
+  if ($getRoot().getLastChild()?.is(node)) {
+    const paragraph = $createParagraphNode()
+    $getRoot().append(paragraph)
+    paragraph.select()
+  } else {
+    const nextNode = node.getNextSibling()
+    if (nextNode && $isDecoratorNode(nextNode)) {
+      $selectDecoratorNode(nextNode)
+      // selecting a decorator node does not change the
+      // window selection (there's no caret) so we need
+      // to manually move focus to the editor element
+      const rootElement = editor.getRootElement()
+      if (rootElement) {
+        rootElement.focus()
+      }
+    } else {
+      nextNode?.selectStart()
+    }
+  }
+
+  node.remove()
 }

@@ -20,7 +20,7 @@ import { $selectDecoratorNode } from '@/utils'
 import type { CardKeyboardEvent } from '../types'
 import type { KeyboardNavigationDeps } from './types'
 
-import { $selectCard } from '../utils'
+import { $selectCard } from '../card-adjacency'
 
 export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
   const { selectedCardKey, isEditingCard, setIsEditingCard, isNested } = deps

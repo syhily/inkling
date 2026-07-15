@@ -1,18 +1,29 @@
 import {
   $createParagraphNode,
   $createTextNode,
+  $getNodeByKey,
   $getRoot,
+  $getSelection,
+  $isNodeSelection,
+  $isParagraphNode,
+  $isRangeSelection,
   createEditor,
   type LexicalEditor,
   type LexicalNode,
 } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { CardNode } from '@/types/lexical-internals'
+
+import { $createMarkdownNode, MarkdownNode } from '@/nodes/base'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import {
+  $deselectCard,
   $getLogicallyAdjacentCard,
   $getVisuallyAdjacentCard,
   $isCaretAtBlockTop,
+  $removeOrReplaceNodeWithParagraph,
+  $selectCard,
   editorOwnsFocus,
   type CardAdjacencyGeometry,
 } from '@/plugins/behaviour/card-adjacency'
@@ -541,6 +552,193 @@ describe('card-adjacency', () => {
 
     it('returns false when the editor has no root element', () => {
       expect(editorOwnsFocus(editor)).toBe(false)
+    })
+  })
+
+  describe('$removeOrReplaceNodeWithParagraph', () => {
+    it('appends and selects a paragraph when the node is the last child', async () => {
+      let cardKey = ''
+      await updateEditor(editor, () => {
+        const image = $createImageNode({ src: '/image.png' })
+        $getRoot().append(image)
+        cardKey = image.getKey()
+      })
+
+      await updateEditor(editor, () => {
+        $removeOrReplaceNodeWithParagraph(editor, $getRoot().getFirstChild() as CardNode)
+      })
+
+      read(() => {
+        const root = $getRoot()
+        expect(root.getChildrenSize()).toBe(1)
+        const paragraph = root.getFirstChild()
+        expect($isParagraphNode(paragraph)).toBe(true)
+        const selection = $getSelection()
+        expect($isRangeSelection(selection)).toBe(true)
+        if ($isRangeSelection(selection)) {
+          expect(selection.anchor.getNode().is(paragraph)).toBe(true)
+        }
+        expect($getNodeByKey(cardKey)).toBeNull()
+      })
+    })
+
+    it('selects the next sibling and focuses the root when the next sibling is a card', async () => {
+      const root = document.createElement('div')
+      editor.setRootElement(root)
+      const focusSpy = vi.spyOn(root, 'focus')
+
+      let cardKey = ''
+      let nextCardKey = ''
+      await updateEditor(editor, () => {
+        const rootNode = $getRoot()
+        const image = $createImageNode({ src: '/image.png' })
+        const nextImage = $createImageNode({ src: '/next.png' })
+        rootNode.append(image)
+        rootNode.append(nextImage)
+        cardKey = image.getKey()
+        nextCardKey = nextImage.getKey()
+      })
+
+      await updateEditor(editor, () => {
+        $removeOrReplaceNodeWithParagraph(editor, $getRoot().getFirstChild() as CardNode)
+      })
+
+      read(() => {
+        expect($getRoot().getChildrenSize()).toBe(1)
+        const selection = $getSelection()
+        expect($isNodeSelection(selection)).toBe(true)
+        if ($isNodeSelection(selection)) {
+          expect(selection.has(nextCardKey)).toBe(true)
+        }
+        expect($getNodeByKey(cardKey)).toBeNull()
+      })
+      expect(focusSpy).toHaveBeenCalled()
+    })
+
+    it('selects the start of the next sibling when it is not a card', async () => {
+      let cardKey = ''
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        const image = $createImageNode({ src: '/image.png' })
+        const paragraph = $createParagraphNode()
+        paragraph.append($createTextNode('Some content'))
+        root.append(image)
+        root.append(paragraph)
+        cardKey = image.getKey()
+      })
+
+      await updateEditor(editor, () => {
+        $removeOrReplaceNodeWithParagraph(editor, $getRoot().getFirstChild() as CardNode)
+      })
+
+      read(() => {
+        expect($getRoot().getChildrenSize()).toBe(1)
+        const selection = $getSelection()
+        expect($isRangeSelection(selection)).toBe(true)
+        if ($isRangeSelection(selection)) {
+          expect(selection.anchor.offset).toBe(0)
+          expect(selection.anchor.getNode().getTextContent()).toBe('Some content')
+        }
+        expect($getNodeByKey(cardKey)).toBeNull()
+      })
+    })
+  })
+
+  describe('$selectCard', () => {
+    async function buildSingleCard() {
+      let cardKey = ''
+      await updateEditor(editor, () => {
+        const image = $createImageNode({ src: '/image.png' })
+        $getRoot().append(image)
+        cardKey = image.getKey()
+      })
+      return cardKey
+    }
+
+    it('sets a node selection containing the card', async () => {
+      const cardKey = await buildSingleCard()
+
+      await updateEditor(editor, () => {
+        $selectCard(editor, cardKey)
+      })
+
+      read(() => {
+        const selection = $getSelection()
+        expect($isNodeSelection(selection)).toBe(true)
+        if ($isNodeSelection(selection)) {
+          expect(selection.has(cardKey)).toBe(true)
+        }
+      })
+    })
+
+    it('focuses the root element when it is not the active element', async () => {
+      const root = document.createElement('div')
+      editor.setRootElement(root)
+      const focusSpy = vi.spyOn(root, 'focus')
+      const cardKey = await buildSingleCard()
+
+      await updateEditor(editor, () => {
+        $selectCard(editor, cardKey)
+      })
+
+      expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true })
+    })
+
+    it('does not focus the root element when it is already the active element', async () => {
+      const root = document.createElement('div')
+      editor.setRootElement(root)
+      vi.spyOn(document, 'activeElement', 'get').mockReturnValue(root)
+      const focusSpy = vi.spyOn(root, 'focus')
+      const cardKey = await buildSingleCard()
+
+      await updateEditor(editor, () => {
+        $selectCard(editor, cardKey)
+      })
+
+      expect(focusSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('$deselectCard', () => {
+    beforeEach(() => {
+      editor = createTestEditor([ImageNode, MarkdownNode])
+    })
+
+    it('removes an empty card via $removeOrReplaceNodeWithParagraph', async () => {
+      let cardKey = ''
+      await updateEditor(editor, () => {
+        const markdown = $createMarkdownNode()
+        $getRoot().append(markdown)
+        cardKey = markdown.getKey()
+      })
+
+      await updateEditor(editor, () => {
+        $deselectCard(editor, cardKey)
+      })
+
+      read(() => {
+        expect($getNodeByKey(cardKey)).toBeNull()
+        const root = $getRoot()
+        expect(root.getChildrenSize()).toBe(1)
+        expect($isParagraphNode(root.getFirstChild())).toBe(true)
+      })
+    })
+
+    it('keeps a non-empty card', async () => {
+      let cardKey = ''
+      await updateEditor(editor, () => {
+        const markdown = $createMarkdownNode({ markdown: 'Some content' })
+        $getRoot().append(markdown)
+        cardKey = markdown.getKey()
+      })
+
+      await updateEditor(editor, () => {
+        $deselectCard(editor, cardKey)
+      })
+
+      read(() => {
+        expect($getNodeByKey(cardKey)).not.toBeNull()
+      })
     })
   })
 })

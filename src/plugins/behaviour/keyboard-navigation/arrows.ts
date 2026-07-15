@@ -21,7 +21,7 @@ import { $isAtStartOfDocument, $isAtTopOfNode, $selectDecoratorNode, getTopLevel
 import type { CardKeyboardEvent } from '../types'
 import type { KeyboardNavigationDeps } from './types'
 
-import { $selectCard, RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX } from '../utils'
+import { $selectCard, RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX } from '../card-adjacency'
 
 export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
   const { selectedCardKey, cursorDidExitAtTop } = deps

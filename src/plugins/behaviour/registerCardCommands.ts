@@ -18,6 +18,7 @@ import type { CardNode } from '@/types/lexical-internals'
 
 import { $insertAndSelectNode } from '@/utils/$insertAndSelectNode'
 
+import { $deselectCard, $selectCard } from './card-adjacency'
 import {
   DELETE_CARD_COMMAND,
   DESELECT_CARD_COMMAND,
@@ -25,7 +26,6 @@ import {
   INSERT_CARD_COMMAND,
   SELECT_CARD_COMMAND,
 } from './commands'
-import { $deselectCard, $selectCard } from './utils'
 
 interface CardCommandDeps {
   selectedCardKey: string | null

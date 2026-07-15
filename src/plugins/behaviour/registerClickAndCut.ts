@@ -5,7 +5,7 @@ import { $getNearestNodeFromDOMNode, CLICK_COMMAND, COMMAND_PRIORITY_LOW, CUT_CO
 
 import { shouldIgnoreEvent } from '@/utils/shouldIgnoreEvent'
 
-import { $selectCard } from './utils'
+import { $selectCard } from './card-adjacency'
 
 export function registerClickAndCut(editor: LexicalEditor) {
   return mergeRegister(

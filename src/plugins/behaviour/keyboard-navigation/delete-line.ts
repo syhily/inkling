@@ -6,8 +6,8 @@ import { $isAtTopOfNode, $selectDecoratorNode } from '@/utils'
 
 import type { KeyboardNavigationDeps } from './types'
 
+import { RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX } from '../card-adjacency'
 import { DELETE_CARD_COMMAND } from '../commands'
-import { RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX } from '../utils'
 
 export function registerDeleteLineCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
   const { selectedCardKey, isNested } = deps

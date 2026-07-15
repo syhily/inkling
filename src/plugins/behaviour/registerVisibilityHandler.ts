@@ -7,6 +7,7 @@ import type { CardNode } from '@/types/lexical-internals'
 
 import { $isHtmlNode } from '@/nodes/HtmlNode'
 
+import { $deselectCard } from './card-adjacency'
 import {
   DESELECT_CARD_COMMAND,
   EDIT_CARD_COMMAND,
@@ -14,7 +15,6 @@ import {
   SELECT_CARD_COMMAND,
   SHOW_CARD_VISIBILITY_SETTINGS_COMMAND,
 } from './commands'
-import { $deselectCard } from './utils'
 
 interface VisibilityHandlerDeps {
   selectedCardKey: string | null
