@@ -156,6 +156,23 @@ test.describe('Linking', async () => {
       await assertHTML(page, html` <p><span data-lexical-text="true">@Unknown page</span></p> `)
     })
 
+    test('keeps typed text when Enter is pressed with no matching suggestions', async function () {
+      await focusEditor(page)
+      await page.keyboard.type('@zz-no-such-internal-post-zz')
+      await expect(page.getByTestId('at-link-results')).toBeVisible()
+
+      await page.keyboard.press('Enter')
+
+      await assertHTML(
+        page,
+        html`
+          <p>
+            <span data-lexical-text="true">@zz-no-such-internal-post-zz</span>
+          </p>
+        `,
+      )
+    })
+
     test('removes at-linking when backspacing', async function () {
       await focusEditor(page)
       await page.keyboard.type('@')
