@@ -1,9 +1,9 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
-import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { bytesToSize } from '@/nodes/base/utils/size-byte-converter'
 
@@ -16,7 +16,7 @@ interface FileNodeData {
   formattedFileSize: string
 }
 
-export function renderFileNode(node: FileNodeData, options: ExportDOMOptions = {}) {
+export function renderFileNode(node: FileNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
   addCreateDocumentOption(options)
   const document = options.createDocument!()
 
@@ -25,9 +25,9 @@ export function renderFileNode(node: FileNodeData, options: ExportDOMOptions = {
   }
 
   if (options.target === 'email') {
-    return emailTemplate(node, document, options)
+    return emailTemplate(node, document, options, context)
   } else {
-    return cardTemplate(node, document)
+    return cardTemplate(node, document, context)
   }
 }
 
@@ -39,7 +39,7 @@ function wrapWithAnchor(content: string, href: string | undefined, cls: string, 
   return `<span class="${cls}">${content}</span>`
 }
 
-function emailTemplate(node: FileNodeData, document: Document, options: ExportDOMOptions) {
+function emailTemplate(node: FileNodeData, document: Document, options: ExportDOMOptions, context: RenderContext) {
   let iconCls
   if (!node.fileTitle && !node.fileCaption) {
     iconCls = 'margin-top: 6px; height: 20px; width: 20px; max-width: 20px; padding-top: 4px; padding-bottom: 4px;'
@@ -48,7 +48,8 @@ function emailTemplate(node: FileNodeData, document: Document, options: ExportDO
   }
 
   const href = options.postUrl || node.src || undefined
-  const safeHref = href && isSafeUrl(href) ? href : undefined
+  // safeUrl's '' sentinel maps back to the undefined sentinel this template branches on
+  const safeHref = context.safeUrl('navigation', href ?? '') || undefined
 
   const html = `
         <table cellspacing="0" cellpadding="4" border="0" class="inkling-file-card" width="100%">
@@ -101,7 +102,7 @@ function emailTemplate(node: FileNodeData, document: Document, options: ExportDO
   return { element: getFirstHtmlElement(container, 'renderFileNode emailTemplate'), type: 'outer' as const }
 }
 
-function cardTemplate(node: FileNodeData, document: Document) {
+function cardTemplate(node: FileNodeData, document: Document, context: RenderContext) {
   const card = document.createElement('div')
   card.setAttribute('class', 'inkling-card inkling-file-card')
 
@@ -135,10 +136,11 @@ function cardTemplate(node: FileNodeData, document: Document) {
   contents.appendChild(metadata)
 
   let container: HTMLElement
-  if (node.src && isSafeUrl(node.src)) {
+  const safeSrc = context.safeUrl('navigation', node.src)
+  if (safeSrc) {
     const anchor = document.createElement('a')
     anchor.setAttribute('class', 'inkling-file-card-container')
-    anchor.setAttribute('href', node.src)
+    anchor.setAttribute('href', safeSrc)
     anchor.setAttribute('title', 'Download')
     anchor.setAttribute('download', '')
     container = anchor

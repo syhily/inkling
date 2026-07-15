@@ -1,8 +1,8 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
-import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { renderEmailButton } from '@/nodes/base/utils/render-helpers/email-button'
 import { html } from '@/nodes/base/utils/tagged-template-fns'
@@ -13,24 +13,24 @@ interface ButtonNodeData {
   alignment: string
 }
 
-export function renderButtonNode(node: ButtonNodeData, options: ExportDOMOptions = {}) {
+export function renderButtonNode(node: ButtonNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
   addCreateDocumentOption(options)
   const document = options.createDocument!()
 
-  if (!node.buttonUrl || node.buttonUrl.trim() === '' || !isSafeUrl(node.buttonUrl)) {
+  if (!node.buttonUrl || node.buttonUrl.trim() === '' || context.safeUrl('navigation', node.buttonUrl) === '') {
     return renderEmptyContainer(document)
   }
 
   if (options.target === 'email') {
-    return emailTemplate(node, options, document)
+    return emailTemplate(node, options, document, context)
   } else {
-    return frontendTemplate(node, document)
+    return frontendTemplate(node, document, context)
   }
 }
 
-function frontendTemplate(node: ButtonNodeData, document: Document) {
+function frontendTemplate(node: ButtonNodeData, document: Document, context: RenderContext) {
   const cardClasses = getCardClasses(node)
-  const safeButtonUrl = isSafeUrl(node.buttonUrl) ? node.buttonUrl : ''
+  const safeButtonUrl = context.safeUrl('navigation', node.buttonUrl)
 
   const cardDiv = document.createElement('div')
   cardDiv.setAttribute('class', cardClasses)
@@ -44,8 +44,8 @@ function frontendTemplate(node: ButtonNodeData, document: Document) {
   return { element: cardDiv, type: 'outer' as const }
 }
 
-function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document: Document) {
-  const safeButtonUrl = isSafeUrl(node.buttonUrl) ? node.buttonUrl : ''
+function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document: Document, context: RenderContext) {
+  const safeButtonUrl = context.safeUrl('navigation', node.buttonUrl)
   const buttonText = node.buttonText || 'Button Title'
 
   if (usesModernEmailButton(options)) {

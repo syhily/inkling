@@ -1,8 +1,8 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
-import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { truncateHtml } from '@/nodes/base/utils/truncate'
 import { sanitizeHtml } from '@/utils/sanitize-html'
@@ -18,37 +18,37 @@ interface BookmarkNodeData {
   caption: string
 }
 
-function getSafeMediaUrls(node: BookmarkNodeData) {
+function getSafeMediaUrls(node: BookmarkNodeData, context: RenderContext) {
   return {
-    safeIcon: isSafeMediaUrl(node.icon) ? node.icon : '',
-    safeThumbnail: isSafeMediaUrl(node.thumbnail) ? node.thumbnail : '',
+    safeIcon: context.safeUrl('media', node.icon),
+    safeThumbnail: context.safeUrl('media', node.thumbnail),
   }
 }
 
-export function renderBookmarkNode(node: BookmarkNodeData, options: ExportDOMOptions = {}) {
+export function renderBookmarkNode(node: BookmarkNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
   addCreateDocumentOption(options)
 
   const document = options.createDocument!()
 
-  if (!node.url || node.url.trim() === '' || !isSafeUrl(node.url)) {
+  if (!node.url || node.url.trim() === '' || context.safeUrl('navigation', node.url) === '') {
     return renderEmptyContainer(document)
   }
 
   if (options.target === 'email') {
-    return emailTemplate(node, document)
+    return emailTemplate(node, document, context)
   } else {
-    return frontendTemplate(node, document)
+    return frontendTemplate(node, document, context)
   }
 }
 
-function emailTemplate(node: BookmarkNodeData, document: Document) {
+function emailTemplate(node: BookmarkNodeData, document: Document, context: RenderContext) {
   const title = escapeHtml(node.title)
   const publisher = escapeHtml(node.publisher)
   const author = escapeHtml(node.author)
   const description = node.description
 
-  const safeUrl = isSafeUrl(node.url) ? node.url : ''
-  const { safeIcon, safeThumbnail } = getSafeMediaUrls(node)
+  const safeUrl = context.safeUrl('navigation', node.url)
+  const { safeIcon, safeThumbnail } = getSafeMediaUrls(node, context)
   const caption = escapeHtml(node.caption)
 
   const element = document.createElement('div')
@@ -134,8 +134,8 @@ function emailTemplate(node: BookmarkNodeData, document: Document) {
   return { element, type: 'outer' as const }
 }
 
-function frontendTemplate(node: BookmarkNodeData, document: Document) {
-  const { safeIcon, safeThumbnail } = getSafeMediaUrls(node)
+function frontendTemplate(node: BookmarkNodeData, document: Document, context: RenderContext) {
+  const { safeIcon, safeThumbnail } = getSafeMediaUrls(node, context)
 
   const element = document.createElement('figure')
   const caption = node.caption
@@ -147,7 +147,7 @@ function frontendTemplate(node: BookmarkNodeData, document: Document) {
 
   const container = document.createElement('a')
   container.setAttribute('class', 'inkling-bookmark-container')
-  container.href = isSafeUrl(node.url) ? node.url : ''
+  container.href = context.safeUrl('navigation', node.url)
   element.appendChild(container)
 
   const content = document.createElement('div')
