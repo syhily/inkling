@@ -6,17 +6,17 @@ import type { CardNode } from '@/types/lexical-internals'
 
 import { $isInklingCard } from '@/nodes/base'
 
+import type { CardSelectionStore } from './cardSelectionStore'
+
 import { $deselectCard } from './card-adjacency'
 
 interface CardSelectionDeps {
-  selectedCardKey: string | null
-  setSelectedCardKey: (key: string | null) => void
-  setIsEditingCard: (editing: boolean) => void
+  store: CardSelectionStore
   isNested?: boolean
 }
 
 export function registerCardSelection(editor: LexicalEditor, deps: CardSelectionDeps) {
-  const { selectedCardKey, setSelectedCardKey, setIsEditingCard, isNested } = deps
+  const { store, isNested } = deps
 
   // Track card selections restored by undo/redo so we can protect them from
   // being cleared by decorator reconciliation side-effects. When a 'historic'
@@ -38,6 +38,10 @@ export function registerCardSelection(editor: LexicalEditor, deps: CardSelection
       return
     }
 
+    // read the store fresh on every update — a synchronous read is never
+    // staler than the React mirror it replaced
+    const { selectedCardKey } = store.getState()
+
     // trigger card selection/deselection when selection changes
     const { isCardSelected, cardKey, cardNode } = editorState.read(() => {
       const selection = $getSelection()
@@ -55,15 +59,13 @@ export function registerCardSelection(editor: LexicalEditor, deps: CardSelection
 
     if (isCardSelected && cardKey) {
       if (!selectedCardKey) {
-        setSelectedCardKey(cardKey)
-        setIsEditingCard(false)
+        store.setState({ selectedCardKey: cardKey, isEditingCard: false })
       } else if (selectedCardKey !== cardKey) {
         editor.update(
           () => {
             $deselectCard(editor, selectedCardKey)
 
-            setSelectedCardKey(cardKey)
-            setIsEditingCard(false)
+            store.setState({ selectedCardKey: cardKey, isEditingCard: false })
           },
           { tag: 'history-merge' },
         ) // don't include a history entry for selection change
@@ -102,8 +104,7 @@ export function registerCardSelection(editor: LexicalEditor, deps: CardSelection
               selection.add(selectedCardKey)
               $setSelection(selection)
             } else {
-              setSelectedCardKey(null)
-              setIsEditingCard(false)
+              store.setState({ selectedCardKey: null, isEditingCard: false })
             }
           },
           { tag: 'history-merge' },
@@ -115,8 +116,7 @@ export function registerCardSelection(editor: LexicalEditor, deps: CardSelection
         () => {
           $deselectCard(editor, selectedCardKey)
 
-          setSelectedCardKey(null)
-          setIsEditingCard(false)
+          store.setState({ selectedCardKey: null, isEditingCard: false })
         },
         { tag: 'history-merge' },
       ) // don't include a history entry for selection change
@@ -133,7 +133,7 @@ export function registerCardSelection(editor: LexicalEditor, deps: CardSelection
         { tag: 'history-merge' },
       ) // don't include a history entry for clearing the open in edit mode prop
 
-      setIsEditingCard(true)
+      store.setState({ isEditingCard: true })
     }
   })
 }

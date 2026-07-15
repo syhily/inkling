@@ -13,16 +13,17 @@ import { describe, expect, it, vi } from 'vitest'
 import type { CardNode } from '@/types/lexical-internals'
 
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
+import { createCardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
 import { registerCardSelection } from '@/plugins/behaviour/registerCardSelection'
 
 // Characterization tests for the preserveCardSelection undo-restore logic
-// (plan 038 step 1). They record the current update-tag/selection behavior so
-// the later swap to store-based deps ({ store, isNested? }) can be validated
-// against a fixed baseline. All deps wiring lives in createSelectionHarness:
-// the swap should touch only that helper, never the test bodies. Assertions
-// stay on shape-invariant observables (editor selection, setter call
-// arguments) and deliberately avoid pinning mirror artifacts that the swap is
-// expected to change (noted per test).
+// (plan 038 step 1). They recorded the pre-swap update-tag/selection behavior
+// as a fixed baseline; the step 3 swap to store-based deps ({ store,
+// isNested? }) touched only createSelectionHarness, never the test bodies.
+// The setter spies stand in for the old React mirror by observing store
+// notifications. Assertions stay on shape-invariant observables (editor
+// selection, setter call arguments) and deliberately avoid pinning mirror
+// artifacts that the swap changed (noted per test).
 
 function createTestEditor() {
   return createEditor({
@@ -32,22 +33,26 @@ function createTestEditor() {
   })
 }
 
-// The one place CardSelectionDeps are constructed. `selectedCardKey` is the
-// local variable standing in for the React mirror: like the real mirror, it
-// is captured at registration time and only refreshed by re-registering, so
-// each harness models one fixed mirror value.
+// The one place CardSelectionDeps are constructed. The setter spies stand in
+// for the old React mirror: every store notification mirrors both current
+// values into them, so assertions on setter call arguments keep their
+// pre-swap meaning.
 function createSelectionHarness(
   editor: LexicalEditor,
   initial: { selectedCardKey?: string | null; isNested?: boolean } = {},
 ) {
   const setSelectedCardKey = vi.fn()
   const setIsEditingCard = vi.fn()
-  const dispose = registerCardSelection(editor, {
-    selectedCardKey: initial.selectedCardKey ?? null,
-    setSelectedCardKey,
-    setIsEditingCard,
-    isNested: initial.isNested,
+  const store = createCardSelectionStore()
+  // seed before subscribing so the spies only record listener-driven writes
+  if (initial.selectedCardKey) {
+    store.setState({ selectedCardKey: initial.selectedCardKey })
+  }
+  store.subscribe((state) => {
+    setSelectedCardKey(state.selectedCardKey)
+    setIsEditingCard(state.isEditingCard)
   })
+  const dispose = registerCardSelection(editor, { store, isNested: initial.isNested })
   return { setSelectedCardKey, setIsEditingCard, dispose }
 }
 
@@ -331,11 +336,12 @@ describe('registerCardSelection', () => {
     expect(harness.setIsEditingCard).toHaveBeenCalledWith(true)
     expect(clearOpenInEditMode).toHaveBeenCalledTimes(1)
     expect(readSelectedCardKeys(editor)).toEqual([cardKey])
-    // as-is note: the history-merge bookkeeping pass still reads the stale
-    // mirror (null), so it repeats setSelectedCardKey(cardKey) and
-    // setIsEditingCard(false) after the branch ran. That artifact follows the
-    // deps wiring, not the branch behavior, so exact call counts and the
-    // final isEditingCard value are intentionally not pinned here.
+    // as-is note: before the store swap, the history-merge bookkeeping pass
+    // read the stale mirror (null) and repeated setSelectedCardKey(cardKey) /
+    // setIsEditingCard(false) after the branch ran. The synchronous store read
+    // no longer produces that artifact. Exact call counts and the final
+    // isEditingCard value stay intentionally unpinned so this test pins branch
+    // behavior, not deps wiring.
 
     harness.dispose()
   })

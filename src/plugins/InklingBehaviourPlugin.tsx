@@ -4,6 +4,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { mergeRegister } from '@lexical/utils'
 import React from 'react'
 
+import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
 import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { registerDefaultTransforms } from '@/transforms'
 
@@ -56,6 +57,7 @@ function useInklingBehaviour({
 }) {
   const { selectedCardKey, setSelectedCardKey, isEditingCard, setIsEditingCard, setShowVisibilitySettings } =
     useInklingSelectedCardContext()
+  const cardSelectionStore = useCardSelectionStore()
 
   const isShiftPressed = React.useRef(false)
 
@@ -84,9 +86,7 @@ function useInklingBehaviour({
   React.useEffect(() => {
     return mergeRegister(
       registerCardSelection(editor, {
-        selectedCardKey,
-        setSelectedCardKey,
-        setIsEditingCard,
+        store: cardSelectionStore,
         isNested,
       }),
       registerCardCommands(editor, {
