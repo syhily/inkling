@@ -590,6 +590,8 @@ describe('HeaderNode', function () {
 
           await expectPrettifiedHtml(
             (element as HTMLElement).outerHTML,
+            // duplicated `#000000` is current renderer output (header-renderer.ts
+            // concatenates buttonStyle + buttonAccent) — pinned verbatim for plan 040
             html`
               <div
                 class="inkling-header-card inkling-v2 inkling-header-card-light-bg"
