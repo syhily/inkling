@@ -31,12 +31,7 @@ export class HtmlNode extends BaseHtmlNode {
 
   decorate() {
     return (
-      <InklingCardWrapper
-        IndicatorIcon={HtmlIndicatorIcon}
-        isVisibilityActive={this.getIsVisibilityActive()}
-        nodeKey={this.getKey()}
-        wrapperStyle="wide"
-      >
+      <InklingCardWrapper IndicatorIcon={HtmlIndicatorIcon} nodeKey={this.getKey()} wrapperStyle="wide">
         <HtmlNodeComponent html={this.html} nodeKey={this.getKey()} />
       </InklingCardWrapper>
     )
