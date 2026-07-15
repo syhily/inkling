@@ -11,13 +11,14 @@ import {
 } from 'lexical'
 import React, { useCallback } from 'react'
 
+import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
+
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
 import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
-import { GeneratedDecoratorNodeBase } from '@/nodes/base'
 import trackEvent from '@/utils/analytics'
 import { isInternalUrl } from '@/utils/isInternalUrl'
 

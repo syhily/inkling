@@ -9,7 +9,11 @@ import {
   extendedHeadingNodeReplacement,
   extendedTextNodeReplacement,
 } from '@/nodes/base'
-import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
+import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
+import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
+
+// Cards eligible for the email renderer, from their declarations.
+const CARD_NODES = deriveCardNodes(CARD_WRAPPER_NODES, 'emailRenderer').map((card) => card.node)
 
 const EMAIL_NODES = [
   ExtendedTextNode,
@@ -21,7 +25,7 @@ const EMAIL_NODES = [
   ListNode,
   ListItemNode,
   LinkNode,
-  HorizontalRuleNode,
+  ...CARD_NODES,
 ]
 
 for (const node of EMAIL_NODES) {

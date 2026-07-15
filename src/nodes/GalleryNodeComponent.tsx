@@ -2,6 +2,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 
+import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
 import type { GalleryImage } from '@/types/gallery'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
@@ -12,7 +13,6 @@ import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import useGalleryReorder from '@/hooks/useGalleryReorder'
-import { GeneratedDecoratorNodeBase } from '@/nodes/base'
 import { MAX_IMAGES, recalculateImageRows } from '@/nodes/GalleryNode'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import { revokePreviewUrl } from '@/utils/revokePreviewUrl'

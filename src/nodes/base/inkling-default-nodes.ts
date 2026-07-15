@@ -5,27 +5,16 @@ export { CARD_WIDTHS, isCardWidth, normalizeCardWidth, type CardWidth } from '@/
 
 import { AsideNode } from '@/nodes/base/nodes/aside/AsideNode'
 import { AtLinkNode, AtLinkSearchNode } from '@/nodes/base/nodes/at-link/index'
-import { BaseAudioNode } from '@/nodes/base/nodes/audio/AudioNode'
-import { BookmarkNode } from '@/nodes/base/nodes/bookmark/BookmarkNode'
-import { ButtonNode } from '@/nodes/base/nodes/button/ButtonNode'
-import { CalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
-import { CodeBlockNode } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
 import { ExtendedHeadingNode, extendedHeadingNodeReplacement } from '@/nodes/base/nodes/ExtendedHeadingNode'
 import { ExtendedQuoteNode, extendedQuoteNodeReplacement } from '@/nodes/base/nodes/ExtendedQuoteNode'
 import { ExtendedTextNode, extendedTextNodeReplacement } from '@/nodes/base/nodes/ExtendedTextNode'
-import { FileNode } from '@/nodes/base/nodes/file/FileNode'
-import { GalleryNode } from '@/nodes/base/nodes/gallery/GalleryNode'
-import { HeaderNode } from '@/nodes/base/nodes/header/HeaderNode'
-import { HorizontalRuleNode } from '@/nodes/base/nodes/horizontalrule/HorizontalRuleNode'
-import { HtmlNode } from '@/nodes/base/nodes/html/HtmlNode'
-import { ImageNode } from '@/nodes/base/nodes/image/ImageNode'
 import { MarkdownNode } from '@/nodes/base/nodes/markdown/MarkdownNode'
 import { TKNode } from '@/nodes/base/nodes/TKNode'
-import { ToggleNode } from '@/nodes/base/nodes/toggle/ToggleNode'
-import { VideoNode } from '@/nodes/base/nodes/video/VideoNode'
 import { ZWNJNode } from '@/nodes/base/nodes/zwnj/ZWNJNode'
 import linebreakSerializers from '@/nodes/base/serializers/linebreak'
 import paragraphSerializers from '@/nodes/base/serializers/paragraph'
+import { CARD_DECLARATIONS } from '@/nodes/cards'
+import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
 
 // re-export everything for easier importing
 export * from '@/nodes/base/InklingDecoratorNode'
@@ -99,6 +88,42 @@ export const DEFAULT_CONFIG = {
   },
 }
 
+// The pre-declaration card order of DEFAULT_NODES — pinned so the derived
+// view stays identical to the pre-refactor array. Cards without a legacy
+// rank (declared later) keep declaration order and land after the pinned run.
+const LEGACY_DEFAULT_CARD_ORDER = [
+  'codeblock',
+  'image',
+  'video',
+  'audio',
+  'callout',
+  'horizontalrule',
+  'html',
+  'file',
+  'toggle',
+  'button',
+  'header',
+  'bookmark',
+  'gallery',
+]
+
+const [
+  codeBlockCardNode,
+  imageCardNode,
+  videoCardNode,
+  audioCardNode,
+  calloutCardNode,
+  horizontalRuleCardNode,
+  htmlCardNode,
+  fileCardNode,
+  toggleCardNode,
+  buttonCardNode,
+  headerCardNode,
+  bookmarkCardNode,
+  galleryCardNode,
+  ...additionalCardNodes
+] = deriveCardNodes(CARD_DECLARATIONS, 'default', LEGACY_DEFAULT_CARD_ORDER).map((card) => card.baseNode)
+
 // export convenience objects for use elsewhere
 export const DEFAULT_NODES = [
   ExtendedTextNode,
@@ -107,21 +132,23 @@ export const DEFAULT_NODES = [
   extendedHeadingNodeReplacement,
   ExtendedQuoteNode,
   extendedQuoteNodeReplacement,
-  CodeBlockNode,
-  ImageNode,
+  codeBlockCardNode,
+  imageCardNode,
+  // MarkdownNode is a base-only node (not a card) — pinned in place.
   MarkdownNode,
-  VideoNode,
-  BaseAudioNode,
-  CalloutNode,
+  videoCardNode,
+  audioCardNode,
+  calloutCardNode,
   AsideNode,
-  HorizontalRuleNode,
-  HtmlNode,
-  FileNode,
-  ToggleNode,
-  ButtonNode,
-  HeaderNode,
-  BookmarkNode,
-  GalleryNode,
+  horizontalRuleCardNode,
+  htmlCardNode,
+  fileCardNode,
+  toggleCardNode,
+  buttonCardNode,
+  headerCardNode,
+  bookmarkCardNode,
+  galleryCardNode,
+  ...additionalCardNodes,
   TKNode,
   AtLinkNode,
   AtLinkSearchNode,

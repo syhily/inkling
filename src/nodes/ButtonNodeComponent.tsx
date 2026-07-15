@@ -2,13 +2,14 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getNodeByKey, type NodeKey } from 'lexical'
 import React from 'react'
 
+import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
+
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { ButtonCard } from '@/components/ui/cards/ButtonCard'
 import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
-import { GeneratedDecoratorNodeBase } from '@/nodes/base'
 
 export interface ButtonNodeComponentProps {
   alignment?: string

@@ -45,7 +45,9 @@ import { DEFAULT_TRANSFORMERS } from '@/plugins/MarkdownShortcutPlugin'
  * Design notes and limitations are documented in `docs/markdown-api.md`.
  */
 
-const MARKDOWN_NODES = [
+// Exported (not part of the public `@/markdown` barrel) so the node-set diff
+// test can pin the pre-derivation arrays; Batch 2 of plan 039 derives these.
+export const MARKDOWN_NODES = [
   HeadingNode,
   QuoteNode,
   ListNode,
@@ -66,7 +68,7 @@ const MARKDOWN_NODES = [
   MarkdownNode,
 ]
 
-const CARD_TRANSFORMERS = [
+export const CARD_TRANSFORMERS = [
   IMAGE_CARD_TRANSFORMER,
   HTML_CARD_TRANSFORMER,
   FILE_CARD_TRANSFORMER,

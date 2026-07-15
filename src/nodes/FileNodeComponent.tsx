@@ -2,6 +2,8 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getNodeByKey, type NodeKey } from 'lexical'
 import React from 'react'
 
+import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
+
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { FileCard } from '@/components/ui/cards/FileCard'
 import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
@@ -9,7 +11,6 @@ import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
-import { GeneratedDecoratorNodeBase } from '@/nodes/base'
 import { fileUploadHandler } from '@/utils/fileUploadHandler'
 import { openFileSelection } from '@/utils/openFileSelection'
 

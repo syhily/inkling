@@ -3,7 +3,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { mergeRegister, $getSelection, $isRangeSelection, COMMAND_PRIORITY_LOW, createCommand } from 'lexical'
 import React from 'react'
 
-import { render as markdownRender } from '@/markdown'
+import { render as markdownRender } from '@/markdown/markdown-html-renderer'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 export const PASTE_MARKDOWN_COMMAND = createCommand<{ text: string; allowBr: boolean }>('PASTE_MARKDOWN_COMMAND')
 export const MIME_TEXT_PLAIN = 'text/plain'

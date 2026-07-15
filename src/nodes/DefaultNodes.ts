@@ -3,7 +3,6 @@ import { ListItemNode, ListNode } from '@lexical/list'
 import { HeadingNode, QuoteNode } from '@lexical/rich-text'
 
 import { AsideNode } from '@/nodes/AsideNode'
-import { AudioNode } from '@/nodes/AudioNode'
 import {
   AtLinkNode,
   AtLinkSearchNode,
@@ -17,18 +16,12 @@ import {
   extendedQuoteNodeReplacement,
   extendedTextNodeReplacement,
 } from '@/nodes/base'
-import { BookmarkNode } from '@/nodes/BookmarkNode'
-import { ButtonNode } from '@/nodes/ButtonNode'
-import { CalloutNode } from '@/nodes/CalloutNode'
-import { CodeBlockNode } from '@/nodes/CodeBlockNode'
-import { FileNode } from '@/nodes/FileNode'
-import { GalleryNode } from '@/nodes/GalleryNode'
-import { HeaderNode } from '@/nodes/HeaderNode'
-import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
-import { HtmlNode } from '@/nodes/HtmlNode'
-import { ImageNode } from '@/nodes/ImageNode'
-import { ToggleNode } from '@/nodes/ToggleNode'
-import { VideoNode } from '@/nodes/VideoNode'
+import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
+import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
+
+// Cards join the set from their declarations; declaration order reproduces
+// the pre-refactor card run below LinkNode.
+const CARD_NODES = deriveCardNodes(CARD_WRAPPER_NODES, 'default').map((card) => card.node)
 
 const RAW_NODES = [
   ExtendedTextNode,
@@ -43,19 +36,7 @@ const RAW_NODES = [
   ListItemNode,
   AsideNode,
   LinkNode,
-  CodeBlockNode,
-  HorizontalRuleNode,
-  ImageNode,
-  AudioNode,
-  VideoNode,
-  CalloutNode,
-  HtmlNode,
-  FileNode,
-  ButtonNode,
-  ToggleNode,
-  HeaderNode,
-  BookmarkNode,
-  GalleryNode,
+  ...CARD_NODES,
   TKNode,
   AtLinkNode,
   AtLinkSearchNode,

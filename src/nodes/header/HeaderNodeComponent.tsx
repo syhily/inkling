@@ -2,6 +2,8 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import { useContext, useEffect, useRef, useState } from 'react'
 
+import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
+
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
 import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
@@ -10,7 +12,6 @@ import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
-import { GeneratedDecoratorNodeBase } from '@/nodes/base'
 import { EDIT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 import { getAccentColor } from '@/utils/getAccentColor'
 import { backgroundImageUploadHandler } from '@/utils/imageUploadHandler'
