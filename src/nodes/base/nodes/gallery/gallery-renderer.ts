@@ -126,7 +126,7 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
       if (
         defaultMaxWidth &&
         image.width > defaultMaxWidth &&
-        isLocalContentImage(image.src, options.siteUrl) &&
+        isLocalContentImage(image.src, options.siteUrl, options.imageBaseUrl) &&
         canTransformImage &&
         canTransformImage(image.src)
       ) {
@@ -162,7 +162,7 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
         const contentImageSizes = options.imageOptimization?.contentImageSizes
         if (
           contentImageSizes &&
-          isLocalContentImage(image.src, options.siteUrl) &&
+          isLocalContentImage(image.src, options.siteUrl, options.imageBaseUrl) &&
           options.canTransformImage?.(image.src)
         ) {
           // find available image size next up from 2x600 so we can use it for the "retina" src

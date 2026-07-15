@@ -1976,6 +1976,101 @@ describe('GalleryNode', function () {
         }),
       )
     })
+
+    it(
+      'resizes CDN gallery images to the max width when imageBaseUrl is configured',
+      editorTest(async function () {
+        const cdnUrl = 'https://cdn.example.com/c/uuid'
+        const galleryNode = $createGalleryNode({
+          images: [
+            {
+              row: 0,
+              fileName: 'NatGeo01.jpg',
+              src: `${cdnUrl}/content/images/2018/08/NatGeo01-9.jpg`,
+              width: 3200,
+              height: 1600,
+            },
+          ],
+          caption: '',
+        })
+        const { element } = galleryNode.exportDOM(editor, { ...exportOptions, imageBaseUrl: cdnUrl })
+        const img = (element as HTMLElement).querySelector('img')!
+
+        // defaultMaxWidth is 2000 in exportOptions; width 3200 resizes to 2000x1000
+        expect(img.getAttribute('width')).toBe('2000')
+        expect(img.getAttribute('height')).toBe('1000')
+      }),
+    )
+
+    it(
+      'uses a retina CDN src for email gallery images when imageBaseUrl is configured',
+      editorTest(async function () {
+        const cdnUrl = 'https://cdn.example.com/c/uuid'
+        const galleryNode = $createGalleryNode({
+          images: [
+            {
+              row: 0,
+              fileName: 'NatGeo01.jpg',
+              src: `${cdnUrl}/content/images/2018/08/NatGeo01-9.jpg`,
+              width: 3200,
+              height: 1600,
+            },
+          ],
+          caption: '',
+        })
+        const { element } = galleryNode.exportDOM(editor, { ...exportOptions, target: 'email', imageBaseUrl: cdnUrl })
+        const img = (element as HTMLElement).querySelector('img')!
+
+        // first available size >= 2x600 is w1600
+        expect(img.getAttribute('src')).toBe(`${cdnUrl}/content/images/size/w1600/2018/08/NatGeo01-9.jpg`)
+      }),
+    )
+
+    it(
+      'generates srcset for CDN gallery images when imageBaseUrl is configured',
+      editorTest(async function () {
+        const cdnUrl = 'https://cdn.example.com/c/uuid'
+        const galleryNode = $createGalleryNode({
+          images: [
+            {
+              row: 0,
+              fileName: 'NatGeo01.jpg',
+              src: `${cdnUrl}/content/images/2018/08/NatGeo01-9.jpg`,
+              width: 3200,
+              height: 1600,
+            },
+          ],
+          caption: '',
+        })
+        const { element } = galleryNode.exportDOM(editor, { ...exportOptions, imageBaseUrl: cdnUrl })
+        const html = (element as HTMLElement).outerHTML
+
+        expect(html).toContain(`${cdnUrl}/content/images/size/w600/2018/08/NatGeo01-9.jpg`)
+        expect(html).toContain('srcset')
+      }),
+    )
+
+    it(
+      'does not generate srcset for CDN gallery images when imageBaseUrl is not configured',
+      editorTest(async function () {
+        const cdnUrl = 'https://cdn.example.com/c/uuid'
+        const galleryNode = $createGalleryNode({
+          images: [
+            {
+              row: 0,
+              fileName: 'NatGeo01.jpg',
+              src: `${cdnUrl}/content/images/2018/08/NatGeo01-9.jpg`,
+              width: 3200,
+              height: 1600,
+            },
+          ],
+          caption: '',
+        })
+        const { element } = galleryNode.exportDOM(editor, exportOptions)
+
+        expect((element as HTMLElement).outerHTML).not.toContain('srcset')
+      }),
+    )
   })
 
   describe('getTextContent', function () {
