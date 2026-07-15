@@ -64,8 +64,10 @@ const exportList = function (
 
   const listContent = exportListContent(node)
 
-  // CASE: list has a start value specified > 1
-  if (start !== 1 && start !== null && start !== undefined) {
+  // CASE: list has a start value specified > 1.
+  // `start` originates from serialized JSON, where a crafted string would be
+  // interpolated raw into the attribute — only emit for finite numbers.
+  if (typeof start === 'number' && Number.isFinite(start) && start !== 1) {
     return `<${tag} start="${start}">${listContent}</${tag}>`
   } else {
     return `<${tag}>${listContent}</${tag}>`

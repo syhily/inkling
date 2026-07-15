@@ -150,4 +150,20 @@ describe('Lists', function () {
       output: '<ol><li><strong>Figure <em>you.</em></strong> Just test</li></ol>',
     }),
   )
+
+  it(
+    'drops a non-numeric start attribute from crafted serialized state',
+    shouldRender({
+      input: `{"root":{"children":[{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"one","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"listitem","version":1,"value":1}],"direction":"ltr","format":"","indent":0,"type":"list","version":1,"listType":"number","start":"2\\"><img src=x onerror=alert(1)>","tag":"ol"}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}`,
+      output: '<ol><li>one</li></ol>',
+    }),
+  )
+
+  it(
+    'keeps a legitimate numeric start attribute',
+    shouldRender({
+      input: `{"root":{"children":[{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"one","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"listitem","version":1,"value":1}],"direction":"ltr","format":"","indent":0,"type":"list","version":1,"listType":"number","start":3,"tag":"ol"}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}`,
+      output: '<ol start="3"><li>one</li></ol>',
+    }),
+  )
 })
