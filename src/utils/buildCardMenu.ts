@@ -1,6 +1,5 @@
-import type { LexicalNode } from 'lexical'
-
 import type { CardConfig } from '@/context/InklingComposerContext'
+import type { CardMenuNodeClass } from '@/utils/inkling-node-class'
 
 import SnippetCardIcon from '@/assets/icons/inkling-card-type-snippet.svg?react'
 import { INSERT_SNIPPET_COMMAND } from '@/plugins/InklingSnippetPlugin'
@@ -33,7 +32,7 @@ export interface BuildCardMenuResult {
 }
 
 export function buildCardMenu(
-  nodes: Map<string, LexicalNode> | Iterable<[string, LexicalNode]>,
+  nodes: Map<string, CardMenuNodeClass> | Iterable<[string, CardMenuNodeClass]>,
   { query, config }: { query?: string; config?: CardConfig } = {},
 ): BuildCardMenuResult {
   let menu = new Map<string, MenuItem[]>()
@@ -81,12 +80,11 @@ export function buildCardMenu(
     maxItemIndex = maxItemIndex + 1
   }
 
-  for (const [nodeType, node] of nodes) {
-    const nodeWithMenu = node as { cardMenu?: MenuItem | MenuItem[] }
-    if (Array.isArray(nodeWithMenu.cardMenu)) {
-      nodeWithMenu.cardMenu.forEach((item) => addMenuItem({ nodeType, ...item }))
-    } else if (nodeWithMenu.cardMenu) {
-      addMenuItem({ nodeType, ...nodeWithMenu.cardMenu })
+  for (const [nodeType, nodeClass] of nodes) {
+    if (Array.isArray(nodeClass.cardMenu)) {
+      nodeClass.cardMenu.forEach((item) => addMenuItem({ nodeType, ...item }))
+    } else {
+      addMenuItem({ nodeType, ...nodeClass.cardMenu })
     }
   }
 

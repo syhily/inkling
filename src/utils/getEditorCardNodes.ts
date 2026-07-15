@@ -1,19 +1,21 @@
-import type { LexicalEditor, LexicalNode } from 'lexical'
+import type { LexicalEditor } from 'lexical'
 
+import type { CardMenuNodeClass } from '@/utils/inkling-node-class'
+
+import { getCardNodeClass, hasCardMenu } from '@/utils/inkling-node-class'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
-export function getEditorCardNodes(editor: LexicalEditor): [string, LexicalNode][] {
+export function getEditorCardNodes(editor: LexicalEditor): [string, CardMenuNodeClass][] {
   const allNodes = getRegisteredNodeMap(editor)
-  const cardNodes: [string, LexicalNode][] = []
+  const cardNodes: [string, CardMenuNodeClass][] = []
 
   for (const [nodeType, { klass }] of allNodes) {
-    if (!('cardMenu' in klass)) {
+    const nodeClass = getCardNodeClass(klass)
+    if (!hasCardMenu(nodeClass)) {
       continue
     }
 
-    // the card klass (with its static cardMenu config) is passed where callers
-    // type it as a LexicalNode — see buildCardMenu, which reads the static prop
-    cardNodes.push([nodeType, klass as unknown as LexicalNode])
+    cardNodes.push([nodeType, nodeClass])
   }
 
   return cardNodes

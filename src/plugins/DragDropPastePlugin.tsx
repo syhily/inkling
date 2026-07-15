@@ -71,10 +71,9 @@ async function getListOfAcceptableMimeTypes(
   const nodes = getEditorCardNodes(editor)
   const acceptableMimeTypes: Record<string, string[]> = {}
   const uploadTypes = uploadFileTypes as Record<string, { mimeTypes: string[] } | undefined> | undefined
-  for (const [nodeType, node] of nodes) {
-    const nodeWithUpload = node as { uploadType?: string }
-    if (nodeType && nodeWithUpload.uploadType) {
-      acceptableMimeTypes[nodeType] = uploadTypes?.[nodeWithUpload.uploadType]?.mimeTypes ?? []
+  for (const [nodeType, nodeClass] of nodes) {
+    if (nodeType && nodeClass.uploadType) {
+      acceptableMimeTypes[nodeType] = uploadTypes?.[nodeClass.uploadType]?.mimeTypes ?? []
     }
   }
   return {

@@ -1,12 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import {
-  $getSelection,
-  $isParagraphNode,
-  $isRangeSelection,
-  $setSelection,
-  type LexicalEditor,
-  type LexicalNode,
-} from 'lexical'
+import { $getSelection, $isParagraphNode, $isRangeSelection, $setSelection, type LexicalEditor } from 'lexical'
 import React from 'react'
 
 import { CardMenu, type CardMenuItemData } from '@/components/ui/CardMenu'
@@ -251,7 +244,7 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
 
   React.useEffect(() => {
     const cardNodes = getEditorCardNodes(editor)
-    setCardMenu(buildCardMenu(cardNodes as [string, LexicalNode][], { config: cardConfig }))
+    setCardMenu(buildCardMenu(cardNodes, { config: cardConfig }))
   }, [cardConfig, editor])
 
   const style: React.CSSProperties = {
