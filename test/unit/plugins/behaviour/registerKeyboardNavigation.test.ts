@@ -16,9 +16,12 @@ import {
   createEditor,
   DELETE_LINE_COMMAND,
   KEY_ARROW_DOWN_COMMAND,
+  KEY_ARROW_UP_COMMAND,
   KEY_BACKSPACE_COMMAND,
+  KEY_DELETE_COMMAND,
   KEY_ENTER_COMMAND,
   KEY_ESCAPE_COMMAND,
+  KEY_MODIFIER_COMMAND,
   KEY_TAB_COMMAND,
   type LexicalCommand,
   type LexicalEditor,
@@ -732,6 +735,284 @@ describe('registerKeyboardNavigation', () => {
 
       cleanup()
       unregister()
+    })
+  })
+
+  describe('card adjacency characterization', () => {
+    it('removes a following card on forward delete from the end of a populated paragraph', async () => {
+      let textNodeSize = 0
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        const paragraph = $createParagraphNode()
+        const textNode = $createTextNode('Some content')
+        paragraph.append(textNode)
+        const image = $createImageNode({ src: '/image.png' })
+        root.append(paragraph)
+        root.append(image)
+        textNodeSize = textNode.getTextContentSize()
+        textNode.select(textNodeSize, textNodeSize)
+      })
+
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(
+        editor,
+        KEY_DELETE_COMMAND,
+        new KeyboardEvent('keydown', { key: 'Delete' }),
+      )
+      expect(result).toBe(true)
+
+      editor.getEditorState().read(() => {
+        const root = $getRoot()
+        expect(root.getChildrenSize()).toBe(1)
+        const paragraph = root.getFirstChild()
+        expect($isParagraphNode(paragraph)).toBe(true)
+        expect(paragraph?.getTextContent()).toBe('Some content')
+        const selection = $getSelection()
+        expect($isRangeSelection(selection)).toBe(true)
+        expect(selection?.anchor.offset).toBe(textNodeSize)
+      })
+
+      cleanup()
+    })
+
+    it('removes a previous card on backspace at the start of a populated paragraph', async () => {
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        const image = $createImageNode({ src: '/image.png' })
+        const paragraph = $createParagraphNode()
+        const textNode = $createTextNode('Some content')
+        paragraph.append(textNode)
+        root.append(image)
+        root.append(paragraph)
+        textNode.select(0, 0)
+      })
+
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(
+        editor,
+        KEY_BACKSPACE_COMMAND,
+        new KeyboardEvent('keydown', { key: 'Backspace' }),
+      )
+      expect(result).toBe(true)
+
+      editor.getEditorState().read(() => {
+        const root = $getRoot()
+        expect(root.getChildrenSize()).toBe(1)
+        const paragraph = root.getFirstChild()
+        expect($isParagraphNode(paragraph)).toBe(true)
+        expect(paragraph?.getTextContent()).toBe('Some content')
+        const selection = $getSelection()
+        expect($isRangeSelection(selection)).toBe(true)
+        expect(selection?.anchor.offset).toBe(0)
+      })
+
+      cleanup()
+    })
+
+    it('selects the last card on meta+arrow down when the document ends with a card', async () => {
+      let cardKey = ''
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        const paragraph = $createParagraphNode()
+        paragraph.append($createTextNode('Some content'))
+        root.append(paragraph)
+        const image = $createImageNode({ src: '/image.png' })
+        root.append(image)
+        cardKey = image.getKey()
+        paragraph.selectEnd()
+      })
+
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(
+        editor,
+        KEY_MODIFIER_COMMAND,
+        new KeyboardEvent('keydown', { key: 'ArrowDown', metaKey: true }),
+      )
+      expect(result).toBe(true)
+
+      editor.getEditorState().read(() => {
+        const selection = $getSelection()
+        expect($isNodeSelection(selection)).toBe(true)
+        expect(selection?.getNodes()[0]?.getKey()).toBe(cardKey)
+      })
+
+      cleanup()
+    })
+
+    it('selects the first card on meta+arrow up when the document starts with a card', async () => {
+      let cardKey = ''
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        const image = $createImageNode({ src: '/image.png' })
+        root.append(image)
+        const paragraph = $createParagraphNode()
+        paragraph.append($createTextNode('Some content'))
+        root.append(paragraph)
+        cardKey = image.getKey()
+        paragraph.selectStart()
+      })
+
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(
+        editor,
+        KEY_MODIFIER_COMMAND,
+        new KeyboardEvent('keydown', { key: 'ArrowUp', metaKey: true }),
+      )
+      expect(result).toBe(true)
+
+      editor.getEditorState().read(() => {
+        const selection = $getSelection()
+        expect($isNodeSelection(selection)).toBe(true)
+        expect(selection?.getNodes()[0]?.getKey()).toBe(cardKey)
+      })
+
+      cleanup()
+    })
+
+    it('selects a previous card on arrow up from the first visual line of a populated paragraph', async () => {
+      let cardKey = ''
+      let textNodeKey = ''
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        const image = $createImageNode({ src: '/image.png' })
+        const paragraph = $createParagraphNode()
+        const textNode = $createTextNode('Some content')
+        paragraph.append(textNode)
+        root.append(image)
+        root.append(paragraph)
+        cardKey = image.getKey()
+        textNodeKey = textNode.getKey()
+      })
+
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+      await setSelectionAt(editor, mounted.root, textNodeKey, 5, 0)
+
+      const result = await dispatchAndCommit(
+        editor,
+        KEY_ARROW_UP_COMMAND,
+        new KeyboardEvent('keydown', { key: 'ArrowUp' }),
+      )
+      expect(result).toBe(true)
+
+      editor.getEditorState().read(() => {
+        const selection = $getSelection()
+        expect($isNodeSelection(selection)).toBe(true)
+        expect(selection?.getNodes()[0]?.getKey()).toBe(cardKey)
+      })
+
+      cleanup()
+    })
+
+    it('does not handle arrow up below the first visual line of a populated paragraph', async () => {
+      let textNodeKey = ''
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        const image = $createImageNode({ src: '/image.png' })
+        const paragraph = $createParagraphNode()
+        const textNode = $createTextNode('Some content')
+        paragraph.append(textNode)
+        root.append(image)
+        root.append(paragraph)
+        textNodeKey = textNode.getKey()
+      })
+
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+      await setSelectionAt(editor, mounted.root, textNodeKey, 5, 100)
+
+      const result = await dispatchAndCommit(
+        editor,
+        KEY_ARROW_UP_COMMAND,
+        new KeyboardEvent('keydown', { key: 'ArrowUp' }),
+      )
+      expect(result).toBe(false)
+
+      editor.getEditorState().read(() => {
+        const root = $getRoot()
+        expect(root.getChildrenSize()).toBe(2)
+        expect($isDecoratorNode(root.getFirstChild())).toBe(true)
+        expect($isRangeSelection($getSelection())).toBe(true)
+      })
+
+      cleanup()
+    })
+
+    it('selects a following card on arrow down from the last visual line of a populated paragraph', async () => {
+      let cardKey = ''
+      let textNodeKey = ''
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        const paragraph = $createParagraphNode()
+        const textNode = $createTextNode('Some content')
+        paragraph.append(textNode)
+        const image = $createImageNode({ src: '/image.png' })
+        root.append(paragraph)
+        root.append(image)
+        cardKey = image.getKey()
+        textNodeKey = textNode.getKey()
+      })
+
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+      await setSelectionAt(editor, mounted.root, textNodeKey, 5, 0)
+
+      const result = await dispatchAndCommit(
+        editor,
+        KEY_ARROW_DOWN_COMMAND,
+        new KeyboardEvent('keydown', { key: 'ArrowDown' }),
+      )
+      expect(result).toBe(true)
+
+      editor.getEditorState().read(() => {
+        const selection = $getSelection()
+        expect($isNodeSelection(selection)).toBe(true)
+        expect(selection?.getNodes()[0]?.getKey()).toBe(cardKey)
+      })
+
+      cleanup()
+    })
+
+    it('does not handle arrow down above the last visual line of a populated paragraph', async () => {
+      let textNodeKey = ''
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        const paragraph = $createParagraphNode()
+        const textNode = $createTextNode('Some content')
+        paragraph.append(textNode)
+        const image = $createImageNode({ src: '/image.png' })
+        root.append(paragraph)
+        root.append(image)
+        textNodeKey = textNode.getKey()
+      })
+
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+      await setSelectionAt(editor, mounted.root, textNodeKey, 5, 100)
+
+      const result = await dispatchAndCommit(
+        editor,
+        KEY_ARROW_DOWN_COMMAND,
+        new KeyboardEvent('keydown', { key: 'ArrowDown' }),
+      )
+      expect(result).toBe(false)
+
+      editor.getEditorState().read(() => {
+        const root = $getRoot()
+        expect(root.getChildrenSize()).toBe(2)
+        expect($isDecoratorNode(root.getLastChild())).toBe(true)
+        expect($isRangeSelection($getSelection())).toBe(true)
+      })
+
+      cleanup()
     })
   })
 })
