@@ -32,7 +32,7 @@ export function renderAudioNode(
     // Throws the pinned missing-postUrl error when postUrl is absent/blank.
     // Note the email template interpolates the escaped postUrl verbatim —
     // routing it through context.safeUrl would drop unsafe postUrls to '',
-    // changing pinned output (T3 review nit, deliberately left as-is).
+    // changing pinned output (deliberate divergence, kept by plan 040 Step 5).
     const postUrl = context.requirePostUrl('renderAudioNode')
 
     return emailTemplate(node, document, postUrl, thumbnailCls, emptyThumbnailCls, safeThumbnailSrc, context)
