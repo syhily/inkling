@@ -350,6 +350,36 @@ describe('card-adjacency', () => {
     })
   })
 
+  describe('$getVisuallyAdjacentCard selection guards', () => {
+    it('returns null for a node selection', async () => {
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        const image = $createImageNode({ src: '/image.png' })
+        const nextImage = $createImageNode({ src: '/next.png' })
+        root.append(image)
+        root.append(nextImage)
+        $selectDecoratorNode(image)
+      })
+
+      expect(read(() => $getVisuallyAdjacentCard('down', fakeGeometry()))).toBeNull()
+      expect(read(() => $getVisuallyAdjacentCard('up', fakeGeometry()))).toBeNull()
+    })
+
+    it('returns null when the selection is not collapsed', async () => {
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        const paragraph = $createParagraphNode()
+        const textNode = $createTextNode('Some content')
+        paragraph.append(textNode)
+        root.append(paragraph)
+        root.append($createImageNode({ src: '/image.png' }))
+        textNode.select(0, 5)
+      })
+
+      expect(read(() => $getVisuallyAdjacentCard('down', fakeGeometry()))).toBeNull()
+    })
+  })
+
   describe('$getLogicallyAdjacentCard anchored on the selection', () => {
     it('returns the previous card when the anchor is at the start of its top-level element', async () => {
       const { cardKey } = await buildCardThenParagraph(0)
