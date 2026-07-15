@@ -8,8 +8,6 @@ import type { ExportChildren } from '@/html/renderer/transformers/index'
 import type { RendererOptions } from '@/html/renderer/types'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
-
 type TextFormatAbbreviation = 'STRONG' | 'EM' | 'S' | 'U' | 'CODE' | 'SUB' | 'SUP' | 'MARK' | 'SPAN'
 
 const FORMAT_TAG_MAP: Record<TextFormatType, TextFormatAbbreviation> = {
@@ -42,8 +40,8 @@ export default class TextContent {
   nodes: LexicalNode[]
   exportChildren: ExportChildren
   options: RequiredKeys<RendererOptions, 'dom'>
-  // Carried for the render-context seam (plan 040); link-href policy migrates
-  // onto it in Step 3 — the class still reads `isSafeUrl` directly for now.
+  // The render-context seam (plan 040): link-href URL policy goes through
+  // `context.safeUrl`.
   context: RenderContext
 
   constructor(exportChildren: ExportChildren, options: RendererOptions, context: RenderContext) {
@@ -166,9 +164,9 @@ export default class TextContent {
   _buildAnchorElement(anchor: HTMLElement, node: LinkNode) {
     // Only set the href if we have a URL, otherwise we get a link to the current page;
     // unsafe URLs (e.g. javascript:) are dropped the same way
-    const url = node.getURL()
-    if (url && isSafeUrl(url)) {
-      anchor.setAttribute('href', url)
+    const safeHref = this.context.safeUrl('navigation', node.getURL())
+    if (safeHref) {
+      anchor.setAttribute('href', safeHref)
     }
     if (node.getRel()) {
       anchor.setAttribute('rel', node.getRel() || '')

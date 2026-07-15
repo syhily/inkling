@@ -1,15 +1,15 @@
-import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 // Attributes the nested callout editor legitimately produces. A[href] is
-// additionally validated with isSafeUrl; CODE[style] is constrained to
-// Lexical's known inline-code serialization.
+// additionally validated with the render context's URL policy; CODE[style]
+// is constrained to Lexical's known inline-code serialization.
 const ALLOWED_ATTRIBUTES: Record<string, string[]> = {
   A: ['href', 'rel', 'target'],
   CODE: ['spellcheck', 'style'],
 }
 const CODE_STYLE_REGEX = /^white-space:\s*pre-wrap;?$/
 
-function cleanAttributes(element: Element, allowedAttributes: Record<string, string[]>) {
+function cleanAttributes(element: Element, allowedAttributes: Record<string, string[]>, context: RenderContext) {
   const allowed = allowedAttributes[element.tagName] ?? []
 
   // snapshot the live NamedNodeMap since attributes are removed while iterating
@@ -19,7 +19,7 @@ function cleanAttributes(element: Element, allowedAttributes: Record<string, str
       continue
     }
 
-    if (element.tagName === 'A' && attribute.name === 'href' && !isSafeUrl(attribute.value)) {
+    if (element.tagName === 'A' && attribute.name === 'href' && context.safeUrl('navigation', attribute.value) === '') {
       element.removeAttribute(attribute.name)
     }
 
@@ -32,6 +32,7 @@ function cleanAttributes(element: Element, allowedAttributes: Record<string, str
 export function cleanDOM(
   node: Element,
   allowedTags: string[],
+  context: RenderContext,
   allowedAttributes: Record<string, string[]> = ALLOWED_ATTRIBUTES,
 ) {
   for (let i = 0; i < node.childNodes.length; i++) {
@@ -43,8 +44,8 @@ export function cleanDOM(
       node.removeChild(child)
       i -= 1
     } else if (child.nodeType === 1) {
-      cleanAttributes(child as Element, allowedAttributes)
-      cleanDOM(child as Element, allowedTags, allowedAttributes)
+      cleanAttributes(child as Element, allowedAttributes, context)
+      cleanDOM(child as Element, allowedTags, context, allowedAttributes)
     }
   }
 }

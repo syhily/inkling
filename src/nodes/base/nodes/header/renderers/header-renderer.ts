@@ -295,16 +295,19 @@ function emailTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOption
                                       nodeData.buttonEnabled && safeButtonUrl
                                         ? `
                                         <td class="inkling-header-button-wrapper">
-                                            ${renderEmailButton({
-                                              alignment: nodeData.alignment,
-                                              color:
-                                                nodeData.buttonColor === 'accent'
-                                                  ? accentColor
-                                                  : safeColor(nodeData.buttonColor, 'transparent'),
-                                              style: options.design?.buttonStyle === 'outline' ? 'outline' : 'fill',
-                                              text: nodeData.buttonText || '',
-                                              url: safeButtonUrl,
-                                            })}
+                                            ${renderEmailButton(
+                                              {
+                                                alignment: nodeData.alignment,
+                                                color:
+                                                  nodeData.buttonColor === 'accent'
+                                                    ? accentColor
+                                                    : safeColor(nodeData.buttonColor, 'transparent'),
+                                                style: options.design?.buttonStyle === 'outline' ? 'outline' : 'fill',
+                                                text: nodeData.buttonText || '',
+                                                url: safeButtonUrl,
+                                              },
+                                              context,
+                                            )}
                                         </td>
                                     `
                                         : ''

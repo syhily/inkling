@@ -1,3 +1,5 @@
+import type { RenderContext } from '@/nodes/base/render-context'
+
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { textColorForBackgroundColor } from '@/utils/colorUtils'
@@ -37,10 +39,14 @@ function buildButtonStyles(color: string, style: 'fill' | 'outline'): { td: stri
   }
 }
 
-export function renderEmailButton(options: EmailButtonOptions = {}): string {
+export function renderEmailButton(options: EmailButtonOptions = {}, context?: RenderContext): string {
   const { alignment = '', buttonWidth = '', color = '', style = 'fill', text = '', url = '' } = options
 
-  if (url !== '' && !isSafeUrl(url)) {
+  // Renderer callers pass the render context so URL policy flows through the
+  // seam; direct callers without a render pass keep the legacy check (pinned
+  // by email-button.test.ts).
+  const isSafeButtonUrl = context ? context.safeUrl('navigation', url) !== '' : isSafeUrl(url)
+  if (url !== '' && !isSafeButtonUrl) {
     return ''
   }
 

@@ -1,4 +1,5 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { cleanDOM } from '@/nodes/base/utils/clean-dom'
@@ -9,7 +10,7 @@ interface CalloutNodeData {
   calloutText: string
 }
 
-export function renderCalloutNode(node: CalloutNodeData, options: ExportDOMOptions = {}) {
+export function renderCalloutNode(node: CalloutNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
   addCreateDocumentOption(options)
   const document = options.createDocument!()
   const element = document.createElement('div')
@@ -37,7 +38,7 @@ export function renderCalloutNode(node: CalloutNodeData, options: ExportDOMOptio
   temporaryContainer.innerHTML = node.calloutText
 
   const allowedTags = ['A', 'STRONG', 'EM', 'B', 'I', 'BR', 'CODE', 'MARK', 'S', 'DEL', 'U', 'SUP', 'SUB']
-  cleanDOM(temporaryContainer, allowedTags)
+  cleanDOM(temporaryContainer, allowedTags, context)
 
   textElement.innerHTML = temporaryContainer.innerHTML
   element.appendChild(textElement)

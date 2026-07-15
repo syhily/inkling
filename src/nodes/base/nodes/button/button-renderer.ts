@@ -49,13 +49,16 @@ function emailTemplate(node: ButtonNodeData, options: ExportDOMOptions, document
   const buttonText = node.buttonText || 'Button Title'
 
   if (usesModernEmailButton(options)) {
-    const buttonHtml = renderEmailButton({
-      alignment: node.alignment,
-      color: 'accent',
-      style: options.design?.buttonStyle,
-      text: buttonText,
-      url: safeButtonUrl,
-    })
+    const buttonHtml = renderEmailButton(
+      {
+        alignment: node.alignment,
+        color: 'accent',
+        style: options.design?.buttonStyle,
+        text: buttonText,
+        url: safeButtonUrl,
+      },
+      context,
+    )
 
     const cardHtml = html`
       <table border="0" cellpadding="0" cellspacing="0">
