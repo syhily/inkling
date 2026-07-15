@@ -80,7 +80,6 @@ interface HeaderCardProps {
   [key: string]: unknown
 }
 
-// Header Card Version 2
 export function HeaderCard({
   alignment,
   buttonEnabled,

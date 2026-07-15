@@ -71,7 +71,7 @@ function HeaderCardStory({ display = 'Default', header = '', subheader = '', ...
 }
 
 const meta = {
-  title: 'Primary cards/Header card v2',
+  title: 'Primary cards/Header card',
   component: HeaderCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
