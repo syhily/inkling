@@ -152,6 +152,39 @@ describe('CardMenu', () => {
     expect(closeMenu).toHaveBeenCalledTimes(1)
   })
 
+  it('does not render dead inkling.local help links', () => {
+    const menu = new Map([
+      ['Primary', [{ label: 'Paragraph', name: 'paragraph', dataTestId: 'paragraph-item' }]],
+      ['Snippets', [{ label: 'My Snippet', type: 'snippet' }]],
+    ])
+
+    const { container } = render(<CardMenu menu={menu} insert={insert} closeMenu={closeMenu} />)
+
+    expect(container.querySelector('a[href*="inkling.local"]')).toBeNull()
+    expect(screen.queryByRole('link')).toBeNull()
+  })
+
+  it('renders the snippet item icon', () => {
+    const SnippetIcon = (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="snippet-icon" {...props} />
+    const menu = new Map([
+      [
+        'Snippets',
+        [
+          {
+            label: 'My Snippet',
+            type: 'snippet',
+            Icon: SnippetIcon,
+            dataTestId: 'snippet-menu-item',
+          },
+        ],
+      ],
+    ])
+
+    render(<CardMenu menu={menu} insert={insert} selectedItemIndex={0} closeMenu={closeMenu} />)
+
+    expect(screen.getByTestId('snippet-menu-item').querySelector('svg')).not.toBeNull()
+  })
+
   it('marks selected item', () => {
     const menu = new Map([
       [

@@ -1,6 +1,5 @@
 import React from 'react'
 
-import ExternalLinkIcon from '@/assets/icons/inkling-help.svg?react'
 import TrashCardIcon from '@/assets/icons/inkling-trash.svg?react'
 
 export interface CardMenuItemData {
@@ -133,13 +132,6 @@ export interface CardMenuSectionProps {
 }
 
 export const CardMenuSection = ({ label, children }: CardMenuSectionProps) => {
-  let helpLink = ''
-  if (label === 'Primary') {
-    helpLink = 'https://inkling.local/help/cards/'
-  } else if (label === 'Snippets') {
-    helpLink = 'https://inkling.local/help/snippets/'
-  }
-
   return (
     <li
       className="flex shrink-0 flex-col justify-center border-t border-grey-200 text-[1.1rem] font-semibold tracking-wide text-grey-600 first-of-type:border-t-0 dark:border-grey-900 dark:text-grey-600"
@@ -151,11 +143,6 @@ export const CardMenuSection = ({ label, children }: CardMenuSectionProps) => {
         style={{ minWidth: 'calc(100% - 3.2rem)' }}
       >
         {label}
-        {helpLink && (
-          <a href={helpLink} rel="noreferrer" target="_blank">
-            <ExternalLinkIcon className="-m-1 size-6 cursor-pointer p-1 transition-all hover:text-green-600" />
-          </a>
-        )}
       </span>
       <ul className="md:grid md:gap-y-[.2rem] md:px-2" role="menu">
         {children}
@@ -166,6 +153,7 @@ export const CardMenuSection = ({ label, children }: CardMenuSectionProps) => {
 
 export interface CardSnippetItemProps {
   label?: string
+  Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
   dataTestId?: string
   dataItemId?: number
   isSelected?: boolean
@@ -177,6 +165,7 @@ export interface CardSnippetItemProps {
 
 export const CardSnippetItem = ({
   label,
+  Icon,
   dataTestId,
   dataItemId,
   isSelected,
@@ -216,6 +205,11 @@ export const CardSnippetItem = ({
         tabIndex={-1}
         onMouseDown={handleMouseDown}
       >
+        {Icon && (
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-white text-grey-900 dark:bg-transparent dark:text-grey-500">
+            <Icon className="size-[1.8rem]" />
+          </div>
+        )}
         <div className="m-0 ml-4 min-w-0 flex-1 truncate text-[1.35rem] leading-snug font-medium tracking-[.02rem] text-grey-900 dark:text-grey-200">
           {label}
         </div>
@@ -293,7 +287,8 @@ export const CardMenu = ({
             key={itemIndex}
             closeMenu={closeMenu}
             dataItemId={itemIndex}
-            data-testid={item.dataTestId}
+            dataTestId={item.dataTestId}
+            Icon={item.Icon}
             isSelected={isSelected}
             label={item.label}
             scrollToItem={isSelected && scrollToSelectedItem}
