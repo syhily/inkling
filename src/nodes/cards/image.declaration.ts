@@ -9,5 +9,6 @@ export const imageDeclaration = {
     default: true,
     emailEditor: true,
     emailRenderer: false,
+    markdown: true,
   },
 } satisfies CardDeclaration<'image'>

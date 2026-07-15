@@ -6,32 +6,10 @@ import { ListItemNode, ListNode } from '@lexical/list'
 import { $convertFromMarkdownString, $convertToMarkdownString, type Transformer } from '@lexical/markdown'
 import { HeadingNode, QuoteNode } from '@lexical/rich-text'
 
-import {
-  AUDIO_CARD_TRANSFORMER,
-  BOOKMARK_CARD_TRANSFORMER,
-  BUTTON_CARD_TRANSFORMER,
-  CALLOUT_CARD_TRANSFORMER,
-  FILE_CARD_TRANSFORMER,
-  GALLERY_CARD_TRANSFORMER,
-  HTML_CARD_TRANSFORMER,
-  IMAGE_CARD_TRANSFORMER,
-  MARKDOWN_CARD_TRANSFORMER,
-  TOGGLE_CARD_TRANSFORMER,
-  VIDEO_CARD_TRANSFORMER,
-} from '@/markdown/card-transformers'
-import { AudioNode } from '@/nodes/AudioNode'
+import { MARKDOWN_CARD_TRANSFORMER } from '@/markdown/card-transformers'
 import { MarkdownNode } from '@/nodes/base/nodes/markdown/MarkdownNode'
-import { BookmarkNode } from '@/nodes/BookmarkNode'
-import { ButtonNode } from '@/nodes/ButtonNode'
-import { CalloutNode } from '@/nodes/CalloutNode'
-import { CodeBlockNode } from '@/nodes/CodeBlockNode'
-import { FileNode } from '@/nodes/FileNode'
-import { GalleryNode } from '@/nodes/GalleryNode'
-import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
-import { HtmlNode } from '@/nodes/HtmlNode'
-import { ImageNode } from '@/nodes/ImageNode'
-import { ToggleNode } from '@/nodes/ToggleNode'
-import { VideoNode } from '@/nodes/VideoNode'
+import { CARD_MARKDOWN_DECLARATIONS } from '@/nodes/cards/card-markdown-transformers'
+import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
 import { DEFAULT_TRANSFORMERS } from '@/plugins/MarkdownShortcutPlugin'
 
 /**
@@ -45,40 +23,42 @@ import { DEFAULT_TRANSFORMERS } from '@/plugins/MarkdownShortcutPlugin'
  * Design notes and limitations are documented in `docs/markdown-api.md`.
  */
 
+// The pre-declaration markdown card order — pinned so the derived views stay
+// identical to the pre-refactor arrays (transformer order affects matching).
+// Cards without a legacy rank (declared later) keep declaration order and
+// land after the pinned run. MarkdownNode is a base-only node, not a card —
+// it and MARKDOWN_CARD_TRANSFORMER stay manual.
+const MARKDOWN_CARD_ORDER = [
+  'codeblock',
+  'horizontalrule',
+  'image',
+  'html',
+  'file',
+  'button',
+  'audio',
+  'video',
+  'gallery',
+  'bookmark',
+  'toggle',
+  'callout',
+]
+
+const MARKDOWN_CARDS = deriveCardNodes(CARD_MARKDOWN_DECLARATIONS, 'markdown', MARKDOWN_CARD_ORDER)
+
 // Exported (not part of the public `@/markdown` barrel) so the node-set diff
-// test can pin the pre-derivation arrays; Batch 2 of plan 039 derives these.
+// test can pin the derived arrays against the pre-refactor literals.
 export const MARKDOWN_NODES = [
   HeadingNode,
   QuoteNode,
   ListNode,
   ListItemNode,
   LinkNode,
-  CodeBlockNode,
-  HorizontalRuleNode,
-  ImageNode,
-  HtmlNode,
-  FileNode,
-  ButtonNode,
-  AudioNode,
-  VideoNode,
-  GalleryNode,
-  BookmarkNode,
-  ToggleNode,
-  CalloutNode,
+  ...MARKDOWN_CARDS.map((card) => card.node),
   MarkdownNode,
 ]
 
 export const CARD_TRANSFORMERS = [
-  IMAGE_CARD_TRANSFORMER,
-  HTML_CARD_TRANSFORMER,
-  FILE_CARD_TRANSFORMER,
-  BUTTON_CARD_TRANSFORMER,
-  AUDIO_CARD_TRANSFORMER,
-  VIDEO_CARD_TRANSFORMER,
-  GALLERY_CARD_TRANSFORMER,
-  BOOKMARK_CARD_TRANSFORMER,
-  TOGGLE_CARD_TRANSFORMER,
-  CALLOUT_CARD_TRANSFORMER,
+  ...MARKDOWN_CARDS.flatMap((card) => (card.markdownTransformer ? [card.markdownTransformer] : [])),
   MARKDOWN_CARD_TRANSFORMER,
 ] as Transformer[]
 

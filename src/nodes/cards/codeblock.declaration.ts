@@ -9,5 +9,8 @@ export const codeBlockDeclaration = {
     default: true,
     emailEditor: false,
     emailRenderer: false,
+    // Markdown-eligible with no card transformer: the code fence is handled
+    // by DEFAULT_TRANSFORMERS (`CODE_BLOCK` in `@/plugins/MarkdownShortcutPlugin`).
+    markdown: true,
   },
 } satisfies CardDeclaration<'codeblock'>

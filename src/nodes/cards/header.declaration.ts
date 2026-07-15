@@ -9,5 +9,6 @@ export const headerDeclaration = {
     default: true,
     emailEditor: false,
     emailRenderer: false,
+    markdown: false,
   },
 } satisfies CardDeclaration<'header'>

@@ -7,11 +7,18 @@ import type { Klass, LexicalNode } from 'lexical'
  *   `DEFAULT_NODES` in `@/nodes/base`.
  * - `emailEditor`: the email composer node set (`@/nodes/EmailEditorNodes`).
  * - `emailRenderer`: the email render node set (`@/nodes/EmailNodes`).
+ * - `markdown`: the markdown round-trip node set (`MARKDOWN_NODES` in
+ *   `@/markdown/round-trip`). CodeBlock and HorizontalRule are
+ *   markdown-eligible with no card transformer (their markdown forms are
+ *   handled by `DEFAULT_TRANSFORMERS`); the transformers themselves attach
+ *   one layer up (`@/nodes/cards/card-markdown-transformers`) because they
+ *   must construct the wrapper node classes the round-trip editor registers.
  */
 export interface CardSurfaces {
   default: boolean
   emailEditor: boolean
   emailRenderer: boolean
+  markdown: boolean
 }
 
 /**

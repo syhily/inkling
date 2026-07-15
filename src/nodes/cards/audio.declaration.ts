@@ -9,5 +9,6 @@ export const audioDeclaration = {
     default: true,
     emailEditor: false,
     emailRenderer: false,
+    markdown: true,
   },
 } satisfies CardDeclaration<'audio'>

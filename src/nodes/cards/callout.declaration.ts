@@ -9,5 +9,6 @@ export const calloutDeclaration = {
     default: true,
     emailEditor: true,
     emailRenderer: false,
+    markdown: true,
   },
 } satisfies CardDeclaration<'callout'>

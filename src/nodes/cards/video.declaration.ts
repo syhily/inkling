@@ -9,5 +9,6 @@ export const videoDeclaration = {
     default: true,
     emailEditor: false,
     emailRenderer: false,
+    markdown: true,
   },
 } satisfies CardDeclaration<'video'>

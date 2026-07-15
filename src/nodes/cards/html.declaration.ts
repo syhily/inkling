@@ -9,5 +9,6 @@ export const htmlDeclaration = {
     default: true,
     emailEditor: true,
     emailRenderer: false,
+    markdown: true,
   },
 } satisfies CardDeclaration<'html'>

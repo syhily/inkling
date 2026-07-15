@@ -9,5 +9,6 @@ export const toggleDeclaration = {
     default: true,
     emailEditor: false,
     emailRenderer: false,
+    markdown: true,
   },
 } satisfies CardDeclaration<'toggle'>

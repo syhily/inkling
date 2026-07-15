@@ -9,5 +9,6 @@ export const buttonDeclaration = {
     default: true,
     emailEditor: true,
     emailRenderer: false,
+    markdown: true,
   },
 } satisfies CardDeclaration<'button'>

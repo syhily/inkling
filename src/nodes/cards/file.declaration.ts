@@ -9,5 +9,6 @@ export const fileDeclaration = {
     default: true,
     emailEditor: false,
     emailRenderer: false,
+    markdown: true,
   },
 } satisfies CardDeclaration<'file'>

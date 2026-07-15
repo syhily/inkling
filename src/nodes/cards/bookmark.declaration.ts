@@ -9,5 +9,6 @@ export const bookmarkDeclaration = {
     default: true,
     emailEditor: true,
     emailRenderer: false,
+    markdown: true,
   },
 } satisfies CardDeclaration<'bookmark'>
