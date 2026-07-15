@@ -1,9 +1,9 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
-import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface VideoNodeData {
@@ -45,12 +45,12 @@ function isEmailRenderOptions(options: VideoRenderOptions): options is EmailVide
   return options.target === 'email' && typeof options.postUrl === 'string' && options.postUrl.trim() !== ''
 }
 
-export function renderVideoNode(node: VideoNodeData, options: VideoRenderOptions = {}) {
+export function renderVideoNode(node: VideoNodeData, options: VideoRenderOptions = {}, context: RenderContext) {
   addCreateDocumentOption(options)
 
   const document = options.createDocument!()
 
-  if (!node.src || node.src.trim() === '' || !isSafeMediaUrl(node.src)) {
+  if (!node.src || node.src.trim() === '' || context.safeUrl('media', node.src) === '') {
     return renderEmptyContainer(document)
   }
 
@@ -63,9 +63,9 @@ export function renderVideoNode(node: VideoNodeData, options: VideoRenderOptions
             throw new Error('renderVideoNode requires options.postUrl when options.target is "email"')
           }
 
-          return emailCardTemplate({ node, options, cardClasses })
+          return emailCardTemplate({ node, options, cardClasses, context })
         })()
-      : cardTemplate({ node, cardClasses })
+      : cardTemplate({ node, cardClasses, context })
 
   const element = document.createElement('div')
   element.innerHTML = htmlString.trim()
@@ -73,13 +73,21 @@ export function renderVideoNode(node: VideoNodeData, options: VideoRenderOptions
   return { element: getFirstHtmlElement(element, 'renderVideoNode'), type: 'outer' as const }
 }
 
-export function cardTemplate({ node, cardClasses }: { node: VideoNodeData; cardClasses: string }) {
+export function cardTemplate({
+  node,
+  cardClasses,
+  context,
+}: {
+  node: VideoNodeData
+  cardClasses: string
+  context: RenderContext
+}) {
   const widthAttr = hasVideoDimensions(node) ? `width="${node.width}"` : ''
   const heightAttr = hasVideoDimensions(node) ? `height="${node.height}"` : ''
   const posterAttr = hasVideoDimensions(node) ? `poster="${getPosterSpacerSrc(node.width, node.height)}"` : ''
   const autoplayAttr = node.loop ? 'loop autoplay muted' : ''
-  const safeThumbnailSrc = isSafeMediaUrl(node.thumbnailSrc) ? node.thumbnailSrc : ''
-  const safeCustomThumbnailSrc = isSafeMediaUrl(node.customThumbnailSrc) ? node.customThumbnailSrc : ''
+  const safeThumbnailSrc = context.safeUrl('media', node.thumbnailSrc)
+  const safeCustomThumbnailSrc = context.safeUrl('media', node.customThumbnailSrc)
   const thumbnailSrc = safeCustomThumbnailSrc || safeThumbnailSrc
   const escapedCaption = node.caption ? escapeHtml(node.caption) : ''
   const hideControlsClass = node.loop ? ' inkling-video-hide' : ''
@@ -88,7 +96,7 @@ export function cardTemplate({ node, cardClasses }: { node: VideoNodeData; cardC
         <figure class="${cardClasses}" data-inkling-thumbnail="${escapeHtml(safeThumbnailSrc)}" data-inkling-custom-thumbnail="${escapeHtml(safeCustomThumbnailSrc)}">
             <div class="inkling-video-container">
                 <video
-                    src="${escapeHtml(isSafeMediaUrl(node.src) ? node.src : '')}"
+                    src="${escapeHtml(context.safeUrl('media', node.src))}"
                     ${posterAttr}
                     ${widthAttr}
                     ${heightAttr}
@@ -146,15 +154,17 @@ export function emailCardTemplate({
   node,
   options,
   cardClasses,
+  context,
 }: {
   node: VideoNodeData
   options: EmailVideoRenderOptions
   cardClasses: string
+  context: RenderContext
 }) {
-  const safeThumbnailSrc = isSafeMediaUrl(node.thumbnailSrc) ? node.thumbnailSrc : ''
-  const safeCustomThumbnailSrc = isSafeMediaUrl(node.customThumbnailSrc) ? node.customThumbnailSrc : ''
+  const safeThumbnailSrc = context.safeUrl('media', node.thumbnailSrc)
+  const safeCustomThumbnailSrc = context.safeUrl('media', node.customThumbnailSrc)
   const thumbnailSrc = safeCustomThumbnailSrc || safeThumbnailSrc
-  const safePostUrl = isSafeUrl(options.postUrl) ? options.postUrl : ''
+  const safePostUrl = context.safeUrl('navigation', options.postUrl)
   const escapedCaption = node.caption ? escapeHtml(node.caption) : ''
   const emailTemplateMaxWidth = 600
   const aspectRatio = hasVideoDimensions(node) ? node.width / node.height : DEFAULT_EMAIL_ASPECT_RATIO

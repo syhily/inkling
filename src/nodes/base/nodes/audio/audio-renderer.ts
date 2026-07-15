@@ -1,8 +1,8 @@
 import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
-import { isSafeMediaUrl } from '@/nodes/base/utils/is-safe-url'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface AudioNodeData {
@@ -24,15 +24,19 @@ interface DefaultAudioExportDOMOptions extends ExportDOMOptions {
 
 type AudioExportDOMOptions = EmailAudioExportDOMOptions | DefaultAudioExportDOMOptions
 
-export function renderAudioNode(node: AudioNodeData, options: AudioExportDOMOptions = {}): ExportDOMOutput {
+export function renderAudioNode(
+  node: AudioNodeData,
+  options: AudioExportDOMOptions = {},
+  context: RenderContext,
+): ExportDOMOutput {
   addCreateDocumentOption(options)
   const document = options.createDocument!()
 
-  if (!node.src || node.src.trim() === '' || !isSafeMediaUrl(node.src)) {
+  if (!node.src || node.src.trim() === '' || context.safeUrl('media', node.src) === '') {
     return renderEmptyContainer(document)
   }
 
-  const safeThumbnailSrc = isSafeMediaUrl(node.thumbnailSrc) ? node.thumbnailSrc : ''
+  const safeThumbnailSrc = context.safeUrl('media', node.thumbnailSrc)
   const thumbnailCls = getThumbnailCls(safeThumbnailSrc)
   const emptyThumbnailCls = getEmptyThumbnailCls(safeThumbnailSrc)
 
