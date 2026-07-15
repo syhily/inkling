@@ -48,6 +48,20 @@ pnpm format:check   # oxfmt --check
 - E2E tests: Playwright against `pnpm dev:test` on port 5174.
 - Coverage thresholds are in `vitest.config.ts`.
 
+### AI-friendly vs human-friendly entry points
+
+AI agents (scripted, parseable output):
+
+- `pnpm test:e2e:quiet` — e2e with the single-line reporter; append spec paths directly to narrow (e.g. `pnpm test:e2e:quiet test/e2e/linking.test.ts`).
+- `pnpm test:unit` — full unit suite; `pnpm vitest run <file>` for one file.
+- `pnpm typecheck`, `pnpm lint`, `pnpm lint:css`, `pnpm format:check` — static gates.
+
+Humans (interactive, visual):
+
+- `pnpm test:e2e:headed` — headed browser; `pnpm test:e2e:report` — HTML report.
+- `pnpm test:unit:watch` — Vitest watch mode.
+- `pnpm storybook` — browse card/component states at http://localhost:6006.
+
 ## Before finishing work
 
 1. Run `pnpm typecheck`, `pnpm lint`, and `pnpm test:unit`.
