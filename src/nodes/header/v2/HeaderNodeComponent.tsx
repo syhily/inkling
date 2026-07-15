@@ -360,11 +360,11 @@ function HeaderNodeComponent({
           // oxlint-disable-next-line typescript/no-explicit-any
         } as any)}
       />
-      <ActionToolbar data-inkling-card-toolbar="signup" isVisible={showSnippetToolbar}>
+      <ActionToolbar data-inkling-card-toolbar="header" isVisible={showSnippetToolbar}>
         <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
       </ActionToolbar>
 
-      <ActionToolbar data-inkling-card-toolbar="signup" isVisible={isSelected && !isEditing && !showSnippetToolbar}>
+      <ActionToolbar data-inkling-card-toolbar="header" isVisible={isSelected && !isEditing && !showSnippetToolbar}>
         <ToolbarMenu>
           <ToolbarMenuItem icon="edit" isActive={false} label="Edit" onClick={handleToolbarEdit} />
           <ToolbarMenuSeparator hide={!cardConfig.createSnippet} />
