@@ -189,65 +189,6 @@ describe('Utils: generateDecoratorNode', function () {
         },
       ),
     )
-
-    ;['emailCustomizationAlpha', 'emailCustomization'].forEach((feature) => {
-      it(
-        `uses custom renderer if passed in (${feature})`,
-        editorTest(function () {
-          const node = $createNodeWithRender()
-          const customRenderer = () => createRenderResult('span', 'custom render')
-
-          const featureOption: Record<string, boolean> = {}
-          featureOption[feature] = true
-
-          const result = node.exportDOM(editor, {
-            feature: featureOption,
-            nodeRenderers: {
-              'render-test': customRenderer,
-            },
-          })
-
-          expect(result.type).toBe('inner')
-          expect(expectHtmlElement(result).outerHTML).toBe('<span>custom render</span>')
-        }),
-      )
-    })
-
-    it(
-      'throws error when custom versioned renderer is missing for node version (emailCustomizationAlpha)',
-      editorTestWithNodes(
-        () => [
-          utils.generateDecoratorNode({
-            nodeType: 'versioned-render-test',
-            properties: [{ name: 'version', default: 1 }],
-            version: 1,
-            defaultRenderFn: {
-              1: () => createRenderResult('div', 'version 1'),
-              2: () => createRenderResult('div', 'version 2'),
-            },
-          }),
-        ],
-        function (testEditor, [VersionedNode]) {
-          const NodeClass = VersionedNode as GeneratedNodeClass
-          const node = new NodeClass({ version: 2 }) as unknown as GeneratedNodeInstance
-
-          expect(() =>
-            node.exportDOM(testEditor, {
-              feature: {
-                emailCustomizationAlpha: true,
-              },
-              nodeRenderers: {
-                'versioned-render-test': {
-                  1: () => createRenderResult('div', 'version 1'),
-                },
-              },
-            }),
-          ).toThrow(
-            /^\[generateDecoratorNode\] versioned-render-test: options\.nodeRenderers\['versioned-render-test'\] for version 2 is required$/,
-          )
-        },
-      ),
-    )
   })
 
   describe('constructor', function () {

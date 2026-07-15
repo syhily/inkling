@@ -38,24 +38,4 @@ export interface ExportDOMOptionsBase {
   [key: string]: unknown
 }
 
-export type ExportDOMRenderer<
-  TNode = unknown,
-  TOptions extends ExportDOMOptionsBase = ExportDOMOptionsBase,
-  TOutput extends ExportDOMOutput = ExportDOMOutput,
-> = (node: TNode, options: TOptions) => TOutput
-
-export type VersionedExportDOMRenderer<
-  TNode = unknown,
-  TOptions extends ExportDOMOptionsBase = ExportDOMOptionsBase,
-  TOutput extends ExportDOMOutput = ExportDOMOutput,
-> = Record<string | number, ExportDOMRenderer<TNode, TOptions, TOutput>>
-
-export type ExportDOMNodeRenderers<
-  TNode = unknown,
-  TOptions extends ExportDOMOptionsBase = ExportDOMOptionsBase,
-  TOutput extends ExportDOMOutput = ExportDOMOutput,
-> = Record<string, ExportDOMRenderer<TNode, TOptions, TOutput> | VersionedExportDOMRenderer<TNode, TOptions, TOutput>>
-
-export interface ExportDOMOptions extends ExportDOMOptionsBase {
-  nodeRenderers?: ExportDOMNodeRenderers
-}
+export type ExportDOMOptions = ExportDOMOptionsBase

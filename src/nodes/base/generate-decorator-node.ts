@@ -352,25 +352,6 @@ export function generateDecoratorNode<
         typeof this.__version === 'string' || typeof this.__version === 'number' ? this.__version : version
       const node = this as unknown as TRenderNode
 
-      const nodeRenderers = options.nodeRenderers as
-        | Record<string, GeneratedRenderFn | GeneratedVersionedRenderFn>
-        | undefined
-      if (nodeRenderers?.[nodeType]) {
-        const render = nodeRenderers[nodeType]
-
-        if (typeof render === 'object') {
-          const versionRenderer = render[nodeVersion]
-          if (!versionRenderer) {
-            throw new Error(
-              `[generateDecoratorNode] ${nodeType}: options.nodeRenderers['${nodeType}'] for version ${nodeVersion} is required`,
-            )
-          }
-          return versionRenderer(node, options)
-        } else {
-          return render(node, options)
-        }
-      }
-
       if (typeof defaultRenderFn === 'object') {
         const render = defaultRenderFn[nodeVersion]
         if (!render) {
