@@ -26,6 +26,13 @@ export class CodeBlockNode extends generateDecoratorNode({
     return parseCodeBlockNode(this)
   }
 
+  // Clears the transient `_openInEditMode` flag the card spec initializes
+  // from the construction dataset; a no-op for spec-less instances.
+  clearOpenInEditMode() {
+    const self = this.getWritable()
+    self.__openInEditMode = false
+  }
+
   isEmpty() {
     return !this.__code
   }

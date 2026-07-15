@@ -77,6 +77,16 @@ export class VideoNode extends generateDecoratorNode({
     return parseVideoNode(this)
   }
 
+  // Editor-side upload behaviour the card spec doesn't cover lives on the
+  // base node (plan 039, Batch 5): the registered card class is assembled
+  // from the declaration and inherits it; renderer surfaces never invoke it.
+  static uploadType = 'video'
+
+  set triggerFileDialog(shouldTrigger: boolean) {
+    const writable = this.getWritable()
+    writable.__triggerFileDialog = shouldTrigger
+  }
+
   get formattedDuration() {
     const minutes = Math.floor(this.duration / 60)
     const seconds = Math.floor(this.duration - minutes * 60)

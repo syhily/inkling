@@ -9,7 +9,7 @@ import { INSERT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 // defined next to the card menus that reference it (`@/nodes/cards/card-menus`);
 // re-exported here to keep this module's public surface unchanged
-export { OPEN_GIF_SELECTOR_COMMAND } from '@/nodes/cards/card-menus'
+export { OPEN_GIF_SELECTOR_COMMAND }
 
 export const INSERT_FROM_GIF_COMMAND = createCommand<ImageNodeDataset>()
 

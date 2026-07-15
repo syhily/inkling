@@ -5,6 +5,7 @@ import type { AudioNodeDataset } from '@/nodes/AudioNode'
 import type { BookmarkNodeDataset } from '@/nodes/BookmarkNode'
 import type { ButtonNodeDataset } from '@/nodes/ButtonNode'
 import type { CalloutNodeDataset } from '@/nodes/CalloutNode'
+import type { CodeBlockNodeDataset } from '@/nodes/CodeBlockNode'
 import type { FileNodeDataset } from '@/nodes/FileNode'
 import type { GalleryNodeDataset } from '@/nodes/GalleryNode'
 import type { HeaderNodeDataset } from '@/nodes/HeaderNode'
@@ -33,14 +34,17 @@ import VideoCardIcon from '@/assets/icons/inkling-card-type-video.svg?react'
  * The card insert commands. Defined here — next to the menus that reference
  * them — and re-exported from the wrapper node modules, so this projection
  * never imports the wrappers it feeds (that would close an import cycle at
- * module evaluation). `OPEN_GIF_SELECTOR_COMMAND` likewise moved here from
- * `@/plugins/InklingSelectorPlugin` (which re-exports it) for the same
- * reason: the plugin imports the Image wrapper.
+ * module evaluation). `INSERT_CODE_BLOCK_COMMAND` lives here too even though
+ * CodeBlock has no menu entry (it is inserted by its markdown code fence), so
+ * all card commands share one home. `OPEN_GIF_SELECTOR_COMMAND` likewise moved
+ * here from `@/plugins/InklingSelectorPlugin` (which re-exports it) for the
+ * same reason: the plugin imports the Image wrapper.
  */
 export const INSERT_AUDIO_COMMAND = createCommand<AudioNodeDataset>()
 export const INSERT_BOOKMARK_COMMAND = createCommand<BookmarkNodeDataset>()
 export const INSERT_BUTTON_COMMAND = createCommand<ButtonNodeDataset>('INSERT_BUTTON_COMMAND')
 export const INSERT_CALLOUT_COMMAND = createCommand<CalloutNodeDataset>()
+export const INSERT_CODE_BLOCK_COMMAND = createCommand<CodeBlockNodeDataset>()
 export const INSERT_FILE_COMMAND = createCommand<FileNodeDataset>()
 export const INSERT_GALLERY_COMMAND = createCommand<GalleryNodeDataset>()
 export const INSERT_HEADER_COMMAND = createCommand<HeaderNodeDataset>()

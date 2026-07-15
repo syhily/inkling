@@ -53,6 +53,28 @@ export class ImageNode extends generateDecoratorNode({
     return parseImageNode(this)
   }
 
+  // Editor-side upload behaviour the card spec doesn't cover lives on the
+  // base node (plan 039, Batch 5): the registered card class is assembled
+  // from the declaration and inherits it; renderer surfaces never invoke it.
+  static uploadType = 'image'
+
+  declare __previewSrc: string | null
+
+  get previewSrc() {
+    const self = this.getLatest()
+    return self.__previewSrc
+  }
+
+  set previewSrc(previewSrc: string | null) {
+    const writable = this.getWritable()
+    writable.__previewSrc = previewSrc
+  }
+
+  set triggerFileDialog(shouldTrigger: boolean) {
+    const writable = this.getWritable()
+    writable.__triggerFileDialog = shouldTrigger
+  }
+
   hasEditMode() {
     return false
   }

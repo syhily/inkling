@@ -12,6 +12,7 @@ import {
   extendedQuoteNodeReplacement,
   extendedTextNodeReplacement,
 } from '@/nodes/base'
+import { BookmarkNode } from '@/nodes/BookmarkNode'
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
 import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
 
@@ -41,7 +42,11 @@ const EMAIL_EDITOR_NODES = [
   ...CARD_NODES,
 ]
 
-for (const node of EMAIL_EDITOR_NODES) {
+// Only the surviving hand-written wrappers subclass their base nodes without
+// redeclaring Lexical's checked methods, so only they need the own-method
+// copies here — the assembled card classes are covered by `assembleCardNode`
+// and every other node declares its own statics natively.
+for (const node of [AsideNode, BookmarkNode]) {
   ensureLexicalNodeOwnMethods(node)
 }
 

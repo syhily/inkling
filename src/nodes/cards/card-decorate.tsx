@@ -38,8 +38,8 @@ import { VideoNodeComponent } from '@/nodes/VideoNodeComponent'
  * the React-bearing half of each card's decorate-target — the node→component
  * mappers that used to be the thirteen `decorate()` bodies. They cannot live
  * in the declaration modules: declarations must stay React-free, and the
- * wrapper props (width/wrapperStyle/className/indicator flag) already live
- * there as `decorateTarget` data.
+ * wrapper props (width/wrapperStyle/indicator flag) already live there as
+ * `decorateTarget` data.
  */
 const DECORATE_RENDER = {
   audio: (node: AudioNode) => (

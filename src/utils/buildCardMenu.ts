@@ -81,11 +81,11 @@ export function buildCardMenu(
   }
 
   for (const [nodeType, nodeClass] of nodes) {
-    if (Array.isArray(nodeClass.cardMenu)) {
-      nodeClass.cardMenu.forEach((item) => addMenuItem({ nodeType, ...item }))
-    } else {
-      addMenuItem({ nodeType, ...nodeClass.cardMenu })
-    }
+    // The card declarations normalize menus to arrays; a bare object is still
+    // tolerated as a single entry — the shape is part of the public
+    // buildCardMenu contract (pinned by test/unit/buildCardMenu.test.ts).
+    const cardMenuItems = Array.isArray(nodeClass.cardMenu) ? nodeClass.cardMenu : [nodeClass.cardMenu]
+    cardMenuItems.forEach((item) => addMenuItem({ nodeType, ...item }))
   }
 
   config?.snippets?.forEach((item) => {

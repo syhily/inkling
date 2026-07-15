@@ -1,0 +1,21 @@
+import type { ButtonData } from '@/nodes/base/nodes/button/ButtonNode'
+
+import { assembleCardNode } from '@/nodes/assemble-card-node'
+import { buttonDeclaration } from '@/nodes/cards/button.declaration'
+
+export { $isButtonNode } from '@/nodes/base/nodes/button/ButtonNode'
+export { INSERT_BUTTON_COMMAND } from '@/nodes/cards/card-menus'
+
+export type ButtonNodeDataset = ButtonData
+
+/**
+ * Transition shim (plan 039, Batch 5): the hand-written wrapper is gone — the
+ * registered class is assembled from the card declaration, and `$isButtonNode`
+ * is canonical on the base node.
+ */
+export const ButtonNode = assembleCardNode(buttonDeclaration)
+export type ButtonNode = InstanceType<typeof ButtonNode>
+
+export const $createButtonNode = (dataset?: ButtonNodeDataset): ButtonNode => {
+  return new ButtonNode(dataset)
+}

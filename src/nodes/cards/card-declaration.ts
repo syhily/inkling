@@ -30,8 +30,8 @@ export interface CardSurfaces {
  * `InklingCardWrapper`. The component render and the `IndicatorIcon`
  * component attach one layer up (`@/nodes/cards/card-decorate`) because they
  * are React-bearing; the shared adapter (`@/nodes/decorate-card`) merges both
- * halves. Cards with no wrapper props (Audio, Bookmark, Callout, File) omit
- * this entry.
+ * halves. Cards with no wrapper props (Audio, Bookmark, Callout, File,
+ * HorizontalRule) omit this entry.
  *
  * `width` is either a constant or a node→width mapper for cards whose width
  * is runtime node state (Image/Video read `cardWidth`; Header maps its
@@ -44,7 +44,6 @@ export interface CardSurfaces {
 export interface DecorateTargetSpec {
   width?: CardWidth | ((node: LexicalNode) => CardWidth | undefined)
   wrapperStyle?: string
-  className?: string
   hasIndicatorIcon?: boolean
 }
 

@@ -16,8 +16,11 @@ import {
   extendedQuoteNodeReplacement,
   extendedTextNodeReplacement,
 } from '@/nodes/base'
+import { BookmarkNode } from '@/nodes/BookmarkNode'
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
 import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
+import { HeaderNode } from '@/nodes/HeaderNode'
+import { ToggleNode } from '@/nodes/ToggleNode'
 
 // Cards join the set from their declarations; declaration order reproduces
 // the pre-refactor card run below LinkNode.
@@ -43,7 +46,11 @@ const RAW_NODES = [
   ZWNJNode,
 ]
 
-for (const node of RAW_NODES) {
+// Only the surviving hand-written wrappers subclass their base nodes without
+// redeclaring Lexical's checked methods, so only they need the own-method
+// copies here — the assembled card classes are covered by `assembleCardNode`
+// and every other node declares its own statics natively.
+for (const node of [AsideNode, BookmarkNode, HeaderNode, ToggleNode]) {
   ensureLexicalNodeOwnMethods(node)
 }
 

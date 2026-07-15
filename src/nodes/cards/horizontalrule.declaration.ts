@@ -5,9 +5,9 @@ import type { CardDeclaration } from './card-declaration'
 export const horizontalRuleDeclaration = {
   nodeType: 'horizontalrule',
   baseNode: HorizontalRuleNode,
-  decorateTarget: {
-    className: 'inline-block',
-  },
+  // No decorateTarget: the card renders with no wrapper props. It
+  // historically passed `className="inline-block"`, but `InklingCardWrapper`
+  // never destructured it — the prop was inert and is dropped here.
   surfaces: {
     default: true,
     emailEditor: true,

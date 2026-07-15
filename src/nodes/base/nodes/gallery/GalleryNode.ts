@@ -1,3 +1,5 @@
+import type { GalleryImage } from '@/types/gallery'
+
 import {
   generateDecoratorNode,
   type DecoratorNodeData,
@@ -6,6 +8,7 @@ import {
 } from '@/nodes/base/generate-decorator-node'
 import { parseGalleryNode } from '@/nodes/base/nodes/gallery/gallery-parser'
 import { renderGalleryNode } from '@/nodes/base/nodes/gallery/gallery-renderer'
+import { pick } from '@/utils/objects'
 
 const galleryProperties = [
   { name: 'images', default: [] as unknown[] },
@@ -15,6 +18,18 @@ const galleryProperties = [
 export type GalleryData = DecoratorNodeData<typeof galleryProperties>
 
 export interface GalleryNode extends DecoratorNodeValueMap<typeof galleryProperties> {}
+
+export const MAX_IMAGES = 9
+export const MAX_PER_ROW = 3
+
+// ensure we don't save client-side only properties such as preview blob urls to the server
+export const ALLOWED_IMAGE_PROPS = ['row', 'src', 'width', 'height', 'alt', 'caption', 'fileName']
+
+export function recalculateImageRows(images: GalleryImage[]) {
+  images.forEach((image: GalleryImage, idx: number) => {
+    image.row = Math.ceil((idx + 1) / MAX_PER_ROW) - 1
+  })
+}
 
 export class GalleryNode extends generateDecoratorNode({
   nodeType: 'gallery',
@@ -38,6 +53,25 @@ export class GalleryNode extends generateDecoratorNode({
 
   hasEditMode() {
     return false
+  }
+
+  // Image-list mutation helpers the card spec doesn't cover live on the base
+  // node (plan 039, Batch 5): the registered card class is assembled from the
+  // declaration and inherits them; renderer surfaces never invoke them.
+  setImages(images: GalleryImage[]) {
+    const datasetImages = images.slice(0, MAX_IMAGES).map((image) => pick(image, ALLOWED_IMAGE_PROPS))
+
+    recalculateImageRows(datasetImages)
+    this.images = datasetImages
+  }
+
+  addImages(images: GalleryImage[]) {
+    const datasetImages = [...this.images, ...images]
+      .slice(0, MAX_IMAGES)
+      .map((image) => pick(image, ALLOWED_IMAGE_PROPS))
+
+    recalculateImageRows(datasetImages)
+    this.images = datasetImages
   }
 }
 

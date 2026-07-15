@@ -83,9 +83,10 @@ export interface DecoratorNodeProperty<Name extends string = string, Default = u
  * - constructor: `setupNestedEditor` creates (or adopts a passed-in) editor
  *   instance on `__<name>`, and `populateNestedEditor` fills it from the
  *   `serializedKey` property's HTML when no editor instance was passed.
- * - `getDataset`: appends the client-side `<name>` / `<name>InitialState`
- *   keys (`<name>InitialState` only unless `exposeInitialStateInDataset` is
- *   false — Header exposes the editors but not their initial states).
+ * - `getDataset`: appends the client-side `<name>` key, plus the
+ *   `<name>InitialState` key unless the spec sets
+ *   `exposeInitialStateInDataset: false` (Header exposes the editors but not
+ *   their initial states).
  * - `exportJSON`: re-serializes the editor's content back into the
  *   `serializedKey` property via `$generateHtmlFromNodes` + `cleanBasicHtml`
  *   (the editor's content may not be reflected in the data property).

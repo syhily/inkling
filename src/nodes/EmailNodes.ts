@@ -5,7 +5,6 @@ import { HeadingNode, QuoteNode } from '@lexical/rich-text'
 import {
   ExtendedHeadingNode,
   ExtendedTextNode,
-  ensureLexicalNodeOwnMethods,
   extendedHeadingNodeReplacement,
   extendedTextNodeReplacement,
 } from '@/nodes/base'
@@ -15,6 +14,10 @@ import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
 // Cards eligible for the email renderer, from their declarations.
 const CARD_NODES = deriveCardNodes(CARD_WRAPPER_NODES, 'emailRenderer').map((card) => card.node)
 
+// No `ensureLexicalNodeOwnMethods` loop: this set has no hand-written
+// subclassing wrappers — its one card (horizontalrule) is assembled from its
+// declaration (covered by `assembleCardNode`) and the rest declare their own
+// statics natively.
 const EMAIL_NODES = [
   ExtendedTextNode,
   extendedTextNodeReplacement,
@@ -27,9 +30,5 @@ const EMAIL_NODES = [
   LinkNode,
   ...CARD_NODES,
 ]
-
-for (const node of EMAIL_NODES) {
-  ensureLexicalNodeOwnMethods(node)
-}
 
 export default EMAIL_NODES
