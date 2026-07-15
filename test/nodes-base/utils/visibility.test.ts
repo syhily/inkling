@@ -271,7 +271,7 @@ describe('Utils: visibility', function () {
 
       const originalOutput = {
         element: p,
-        type: 'html',
+        type: 'outer',
       } as VisibilityRenderOutput
       return renderWithVisibility(originalOutput, visibilityWithDefaults, { target })
     }
@@ -292,7 +292,7 @@ describe('Utils: visibility', function () {
 
         expect(getHTMLElement(result.element).tagName).toEqual('P')
         expect(getHTMLElement(result.element).innerHTML).toBe('testing')
-        expect(result.type).toBe('html')
+        expect(result.type).toBe('outer')
       })
 
       it('wraps original output when emailing a specific segment', function () {
@@ -302,7 +302,7 @@ describe('Utils: visibility', function () {
         expect(getHTMLElement(result.element).tagName).toEqual('DIV')
         expect(getHTMLElement(result.element).dataset.ghSegment!).toBe('status:free')
         expect(getHTMLElement(result.element).innerHTML).toBe('<p>testing</p>')
-        expect(result.type).toBe('html')
+        expect(result.type).toBe('outer')
       })
     })
 
@@ -313,7 +313,7 @@ describe('Utils: visibility', function () {
 
         expect(getHTMLElement(result.element).tagName).toEqual('P')
         expect(getHTMLElement(result.element).innerHTML).toBe('testing')
-        expect(result.type).toBe('html')
+        expect(result.type).toBe('outer')
       })
 
       it('adds wrapping comments when anonymous is gated', function () {
@@ -423,14 +423,14 @@ describe('Utils: visibility', function () {
 
       const originalOutput = {
         element: p,
-        type: 'html',
+        type: 'outer',
       } as VisibilityRenderOutput
       const result = renderWithVisibility(originalOutput, visibility, { target: 'email' })
 
       expect(getHTMLElement(result.element).tagName).toEqual('DIV')
       expect(getHTMLElement(result.element).dataset.ghSegment!).toBe('status:free')
       expect(getHTMLElement(result.element).innerHTML).toBe('<p>testing</p>')
-      expect(result.type).toBe('html')
+      expect(result.type).toBe('outer')
     })
   })
 })

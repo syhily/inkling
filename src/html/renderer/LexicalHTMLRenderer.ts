@@ -10,7 +10,7 @@ import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
 import { registerRemoveAtLinkNodesTransform } from '@/transforms'
 
 interface RenderOptions {
-  target?: 'html' | 'email' | 'plaintext'
+  target?: 'html' | 'email'
   dom?: ExportDOMDom
 }
 

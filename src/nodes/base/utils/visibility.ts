@@ -204,13 +204,13 @@ function _renderWithEmailVisibility(
   document: Document,
   content: string,
   emailVisibility: { memberSegment: string },
-): ExportDOMOutput<'html'> {
+): ExportDOMOutput<'outer'> {
   const { memberSegment } = emailVisibility
   const container = document.createElement('div')
   container.innerHTML = content
   container.setAttribute('data-gh-segment', memberSegment)
   container.classList.add('inkling-visibility-wrapper')
-  return { element: container, type: 'html' as const }
+  return { element: container, type: 'outer' as const }
 }
 
 const SEGMENT_REGEX = /^(status:[\w+-]+,)*status:[\w+-]+$/
