@@ -373,3 +373,57 @@ un-migrated code, and the drift-guard cases can be restored to
 independent: if it must ship alone, cherry-pick it onto a branch without the
 refactor commits — it touches only `toggle-renderer.ts` and its test
 expectations.
+
+## Execution notes
+
+Plan 040 landed in seven steps on main (`aa53edc..c8e522f`). Step 1
+(`aa53edc` + `931250e`) pinned renderer output including an adversarial
+corpus (markup-bearing inputs for toggle/callout/video/audio). Step 2
+(`aa4a8bb` + `3cc849e`) introduced the read-only seam
+`src/nodes/base/render-context.ts`, threaded as the third argument through
+every renderer and the TextContent/transformer path. Step 3
+(`f9721a9`, `cc7ab0a`, `5bd74b6`, `e37cac7`, `58711c3`) routed all URL
+policy through `context.safeUrl`/`context.isLocalContentImage` with zero
+test changes. Step 4 (`1cf558c`, `162c6e5`, `cbaae0e`) converged
+sanitization: captions moved to `context.sanitizeCaption`, and toggle's
+six raw interpolation sites were fixed — the plan's one intentional output
+change, with the per-target before/after diff recorded in the commit
+message. Both pre-authorized STOP fallbacks were taken after corpus diffs:
+`context.escapeText` for the video caption / audio email title (DOMPurify
+diverged from `escapeHtml` on 5/7 corpus inputs) and `CALLOUT_HTML_CONFIG`
+dispatched to cleanDOM (no DOMPurify config reproduces cleanDOM's per-tag
+attribute policy and script-unwrap semantics). Step 5 (`499058e` +
+`e90d495`) unified all 16 `options.target` comparisons behind
+`context.variant`, moved the missing-postUrl throws into
+`context.requirePostUrl` (pinned error messages intact), and single-sourced
+`context.usesModernEmailButton` plus the color checks (one
+`COLOR_VALUE_REGEX` + documented `isSafeColorValue`/
+`isEmailButtonColorValue`; the `'transparent'` rejection stays
+email-button-only because header uses it as a legitimate fallback). Step 6
+(`ad77e76`) folded the options bag: `context.trackIdAttribute` owns
+heading-id dedup, `addCreateDocumentOption` and its 14 call sites were
+deleted, and `ExportDOMOptionsBase` was narrowed while the public
+`ExportDOMOptions` keeps the index signature (`pnpm verify:package` and
+`pnpm verify:types` PASS). Step 7 (`c6add85`) retired the media-url-policy
+drift guard — its adversarial cases were already pinned per card and are
+now also seam tests — and added the shrink-only import guard
+`test/nodes-base/nodes/render-policy-imports.test.ts`; `c8e522f` cites that
+guard from the seam's module header. CONTEXT.md gained a "Render context"
+entry.
+
+Accepted leftovers, all documented: six renderers keep `escape-html`
+imports for plain-text template interpolation (allowlisted in the guard; a
+byte-identical migration to `context.escapeText` would shrink the allowlist
+to just the markdown renderer and is the natural follow-up), markdown keeps
+`sanitize-html` on markdown-it output, `email-button.ts` keeps its legacy
+fallback for direct non-render callers, `visibility.ts` still reads
+`options.target` but is fed the frozen context, and audio's email template
+keeps the verbatim escaped postUrl (routing through `safeUrl` would drift
+pinned output — recorded at the call site). Renderers still receive the raw
+options bag alongside the context, so "the context is the only thing
+renderers receive" remains the unfinished end-state and the next fold.
+
+Gates at HEAD: `pnpm vitest run test/nodes-base test/html-renderer` = 46
+files / 730 passed / 21 todo; `pnpm test:unit` = 206 files / 1707 passed /
+21 todo; typecheck clean; lint 0/0; format:check clean. No e2e run — no
+demo-visible path changed and e2e asserts no exported markup.

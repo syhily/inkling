@@ -69,7 +69,7 @@ Repo quick reference (verification gates used by every plan):
 | 037  | Delete the seams nothing varies across                            | P2       | M      | —                                | DONE (`f18e1dc`) |
 | 038  | Move card selection to an editor-side store                       | P2       | M      | 036                              | DONE (`b3e05fc`) |
 | 039  | One declaration per card — deepen generator, derive registries    | P1       | L      | 037, 038                         | DONE (`4512bef`) |
-| 040  | Put renderer policy behind a render-context seam                  | P1       | M      | 037                              | TODO             |
+| 040  | Put renderer policy behind a render-context seam                  | P1       | M      | 037                              | DONE (`c6add85`) |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale — finding fixed independently or approach
