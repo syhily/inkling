@@ -67,7 +67,7 @@ Repo quick reference (verification gates used by every plan):
 | 035  | Unify typed fill/outline email-button rendering                   | P3       | M      | 030                              | DONE             |
 | 036  | Consolidate card adjacency behind one module                      | P1       | L      | —                                | DONE (`c944cd3`) |
 | 037  | Delete the seams nothing varies across                            | P2       | M      | —                                | DONE (`f18e1dc`) |
-| 038  | Move card selection to an editor-side store                       | P2       | M      | 036                              | TODO             |
+| 038  | Move card selection to an editor-side store                       | P2       | M      | 036                              | DONE (`b3e05fc`) |
 | 039  | One declaration per card — deepen generator, derive registries    | P1       | L      | 037, 038                         | TODO             |
 | 040  | Put renderer policy behind a render-context seam                  | P1       | M      | 037                              | TODO             |
 

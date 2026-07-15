@@ -23,3 +23,7 @@ _Avoid_: card registration, card manifest
 **Render target**:
 Where a card's exported markup is going: **web** (the editor's own frontend) or **email** (email clients, with Outlook-grade markup constraints). A card can have structurally different output per target.
 _Avoid_: environment, platform
+
+**Card selection store**:
+The per-top-level-composer, editor-side store owning card-selection truth for non-React code: the selected card key and the edit-mode flag. Fed once by registerCardSelection, read synchronously by command handlers, subscribed to render-only by React via useCardSelection.
+_Avoid_: selection context, selection mirror, selected-card state
