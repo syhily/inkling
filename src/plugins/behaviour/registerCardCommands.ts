@@ -7,7 +7,6 @@ import {
   $getNodeByKey,
   $getRoot,
   $getSelection,
-  $isDecoratorNode,
   $isNodeSelection,
   $isRangeSelection,
   $setSelection,
@@ -18,7 +17,7 @@ import type { CardNode } from '@/types/lexical-internals'
 
 import { $insertAndSelectNode } from '@/utils/$insertAndSelectNode'
 
-import { $deselectCard, $selectCard } from './card-adjacency'
+import { $deselectCard, $getLogicallyAdjacentCard, $selectCard } from './card-adjacency'
 import {
   DELETE_CARD_COMMAND,
   DESELECT_CARD_COMMAND,
@@ -135,9 +134,11 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
         const nextSibling = cardNode.getNextSibling()
 
         if (direction === 'backward' && previousSibling) {
-          if ($isDecoratorNode(previousSibling)) {
+          // from-mode: cardNode comes from the payload, not the selection
+          const previousCard = $getLogicallyAdjacentCard('previous', cardNode)
+          if (previousCard) {
             const nodeSelection = $createNodeSelection()
-            nodeSelection.add(previousSibling.getKey())
+            nodeSelection.add(previousCard.getKey())
             $setSelection(nodeSelection)
           } else if (previousSibling.selectEnd) {
             // decorator nodes have selectEnd, so this needs to come after that check
@@ -146,9 +147,11 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
             cardNode.selectPrevious?.()
           }
         } else if (nextSibling) {
-          if ($isDecoratorNode(nextSibling)) {
+          // from-mode: cardNode comes from the payload, not the selection
+          const nextCard = $getLogicallyAdjacentCard('next', cardNode)
+          if (nextCard) {
             const nodeSelection = $createNodeSelection()
-            nodeSelection.add(nextSibling.getKey())
+            nodeSelection.add(nextCard.getKey())
             $setSelection(nodeSelection)
           } else if (nextSibling.selectStart) {
             // decorator nodes have selectStart, so this needs to come after that check
