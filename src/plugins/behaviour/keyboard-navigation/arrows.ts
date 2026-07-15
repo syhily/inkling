@@ -228,7 +228,7 @@ export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNa
           return true
         }
 
-        // move cursor to end of previous node
+        // move cursor to start of next node
         event?.preventDefault()
         nextSibling.selectStart()
         return true
