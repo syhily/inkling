@@ -10,7 +10,7 @@ import { $getLogicallyAdjacentCard, editorOwnsFocus } from '../card-adjacency'
 import { DELETE_CARD_COMMAND } from '../commands'
 
 export function registerDeleteCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
-  const { selectedCardKey, isNested } = deps
+  const { store, isNested } = deps
 
   return editor.registerCommand(
     KEY_DELETE_COMMAND,
@@ -21,6 +21,7 @@ export function registerDeleteCommand(editor: LexicalEditor, deps: KeyboardNavig
       }
 
       // delete selected card if we have one
+      const { selectedCardKey } = store.getState()
       if (!isNested && selectedCardKey) {
         event?.preventDefault()
         editor.dispatchCommand(DELETE_CARD_COMMAND, { cardKey: selectedCardKey, direction: 'forward' })

@@ -2,6 +2,7 @@ import { createEditor, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ImageNode } from '@/nodes/ImageNode'
+import { createCardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
 import { registerVisibilityHandler } from '@/plugins/behaviour/registerVisibilityHandler'
 
 function createTestEditor() {
@@ -23,8 +24,7 @@ describe('registerVisibilityHandler', () => {
 
   it('registers visibility command listeners and returns a cleanup function', () => {
     const cleanup = registerVisibilityHandler(editor, {
-      selectedCardKey: null,
-      isEditingCard: false,
+      store: createCardSelectionStore(),
       setShowVisibilitySettings,
     })
 

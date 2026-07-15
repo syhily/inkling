@@ -17,6 +17,8 @@ import type { CardNode } from '@/types/lexical-internals'
 
 import { $insertAndSelectNode } from '@/utils/$insertAndSelectNode'
 
+import type { CardSelectionStore } from './cardSelectionStore'
+
 import { $deselectCard, $getLogicallyAdjacentCard, $selectCard } from './card-adjacency'
 import {
   DELETE_CARD_COMMAND,
@@ -27,15 +29,12 @@ import {
 } from './commands'
 
 interface CardCommandDeps {
-  selectedCardKey: string | null
-  isEditingCard: boolean
-  setSelectedCardKey: (key: string | null) => void
-  setIsEditingCard: (editing: boolean) => void
+  store: CardSelectionStore
   setShowVisibilitySettings: (show: boolean) => void
 }
 
 export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDeps) {
-  const { selectedCardKey, isEditingCard, setSelectedCardKey, setIsEditingCard, setShowVisibilitySettings } = deps
+  const { store, setShowVisibilitySettings } = deps
 
   return mergeRegister(
     editor.registerCommand(
@@ -55,10 +54,10 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
         if (focusNode !== null) {
           $insertAndSelectNode({ selectedNode: focusNode, newNode: cardNode })
 
-          setSelectedCardKey(cardNode.getKey())
+          store.setState({ selectedCardKey: cardNode.getKey() })
 
           if (openInEditMode) {
-            setIsEditingCard(true)
+            store.setState({ isEditingCard: true })
           }
         }
 
@@ -69,6 +68,8 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
     editor.registerCommand(
       SELECT_CARD_COMMAND,
       ({ cardKey }) => {
+        const { selectedCardKey, isEditingCard } = store.getState()
+
         // already selected, delete if empty as we're exiting edit mode
         if (selectedCardKey === cardKey && isEditingCard) {
           const cardNode = $getNodeByKey(cardKey) as CardNode | null
@@ -86,8 +87,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
 
         $selectCard(editor, cardKey)
 
-        setSelectedCardKey(cardKey)
-        setIsEditingCard(false)
+        store.setState({ selectedCardKey: cardKey, isEditingCard: false })
         return true
       },
       COMMAND_PRIORITY_LOW,
@@ -95,16 +95,18 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
     editor.registerCommand(
       EDIT_CARD_COMMAND,
       ({ cardKey }) => {
+        const { selectedCardKey } = store.getState()
+
         if (selectedCardKey && selectedCardKey !== cardKey) {
           $deselectCard(editor, selectedCardKey)
         }
         $selectCard(editor, cardKey)
 
-        setSelectedCardKey(cardKey)
+        store.setState({ selectedCardKey: cardKey })
 
         const cardNode = $getNodeByKey(cardKey) as CardNode | null
         if (cardNode?.hasEditMode?.()) {
-          setIsEditingCard(true)
+          store.setState({ isEditingCard: true })
         }
         return true
       },
@@ -115,8 +117,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
       ({ cardKey }) => {
         $deselectCard(editor, cardKey)
 
-        setSelectedCardKey(null)
-        setIsEditingCard(false)
+        store.setState({ selectedCardKey: null, isEditingCard: false })
         // Hide visibility settings when deselecting a card
         setShowVisibilitySettings(false)
         return true
@@ -174,8 +175,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
           rootElement.focus()
         }
 
-        setSelectedCardKey(null)
-        setIsEditingCard(false)
+        store.setState({ selectedCardKey: null, isEditingCard: false })
         setShowVisibilitySettings(false)
         return true
       },

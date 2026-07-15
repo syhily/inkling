@@ -8,6 +8,7 @@ import { CardWrapper } from '@/components/ui/CardWrapper'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 import { normalizeCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 import {
   EDIT_CARD_COMMAND,
@@ -36,7 +37,9 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
   const containerRef = React.useRef<HTMLDivElement | null>(null)
   const skipClick = React.useRef(false)
 
-  const { selectedCardKey, isEditingCard, isDragging } = useInklingSelectedCardContext()
+  const { isDragging } = useInklingSelectedCardContext()
+  const selectedCardKey = useCardSelection((state) => state.selectedCardKey)
+  const isEditingCard = useCardSelection((state) => state.isEditingCard)
 
   const isSelected = selectedCardKey === nodeKey
   const isEditing = isSelected && isEditingCard

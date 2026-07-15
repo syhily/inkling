@@ -24,7 +24,7 @@ import type { KeyboardNavigationDeps } from './types'
 import { $getLogicallyAdjacentCard, $getVisuallyAdjacentCard, $selectCard, editorOwnsFocus } from '../card-adjacency'
 
 export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
-  const { selectedCardKey, cursorDidExitAtTop } = deps
+  const { store, cursorDidExitAtTop } = deps
 
   return editor.registerCommand(
     KEY_ARROW_UP_COMMAND,
@@ -84,6 +84,7 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
       }
 
       // if we're in a nested editor, we need to move selection back to the parent editor
+      const { selectedCardKey } = store.getState()
       if (selectedCardKey && (event as CardKeyboardEvent)?._fromCaptionEditor) {
         $selectCard(editor, selectedCardKey)
         return true
@@ -138,7 +139,7 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
 }
 
 export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
-  const { selectedCardKey } = deps
+  const { store } = deps
 
   return editor.registerCommand(
     KEY_ARROW_DOWN_COMMAND,
@@ -199,6 +200,7 @@ export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNa
       }
 
       // if we're in a nested editor, we need to move selection back to the parent editor
+      const { selectedCardKey } = store.getState()
       if (selectedCardKey && (event as CardKeyboardEvent)?._fromCaptionEditor) {
         $selectCard(editor, selectedCardKey)
         return true

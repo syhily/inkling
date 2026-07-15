@@ -55,8 +55,7 @@ function useInklingBehaviour({
   cursorDidExitAtTop?: () => void
   isNested?: boolean
 }) {
-  const { selectedCardKey, setSelectedCardKey, isEditingCard, setIsEditingCard, setShowVisibilitySettings } =
-    useInklingSelectedCardContext()
+  const { setShowVisibilitySettings } = useInklingSelectedCardContext()
   const cardSelectionStore = useCardSelectionStore()
 
   const isShiftPressed = React.useRef(false)
@@ -83,6 +82,9 @@ function useInklingBehaviour({
     return registerMouseEvents(editor, { containerElem, isNested })
   }, [editor, containerElem, isNested])
 
+  // Register the behaviour listeners once per mount. Handlers read card
+  // selection synchronously from the store, so listeners no longer need to be
+  // torn down and re-registered per render to keep their closures fresh.
   React.useEffect(() => {
     return mergeRegister(
       registerCardSelection(editor, {
@@ -90,16 +92,11 @@ function useInklingBehaviour({
         isNested,
       }),
       registerCardCommands(editor, {
-        selectedCardKey,
-        isEditingCard,
-        setSelectedCardKey,
-        setIsEditingCard,
+        store: cardSelectionStore,
         setShowVisibilitySettings,
       }),
       registerKeyboardNavigation(editor, {
-        selectedCardKey,
-        isEditingCard,
-        setIsEditingCard,
+        store: cardSelectionStore,
         isNested,
         cursorDidExitAtTop,
       }),
@@ -107,12 +104,11 @@ function useInklingBehaviour({
       registerLinkMatching(editor, { isShiftPressed }),
       registerClickAndCut(editor),
       registerVisibilityHandler(editor, {
-        selectedCardKey,
-        isEditingCard,
+        store: cardSelectionStore,
         setShowVisibilitySettings,
       }),
     )
-  })
+  }, [editor, cardSelectionStore, isNested, cursorDidExitAtTop, setShowVisibilitySettings])
 
   // remove alignment formats,
   // denest invalid node nesting,

@@ -7,6 +7,8 @@ import type { CardNode } from '@/types/lexical-internals'
 
 import { $isHtmlNode } from '@/nodes/HtmlNode'
 
+import type { CardSelectionStore } from './cardSelectionStore'
+
 import { $deselectCard } from './card-adjacency'
 import {
   DESELECT_CARD_COMMAND,
@@ -17,19 +19,19 @@ import {
 } from './commands'
 
 interface VisibilityHandlerDeps {
-  selectedCardKey: string | null
-  isEditingCard: boolean
+  store: CardSelectionStore
   setShowVisibilitySettings: (show: boolean) => void
 }
 
 export function registerVisibilityHandler(editor: LexicalEditor, deps: VisibilityHandlerDeps) {
-  const { selectedCardKey, isEditingCard, setShowVisibilitySettings } = deps
+  const { store, setShowVisibilitySettings } = deps
 
   return mergeRegister(
     editor.registerCommand(
       SHOW_CARD_VISIBILITY_SETTINGS_COMMAND,
       ({ cardKey }) => {
         editor.update(() => {
+          const { selectedCardKey, isEditingCard } = store.getState()
           const cardNode = $getNodeByKey(cardKey) as CardNode | null
 
           // If the card is an html card, we toggle the visibility settings differently

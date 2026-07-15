@@ -30,6 +30,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
+import { createCardSelectionStore, type CardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
 import { DELETE_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { registerKeyboardNavigation } from '@/plugins/behaviour/registerKeyboardNavigation'
 
@@ -180,12 +181,12 @@ async function setSelectionAt(
 
 describe('registerKeyboardNavigation', () => {
   let editor: LexicalEditor
-  let setIsEditingCard: ReturnType<typeof vi.fn>
+  let store: CardSelectionStore
   let mounted: ReturnType<typeof mountEditor> | null = null
 
   beforeEach(() => {
     editor = createTestEditor()
-    setIsEditingCard = vi.fn()
+    store = createCardSelectionStore()
     document.body.innerHTML = ''
     mounted = null
   })
@@ -196,11 +197,8 @@ describe('registerKeyboardNavigation', () => {
   })
 
   function registerWithCardKey(cardKey: string | null = null) {
-    return registerKeyboardNavigation(editor, {
-      selectedCardKey: cardKey,
-      isEditingCard: false,
-      setIsEditingCard,
-    })
+    store.setState({ selectedCardKey: cardKey })
+    return registerKeyboardNavigation(editor, { store })
   }
 
   it('registers keyboard command listeners and returns a cleanup function', () => {
@@ -271,7 +269,7 @@ describe('registerKeyboardNavigation', () => {
       new KeyboardEvent('keydown', { key: 'Enter', metaKey: true }),
     )
     expect(result).toBe(true)
-    expect(setIsEditingCard).toHaveBeenCalledWith(true)
+    expect(store.getState().isEditingCard).toBe(true)
 
     cleanup()
   })
@@ -364,11 +362,8 @@ describe('registerKeyboardNavigation', () => {
     mounted = mountEditor(editor)
     const selectCardListener = vi.fn()
     const unregister = editor.registerCommand(SELECT_CARD_COMMAND, selectCardListener, 0)
-    const cleanup = registerKeyboardNavigation(editor, {
-      selectedCardKey: cardKey,
-      isEditingCard: true,
-      setIsEditingCard,
-    })
+    store.setState({ selectedCardKey: cardKey, isEditingCard: true })
+    const cleanup = registerKeyboardNavigation(editor, { store })
 
     const result = await dispatchAndCommit(editor, KEY_ESCAPE_COMMAND, new KeyboardEvent('keydown', { key: 'Escape' }))
     expect(result).toBe(true)
@@ -696,11 +691,8 @@ describe('registerKeyboardNavigation', () => {
       mounted = mountEditor(editor)
       const deleteCardListener = vi.fn()
       const unregister = editor.registerCommand(DELETE_CARD_COMMAND, deleteCardListener, 0)
-      const cleanup = registerKeyboardNavigation(editor, {
-        selectedCardKey: cardKey,
-        isEditingCard: false,
-        setIsEditingCard,
-      })
+      store.setState({ selectedCardKey: cardKey })
+      const cleanup = registerKeyboardNavigation(editor, { store })
 
       const result = await dispatchAndCommit(editor, DELETE_LINE_COMMAND, true)
       expect(result).toBe(true)
@@ -722,12 +714,8 @@ describe('registerKeyboardNavigation', () => {
       mounted = mountEditor(editor)
       const deleteCardListener = vi.fn()
       const unregister = editor.registerCommand(DELETE_CARD_COMMAND, deleteCardListener, 0)
-      const cleanup = registerKeyboardNavigation(editor, {
-        selectedCardKey: cardKey,
-        isEditingCard: false,
-        setIsEditingCard,
-        isNested: true,
-      })
+      store.setState({ selectedCardKey: cardKey })
+      const cleanup = registerKeyboardNavigation(editor, { store, isNested: true })
 
       const result = await dispatchAndCommit(editor, DELETE_LINE_COMMAND, true)
       expect(result).toBe(false)

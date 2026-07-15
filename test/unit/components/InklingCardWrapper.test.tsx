@@ -4,8 +4,9 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import InklingCardWrapper from '@/components/InklingCardWrapper'
+import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
-import { InklingSelectedCardContext, useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
+import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { buildDefaultVisibility } from '@/nodes/base/utils/visibility'
 import { HtmlNode } from '@/nodes/HtmlNode'
 import { VISIBILITY_SETTINGS } from '@/utils/visibility'
@@ -50,10 +51,10 @@ function addHtmlNode(editor: LexicalEditor, dataset: Record<string, unknown> = {
 }
 
 function SelectCard({ nodeKey }: { nodeKey: NodeKey }) {
-  const { setSelectedCardKey } = useInklingSelectedCardContext()
+  const store = useCardSelectionStore()
   React.useEffect(() => {
-    setSelectedCardKey(nodeKey)
-  }, [nodeKey, setSelectedCardKey])
+    store.setState({ selectedCardKey: nodeKey })
+  }, [nodeKey, store])
   return null
 }
 

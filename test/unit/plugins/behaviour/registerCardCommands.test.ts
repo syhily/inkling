@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
+import { createCardSelectionStore, type CardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
 import { DELETE_CARD_COMMAND, INSERT_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { registerCardCommands } from '@/plugins/behaviour/registerCardCommands'
 
@@ -22,21 +23,18 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
 
 describe('registerCardCommands', () => {
   let editor: LexicalEditor
-  const setSelectedCardKey = vi.fn()
-  const setIsEditingCard = vi.fn()
+  let store: CardSelectionStore
   const setShowVisibilitySettings = vi.fn()
 
   beforeEach(() => {
     vi.clearAllMocks()
     editor = createTestEditor()
+    store = createCardSelectionStore()
   })
 
   function register(deps: Partial<Parameters<typeof registerCardCommands>[1]> = {}) {
     return registerCardCommands(editor, {
-      selectedCardKey: null,
-      isEditingCard: false,
-      setSelectedCardKey,
-      setIsEditingCard,
+      store,
       setShowVisibilitySettings,
       ...deps,
     })
@@ -60,7 +58,7 @@ describe('registerCardCommands', () => {
       expect(dispatched).toBe(true)
     })
 
-    expect(setSelectedCardKey).toHaveBeenCalledWith(imageNode!.getKey())
+    expect(store.getState().selectedCardKey).toBe(imageNode!.getKey())
 
     editor.getEditorState().read(() => {
       const root = $getRoot()
@@ -102,6 +100,6 @@ describe('registerCardCommands', () => {
 
     const dispatched = editor.dispatchCommand(SELECT_CARD_COMMAND, { cardKey: cardKey! })
     expect(dispatched).toBe(true)
-    expect(setSelectedCardKey).toHaveBeenCalledWith(cardKey)
+    expect(store.getState().selectedCardKey).toBe(cardKey)
   })
 })

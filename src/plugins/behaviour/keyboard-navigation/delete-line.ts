@@ -10,12 +10,13 @@ import { $getLogicallyAdjacentCard, $isCaretAtBlockTop, editorOwnsFocus } from '
 import { DELETE_CARD_COMMAND } from '../commands'
 
 export function registerDeleteLineCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
-  const { selectedCardKey, isNested } = deps
+  const { store, isNested } = deps
 
   return editor.registerCommand(
     DELETE_LINE_COMMAND,
     (isBackward) => {
       // delete selected card if it's not a nested editor
+      const { selectedCardKey } = store.getState()
       if (selectedCardKey && editorOwnsFocus(editor) && !isNested) {
         editor.dispatchCommand(DELETE_CARD_COMMAND, {
           cardKey: selectedCardKey,

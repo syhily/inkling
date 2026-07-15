@@ -30,7 +30,7 @@ const SPECIAL_MARKUPS = {
 }
 
 export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
-  const { selectedCardKey, isNested } = deps
+  const { store, isNested } = deps
 
   return editor.registerCommand(
     KEY_BACKSPACE_COMMAND,
@@ -41,6 +41,7 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
       }
 
       // delete selected card if we have one
+      const { selectedCardKey } = store.getState()
       if (!isNested && selectedCardKey) {
         event?.preventDefault()
         editor.dispatchCommand(DELETE_CARD_COMMAND, { cardKey: selectedCardKey, direction: 'backward' })

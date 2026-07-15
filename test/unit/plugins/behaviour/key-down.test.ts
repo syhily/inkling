@@ -3,12 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { KeyboardNavigationDeps } from '@/plugins/behaviour/keyboard-navigation/types'
 
+import { createCardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
 import { registerKeyDownPassthrough } from '@/plugins/behaviour/keyboard-navigation/key-down'
 
 const deps: KeyboardNavigationDeps = {
-  selectedCardKey: null,
-  isEditingCard: false,
-  setIsEditingCard: () => {},
+  store: createCardSelectionStore(),
 }
 
 function createTestEditor() {

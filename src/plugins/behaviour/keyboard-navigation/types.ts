@@ -1,7 +1,7 @@
+import type { CardSelectionStore } from '../cardSelectionStore'
+
 export interface KeyboardNavigationDeps {
-  selectedCardKey: string | null
-  isEditingCard: boolean
-  setIsEditingCard: (editing: boolean) => void
+  store: CardSelectionStore
   isNested?: boolean
   cursorDidExitAtTop?: () => void
 }

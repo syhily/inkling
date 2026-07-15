@@ -9,11 +9,12 @@ import type { KeyboardNavigationDeps } from './types'
 import { SELECT_CARD_COMMAND } from '../commands'
 
 export function registerEscapeCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
-  const { selectedCardKey, isEditingCard } = deps
+  const { store } = deps
 
   return editor.registerCommand(
     KEY_ESCAPE_COMMAND,
     () => {
+      const { selectedCardKey, isEditingCard } = store.getState()
       const parentEditor = getParentEditor(editor)
 
       if (selectedCardKey && isEditingCard) {

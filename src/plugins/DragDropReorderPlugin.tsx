@@ -16,6 +16,7 @@ import type { CardNode } from '@/types/lexical-internals'
 
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 import { $createImageNode } from '@/nodes/ImageNode'
 import { type DraggableInfo, type DroppablePosition } from '@/utils/draggable/DragDropContainer'
 import { DragDropHandler } from '@/utils/draggable/DragDropHandler'
@@ -31,7 +32,8 @@ interface DragPreviewElement extends HTMLDivElement {
 
 function useDragDropReorder(editor: LexicalEditor): void {
   const inkling = React.useContext(InklingComposerContext)
-  const { setIsDragging, isEditingCard } = useInklingSelectedCardContext()
+  const { setIsDragging } = useInklingSelectedCardContext()
+  const isEditingCard = useCardSelection((state) => state.isEditingCard)
 
   const cardContainer = React.useRef<{
     refresh: () => void

@@ -23,11 +23,13 @@ import type { KeyboardNavigationDeps } from './types'
 import { $selectCard } from '../card-adjacency'
 
 export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
-  const { selectedCardKey, isEditingCard, setIsEditingCard, isNested } = deps
+  const { store, isNested } = deps
 
   return editor.registerCommand(
     KEY_ENTER_COMMAND,
     (event) => {
+      const { selectedCardKey, isEditingCard } = store.getState()
+
       // toggle edit mode if a card is selected and ctrl/cmd+enter is pressed
       if (selectedCardKey && event && (event.metaKey || event.ctrlKey)) {
         const cardNode = $getNodeByKey(selectedCardKey)
@@ -72,9 +74,9 @@ export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNaviga
               $selectCard(editor, selectedCardKey)
             }
 
-            setIsEditingCard(false)
+            store.setState({ isEditingCard: false })
           } else {
-            setIsEditingCard(true)
+            store.setState({ isEditingCard: true })
           }
 
           return true
