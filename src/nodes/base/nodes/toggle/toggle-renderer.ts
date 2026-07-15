@@ -1,7 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { html } from '@/nodes/base/utils/tagged-template-fns'
 
@@ -67,9 +66,7 @@ function emailCardTemplate({ node, context }: { node: ToggleNodeData; context: R
 }
 
 export function renderToggleNode(node: ToggleNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
-  addCreateDocumentOption(options)
-
-  const document = options.createDocument!()
+  const document = context.createDocument()
 
   const htmlString = context.variant({ web: false, email: true })
     ? emailCardTemplate({ node, context })

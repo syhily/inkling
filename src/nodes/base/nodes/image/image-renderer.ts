@@ -1,7 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
@@ -38,9 +37,7 @@ interface ImageRenderOptions extends ExportDOMOptions {
 }
 
 export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions = {}, context: RenderContext) {
-  addCreateDocumentOption(options)
-
-  const document = options.createDocument!()
+  const document = context.createDocument()
 
   if (!node.src || node.src.trim() === '' || context.safeUrl('media', node.src) === '') {
     return renderEmptyContainer(document)

@@ -1,7 +1,7 @@
 import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { render } from '@/markdown/markdown-html-renderer'
-import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 
 interface MarkdownNodeData {
@@ -13,13 +13,16 @@ interface MarkdownRenderOptions extends ExportDOMOptions {}
 export function renderMarkdownNode(
   node: MarkdownNodeData,
   options: MarkdownRenderOptions = {},
+  context: RenderContext,
 ): ExportDOMOutput<'inner'> {
-  addCreateDocumentOption(options)
-  if (typeof options.createDocument !== 'function') {
+  // A truthy non-function `createDocument` reaches the context verbatim from
+  // the options bag; the TypeError for that caller bug is pinned
+  // (test/nodes-base/nodes/markdown.test.ts).
+  if (options.createDocument && typeof options.createDocument !== 'function') {
     throw new TypeError('renderMarkdownNode requires options.createDocument to be a function')
   }
 
-  const document = options.createDocument()
+  const document = context.createDocument()
 
   const html = sanitizeHtml(render(node.markdown || '', options as Record<string, unknown>))
 

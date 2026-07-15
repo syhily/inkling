@@ -15,8 +15,6 @@ export default function $convertToHtmlString(editor: LexicalEditor, options: Ren
   const output: string[] = []
   const children: LexicalNode[] = $getRoot().getChildren()
 
-  options.usedIdAttributes = options.usedIdAttributes || {}
-
   // One read-only render context per string render, threaded to the element
   // transformers and TextContent so they can migrate onto it (plan 040). Card
   // exportDOM builds its own context per call.

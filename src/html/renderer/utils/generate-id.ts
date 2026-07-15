@@ -1,24 +1,12 @@
-import type { RendererOptions } from '@/html/renderer/types'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { slugify } from '@/utils'
 
-function generateId(text: string, options: RendererOptions) {
-  if (!options.usedIdAttributes) {
-    options.usedIdAttributes = {}
-  }
-
-  const id = slugify(text)
-  let deduplicatedId = id
-
-  if (options.usedIdAttributes[id] !== undefined) {
-    deduplicatedId += `-${options.usedIdAttributes[id]}`
-
-    options.usedIdAttributes[id] += 1
-  } else {
-    options.usedIdAttributes[id] = 1
-  }
-
-  return deduplicatedId
+// The render context owns the used-id map (plan 040 Step 6): one map per
+// render pass, so duplicate headings dedup within a render exactly as the old
+// options-bag `usedIdAttributes` did.
+function generateId(text: string, context: RenderContext) {
+  return context.trackIdAttribute(slugify(text))
 }
 
 export default generateId

@@ -1,7 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
@@ -29,9 +28,7 @@ function getPosterSpacerSrc(width: number, height: number) {
 }
 
 export function renderVideoNode(node: VideoNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
-  addCreateDocumentOption(options)
-
-  const document = options.createDocument!()
+  const document = context.createDocument()
 
   if (!node.src || node.src.trim() === '' || context.safeUrl('media', node.src) === '') {
     return renderEmptyContainer(document)

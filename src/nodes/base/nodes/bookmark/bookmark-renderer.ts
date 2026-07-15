@@ -1,7 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { truncateHtml } from '@/nodes/base/utils/truncate'
@@ -25,9 +24,7 @@ function getSafeMediaUrls(node: BookmarkNodeData, context: RenderContext) {
 }
 
 export function renderBookmarkNode(node: BookmarkNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
-  addCreateDocumentOption(options)
-
-  const document = options.createDocument!()
+  const document = context.createDocument()
 
   if (!node.url || node.url.trim() === '' || context.safeUrl('navigation', node.url) === '') {
     return renderEmptyContainer(document)

@@ -1,7 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { renderEmailButton } from '@/nodes/base/utils/render-helpers/email-button'
@@ -14,8 +13,7 @@ interface ButtonNodeData {
 }
 
 export function renderButtonNode(node: ButtonNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
-  addCreateDocumentOption(options)
-  const document = options.createDocument!()
+  const document = context.createDocument()
 
   if (!node.buttonUrl || node.buttonUrl.trim() === '' || context.safeUrl('navigation', node.buttonUrl) === '') {
     return renderEmptyContainer(document)

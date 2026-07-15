@@ -1,8 +1,7 @@
 import DOMPurify, { type Config as DOMPurifyConfig } from 'dompurify'
 
-import type { ExportDOMDesignOptions, ExportDOMFeatureOptions, ExportDOMOptions } from '@/nodes/base/export-dom'
+import type { ExportDOMDesignOptions, ExportDOMFeatureOptions, ExportDOMOptionsBase } from '@/nodes/base/export-dom'
 
-import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { cleanDOM } from '@/nodes/base/utils/clean-dom'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { isLocalContentImage as isLocalContentImageImpl } from '@/nodes/base/utils/is-local-content-image'
@@ -33,16 +32,20 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  *   `usesModernEmailButton` and the `isSafeColorValue`/`isEmailButtonColorValue`
  *   color predicates single-source the feature/design-flag and color checks
  *   that button and header previously duplicated inline.
- * - `createDocument` resolution absorbs `addCreateDocumentOption` (Step 6
- *   deletes that function and folds the remaining options-bag state in).
+ * - `createDocument` resolution absorbed the deleted `addCreateDocumentOption`
+ *   helper (Step 6), and `trackIdAttribute` owns the heading-id dedup map the
+ *   options bag's `usedIdAttributes` used to carry.
  *
  * The context is read-only: scalar fields are copied, `feature`/`design` are
  * frozen snapshots, and the object itself is frozen. The freeze is shallow —
  * nested values inside `feature`/`design` stay shared references and must not
- * carry mutable state. The context is cheap to build, so callers construct it
- * once per render pass (per `exportDOM` call in the card dispatch, per
- * `$convertToHtmlString` run in the string layer) and never share it across
- * renders.
+ * carry mutable state. `trackIdAttribute` is the one exception to the
+ * read-only surface: it mutates the id-dedup map, which is internal
+ * per-render state the seam owns, not exposed policy. The context is cheap to
+ * build, so callers construct it once per render pass (per `exportDOM` call
+ * in the card dispatch, per `$convertToHtmlString` run in the string layer)
+ * and never share it across renders — which is exactly why the per-render id
+ * map is safe.
  */
 
 export type SafeUrlKind = 'navigation' | 'media'
@@ -157,19 +160,53 @@ export interface RenderContext {
    * feature flags or a `design.buttonStyle` are set.
    */
   usesModernEmailButton(): boolean
+  /**
+   * Heading-id deduplication, folded in from the options bag's
+   * `usedIdAttributes` (plan 040 Step 6): records one use of the slugified
+   * base `id` and returns the id to emit — the base id on first use,
+   * `<id>-<n>` on repeats. The one mutable-state method on the context; the
+   * map is internal per-render state, safe because a context is never shared
+   * across renders.
+   */
+  trackIdAttribute(id: string): string
+}
+
+/**
+ * Resolves the document factory for one render pass: `options.createDocument`
+ * / `options.dom` / the browser global, in that order. This absorbs the
+ * deleted `addCreateDocumentOption` helper (plan 040 Step 6) — the options bag
+ * is read, never mutated — preserving its exact non-browser throw. The
+ * browser-global fallback is covered by the seam tests via stubbed globals.
+ */
+function resolveCreateDocument(options: ExportDOMOptionsBase): () => Document {
+  if (options.createDocument) {
+    return options.createDocument
+  }
+
+  if (options.dom) {
+    const dom = options.dom
+    return function () {
+      return dom.window.document
+    }
+  }
+
+  const document = typeof window !== 'undefined' && window.document
+
+  if (!document) {
+    throw new Error('Must be passed a `createDocument` function as an option when used in a non-browser environment')
+  }
+
+  return function () {
+    return document
+  }
 }
 
 /**
  * Builds the read-only render context for one render pass.
- *
- * `createDocument` resolution currently delegates to `addCreateDocumentOption`
- * (which mutates `options` — renderers still call it themselves until Step 6),
- * preserving its exact non-browser throw. Step 6 absorbs that logic here and
- * deletes the function.
  */
-export function createRenderContext(options: ExportDOMOptions): RenderContext {
-  addCreateDocumentOption(options)
-  const createDocument = options.createDocument!
+export function createRenderContext(options: ExportDOMOptionsBase): RenderContext {
+  const createDocument = resolveCreateDocument(options)
+  const usedIdAttributes: Record<string, number> = {}
 
   const target = options.target
   const postUrl = options.postUrl
@@ -223,6 +260,15 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
     },
     usesModernEmailButton() {
       return Boolean(feature?.emailCustomization || feature?.emailCustomizationAlpha || design?.buttonStyle)
+    },
+    trackIdAttribute(id) {
+      const seen = usedIdAttributes[id]
+      if (seen === undefined) {
+        usedIdAttributes[id] = 1
+        return id
+      }
+      usedIdAttributes[id] = seen + 1
+      return `${id}-${seen}`
     },
   }
 

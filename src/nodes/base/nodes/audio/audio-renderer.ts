@@ -1,7 +1,6 @@
 import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
@@ -17,8 +16,7 @@ export function renderAudioNode(
   options: ExportDOMOptions = {},
   context: RenderContext,
 ): ExportDOMOutput {
-  addCreateDocumentOption(options)
-  const document = options.createDocument!()
+  const document = context.createDocument()
 
   if (!node.src || node.src.trim() === '' || context.safeUrl('media', node.src) === '') {
     return renderEmptyContainer(document)

@@ -1,7 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 
 import { isSafeColorValue, type RenderContext } from '@/nodes/base/render-context'
-import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { renderEmailButton } from '@/nodes/base/utils/render-helpers/email-button'
@@ -59,7 +58,7 @@ function safeColor(value: string, fallback: string): string {
   return isSafeColorValue(value) ? value : fallback
 }
 
-function cardTemplate(nodeData: HeaderV2NodeData, options: HeaderV2RenderOptions = {}, context: RenderContext) {
+function cardTemplate(nodeData: HeaderV2NodeData, context: RenderContext, options: HeaderV2RenderOptions = {}) {
   const cardClasses = getCardClasses(nodeData).join(' ')
 
   const safeBackgroundImageSrc = context.safeUrl('media', nodeData.backgroundImageSrc)
@@ -349,8 +348,7 @@ export function renderHeaderNodeV2(
   options: HeaderV2RenderOptions = {},
   context: RenderContext,
 ) {
-  addCreateDocumentOption(options)
-  const document = options.createDocument!()
+  const document = context.createDocument()
 
   const node = {
     alignment: dataset.__alignment,
@@ -373,7 +371,7 @@ export function renderHeaderNodeV2(
   }
 
   if (context.variant({ web: false, email: true })) {
-    const emailDoc = options.createDocument!()
+    const emailDoc = context.createDocument()
     const emailDiv = emailDoc.createElement('div')
 
     emailDiv.innerHTML = emailTemplate(node, context)?.trim()
@@ -384,7 +382,7 @@ export function renderHeaderNodeV2(
     }
   }
 
-  const htmlString = cardTemplate(node, options, context)
+  const htmlString = cardTemplate(node, context, options)
 
   const element = document.createElement('div')
   element.innerHTML = htmlString?.trim()

@@ -1,7 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
@@ -81,8 +80,7 @@ function buildStructure(images: GalleryImage[]) {
 }
 
 export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderOptions = {}, context: RenderContext) {
-  addCreateDocumentOption(options)
-  const document = options.createDocument!()
+  const document = context.createDocument()
 
   const validImages = node.images.filter((image) => isValidImage(image, context))
   if (!validImages.length) {

@@ -1,7 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 import { html } from '@/nodes/base/utils/tagged-template-fns'
 
 function horizontalRuleEmailTemplate() {
@@ -40,8 +39,7 @@ function horizontalRuleEmailTemplate() {
 }
 
 export function renderHorizontalRuleNode(_: unknown, options: ExportDOMOptions = {}, context: RenderContext) {
-  addCreateDocumentOption(options)
-  const document = options.createDocument!()
+  const document = context.createDocument()
 
   if (context.variant({ web: false, email: true })) {
     const element = document.createElement('div')

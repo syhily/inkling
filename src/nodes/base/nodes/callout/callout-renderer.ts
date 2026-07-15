@@ -2,7 +2,6 @@ import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { CALLOUT_HTML_CONFIG } from '@/nodes/base/render-context'
-import { addCreateDocumentOption } from '@/nodes/base/utils/add-create-document-option'
 
 interface CalloutNodeData {
   backgroundColor: string
@@ -11,8 +10,7 @@ interface CalloutNodeData {
 }
 
 export function renderCalloutNode(node: CalloutNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
-  addCreateDocumentOption(options)
-  const document = options.createDocument!()
+  const document = context.createDocument()
   const element = document.createElement('div')
 
   // backgroundColor can end up with `rgba(0, 0, 0, 0)` from old mobiledoc copy/paste
