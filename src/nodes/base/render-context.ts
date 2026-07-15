@@ -46,6 +46,11 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  * in the card dispatch, per `$convertToHtmlString` run in the string layer)
  * and never share it across renders — which is exactly why the per-render id
  * map is safe.
+ *
+ * Card sources must not import the policy modules (`is-safe-url`,
+ * `escape-html`, `clean-dom`, `sanitize-html`) directly — the shrink-only
+ * allowlist in `test/nodes-base/nodes/render-policy-imports.test.ts` enforces
+ * the seam.
  */
 
 export type SafeUrlKind = 'navigation' | 'media'
