@@ -326,3 +326,7 @@ touching the others. No data, serialization format, or public API changes are
 involved, so no migration is needed. If the header flatten (cluster 3) must be
 reverted, revert the whole commit rather than partially re-adding `v2/`
 paths — the directory moves and the dispatch removal are one logical change.
+
+## Execution notes
+
+Plan 037 landed in full across 8 commits (`79afc8c`..`f18e1dc`): all five deletion clusters executed as specified — the dynamic-data render seam, the `nodeRenderers` override seam, the versioned-renderer dispatch plus the four-file header `v2/` flatten (true git renames), the `plaintext` target and `'html'` output-type variants, and the zero-importer modules plus the `call-to-action` dead branch. Every RETAIN item survived: `urlTransformMap` with its new out-of-repo-consumer comment, the header `version` property, the serialization `version` option, the `renderHeaderNodeV2` name, and the `inkling-v2` CSS class. Accepted deviations were limited to the `HtmlExportDOMOutput` consumer fix, six (not three) `'html'`→`'outer'` visibility test literals, the `html.test.ts` assertion fix plus its dead branch, doc line-ref corrections, and the stale v2 story title/comment cleanup. Final gates at `f18e1dc`: typecheck clean, lint 0/0, format:check clean, unit suite 203 files / 1638 passed / 21 todo; `verify:package` PASS and header e2e 17/17 verified earlier in the range. No seam names survive in src/test/demo except as unrelated senses; no `v2/` paths remain under `src/`; docs describe the post-deletion reality.
