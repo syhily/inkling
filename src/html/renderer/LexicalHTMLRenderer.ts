@@ -7,14 +7,11 @@ import type { ExportDOMDom } from '@/nodes/base'
 
 import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
-import getDynamicDataNodes from '@/html/renderer/get-dynamic-data-nodes'
 import { registerRemoveAtLinkNodesTransform } from '@/transforms'
 
 interface RenderOptions {
   target?: 'html' | 'email' | 'plaintext'
   dom?: ExportDOMDom
-  // TODO: we should define some standard here once we move to more cards with dynamic data
-  renderData?: Map<number, unknown>
 }
 
 function defaultOnError(error: Error) {
@@ -54,24 +51,6 @@ export default class LexicalHTMLRenderer {
 
     const editorState = editor.parseEditorState(lexicalState)
 
-    // gather nodes that require dynamic data
-    const dynamicDataNodes = getDynamicDataNodes(editorState)
-
-    // fetch dynamic data
-    const renderData = new Map()
-    await Promise.all(
-      dynamicDataNodes.map(async (node) => {
-        if (!node.getDynamicData) {
-          return
-        }
-
-        const { key, data } = await node.getDynamicData(options)
-        renderData.set(key, data)
-      }),
-    )
-
-    options.renderData = renderData
-
     // set up editor with our state
     editor.setEditorState(editorState)
 
@@ -80,7 +59,7 @@ export default class LexicalHTMLRenderer {
 
     // render
     let html = ''
-    editor.update(async () => {
+    editor.update(() => {
       html = $convertToHtmlString(editor, options)
     })
 

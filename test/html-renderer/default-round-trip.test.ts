@@ -9,7 +9,7 @@ import type { ExportDOMOptions } from '@/nodes/base'
 import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import { htmlToLexical } from '@/html/html-to-lexical/index'
 import { LexicalHTMLRenderer as Renderer } from '@/html/renderer/index'
-import { ImageNode, InklingDecoratorNode } from '@/nodes/base'
+import { ImageNode } from '@/nodes/base'
 
 const dom = new JSDOM()
 
@@ -32,58 +32,6 @@ class CustomImageNode extends ImageNode {
   exportDOM(_editor: LexicalEditor, options: ExportDOMOptions = {}) {
     const element = options.dom!.window.document.createElement('div')
     element.setAttribute('data-custom-image', 'true')
-
-    return { element, type: 'outer' as const }
-  }
-}
-
-// Fetches dynamic data at render time, like server-rendered cards do
-class DynamicDataNode extends InklingDecoratorNode {
-  constructor(key?: string) {
-    super(key)
-  }
-
-  static getType() {
-    return 'dynamic-data'
-  }
-
-  static clone(node: DynamicDataNode) {
-    return new DynamicDataNode(node.__key)
-  }
-
-  static importJSON(_serializedNode: Record<string, unknown>) {
-    return new DynamicDataNode()
-  }
-
-  createDOM() {
-    return document.createElement('div')
-  }
-
-  updateDOM() {
-    return false
-  }
-
-  isInline() {
-    return false
-  }
-
-  isInklingCard(): true {
-    return true
-  }
-
-  hasDynamicData() {
-    return true
-  }
-
-  async getDynamicData() {
-    return { key: 1, data: 'fetched content' }
-  }
-
-  exportDOM(_editor: LexicalEditor, options: ExportDOMOptions & { renderData?: Map<number, unknown> } = {}) {
-    const element = options.dom ? options.dom.window.document.createElement('div') : null
-    if (element) {
-      element.textContent = String(options.renderData?.get(1) ?? '')
-    }
 
     return { element, type: 'outer' as const }
   }
@@ -159,15 +107,6 @@ describe('default import-to-render round trip', function () {
     const html = await renderer.render(state)
 
     expect(html).toBe('<div data-custom-image="true"></div>')
-  })
-
-  it('fetches dynamic data for cards registered through the constructor', async function () {
-    const state = `{"root":{"children":[{"type":"dynamic-data","version":1}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}`
-
-    const renderer = new Renderer({ dom, nodes: [DynamicDataNode] })
-    const html = await renderer.render(state)
-
-    expect(html).toBe('<div>fetched content</div>')
   })
 
   it('still passes genuinely unregistered states to a custom onError', async function () {

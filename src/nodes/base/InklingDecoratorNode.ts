@@ -18,10 +18,8 @@ export class InklingDecoratorNode extends DecoratorNode<unknown> {
 export type InklingCard = InklingDecoratorNode & {
   isInklingCard(): true
   exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): ExportDOMOutput
-  hasDynamicData(): boolean
   hasEditMode(): boolean
   isEmpty(): boolean
-  getDynamicData?(options: ExportDOMOptions): Promise<{ key: number; data: unknown }>
 }
 
 export function $isInklingCard(node: unknown): node is InklingCard {
@@ -32,10 +30,7 @@ export function $isInklingCard(node: unknown): node is InklingCard {
   const card = node as Partial<InklingCard>
 
   return (
-    typeof card.isInklingCard === 'function' &&
-    card.isInklingCard() === true &&
-    typeof card.exportDOM === 'function' &&
-    typeof card.hasDynamicData === 'function'
+    typeof card.isInklingCard === 'function' && card.isInklingCard() === true && typeof card.exportDOM === 'function'
   )
 }
 /* c8 ignore end */
