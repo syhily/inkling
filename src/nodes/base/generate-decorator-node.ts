@@ -12,16 +12,10 @@ import {
 } from '@/nodes/base/utils/visibility'
 
 // Bivariant method syntax so that a render function declared with a concrete
-// node type can be assigned to `RenderFn<TRenderNode, TOutput>`, while explicit
-// `TRenderNode` type arguments still let TypeScript check the render function
-// against a known node type (see HeaderNode).
+// node type can be assigned to `RenderFn<TRenderNode, TOutput>`.
 type RenderFn<TNode = unknown, TOutput extends ExportDOMOutput = ExportDOMOutput> = {
   bivarianceHack(node: TNode, options: ExportDOMOptions): TOutput
 }['bivarianceHack']
-type VersionedRenderFn<TNode = unknown, TOutput extends ExportDOMOutput = ExportDOMOutput> = Record<
-  string | number,
-  RenderFn<TNode, TOutput>
->
 type WidenLiteral<T> = T extends string
   ? string
   : T extends number
@@ -173,10 +167,9 @@ export function generateDecoratorNode<
   Props extends readonly DecoratorNodeProperty[] = readonly [],
   HasVisibility extends boolean = false,
   TOutput extends ExportDOMOutput = ExportDOMOutput,
-  // When not passed explicitly, TRenderNode is inferred from `defaultRenderFn`'s
-  // node parameter — the render fn's declared node type is trusted, not validated
-  // against the generated node shape. Pass explicit type arguments (see HeaderNode)
-  // to have render fns checked against a known node type.
+  // TRenderNode is inferred from `defaultRenderFn`'s node parameter — the
+  // render fn's declared node type is trusted, not validated against the
+  // generated node shape.
   TRenderNode = GeneratedDecoratorNodeInstance<DecoratorNodeValueMap<Props, HasVisibility>, TOutput>,
 >({
   nodeType,
@@ -187,13 +180,11 @@ export function generateDecoratorNode<
 }: {
   nodeType: string
   properties?: Props
-  defaultRenderFn?: RenderFn<TRenderNode, TOutput> | VersionedRenderFn<TRenderNode, TOutput>
+  defaultRenderFn?: RenderFn<TRenderNode, TOutput>
   version?: number
   hasVisibility?: HasVisibility
 }): GeneratedDecoratorNodeClass<DecoratorNodeValueMap<Props, HasVisibility>, TOutput> {
   type GeneratedDataset = DecoratorNodeValueMap<Props, HasVisibility>
-  type GeneratedRenderFn = RenderFn<TRenderNode, TOutput>
-  type GeneratedVersionedRenderFn = VersionedRenderFn<TRenderNode, TOutput>
 
   const nodeProperties = properties ?? []
 
@@ -346,27 +337,11 @@ export function generateDecoratorNode<
     }
 
     exportDOM(_editor: LexicalEditor, options: ExportDOMOptions = {}): TOutput {
-      // this.__version is used when a node has a version property which
-      // means it's set from the serialized version data at runtime
-      const nodeVersion =
-        typeof this.__version === 'string' || typeof this.__version === 'number' ? this.__version : version
-      const node = this as unknown as TRenderNode
-
-      if (typeof defaultRenderFn === 'object') {
-        const render = defaultRenderFn[nodeVersion]
-        if (!render) {
-          throw new Error(
-            `[generateDecoratorNode] ${nodeType}: "defaultRenderFn" for version ${nodeVersion} is required`,
-          )
-        }
-        return render(node, options)
-      }
-
       if (!defaultRenderFn) {
         throw new Error(`[generateDecoratorNode] ${nodeType}: "defaultRenderFn" is required`)
       }
 
-      return defaultRenderFn(node, options)
+      return defaultRenderFn(this as unknown as TRenderNode, options)
     }
 
     /* c8 ignore start */

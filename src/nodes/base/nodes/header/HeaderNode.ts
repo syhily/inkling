@@ -5,7 +5,7 @@ import {
   type DecoratorNodeValueMap,
 } from '@/nodes/base/generate-decorator-node'
 import { parseHeaderNode } from '@/nodes/base/nodes/header/parsers/header-parser'
-import { renderHeaderNodeV2 } from '@/nodes/base/nodes/header/renderers/v2/header-renderer'
+import { renderHeaderNodeV2 } from '@/nodes/base/nodes/header/renderers/header-renderer'
 
 const headerProperties = [
   { name: 'size', default: 'small' },
@@ -34,20 +34,10 @@ export type HeaderData = DecoratorNodeData<typeof headerProperties>
 
 export interface HeaderNode extends DecoratorNodeValueMap<typeof headerProperties> {}
 
-type HeaderRenderNode = Parameters<typeof renderHeaderNodeV2>[0]
-type HeaderRenderOutput = ReturnType<typeof renderHeaderNodeV2>
-
-export class HeaderNode extends generateDecoratorNode<
-  typeof headerProperties,
-  false,
-  HeaderRenderOutput,
-  HeaderRenderNode
->({
+export class HeaderNode extends generateDecoratorNode({
   nodeType: 'header',
   properties: headerProperties,
-  defaultRenderFn: {
-    2: renderHeaderNodeV2,
-  },
+  defaultRenderFn: renderHeaderNodeV2,
 }) {
   static importDOM() {
     return parseHeaderNode(this)

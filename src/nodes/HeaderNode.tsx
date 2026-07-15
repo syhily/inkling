@@ -6,7 +6,7 @@ import HeaderCardIcon from '@/assets/icons/inkling-card-type-header.svg?react'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { cleanBasicHtml } from '@/html/clean-basic-html'
 import { HeaderNode as BaseHeaderNode, normalizeCardWidth, type CardWidth, type HeaderData } from '@/nodes/base'
-import HeaderNodeComponent from '@/nodes/header/v2/HeaderNodeComponent'
+import HeaderNodeComponent from '@/nodes/header/HeaderNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 

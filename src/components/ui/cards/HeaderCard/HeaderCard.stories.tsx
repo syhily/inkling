@@ -3,12 +3,12 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { createEditor } from 'lexical'
 import React from 'react'
 
-import { HeaderCard } from '@/components/ui/cards/HeaderCard/v2/HeaderCard'
+import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import { MINIMAL_NODES } from '@/index'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
 
-import { editorEmptyState } from '../../../../../../.storybook/editorEmptyState'
+import { editorEmptyState } from '../../../../../.storybook/editorEmptyState'
 
 const displayOptions = {
   Default: { isSelected: false, isEditing: false },

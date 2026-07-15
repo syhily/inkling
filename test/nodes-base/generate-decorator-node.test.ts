@@ -99,56 +99,6 @@ describe('Utils: generateDecoratorNode', function () {
     )
 
     it(
-      'uses versioned default renderer (static version)',
-      editorTestWithNodes(
-        () => [
-          utils.generateDecoratorNode({
-            nodeType: 'versioned-render-test',
-            properties: [],
-            version: 2,
-            defaultRenderFn: {
-              1: () => createRenderResult('div', 'version 1'),
-              2: () => createRenderResult('div', 'version 2'),
-            },
-          }),
-        ],
-        function (testEditor, [VersionedNode]) {
-          const NodeClass = VersionedNode as GeneratedNodeClass
-          const node = new NodeClass() as unknown as GeneratedNodeInstance
-          const result = node.exportDOM(testEditor)
-
-          expect(result.type).toBe('inner')
-          expect(expectHtmlElement(result).outerHTML).toBe('<div>version 2</div>')
-        },
-      ),
-    )
-
-    it(
-      'uses versioned default renderer (dataset version)',
-      editorTestWithNodes(
-        () => [
-          utils.generateDecoratorNode({
-            nodeType: 'versioned-render-test',
-            properties: [{ name: 'version', default: 1 }],
-            version: 1,
-            defaultRenderFn: {
-              1: () => createRenderResult('div', 'version 1'),
-              2: () => createRenderResult('div', 'version 2'),
-            },
-          }),
-        ],
-        function (testEditor, [VersionedNode]) {
-          const NodeClass = VersionedNode as GeneratedNodeClass
-          const node = new NodeClass({ version: 2 }) as unknown as GeneratedNodeInstance
-          const result = node.exportDOM(testEditor)
-
-          expect(result.type).toBe('inner')
-          expect(expectHtmlElement(result).outerHTML).toBe('<div>version 2</div>')
-        },
-      ),
-    )
-
-    it(
       'throws error when defaultRenderFn is not provided',
       editorTestWithNodes(
         () => [
@@ -162,29 +112,6 @@ describe('Utils: generateDecoratorNode', function () {
           const node = new NodeClass() as unknown as GeneratedNodeInstance
           expect(() => node.exportDOM(testEditor)).toThrow(
             /^\[generateDecoratorNode\] no-render-test: "defaultRenderFn" is required$/,
-          )
-        },
-      ),
-    )
-
-    it(
-      'throws error when default versioned renderer is missing for node version',
-      editorTestWithNodes(
-        () => [
-          utils.generateDecoratorNode({
-            nodeType: 'versioned-render-test',
-            properties: [],
-            version: 2,
-            defaultRenderFn: {
-              1: () => createRenderResult('div', 'version 1'),
-            },
-          }),
-        ],
-        function (testEditor, [VersionedNode]) {
-          const NodeClass = VersionedNode as GeneratedNodeClass
-          const node = new NodeClass() as unknown as GeneratedNodeInstance
-          expect(() => node.exportDOM(testEditor)).toThrow(
-            /^\[generateDecoratorNode\] versioned-render-test: "defaultRenderFn" for version 2 is required$/,
           )
         },
       ),

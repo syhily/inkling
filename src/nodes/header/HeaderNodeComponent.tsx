@@ -3,7 +3,7 @@ import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } fro
 import { useContext, useEffect, useRef, useState } from 'react'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
-import { HeaderCard } from '@/components/ui/cards/HeaderCard/v2/HeaderCard'
+import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
 import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
