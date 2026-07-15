@@ -55,4 +55,12 @@ describe('ButtonNode', () => {
       expect(node.buttonText).toBe('Click me')
     })
   })
+
+  describe('decorate', () => {
+    it('decorates with the wide wrapper style', () => {
+      const node = $createButtonNode({ buttonText: 'Click', buttonUrl: 'https://example.com' })
+      const decorated = node.decorate() as React.ReactElement<{ wrapperStyle?: string }>
+      expect(decorated.props.wrapperStyle).toBe('wide')
+    })
+  })
 })

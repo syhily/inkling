@@ -33,7 +33,7 @@ export class ButtonNode extends BaseButtonNode {
 
   decorate() {
     return (
-      <InklingCardWrapper nodeKey={this.getKey()} width="regular">
+      <InklingCardWrapper nodeKey={this.getKey()} width="regular" wrapperStyle="wide">
         <ButtonNodeComponent
           alignment={this.alignment ?? 'center'}
           buttonText={this.buttonText ?? ''}
