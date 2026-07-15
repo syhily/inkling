@@ -6,7 +6,6 @@ import { $isQuoteNode } from '@lexical/rich-text'
 import {
   $createParagraphNode,
   $getSelection,
-  $isDecoratorNode,
   $isParagraphNode,
   $isRangeSelection,
   $isTextNode,
@@ -20,6 +19,7 @@ import { $selectDecoratorNode } from '@/utils'
 
 import type { KeyboardNavigationDeps } from './types'
 
+import { $getLogicallyAdjacentCard, editorOwnsFocus } from '../card-adjacency'
 import { DELETE_CARD_COMMAND } from '../commands'
 import { SPECIAL_MARKUPS } from '../utils'
 
@@ -30,7 +30,7 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
     KEY_BACKSPACE_COMMAND,
     (event) => {
       // avoid processing card behaviours when an inner element has focus
-      if (document.activeElement !== editor.getRootElement()) {
+      if (!editorOwnsFocus(editor)) {
         return true
       }
 
@@ -48,7 +48,6 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
           const anchor = selection?.anchor
           const anchorNode = anchor.getNode()
           const topLevelElement = anchorNode.getTopLevelElement()
-          const previousSibling = topLevelElement?.getPreviousSibling()
 
           const atStartOfElement = selection?.anchor.offset === 0 && selection.focus.offset === 0
 
@@ -73,14 +72,10 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
           }
 
           // delete empty paragraphs and select card if preceded by card
-          if (
-            $isParagraphNode(anchorNode) &&
-            anchorNode.isEmpty() &&
-            previousSibling &&
-            $isDecoratorNode(previousSibling)
-          ) {
+          const previousCardSibling = topLevelElement ? $getLogicallyAdjacentCard('previous', topLevelElement) : null
+          if ($isParagraphNode(anchorNode) && anchorNode.isEmpty() && previousCardSibling) {
             topLevelElement?.remove()
-            $selectDecoratorNode(previousSibling)
+            $selectDecoratorNode(previousCardSibling)
             return true
           }
 
@@ -115,15 +110,15 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
           }
 
           // delete any previous card keeping caret in place
+          // (selection-mode 'previous' is gated on exactly atStartOfElement above)
+          const previousCard = $getLogicallyAdjacentCard('previous')
           if (
-            atStartOfElement &&
-            previousSibling &&
-            $isDecoratorNode(previousSibling) &&
+            previousCard &&
             anchorNodeParent === topLevelElement && // handles lists, where the parent node is not the paragraph
             anchorNodeParent?.getFirstChild()?.is(anchorNode) // handles child nodes in paragraphs, e.g. LinkNode and HorizontalRule
           ) {
             event?.preventDefault()
-            previousSibling.remove()
+            previousCard.remove()
             return true
           }
 
