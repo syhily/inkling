@@ -5,10 +5,12 @@ import { useEffect } from 'react'
 export const InklingFocusPlugin = ({ onFocus }: { onFocus?: () => void }) => {
   const [editor] = useLexicalComposerContext()
   useEffect(() => {
-    editor.registerCommand(
+    // return the unregister handle so the listener is removed on unmount
+    return editor.registerCommand(
       FOCUS_COMMAND,
       () => {
         onFocus?.()
+        // mark handled at editor priority so propagation stops here
         return true
       },
       COMMAND_PRIORITY_EDITOR,
