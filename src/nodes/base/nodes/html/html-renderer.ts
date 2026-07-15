@@ -10,7 +10,7 @@ interface HtmlNodeData {
   visibility?: Record<string, unknown>
 }
 
-export type HtmlExportDOMOutput = ExportDOMOutput<'inner' | 'value' | 'html'>
+export type HtmlExportDOMOutput = ExportDOMOutput<'inner' | 'value' | 'outer'>
 
 export function renderHtmlNode(node: HtmlNodeData, options: ExportDOMOptions = {}): HtmlExportDOMOutput {
   addCreateDocumentOption(options)

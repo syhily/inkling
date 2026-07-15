@@ -1,6 +1,6 @@
 import type { DOMExportOutput as LexicalDOMExportOutput } from 'lexical'
 
-export type ExportDOMOutputType = 'inner' | 'outer' | 'value' | 'html'
+export type ExportDOMOutputType = 'inner' | 'outer' | 'value'
 export type ExportDOMElement = LexicalDOMExportOutput['element']
 
 export type ExportDOMOutput<TType extends ExportDOMOutputType = ExportDOMOutputType> = LexicalDOMExportOutput & {

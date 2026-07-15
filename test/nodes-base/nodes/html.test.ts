@@ -388,7 +388,7 @@ describe('HtmlNode', function () {
             const element = result.element as HTMLTextAreaElement
             expect(element.value).toBe(`\n${expectedContents}\n`)
           } else {
-            expect(result.type).toBe('html')
+            expect(result.type).toBe('outer')
             const element = result.element as HTMLElement
             expect(element.outerHTML).toBe(
               `<div data-gh-segment="${expectedSegment}" class="inkling-visibility-wrapper">\n${expectedContents}\n</div>`,
