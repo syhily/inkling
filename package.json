@@ -63,8 +63,6 @@
     "react-error-boundary": "6.1.2"
   },
   "devDependencies": {
-    "@babel/core": "8.0.1",
-    "@babel/plugin-proposal-private-property-in-object": "7.21.11",
     "@codemirror/autocomplete": "6.20.3",
     "@codemirror/commands": "6.10.4",
     "@codemirror/lang-css": "6.3.1",
@@ -76,7 +74,6 @@
     "@emoji-mart/react": "1.1.1",
     "@etchteam/storybook-addon-status": "8.1.0",
     "@lexical/clipboard": "0.46.0",
-    "@lexical/code": "0.46.0",
     "@lexical/headless": "0.46.0",
     "@lexical/html": "0.46.0",
     "@lexical/link": "0.46.0",
@@ -112,8 +109,6 @@
     "@vitejs/plugin-react": "6.0.3",
     "@vitest/coverage-v8": "4.1.9",
     "@vitest/ui": "4.1.9",
-    "babel-loader": "10.1.1",
-    "codemirror": "6.0.2",
     "concurrently": "10.0.3",
     "dompurify": "3.4.11",
     "dotenv": "17.4.2",
@@ -122,7 +117,6 @@
     "fast-average-color": "9.5.2",
     "fs-extra": "11.3.6",
     "globals": "17.7.0",
-    "highlight.js": "11.11.1",
     "html-minifier-terser": "7.2.0",
     "husky": "9.1.7",
     "jsdom": "29.1.1",
