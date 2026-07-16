@@ -15,7 +15,9 @@ import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useCardDragAndDrop from '@/hooks/useCardDragAndDrop'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
+import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import usePinturaEditor, { type PinturaConfig } from '@/hooks/usePinturaEditor'
+import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
 import { isCardWidth } from '@/nodes/base/utils/card-widths'
 import { $createGalleryNode } from '@/nodes/GalleryNode'
 import { $isImageNode } from '@/nodes/ImageNode'
@@ -24,7 +26,6 @@ import { getImageDimensions } from '@/utils/getImageDimensions'
 import { getImageFilenameFromSrc } from '@/utils/getImageFilenameFromSrc'
 import { getAllowedImageCardWidths, getDefaultImageCardWidth } from '@/utils/image-card-widths'
 import { isGif } from '@/utils/isGif'
-import { openFileSelection } from '@/utils/openFileSelection'
 import { imageUploadIntent } from '@/utils/upload-intent'
 
 export interface ImageNodeComponentProps {
@@ -167,18 +168,10 @@ export function ImageNodeComponent({
     }
   }, [imageUploader.isLoading, src, uploadImage])
 
+  // If an initial file is provided, upload it
+  useInitialFileUpload({ initialFile, isReady: !src, run: (file) => uploadImage([file]) })
+
   React.useEffect(() => {
-    // If an initial file is provided, upload it
-    const uploadInitialFile = async (file: File) => {
-      if (file && !src) {
-        await uploadImage([file])
-      }
-    }
-
-    if (initialFile) {
-      uploadInitialFile(initialFile)
-    }
-
     // Populate missing image dimensions, occurs when images are
     // pasted/dragged/inserted as external or when loaded from serialized
     // state that has missing images
@@ -239,30 +232,7 @@ export function ImageNodeComponent({
     })
   }
 
-  // when card is inserted from the card menu or slash command we want to show the file picker immediately
-  // uses a setTimeout to avoid issues with React rendering the component twice in dev mode 🙈
-  React.useEffect(() => {
-    if (!triggerFileDialog) {
-      return
-    }
-
-    const renderTimeout = setTimeout(() => {
-      // trigger dialog
-      openFileSelection({ fileInputRef })
-
-      // clear the property on the node so we don't accidentally trigger anything with a re-render
-      editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if ($isImageNode(node)) {
-          node.triggerFileDialog = false
-        }
-      })
-    })
-
-    return () => {
-      clearTimeout(renderTimeout)
-    }
-  }, [triggerFileDialog, nodeKey, editor, fileInputRef])
+  useTriggerFileDialog({ editor, nodeKey, guard: $isImageNode, fileInputRef, triggerFileDialog })
 
   const handleImageCardResize = React.useCallback(
     (newWidth: unknown) => {

@@ -9,8 +9,9 @@ import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
+import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
+import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
 import { $isFileNode, $updateCardNode } from '@/nodes/base'
-import { openFileSelection } from '@/utils/openFileSelection'
 import { fileUploadIntent } from '@/utils/upload-intent'
 
 export interface FileNodeComponentProps {
@@ -67,17 +68,7 @@ function FileNodeComponent({
 
   const fileDragHandler = useFileDragAndDrop({ handleDrop: handleFileDrop })
 
-  React.useEffect(() => {
-    const uploadInitialFile = async (file: File | undefined): Promise<void> => {
-      if (file && !fileSrc) {
-        await uploadFile([file])
-      }
-    }
-
-    uploadInitialFile(initialFile)
-
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  useInitialFileUpload({ initialFile, isReady: !fileSrc, run: (file) => uploadFile([file]) })
 
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const files = e.target.files
@@ -116,26 +107,7 @@ function FileNodeComponent({
     })
   }
 
-  React.useEffect(() => {
-    if (!triggerFileDialog) {
-      return
-    }
-
-    const renderTimeout = setTimeout(() => {
-      openFileSelection({ fileInputRef })
-
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isFileNode, (node) => {
-          node.triggerFileDialog = false
-        })
-      })
-    })
-
-    return () => {
-      clearTimeout(renderTimeout)
-    }
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [openFileSelection])
+  useTriggerFileDialog({ editor, nodeKey, guard: $isFileNode, fileInputRef, triggerFileDialog })
 
   return (
     <>

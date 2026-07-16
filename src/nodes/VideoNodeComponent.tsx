@@ -11,11 +11,12 @@ import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
+import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import { usePreviewLease } from '@/hooks/usePreviewLease'
+import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
 import { $isVideoNode, $updateCardNode } from '@/nodes/base'
 import { isCardWidth } from '@/nodes/base/utils/card-widths'
 import extractVideoMetadata, { type VideoMetadata } from '@/utils/extractVideoMetadata'
-import { openFileSelection } from '@/utils/openFileSelection'
 import { customThumbnailUploadIntent, videoThumbnailUploadIntent, videoUploadIntent } from '@/utils/upload-intent'
 
 interface VideoNodeComponentProps {
@@ -64,17 +65,11 @@ export function VideoNodeComponent({
 
   const videoMimeTypes: string[] = fileUploader.fileTypes?.video?.mimeTypes || ['video/*']
 
-  React.useEffect(() => {
-    const uploadInitialFiles = async (file: File | null) => {
-      if (file && !videoUploader.isLoading) {
-        await handleVideoUpload([file])
-      }
-    }
-    uploadInitialFiles(initialFile)
-
-    // We only do this for init
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  useInitialFileUpload({
+    initialFile,
+    isReady: !videoUploader.isLoading,
+    run: (file) => handleVideoUpload([file]),
+  })
 
   const handleVideoUpload = async (files: FileList | File[]) => {
     const file = files[0]
@@ -185,28 +180,12 @@ export function VideoNodeComponent({
     cardContext.setEditing(true)
   }
 
-  // when card is inserted from the card menu or slash command we want to show the file picker immediately
-  // uses a setTimeout to avoid issues with React rendering the component twice in dev mode 🙈
-  React.useEffect(() => {
-    if (!triggerFileDialog) {
-      return
-    }
-
-    const renderTimeout = setTimeout(() => {
-      // trigger dialog
-      openFileSelection({ fileInputRef: videoFileInputRef })
-
-      // clear the property on the node so we don't accidentally trigger anything with a re-render
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isVideoNode, (node) => {
-          node.triggerFileDialog = false
-        })
-      })
-    })
-
-    return () => {
-      clearTimeout(renderTimeout)
-    }
+  useTriggerFileDialog({
+    editor,
+    nodeKey,
+    guard: $isVideoNode,
+    fileInputRef: videoFileInputRef,
+    triggerFileDialog,
   })
 
   const isCardPopulated = customThumbnail || thumbnail

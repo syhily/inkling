@@ -9,8 +9,9 @@ import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
+import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
+import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
 import { $isAudioNode, $updateCardNode } from '@/nodes/base'
-import { openFileSelection } from '@/utils/openFileSelection'
 import { audioThumbnailUploadIntent, audioUploadIntent } from '@/utils/upload-intent'
 
 interface AudioNodeComponentProps {
@@ -50,20 +51,11 @@ export function AudioNodeComponent({
   const uploadThumbnail = (files: FileList | File[] | null) =>
     audioThumbnailUploadIntent({ editor, nodeKey, upload: thumbnailUploader.upload, files })
 
-  React.useEffect(() => {
-    const uploadInitialFile = async (file: File) => {
-      if (file && !src && !audioUploader.isLoading) {
-        await uploadAudio([file])
-      }
-    }
-
-    if (initialFile) {
-      uploadInitialFile(initialFile)
-    }
-
-    // We only do this for init
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  useInitialFileUpload({
+    initialFile,
+    isReady: !src && !audioUploader.isLoading,
+    run: (file) => uploadAudio([file]),
+  })
 
   const onAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fls = e.target.files
@@ -105,28 +97,12 @@ export function AudioNodeComponent({
     setEditing(true)
   }
 
-  // when card is inserted from the card menu or slash command we want to show the file picker immediately
-  // uses a setTimeout to avoid issues with React rendering the component twice in dev mode 🙈
-  React.useEffect(() => {
-    if (!triggerFileDialog) {
-      return
-    }
-
-    const renderTimeout = setTimeout(() => {
-      // trigger dialog
-      openFileSelection({ fileInputRef: audioFileInputRef })
-
-      // clear the property on the node so we don't accidentally trigger anything with a re-render
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isAudioNode, (node) => {
-          node.triggerFileDialog = false
-        })
-      })
-    })
-
-    return () => {
-      clearTimeout(renderTimeout)
-    }
+  useTriggerFileDialog({
+    editor,
+    nodeKey,
+    guard: $isAudioNode,
+    fileInputRef: audioFileInputRef,
+    triggerFileDialog,
   })
 
   return (
