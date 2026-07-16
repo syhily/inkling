@@ -60,6 +60,21 @@ export type { InklingEditorProps } from '@/components/InklingEditor'
 export type { InklingNestedComposerProps } from '@/components/InklingNestedComposer'
 export type { ExternalControlAPI } from '@/plugins/ExternalControlPlugin'
 
+/* Host-facing config types: the shapes a host names when wiring
+ * <InklingComposer cardConfig={...} fileUploader={...}> and its callbacks. */
+export type {
+  CardConfig,
+  FileUploader,
+  FileUploaderInput,
+  GifSettings,
+  LinkingSettings,
+  SnippetItem,
+  SnippetSettings,
+  UploadSettings,
+  VisibilitySettings,
+} from '@/context/InklingHostIntegrationContext'
+export type { ListOptionItem, SearchResult } from '@/hooks/useSearchLinks'
+
 export type { AudioNodeDataset } from '@/nodes/AudioNode'
 export { INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
 export type { CodeBlockNodeDataset } from '@/nodes/CodeBlockNode'
