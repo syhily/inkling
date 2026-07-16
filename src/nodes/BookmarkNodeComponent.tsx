@@ -11,10 +11,8 @@ import {
 } from 'lexical'
 import React, { useCallback } from 'react'
 
-import { ActionToolbar } from '@/components/ui/ActionToolbar'
+import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
-import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
-import { ToolbarMenu, ToolbarMenuItem } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { $isBookmarkNode, $updateCardNode } from '@/nodes/base'
@@ -55,7 +53,6 @@ export function BookmarkNodeComponent({
   const [urlInputValue, setUrlInputValue] = React.useState<string>(url)
   const [loading, setLoading] = React.useState<boolean>(false)
   const [urlError, setUrlError] = React.useState<boolean>(false)
-  const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
 
   const handleUrlChange = (eventOrUrl: React.ChangeEvent<HTMLInputElement> | string): void => {
     // TODO: change this so we only get given URL strings - child components should handle their own events
@@ -258,25 +255,13 @@ export function BookmarkNodeComponent({
         }
       />
 
-      <ActionToolbar data-inkling-card-toolbar="bookmark" isVisible={showSnippetToolbar}>
-        <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
-      </ActionToolbar>
-
-      <ActionToolbar
-        data-inkling-card-toolbar="bookmark"
-        isVisible={title ? isSelected && !showSnippetToolbar && !!cardConfig.createSnippet : false}
-      >
-        <ToolbarMenu>
-          <ToolbarMenuItem
-            dataTestId="create-snippet"
-            hide={!cardConfig.createSnippet}
-            icon="snippet"
-            isActive={false}
-            label="Save as snippet"
-            onClick={() => setShowSnippetToolbar(true)}
-          />
-        </ToolbarMenu>
-      </ActionToolbar>
+      <CardActionToolbar
+        card="bookmark"
+        hideWhileEditing={false}
+        items={[{ kind: 'snippet' }]}
+        nodeKey={nodeKey}
+        visibleWhen={!!title && !!cardConfig.createSnippet}
+      />
     </>
   )
 }

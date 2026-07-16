@@ -4,10 +4,8 @@ import React from 'react'
 
 import type { GalleryImage } from '@/types/gallery'
 
-import { ActionToolbar } from '@/components/ui/ActionToolbar'
+import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { GalleryCard } from '@/components/ui/cards/GalleryCard'
-import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
-import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
@@ -24,11 +22,10 @@ export interface GalleryNodeComponentProps {
 
 export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInitialState }: GalleryNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const { fileUploader, cardConfig } = React.useContext(InklingComposerContext)
+  const { fileUploader } = React.useContext(InklingComposerContext)
   const { isSelected } = React.useContext(CardContext)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
-  const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
   const [images, setImages] = React.useState<GalleryImage[]>(() => {
     const existingImages = editor.getEditorState().read(() => {
       const node = $getNodeByKey(nodeKey)
@@ -107,9 +104,6 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
     setErrorMessage(null)
   }
 
-  const hideToolbar =
-    !isSelected || imageFilesDropper.isDraggedOver || galleryReorder.isDraggedOver || images.length <= 0
-
   return (
     <>
       <GalleryCard
@@ -128,32 +122,23 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
         onFileChange={onFileChange}
       />
 
-      <ActionToolbar data-inkling-card-toolbar="gallery" isVisible={showSnippetToolbar}>
-        <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
-      </ActionToolbar>
-
-      <ActionToolbar data-inkling-card-toolbar="gallery" isVisible={!hideToolbar}>
-        <ToolbarMenu>
-          <ToolbarMenuItem
-            className={undefined}
-            dataTestId="add-gallery-image"
-            icon="add"
-            isActive={false}
-            label="Add images"
-            onClick={handleToolbarAdd}
-          />
-          <ToolbarMenuSeparator hide={!cardConfig.createSnippet} />
-          <ToolbarMenuItem
-            className={undefined}
-            dataTestId="create-snippet"
-            hide={!cardConfig.createSnippet}
-            icon="snippet"
-            isActive={false}
-            label="Save as snippet"
-            onClick={() => setShowSnippetToolbar(true)}
-          />
-        </ToolbarMenu>
-      </ActionToolbar>
+      <CardActionToolbar
+        card="gallery"
+        hideWhileEditing={false}
+        items={[
+          {
+            kind: 'custom',
+            dataTestId: 'add-gallery-image',
+            icon: 'add',
+            label: 'Add images',
+            onClick: handleToolbarAdd,
+          },
+          { kind: 'separator' },
+          { kind: 'snippet' },
+        ]}
+        nodeKey={nodeKey}
+        visibleWhen={!imageFilesDropper.isDraggedOver && !galleryReorder.isDraggedOver && images.length > 0}
+      />
     </>
   )
 }
