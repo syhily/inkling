@@ -390,7 +390,13 @@ export function generateDecoratorNode<
       return this.importSpec ? buildImportConversions(this.importSpec, this) : null
     }
 
-    constructor(data: Partial<DecoratorNodeValueMap<Props, HasVisibility>> = {}, key?: string) {
+    // The import-conversion boundary constructs nodes from a plain payload
+    // record (import-spec.ts); the union admits both that record and the
+    // typed partial dataset without either side asserting the other.
+    constructor(
+      data: Partial<DecoratorNodeValueMap<Props, HasVisibility>> | Record<string, unknown> = {},
+      key?: string,
+    ) {
       super(key)
       const dataset = data as Record<string, unknown>
       internalProps.forEach((prop) => {

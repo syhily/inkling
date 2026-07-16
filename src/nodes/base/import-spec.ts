@@ -127,12 +127,11 @@ export type ImportReadSpec =
       provides: readonly string[]
     }
 
-// The generated node constructors take a partial dataset of their own value
-// map, which is not provably assignable to `Record<string, unknown>` under
-// strict variance — the payload built here is a plain record, so `any` is
-// the honest parameter type at this boundary.
-// oxlint-disable-next-line typescript/no-explicit-any
-type ImportNodeClass = new (data: any) => LexicalNode
+// The generated node constructors accept a plain payload record alongside
+// their typed partial dataset (see the constructor in
+// generate-decorator-node.ts) — the payload built here is such a record, so
+// the boundary constructs through that member of the union.
+type ImportNodeClass = new (data: Record<string, unknown>) => LexicalNode
 
 /**
  * Throws when an import-spec read names a property absent from the node's
