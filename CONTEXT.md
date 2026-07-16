@@ -29,7 +29,7 @@ The read-only, per-render-pass view of export-time policy and data that is the s
 _Avoid_: options bag, policy object
 
 **Card write seam**:
-The single typed write path for card-node fields: `$updateCardNode(nodeKey, guard, update)` (src/nodes/base/update-card-node.ts), called inside `editor.update()`. The card's own `$is*` guard narrows the node, so every field the mutator writes is checked against the card's node type.
+The typed write path for card-node fields: `$updateCardNode(nodeKey, guard, update)` (src/nodes/base/update-card-node.ts), called inside `editor.update()`. The card's own `$is*` guard narrows the node, so every field the mutator writes is checked against the card's node type. One sanctioned exception: `useVisibilityToggle` keeps the old cast idiom because its test suite doubles the node structurally (plan 044 execution notes).
 _Avoid_: `$getNodeByKey` + `as GeneratedDecoratorNodeBase`
 
 **Card selection store**:
