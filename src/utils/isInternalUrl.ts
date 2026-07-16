@@ -1,18 +1,8 @@
-const ALLOWED_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:', 'ftp:'])
-
-export function isValidUrl(url: string): boolean {
-  if (/\s/.test(url)) {
-    return false
-  }
-
-  try {
-    const parsed = new URL(url)
-    return ALLOWED_PROTOCOLS.has(parsed.protocol)
-  } catch {
-    return false
-  }
-}
-
+// "Own URL" checks come in an input/export pair: `isInternalUrl` decides
+// whether a link points at our own site (at-link labeling); the export-side
+// counterpart is `isLocalContentImage`
+// (`@/nodes/base/utils/is-local-content-image`, behind the render context),
+// which recognizes our own content images in exported markup.
 export function isInternalUrl(url: string, siteUrl?: string): boolean {
   if (!url || !siteUrl) {
     return false

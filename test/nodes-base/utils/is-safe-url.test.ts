@@ -31,7 +31,7 @@ describe('isSafeUrl', () => {
 
   it('rejects mailto, tel, and ftp URLs', () => {
     // export-side navigation policy keeps only http/https/relative. The input
-    // side (pasted-text link acceptance, `isValidUrl` in `@/utils/isInternalUrl`)
+    // side (`isPasteableLinkUrl` in `@/plugins/behaviour/clipboard-protocol`)
     // deliberately accepts these schemes; the divergence is pinned in
     // `test/unit/plugins/behaviour/clipboard-protocol.test.tsx`.
     expect(isSafeUrl('mailto:test@example.com')).toBe(false)

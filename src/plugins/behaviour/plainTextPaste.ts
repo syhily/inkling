@@ -2,9 +2,7 @@ import type { LexicalEditor } from 'lexical'
 
 import { $getSelection, $isRangeSelection } from 'lexical'
 
-import { isValidUrl } from '@/utils/isInternalUrl'
-
-import { MIME_TEXT_HTML, MIME_TEXT_PLAIN, PASTE_MARKDOWN_COMMAND } from './clipboard-protocol'
+import { isPasteableLinkUrl, MIME_TEXT_HTML, MIME_TEXT_PLAIN, PASTE_MARKDOWN_COMMAND } from './clipboard-protocol'
 import { PASTE_LINK_COMMAND } from './commands'
 
 interface PlainTextPasteOptions {
@@ -21,7 +19,7 @@ export function handlePlainTextPaste(
   const text = clipboardData.getData(MIME_TEXT_PLAIN)
 
   // Use shared URL validator so mailto:, ftp:, tel: etc. are handled consistently.
-  const linkMatch = text && isValidUrl(text) ? ([text, text] as RegExpMatchArray) : null
+  const linkMatch = text && isPasteableLinkUrl(text) ? ([text, text] as RegExpMatchArray) : null
   if (linkMatch) {
     if (!skipCardShortcutGuard) {
       // avoid any conversion if we're pasting onto a card shortcut

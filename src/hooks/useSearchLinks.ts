@@ -4,6 +4,11 @@ import EarthIcon from '@/assets/icons/inkling-earth.svg?react'
 import { debounce } from '@/utils'
 
 const DEBOUNCE_MS = 100
+// A third URL table, deliberately not unified with either side of the
+// clipboard protocol's policy pair: it classifies link-search-box queries
+// (accepts mailto/tel, not ftp), not pasted links (`isPasteableLinkUrl` in
+// `@/plugins/behaviour/clipboard-protocol`) or export-safe hrefs (`isSafeUrl`
+// in `@/nodes/base/utils/is-safe-url`).
 const URL_QUERY_REGEX = /^http|^#|^\/|^mailto:|^tel:/
 
 export interface ListOptionItem {

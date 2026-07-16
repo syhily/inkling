@@ -5,9 +5,8 @@ import React, { useMemo } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { isSafeUrl } from '@/nodes/base/utils/is-safe-url'
-import { getModifierState } from '@/plugins/behaviour/clipboard-protocol'
+import { getModifierState, isPasteableLinkUrl } from '@/plugins/behaviour/clipboard-protocol'
 import { MarkdownPastePlugin } from '@/plugins/MarkdownPastePlugin'
-import { isValidUrl } from '@/utils/isInternalUrl'
 
 function createTestEditor() {
   return createEditor({
@@ -72,40 +71,40 @@ describe('MarkdownPastePlugin modifier state', () => {
   })
 })
 
-// Input-side link acceptance: which pasted text becomes a link. The function
-// under test still lives in `@/utils/isInternalUrl` as `isValidUrl`; it moves
-// into the protocol module under an input-side name in the follow-up commit.
-describe('input-side link acceptance', () => {
+// Input-side link acceptance: which pasted text becomes a link (moved from
+// `describe('isValidUrl')` in `test/unit/utils/isInternalUrl.test.ts` with
+// the function's move into the protocol module).
+describe('isPasteableLinkUrl', () => {
   it('accepts http and https urls', () => {
-    expect(isValidUrl('https://example.com')).toBe(true)
-    expect(isValidUrl('http://example.com')).toBe(true)
-    expect(isValidUrl('https://example.com/path?query=1#hash')).toBe(true)
+    expect(isPasteableLinkUrl('https://example.com')).toBe(true)
+    expect(isPasteableLinkUrl('http://example.com')).toBe(true)
+    expect(isPasteableLinkUrl('https://example.com/path?query=1#hash')).toBe(true)
   })
 
   it('accepts mailto, tel, and ftp urls', () => {
-    expect(isValidUrl('mailto:test@example.com')).toBe(true)
-    expect(isValidUrl('tel:+1234567890')).toBe(true)
-    expect(isValidUrl('ftp://example.com/file.txt')).toBe(true)
+    expect(isPasteableLinkUrl('mailto:test@example.com')).toBe(true)
+    expect(isPasteableLinkUrl('tel:+1234567890')).toBe(true)
+    expect(isPasteableLinkUrl('ftp://example.com/file.txt')).toBe(true)
   })
 
   it('rejects javascript urls', () => {
-    expect(isValidUrl('javascript:alert(1)')).toBe(false)
+    expect(isPasteableLinkUrl('javascript:alert(1)')).toBe(false)
   })
 
   it('rejects malformed urls', () => {
-    expect(isValidUrl('not a url')).toBe(false)
-    expect(isValidUrl('')).toBe(false)
-    expect(isValidUrl('https://')).toBe(false)
+    expect(isPasteableLinkUrl('not a url')).toBe(false)
+    expect(isPasteableLinkUrl('')).toBe(false)
+    expect(isPasteableLinkUrl('https://')).toBe(false)
   })
 
   it('rejects relative urls', () => {
-    expect(isValidUrl('/path')).toBe(false)
-    expect(isValidUrl('#anchor')).toBe(false)
+    expect(isPasteableLinkUrl('/path')).toBe(false)
+    expect(isPasteableLinkUrl('#anchor')).toBe(false)
   })
 
   it('rejects urls with whitespace', () => {
-    expect(isValidUrl(' https://example.com')).toBe(false)
-    expect(isValidUrl('https://example.com ')).toBe(false)
+    expect(isPasteableLinkUrl(' https://example.com')).toBe(false)
+    expect(isPasteableLinkUrl('https://example.com ')).toBe(false)
   })
 })
 
@@ -117,7 +116,7 @@ describe('input/export url policy divergence', () => {
     // context's `safeUrl`; plans 001/030/040) keeps only http/https/relative.
     // A pasted ftp/mailto/tel link is live in the editor and blanked on
     // export — documented and pinned here, deliberately not aligned.
-    expect(isValidUrl('ftp://example.com/file')).toBe(true)
+    expect(isPasteableLinkUrl('ftp://example.com/file')).toBe(true)
     expect(isSafeUrl('ftp://example.com/file')).toBe(false)
   })
 })
