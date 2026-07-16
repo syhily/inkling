@@ -3,16 +3,32 @@ import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
-import { CalloutCard } from '@/components/ui/cards/CalloutCard'
+import { CALLOUT_COLORS, CalloutCard, type CalloutColorName } from '@/components/ui/cards/CalloutCard'
 import CardContext from '@/context/CardContext'
 import { $isCalloutNode, $updateCardNode } from '@/nodes/base'
+
+// backgroundColor is a free string on the node — HTML import captures any
+// `inkling-callout-card-*` class word — so narrow it to the known palette at
+// the card seam, falling back to the node's own default
+function isCalloutColorName(color: string | undefined): color is CalloutColorName {
+  return color !== undefined && Object.hasOwn(CALLOUT_COLORS, color)
+}
+
+// emoji-mart yields `{ native }` for standard emojis; custom emojis (this
+// picker isn't configured with any) carry `src` instead
+function getNativeEmoji(emoji: unknown): string | undefined {
+  if (typeof emoji === 'object' && emoji !== null && 'native' in emoji && typeof emoji.native === 'string') {
+    return emoji.native
+  }
+  return undefined
+}
 
 export interface CalloutNodeComponentProps {
   nodeKey: NodeKey
   calloutEmoji?: string
   backgroundColor?: string
-  textColor?: string
-  calloutTextEditor?: LexicalEditor | null
+  // non-null: the decorate mapper guards the headless round-trip null state
+  calloutTextEditor: LexicalEditor
   calloutTextEditorInitialState?: EditorState | undefined
 }
 
@@ -40,7 +56,10 @@ export function CalloutNodeComponent({
 
   const handleEmojiSelect = React.useCallback(
     (newEmoji: unknown): void => {
-      const nativeEmoji = (newEmoji as { native?: string } | undefined)?.native ?? (newEmoji as string)
+      const nativeEmoji = getNativeEmoji(newEmoji)
+      if (nativeEmoji === undefined) {
+        return
+      }
       handleEmojiChange(nativeEmoji)
       setShowEmojiPicker(false)
     },
@@ -75,13 +94,13 @@ export function CalloutNodeComponent({
         backgroundColor={backgroundColor}
         calloutEmoji={calloutEmoji}
         changeEmoji={handleEmojiSelect}
-        color={backgroundColor as import('@/components/ui/cards/CalloutCard').CalloutColorName}
+        color={isCalloutColorName(backgroundColor) ? backgroundColor : 'blue'}
         handleColorChange={handleBackgroundColorChange}
         isEditing={isEditing}
         nodeKey={nodeKey}
         setShowEmojiPicker={setShowEmojiPicker}
         showEmojiPicker={showEmojiPicker}
-        textEditor={calloutTextEditor!}
+        textEditor={calloutTextEditor}
         textEditorInitialState={calloutTextEditorInitialState}
         toggleEmoji={handleToggleEmoji}
         toggleEmojiPicker={handleToggleEmojiPicker}
