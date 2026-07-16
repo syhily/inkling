@@ -496,3 +496,30 @@ proves unsound mid-execution, revert to `d998080`'s tree state for
 the header no-dep-array fix can still ship alone as a one-line
 `}, [editor])` fix in `HeaderPlugin.tsx:36` (cherry-pickable, touches only
 that file and its churn test).
+
+## Execution notes
+
+Plan 043 landed in three commits on main (`92fbaa5..6bb6bf9`) plus a README
+fix. Step 1 (`92fbaa5`) pinned the registration matrix — 25 pins covering
+the 11 per-card inserts (incl. exact `openInEditMode` key presence), payload
+guards, the email mounting matrix, bookmark's range-selection quirk, media
+re-dispatch, and the header re-registration churn. Step 2 (`95a67b6`) added
+the declaration vocabulary (`CardInsertSpec`: `openInEditMode?`,
+`claimsMediaInsert?`, `requiresRangeSelection?`, `insertCommandPriority?:
+'high'`), the `card-insert-commands` projection, and the
+`CardInsertPlugin` registrar, replicating the matrix green before deleting
+anything. Step 3 (`6bb6bf9`) deleted the eleven per-card insert plugins,
+switched the mount sites and the barrel — the deliberate public-surface
+change: packed exports 76 → 66, recorded in the commit message and riding
+toward plan 048's 2.0.0. Drift absorbed: HeaderPlugin's no-dep-array churn
+is gone (the one deliberate expectation change, 3→1 registrations after two
+rerenders, documented in the commit); BookmarkPlugin's range-selection quirk
+survives as declaration data because it's observable in dispatch returns;
+ImagePlugin's dead upload scaffolding was deleted with the file; the File
+media-gap is pinned as current behavior, not fixed. Post-review fix
+(`docs(readme): drop deleted card plugins from the export list`): the README
+plugin list still named the eleven deleted exports. Gates at HEAD: full unit
+207 files / 1746 passed / 21 todo; nodes-base+html-renderer 735/21
+unchanged; typecheck/lint/format:check clean; verify:package (66 exports) +
+verify:types PASS; scoped e2e 262 passed (slash-menu, plus-button, cards,
+DragDropPastePlugin).
