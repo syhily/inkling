@@ -1,11 +1,12 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
+import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CodeBlockCard } from '@/components/ui/cards/CodeBlockCard'
 import CardContext from '@/context/CardContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
+import { $updateCardNode } from '@/nodes/base'
 import { $isCodeBlockNode } from '@/nodes/CodeBlockNode'
 
 export interface CodeBlockNodeComponentProps {
@@ -30,10 +31,9 @@ export function CodeBlockNodeComponent({
   const updateCode = React.useCallback(
     (value: string) => {
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if ($isCodeBlockNode(node)) {
+        $updateCardNode(nodeKey, $isCodeBlockNode, (node) => {
           node.code = value
-        }
+        })
       })
     },
     [editor, nodeKey],
@@ -42,10 +42,9 @@ export function CodeBlockNodeComponent({
   const updateLanguage = React.useCallback(
     (value: string) => {
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if ($isCodeBlockNode(node)) {
+        $updateCardNode(nodeKey, $isCodeBlockNode, (node) => {
           node.language = value
-        }
+        })
       })
     },
     [editor, nodeKey],

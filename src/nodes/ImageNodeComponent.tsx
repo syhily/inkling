@@ -17,6 +17,7 @@ import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
+import { $updateCardNode } from '@/nodes/base'
 import { isCardWidth } from '@/nodes/base/utils/card-widths'
 import { $createGalleryNode } from '@/nodes/GalleryNode'
 import { $isImageNode } from '@/nodes/ImageNode'
@@ -196,11 +197,10 @@ export function ImageNodeComponent({
       if (src && !initialFile && !triggerFileDialog) {
         const { width, height } = await getImageDimensions(src)
         editor.update(() => {
-          const node = $getNodeByKey(nodeKey)
-          if ($isImageNode(node)) {
+          $updateCardNode(nodeKey, $isImageNode, (node) => {
             node.width = width
             node.height = height
-          }
+          })
         })
       }
     }
@@ -236,19 +236,17 @@ export function ImageNodeComponent({
 
   const setHref = (newHref: string) => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if ($isImageNode(node)) {
+      $updateCardNode(nodeKey, $isImageNode, (node) => {
         node.href = newHref
-      }
+      })
     })
   }
 
   const setAltText = (newAltText: string) => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if ($isImageNode(node)) {
+      $updateCardNode(nodeKey, $isImageNode, (node) => {
         node.alt = newAltText
-      }
+      })
     })
   }
 
@@ -261,11 +259,10 @@ export function ImageNodeComponent({
       }
 
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if ($isImageNode(node)) {
+        $updateCardNode(nodeKey, $isImageNode, (node) => {
           node.cardWidth = newWidth // this is a property on the node, not the card
           setCardWidth(newWidth) // sets the state of the toolbar component
-        }
+        })
       })
     },
     [allowedImageCardWidths, editor, nodeKey, setCardWidth],

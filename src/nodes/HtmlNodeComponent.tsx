@@ -1,5 +1,4 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getNodeByKey } from 'lexical'
 import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
@@ -11,6 +10,7 @@ import InklingHostIntegrationContext from '@/context/InklingHostIntegrationConte
 import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useVisibilityToggle } from '@/hooks/useVisibilityToggle'
+import { $updateCardNode } from '@/nodes/base'
 import { $isHtmlNode } from '@/nodes/HtmlNode'
 import { SHOW_CARD_VISIBILITY_SETTINGS_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
@@ -26,10 +26,9 @@ export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: s
 
   const updateHtml = (value: string) => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if ($isHtmlNode(node)) {
+      $updateCardNode(nodeKey, $isHtmlNode, (node) => {
         node.html = value
-      }
+      })
     })
   }
 
