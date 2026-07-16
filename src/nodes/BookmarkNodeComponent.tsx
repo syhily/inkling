@@ -105,7 +105,7 @@ export function BookmarkNodeComponent({
       setUrlInputValue(eventOrUrl)
       return
     }
-    setUrlInputValue((eventOrUrl.target as HTMLInputElement).value)
+    setUrlInputValue(eventOrUrl.target.value)
   }
 
   const handleUrlSubmit = async (
@@ -125,7 +125,7 @@ export function BookmarkNodeComponent({
         })
       }
       if (type === 'url') {
-        const target = isInternalUrl(eventOrUrl, cardConfig?.siteUrl ?? '') ? 'internal' : 'external'
+        const target = isInternalUrl(eventOrUrl, cardConfig.siteUrl ?? '') ? 'internal' : 'external'
         trackEvent('Link dropdown: URL entered', { context: 'bookmark', target })
       }
 
@@ -135,7 +135,8 @@ export function BookmarkNodeComponent({
     if (typeof eventOrUrl === 'object' && 'key' in eventOrUrl && eventOrUrl.key === 'Enter') {
       // when Enter is pressed with focus in the main editor (UrlInputPlugin)
       // the event target is the editor root, so fall back to the input value
-      const targetValue = (eventOrUrl.target as HTMLInputElement).value
+      const { target } = eventOrUrl
+      const targetValue = target instanceof HTMLInputElement ? target.value : undefined
       fetchMetadata(targetValue ?? urlInputValue)
     }
   }
@@ -259,7 +260,7 @@ export function BookmarkNodeComponent({
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const searchEnabled = typeof cardConfig?.searchLinks === 'function'
+  const searchEnabled = typeof cardConfig.searchLinks === 'function'
 
   return (
     <>
@@ -277,7 +278,7 @@ export function BookmarkNodeComponent({
         isLoading={loading}
         isSelected={isSelected}
         publisher={publisher}
-        searchLinks={cardConfig?.searchLinks}
+        searchLinks={cardConfig.searchLinks}
         thumbnail={thumbnail}
         title={title}
         url={url}
