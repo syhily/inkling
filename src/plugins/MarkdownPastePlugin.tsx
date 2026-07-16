@@ -16,8 +16,10 @@ export const MarkdownPastePlugin = () => {
   const [editor] = useLexicalComposerContext()
   const modifierState = getModifierState(editor)
 
-  // Per-consumer listeners are deliberate: the plugin must work standalone,
-  // and writes into the shared modifier state are idempotent.
+  // Per-consumer listeners are deliberate: the plugin must work standalone.
+  // This writer uses `e.key === 'Shift'` (pinned by this plugin's
+  // synthetic-event tests); see clipboard-protocol.ts for why the two writer
+  // formulations agree on real event streams.
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {

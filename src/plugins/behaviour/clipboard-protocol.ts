@@ -37,7 +37,11 @@ const modifierStates = new WeakMap<LexicalEditor, ModifierState>()
 // `{ current: boolean }` shape matches `LinkMatchingDeps.isShiftPressed`
 // (`registerLinkMatching.ts`), so the behaviour layer's deps interface is
 // unchanged. Each plugin keeps its own keydown/keyup listeners (it must work
-// standalone) and every write is idempotent, so the writers cannot diverge.
+// standalone). The two write formulations (MarkdownPastePlugin writes on
+// `e.key === 'Shift'`, InklingBehaviourPlugin writes `event.shiftKey`) agree
+// on every real browser event stream except one corner: releasing one of two
+// held Shift keys, where the stale value self-corrects on the next key event
+// — only a menu-paste inside that window observes it (pre-existing).
 export function getModifierState(editor: LexicalEditor): ModifierState {
   let state = modifierStates.get(editor)
   if (!state) {
