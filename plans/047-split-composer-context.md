@@ -496,3 +496,54 @@ Step-1 characterization tests were written against the legacy context and
 remain valid there (adjust only their provider imports). The dead-slice
 deletion in Step 4 is independent and can ship alone by cherry-pick if the
 option-bag split is stopped.
+
+## Execution notes
+
+Plan 047 landed in five commits on main (`09ec187..41c32e3`) plus a
+post-review cleanup (`b2db84d`). Step 1 (`09ec187`) pinned the drag-drop
+and word-count channel behavior; its initial pin file clobbered a
+pre-existing `InklingNestedComposer.test.tsx` integration test, which was
+restored with the pins moved to `InklingNestedComposerWordCount.test.tsx`
+(verified byte-identical at HEAD). Step 2 (`55390c6`) split the composer
+context by lifecycle into three contexts with one memo each. Step 3
+(`5693917`) replaced the context-mutated drag-drop ref with a
+per-composer handle (plan-038 store shape); `editorContainerRef` folded
+in as `containerElement` per the orchestration ruling, fed from the same
+ref callback, top-level only. Step 4 (`920aa99`) split
+`DragDropContainer`'s flat option bag into `{ draggable, droppable,
+lifecycle? }` with `?? noop` assembly — `DragDropHandler` untouched per
+the STOP-condition rescope — and deleted the four dead
+`droppables.slice(...)` calls plus eleven permanently-empty callbacks.
+Step 5 (`41c32e3`) gave word count the same handle treatment
+(`wordCountHandle.ts`, `WordCountHandleContext`, `useWordCountCallback`)
+and deleted `src/context/InklingComposerContext.tsx`, the last legacy
+module (zero imports remain).
+
+A quiet bug fix surfaced in review: the old `useCardDragAndDrop` had
+`enabled` in the registration deps with no cleanup, so every toggle (or
+an inline `canDrop`) registered an additional live container on the same
+element without destroying the previous one — orphaned containers and
+double `onDropEnd`. Step 3's deps-exclusion-plus-cleanup (oxlint
+suppression, documented) eliminates that; `b2db84d` pins it
+(registerContainer exactly once, destroy never, across `enabled` flips).
+
+Reviews: spec and quality both APPROVED. Post-review fixes in `b2db84d`:
+the two pins above plus a late-handler-arrival pin (hook registers when
+the reorder plugin publishes the handler after mount — the headline
+Step-3 improvement, previously unpinned); an unnecessary `as any` +
+suppression dropped from `useCardDragAndDrop`; `useGalleryReorder`'s
+cleanup aligned to the closure-local idiom; and the 19 test fixtures
+swept of inert `editorContainerRef`/`onWordCountChangeRef` legacy keys
+(the plan's Step-2 "migrate hand-rolled values" clause completed).
+Commit-message nit on record: `09ec187` says "13 tests", adds 6 — all
+later arithmetic was consistent with 6; history not rewritten.
+
+Gates at HEAD: full unit 221 files / 1920 passed / 21 todo;
+nodes-base+html-renderer 46 files / 735 passed / 21 todo;
+typecheck/lint/format clean; the four named e2e specs green (drag trio
+54 passed, word-count 3 passed — nested counting needed no fallback);
+`dist/editor.d.ts` byte-identical across the range and `verify:types`
+green, so the public surface is untouched. Module-level fallback handles
+are shared across provider-less consumers (two standalone editors would
+cross-talk) — exact parity with the pre-refactor module-level default
+context and the plan-038 precedent; recorded, no action.
