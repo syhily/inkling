@@ -518,3 +518,50 @@ pass against the original handlers, and the policy matrix in commit 1's
 message remains the evidence for the next attempt. Nothing in this plan
 touches `src/nodes/base/`, the public barrel, or the card declarations, so
 no revert can strand the render seam or the public surface.
+
+## Execution notes
+
+Plan 045 landed in eight commits on main (`6931af6..e60b07a`) plus a
+post-review cleanup (`439849c`). Step 1 (`6931af6`) characterized the
+handlers, inline flows, and effects — the policy matrix (per-card guards,
+arity, empty-result policy, preview lifecycle) pinned before any
+production change. Step 2 (`44921fa`) introduced `src/utils/upload-intent.ts`
+with 17 module tests and zero call-site changes. `dcc63bc` was a disclosed
+non-plan commit normalizing plan 044's markdown emphasis for oxfmt (the
+heredoc-appended execution notes had broken `format:check`). Step 3
+(`38c78cd`) routed the card upload handlers through the intent module and
+deleted the four handler modules; the re-pointed test suites kept
+byte-identical expectations. Steps 4–5 (`87c41a2`, `d31cb95`) migrated
+video's inline flows (adding `src/hooks/usePreviewLease.ts`) and gallery's
+multi-file flow (as a documented in-module adapter — the flow can't be a
+runner configuration because of its local-state-first ordering, recorded
+in a comment per the STOP clause). Step 6 (`5a95308`) owned the
+trigger-on-insert and initial-file effects once
+(`useTriggerFileDialog`, `useInitialFileUpload`), deleting all 8 effect
+copies; the three dependency-array idioms were subsumed onto every-render
+checks, an intentional, pinned delta. Step 7 (`e60b07a`) added the
+import-guard test pinning the object-URL caller set to exactly
+`upload-intent.ts`, `revokePreviewUrl.ts`, `extractVideoMetadata.ts`.
+
+Reviews: spec and quality both APPROVED. Post-review nits fixed in
+`439849c`: a duplicated `BackgroundImageUploadResult` interface deleted,
+`stripFileExtension` unexported (no external consumer); CONTEXT.md gained
+"Upload intent" and "Preview lease" glossary entries. Acknowledged,
+unreachable behavior delta left as-is: a null `files` no longer resets
+file-node `src` before the bail (real change events always carry a
+FileList); `upload?.()` became `upload()` (the type declares it required
+and the default context provides a noop). Two plan defects surfaced and
+were handled per the plan's own clauses: the evidence prose had audio's
+extract-after-upload order backwards (code was pinned as-is), and the
+stated 730-test render-side baseline was stale after 041–044 (actual:
+735). Moot step: `ImagePlugin.tsx` was already deleted by plan 043.
+
+Preserved behaviors (all pinned, all green): per-card initial-file guards
+as data (image `!src`, audio `!src && !isLoading`, video `!isLoading`,
+file `!fileSrc`); video preview surviving a rejected upload; one-arg vs
+two-arg upload arity; gallery local-state-first ordering and image
+identity for `useGalleryReorder`; `uploadOptions` resolved inside an
+editor read. Gates at HEAD: full unit 213 files / 1797 passed / 21 todo;
+nodes-base+html-renderer 46 files / 735 passed / 21 todo;
+typecheck/lint/format clean; scoped card e2e 95 passed. `src/index.ts`
+untouched, so verify:package/verify:types not required.
