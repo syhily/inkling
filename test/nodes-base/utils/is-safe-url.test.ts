@@ -29,6 +29,16 @@ describe('isSafeUrl', () => {
     expect(isSafeUrl('javascript:alert(1)')).toBe(false)
   })
 
+  it('rejects mailto, tel, and ftp URLs', () => {
+    // export-side navigation policy keeps only http/https/relative. The input
+    // side (pasted-text link acceptance, `isValidUrl` in `@/utils/isInternalUrl`)
+    // deliberately accepts these schemes; the divergence is pinned in
+    // `test/unit/plugins/behaviour/clipboard-protocol.test.tsx`.
+    expect(isSafeUrl('mailto:test@example.com')).toBe(false)
+    expect(isSafeUrl('tel:+1234567890')).toBe(false)
+    expect(isSafeUrl('ftp://example.com/file.txt')).toBe(false)
+  })
+
   it('rejects URLs with control characters or whitespace inside the scheme', () => {
     // browsers strip ASCII tab/LF/CR before scheme parsing, so these would
     // otherwise be treated as relative URLs and navigated as javascript:
