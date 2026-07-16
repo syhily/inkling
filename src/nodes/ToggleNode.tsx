@@ -10,14 +10,13 @@ export { INSERT_TOGGLE_COMMAND } from '@/nodes/cards/card-menus'
 
 export type ToggleNodeDataset = ToggleData & {
   titleEditor?: LexicalEditor
+  // accepted for getDataset/clone symmetry but not read by the constructor —
+  // `__titleEditorInitialState` is set internally when the editor is
+  // populated from its serialized HTML (src/utils/nested-editors.ts)
   titleEditorInitialState?: EditorState
   contentEditor?: LexicalEditor
+  // see titleEditorInitialState
   contentEditorInitialState?: EditorState
-}
-
-export type SerializedToggleNode = ReturnType<BaseToggleNode['exportJSON']> & {
-  heading: string
-  content: string
 }
 
 export class ToggleNode extends BaseToggleNode {

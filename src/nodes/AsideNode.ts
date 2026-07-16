@@ -32,6 +32,6 @@ export function $createAsideNode() {
   return new AsideNode()
 }
 
-export function $isAsideNode(node: unknown) {
+export function $isAsideNode(node: unknown): node is AsideNode {
   return node instanceof AsideNode
 }

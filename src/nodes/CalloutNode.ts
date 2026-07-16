@@ -10,6 +10,9 @@ export { INSERT_CALLOUT_COMMAND } from '@/nodes/cards/card-menus'
 
 export type CalloutNodeDataset = CalloutData & {
   calloutTextEditor?: LexicalEditor
+  // accepted for getDataset/clone symmetry but not read by the constructor —
+  // `__calloutTextEditorInitialState` is set internally when the editor is
+  // populated from its serialized HTML (src/utils/nested-editors.ts)
   calloutTextEditorInitialState?: EditorState
 }
 

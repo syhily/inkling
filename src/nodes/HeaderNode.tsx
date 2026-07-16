@@ -10,8 +10,13 @@ export { INSERT_HEADER_COMMAND } from '@/nodes/cards/card-menus'
 
 export type HeaderNodeDataset = HeaderData & {
   headerTextEditor?: LexicalEditor
+  // not read by the constructor, and the declaration sets
+  // `exposeInitialStateInDataset: false` so getDataset never emits them
+  // either — `__headerTextEditorInitialState` is set internally when the
+  // editor is populated from its serialized HTML (src/utils/nested-editors.ts)
   headerTextEditorInitialState?: EditorState
   subheaderTextEditor?: LexicalEditor
+  // see headerTextEditorInitialState
   subheaderTextEditorInitialState?: EditorState
 }
 
