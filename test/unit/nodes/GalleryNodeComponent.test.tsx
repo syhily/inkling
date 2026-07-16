@@ -42,7 +42,10 @@ function createCardContext(overrides: Partial<React.ContextType<typeof CardConte
   }
 }
 
-function createComposerContext(upload: ReturnType<typeof vi.fn> = vi.fn(() => Promise.resolve(undefined))) {
+function createComposerContext(
+  upload: ReturnType<typeof vi.fn> = vi.fn(() => Promise.resolve(undefined)),
+  cardConfig: Record<string, unknown> = {},
+) {
   return {
     fileUploader: {
       useFileUpload: () => ({
@@ -52,7 +55,7 @@ function createComposerContext(upload: ReturnType<typeof vi.fn> = vi.fn(() => Pr
       }),
       fileTypes: { image: { mimeTypes: ['image/png'] } },
     },
-    cardConfig: {},
+    cardConfig,
     darkMode: false,
     enableMultiplayer: false,
     editorContainerRef: { current: null } as React.RefObject<HTMLElement | null>,
@@ -62,15 +65,18 @@ function createComposerContext(upload: ReturnType<typeof vi.fn> = vi.fn(() => Pr
   }
 }
 
-function addGalleryNode(editor: LexicalEditor) {
+function addGalleryNode(
+  editor: LexicalEditor,
+  images: GalleryImage[] = [
+    { src: '/one.png', fileName: 'one.png', width: 100, height: 100 },
+    { src: '/two.png', fileName: 'two.png', width: 100, height: 100 },
+  ],
+) {
   return new Promise<NodeKey>((resolve) => {
     editor.update(
       () => {
         const galleryNode = new GalleryNode({
-          images: [
-            { src: '/one.png', fileName: 'one.png', width: 100, height: 100 },
-            { src: '/two.png', fileName: 'two.png', width: 100, height: 100 },
-          ],
+          images,
         })
         $getRoot().append(galleryNode)
       },
@@ -229,5 +235,115 @@ describe('GalleryNodeComponent', () => {
 
     expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:gallery-preview-1')
     expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:gallery-preview-2')
+  })
+
+  describe('action toolbar', () => {
+    function renderWithToolbar(
+      nodeKey: NodeKey,
+      cardOverrides: Record<string, unknown> = {},
+      cardConfig: Record<string, unknown> = {},
+    ) {
+      const composerValue = createComposerContext(undefined, cardConfig)
+      const cardValue = createCardContext(cardOverrides)
+      return render(
+        <InklingComposerContext.Provider value={composerValue}>
+          <CardContext.Provider value={cardValue}>
+            <GalleryNodeComponent
+              captionEditor={createTestEditor()}
+              captionEditorInitialState={undefined}
+              nodeKey={nodeKey}
+            />
+          </CardContext.Provider>
+        </InklingComposerContext.Provider>,
+      )
+    }
+
+    function getToolbars(container: HTMLElement) {
+      return container.querySelectorAll('[data-inkling-card-toolbar="gallery"]')
+    }
+
+    it('hides the toolbar when the card is not selected', async () => {
+      const nodeKey = await addGalleryNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { isSelected: false })
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('keeps the toolbar visible while the card is editing', async () => {
+      // gallery's menu toolbar has no !isEditing factor
+      const nodeKey = await addGalleryNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { isSelected: true, isEditing: true })
+
+      expect(getToolbars(container)).toHaveLength(1)
+    })
+
+    it('hides the toolbar when the gallery has no images', async () => {
+      const nodeKey = await addGalleryNode(editor, [])
+      const { container } = renderWithToolbar(nodeKey, { isSelected: true })
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('hides the toolbar while files are dragged over the card', async () => {
+      const nodeKey = await addGalleryNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { isSelected: true })
+
+      expect(getToolbars(container)).toHaveLength(1)
+
+      fireEvent.dragEnter(screen.getByTestId('gallery-container'))
+      expect(getToolbars(container)).toHaveLength(0)
+
+      fireEvent.dragLeave(screen.getByTestId('gallery-container'))
+      expect(getToolbars(container)).toHaveLength(1)
+    })
+
+    it('renders add-images, separator, and snippet items when selected', async () => {
+      const nodeKey = await addGalleryNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { isSelected: true }, { createSnippet: vi.fn() })
+
+      const toolbars = getToolbars(container)
+      expect(toolbars).toHaveLength(1)
+      const toolbar = toolbars[0]
+      expect(toolbar.querySelectorAll('li')).toHaveLength(3)
+
+      const labels = Array.from(toolbar.querySelectorAll('button')).map((button) => button.getAttribute('aria-label'))
+      expect(labels).toEqual(['Add images', 'Save as snippet'])
+      expect(toolbar.querySelectorAll('button svg')).toHaveLength(2)
+      expect(screen.getByTestId('add-gallery-image')).toBeTruthy()
+      expect(screen.getByTestId('create-snippet')).toBeTruthy()
+    })
+
+    it('hides the snippet item and its separator when createSnippet is not configured', async () => {
+      const nodeKey = await addGalleryNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { isSelected: true })
+
+      const toolbar = getToolbars(container)[0]
+      expect(toolbar.querySelectorAll('li')).toHaveLength(1)
+      expect(screen.getByTestId('add-gallery-image')).toBeTruthy()
+      expect(screen.queryByTestId('create-snippet')).toBeNull()
+    })
+
+    it('clicks the hidden file input when the add-images item is clicked', async () => {
+      const nodeKey = await addGalleryNode(editor)
+      renderWithToolbar(nodeKey, { isSelected: true })
+
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement
+      const clickSpy = vi.spyOn(input, 'click')
+      fireEvent.click(screen.getByTestId('add-gallery-image'))
+
+      expect(clickSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('opens the snippet input when the snippet item is clicked', async () => {
+      const nodeKey = await addGalleryNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { isSelected: true }, { createSnippet: vi.fn() })
+
+      fireEvent.click(screen.getByTestId('create-snippet'))
+
+      // gallery is the one card whose menu toolbar does not gate on the
+      // snippet state, so assert only that the snippet input opened
+      const toolbars = getToolbars(container)
+      expect(Array.from(toolbars).some((toolbar) => toolbar.querySelector('[data-testid="snippet-name"]'))).toBe(true)
+    })
   })
 })

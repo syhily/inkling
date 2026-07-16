@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -42,7 +42,10 @@ function createCardContext(overrides: Partial<React.ContextType<typeof CardConte
   }
 }
 
-function createComposerContext(upload: ReturnType<typeof vi.fn> = vi.fn(() => Promise.resolve(undefined))) {
+function createComposerContext(
+  upload: ReturnType<typeof vi.fn> = vi.fn(() => Promise.resolve(undefined)),
+  cardConfig: Record<string, unknown> = {},
+) {
   return {
     fileUploader: {
       useFileUpload: () => ({
@@ -52,7 +55,7 @@ function createComposerContext(upload: ReturnType<typeof vi.fn> = vi.fn(() => Pr
       }),
       fileTypes: { file: { mimeTypes: ['application/pdf'] } },
     },
-    cardConfig: {},
+    cardConfig,
     darkMode: false,
     enableMultiplayer: false,
     editorContainerRef: { current: null } as React.RefObject<HTMLElement | null>,
@@ -167,5 +170,111 @@ describe('FileNodeComponent', () => {
     // the mount effect runs synchronously; give any async work a chance to fire
     await flushMacrotask()
     expect(upload).not.toHaveBeenCalled()
+  })
+
+  describe('action toolbar', () => {
+    const populatedProps = {
+      fileName: 'report.pdf',
+      fileSize: '12 KB',
+      fileSrc: '/report.pdf',
+    }
+
+    function renderWithToolbar(
+      cardOverrides: Record<string, unknown> = {},
+      { populated = true, cardConfig = {} }: { populated?: boolean; cardConfig?: Record<string, unknown> } = {},
+    ) {
+      const composerValue = createComposerContext(undefined, cardConfig)
+      const cardValue = createCardContext(cardOverrides)
+      const fileProps = populated ? populatedProps : { fileName: '', fileSize: '', fileSrc: '' }
+      return render(
+        <InklingComposerContext.Provider value={composerValue}>
+          <CardContext.Provider value={cardValue}>
+            <FileNodeComponent
+              fileDesc=""
+              fileDescPlaceholder="Add a description"
+              fileName={fileProps.fileName}
+              fileSize={fileProps.fileSize}
+              fileSrc={fileProps.fileSrc}
+              fileTitle="Report"
+              fileTitlePlaceholder="Add a title"
+              nodeKey="file-1"
+              triggerFileDialog={false}
+            />
+          </CardContext.Provider>
+        </InklingComposerContext.Provider>,
+      )
+    }
+
+    function getToolbars(container: HTMLElement) {
+      return container.querySelectorAll('[data-inkling-card-toolbar="file-upload"]')
+    }
+
+    it('hides the toolbar when the card is not selected', () => {
+      const { container } = renderWithToolbar({ isSelected: false, isEditing: false })
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('hides the toolbar while the card is editing', () => {
+      const { container } = renderWithToolbar({ isSelected: true, isEditing: true })
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('hides the toolbar until the card is populated', () => {
+      const { container } = renderWithToolbar({ isSelected: true, isEditing: false }, { populated: false })
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('renders edit, separator, and snippet items when selected and populated', () => {
+      const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
+
+      const toolbars = getToolbars(container)
+      expect(toolbars).toHaveLength(1)
+      const toolbar = toolbars[0]
+      expect(toolbar.querySelectorAll('li')).toHaveLength(3)
+
+      const labels = Array.from(toolbar.querySelectorAll('button')).map((button) => button.getAttribute('aria-label'))
+      expect(labels).toEqual(['Edit', 'Save as snippet'])
+      expect(toolbar.querySelectorAll('button svg')).toHaveLength(2)
+      expect(screen.getByTestId('edit-file-upload-card')).toBeTruthy()
+    })
+
+    it('renders the snippet item and its separator even when createSnippet is not configured', () => {
+      // pinned AS-IS: file is the only card that does not gate the snippet
+      // item (or its separator) on cardConfig.createSnippet — plan 046 step 4
+      // deliberately adds the gate
+      const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
+
+      const toolbar = getToolbars(container)[0]
+      expect(toolbar.querySelectorAll('li')).toHaveLength(3)
+      expect(screen.getByRole('button', { name: 'Save as snippet' })).toBeTruthy()
+      expect(screen.queryByTestId('create-snippet')).toBeNull()
+    })
+
+    it('does not enter edit mode when the edit item is clicked', () => {
+      // pinned AS-IS: file's edit item is wired to an inert no-op — plan 046
+      // step 4 deliberately wires it to setEditing(true)
+      const setEditing = vi.fn()
+      const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
+      renderWithToolbar({ isSelected: true, isEditing: false, setEditing })
+
+      fireEvent.click(screen.getByTestId('edit-file-upload-card'))
+
+      expect(setEditing).not.toHaveBeenCalled()
+      expect(dispatchSpy).not.toHaveBeenCalled()
+    })
+
+    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
+      const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
+
+      fireEvent.click(screen.getByRole('button', { name: 'Save as snippet' }))
+
+      const toolbars = getToolbars(container)
+      expect(toolbars).toHaveLength(1)
+      expect(toolbars[0].querySelector('ul')).toBeNull()
+      expect(toolbars[0].querySelector('[data-testid="snippet-name"]')).toBeTruthy()
+    })
   })
 })

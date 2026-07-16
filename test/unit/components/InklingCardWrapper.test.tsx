@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import { $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -12,6 +12,7 @@ import InklingComposerContext from '@/context/InklingComposerContext'
 import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { buildDefaultVisibility } from '@/nodes/base/utils/visibility'
 import { HtmlNode } from '@/nodes/HtmlNode'
+import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { VISIBILITY_SETTINGS } from '@/utils/visibility'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -170,5 +171,35 @@ describe('InklingCardWrapper', () => {
 
     rerenderWidth('wide')
     expect(container).toHaveAttribute('data-inkling-card-width', 'wide')
+  })
+
+  it('dispatches EDIT_CARD_COMMAND when the card context setEditing(true) is called', async () => {
+    // the equivalence plan 046 relies on: cards that dispatch
+    // EDIT_CARD_COMMAND directly and cards that call the context's
+    // setEditing(true) reach the same command handler
+    const nodeKey = await addHtmlNode(editor)
+    const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
+    const composerValue = createComposerContext()
+    let captured: React.ContextType<typeof CardContext> | undefined
+    function ContextProbe() {
+      captured = React.useContext(CardContext)
+      return null
+    }
+
+    render(
+      <InklingComposerContext.Provider value={composerValue}>
+        <InklingSelectedCardContext>
+          <InklingCardWrapper nodeKey={nodeKey}>
+            <ContextProbe />
+          </InklingCardWrapper>
+        </InklingSelectedCardContext>
+      </InklingComposerContext.Provider>,
+    )
+
+    act(() => {
+      captured?.setEditing(true)
+    })
+
+    expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: nodeKey })
   })
 })

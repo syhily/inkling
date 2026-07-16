@@ -66,14 +66,14 @@ function createUploadMock(overrides: Partial<UploadMock> = {}): UploadMock {
   }
 }
 
-function createComposerContext(uploads: Record<string, UploadMock> = {}) {
+function createComposerContext(uploads: Record<string, UploadMock> = {}, cardConfig: Record<string, unknown> = {}) {
   const defaultUpload = createUploadMock()
   return {
     fileUploader: {
       useFileUpload: (type: string) => uploads[type] ?? defaultUpload,
       fileTypes: { image: { mimeTypes: ['image/png'] }, video: { mimeTypes: ['video/mp4'] } },
     },
-    cardConfig: {},
+    cardConfig,
     darkMode: false,
     enableMultiplayer: false,
     editorContainerRef: { current: null } as React.RefObject<HTMLElement | null>,
@@ -418,5 +418,121 @@ describe('VideoNodeComponent', () => {
     await flushMacrotask()
     expect(videoUpload.upload).not.toHaveBeenCalled()
     expect(extractVideoMetadata).not.toHaveBeenCalled()
+  })
+
+  describe('action toolbar', () => {
+    function renderWithToolbar(
+      cardOverrides: Record<string, unknown> = {},
+      { thumbnail = 'https://example.com/thumb.jpg', customThumbnail = '', cardConfig = {} } = {},
+    ) {
+      const collaborationValue = createCollaborationContext()
+      const composerValue = createLexicalComposerContext(editor)
+      const inklingComposerValue = createComposerContext({}, cardConfig)
+      const cardValue = createCardContext(cardOverrides)
+
+      return render(
+        <CollaborationContext.Provider value={collaborationValue}>
+          <LexicalComposerContext.Provider value={composerValue}>
+            <InklingComposerContext.Provider value={inklingComposerValue}>
+              <CardContext.Provider value={cardValue}>
+                <VideoNodeComponent
+                  captionEditor={captionEditor}
+                  captionEditorInitialState={undefined}
+                  cardWidth="regular"
+                  customThumbnail={customThumbnail}
+                  initialFile={null}
+                  isLoopChecked={false}
+                  nodeKey="video-1"
+                  thumbnail={thumbnail}
+                  totalDuration="1:23"
+                  triggerFileDialog={false}
+                />
+              </CardContext.Provider>
+            </InklingComposerContext.Provider>
+          </LexicalComposerContext.Provider>
+        </CollaborationContext.Provider>,
+      )
+    }
+
+    function getToolbars(container: HTMLElement) {
+      return container.querySelectorAll('[data-inkling-card-toolbar="video"]')
+    }
+
+    it('hides the toolbar when the card is not selected', () => {
+      const { container } = renderWithToolbar({ isSelected: false, isEditing: false })
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('hides the toolbar while the card is editing', () => {
+      const { container } = renderWithToolbar({ isSelected: true, isEditing: true })
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('hides the toolbar when the card has no thumbnail', () => {
+      const { container } = renderWithToolbar({ isSelected: true, isEditing: false }, { thumbnail: '' })
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('shows the toolbar when only a custom thumbnail is set', () => {
+      const { container } = renderWithToolbar(
+        { isSelected: true, isEditing: false },
+        { thumbnail: '', customThumbnail: 'https://example.com/custom.jpg' },
+      )
+
+      expect(getToolbars(container)).toHaveLength(1)
+    })
+
+    it('renders edit, separator, and snippet items when selected and populated', () => {
+      const { container } = renderWithToolbar(
+        { isSelected: true, isEditing: false },
+        { cardConfig: { createSnippet: vi.fn() } },
+      )
+
+      const toolbars = getToolbars(container)
+      expect(toolbars).toHaveLength(1)
+      const toolbar = toolbars[0]
+      expect(toolbar.querySelectorAll('li')).toHaveLength(3)
+
+      const labels = Array.from(toolbar.querySelectorAll('button')).map((button) => button.getAttribute('aria-label'))
+      expect(labels).toEqual(['Edit', 'Save as snippet'])
+      expect(toolbar.querySelectorAll('button svg')).toHaveLength(2)
+      expect(screen.getByTestId('edit-video-card')).toBeTruthy()
+      expect(screen.getByTestId('create-snippet')).toBeTruthy()
+    })
+
+    it('hides the snippet item and its separator when createSnippet is not configured', () => {
+      const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
+
+      const toolbar = getToolbars(container)[0]
+      expect(toolbar.querySelectorAll('li')).toHaveLength(1)
+      expect(screen.getByTestId('edit-video-card')).toBeTruthy()
+      expect(screen.queryByTestId('create-snippet')).toBeNull()
+    })
+
+    it('enters edit mode through the card context when the edit item is clicked', () => {
+      const setEditing = vi.fn()
+      renderWithToolbar({ isSelected: true, isEditing: false, setEditing })
+
+      fireEvent.click(screen.getByTestId('edit-video-card'))
+
+      expect(setEditing).toHaveBeenCalledWith(true)
+    })
+
+    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
+      const { container } = renderWithToolbar(
+        { isSelected: true, isEditing: false },
+        { cardConfig: { createSnippet: vi.fn() } },
+      )
+
+      fireEvent.click(screen.getByTestId('create-snippet'))
+
+      const toolbars = getToolbars(container)
+      expect(toolbars).toHaveLength(1)
+      expect(toolbars[0].querySelector('ul')).toBeNull()
+      expect(toolbars[0].querySelector('[data-testid="snippet-name"]')).toBeTruthy()
+    })
   })
 })

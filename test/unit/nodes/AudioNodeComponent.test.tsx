@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -42,7 +42,15 @@ function createCardContext(overrides: Partial<React.ContextType<typeof CardConte
   }
 }
 
-function createComposerContext({ upload = vi.fn(() => Promise.resolve(undefined)), isLoading = false } = {}) {
+function createComposerContext({
+  upload = vi.fn(() => Promise.resolve(undefined)),
+  isLoading = false,
+  cardConfig = {},
+}: {
+  upload?: ReturnType<typeof vi.fn>
+  isLoading?: boolean
+  cardConfig?: Record<string, unknown>
+} = {}) {
   return {
     fileUploader: {
       useFileUpload: () => ({
@@ -52,7 +60,7 @@ function createComposerContext({ upload = vi.fn(() => Promise.resolve(undefined)
       }),
       fileTypes: { audio: { mimeTypes: ['audio/mpeg'] }, image: { mimeTypes: ['image/png'] } },
     },
-    cardConfig: {},
+    cardConfig,
     darkMode: false,
     enableMultiplayer: false,
     editorContainerRef: { current: null } as React.RefObject<HTMLElement | null>,
@@ -208,5 +216,102 @@ describe('AudioNodeComponent', () => {
     // the mount effect runs synchronously; give any async work a chance to fire
     await flushMacrotask()
     expect(upload).not.toHaveBeenCalled()
+  })
+
+  describe('action toolbar', () => {
+    function renderWithToolbar(
+      cardOverrides: Record<string, unknown> = {},
+      { src = '/audio.mp3', cardConfig = {} } = {},
+    ) {
+      const composerValue = createComposerContext({ cardConfig })
+      const cardValue = createCardContext(cardOverrides)
+      return render(
+        <InklingComposerContext.Provider value={composerValue}>
+          <CardContext.Provider value={cardValue}>
+            <AudioNodeComponent
+              duration={125}
+              initialFile={undefined}
+              nodeKey="audio-1"
+              src={src}
+              thumbnailSrc=""
+              title="Episode 1"
+              triggerFileDialog={false}
+            />
+          </CardContext.Provider>
+        </InklingComposerContext.Provider>,
+      )
+    }
+
+    function getToolbars(container: HTMLElement) {
+      return container.querySelectorAll('[data-inkling-card-toolbar="audio"]')
+    }
+
+    it('hides the toolbar when the card is not selected', () => {
+      const { container } = renderWithToolbar({ isSelected: false, isEditing: false })
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('hides the toolbar while the card is editing', () => {
+      const { container } = renderWithToolbar({ isSelected: true, isEditing: true })
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('hides the toolbar when the card has no src', () => {
+      const { container } = renderWithToolbar({ isSelected: true, isEditing: false }, { src: '' })
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('renders edit, separator, and snippet items when selected and populated', () => {
+      const { container } = renderWithToolbar(
+        { isSelected: true, isEditing: false },
+        { cardConfig: { createSnippet: vi.fn() } },
+      )
+
+      const toolbars = getToolbars(container)
+      expect(toolbars).toHaveLength(1)
+      const toolbar = toolbars[0]
+      expect(toolbar.querySelectorAll('li')).toHaveLength(3)
+
+      // "Snippet" is audio's deviant label (the other cards read "Save as
+      // snippet") — pinned AS-IS; plan 046 step 3 deliberately renames it
+      const labels = Array.from(toolbar.querySelectorAll('button')).map((button) => button.getAttribute('aria-label'))
+      expect(labels).toEqual(['Edit', 'Snippet'])
+      expect(toolbar.querySelectorAll('button svg')).toHaveLength(2)
+      expect(screen.getByTestId('create-snippet')).toBeTruthy()
+    })
+
+    it('hides the snippet item and its separator when createSnippet is not configured', () => {
+      const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
+
+      const toolbar = getToolbars(container)[0]
+      expect(toolbar.querySelectorAll('li')).toHaveLength(1)
+      expect(screen.queryByTestId('create-snippet')).toBeNull()
+    })
+
+    it('enters edit mode through the card context when the edit item is clicked', () => {
+      const setEditing = vi.fn()
+      renderWithToolbar({ isSelected: true, isEditing: false, setEditing })
+
+      fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+
+      expect(setEditing).toHaveBeenCalledWith(true)
+    })
+
+    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
+      const { container } = renderWithToolbar(
+        { isSelected: true, isEditing: false },
+        { cardConfig: { createSnippet: vi.fn() } },
+      )
+
+      fireEvent.click(screen.getByTestId('create-snippet'))
+
+      const toolbars = getToolbars(container)
+      expect(toolbars).toHaveLength(1)
+      expect(toolbars[0].querySelector('ul')).toBeNull()
+      expect(toolbars[0].querySelector('[data-testid="snippet-name"]')).toBeTruthy()
+    })
   })
 })

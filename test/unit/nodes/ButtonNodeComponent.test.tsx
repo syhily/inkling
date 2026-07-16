@@ -39,7 +39,7 @@ function createCardContext(overrides: Partial<React.ContextType<typeof CardConte
   }
 }
 
-function createComposerContext() {
+function createComposerContext(cardConfig: Record<string, unknown> = {}) {
   return {
     fileUploader: {
       useFileUpload: () => ({
@@ -49,7 +49,7 @@ function createComposerContext() {
       }),
       fileTypes: {},
     },
-    cardConfig: {},
+    cardConfig,
     darkMode: false,
     enableMultiplayer: false,
     editorContainerRef: { current: null } as React.RefObject<HTMLElement | null>,
@@ -127,5 +127,79 @@ describe('ButtonNodeComponent', () => {
 
     fireEvent.click(screen.getByTestId('edit-button-card'))
     expect(setEditing).toHaveBeenCalledWith(true)
+  })
+
+  describe('action toolbar', () => {
+    function renderWithToolbar(cardValue: ReturnType<typeof createCardContext>, cardConfig = {}) {
+      const composerValue = createComposerContext(cardConfig)
+      return render(
+        <InklingComposerContext.Provider value={composerValue}>
+          <CardContext.Provider value={cardValue}>
+            <ButtonNodeComponent
+              alignment="center"
+              buttonText="Subscribe"
+              buttonUrl="https://example.com"
+              nodeKey="button-1"
+            />
+          </CardContext.Provider>
+        </InklingComposerContext.Provider>,
+      )
+    }
+
+    function getToolbars(container: HTMLElement) {
+      return container.querySelectorAll('[data-inkling-card-toolbar="button"]')
+    }
+
+    it('hides the toolbar when the card is not selected', () => {
+      const { container } = renderWithToolbar(createCardContext({ isSelected: false, isEditing: false }))
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('hides the toolbar while the card is editing', () => {
+      const { container } = renderWithToolbar(createCardContext({ isSelected: true, isEditing: true }))
+
+      expect(getToolbars(container)).toHaveLength(0)
+    })
+
+    it('renders edit, separator, and snippet items when selected', () => {
+      const { container } = renderWithToolbar(createCardContext({ isSelected: true, isEditing: false }), {
+        createSnippet: vi.fn(),
+      })
+
+      const toolbars = getToolbars(container)
+      expect(toolbars).toHaveLength(1)
+      const toolbar = toolbars[0]
+      expect(toolbar.querySelectorAll('li')).toHaveLength(3)
+
+      const labels = Array.from(toolbar.querySelectorAll('button')).map((button) => button.getAttribute('aria-label'))
+      expect(labels).toEqual(['Edit', 'Save as snippet'])
+      // every item renders an icon
+      expect(toolbar.querySelectorAll('button svg')).toHaveLength(2)
+      expect(screen.getByTestId('edit-button-card')).toBeTruthy()
+      expect(screen.getByTestId('create-snippet')).toBeTruthy()
+    })
+
+    it('hides the snippet item and its separator when createSnippet is not configured', () => {
+      const { container } = renderWithToolbar(createCardContext({ isSelected: true, isEditing: false }))
+
+      const toolbar = getToolbars(container)[0]
+      expect(toolbar.querySelectorAll('li')).toHaveLength(1)
+      expect(screen.getByTestId('edit-button-card')).toBeTruthy()
+      expect(screen.queryByTestId('create-snippet')).toBeNull()
+    })
+
+    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
+      const { container } = renderWithToolbar(createCardContext({ isSelected: true, isEditing: false }), {
+        createSnippet: vi.fn(),
+      })
+
+      fireEvent.click(screen.getByTestId('create-snippet'))
+
+      const toolbars = getToolbars(container)
+      expect(toolbars).toHaveLength(1)
+      expect(toolbars[0].querySelector('ul')).toBeNull()
+      expect(toolbars[0].querySelector('[data-testid="snippet-name"]')).toBeTruthy()
+    })
   })
 })
