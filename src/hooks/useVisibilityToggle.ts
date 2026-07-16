@@ -3,7 +3,7 @@ import { $getNodeByKey, type LexicalEditor, type NodeKey } from 'lexical'
 import type { CardConfig } from '@/context/InklingComposerContext'
 import type { Visibility } from '@/nodes/base/utils/visibility'
 
-import { $isHtmlNode, $updateCardNode } from '@/nodes/base'
+import { GeneratedDecoratorNodeBase } from '@/nodes/base'
 import {
   VISIBILITY_SETTINGS,
   getVisibilityOptions,
@@ -37,9 +37,10 @@ export const useVisibilityToggle = (
 
   editor.getEditorState().read(() => {
     const htmlNode = $getNodeByKey(nodeKey)
-    if ($isHtmlNode(htmlNode)) {
-      currentVisibility = htmlNode.visibility
+    if (!htmlNode) {
+      return
     }
+    currentVisibility = (htmlNode as GeneratedDecoratorNodeBase).visibility as Visibility
   })
 
   const visibilityData = parseVisibilityToToggles(currentVisibility)
@@ -51,22 +52,28 @@ export const useVisibilityToggle = (
     visibilityOptions,
     toggleVisibility: (type: string, key: string, value: boolean) => {
       editor.update(() => {
-        $updateCardNode(nodeKey, $isHtmlNode, (node) => {
-          const newVisibilityOptions = structuredClone(
-            getVisibilityOptions(node.visibility, {
-              isStripeEnabled,
-              showWeb,
-              showEmail,
-            }),
-          )
-          const toggle = newVisibilityOptions.find((g) => g.key === type)?.toggles?.find((t) => t.key === key)
-          if (!toggle) {
-            return
-          }
+        const node = $getNodeByKey(nodeKey)
+        if (!node) {
+          return
+        }
+        const newVisibilityOptions = structuredClone(
+          getVisibilityOptions((node as GeneratedDecoratorNodeBase).visibility as Visibility, {
+            isStripeEnabled,
+            showWeb,
+            showEmail,
+          }),
+        )
+        const toggle = newVisibilityOptions.find((g) => g.key === type)?.toggles?.find((t) => t.key === key)
+        if (!toggle) {
+          return
+        }
 
-          toggle.checked = value
-          node.visibility = serializeOptionsToVisibility(newVisibilityOptions, node.visibility)
-        })
+        toggle.checked = value
+        const nodeWithVisibility = node as GeneratedDecoratorNodeBase & { visibility: Visibility }
+        nodeWithVisibility.visibility = serializeOptionsToVisibility(
+          newVisibilityOptions,
+          nodeWithVisibility.visibility,
+        )
       })
     },
   }
