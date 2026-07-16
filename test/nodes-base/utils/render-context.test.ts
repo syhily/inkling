@@ -100,6 +100,51 @@ describe('createRenderContext', () => {
     })
   })
 
+  describe('image and markdown data options', () => {
+    it('carries the transform functions by reference', () => {
+      const canTransformImage = (src: string) => src.startsWith('/')
+      const canTransformImageToFormat = (format: string) => format === 'webp'
+      const context = createRenderContext({ dom, canTransformImage, canTransformImageToFormat })
+
+      expect(context.canTransformImage).toBe(canTransformImage)
+      expect(context.canTransformImageToFormat).toBe(canTransformImageToFormat)
+    })
+
+    it('exposes imageOptimization as a frozen snapshot', () => {
+      const imageOptimization = { defaultMaxWidth: 1000, contentImageSizes: { m: { width: 1000 } }, srcsets: true }
+      const context = createRenderContext({ dom, imageOptimization })
+
+      expect(Object.isFrozen(context.imageOptimization)).toBe(true)
+      expect(context.imageOptimization?.defaultMaxWidth).toBe(1000)
+      expect(context.imageOptimization?.contentImageSizes).toEqual({ m: { width: 1000 } })
+      expect(context.imageOptimization?.srcsets).toBe(true)
+
+      imageOptimization.defaultMaxWidth = 600
+      expect(context.imageOptimization?.defaultMaxWidth).toBe(1000)
+    })
+
+    it('carries inklingVersion for the markdown card', () => {
+      const context = createRenderContext({ dom, inklingVersion: '3.9' })
+
+      expect(context.inklingVersion).toBe('3.9')
+    })
+
+    it('leaves the data options undefined when not passed', () => {
+      const context = createRenderContext({ dom })
+
+      expect(context.imageOptimization).toBeUndefined()
+      expect(context.canTransformImage).toBeUndefined()
+      expect(context.canTransformImageToFormat).toBeUndefined()
+      expect(context.inklingVersion).toBeUndefined()
+    })
+
+    it('throws the pinned markdown TypeError for a truthy non-function createDocument', () => {
+      expect(() => createRenderContext({ createDocument: true as unknown as () => Document })).toThrow(
+        /^renderMarkdownNode requires options\.createDocument to be a function$/,
+      )
+    })
+  })
+
   describe('safeUrl', () => {
     const context = createRenderContext({ dom })
 

@@ -33,6 +33,13 @@ export interface ExportDOMOptionsBase {
   canTransformImage?: (src: string) => boolean
   canTransformImageToFormat?: (format: string) => boolean
   imageOptimization?: Record<string, unknown>
+  /**
+   * The markdown card's slug-policy input (consumed by
+   * `markdown-html-renderer`). Previously carried only by the public
+   * `ExportDOMOptions` index signature; promoted to the base (plan 042) so
+   * the render-context factory reads it with real typo-checking.
+   */
+  inklingVersion?: string
   feature?: ExportDOMFeatureOptions
   design?: ExportDOMDesignOptions
 }

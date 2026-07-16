@@ -117,12 +117,30 @@ export function isEmailButtonColorValue(value: string): boolean {
   return COLOR_VALUE_REGEX.test(value) && value !== 'transparent'
 }
 
+/**
+ * The image-optimization keys the image/gallery renderers and the srcset
+ * helper consume, single-sourced here (plan 042) from the three renderer-local
+ * declarations it replaces. The options bag types `imageOptimization` as
+ * `Record<string, unknown>`; the factory casts to this shape inside the seam.
+ */
+export interface ImageOptimizationOptions {
+  defaultMaxWidth?: number
+  contentImageSizes?: Record<string, { width: number }>
+  srcsets?: boolean
+}
+
 export interface RenderContext {
   /** The render target exactly as passed via `options.target` (e.g. `'email'`) — never normalized. */
   readonly target: string | undefined
   readonly imageBaseUrl: string | undefined
   readonly siteUrl: string | undefined
   readonly postUrl: string | undefined
+  /** Frozen snapshot of the image-optimization bag (absent when not passed). */
+  readonly imageOptimization: ImageOptimizationOptions | undefined
+  readonly canTransformImage: ((src: string) => boolean) | undefined
+  readonly canTransformImageToFormat: ((format: string) => boolean) | undefined
+  /** The markdown card's slug-policy input, consumed by `markdown-html-renderer`. */
+  readonly inklingVersion: string | undefined
   /** Frozen snapshots of the feature/design option bags (absent when not passed). */
   readonly feature: Readonly<ExportDOMFeatureOptions> | undefined
   readonly design: Readonly<ExportDOMDesignOptions> | undefined
@@ -187,6 +205,13 @@ export interface RenderContext {
  */
 function resolveCreateDocument(options: ExportDOMOptionsBase): () => Document {
   if (options.createDocument) {
+    // A truthy non-function `createDocument` is a caller bug. The pinned
+    // TypeError message names the historical caller — the check lived in the
+    // markdown renderer (test/nodes-base/nodes/markdown.test.ts pins the exact
+    // message) before plan 042 moved it into the factory.
+    if (typeof options.createDocument !== 'function') {
+      throw new TypeError('renderMarkdownNode requires options.createDocument to be a function')
+    }
     return options.createDocument
   }
 
@@ -221,12 +246,19 @@ export function createRenderContext(options: ExportDOMOptionsBase): RenderContex
   const imageBaseUrl = options.imageBaseUrl
   const feature = options.feature ? Object.freeze({ ...options.feature }) : undefined
   const design = options.design ? Object.freeze({ ...options.design }) : undefined
+  const imageOptimization = options.imageOptimization
+    ? Object.freeze({ ...options.imageOptimization } as ImageOptimizationOptions)
+    : undefined
 
   const context: RenderContext = {
     target,
     imageBaseUrl,
     siteUrl,
     postUrl,
+    imageOptimization,
+    canTransformImage: options.canTransformImage,
+    canTransformImageToFormat: options.canTransformImageToFormat,
+    inklingVersion: options.inklingVersion,
     feature,
     design,
     createDocument,
