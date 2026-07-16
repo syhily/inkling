@@ -3,7 +3,10 @@ import { $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexica
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { CardWidth } from '@/nodes/base/utils/card-widths'
+
 import InklingCardWrapper from '@/components/InklingCardWrapper'
+import CardContext from '@/context/CardContext'
 import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
@@ -75,6 +78,29 @@ function renderWrapper(
   )
 }
 
+function CardWidthProbe({ widths }: { widths: CardWidth[] }) {
+  const { cardWidth } = React.useContext(CardContext)
+  React.useEffect(() => {
+    widths.push(cardWidth)
+  }, [cardWidth, widths])
+  return null
+}
+
+function renderWrapperWithWidth(nodeKey: NodeKey, width: string, widths: CardWidth[]) {
+  const composerValue = createComposerContext()
+  const tree = (nextWidth: string) => (
+    <InklingComposerContext.Provider value={composerValue}>
+      <InklingSelectedCardContext>
+        <InklingCardWrapper nodeKey={nodeKey} width={nextWidth}>
+          <CardWidthProbe widths={widths} />
+        </InklingCardWrapper>
+      </InklingSelectedCardContext>
+    </InklingComposerContext.Provider>
+  )
+  const result = render(tree(width))
+  return { ...result, rerenderWidth: (nextWidth: string) => result.rerender(tree(nextWidth)) }
+}
+
 describe('InklingCardWrapper', () => {
   let editor: LexicalEditor
 
@@ -114,5 +140,35 @@ describe('InklingCardWrapper', () => {
     renderWrapper(nodeKey, { cardConfig: { visibilitySettings: VISIBILITY_SETTINGS.WEB_ONLY } })
 
     expect(screen.getByTestId('visibility-indicator')).toBeInTheDocument()
+  })
+
+  it('syncs the context cardWidth state from the width prop', async () => {
+    const nodeKey = await addHtmlNode(editor)
+    const widths: CardWidth[] = []
+
+    const { rerenderWidth } = renderWrapperWithWidth(nodeKey, 'wide', widths)
+    expect(widths.at(-1)).toBe('wide')
+
+    rerenderWidth('regular')
+    expect(widths.at(-1)).toBe('regular')
+
+    rerenderWidth('wide')
+    expect(widths.at(-1)).toBe('wide')
+  })
+
+  it('keys the decorator parent data attribute off the width prop', async () => {
+    const nodeKey = await addHtmlNode(editor)
+
+    // in this harness the decorator parent element is the render container;
+    // in the product it is Lexical's decorator div
+    const { container, rerenderWidth } = renderWrapperWithWidth(nodeKey, 'wide', [])
+    expect(container).toHaveAttribute('data-inkling-card-width', 'wide')
+
+    // 'regular' deletes the attribute so there is less test churn
+    rerenderWidth('regular')
+    expect(container).not.toHaveAttribute('data-inkling-card-width')
+
+    rerenderWidth('wide')
+    expect(container).toHaveAttribute('data-inkling-card-width', 'wide')
   })
 })

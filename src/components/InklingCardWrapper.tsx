@@ -123,17 +123,21 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
     // so we can target it via CSS for things like spacing between stacked full-width cards
     if (containerRef.current?.parentElement) {
       // avoid setting property when 'regular' so there's less test churn
-      if (cardWidth === 'regular') {
+      if (normalizedWidth === 'regular') {
         delete containerRef.current.parentElement.dataset.inklingCardWidth
       } else {
-        if (cardWidth !== width) {
-          setCardWidth(cardWidth)
-        }
-        // we are now using the width passed from the property instead of the state, as it is the source of truth
-        containerRef.current.parentElement.dataset.inklingCardWidth = width
+        containerRef.current.parentElement.dataset.inklingCardWidth = normalizedWidth
       }
     }
-  }, [cardWidth, containerRef, width])
+  }, [normalizedWidth])
+
+  // the width prop (resolved from the node via the card's declaration) is the
+  // source of truth; the context state follows it so toolbar active states and
+  // the figure attribute track external node changes (undo/redo, collab).
+  // Toolbar writers still dual-write node + state for immediate feedback.
+  React.useEffect(() => {
+    setCardWidth(normalizedWidth)
+  }, [normalizedWidth])
 
   const setEditing = (shouldEdit: boolean) => {
     // convert nodeKey to int
