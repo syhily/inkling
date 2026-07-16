@@ -502,3 +502,65 @@ pins and Step 6's e2e runs remain valid. Steps 4, 5, and 6 are independent of
 the seam and of each other: any of them can be cherry-reverted without
 touching the rest, and Step 5's undo fix (if taken) can ship alone by
 reverting only the seam commits.
+
+## Execution notes
+
+Plan 052 landed in six commits on main (`80ad76d..91990ab`) plus a
+plan amendment (`889c456`) and two post-review fixes (`d915823`,
+`571b7b2`). Execution began with a CORRECTLY-FIRED STOP: the drift check
+found plan 050 had moved the `HR`/`CODE_BLOCK` transformers from
+`MarkdownShortcutPlugin.tsx` to `src/markdown/transformers.ts`, making
+the plan's migration target and its illustrative seam home (which would
+have inverted the one-directional plugins→markdown import layering)
+unexecutable. The orchestrator amendment (`889c456`) retargeted the
+migration to `src/markdown/transformers.ts`, ruled the seam home as
+`src/markdown/card-shortcuts.ts`, restated the public-surface criterion
+(barrel keeps `HR_TRANSFORMER`/`CODE_BLOCK_TRANSFORMER`/five sets from
+`@/markdown/transformers`; seam out of the barrel), and refreshed stale
+facts. Execution then proceeded cleanly: Step 1 (`80ad76d`) 13
+per-trigger pins; Step 2 (`decf40a`) the seam + code-fence migration
+(enter/tab/CODE_BLOCK all delegate; fence regexes named and deliberately
+unflattened); Step 3 (`6e37bef`) HR through the seam as TWO named
+per-trigger variants (markdown trigger keeps the emptied paragraph +
+isImport branch; update-scan trigger creates a fresh trailing paragraph,
+key-pinned); Step 4 (`f0604eb`) the vacuous `hasNodes([])` guard made
+real; Step 5 (`9ec631a`) dirty-set+tag gating (plan-006 idiom) — the
+plan's ONE intentional behavior change, fixing the real
+undo-resurrects-the-card hazard with the sanctioned pin update carrying
+before/after evidence; Step 6 (`91990ab`) EmEnDash recategorized as a
+text plugin (render order preserved before HorizontalRulePlugin).
+
+Characterization corrected two plan facts (pin-the-code rule; plan
+defects, code right): the enter/tab fence regex is NOT end-anchored, so
+over-long languages still transform with the full rest-of-line as
+language (pinned with a documenting comment — a follow-up candidate if
+enter/tab semantics should ever converge with the transformer); and
+`registerKeyboardNavigation.test.ts` had 29 pre-existing cases, not the
+"exactly 50"/"~56" the plan and amendment claimed (grep substring
+artifact). The fence-body merge into ONE shared body
+(`$insertCodeBlockForShortcut`, replace-based) survived hard review:
+`replace()` without includeChildren and `insertAfter()`+`remove()` are
+net-identical here (position, children, final NodeSelection), verified
+against the vendored Lexical 0.46 source; the one nuance — `replace()`
+also remaps the composition key — is strictly safer in an unpinned IME
+edge, recorded for the record. The hand-rolled HR listener is NOT dead
+(its test mounts the no-markdown-transformers configuration and it
+fires); it stays as the consumer-configurable path.
+
+Reviews: spec and quality both APPROVED. Post-review fixes: `d915823`
+documents the one behavior corner the Step-5 commit message understated
+(a `---` paragraph that matched BEFORE the listener registered no longer
+converts on a mere selection-only update — inherent to the prescribed
+idiom) and softens the seam's pin-coverage claim (fresh-key side
+key-pinned; kept-paragraph side covered by import pin + e2e); `571b7b2`
+fixes the CONTEXT.md glossary entry — an unclosed inline triple-backtick
+span (``lang) was making oxfmt mangle every following markdown construct
+in the entry (`_Avoid_:` → `\_Avoid*`, `CODE_BLOCK` → `CODE*BLOCK`);
+closing the span (` ` ``lang ` `) makes the correct text format-stable.
+
+Gates at HEAD: full unit 225 files / 1966 passed / 21 todo;
+nodes-base+html-renderer 48 files / 754 passed / 21 todo;
+text-transforms e2e 49 passed (run twice); `verify:package` PASS (64
+exports — barrel untouched); `verify:types` PASS;
+typecheck/lint/format/lint:css clean. The IME/isComposing pin is noted as
+not simulable in jsdom (plan's fallback), guard carried verbatim.

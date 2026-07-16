@@ -87,7 +87,7 @@ Repo quick reference (verification gates used by every plan):
 | 049 | Name the clipboard-protocol module | P2 | M | — | DONE (`1ed291e`) |
 | 050 | One markdown module, two named dialects | P2 | S | 049 | DONE (`daa4f9f`) |
 | 051 | Card import spec joins the declaration | P2 | L | 043 | DONE (`78a3b6f`) |
-| 052 | Collapse the card shortcuts into one seam | P2 | S | — | TODO |
+| 052 | Collapse the card shortcuts into one seam | P2 | S | — | DONE (`91990ab`) |
 | 053 | Split the at-link module at its node/session seam | P3 | M | — | TODO |
 | 054 | Latent-fix batch from the 2026-07-16 review | P1 | S | — | DONE (`8a131e6`) |
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
