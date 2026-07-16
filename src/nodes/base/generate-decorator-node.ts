@@ -347,7 +347,7 @@ export function generateDecoratorNode<
   // "import spec"); validate it against the property list at class-creation
   // time so a read naming an unknown property fails loudly here.
   if (importSpec) {
-    validateImportSpec(importSpec, internalProps)
+    validateImportSpec(importSpec, internalProps, nodeType)
   }
 
   class GeneratedDecoratorNode extends InklingDecoratorNode {
@@ -377,15 +377,17 @@ export function generateDecoratorNode<
     static importSpec: CardImportSpec | undefined = importSpec
 
     /**
-     * The derived DOM-import conversions (CONTEXT.md: "import spec").
-     * Constructs through `this` — the class Lexical invokes `importDOM` on —
-     * so assembled/wrapper subclasses construct themselves and nested
-     * editors keep populating on paste. Spec-less classes (MarkdownNode;
-     * cards with structural hand-written parsers, which override this) yield
-     * no conversions; Lexical tolerates the null return.
+     * The derived DOM-import conversions (CONTEXT.md: "import spec"). Reads
+     * the spec off `this` — the class Lexical invokes `importDOM` on — so
+     * assembled/wrapper subclasses construct themselves and nested editors
+     * keep populating on paste, and a subclass redeclaring `static importSpec`
+     * derives from its own spec (the same adoption idiom as `nestedEditors`).
+     * Spec-less classes (MarkdownNode; cards with structural hand-written
+     * parsers, which override this) yield no conversions; Lexical tolerates
+     * the null return.
      */
     static importDOM() {
-      return importSpec ? buildImportConversions(importSpec, this) : null
+      return this.importSpec ? buildImportConversions(this.importSpec, this) : null
     }
 
     constructor(data: Partial<DecoratorNodeValueMap<Props, HasVisibility>> = {}, key?: string) {

@@ -77,7 +77,7 @@ export interface ImportClassMapEntry {
  * omits the key.
  */
 export interface ImportReadSpec {
-  /** The card property the read writes; must name a key of the node's `properties` (enforced by `validateImportSpec`). */
+  /** The card property the read writes; must name a key of the node's `properties` (enforced by `validateImportSpec`). Ignored for `kind: 'composite'`, whose writes are named by `provides` instead. */
   name: string
   kind: 'attribute' | 'property' | 'text' | 'html' | 'caption' | 'classMap' | 'composite'
   /** `querySelector` locating the element to read from; reads from the matched element itself when unset. */
@@ -117,7 +117,11 @@ type ImportNodeClass = new (data: any) => LexicalNode
  * the reads, run at class-creation time. Composite reads are checked through
  * their `provides` list.
  */
-export function validateImportSpec(spec: CardImportSpec, properties: readonly DecoratorNodeProperty[]) {
+export function validateImportSpec(
+  spec: CardImportSpec,
+  properties: readonly DecoratorNodeProperty[],
+  nodeType?: string,
+) {
   const propertyNames = new Set(properties.map((prop) => prop.name))
 
   spec.conversions.forEach((conversion) => {
@@ -126,7 +130,7 @@ export function validateImportSpec(spec: CardImportSpec, properties: readonly De
       names.forEach((name) => {
         if (!propertyNames.has(name)) {
           throw new Error(
-            `[generateDecoratorNode] importSpec read "${name}" (tag "${conversion.tag}") does not match a property`,
+            `[generateDecoratorNode] ${nodeType ? `${nodeType}: ` : ''}importSpec read "${name}" (tag "${conversion.tag}") does not match a property`,
           )
         }
       })

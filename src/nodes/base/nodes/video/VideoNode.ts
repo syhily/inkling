@@ -44,7 +44,12 @@ export const videoImportSpec = {
         {
           name: 'cardWidth',
           kind: 'classMap',
-          classMap: [{ pattern: /\binkling-width-(full)\b/ }, { pattern: /\binkling-width-(wide)\b/ }],
+          // token-anchored to reproduce the old classList.contains semantics
+          // exactly (a `\b` pattern would also match `foo-inkling-width-full`)
+          classMap: [
+            { pattern: /(?:^|\s)inkling-width-(full)(?=\s|$)/ },
+            { pattern: /(?:^|\s)inkling-width-(wide)(?=\s|$)/ },
+          ],
           fallback: 'regular',
         },
         {
