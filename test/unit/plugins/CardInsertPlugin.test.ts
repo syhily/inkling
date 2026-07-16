@@ -19,8 +19,8 @@ import { HtmlNode, INSERT_HTML_COMMAND } from '@/nodes/HtmlNode'
 import { ImageNode, INSERT_IMAGE_COMMAND } from '@/nodes/ImageNode'
 import { ToggleNode, INSERT_TOGGLE_COMMAND } from '@/nodes/ToggleNode'
 import { VideoNode, INSERT_VIDEO_COMMAND } from '@/nodes/VideoNode'
+import { INSERT_MEDIA_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
 import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
-import { INSERT_MEDIA_COMMAND } from '@/plugins/DragDropPastePlugin'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
 /**

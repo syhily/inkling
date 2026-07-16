@@ -5,7 +5,7 @@ import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_HIGH, COMMAND_PRIORI
 import React from 'react'
 
 import { CARD_INSERT_COMMANDS, type CardInsertRegistration } from '@/nodes/cards/card-insert-commands'
-import { INSERT_MEDIA_COMMAND } from '@/plugins/DragDropPastePlugin'
+import { INSERT_MEDIA_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
 // command payloads cross an untyped runtime boundary (menu dispatch, external

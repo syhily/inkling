@@ -1,41 +1,41 @@
 import { $insertDataTransferForRichText } from '@lexical/clipboard'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister, $getSelection, $isRangeSelection, COMMAND_PRIORITY_LOW, createCommand } from 'lexical'
+import { mergeRegister, $getSelection, $isRangeSelection, COMMAND_PRIORITY_LOW } from 'lexical'
 import React from 'react'
 
 import { render as markdownRender } from '@/markdown/markdown-html-renderer'
+import {
+  getModifierState,
+  MIME_TEXT_HTML,
+  MIME_TEXT_PLAIN,
+  PASTE_MARKDOWN_COMMAND,
+} from '@/plugins/behaviour/clipboard-protocol'
 import { sanitizeHtml } from '@/utils/sanitize-html'
-export const PASTE_MARKDOWN_COMMAND = createCommand<{ text: string; allowBr: boolean }>('PASTE_MARKDOWN_COMMAND')
-export const MIME_TEXT_PLAIN = 'text/plain'
-export const MIME_TEXT_HTML = 'text/html'
 
 export const MarkdownPastePlugin = () => {
   const [editor] = useLexicalComposerContext()
-  const [isShiftDown, setShiftDown] = React.useState(false)
+  const modifierState = getModifierState(editor)
 
-  React.useEffect(() => {
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'Shift') {
-        setShiftDown(false)
-      }
-    }
-    document.addEventListener('keyup', handleKeyUp)
-    return () => {
-      document.removeEventListener('keyup', handleKeyUp)
-    }
-  }, [setShiftDown])
-
+  // Per-consumer listeners are deliberate: the plugin must work standalone,
+  // and writes into the shared modifier state are idempotent.
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
-        setShiftDown(true)
+        modifierState.current = true
+      }
+    }
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        modifierState.current = false
       }
     }
     document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('keyup', handleKeyUp)
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('keyup', handleKeyUp)
     }
-  }, [setShiftDown])
+  }, [modifierState])
 
   React.useEffect(() => {
     return mergeRegister(
@@ -47,7 +47,7 @@ export const MarkdownPastePlugin = () => {
             return false
           }
           const dataTransfer = new DataTransfer()
-          if (isShiftDown) {
+          if (modifierState.current) {
             dataTransfer.setData(MIME_TEXT_PLAIN, text)
           } else {
             const markdownHtml = markdownRender(text)
@@ -63,7 +63,7 @@ export const MarkdownPastePlugin = () => {
         COMMAND_PRIORITY_LOW,
       ),
     )
-  }, [editor, isShiftDown])
+  }, [editor, modifierState])
 
   return null
 }

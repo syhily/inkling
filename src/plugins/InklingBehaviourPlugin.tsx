@@ -8,6 +8,7 @@ import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
 import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { registerDefaultTransforms } from '@/transforms'
 
+import { getModifierState } from './behaviour/clipboard-protocol'
 import {
   DELETE_CARD_COMMAND,
   DESELECT_CARD_COMMAND,
@@ -58,7 +59,7 @@ function useInklingBehaviour({
   const { setShowVisibilitySettings } = useInklingSelectedCardContext()
   const cardSelectionStore = useCardSelectionStore()
 
-  const isShiftPressed = React.useRef(false)
+  const isShiftPressed = getModifierState(editor)
 
   React.useEffect(() => {
     const keyDown = (event: KeyboardEvent) => {
@@ -76,7 +77,7 @@ function useInklingBehaviour({
       document.removeEventListener('keydown', keyDown)
       document.removeEventListener('keyup', keyUp)
     }
-  }, [])
+  }, [isShiftPressed])
 
   React.useEffect(() => {
     return registerMouseEvents(editor, { containerElem, isNested })
@@ -108,7 +109,7 @@ function useInklingBehaviour({
         setShowVisibilitySettings,
       }),
     )
-  }, [editor, cardSelectionStore, isNested, cursorDidExitAtTop, setShowVisibilitySettings])
+  }, [editor, cardSelectionStore, isNested, cursorDidExitAtTop, setShowVisibilitySettings, isShiftPressed])
 
   // remove alignment formats,
   // denest invalid node nesting,

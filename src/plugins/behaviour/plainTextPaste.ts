@@ -2,9 +2,9 @@ import type { LexicalEditor } from 'lexical'
 
 import { $getSelection, $isRangeSelection } from 'lexical'
 
-import { MIME_TEXT_HTML, MIME_TEXT_PLAIN, PASTE_MARKDOWN_COMMAND } from '@/plugins/MarkdownPastePlugin'
 import { isValidUrl } from '@/utils/isInternalUrl'
 
+import { MIME_TEXT_HTML, MIME_TEXT_PLAIN, PASTE_MARKDOWN_COMMAND } from './clipboard-protocol'
 import { PASTE_LINK_COMMAND } from './commands'
 
 interface PlainTextPasteOptions {

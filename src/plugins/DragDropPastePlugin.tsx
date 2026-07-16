@@ -1,24 +1,16 @@
-import type { BaseSelection, LexicalCommand, LexicalEditor } from 'lexical'
+import type { BaseSelection, LexicalEditor } from 'lexical'
 
 import { $insertDataTransferForRichText } from '@lexical/clipboard'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { DRAG_DROP_PASTE } from '@lexical/rich-text'
-import {
-  $getRoot,
-  $getSelection,
-  COMMAND_PRIORITY_HIGH,
-  COMMAND_PRIORITY_LOW,
-  createCommand,
-  DROP_COMMAND,
-} from 'lexical'
+import { $getRoot, $getSelection, COMMAND_PRIORITY_HIGH, COMMAND_PRIORITY_LOW, DROP_COMMAND } from 'lexical'
 import React from 'react'
 
 import type { FileUploader } from '@/context/InklingHostIntegrationContext'
 
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { INSERT_MEDIA_COMMAND, MIME_TEXT_HTML } from '@/plugins/behaviour/clipboard-protocol'
 import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
-
-export const INSERT_MEDIA_COMMAND: LexicalCommand<{ type: string | undefined; file: File }> = createCommand()
 
 interface ProcessedFile {
   type: string | undefined
@@ -148,7 +140,7 @@ function DragDropPastePlugin() {
       if (!dataTransfer) {
         return
       }
-      const html = dataTransfer.getData('text/html')
+      const html = dataTransfer.getData(MIME_TEXT_HTML)
       if (html) {
         event.preventDefault()
 

@@ -9,7 +9,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { MIME_TEXT_HTML, MIME_TEXT_PLAIN } from '@/plugins/MarkdownPastePlugin'
+import { MIME_TEXT_HTML, MIME_TEXT_PLAIN } from '@/plugins/behaviour/clipboard-protocol'
 import { RestrictContentPlugin } from '@/plugins/RestrictContentPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({

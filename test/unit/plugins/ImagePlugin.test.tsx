@@ -4,8 +4,8 @@ import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type Lex
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ImageNode, INSERT_IMAGE_COMMAND } from '@/nodes/ImageNode'
+import { INSERT_MEDIA_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
 import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
-import { INSERT_MEDIA_COMMAND } from '@/plugins/DragDropPastePlugin'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({

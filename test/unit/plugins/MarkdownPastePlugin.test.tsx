@@ -12,7 +12,8 @@ import {
 import React, { useMemo } from 'react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { MarkdownPastePlugin, PASTE_MARKDOWN_COMMAND } from '@/plugins/MarkdownPastePlugin'
+import { PASTE_MARKDOWN_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
+import { MarkdownPastePlugin } from '@/plugins/MarkdownPastePlugin'
 
 // jsdom does not implement DataTransfer (verified on jsdom 29); the plugin
 // builds one inside its command handler, so shim the minimal setData/getData

@@ -4,9 +4,9 @@ import { $generateNodesFromDOM } from '@lexical/html'
 import { DRAG_DROP_PASTE } from '@lexical/rich-text'
 import { $isRangeSelection, $getSelection, $insertNodes, COMMAND_PRIORITY_LOW, PASTE_COMMAND } from 'lexical'
 
-import { MIME_TEXT_HTML } from '@/plugins/MarkdownPastePlugin'
 import { shouldIgnoreEvent } from '@/utils/shouldIgnoreEvent'
 
+import { MIME_TEXT_HTML } from './clipboard-protocol'
 import { handlePlainTextPaste } from './plainTextPaste'
 
 interface PasteHandlerDeps {
