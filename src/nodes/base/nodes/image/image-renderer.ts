@@ -18,8 +18,8 @@ function isAnimatedImage(url = '') {
 
 interface ImageNodeData {
   src: string
-  width: number
-  height: number
+  width: number | null
+  height: number | null
   alt: string
   title: string
   caption: string
@@ -68,6 +68,8 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
   const { defaultMaxWidth } = context.imageOptimization || {}
   if (
     defaultMaxWidth &&
+    node.width !== null &&
+    node.height !== null &&
     node.width > defaultMaxWidth &&
     context.isLocalContentImage(node.src) &&
     canTransformImage &&
@@ -85,12 +87,15 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
   let picture: HTMLPictureElement | null = null
 
   if (context.variant({ web: true, email: false })) {
-    const imgAttributes = {
-      src: node.src,
-      width: node.width,
-      height: node.height,
+    // a null width yields no srcset below, so skip the call outright
+    if (node.width !== null) {
+      const imgAttributes = {
+        src: node.src,
+        width: node.width,
+        height: node.height,
+      }
+      setSrcsetAttribute(img, imgAttributes, context)
     }
-    setSrcsetAttribute(img, imgAttributes, context)
 
     let sizes: string | undefined
     if (img.getAttribute('srcset') && node.width && node.width >= 720) {
@@ -122,6 +127,11 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
       let sourcesAdded = false
 
       MODERN_IMAGE_FORMATS.forEach((format) => {
+        // a null width yields no srcset from getSrcsetAttribute — skip early
+        if (node.width === null) {
+          return
+        }
+
         if (!context.canTransformImageToFormat!(format)) {
           return
         }
@@ -174,7 +184,7 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
     const contentImageSizes = context.imageOptimization?.contentImageSizes
     if (contentImageSizes && context.isLocalContentImage(node.src) && context.canTransformImage?.(node.src)) {
       // find available image size next up from 2x600 so we can use it for the "retina" src
-      const availableImageWidths = getAvailableImageWidths(node, contentImageSizes)
+      const availableImageWidths = getAvailableImageWidths({ width: node.width }, contentImageSizes)
       const srcWidth = availableImageWidths.find((width) => width >= 1200)
 
       if (!srcWidth || srcWidth === node.width) {

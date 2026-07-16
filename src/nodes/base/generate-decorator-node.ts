@@ -25,16 +25,19 @@ import {
 } from '@/nodes/base/utils/visibility'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
-// Bivariant method syntax so that a render function declared with a concrete
-// node type can be assigned to `RenderFn<TRenderNode, TOutput>`. The render
-// context is the ONLY export-time view a render fn receives besides the node:
-// render policy (target, URL, sanitization, feature/design flags) and the
-// image/markdown data options all live behind it (plans 040/042). The public
-// `exportDOM(editor, options)` entry point builds the context from the
-// options bag; the bag itself never reaches the render fn.
-type RenderFn<TNode = unknown, TOutput extends ExportDOMOutput = ExportDOMOutput> = {
-  bivarianceHack(node: TNode, context: RenderContext): TOutput
-}['bivarianceHack']
+// The render context is the ONLY export-time view a render fn receives
+// besides the node: render policy (target, URL, sanitization, feature/design
+// flags) and the image/markdown data options all live behind it
+// (plans 040/042). The public `exportDOM(editor, options)` entry point
+// builds the context from the options bag; the bag itself never reaches the
+// render fn. The node parameter is typed as the generated instance itself
+// (below), so a render fn's declared node view must be a shape the instance
+// genuinely satisfies — strict parameter contravariance rejects narrower
+// fictions (e.g. `width: number` where the dataset is `number | null`).
+type RenderFn<TNode, TOutput extends ExportDOMOutput = ExportDOMOutput> = (
+  node: TNode,
+  context: RenderContext,
+) => TOutput
 type WidenLiteral<T> = T extends string
   ? string
   : T extends number
@@ -287,10 +290,6 @@ export function generateDecoratorNode<
   Props extends readonly DecoratorNodeProperty[] = readonly [],
   HasVisibility extends boolean = false,
   TOutput extends ExportDOMOutput = ExportDOMOutput,
-  // TRenderNode is inferred from `defaultRenderFn`'s node parameter — the
-  // render fn's declared node type is trusted, not validated against the
-  // generated node shape.
-  TRenderNode = GeneratedDecoratorNodeInstance<DecoratorNodeValueMap<Props, HasVisibility>, TOutput>,
 >({
   nodeType,
   properties,
@@ -302,7 +301,13 @@ export function generateDecoratorNode<
 }: {
   nodeType: string
   properties?: Props
-  defaultRenderFn?: RenderFn<TRenderNode, TOutput>
+  // The render fn's declared node type is checked against the generated
+  // instance shape: it must accept the instance, so every key it reads must
+  // exist on the node's dataset at the dataset's true (widened) type.
+  defaultRenderFn?: RenderFn<
+    GeneratedDecoratorNodeInstance<DecoratorNodeValueMap<Props, HasVisibility>, TOutput>,
+    TOutput
+  >
   version?: number
   hasVisibility?: HasVisibility
   nestedEditors?: readonly NestedEditorSpec[]
@@ -610,7 +615,11 @@ export function generateDecoratorNode<
       // One read-only render context per export — the only export-time view
       // the render fn receives besides the node (plan 042).
       const context = createRenderContext(options)
-      return defaultRenderFn(this as unknown as TRenderNode, context)
+      // The class's dynamic-dataset index signature makes `this` unprovable
+      // as the instance type (see the return-cast note below), but unlike the
+      // old inferred TRenderNode the asserted shape is now TRUE of the
+      // runtime object: the dataset keys at their widened types.
+      return defaultRenderFn(this as unknown as GeneratedDecoratorNodeInstance<GeneratedDataset, TOutput>, context)
     }
 
     /* c8 ignore start */

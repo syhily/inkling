@@ -24,26 +24,6 @@ interface HeaderV2NodeData {
   accentColor: string
 }
 
-interface HeaderV2DatasetNode {
-  __alignment: string
-  __buttonText: string
-  __buttonEnabled: boolean
-  __buttonUrl: string
-  __header: string
-  __subheader: string
-  __backgroundImageSrc: string
-  __backgroundImageWidth: number | null
-  __backgroundImageHeight: number | null
-  __backgroundSize: string
-  __backgroundColor: string
-  __buttonColor: string
-  __layout: string
-  __textColor: string
-  __buttonTextColor: string
-  __swapped: boolean
-  __accentColor: string
-}
-
 // Colors come from document JSON, not just the color picker — constrain to
 // values the picker can produce before interpolating into style/attributes.
 // The predicate is single-sourced in the render-context module; note header
@@ -337,34 +317,14 @@ function emailTemplate(nodeData: HeaderV2NodeData, context: RenderContext) {
         `
 }
 
-export function renderHeaderNodeV2(dataset: HeaderV2DatasetNode, context: RenderContext) {
+export function renderHeaderNodeV2(nodeData: HeaderV2NodeData, context: RenderContext) {
   const document = context.createDocument()
-
-  const node = {
-    alignment: dataset.__alignment,
-    buttonText: dataset.__buttonText,
-    buttonEnabled: dataset.__buttonEnabled,
-    buttonUrl: dataset.__buttonUrl,
-    header: dataset.__header,
-    subheader: dataset.__subheader,
-    backgroundImageSrc: dataset.__backgroundImageSrc,
-    backgroundImageWidth: dataset.__backgroundImageWidth,
-    backgroundImageHeight: dataset.__backgroundImageHeight,
-    backgroundSize: dataset.__backgroundSize,
-    backgroundColor: dataset.__backgroundColor,
-    buttonColor: dataset.__buttonColor,
-    layout: dataset.__layout,
-    textColor: dataset.__textColor,
-    buttonTextColor: dataset.__buttonTextColor,
-    swapped: dataset.__swapped,
-    accentColor: dataset.__accentColor,
-  }
 
   if (context.variant({ web: false, email: true })) {
     const emailDoc = context.createDocument()
     const emailDiv = emailDoc.createElement('div')
 
-    emailDiv.innerHTML = emailTemplate(node, context)?.trim()
+    emailDiv.innerHTML = emailTemplate(nodeData, context)?.trim()
 
     return {
       element: getFirstHtmlElement(emailDiv, 'renderHeaderV2Node email') as HTMLDivElement,
@@ -372,19 +332,19 @@ export function renderHeaderNodeV2(dataset: HeaderV2DatasetNode, context: Render
     }
   }
 
-  const htmlString = cardTemplate(node, context)
+  const htmlString = cardTemplate(nodeData, context)
 
   const element = document.createElement('div')
   element.innerHTML = htmlString?.trim()
 
-  if (node.header === '') {
+  if (nodeData.header === '') {
     const h2Element = element.querySelector('.inkling-header-card-heading')
     if (h2Element) {
       h2Element.remove()
     }
   }
 
-  if (node.subheader === '') {
+  if (nodeData.subheader === '') {
     const pElement = element.querySelector('.inkling-header-card-subheading')
     if (pElement) {
       pElement.remove()

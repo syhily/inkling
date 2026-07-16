@@ -6,6 +6,7 @@ import {
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
 } from '@/nodes/base/generate-decorator-node'
+import { formatVideoDuration } from '@/nodes/base/nodes/video/format-video-duration'
 import { renderVideoNode } from '@/nodes/base/nodes/video/video-renderer'
 
 const videoProperties = [
@@ -152,11 +153,7 @@ export class VideoNode extends generateDecoratorNode({
   }
 
   get formattedDuration() {
-    const minutes = Math.floor(this.duration / 60)
-    const seconds = Math.floor(this.duration - minutes * 60)
-    const paddedSeconds = String(seconds).padStart(2, '0')
-    const formattedDuration = `${minutes}:${paddedSeconds}`
-    return formattedDuration
+    return formatVideoDuration(this.duration)
   }
 }
 

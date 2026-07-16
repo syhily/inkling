@@ -1,5 +1,6 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
+import { formatVideoDuration } from '@/nodes/base/nodes/video/format-video-duration'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
@@ -9,9 +10,9 @@ interface VideoNodeData {
   height: number | null
   caption: string
   loop: boolean
+  duration: number
   thumbnailSrc: string
   customThumbnailSrc: string
-  formattedDuration: string
   cardWidth: string
 }
 
@@ -100,7 +101,7 @@ export function cardTemplate({
                         </button>
                         <span class="inkling-video-current-time">0:00</span>
                         <div class="inkling-video-time">
-                            /<span class="inkling-video-duration">${node.formattedDuration}</span>
+                            /<span class="inkling-video-duration">${formatVideoDuration(node.duration)}</span>
                         </div>
                         <input type="range" class="inkling-video-seek-slider" max="100" value="0">
                         <button class="inkling-video-playback-rate" aria-label="Adjust playback speed">1&#215;</button>

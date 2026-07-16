@@ -17,7 +17,7 @@ interface ValidGalleryImage extends GalleryImage {
 }
 
 interface GalleryNodeData {
-  images: ValidGalleryImage[]
+  images: unknown[]
   caption: string
 }
 
@@ -73,7 +73,7 @@ function buildStructure(images: ValidGalleryImage[]) {
 export function renderGalleryNode(node: GalleryNodeData, context: RenderContext) {
   const document = context.createDocument()
 
-  const validImages = node.images.filter((image) => isValidImage(image, context))
+  const validImages = node.images.filter((image): image is ValidGalleryImage => isValidImage(image, context))
   if (!validImages.length) {
     return renderEmptyContainer(document)
   }

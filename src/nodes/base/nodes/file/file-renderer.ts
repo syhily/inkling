@@ -10,7 +10,6 @@ interface FileNodeData {
   fileCaption: string
   fileName: string
   fileSize: number
-  formattedFileSize: string
 }
 
 export function renderFileNode(node: FileNodeData, context: RenderContext) {
@@ -128,7 +127,9 @@ function cardTemplate(node: FileNodeData, document: Document, context: RenderCon
 
   const filesize = document.createElement('div')
   filesize.setAttribute('class', 'inkling-file-card-filesize')
-  filesize.textContent = node.formattedFileSize || ''
+  // same value the FileNode.formattedFileSize getter computes (bytesToSize
+  // never returns an empty string)
+  filesize.textContent = bytesToSize(node.fileSize)
 
   metadata.appendChild(filename)
   metadata.appendChild(filesize)
