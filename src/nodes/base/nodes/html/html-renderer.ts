@@ -1,5 +1,6 @@
 import type { ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
+import type { Visibility } from '@/nodes/base/utils/visibility'
 
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { wrapReplacementStrings } from '@/nodes/base/utils/replacement-strings'
@@ -7,7 +8,9 @@ import { renderWithVisibility } from '@/nodes/base/utils/visibility'
 
 interface HtmlNodeData {
   html: string
-  visibility?: Record<string, unknown>
+  // HtmlNode is generated with hasVisibility: true, so the constructor
+  // guarantees a Visibility shape here (never absent)
+  visibility: Visibility
 }
 
 export type HtmlExportDOMOutput = ExportDOMOutput<'inner' | 'value' | 'outer'>
