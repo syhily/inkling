@@ -228,7 +228,12 @@ describe('FileNodeComponent', () => {
     })
 
     it('renders edit, separator, and snippet items when selected and populated', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
+      const { container } = renderWithToolbar(
+        { isSelected: true, isEditing: false },
+        {
+          cardConfig: { createSnippet: vi.fn() },
+        },
+      )
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -241,35 +246,40 @@ describe('FileNodeComponent', () => {
       expect(screen.getByTestId('edit-file-upload-card')).toBeTruthy()
     })
 
-    it('renders the snippet item and its separator even when createSnippet is not configured', () => {
-      // pinned AS-IS: file is the only card that does not gate the snippet
-      // item (or its separator) on cardConfig.createSnippet — plan 046 step 4
-      // deliberately adds the gate
+    it('hides the snippet item and its separator when createSnippet is not configured', () => {
+      // plan 046 step 4 deliberate change: file was the only card that did
+      // not gate the snippet item (or its separator) on
+      // cardConfig.createSnippet — the item opened an input whose creation
+      // silently no-oped. It now matches the other ten cards
       const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
 
       const toolbar = getToolbars(container)[0]
-      expect(toolbar.querySelectorAll('li')).toHaveLength(3)
-      expect(screen.getByRole('button', { name: 'Save as snippet' })).toBeTruthy()
+      expect(toolbar.querySelectorAll('li')).toHaveLength(1)
+      expect(screen.queryByRole('button', { name: 'Save as snippet' })).toBeNull()
       expect(screen.queryByTestId('create-snippet')).toBeNull()
     })
 
-    it('does not enter edit mode when the edit item is clicked', () => {
-      // pinned AS-IS: file's edit item is wired to an inert no-op — plan 046
-      // step 4 deliberately wires it to setEditing(true)
+    it('enters edit mode through the card context when the edit item is clicked', () => {
+      // plan 046 step 4 deliberate change: file's edit item was wired to an
+      // inert no-op (preventDefault/stopPropagation only); it now enters the
+      // edit mode FileCard already implements, like every other card
       const setEditing = vi.fn()
-      const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
       renderWithToolbar({ isSelected: true, isEditing: false, setEditing })
 
       fireEvent.click(screen.getByTestId('edit-file-upload-card'))
 
-      expect(setEditing).not.toHaveBeenCalled()
-      expect(dispatchSpy).not.toHaveBeenCalled()
+      expect(setEditing).toHaveBeenCalledWith(true)
     })
 
     it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
+      const { container } = renderWithToolbar(
+        { isSelected: true, isEditing: false },
+        {
+          cardConfig: { createSnippet: vi.fn() },
+        },
+      )
 
-      fireEvent.click(screen.getByRole('button', { name: 'Save as snippet' }))
+      fireEvent.click(screen.getByTestId('create-snippet'))
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)

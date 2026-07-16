@@ -2,10 +2,8 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { type NodeKey } from 'lexical'
 import React from 'react'
 
-import { ActionToolbar } from '@/components/ui/ActionToolbar'
+import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { FileCard } from '@/components/ui/cards/FileCard'
-import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
-import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
@@ -42,9 +40,8 @@ function FileNodeComponent({
   const [editor] = useLexicalComposerContext()
   const [isPopulated, setIsPopulated] = React.useState<boolean>(false)
   const { fileUploader } = React.useContext(InklingComposerContext)
-  const { isSelected, isEditing } = React.useContext(CardContext)
+  const { isEditing } = React.useContext(CardContext)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
-  const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
 
   const uploader = fileUploader.useFileUpload('file')
 
@@ -81,11 +78,6 @@ function FileNodeComponent({
       setIsPopulated(true)
     }
   }, [fileName, fileSize, fileSrc])
-
-  const enableEditing = (e: React.MouseEvent): void => {
-    e.preventDefault()
-    e.stopPropagation()
-  }
 
   const handleFileTitle = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const title = e.target.value
@@ -127,34 +119,12 @@ function FileNodeComponent({
         isPopulated={isPopulated}
         onFileChange={onFileChange as Parameters<typeof FileCard>[0]['onFileChange']}
       />
-      <ActionToolbar data-inkling-card-toolbar="file-upload" isVisible={showSnippetToolbar}>
-        <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
-      </ActionToolbar>
-
-      <ActionToolbar
-        data-inkling-card-toolbar="file-upload"
-        isVisible={isSelected && isPopulated && !isEditing && !showSnippetToolbar}
-      >
-        <ToolbarMenu>
-          <ToolbarMenuItem
-            className={undefined}
-            dataTestId="edit-file-upload-card"
-            icon="edit"
-            isActive={false}
-            label="Edit"
-            onClick={enableEditing}
-          />
-          <ToolbarMenuSeparator hide={undefined} />
-          <ToolbarMenuItem
-            className={undefined}
-            dataTestId={undefined}
-            icon="snippet"
-            isActive={false}
-            label="Save as snippet"
-            onClick={() => setShowSnippetToolbar(true)}
-          />
-        </ToolbarMenu>
-      </ActionToolbar>
+      <CardActionToolbar
+        card="file-upload"
+        items={[{ kind: 'edit', dataTestId: 'edit-file-upload-card' }, { kind: 'separator' }, { kind: 'snippet' }]}
+        nodeKey={nodeKey}
+        visibleWhen={isPopulated}
+      />
     </>
   )
 }
