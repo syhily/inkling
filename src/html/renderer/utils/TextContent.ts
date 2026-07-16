@@ -32,8 +32,8 @@ type Entries<T> = {
 export default class TextContent {
   nodes: LexicalNode[]
   exportChildren: ExportChildren
-  // The render-context seam (plan 040): link-href URL policy goes through
-  // `context.safeUrl`.
+  // The render-context seam (plan 040; plan 042 made it the constructor's
+  // second argument): link-href URL policy goes through `context.safeUrl`.
   context: RenderContext
 
   constructor(exportChildren: ExportChildren, context: RenderContext) {

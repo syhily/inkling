@@ -36,6 +36,10 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  * - `createDocument` resolution absorbed the deleted `addCreateDocumentOption`
  *   helper (Step 6), and `trackIdAttribute` owns the heading-id dedup map the
  *   options bag's `usedIdAttributes` used to carry.
+ * - Plan 042 completed the fold: renderers and transformers receive ONLY
+ *   this context. The data fields it now also carries — `imageOptimization`
+ *   (a frozen snapshot), the `canTransformImage*` callbacks (by reference),
+ *   and `inklingVersion` — are documented at their declarations.
  *
  * The context is read-only: scalar fields are copied, `feature`/`design` are
  * frozen snapshots, and the object itself is frozen. The freeze is shallow —
