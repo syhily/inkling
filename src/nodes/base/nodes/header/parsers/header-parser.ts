@@ -7,10 +7,11 @@ import type { LexicalNode } from 'lexical'
 export function parseHeaderNode(HeaderNode: new (data: Record<string, unknown>) => LexicalNode) {
   return {
     div: (nodeElem: HTMLElement) => {
+      // tagName is guaranteed by Lexical's nodeName dispatch ('div' key)
       const isHeaderCardv2 =
-        nodeElem.classList?.contains('inkling-header-card') && nodeElem.classList?.contains('inkling-v2')
+        nodeElem.classList.contains('inkling-header-card') && nodeElem.classList.contains('inkling-v2')
 
-      if (nodeElem.tagName === 'DIV' && isHeaderCardv2) {
+      if (isHeaderCardv2) {
         return {
           conversion(domNode: HTMLElement) {
             const div = domNode

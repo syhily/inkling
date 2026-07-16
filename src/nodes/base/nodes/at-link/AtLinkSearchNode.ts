@@ -40,7 +40,6 @@ export class AtLinkSearchNode extends TextNode {
 
   createDOM(config: EditorConfig) {
     const span = super.createDOM(config)
-    span.dataset.placeholder = ''
     if (!this.__text) {
       span.dataset.placeholder = this.__placeholder ?? this.defaultPlaceholder
     } else {

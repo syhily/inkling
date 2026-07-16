@@ -19,7 +19,7 @@ export function parseGalleryNode(GalleryNode: new (data: Record<string, unknown>
   return {
     figure: (nodeElem: HTMLElement) => {
       // Inkling gallery card
-      if (nodeElem.classList?.contains('inkling-gallery-card')) {
+      if (nodeElem.classList.contains('inkling-gallery-card')) {
         return {
           conversion(domNode: HTMLElement) {
             const payload: Record<string, unknown> = {}

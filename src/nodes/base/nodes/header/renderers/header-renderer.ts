@@ -324,7 +324,7 @@ export function renderHeaderNodeV2(nodeData: HeaderV2NodeData, context: RenderCo
     const emailDoc = context.createDocument()
     const emailDiv = emailDoc.createElement('div')
 
-    emailDiv.innerHTML = emailTemplate(nodeData, context)?.trim()
+    emailDiv.innerHTML = emailTemplate(nodeData, context).trim()
 
     return {
       element: getFirstHtmlElement(emailDiv, 'renderHeaderV2Node email') as HTMLDivElement,
@@ -335,7 +335,7 @@ export function renderHeaderNodeV2(nodeData: HeaderV2NodeData, context: RenderCo
   const htmlString = cardTemplate(nodeData, context)
 
   const element = document.createElement('div')
-  element.innerHTML = htmlString?.trim()
+  element.innerHTML = htmlString.trim()
 
   if (nodeData.header === '') {
     const h2Element = element.querySelector('.inkling-header-card-heading')

@@ -6,18 +6,18 @@ import type { LexicalNode } from 'lexical'
 export function parseBookmarkNode(BookmarkNode: new (data: Record<string, unknown>) => LexicalNode) {
   return {
     figure: (nodeElem: HTMLElement) => {
-      const isKgBookmarkCard = nodeElem.classList?.contains('inkling-bookmark-card')
-      if (nodeElem.tagName === 'FIGURE' && isKgBookmarkCard) {
+      // tagName is guaranteed by Lexical's nodeName dispatch ('figure' key)
+      if (nodeElem.classList.contains('inkling-bookmark-card')) {
         return {
           conversion(domNode: HTMLElement) {
-            const url = domNode?.querySelector('.inkling-bookmark-container')?.getAttribute('href')
-            const icon = domNode?.querySelector('.inkling-bookmark-icon')?.getAttribute('src')
-            const title = domNode?.querySelector('.inkling-bookmark-title')?.textContent?.trim()
-            const description = domNode?.querySelector('.inkling-bookmark-description')?.textContent?.trim()
-            const author = domNode?.querySelector('.inkling-bookmark-publisher')?.textContent?.trim() // NOTE: This is NOT in error. The classes are reversed for theme backwards-compatibility.
-            const publisher = domNode?.querySelector('.inkling-bookmark-author')?.textContent?.trim() // NOTE: This is NOT in error. The classes are reversed for theme backwards-compatibility.
-            const thumbnail = domNode?.querySelector('.inkling-bookmark-thumbnail img')?.getAttribute('src')
-            const caption = domNode?.querySelector('figure.inkling-bookmark-card figcaption')?.textContent?.trim()
+            const url = domNode.querySelector('.inkling-bookmark-container')?.getAttribute('href')
+            const icon = domNode.querySelector('.inkling-bookmark-icon')?.getAttribute('src')
+            const title = domNode.querySelector('.inkling-bookmark-title')?.textContent?.trim()
+            const description = domNode.querySelector('.inkling-bookmark-description')?.textContent?.trim()
+            const author = domNode.querySelector('.inkling-bookmark-publisher')?.textContent?.trim() // NOTE: This is NOT in error. The classes are reversed for theme backwards-compatibility.
+            const publisher = domNode.querySelector('.inkling-bookmark-author')?.textContent?.trim() // NOTE: This is NOT in error. The classes are reversed for theme backwards-compatibility.
+            const thumbnail = domNode.querySelector('.inkling-bookmark-thumbnail img')?.getAttribute('src')
+            const caption = domNode.querySelector('figure.inkling-bookmark-card figcaption')?.textContent?.trim()
             const payload: Record<string, unknown> = {
               url: url,
               metadata: {
@@ -39,7 +39,8 @@ export function parseBookmarkNode(BookmarkNode: new (data: Record<string, unknow
       return null
     },
     div: (nodeElem: HTMLElement) => {
-      if (nodeElem.nodeType === 1 && nodeElem.tagName === 'DIV' && nodeElem.className.match(/graf--mixtapeEmbed/)) {
+      // nodeType/tagName are guaranteed by Lexical's nodeName dispatch ('div' key)
+      if (nodeElem.className.match(/graf--mixtapeEmbed/)) {
         return {
           conversion(domNode: HTMLElement) {
             // Grab the relevant elements - Anchor wraps most of the data

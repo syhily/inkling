@@ -289,7 +289,7 @@ function getEmptyThumbnailCls(thumbnailSrc: string) {
   return emptyThumbnailCls
 }
 
-function getFormattedDuration(duration = 200) {
+function getFormattedDuration(duration: number) {
   const minutes = Math.floor(duration / 60)
   const seconds = Math.floor(duration - minutes * 60)
   const paddedSeconds = String(seconds).padStart(2, '0')

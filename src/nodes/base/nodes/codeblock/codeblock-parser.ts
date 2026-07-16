@@ -8,8 +8,9 @@ import { readCaptionFromElement } from '@/nodes/base/utils/read-caption-from-ele
 export function parseCodeBlockNode(CodeBlockNode: new (data: Record<string, unknown>) => LexicalNode) {
   return {
     figure: (nodeElem: HTMLElement) => {
+      // tagName is guaranteed by Lexical's nodeName dispatch ('figure' key)
       const pre = nodeElem.querySelector('pre')
-      if (nodeElem.tagName === 'FIGURE' && pre) {
+      if (pre) {
         return {
           conversion(domNode: HTMLElement) {
             const code = pre.querySelector('code')
@@ -42,22 +43,21 @@ export function parseCodeBlockNode(CodeBlockNode: new (data: Record<string, unkn
       return null
     },
     pre: () => ({
+      // tagName is guaranteed by Lexical's nodeName dispatch ('pre' key)
       conversion(domNode: HTMLElement) {
-        if (domNode.tagName === 'PRE') {
-          const [codeElement] = domNode.children
+        const [codeElement] = domNode.children
 
-          if (codeElement && codeElement.tagName === 'CODE') {
-            const payload: Record<string, unknown> = { code: codeElement.textContent }
-            const preClass = domNode.getAttribute('class') || ''
-            const codeClass = codeElement.getAttribute('class') || ''
-            const langRegex = /lang(?:uage)?-(.*?)(?:\s|$)/i
-            const languageMatches = preClass.match(langRegex) || codeClass.match(langRegex)
-            if (languageMatches) {
-              payload.language = languageMatches[1].toLowerCase()
-            }
-            const node = new CodeBlockNode(payload)
-            return { node }
+        if (codeElement && codeElement.tagName === 'CODE') {
+          const payload: Record<string, unknown> = { code: codeElement.textContent }
+          const preClass = domNode.getAttribute('class') || ''
+          const codeClass = codeElement.getAttribute('class') || ''
+          const langRegex = /lang(?:uage)?-(.*?)(?:\s|$)/i
+          const languageMatches = preClass.match(langRegex) || codeClass.match(langRegex)
+          if (languageMatches) {
+            payload.language = languageMatches[1].toLowerCase()
           }
+          const node = new CodeBlockNode(payload)
+          return { node }
         }
 
         return null

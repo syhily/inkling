@@ -70,5 +70,5 @@ export function parseHtmlNode(HtmlNode: new (data: Record<string, unknown>) => L
 }
 
 function isHtmlEndComment(node: Node) {
-  return node && node.nodeType === 8 && node.nodeValue?.trim().match(/^inkling-card-end:\s?html$/)
+  return node.nodeType === 8 && node.nodeValue?.trim().match(/^inkling-card-end:\s?html$/)
 }
