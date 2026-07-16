@@ -29,6 +29,22 @@ import {
 // Headless half of the at-link plugin: node lifecycle (insertion, shape
 // transform, command guards). The React half (search session + popup) lives
 // in src/plugins/AtLinkPlugin.tsx and consumes these registrations.
+//
+// Both insertion paths share $insertAtLink; the deliberate asymmetries
+// between them (document why, don't flatten):
+// 1. The native before-regex (/(^|\s)@$/) includes the literal '@' because
+//    it runs AFTER the browser inserted the character; the controlled
+//    check ($shouldConvertAtLink) runs pre-insertion and must not see one.
+// 2. The native predicate ($shouldConvertInsertedAt) accepts only text
+//    anchors — the post-insertion selection is always text; the
+//    element-anchor branch (empty paragraph) exists only in the
+//    pre-insertion path.
+// 3. Both paths skip during composition (event.isComposing /
+//    editor.isComposing()) — identical IME safety, kept at their own
+//    layers.
+// 4. The paths are mutually exclusive in practice: a consumed controlled
+//    command prevents DOM insertion, so no 'input' event fires. The native
+//    listener is fallback-only; both registrations stay.
 
 export function $removeAtLink(node: AtLinkNode, { focus = false } = {}) {
   if (!$isAtLinkNode(node)) {
@@ -152,8 +168,54 @@ export function $insertAtLink(): boolean {
   return true
 }
 
+// Detection predicate for the native fallback: should a just-inserted '@'
+// become an at-link? Text anchors only — the post-insertion selection is
+// always text (see the module header for the deliberate asymmetries with
+// the pre-insertion $shouldConvertAtLink).
+export function $shouldConvertInsertedAt(): boolean {
+  // get the current selection
+  const selection = $getSelection()
+  if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
+    return false
+  }
+
+  const anchor = selection.anchor
+  if (anchor.type !== 'text') {
+    return false
+  }
+
+  const anchorNode = anchor.getNode()
+  if (!anchorNode.isSimpleText()) {
+    return false
+  }
+
+  const anchorOffset = anchor.offset
+  let textBeforeAnchor = anchorNode.getTextContent().slice(0, anchorOffset)
+  let textAfterAnchor = anchorNode.getTextContent().slice(anchorOffset)
+
+  // adjust before/after text if we're immediately preceded/followed by a text node
+  // because that content needs to be accounted for in our regex match
+  const prevSibling = anchorNode.getPreviousSibling()
+  const nextSibling = anchorNode.getNextSibling()
+
+  if (anchorOffset === 0 && $isTextNode(prevSibling)) {
+    textBeforeAnchor = prevSibling.getTextContent()
+  }
+
+  if (anchorOffset === anchorNode.getTextContent().length && $isTextNode(nextSibling)) {
+    textAfterAnchor = nextSibling.getTextContent()
+  }
+
+  const textBeforeRegExp = /(^|\s)@$/
+  const textAfterRegExp = /^($|\s|\.)/
+
+  return textBeforeRegExp.test(textBeforeAnchor) && textAfterRegExp.test(textAfterAnchor)
+}
+
 // Native 'input' fallback for the rare case where Lexical lets the browser
 // insert text without dispatching CONTROLLED_TEXT_INSERTION_COMMAND.
+// Detection-only: the update phase deletes the just-inserted '@' and
+// delegates to the shared $insertAtLink.
 function registerNativeAtLinkInsertion(editor: LexicalEditor) {
   const rootElement = editor.getRootElement()
   if (!rootElement) {
@@ -166,49 +228,7 @@ function registerNativeAtLinkInsertion(editor: LexicalEditor) {
     }
 
     if (event.inputType === 'insertText' && event.data === '@') {
-      let replaceAt = false
-
-      editor.getEditorState().read(() => {
-        // get the current selection
-        const selection = $getSelection()
-        if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
-          return
-        }
-
-        const anchor = selection.anchor
-        if (anchor.type !== 'text') {
-          return
-        }
-
-        const anchorNode = anchor.getNode()
-        if (!anchorNode.isSimpleText()) {
-          return
-        }
-
-        const anchorOffset = anchor.offset
-        let textBeforeAnchor = anchorNode.getTextContent().slice(0, anchorOffset)
-        let textAfterAnchor = anchorNode.getTextContent().slice(anchorOffset)
-
-        // adjust before/after text if we're immediately preceded/followed by a text node
-        // because that content needs to be accounted for in our regex match
-        const prevSibling = anchorNode.getPreviousSibling()
-        const nextSibling = anchorNode.getNextSibling()
-
-        if (anchorOffset === 0 && $isTextNode(prevSibling)) {
-          textBeforeAnchor = prevSibling.getTextContent()
-        }
-
-        if (anchorOffset === anchorNode.getTextContent().length && $isTextNode(nextSibling)) {
-          textAfterAnchor = nextSibling.getTextContent()
-        }
-
-        const textBeforeRegExp = /(^|\s)@$/
-        const textAfterRegExp = /^($|\s|\.)/
-
-        if (textBeforeRegExp.test(textBeforeAnchor) && textAfterRegExp.test(textAfterAnchor)) {
-          replaceAt = true
-        }
-      })
+      const replaceAt = editor.getEditorState().read(() => $shouldConvertInsertedAt())
 
       if (replaceAt) {
         editor.update(() => {
@@ -218,36 +238,13 @@ function registerNativeAtLinkInsertion(editor: LexicalEditor) {
             return
           }
 
-          // store current node's format so it can be re-applied to the eventual link node
-          const anchorNode = selection.anchor.getNode()
-          if (!$isTextNode(anchorNode)) {
-            return
-          }
-          const linkFormat = anchorNode.getFormat()
-
-          // delete the '@' character
+          // delete the '@' character — the post-deletion state equals the
+          // pre-insertion state the controlled path sees, so the shared
+          // insert's own $shouldConvertAtLink() re-check passes (kept: it
+          // keeps $insertAtLink total, and it is cheap)
           selection.deleteCharacter(true)
 
-          // prep the at-link node
-          const atLinkNode = $createAtLinkNode()
-          atLinkNode.setLinkFormat(linkFormat)
-          const zwnjNode = $createZWNJNode()
-          atLinkNode.append(zwnjNode)
-          const atLinkSearchNode = $createAtLinkSearchNode('')
-          atLinkNode.append(atLinkSearchNode)
-
-          // insert it
-          selection.insertNodes([atLinkNode])
-
-          // ensure we still have a cursor and it's inside the search node
-          atLinkNode.select(1, 1)
-
-          const searchNode = atLinkNode.getChildAtIndex(1)
-          const rangeSelection = $getSelection()
-          if ($isAtLinkSearchNode(searchNode) && $isRangeSelection(rangeSelection)) {
-            rangeSelection.anchor.set(searchNode.getKey(), 0, 'text')
-            rangeSelection.focus.set(searchNode.getKey(), 0, 'text')
-          }
+          $insertAtLink()
         })
       }
     }

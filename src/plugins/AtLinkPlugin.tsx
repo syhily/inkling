@@ -33,7 +33,9 @@ interface AtLinkPluginProps {
   siteUrl?: CardConfig['siteUrl']
 }
 
-// Manages at-link search nodes and display of the search results panel when appropriate
+// At-link search session: tracks the focused at-link node and query, and
+// renders the search results popup. The headless node lifecycle (insertion,
+// shape transform, command guards) lives in ./behaviour/at-link.
 export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps) => {
   const [editor] = useLexicalComposerContext()
   const [focusedAtLinkNode, setFocusedAtLinkNode] = React.useState<AtLinkNode | null>(null)
