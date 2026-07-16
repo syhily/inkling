@@ -411,8 +411,7 @@ function useSlashCardMenu(editor: LexicalEditor) {
           <CardMenu
             closeMenu={closeMenu}
             insert={insert}
-            // oxlint-disable-next-line typescript/no-explicit-any
-            menu={cardMenu.menu as any}
+            menu={cardMenu.menu}
             scrollToSelectedItem={scrollToSelectedItem}
             selectedItemIndex={selectedItemIndex}
           />

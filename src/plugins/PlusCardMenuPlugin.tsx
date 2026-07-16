@@ -2,7 +2,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getSelection, $isParagraphNode, $isRangeSelection, $setSelection, type LexicalEditor } from 'lexical'
 import React from 'react'
 
-import { CardMenu, type CardMenuItemData } from '@/components/ui/CardMenu'
+import { CardMenu } from '@/components/ui/CardMenu'
 import { PlusButton, PlusMenu } from '@/components/ui/PlusMenu'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { buildCardMenu } from '@/utils/buildCardMenu'
@@ -261,7 +261,7 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
         {isShowingButton && <PlusButton onClick={openMenu} />}
         {isShowingMenu && (
           <PlusMenu>
-            <CardMenu closeMenu={closeMenu} insert={insert} menu={cardMenu.menu as Map<string, CardMenuItemData[]>} />
+            <CardMenu closeMenu={closeMenu} insert={insert} menu={cardMenu.menu} />
           </PlusMenu>
         )}
       </div>

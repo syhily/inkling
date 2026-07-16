@@ -4,13 +4,12 @@ import type { CardMenuNodeClass } from '@/utils/inkling-node-class'
 import SnippetCardIcon from '@/assets/icons/inkling-card-type-snippet.svg?react'
 import { INSERT_SNIPPET_COMMAND } from '@/plugins/InklingSnippetPlugin'
 
-export interface MenuItem {
+interface MenuItemBase {
   nodeType?: string
   label: string
   desc?: string
   Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
   insertCommand?: unknown
-  insertParams?: unknown
   matches?: ((query: string, label: string) => boolean) | string[]
   priority?: number
   shortcut?: string
@@ -22,12 +21,22 @@ export interface MenuItem {
   [key: string]: unknown
 }
 
+export interface MenuItem extends MenuItemBase {
+  insertParams?: Record<string, unknown> | ((args: { config: CardConfig | undefined }) => Record<string, unknown>)
+}
+
+/** A `MenuItem` after `buildCardMenu` has resolved function-valued `insertParams`
+ * against the host config — consumers always see plain data. */
+export interface ResolvedMenuItem extends MenuItemBase {
+  insertParams?: Record<string, unknown>
+}
+
 export interface BuildCardMenuConfig {
   config?: CardConfig
 }
 
 export interface BuildCardMenuResult {
-  menu: Map<string, MenuItem[]>
+  menu: Map<string, ResolvedMenuItem[]>
   maxItemIndex: number
 }
 
@@ -35,7 +44,7 @@ export function buildCardMenu(
   nodes: Map<string, CardMenuNodeClass> | Iterable<[string, CardMenuNodeClass]>,
   { query, config }: { query?: string; config?: CardConfig } = {},
 ): BuildCardMenuResult {
-  let menu = new Map<string, MenuItem[]>()
+  let menu = new Map<string, ResolvedMenuItem[]>()
 
   const lowerQuery = query?.toLowerCase()
 
@@ -62,18 +71,19 @@ export function buildCardMenu(
       return
     }
 
-    if (typeof item.insertParams === 'function') {
-      ;(item as Record<string, unknown>).insertParams = (
-        item.insertParams as (args: { config: CardConfig | undefined }) => unknown
-      )({ config })
+    // resolve function-valued insertParams against the host config (e.g.
+    // Header's version stamp) so the menu always carries plain data
+    const resolvedItem: ResolvedMenuItem = {
+      ...item,
+      insertParams: typeof item.insertParams === 'function' ? item.insertParams({ config }) : item.insertParams,
     }
 
-    const section = item.section || 'Primary'
+    const section = resolvedItem.section || 'Primary'
 
     if (!menu.has(section)) {
-      menu.set(section, [item])
+      menu.set(section, [resolvedItem])
     } else {
-      menu.get(section)?.push(item)
+      menu.get(section)?.push(resolvedItem)
     }
 
     maxItemIndex = maxItemIndex + 1
@@ -126,7 +136,9 @@ export function buildCardMenu(
   return { menu, maxItemIndex }
 }
 
-interface SnippetData {
+// a type alias (not interface) so the object-literal shape gets an implicit
+// index signature and can flow into MenuItem.insertParams: Record<string, unknown>
+type SnippetData = {
   name: string
   value?: string
 }
