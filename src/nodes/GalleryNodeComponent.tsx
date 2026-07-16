@@ -2,7 +2,6 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 
-import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
 import type { GalleryImage } from '@/types/gallery'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
@@ -13,6 +12,7 @@ import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import useGalleryReorder from '@/hooks/useGalleryReorder'
+import { $isGalleryNode, $updateCardNode } from '@/nodes/base'
 import { MAX_IMAGES, recalculateImageRows } from '@/nodes/GalleryNode'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import { revokePreviewUrl } from '@/utils/revokePreviewUrl'
@@ -48,7 +48,8 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
   const [images, setImages] = React.useState<GalleryImage[]>(() => {
     const existingImages = editor.getEditorState().read(() => {
       const node = $getNodeByKey(nodeKey)
-      return (node as GeneratedDecoratorNodeBase).images as GalleryImage[] | undefined
+      // `images` is `unknown[]` on the node type; narrowed locally to GalleryImage[]
+      return $isGalleryNode(node) ? (node.images as GalleryImage[] | undefined) : undefined
     })
     return existingImages ?? []
   })
@@ -71,11 +72,7 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
 
   function setNodeImages(newImages: GalleryImage[]): void {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      const galleryNode = node as GeneratedDecoratorNodeBase | null
-      if (galleryNode && typeof galleryNode.setImages === 'function') {
-        ;(galleryNode.setImages as (images: GalleryImage[]) => void)(newImages)
-      }
+      $updateCardNode(nodeKey, $isGalleryNode, (node) => node.setImages(newImages))
     })
   }
 

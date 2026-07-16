@@ -1,8 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
+import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
-
-import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { CalloutCard } from '@/components/ui/cards/CalloutCard'
@@ -10,6 +8,7 @@ import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
+import { $isCalloutNode, $updateCardNode } from '@/nodes/base'
 
 export interface CalloutNodeComponentProps {
   nodeKey: NodeKey
@@ -36,10 +35,9 @@ export function CalloutNodeComponent({
   const handleEmojiChange = React.useCallback(
     (newEmoji: string): void => {
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if (node) {
-          ;(node as GeneratedDecoratorNodeBase).calloutEmoji = newEmoji
-        }
+        $updateCardNode(nodeKey, $isCalloutNode, (node) => {
+          node.calloutEmoji = newEmoji
+        })
       })
     },
     [editor, nodeKey],
@@ -70,10 +68,9 @@ export function CalloutNodeComponent({
       return
     }
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).backgroundColor = color
-      }
+      $updateCardNode(nodeKey, $isCalloutNode, (node) => {
+        node.backgroundColor = color
+      })
     })
   }
 

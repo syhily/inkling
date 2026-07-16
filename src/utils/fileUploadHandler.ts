@@ -1,6 +1,6 @@
-import { $getNodeByKey, type LexicalEditor, type NodeKey } from 'lexical'
+import { type LexicalEditor, type NodeKey } from 'lexical'
 
-import { GeneratedDecoratorNodeBase } from '@/nodes/base'
+import { $isFileNode, $updateCardNode } from '@/nodes/base'
 
 export const stripFileExtension = (fileName: string): string => {
   const fileExtension = fileName.split('.').pop() ?? ''
@@ -39,14 +39,12 @@ export const fileUploadHandler = async (
     src: src ?? '',
   }
   await editor.update(() => {
-    const node = $getNodeByKey(nodeKey)
-    if (node) {
-      const n = node as GeneratedDecoratorNodeBase
-      n.fileTitle = stripFileExtension(dataset.fileName)
-      n.fileName = dataset.fileName
-      n.fileSize = dataset.fileSize
-      n.src = dataset.src
-    }
+    $updateCardNode(nodeKey, $isFileNode, (node) => {
+      node.fileTitle = stripFileExtension(dataset.fileName)
+      node.fileName = dataset.fileName
+      node.fileSize = dataset.fileSize
+      node.src = dataset.src
+    })
   })
 
   return

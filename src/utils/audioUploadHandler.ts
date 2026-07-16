@@ -1,6 +1,6 @@
-import { $getNodeByKey, type LexicalEditor, type NodeKey } from 'lexical'
+import { type LexicalEditor, type NodeKey } from 'lexical'
 
-import { GeneratedDecoratorNodeBase } from '@/nodes/base'
+import { $isAudioNode, $updateCardNode } from '@/nodes/base'
 import { getAudioMetadata } from '@/utils/getAudioMetadata'
 import prettifyFileName from '@/utils/prettifyFileName'
 import { revokePreviewUrl } from '@/utils/revokePreviewUrl'
@@ -37,14 +37,12 @@ export const audioUploadHandler = async (
     const { duration } = await getAudioMetadata(objectURL)
 
     await editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        const n = node as GeneratedDecoratorNodeBase
-        n.duration = duration
-        n.src = fileSrc
-        n.mimeType = mimeType
-        n.title = title
-      }
+      $updateCardNode(nodeKey, $isAudioNode, (node) => {
+        node.duration = duration
+        node.src = fileSrc
+        node.mimeType = mimeType
+        node.title = title
+      })
     })
   } finally {
     revokePreviewUrl(objectURL)

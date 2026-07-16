@@ -28,6 +28,10 @@ _Avoid_: environment, platform
 The read-only, per-render-pass view of export-time policy and data that is the sole export-time view a card renderer receives besides the node: URL safety, sanitization, render-target branching, feature/design flags, color checks, document resolution, heading-id tracking, image/markdown data options. The public entry points (`exportDOM(editor, options)`, `$convertToHtmlString`, `LexicalHTMLRenderer.render`) still accept the export options and build the context from them. Card sources must not import the policy modules directly — an import guard enforces the seam.
 _Avoid_: options bag, policy object
 
+**Card write seam**:
+The single typed write path for card-node fields: `$updateCardNode(nodeKey, guard, update)` (src/nodes/base/update-card-node.ts), called inside `editor.update()`. The card's own `$is*` guard narrows the node, so every field the mutator writes is checked against the card's node type.
+_Avoid_: `$getNodeByKey` + `as GeneratedDecoratorNodeBase`
+
 **Card selection store**:
 The per-top-level-composer, editor-side store owning card-selection truth for non-React code: the selected card key and the edit-mode flag. Fed once by registerCardSelection, read synchronously by command handlers, subscribed to render-only by React via useCardSelection.
 _Avoid_: selection context, selection mirror, selected-card state

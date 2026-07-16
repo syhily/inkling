@@ -11,14 +11,13 @@ import {
 } from 'lexical'
 import React, { useCallback } from 'react'
 
-import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
-
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
 import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
+import { $isBookmarkNode, $updateCardNode } from '@/nodes/base'
 import trackEvent from '@/utils/analytics'
 import { isInternalUrl } from '@/utils/isInternalUrl'
 
@@ -165,17 +164,15 @@ export function BookmarkNodeComponent({
       return
     }
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        const n = node as GeneratedDecoratorNodeBase
-        n.url = href
-        n.author = response.metadata.author
-        n.icon = response.metadata.icon
-        n.title = response.metadata.title
-        n.description = response.metadata.description
-        n.publisher = response.metadata.publisher
-        n.thumbnail = response.metadata.thumbnail
-      }
+      $updateCardNode(nodeKey, $isBookmarkNode, (node) => {
+        node.url = href
+        node.author = response.metadata.author
+        node.icon = response.metadata.icon
+        node.title = response.metadata.title
+        node.description = response.metadata.description
+        node.publisher = response.metadata.publisher
+        node.thumbnail = response.metadata.thumbnail
+      })
     })
     setLoading(false)
   }
@@ -197,21 +194,19 @@ export function BookmarkNodeComponent({
       return
     }
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        const n = node as GeneratedDecoratorNodeBase
-        n.url = response.url
-        n.author = response.metadata.author
-        n.icon = response.metadata.icon
-        n.title = response.metadata.title
-        n.description = response.metadata.description
-        n.publisher = response.metadata.publisher
-        n.thumbnail = response.metadata.thumbnail
+      $updateCardNode(nodeKey, $isBookmarkNode, (node) => {
+        node.url = response.url
+        node.author = response.metadata.author
+        node.icon = response.metadata.icon
+        node.title = response.metadata.title
+        node.description = response.metadata.description
+        node.publisher = response.metadata.publisher
+        node.thumbnail = response.metadata.thumbnail
 
         if (createdWithUrl) {
-          n.selectNext()
+          node.selectNext()
         }
-      }
+      })
     })
     setLoading(false)
     // We only do this for init

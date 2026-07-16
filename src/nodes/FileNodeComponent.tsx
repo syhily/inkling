@@ -1,8 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getNodeByKey, type NodeKey } from 'lexical'
+import { type NodeKey } from 'lexical'
 import React from 'react'
-
-import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { FileCard } from '@/components/ui/cards/FileCard'
@@ -11,6 +9,7 @@ import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
+import { $isFileNode, $updateCardNode } from '@/nodes/base'
 import { fileUploadHandler } from '@/utils/fileUploadHandler'
 import { openFileSelection } from '@/utils/openFileSelection'
 
@@ -76,10 +75,9 @@ function FileNodeComponent({
 
     // reset original src so it can be replaced with preview and upload progress
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).src = ''
-      }
+      $updateCardNode(nodeKey, $isFileNode, (node) => {
+        node.src = ''
+      })
     })
 
     return await fileUploadHandler(files, nodeKey, editor, uploader.upload)
@@ -100,10 +98,9 @@ function FileNodeComponent({
     const title = e.target.value
 
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).fileTitle = title
-      }
+      $updateCardNode(nodeKey, $isFileNode, (node) => {
+        node.fileTitle = title
+      })
     })
   }
 
@@ -111,10 +108,9 @@ function FileNodeComponent({
     const desc = e.target.value
 
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).fileCaption = desc
-      }
+      $updateCardNode(nodeKey, $isFileNode, (node) => {
+        node.fileCaption = desc
+      })
     })
   }
 
@@ -127,10 +123,9 @@ function FileNodeComponent({
       openFileSelection({ fileInputRef })
 
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if (node) {
-          ;(node as GeneratedDecoratorNodeBase).triggerFileDialog = false
-        }
+        $updateCardNode(nodeKey, $isFileNode, (node) => {
+          node.triggerFileDialog = false
+        })
       })
     })
 

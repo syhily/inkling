@@ -1,6 +1,6 @@
-import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
+import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 
-import { GeneratedDecoratorNodeBase } from '@/nodes/base'
+import { $isImageNode, $updateCardNode } from '@/nodes/base'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import { revokePreviewUrl } from '@/utils/revokePreviewUrl'
 
@@ -21,10 +21,9 @@ export const imageUploadHandler = async (
 
   try {
     await editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).previewSrc = previewUrl
-      }
+      $updateCardNode(nodeKey, $isImageNode, (node) => {
+        node.previewSrc = previewUrl
+      })
     })
 
     // use the local object URL to grab metadata
@@ -36,14 +35,12 @@ export const imageUploadHandler = async (
 
     // replace preview URL with real URL and set image metadata
     await editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        const n = node as GeneratedDecoratorNodeBase
-        n.width = width
-        n.height = height
-        n.src = imageSrc ?? ''
-        n.previewSrc = null
-      }
+      $updateCardNode(nodeKey, $isImageNode, (node) => {
+        node.width = width
+        node.height = height
+        node.src = imageSrc ?? ''
+        node.previewSrc = null
+      })
     })
   } finally {
     revokePreviewUrl(previewUrl)

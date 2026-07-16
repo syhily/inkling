@@ -1,9 +1,8 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
+import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React, { useState } from 'react'
 
 import type { FileChangeEvent } from '@/components/ui/cards/AudioCard'
-import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { VideoCard } from '@/components/ui/cards/VideoCard'
@@ -12,6 +11,7 @@ import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
+import { $isVideoNode, $updateCardNode } from '@/nodes/base'
 import { isCardWidth } from '@/nodes/base/utils/card-widths'
 import extractVideoMetadata from '@/utils/extractVideoMetadata'
 import { getImageDimensions } from '@/utils/getImageDimensions'
@@ -127,19 +127,18 @@ export function VideoNodeComponent({
 
     if (videoUrl) {
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if (node) {
-          ;(node as GeneratedDecoratorNodeBase).src = videoUrl
-          ;(node as GeneratedDecoratorNodeBase).duration = duration
-          ;(node as GeneratedDecoratorNodeBase).fileName = file.name
-          ;(node as GeneratedDecoratorNodeBase).width = width
-          ;(node as GeneratedDecoratorNodeBase).height = height
-          ;(node as GeneratedDecoratorNodeBase).mimeType = mimeType
-          if (!(node as GeneratedDecoratorNodeBase).customThumbnailSrc) {
-            ;(node as GeneratedDecoratorNodeBase).thumbnailWidth = width
-            ;(node as GeneratedDecoratorNodeBase).thumbnailHeight = height
+        $updateCardNode(nodeKey, $isVideoNode, (node) => {
+          node.src = videoUrl
+          node.duration = duration
+          node.fileName = file.name
+          node.width = width
+          node.height = height
+          node.mimeType = mimeType
+          if (!node.customThumbnailSrc) {
+            node.thumbnailWidth = width
+            node.thumbnailHeight = height
           }
-        }
+        })
       })
     }
 
@@ -153,10 +152,9 @@ export function VideoNodeComponent({
 
     if (imageUrl) {
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if (node) {
-          ;(node as GeneratedDecoratorNodeBase).thumbnailSrc = imageUrl
-        }
+        $updateCardNode(nodeKey, $isVideoNode, (node) => {
+          node.thumbnailSrc = imageUrl
+        })
       })
     }
 
@@ -181,12 +179,11 @@ export function VideoNodeComponent({
 
     if (imageUrl) {
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if (node) {
-          ;(node as GeneratedDecoratorNodeBase).customThumbnailSrc = imageUrl
-          ;(node as GeneratedDecoratorNodeBase).thumbnailWidth = width
-          ;(node as GeneratedDecoratorNodeBase).thumbnailHeight = height
-        }
+        $updateCardNode(nodeKey, $isVideoNode, (node) => {
+          node.customThumbnailSrc = imageUrl
+          node.thumbnailWidth = width
+          node.thumbnailHeight = height
+        })
       })
     }
   }
@@ -205,22 +202,19 @@ export function VideoNodeComponent({
 
   const onRemoveCustomThumbnail = () => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        const n = node as GeneratedDecoratorNodeBase
-        n.customThumbnailSrc = ''
-        n.thumbnailHeight = n.height
-        n.thumbnailWidth = n.width
-      }
+      $updateCardNode(nodeKey, $isVideoNode, (node) => {
+        node.customThumbnailSrc = ''
+        node.thumbnailHeight = node.height
+        node.thumbnailWidth = node.width
+      })
     })
   }
 
   const onLoopChange = (checked: boolean) => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).loop = checked
-      }
+      $updateCardNode(nodeKey, $isVideoNode, (node) => {
+        node.loop = checked
+      })
     })
   }
 
@@ -230,10 +224,9 @@ export function VideoNodeComponent({
     }
 
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).cardWidth = width
-      }
+      $updateCardNode(nodeKey, $isVideoNode, (node) => {
+        node.cardWidth = width
+      })
       cardContext.setCardWidth(width)
     })
   }
@@ -257,10 +250,9 @@ export function VideoNodeComponent({
 
       // clear the property on the node so we don't accidentally trigger anything with a re-render
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if (node) {
-          ;(node as GeneratedDecoratorNodeBase).triggerFileDialog = false
-        }
+        $updateCardNode(nodeKey, $isVideoNode, (node) => {
+          node.triggerFileDialog = false
+        })
       })
     })
 

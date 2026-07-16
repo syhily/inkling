@@ -1,8 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getNodeByKey, type NodeKey } from 'lexical'
+import { type NodeKey } from 'lexical'
 import React from 'react'
-
-import type { CardNode } from '@/types/lexical-internals'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { AudioCard } from '@/components/ui/cards/AudioCard'
@@ -11,6 +9,7 @@ import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
+import { $isAudioNode, $updateCardNode } from '@/nodes/base'
 import { audioUploadHandler } from '@/utils/audioUploadHandler'
 import { openFileSelection } from '@/utils/openFileSelection'
 import { thumbnailUploadHandler } from '@/utils/thumbnailUploadHandler'
@@ -74,19 +73,17 @@ export function AudioNodeComponent({
 
   const setTitle = (newTitle: string) => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey) as CardNode | null
-      if (node) {
+      $updateCardNode(nodeKey, $isAudioNode, (node) => {
         node.title = newTitle
-      }
+      })
     })
   }
 
   const removeThumbnail = () => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey) as CardNode | null
-      if (node) {
+      $updateCardNode(nodeKey, $isAudioNode, (node) => {
         node.thumbnailSrc = ''
-      }
+      })
     })
   }
 
@@ -117,10 +114,9 @@ export function AudioNodeComponent({
 
       // clear the property on the node so we don't accidentally trigger anything with a re-render
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey) as CardNode | null
-        if (node) {
+        $updateCardNode(nodeKey, $isAudioNode, (node) => {
           node.triggerFileDialog = false
-        }
+        })
       })
     })
 

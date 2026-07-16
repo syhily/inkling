@@ -1,6 +1,6 @@
 import { $getNodeByKey, type LexicalEditor, type NodeKey } from 'lexical'
 
-import { GeneratedDecoratorNodeBase } from '@/nodes/base'
+import { $isAudioNode, $updateCardNode } from '@/nodes/base'
 
 type UploadFn = (
   files: FileList | File[],
@@ -21,17 +21,20 @@ export const thumbnailUploadHandler = async (
 
   editor.getEditorState().read(() => {
     const node = $getNodeByKey(nodeKey)
-    if (node) {
-      mediaSrc = (node as GeneratedDecoratorNodeBase).src as string
+    if ($isAudioNode(node)) {
+      mediaSrc = node.src
     }
   })
 
   const uploadResult = await upload(files, { formData: { url: mediaSrc } })
 
+  const thumbnailSrc = uploadResult?.[0]?.url
+
   await editor.update(() => {
-    const node = $getNodeByKey(nodeKey)
-    if (node && uploadResult?.[0]?.url) {
-      ;(node as GeneratedDecoratorNodeBase).thumbnailSrc = uploadResult[0].url
+    if (thumbnailSrc) {
+      $updateCardNode(nodeKey, $isAudioNode, (node) => {
+        node.thumbnailSrc = thumbnailSrc
+      })
     }
   })
 

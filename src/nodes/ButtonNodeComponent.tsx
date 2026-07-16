@@ -1,8 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getNodeByKey, type NodeKey } from 'lexical'
+import { type NodeKey } from 'lexical'
 import React from 'react'
-
-import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { ButtonCard } from '@/components/ui/cards/ButtonCard'
@@ -10,6 +8,7 @@ import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
+import { $isButtonNode, $updateCardNode } from '@/nodes/base'
 
 export interface ButtonNodeComponentProps {
   alignment?: string
@@ -33,28 +32,25 @@ export function ButtonNodeComponent({
 
   const handleButtonTextChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).buttonText = event.target.value
-      }
+      $updateCardNode(nodeKey, $isButtonNode, (node) => {
+        node.buttonText = event.target.value
+      })
     })
   }
 
   const handleButtonUrlChange = (value: string): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).buttonUrl = value
-      }
+      $updateCardNode(nodeKey, $isButtonNode, (node) => {
+        node.buttonUrl = value
+      })
     })
   }
 
   const handleAlignmentChange = (name: string): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).alignment = name
-      }
+      $updateCardNode(nodeKey, $isButtonNode, (node) => {
+        node.alignment = name
+      })
     })
   }
 
