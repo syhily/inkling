@@ -995,6 +995,23 @@ describe('VideoNode', function () {
         expect(nodes[0].duration).toBe(0)
       }),
     )
+
+    it(
+      'produces no card when the figure has no video element',
+      editorTest(async function () {
+        const document = createDocument(html`
+          <figure
+            class="inkling-card inkling-video-card inkling-width-regular"
+            data-inkling-thumbnail="/content/images/2022/11/inkling-lexical.jpg"
+          >
+            <div class="inkling-video-container"></div>
+          </figure>
+        `)
+        const nodes = $generateNodesFromDOM(editor, document)
+
+        expect(nodes.some((node) => $isVideoNode(node))).toBe(false)
+      }),
+    )
   })
 
   describe('getTextContent', function () {
