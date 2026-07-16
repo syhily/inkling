@@ -548,7 +548,7 @@ export function generateDecoratorNode<
       const data: Record<string, unknown> = {}
 
       // migrate older nodes that were saved with an earlier version of the visibility format
-      serializedNode.visibility = migrateOldVisibilityFormat(serializedNode.visibility as Visibility)
+      serializedNode.visibility = migrateOldVisibilityFormat(serializedNode.visibility as Visibility | undefined)
 
       internalProps.forEach((prop) => {
         data[prop.name] = serializedNode[prop.name]

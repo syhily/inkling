@@ -8,7 +8,34 @@ export const PAID_MEMBERS_SEGMENT = 'status:-free' // paid + comped + gift
 export const FREE_MEMBERS_SEGMENT = 'status:free'
 export const NO_MEMBERS_SEGMENT = ''
 
-const DEFAULT_VISIBILITY = {
+export interface WebVisibility {
+  nonMember?: boolean
+  memberSegment?: string
+}
+
+export interface EmailVisibility {
+  memberSegment?: string
+}
+
+// Visibility can be in old or new format
+export interface Visibility {
+  web?: WebVisibility
+  email?: EmailVisibility
+  showOnEmail?: boolean
+  showOnWeb?: boolean
+  emailOnly?: boolean
+  segment?: string
+  [key: string]: unknown
+}
+
+// the fully-populated new format that buildDefaultVisibility creates and that
+// migrateOldVisibilityFormat normalizes old/partial payloads toward
+export interface DefaultVisibility extends Visibility {
+  web: { nonMember: boolean; memberSegment: string }
+  email: { memberSegment: string }
+}
+
+const DEFAULT_VISIBILITY: DefaultVisibility = {
   web: {
     nonMember: true,
     memberSegment: ALL_MEMBERS_SEGMENT,
@@ -23,19 +50,9 @@ function isNullish(value: unknown) {
 }
 
 // ensure we always work with a deep copy to avoid accidental ref mutations
-export function buildDefaultVisibility() {
-  return JSON.parse(JSON.stringify(DEFAULT_VISIBILITY))
-}
-
-// Visibility can be in old or new format
-export interface Visibility {
-  web?: { nonMember?: boolean; memberSegment?: string }
-  email?: { memberSegment?: string }
-  showOnEmail?: boolean
-  showOnWeb?: boolean
-  emailOnly?: boolean
-  segment?: string
-  [key: string]: unknown
+export function buildDefaultVisibility(): DefaultVisibility {
+  const parsed: DefaultVisibility = JSON.parse(JSON.stringify(DEFAULT_VISIBILITY))
+  return parsed
 }
 
 export function isOldVisibilityFormat(visibility: Visibility) {
@@ -49,7 +66,8 @@ export function isOldVisibilityFormat(visibility: Visibility) {
 }
 
 export function isVisibilityRestricted(visibility: Visibility) {
-  const migratedVisibility = isOldVisibilityFormat(visibility) ? migrateOldVisibilityFormat(visibility) : visibility
+  // migrateOldVisibilityFormat returns new-format input unchanged
+  const migratedVisibility = migrateOldVisibilityFormat(visibility)
 
   return (
     migratedVisibility.web?.nonMember === false ||
@@ -86,13 +104,15 @@ export function isVisibilityRestricted(visibility: Visibility) {
 // memberSegment: 'status:free,status:-free' = everyone
 // memberSegment: 'status:free' = free members
 // memberSegment: 'status:-free' = paid + comped + gift members
-export function migrateOldVisibilityFormat(visibility: Visibility) {
+export function migrateOldVisibilityFormat(visibility: Visibility): Visibility
+export function migrateOldVisibilityFormat(visibility: Visibility | undefined): Visibility | undefined
+export function migrateOldVisibilityFormat(visibility: Visibility | undefined): Visibility | undefined {
   if (!visibility || !isOldVisibilityFormat(visibility)) {
     return visibility
   }
 
   // deep clone to avoid mutating the original object
-  const newVisibility = JSON.parse(JSON.stringify(visibility))
+  const newVisibility: Visibility = JSON.parse(JSON.stringify(visibility))
 
   // ensure we have expected objects ready to populate
   newVisibility.web ??= {}
@@ -122,6 +142,11 @@ export function migrateOldVisibilityFormat(visibility: Visibility) {
     newVisibility.email.memberSegment = PAID_MEMBERS_SEGMENT
   } else if (!visibility.segment) {
     newVisibility.email.memberSegment = ALL_MEMBERS_SEGMENT
+  } else {
+    // unrecognized segments (e.g. the all-members 'status:free,status:-free' the
+    // old format could already carry) pass through verbatim — previously they hit
+    // no branch and the email renderer emitted data-gh-segment="undefined"
+    newVisibility.email.memberSegment = visibility.segment
   }
 
   return newVisibility
@@ -161,7 +186,7 @@ export function renderWithVisibility(
       return originalRenderOutput
     }
 
-    return _renderWithEmailVisibility(document, content, email as { memberSegment: string })
+    return _renderWithEmailVisibility(document, content, email)
   }
 
   const isNotVisibleOnWeb = web.nonMember === false && web.memberSegment === NO_MEMBERS_SEGMENT
@@ -173,7 +198,7 @@ export function renderWithVisibility(
   const hasWebVisibilityRestrictions = web.nonMember !== true || web.memberSegment !== ALL_MEMBERS_SEGMENT
 
   if (hasWebVisibilityRestrictions) {
-    return _renderWithWebVisibility(document, content, web as { nonMember: boolean; memberSegment: string })
+    return _renderWithWebVisibility(document, content, web)
   }
 
   return originalRenderOutput
@@ -206,9 +231,10 @@ function _getRenderContent({ element, type }: ExportDOMOutput) {
 function _renderWithEmailVisibility(
   document: Document,
   content: string,
-  emailVisibility: { memberSegment: string },
+  emailVisibility: EmailVisibility,
 ): ExportDOMOutput<'outer'> {
-  const { memberSegment } = emailVisibility
+  // migration always populates memberSegment; fail closed if it somehow isn't
+  const { memberSegment = NO_MEMBERS_SEGMENT } = emailVisibility
   const container = document.createElement('div')
   container.innerHTML = content
   container.setAttribute('data-gh-segment', memberSegment)
@@ -221,9 +247,9 @@ const SEGMENT_REGEX = /^(status:[\w+-]+,)*status:[\w+-]+$/
 function _renderWithWebVisibility(
   document: Document,
   content: string,
-  webVisibility: { nonMember: boolean; memberSegment: string },
+  webVisibility: WebVisibility,
 ): ExportDOMOutput<'value'> {
-  const { nonMember, memberSegment } = webVisibility
+  const { nonMember, memberSegment = '' } = webVisibility
   // the marker is embedded in an HTML comment that downstream publishers parse;
   // a memberSegment containing `-->` would terminate the comment early, so only
   // the documented segment alphabet (or '' for no-one) is interpolated
