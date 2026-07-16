@@ -83,7 +83,7 @@ Repo quick reference (verification gates used by every plan):
 | 045 | One media-upload intent module | P2 | M | 044 | DONE (`e60b07a`) |
 | 046 | Collapse the card action toolbar into one module | P2 | M | 043 | DONE (`a962f9a`) |
 | 047 | Split the composer context by lifecycle | P1 | L | — | DONE (`41c32e3`) |
-| 048 | Make the host interface honest (2.0.0) | P1 | M | 047 | TODO |
+| 048 | Make the host interface honest (2.0.0) | P1 | M | 047 | DONE (`aa600d5`) |
 | 049 | Name the clipboard-protocol module | P2 | M | — | TODO |
 | 050 | One markdown module, two named dialects | P2 | S | 049 | TODO |
 | 051 | Card import spec joins the declaration | P2 | L | 043 | TODO |

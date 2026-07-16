@@ -551,3 +551,67 @@ reverts with the same `git revert` (git tracks it as a rename). If Steps
 then re-land the bump and fixtures together — 2.0.0 must not describe a
 surface that was subsequently reshaped. Nothing is pushed at any point, so
 every rollback is local history surgery, not a public recall.
+
+## Execution notes
+
+Plan 048 landed in seven commits on main (`e7feb71..aa600d5`) plus a
+post-review cleanup (`6dd485b`). Step 1 (`e7feb71`, breaking) closed
+`CardConfig` into the five per-feature-area host-config interfaces
+(`GifSettings`, `SnippetSettings`, `LinkingSettings`, `VisibilitySettings`,
+`UploadSettings`) with `post` on the composed type; dead keys
+`feature`/`renderLabels`/`fetchLabels` deleted with their read chains.
+Step 2 (`6787afd`, breaking) exported the type family — 11 type-only
+exports, zero runtime change. Step 3 (`f052f55`) typed the demo configs
+against the closed type (two forced, runtime-neutral adjustments
+disclosed). Step 4 (`2797955`, breaking) removed `DesignSandbox` and
+`InklingCardWrapper` from the barrel and moved DesignSandbox to
+`demo/components/` (100%-similarity rename; the wrapper module stays at
+its path for deep imports, per AGENTS.md). Step 5 (`abe7986`) dropped the
+`never[]` casts, dead props, and redundant `onChange` redeclarations;
+`InklingEditorProps` became an alias. Step 6 (`acbd08b`) folded the
+history/onChange forwarders into one `SharedEditorStateContext` module —
+`historyState` in `useState`, so a changing `onChange` identity cannot
+reset the undo stack. Step 7 (`aa600d5`, breaking) bumped the version to
+2.0.0 and pinned the new surface in both packed-consumer fixtures.
+
+Public-surface delta (the 2.0.0 story): 11 type-only exports added;
+runtime exports 66 → 64 (`DesignSandbox`, `InklingCardWrapper` removed) —
+plan 043's 76 → 66 shrink already on main rides the same major.
+`CardConfig` is closed (no index signature; a planted `membersEnabled`
+key fails typecheck, proven empirically and pinned in both fixtures).
+`EmailEditorProps.cardConfig` is `CardConfig` instead of
+`Record<string, unknown>`. The plan-042 leftover was adjudicated:
+`renderWithVisibility` is no longer barrel-reachable at all (043's shrink
+removed the `utils` object), but the honest fix —
+`Partial<Pick<RenderContext, 'target'>>` — was applied anyway and pinned
+in `test/typecheck/render-with-visibility.ts`.
+
+Two drift events, both disclosed and runtime-identical: the plan's Step-5
+evidence was wrong about `InklingNestedEditor`'s dead props
+(`HeaderCard.tsx` passed inert `style` at two call sites — deleted with
+the interface entries), and the EmailEditor call site needed
+`getEmailEditorCardConfig({ ...cardConfig })` for assignability. The
+DesignSandbox STOP phrasing in the orchestration brief was superseded by
+the plan's own prescription (the plan documents the barrel export as
+evidence and prescribes the removal). Plan-044's `FileNodeComponent` cast
+nit was left alone (plan doesn't cover the file).
+
+Reviews: spec and quality both APPROVED. Post-review fixes in `6dd485b`:
+`buildCardMenu.ts` stopped casting around the closed type to read `post`
+(the one residual dishonesty pattern the plan eliminated everywhere
+else), and `SharedEditorStateContext` gained pins — history identity
+stable across `onChange` identity changes, module-default fallback
+without a provider. The flagged `verify-packed-types.mjs` quirk
+(broken-decl negative phase is dead code; latent false-failure if revived
+naively) is pre-existing and deliberately NOT fixed here — both reviewers
+recommended a standalone scripts commit; it is tracked in
+`docs/tech-debt-triage.md`. One non-reproducible `verify:types` flake
+observed in review (floating consumer devDeps); current state passes
+deterministically across `@types/react` 19.0.0–19.2.17.
+
+Gates at HEAD: full unit 221 files / 1922 passed / 21 todo;
+nodes-base+html-renderer 46 files / 735 passed / 21 todo;
+typecheck/lint/format clean; `pnpm build` + `build:demo` pass;
+`verify:package` PASS (64 exports, negative assertions live);
+`verify:types` PASS (Bundler + NodeNext). Zero runtime-test expectation
+edits across the whole range.
