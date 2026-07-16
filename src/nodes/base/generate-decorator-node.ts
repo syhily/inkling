@@ -88,7 +88,8 @@ function validateArguments(nodeType: string, properties: readonly DecoratorNodeP
 export interface DecoratorNodeProperty<Name extends string = string, Default = unknown> {
   name: Name
   default: Default
-  urlType?: string
+  // validateArguments keeps the runtime throw for untyped consumers
+  urlType?: 'url' | 'html' | 'markdown'
   urlPath?: string
   wordCount?: boolean
   privateName?: string
