@@ -356,6 +356,25 @@ describe('ImageNode', function () {
     )
 
     it(
+      'emits no resize attrs when width is set but height is null (no height="0" garbage)',
+      editorTest(async function () {
+        // batch-2 image-renderer honesty fix: the old code divided by null and
+        // emitted height="0"; the resize block now requires both dimensions
+        dataset.width = 3000
+        dataset.height = null
+        ;(exportOptions.imageOptimization as Record<string, unknown>).defaultMaxWidth = 2000
+        exportOptions.canTransformImage = () => true
+
+        const imageNode = $createImageNode(dataset)
+        const { element } = imageNode.exportDOM(editor, exportOptions)
+        const output = (element as HTMLElement).outerHTML
+
+        expect(output).not.toContain('height="0"')
+        expect(output).not.toContain('width="2000"')
+      }),
+    )
+
+    it(
       'uses original width and height when transform is not available',
       editorTest(async function () {
         dataset.width = 3000
