@@ -5,6 +5,7 @@ import type { AudioNode } from '@/nodes/AudioNode'
 import type { BookmarkNode } from '@/nodes/BookmarkNode'
 import type { ButtonNode } from '@/nodes/ButtonNode'
 import type { CalloutNode } from '@/nodes/CalloutNode'
+import type { DecorateTargetSpec } from '@/nodes/cards/card-declaration'
 import type { CodeBlockNode } from '@/nodes/CodeBlockNode'
 import type { FileNode } from '@/nodes/FileNode'
 import type { GalleryNode } from '@/nodes/GalleryNode'
@@ -22,7 +23,7 @@ import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
 import { BookmarkNodeComponent } from '@/nodes/BookmarkNodeComponent'
 import { ButtonNodeComponent } from '@/nodes/ButtonNodeComponent'
 import { CalloutNodeComponent } from '@/nodes/CalloutNodeComponent'
-import { CARD_DECLARATIONS, type CardDeclaration, type CardNodeType } from '@/nodes/cards'
+import { CARD_DECLARATIONS, type CardNodeType } from '@/nodes/cards'
 import { CodeBlockNodeComponent } from '@/nodes/CodeBlockNodeComponent'
 import FileNodeComponent from '@/nodes/FileNodeComponent'
 import { GalleryNodeComponent } from '@/nodes/GalleryNodeComponent'
@@ -70,9 +71,9 @@ const DECORATE_RENDER = {
   ),
   button: (node: ButtonNode) => (
     <ButtonNodeComponent
-      alignment={node.alignment ?? 'center'}
-      buttonText={node.buttonText ?? ''}
-      buttonUrl={node.buttonUrl ?? ''}
+      alignment={node.alignment}
+      buttonText={node.buttonText}
+      buttonUrl={node.buttonUrl}
       nodeKey={node.getKey()}
     />
   ),
@@ -230,8 +231,9 @@ type DecorateRender = (node: LexicalNode) => ReactNode
  * (`@/nodes/decorate-card`) renders these through `InklingCardWrapper`.
  */
 export const CARD_DECORATE_TARGETS = CARD_DECLARATIONS.map((declaration) => {
-  // widen to the spec interface so the optional entries typecheck uniformly
-  const { decorateTarget } = declaration as CardDeclaration
+  // `in` narrows the union to the declarations carrying the optional decorate-target entry
+  const decorateTarget: DecorateTargetSpec | undefined =
+    'decorateTarget' in declaration ? declaration.decorateTarget : undefined
   return {
     ...declaration,
     decorateTarget,
@@ -240,8 +242,10 @@ export const CARD_DECORATE_TARGETS = CARD_DECLARATIONS.map((declaration) => {
   }
 })
 
-const CARD_DECORATE_TARGETS_BY_TYPE = new Map(CARD_DECORATE_TARGETS.map((target) => [target.nodeType, target]))
+const CARD_DECORATE_TARGETS_BY_TYPE = new Map(
+  CARD_DECORATE_TARGETS.map((target): [string, (typeof CARD_DECORATE_TARGETS)[number]] => [target.nodeType, target]),
+)
 
 export function getCardDecorateTarget(nodeType: string): (typeof CARD_DECORATE_TARGETS)[number] | undefined {
-  return CARD_DECORATE_TARGETS_BY_TYPE.get(nodeType as CardNodeType)
+  return CARD_DECORATE_TARGETS_BY_TYPE.get(nodeType)
 }

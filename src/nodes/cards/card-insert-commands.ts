@@ -1,6 +1,6 @@
 import type { Klass, LexicalCommand, LexicalNode } from 'lexical'
 
-import type { CardDeclaration, CardInsertSpec } from '@/nodes/cards/card-declaration'
+import type { CardInsertSpec } from '@/nodes/cards/card-declaration'
 
 import { getCardInsertCommand } from '@/nodes/cards/card-menus'
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
@@ -23,8 +23,8 @@ export interface CardInsertRegistration {
  * drop out here.
  */
 export const CARD_INSERT_COMMANDS: CardInsertRegistration[] = CARD_WRAPPER_NODES.flatMap((declaration) => {
-  // widen to the spec interface so the optional insert entry narrows uniformly
-  const { insert } = declaration as CardDeclaration
+  // `in` narrows the union to the declarations carrying the optional insert entry
+  const insert: CardInsertSpec | undefined = 'insert' in declaration ? declaration.insert : undefined
   const command = getCardInsertCommand(declaration.nodeType)
   if (insert === undefined || command === undefined) {
     return []
