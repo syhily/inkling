@@ -78,7 +78,7 @@ Repo quick reference (verification gates used by every plan):
 
 | 041 | Shrink the escape-html allowlist onto context.escapeText | P2 | S | — | DONE (`b7c181d`) |
 | 042 | Renderers receive only the render context | P1 | M | 041 | DONE (`c40363f`) |
-| 043 | Derive the card insert plugins from the declaration | P1 | M | — | TODO |
+| 043 | Derive the card insert plugins from the declaration | P1 | M | — | DONE (`6bb6bf9`) |
 | 044 | Put card-node writes behind a typed seam | P1 | L | — | TODO |
 | 045 | One media-upload intent module | P2 | M | 044 | TODO |
 | 046 | Collapse the card action toolbar into one module | P2 | M | 043 | TODO |
