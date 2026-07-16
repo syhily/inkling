@@ -32,7 +32,14 @@ function isValidImage(image: unknown, context: RenderContext): image is ValidGal
   const height = candidate.height
   const row = candidate.row
 
+  // the predicate vouches for the whole ValidGalleryImage shape, so the
+  // optional string fields must be string-or-absent too, not just present-or-not
+  const optionalStringsValid = (['alt', 'title', 'href', 'caption', 'previewSrc'] as const).every(
+    (key) => candidate[key] === undefined || typeof candidate[key] === 'string',
+  )
+
   return (
+    optionalStringsValid &&
     typeof candidate.fileName === 'string' &&
     candidate.fileName.trim() !== '' &&
     typeof candidate.src === 'string' &&
