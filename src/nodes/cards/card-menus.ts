@@ -254,7 +254,7 @@ const DRAG_ICON_FALLBACKS: Record<string, NonNullable<MenuItem['Icon']>> = {
  * for menu-less cards.
  */
 export function getCardDragIcon(nodeType: string): MenuItem['Icon'] {
-  return (CARD_MENUS as Record<string, MenuItem[]>)[nodeType]?.[0]?.Icon ?? DRAG_ICON_FALLBACKS[nodeType]
+  return (CARD_MENUS as Partial<Record<string, MenuItem[]>>)[nodeType]?.[0]?.Icon ?? DRAG_ICON_FALLBACKS[nodeType]
 }
 
 /**
@@ -266,5 +266,7 @@ export function getCardDragIcon(nodeType: string): MenuItem['Icon'] {
  * (`@/nodes/cards/card-insert-commands`) consumes this.
  */
 export function getCardInsertCommand(nodeType: string): LexicalCommand<unknown> | undefined {
-  return (CARD_MENUS as Record<string, MenuItem[]>)[nodeType]?.[0]?.insertCommand as LexicalCommand<unknown> | undefined
+  return (CARD_MENUS as Partial<Record<string, MenuItem[]>>)[nodeType]?.[0]?.insertCommand as
+    | LexicalCommand<unknown>
+    | undefined
 }

@@ -55,7 +55,7 @@ export function assembleCardNode<TNode extends LexicalNode>(
     static nestedEditors = declaration.nestedEditors
     static transientProps = declaration.transientProps
     // undefined for CodeBlock, the one card with no menu entry
-    static cardMenu = (CARD_MENUS as Record<string, MenuItem[]>)[declaration.nodeType]
+    static cardMenu: MenuItem[] | undefined = (CARD_MENUS as Partial<Record<string, MenuItem[]>>)[declaration.nodeType]
 
     decorate(): ReactNode {
       return decorateCard(this)
