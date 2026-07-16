@@ -7,6 +7,11 @@ import InklingCollaborationContext from '@/context/InklingCollaborationContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { InklingSelectedCardContext, useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
+import {
+  SharedEditorStateContext,
+  useSharedEditorStateContext,
+  type SharedEditorStateContextValue,
+} from '@/context/SharedEditorStateContext'
 import { TKContext, useTKContext } from '@/context/TKContext'
 
 describe('InklingHostIntegrationContext', () => {
@@ -115,5 +120,49 @@ describe('TKContext', () => {
     await waitFor(() => {
       expect(result.current.tkCount).toBe(0)
     })
+  })
+})
+
+describe('SharedEditorStateContext', () => {
+  it('provides a module-default history state without a provider', () => {
+    let captured: SharedEditorStateContextValue | undefined
+
+    function Consumer() {
+      captured = useSharedEditorStateContext()
+      return null
+    }
+
+    render(<Consumer />)
+
+    expect(captured!.historyState).toBeDefined()
+    expect(captured!.onChange).toBeUndefined()
+  })
+
+  it('keeps the history state stable when the onChange identity changes', () => {
+    const captured: SharedEditorStateContextValue[] = []
+
+    function Consumer() {
+      captured.push(useSharedEditorStateContext())
+      return null
+    }
+
+    const { rerender } = render(
+      <SharedEditorStateContext onChange={() => {}}>
+        <Consumer />
+      </SharedEditorStateContext>,
+    )
+    rerender(
+      <SharedEditorStateContext onChange={() => {}}>
+        <Consumer />
+      </SharedEditorStateContext>,
+    )
+
+    expect(captured.length).toBeGreaterThanOrEqual(2)
+    const first = captured[0]
+    for (const value of captured) {
+      expect(value.historyState).toBe(first.historyState)
+    }
+    // the fresh onChange still flows through — only the undo stack is pinned
+    expect(captured[captured.length - 1].onChange).not.toBe(first.onChange)
   })
 })

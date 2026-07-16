@@ -48,8 +48,7 @@ export function buildCardMenu(
     }
 
     // items restricted for posts vs. pages (e.g. email CTA card)
-    const cfg = config as Record<string, unknown> | undefined
-    const postDisplayName = (cfg?.post as { displayName?: string } | undefined)?.displayName
+    const postDisplayName = config?.post?.displayName
     if (item.postType && postDisplayName && item.postType !== postDisplayName) {
       return
     }
