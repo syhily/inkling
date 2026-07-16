@@ -35,6 +35,10 @@ export const useVisibilityToggle = (
 
   let currentVisibility: Visibility | undefined
 
+  // This hook intentionally bypasses the $updateCardNode write seam: its tests drive the
+  // hook with a structural test double (a plain-object `$getNodeByKey` mock), so the
+  // seam's `$isHtmlNode` instanceof narrowing would never match. See CONTEXT.md,
+  // "Card write seam" for the recorded exception.
   editor.getEditorState().read(() => {
     const htmlNode = $getNodeByKey(nodeKey)
     if (!htmlNode) {

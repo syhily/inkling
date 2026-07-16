@@ -473,3 +473,37 @@ alone, it doesn't need the seam). Step 3 touches no write path and rolls
 back cleanly at any point. Because every step is type-level, rollback can
 never require a data migration or a test-expectation restore — if it seems
 to, that is itself the signal a STOP condition was missed.
+
+## Execution notes
+
+Plan 044 landed in four commits on main (`66a231f..cde26e3`) plus two
+follow-ups. Step 1 (`66a231f`) added the `$updateCardNode(nodeKey, guard,
+update)` seam in `src/nodes/base/update-card-node.ts` (re-exported from
+`@/nodes/base/inkling-default-nodes`) and migrated the card-node field
+writes behind it. Step 2 (`ff23ce8`) routed header card writes through the
+seam and typed `HeaderCard` props honestly. Step 3 (`0cf0929`)
+single-sourced the card-ui types and folded the Holder intermediaries.
+The write-cast census went 57 → 3.
+
+Step 4 (`cde26e3`) is a deliberate local revert, taken under the plan's
+STOP conditions: `useVisibilityToggle`'s tests drive the hook with a
+structural test double (a plain-object `$getNodeByKey` mock), so the
+seam's `$isHtmlNode` instanceof narrowing can never match there. At the
+fork the orchestrator chose option (a): keep the three residual casts
+(`useVisibilityToggle.ts:43,60,72`) rather than force the seam onto a
+call site whose tests can't see it. The exception is recorded in
+CONTEXT.md under "Card write seam" (`docs(context): note the
+useVisibilityToggle exception to the write seam`), and a post-review nit
+added an in-file comment pointing at it.
+
+Known limitation (pinned in `test/typecheck/card-node-write-seam.ts`):
+the generated card classes carry `[key: string]: unknown`, so the seam
+guarantees the value types of *known* fields, not exhaustiveness against
+arbitrary string keys.
+
+Reviews: spec and quality both APPROVED. Remaining quality nits
+(`HeaderNodeComponent` redundant spread/`?.`, `FileNodeComponent` possibly
+redundant `as Parameters<…>` casts — noted by review as compile-unverified)
+were deferred to plans 046/048. Gates at HEAD: full unit 207 files /
+1746 passed / 21 todo; nodes-base+html-renderer 46 files / 735 passed /
+21 todo; typecheck/lint/format:check clean.
