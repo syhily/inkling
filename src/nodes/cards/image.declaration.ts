@@ -41,6 +41,7 @@ export const imageDeclaration = {
   decorateTarget: {
     width: (node: LexicalNode) => normalizeCardWidth((node as ImageNode).cardWidth) ?? 'regular',
   },
+  insert: { claimsMediaInsert: true },
   surfaces: {
     default: true,
     emailEditor: true,

@@ -44,6 +44,7 @@ export const headerDeclaration = {
   decorateTarget: {
     width: headerCardWidth,
   },
+  insert: { openInEditMode: true },
   surfaces: {
     default: true,
     emailEditor: false,

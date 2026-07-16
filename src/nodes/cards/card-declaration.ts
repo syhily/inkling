@@ -48,6 +48,29 @@ export interface DecorateTargetSpec {
 }
 
 /**
+ * The card's membership in the insert-command surface (CONTEXT.md: "card
+ * declaration") — the per-card facts the eleven hand-written insert plugins
+ * held: which insert command the card joins (resolved from its menu's first
+ * entry by the projection), whether it dispatches `INSERT_CARD_COMMAND` with
+ * `openInEditMode: true`, and whether it claims media inserts. The presence
+ * of `insert` is the opt-in; an empty spec (file, gallery) is the common
+ * case. CodeBlock and HorizontalRule omit the entry — they have no derived
+ * insert registration. React-free; the registrar
+ * (`@/plugins/CardInsertPlugin`) is its derived view.
+ */
+export interface CardInsertSpec {
+  /** dispatch INSERT_CARD_COMMAND with openInEditMode: true after construction */
+  openInEditMode?: boolean
+  /** claim INSERT_MEDIA_COMMAND payloads whose type equals this card's nodeType */
+  claimsMediaInsert?: boolean
+  /** bookmark only — historical; redundant with INSERT_CARD_COMMAND's own
+      selection handling but observable in dispatch return values */
+  requiresRangeSelection?: boolean
+  /** bookmark only — historical HIGH priority; every other card is LOW */
+  insertCommandPriority?: 'high'
+}
+
+/**
  * The single per-card source of truth (CONTEXT.md: "card declaration").
  * React-free: `baseNode` is imported from its deep `@/nodes/base/nodes/...`
  * path so `@/nodes/base` can derive its node set from the declarations
@@ -83,5 +106,10 @@ export interface CardDeclaration<NodeType extends string = string> {
    * The card's decorate-target wrapper props; see `DecorateTargetSpec`.
    */
   decorateTarget?: DecorateTargetSpec
+  /**
+   * The card's insert-command registration; see `CardInsertSpec`. Presence
+   * opts the card into the insert-command surface.
+   */
+  insert?: CardInsertSpec
   surfaces: CardSurfaces
 }

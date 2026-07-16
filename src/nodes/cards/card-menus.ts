@@ -1,4 +1,4 @@
-import { createCommand } from 'lexical'
+import { createCommand, type LexicalCommand } from 'lexical'
 
 import type { CardConfig } from '@/context/InklingComposerContext'
 import type { AudioNodeDataset } from '@/nodes/AudioNode'
@@ -255,4 +255,16 @@ const DRAG_ICON_FALLBACKS: Record<string, NonNullable<MenuItem['Icon']>> = {
  */
 export function getCardDragIcon(nodeType: string): MenuItem['Icon'] {
   return (CARD_MENUS as Record<string, MenuItem[]>)[nodeType]?.[0]?.Icon ?? DRAG_ICON_FALLBACKS[nodeType]
+}
+
+/**
+ * Resolves a card's insert command — the command its menu's first entry
+ * dispatches, the same first-entry convention `getCardDragIcon` documents
+ * above (Image's second entry is the GIF selector, not an insert command).
+ * `MenuItem.insertCommand` is `unknown` at the menu interface, so the type is
+ * asserted at this one resolution site. The insert registration projection
+ * (`@/nodes/cards/card-insert-commands`) consumes this.
+ */
+export function getCardInsertCommand(nodeType: string): LexicalCommand<unknown> | undefined {
+  return (CARD_MENUS as Record<string, MenuItem[]>)[nodeType]?.[0]?.insertCommand as LexicalCommand<unknown> | undefined
 }

@@ -20,6 +20,7 @@ export const galleryDeclaration = {
   decorateTarget: {
     width: 'wide',
   },
+  insert: {},
   surfaces: {
     default: true,
     emailEditor: false,

@@ -9,6 +9,7 @@ export const buttonDeclaration = {
     width: 'regular',
     wrapperStyle: 'wide',
   },
+  insert: { openInEditMode: true },
   surfaces: {
     default: true,
     emailEditor: true,

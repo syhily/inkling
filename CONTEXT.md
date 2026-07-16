@@ -17,7 +17,7 @@ The declarative definition of a card — its properties, card menu, nested edito
 _Avoid_: card config, card definition
 
 **Card declaration**:
-The single per-card source of truth naming everything the editor must know about a card: its card spec and which editor surfaces it joins (node sets, markdown, email). Every registry is a derived view over the card declarations.
+The single per-card source of truth naming everything the editor must know about a card: its card spec, which editor surfaces it joins (node sets, markdown, email), and its insert-command registration (command, edit-mode flag, media claiming). Every registry is a derived view over the card declarations — the node sets, the menus, the decorate targets, and the insert registrar (`CardInsertPlugin`).
 _Avoid_: card registration, card manifest
 
 **Render target**:

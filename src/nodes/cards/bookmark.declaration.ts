@@ -17,6 +17,7 @@ export const bookmarkDeclaration = {
   nodeType: 'bookmark',
   baseNode: BookmarkNode,
   nestedEditors,
+  insert: { requiresRangeSelection: true, insertCommandPriority: 'high' },
   surfaces: {
     default: true,
     emailEditor: true,

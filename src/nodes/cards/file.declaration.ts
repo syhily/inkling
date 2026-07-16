@@ -17,6 +17,7 @@ export const fileDeclaration = {
   nodeType: 'file',
   baseNode: FileNode,
   transientProps,
+  insert: {},
   surfaces: {
     default: true,
     emailEditor: false,

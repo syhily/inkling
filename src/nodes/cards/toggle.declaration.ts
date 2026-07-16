@@ -28,6 +28,7 @@ export const toggleDeclaration = {
   decorateTarget: {
     width: 'regular',
   },
+  insert: { openInEditMode: true },
   surfaces: {
     default: true,
     emailEditor: false,

@@ -33,6 +33,7 @@ export const videoDeclaration = {
   decorateTarget: {
     width: (node: LexicalNode) => normalizeCardWidth((node as VideoNode).cardWidth) ?? 'regular',
   },
+  insert: { claimsMediaInsert: true },
   surfaces: {
     default: true,
     emailEditor: false,

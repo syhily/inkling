@@ -18,6 +18,7 @@ export const calloutDeclaration = {
   nodeType: 'callout',
   baseNode: CalloutNode,
   nestedEditors,
+  insert: { openInEditMode: true },
   surfaces: {
     default: true,
     emailEditor: true,

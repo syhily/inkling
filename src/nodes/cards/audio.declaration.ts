@@ -17,6 +17,7 @@ export const audioDeclaration = {
   nodeType: 'audio',
   baseNode: BaseAudioNode,
   transientProps,
+  insert: { claimsMediaInsert: true },
   surfaces: {
     default: true,
     emailEditor: false,

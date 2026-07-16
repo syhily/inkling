@@ -10,6 +10,7 @@ export const htmlDeclaration = {
     // the icon component attaches one layer up (`@/nodes/cards/card-decorate`)
     hasIndicatorIcon: true,
   },
+  insert: { openInEditMode: true },
   surfaces: {
     default: true,
     emailEditor: true,
