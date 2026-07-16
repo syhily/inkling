@@ -2,12 +2,9 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 
-import { ActionToolbar } from '@/components/ui/ActionToolbar'
+import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CalloutCard } from '@/components/ui/cards/CalloutCard'
-import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
-import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
 import { $isCalloutNode, $updateCardNode } from '@/nodes/base'
 
 export interface CalloutNodeComponentProps {
@@ -27,9 +24,7 @@ export function CalloutNodeComponent({
   calloutTextEditorInitialState,
 }: CalloutNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const { cardConfig } = React.useContext(InklingComposerContext)
-  const { isEditing, isSelected, setEditing } = React.useContext(CardContext)
-  const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
+  const { isEditing } = React.useContext(CardContext)
   const [showEmojiPicker, setShowEmojiPicker] = React.useState<boolean>(false)
 
   const handleEmojiChange = React.useCallback(
@@ -74,12 +69,6 @@ export function CalloutNodeComponent({
     })
   }
 
-  const handleToolbarEdit = (event: React.MouseEvent): void => {
-    event.preventDefault()
-    event.stopPropagation()
-    setEditing(true)
-  }
-
   return (
     <>
       <CalloutCard
@@ -97,31 +86,11 @@ export function CalloutNodeComponent({
         toggleEmoji={handleToggleEmoji}
         toggleEmojiPicker={handleToggleEmojiPicker}
       />
-      <ActionToolbar data-inkling-card-toolbar="callout" isVisible={showSnippetToolbar}>
-        <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
-      </ActionToolbar>
-      <ActionToolbar data-inkling-card-toolbar="callout" isVisible={isSelected && !isEditing && !showSnippetToolbar}>
-        <ToolbarMenu>
-          <ToolbarMenuItem
-            className={undefined}
-            dataTestId="edit-callout-card"
-            icon="edit"
-            isActive={false}
-            label="Edit"
-            onClick={handleToolbarEdit}
-          />
-          <ToolbarMenuSeparator hide={!cardConfig.createSnippet} />
-          <ToolbarMenuItem
-            className={undefined}
-            dataTestId="create-snippet"
-            hide={!cardConfig.createSnippet}
-            icon="snippet"
-            isActive={false}
-            label="Save as snippet"
-            onClick={() => setShowSnippetToolbar(true)}
-          />
-        </ToolbarMenu>
-      </ActionToolbar>
+      <CardActionToolbar
+        card="callout"
+        items={[{ kind: 'edit', dataTestId: 'edit-callout-card' }, { kind: 'separator' }, { kind: 'snippet' }]}
+        nodeKey={nodeKey}
+      />
     </>
   )
 }

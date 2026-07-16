@@ -2,12 +2,9 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { type NodeKey } from 'lexical'
 import React from 'react'
 
-import { ActionToolbar } from '@/components/ui/ActionToolbar'
+import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { ButtonCard } from '@/components/ui/cards/ButtonCard'
-import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
-import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
 import { $isButtonNode, $updateCardNode } from '@/nodes/base'
 
 export interface ButtonNodeComponentProps {
@@ -26,9 +23,7 @@ export function ButtonNodeComponent({
   nodeKey,
 }: ButtonNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const { cardConfig } = React.useContext(InklingComposerContext)
-  const { isEditing, isSelected, setEditing } = React.useContext(CardContext)
-  const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
+  const { isEditing } = React.useContext(CardContext)
 
   const handleButtonTextChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     editor.update(() => {
@@ -54,12 +49,6 @@ export function ButtonNodeComponent({
     })
   }
 
-  const handleToolbarEdit = (event: React.MouseEvent): void => {
-    event.preventDefault()
-    event.stopPropagation()
-    setEditing(true)
-  }
-
   return (
     <>
       <ButtonCard
@@ -73,32 +62,11 @@ export function ButtonNodeComponent({
         isEditing={isEditing}
       />
 
-      <ActionToolbar data-inkling-card-toolbar="button" isVisible={showSnippetToolbar}>
-        <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
-      </ActionToolbar>
-
-      <ActionToolbar data-inkling-card-toolbar="button" isVisible={isSelected && !isEditing && !showSnippetToolbar}>
-        <ToolbarMenu>
-          <ToolbarMenuItem
-            className={undefined}
-            dataTestId="edit-button-card"
-            icon="edit"
-            isActive={false}
-            label="Edit"
-            onClick={handleToolbarEdit}
-          />
-          <ToolbarMenuSeparator hide={!cardConfig.createSnippet} />
-          <ToolbarMenuItem
-            className={undefined}
-            dataTestId="create-snippet"
-            hide={!cardConfig.createSnippet}
-            icon="snippet"
-            isActive={false}
-            label="Save as snippet"
-            onClick={() => setShowSnippetToolbar(true)}
-          />
-        </ToolbarMenu>
-      </ActionToolbar>
+      <CardActionToolbar
+        card="button"
+        items={[{ kind: 'edit', dataTestId: 'edit-button-card' }, { kind: 'separator' }, { kind: 'snippet' }]}
+        nodeKey={nodeKey}
+      />
     </>
   )
 }

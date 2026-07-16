@@ -2,10 +2,8 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 
-import { ActionToolbar } from '@/components/ui/ActionToolbar'
+import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CodeBlockCard } from '@/components/ui/cards/CodeBlockCard'
-import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
-import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { $isCodeBlockNode } from '@/nodes/CodeBlockNode'
@@ -26,9 +24,8 @@ export function CodeBlockNodeComponent({
   captionEditorInitialState,
 }: CodeBlockNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const { cardConfig, darkMode } = React.useContext(InklingComposerContext)
-  const { isEditing, isSelected, setEditing } = React.useContext(CardContext)
-  const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
+  const { darkMode } = React.useContext(InklingComposerContext)
+  const { isEditing, isSelected } = React.useContext(CardContext)
 
   const updateCode = React.useCallback(
     (value: string) => {
@@ -54,12 +51,6 @@ export function CodeBlockNodeComponent({
     [editor, nodeKey],
   )
 
-  const handleToolbarEdit = (event: React.MouseEvent): void => {
-    event.preventDefault()
-    event.stopPropagation()
-    setEditing(true)
-  }
-
   return (
     <>
       <CodeBlockCard
@@ -73,31 +64,11 @@ export function CodeBlockNodeComponent({
         updateCode={updateCode}
         updateLanguage={updateLanguage}
       />
-      <ActionToolbar data-inkling-card-toolbar="code-block" isVisible={showSnippetToolbar}>
-        <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
-      </ActionToolbar>
-      <ActionToolbar data-inkling-card-toolbar="code-block" isVisible={isSelected && !isEditing && !showSnippetToolbar}>
-        <ToolbarMenu>
-          <ToolbarMenuItem
-            className={undefined}
-            dataTestId="edit-code-block-card"
-            icon="edit"
-            isActive={false}
-            label="Edit"
-            onClick={handleToolbarEdit}
-          />
-          <ToolbarMenuSeparator hide={!cardConfig.createSnippet} />
-          <ToolbarMenuItem
-            className={undefined}
-            dataTestId="create-snippet"
-            hide={!cardConfig.createSnippet}
-            icon="snippet"
-            isActive={false}
-            label="Save as snippet"
-            onClick={() => setShowSnippetToolbar(true)}
-          />
-        </ToolbarMenu>
-      </ActionToolbar>
+      <CardActionToolbar
+        card="code-block"
+        items={[{ kind: 'edit', dataTestId: 'edit-code-block-card' }, { kind: 'separator' }, { kind: 'snippet' }]}
+        nodeKey={nodeKey}
+      />
     </>
   )
 }

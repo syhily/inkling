@@ -4,17 +4,14 @@ import { useContext, useEffect, useRef, useState } from 'react'
 
 import type { FileChangeEvent } from '@/components/ui/cards/card-ui-types'
 
-import { ActionToolbar } from '@/components/ui/ActionToolbar'
+import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
-import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
-import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { $updateCardNode } from '@/nodes/base'
 import { $isHeaderNode } from '@/nodes/HeaderNode'
-import { EDIT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 import { getAccentColor } from '@/utils/getAccentColor'
 import { openFileSelection } from '@/utils/openFileSelection'
 import { backgroundImageUploadHandler } from '@/utils/upload-intent'
@@ -72,8 +69,7 @@ function HeaderNodeComponent({
 }: HeaderNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
   const { cardConfig, fileUploader } = useContext(InklingComposerContext)
-  const { isEditing, isSelected } = useContext(CardContext)
-  const [showSnippetToolbar, setShowSnippetToolbar] = useState<boolean>(false)
+  const { isEditing } = useContext(CardContext)
   const [showBackgroundImage, setShowBackgroundImage] = useState<boolean>(Boolean(backgroundImageSrc))
   const [lastBackgroundImage, setLastBackgroundImage] = useState<string>(backgroundImageSrc)
 
@@ -123,12 +119,6 @@ function HeaderNodeComponent({
         node.backgroundSize = a
       })
     })
-  }
-
-  const handleToolbarEdit = (event: React.MouseEvent): void => {
-    event.preventDefault()
-    event.stopPropagation()
-    editor.dispatchCommand(EDIT_CARD_COMMAND, { cardKey: nodeKey, focusEditor: false })
   }
 
   const imageUploader = fileUploader.useFileUpload('image')
@@ -338,24 +328,7 @@ function HeaderNodeComponent({
           onFileChange,
         }}
       />
-      <ActionToolbar data-inkling-card-toolbar="header" isVisible={showSnippetToolbar}>
-        <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
-      </ActionToolbar>
-
-      <ActionToolbar data-inkling-card-toolbar="header" isVisible={isSelected && !isEditing && !showSnippetToolbar}>
-        <ToolbarMenu>
-          <ToolbarMenuItem icon="edit" isActive={false} label="Edit" onClick={handleToolbarEdit} />
-          <ToolbarMenuSeparator hide={!cardConfig.createSnippet} />
-          <ToolbarMenuItem
-            dataTestId="create-snippet"
-            hide={!cardConfig.createSnippet}
-            icon="snippet"
-            isActive={false}
-            label="Save as snippet"
-            onClick={() => setShowSnippetToolbar(true)}
-          />
-        </ToolbarMenu>
-      </ActionToolbar>
+      <CardActionToolbar card="header" nodeKey={nodeKey} />
     </>
   )
 }
