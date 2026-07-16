@@ -121,8 +121,8 @@ export type ImportReadSpec =
       kind: 'composite'
       /** `querySelector` locating the element to read from; reads from the matched element itself when unset. */
       selector?: string
-      /** The helper producing the partial payload. */
-      read: (element: HTMLElement) => Record<string, unknown>
+      /** The helper producing the partial payload; narrows the located element itself. */
+      read: (element: Element) => Record<string, unknown>
       /** The payload keys the helper provides; each must name a card property. */
       provides: readonly string[]
     }
@@ -228,7 +228,7 @@ function readImportPayload(conversion: ImportConversionSpec, domNode: HTMLElemen
       if (!element) {
         return null
       }
-      const provided = read.read(element as HTMLElement)
+      const provided = read.read(element)
       read.provides.forEach((key) => {
         if (key in provided) {
           payload[key] = provided[key]

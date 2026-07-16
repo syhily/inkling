@@ -1,5 +1,14 @@
-export function readImageAttributesFromElement(element: HTMLImageElement) {
+// tagName rather than instanceof: the imported document can come from another
+// realm (a separate JSDOM in tests), where the global HTMLImageElement
+// wouldn't match
+const isImageElement = (element: Element): element is HTMLImageElement => element.tagName === 'IMG'
+
+export function readImageAttributesFromElement(element: Element): Record<string, string | number> {
   const attrs: Record<string, string | number> = {}
+
+  if (!isImageElement(element)) {
+    return attrs
+  }
 
   if (element.src) {
     attrs.src = element.src

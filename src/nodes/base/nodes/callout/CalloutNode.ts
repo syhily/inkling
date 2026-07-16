@@ -63,7 +63,7 @@ export class CalloutNode extends generateDecoratorNode({
     // __calloutText is set by super from the same value (?? '' matches || ''
     // for the string-typed dataset); only the keys super never received are
     // assigned here.
-    super({ calloutText, calloutTextEditor } as Partial<CalloutData>, key)
+    super({ calloutText, calloutTextEditor }, key)
     this.__calloutEmoji = calloutEmoji ?? '💡'
     this.__backgroundColor = backgroundColor || 'blue'
   }

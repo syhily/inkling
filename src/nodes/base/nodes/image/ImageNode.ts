@@ -20,8 +20,6 @@ const imageProperties = [
   { name: 'href', default: '', urlType: 'url' },
 ] as const satisfies readonly DecoratorNodeProperty[]
 
-const imageAttributesRead = readImageAttributesFromElement as (element: HTMLElement) => Record<string, unknown>
-
 export const imageImportSpec = {
   conversions: [
     {
@@ -31,7 +29,7 @@ export const imageImportSpec = {
         {
           name: 'imageAttributes',
           kind: 'composite',
-          read: imageAttributesRead,
+          read: readImageAttributesFromElement,
           provides: ['src', 'width', 'height', 'alt', 'title', 'href'],
         },
       ],
@@ -46,7 +44,7 @@ export const imageImportSpec = {
           name: 'imageAttributes',
           kind: 'composite',
           selector: 'img',
-          read: imageAttributesRead,
+          read: readImageAttributesFromElement,
           provides: ['src', 'width', 'height', 'alt', 'title', 'href'],
         },
         {

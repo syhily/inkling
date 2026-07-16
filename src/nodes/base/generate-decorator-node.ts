@@ -209,7 +209,10 @@ export interface GeneratedDecoratorNodeClass<
   TDataset extends Record<string, unknown>,
   TOutput extends ExportDOMOutput = ExportDOMOutput,
 > {
-  new (data?: Partial<TDataset>, key?: string): GeneratedDecoratorNodeInstance<TDataset, TOutput>
+  new (
+    data?: Partial<TDataset> | Record<string, unknown>,
+    key?: string,
+  ): GeneratedDecoratorNodeInstance<TDataset, TOutput>
   prototype: GeneratedDecoratorNodeInstance<TDataset, TOutput>
   getType(): string
   clone(node: GeneratedDecoratorNodeInstance<TDataset, TOutput>): GeneratedDecoratorNodeInstance<TDataset, TOutput>

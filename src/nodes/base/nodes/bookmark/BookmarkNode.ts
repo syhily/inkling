@@ -100,7 +100,7 @@ export class BookmarkNode extends generateDecoratorNode({
     // __caption is set by super from the same value (?? '' matches || '' for
     // the string-typed dataset); the metadata remap below covers the keys
     // super never received.
-    super({ caption, captionEditor } as Partial<BookmarkData>, key)
+    super({ caption, captionEditor }, key)
     this.__url = url || ''
     this.__icon = metadata?.icon || ''
     this.__title = metadata?.title || ''

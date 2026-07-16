@@ -1,7 +1,7 @@
 import type { ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { renderEmptyContainer, type EmptyContainerOutput } from '@/nodes/base/utils/render-empty-container'
 
 export const ALL_MEMBERS_SEGMENT = 'status:free,status:-free'
 export const PAID_MEMBERS_SEGMENT = 'status:-free' // paid + comped + gift
@@ -152,13 +152,13 @@ export function migrateOldVisibilityFormat(visibility: Visibility | undefined): 
   return newVisibility
 }
 
-export function renderWithVisibility(
-  originalRenderOutput: ExportDOMOutput,
+export function renderWithVisibility<T extends ExportDOMOutput>(
+  originalRenderOutput: T,
   visibility: Visibility | undefined,
   // `target` is optional: omitting it takes the web path (context.target is
   // only ever compared against 'email')
   context: Partial<Pick<RenderContext, 'target'>>,
-) {
+): T | EmptyContainerOutput | ExportDOMOutput<'outer'> | ExportDOMOutput<'value'> {
   if (!visibility) {
     return originalRenderOutput
   }
