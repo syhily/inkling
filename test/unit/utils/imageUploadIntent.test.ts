@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ImageNode, $createImageNode, type ImageNode as ImageNodeType } from '@/nodes/ImageNode'
 import { getImageDimensions } from '@/utils/getImageDimensions'
-import { imageUploadHandler } from '@/utils/imageUploadHandler'
+import { imageUploadIntent } from '@/utils/upload-intent'
 
 vi.mock('@/utils/getImageDimensions', () => ({
   getImageDimensions: vi.fn(),
@@ -22,7 +22,7 @@ function flushMacrotask(): Promise<void> {
   })
 }
 
-describe('imageUploadHandler', () => {
+describe('imageUploadIntent', () => {
   let editor: LexicalEditor
   let createObjectURLSpy: ReturnType<typeof vi.spyOn>
   let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>
@@ -53,7 +53,7 @@ describe('imageUploadHandler', () => {
     const upload = vi.fn().mockResolvedValue([{ url: 'https://example.com/image.png' }])
     const nodeKey = await createImageNodeInEditor()
 
-    await imageUploadHandler([file], nodeKey, editor, upload)
+    await imageUploadIntent({ files: [file], nodeKey, editor, upload })
     await flushMacrotask()
 
     expect(createObjectURLSpy).toHaveBeenCalledExactlyOnceWith(file)
@@ -74,7 +74,7 @@ describe('imageUploadHandler', () => {
     const upload = vi.fn().mockRejectedValue(new Error('upload failed'))
     const nodeKey = await createImageNodeInEditor()
 
-    await expect(imageUploadHandler([file], nodeKey, editor, upload)).rejects.toThrow('upload failed')
+    await expect(imageUploadIntent({ files: [file], nodeKey, editor, upload })).rejects.toThrow('upload failed')
 
     expect(createObjectURLSpy).toHaveBeenCalledExactlyOnceWith(file)
     expect(revokeObjectURLSpy).toHaveBeenCalledExactlyOnceWith('blob://image-preview')
@@ -86,7 +86,9 @@ describe('imageUploadHandler', () => {
     const upload = vi.fn().mockResolvedValue([{ url: 'https://example.com/image.png' }])
     const nodeKey = await createImageNodeInEditor()
 
-    await expect(imageUploadHandler([file], nodeKey, editor, upload)).rejects.toThrow('failed to read dimensions')
+    await expect(imageUploadIntent({ files: [file], nodeKey, editor, upload })).rejects.toThrow(
+      'failed to read dimensions',
+    )
 
     expect(createObjectURLSpy).toHaveBeenCalledExactlyOnceWith(file)
     expect(revokeObjectURLSpy).toHaveBeenCalledExactlyOnceWith('blob://image-preview')

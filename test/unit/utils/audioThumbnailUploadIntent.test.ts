@@ -3,7 +3,7 @@ import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AudioNode, $createAudioNode, type AudioNode as AudioNodeType } from '@/nodes/AudioNode'
-import { thumbnailUploadHandler } from '@/utils/thumbnailUploadHandler'
+import { audioThumbnailUploadIntent } from '@/utils/upload-intent'
 
 function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -11,7 +11,7 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void
   })
 }
 
-describe('thumbnailUploadHandler', () => {
+describe('audioThumbnailUploadIntent', () => {
   let editor: LexicalEditor
 
   beforeEach(() => {
@@ -39,7 +39,7 @@ describe('thumbnailUploadHandler', () => {
     const upload = vi.fn()
     const nodeKey = await createAudioNodeInEditor()
 
-    await thumbnailUploadHandler(null, nodeKey, editor, upload)
+    await audioThumbnailUploadIntent({ files: null, nodeKey, editor, upload })
 
     expect(upload).not.toHaveBeenCalled()
   })
@@ -49,7 +49,7 @@ describe('thumbnailUploadHandler', () => {
     const nodeKey = await createAudioNodeInEditor()
     const file = new File(['image'], 'thumb.jpg', { type: 'image/jpeg' })
 
-    await thumbnailUploadHandler([file], nodeKey, editor, upload)
+    await audioThumbnailUploadIntent({ files: [file], nodeKey, editor, upload })
 
     expect(upload).toHaveBeenCalledExactlyOnceWith([file], { formData: { url: '/audio.mp3' } })
     expect(readThumbnailSrc(nodeKey)).toBe('https://example.com/thumb.jpg')
@@ -60,7 +60,7 @@ describe('thumbnailUploadHandler', () => {
     const nodeKey = await createAudioNodeInEditor()
     const file = new File(['image'], 'thumb.jpg', { type: 'image/jpeg' })
 
-    await thumbnailUploadHandler([file], nodeKey, editor, upload)
+    await audioThumbnailUploadIntent({ files: [file], nodeKey, editor, upload })
 
     expect(upload).toHaveBeenCalledExactlyOnceWith([file], { formData: { url: '/audio.mp3' } })
     expect(readThumbnailSrc(nodeKey)).toBe('')

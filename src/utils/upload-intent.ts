@@ -1,6 +1,9 @@
 import { $getNodeByKey, type LexicalEditor, type LexicalNode, type NodeKey } from 'lexical'
 
-import { $updateCardNode } from '@/nodes/base'
+import { $isAudioNode, $isFileNode, $isImageNode, $updateCardNode, type FileNode, type ImageNode } from '@/nodes/base'
+import { getAudioMetadata } from '@/utils/getAudioMetadata'
+import { getImageDimensions } from '@/utils/getImageDimensions'
+import prettifyFileName from '@/utils/prettifyFileName'
 import { revokePreviewUrl } from '@/utils/revokePreviewUrl'
 
 /**
@@ -212,7 +215,10 @@ export async function runUploadIntent<TNode extends LexicalNode, TMeta = undefin
             return uploadOptions(guard(node) ? node : null)
           })
         : uploadOptions
-    const result = await upload(files, resolvedUploadOptions)
+    // one-arg call when the card carries no upload options — the pinned
+    // handlers' call arity (upload(files) vs upload(files, options)) is part
+    // of the per-card contract
+    const result = resolvedUploadOptions ? await upload(files, resolvedUploadOptions) : await upload(files)
     const resultUrl = result?.[0]?.url
 
     if (isEmptyResult(result) && onEmptyResult === 'bail') {
@@ -233,5 +239,188 @@ export async function runUploadIntent<TNode extends LexicalNode, TMeta = undefin
     return resultUrl
   } finally {
     lease?.release()
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Per-card intent configurations — the Step-1 policy matrix as data. Each   */
+/* factory is the card's metadata extraction + empty-result policy (+ the    */
+/* pre-upload src reset where the card has one) bound to the runner; the     */
+/* four handler modules these replace were deleted in the same commit.       */
+/* ------------------------------------------------------------------------ */
+
+export interface CardUploadIntentDeps {
+  editor: LexicalEditor
+  nodeKey: NodeKey
+  upload: UploadFn
+  files: FileList | File[] | null
+}
+
+/**
+ * Image: object-URL preview published as `previewSrc`, dimensions extracted
+ * from the preview before the upload, and the patch ALWAYS lands — an empty
+ * result still writes `src: ''` and clears the preview. Rejections propagate;
+ * the lease is released in `finally`.
+ */
+export function imageUploadIntent({
+  editor,
+  nodeKey,
+  upload,
+  files,
+  prePatch,
+}: CardUploadIntentDeps & { prePatch?: (node: ImageNode) => void }): Promise<string | undefined> {
+  return runUploadIntent({
+    editor,
+    nodeKey,
+    guard: $isImageNode,
+    files,
+    upload,
+    prePatch,
+    leasePreview: true,
+    previewPatch: (node, url) => {
+      node.previewSrc = url
+    },
+    extractMetadata: ({ previewUrl }) => getImageDimensions(previewUrl!),
+    onEmptyResult: 'patch',
+    patch: (node, { meta, resultUrl }) => {
+      node.width = meta.width
+      node.height = meta.height
+      node.src = resultUrl ?? ''
+      node.previewSrc = null
+    },
+  })
+}
+
+/**
+ * Audio: object URL leased for metadata only (never published on the node),
+ * upload FIRST, and bail with the node untouched when no url comes back; only
+ * then extract duration/title/mimeType and patch. Rejections propagate; the
+ * lease is released in `finally`.
+ */
+export function audioUploadIntent({
+  editor,
+  nodeKey,
+  upload,
+  files,
+}: CardUploadIntentDeps): Promise<string | undefined> {
+  return runUploadIntent({
+    editor,
+    nodeKey,
+    guard: $isAudioNode,
+    files,
+    upload,
+    leasePreview: true,
+    metadataTiming: 'afterUpload',
+    extractMetadata: async ({ file, previewUrl }) => {
+      const { duration } = await getAudioMetadata(previewUrl!)
+      return {
+        duration,
+        mimeType: file.type,
+        title: prettifyFileName(file.name),
+      }
+    },
+    onEmptyResult: 'bail',
+    patch: (node, { meta, resultUrl }) => {
+      node.duration = meta.duration
+      node.src = resultUrl ?? ''
+      node.mimeType = meta.mimeType
+      node.title = meta.title
+    },
+  })
+}
+
+export const stripFileExtension = (fileName: string): string => {
+  const fileExtension = fileName.split('.').pop() ?? ''
+  const fileNameWithoutExtension = fileName.replace(`.${fileExtension}`, '')
+  return fileNameWithoutExtension
+}
+
+/**
+ * File: no object URL at all. Bails (node untouched beyond `prePatch`) when
+ * the result is missing or has no first item, but a first item without a url
+ * still patches with `src: ''`.
+ */
+export function fileUploadIntent({
+  editor,
+  nodeKey,
+  upload,
+  files,
+  prePatch,
+}: CardUploadIntentDeps & { prePatch?: (node: FileNode) => void }): Promise<string | undefined> {
+  return runUploadIntent({
+    editor,
+    nodeKey,
+    guard: $isFileNode,
+    files,
+    upload,
+    prePatch,
+    isEmptyResult: (result) => !result || !result[0],
+    onEmptyResult: 'bail',
+    patch: (node, { resultUrl, file }) => {
+      const fileName = file?.name ?? ''
+      node.fileTitle = stripFileExtension(fileName)
+      node.fileName = fileName
+      node.fileSize = file?.size ?? 0
+      node.src = resultUrl ?? ''
+    },
+  })
+}
+
+/**
+ * Audio thumbnail: reads the current `node.src` and passes it as
+ * `formData: { url }`; writes `thumbnailSrc` only when a url comes back.
+ */
+export function audioThumbnailUploadIntent({
+  editor,
+  nodeKey,
+  upload,
+  files,
+}: CardUploadIntentDeps): Promise<string | undefined> {
+  return runUploadIntent({
+    editor,
+    nodeKey,
+    guard: $isAudioNode,
+    files,
+    upload,
+    uploadOptions: (node) => ({ formData: { url: node?.src ?? '' } }),
+    onEmptyResult: 'bail',
+    patch: (node, { resultUrl }) => {
+      node.thumbnailSrc = resultUrl ?? ''
+    },
+  })
+}
+
+export interface BackgroundImageUploadResult {
+  imageSrc: string | undefined
+  width: number
+  height: number
+}
+
+/**
+ * Re-homed verbatim from the deleted imageUploadHandler module (plan 045
+ * Step 3): the header's background flow performs no node write — the header
+ * patches `backgroundImageSrc/Width/Height` itself — so it is not a runner
+ * configuration. Behavior is identical to the original handler.
+ */
+export const backgroundImageUploadHandler = async (
+  files: FileList | File[] | null,
+  upload: UploadFn,
+): Promise<BackgroundImageUploadResult | undefined> => {
+  if (!files) {
+    return
+  }
+  const result = await upload(files)
+  const imageSrc = result?.[0]?.url
+
+  if (!imageSrc) {
+    return undefined
+  }
+
+  const { width, height } = await getImageDimensions(imageSrc)
+
+  return {
+    imageSrc,
+    width,
+    height,
   }
 }

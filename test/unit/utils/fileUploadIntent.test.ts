@@ -3,7 +3,7 @@ import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { FileNode, $createFileNode, type FileNode as FileNodeType } from '@/nodes/FileNode'
-import { fileUploadHandler } from '@/utils/fileUploadHandler'
+import { fileUploadIntent } from '@/utils/upload-intent'
 
 function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -11,7 +11,7 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void
   })
 }
 
-describe('fileUploadHandler', () => {
+describe('fileUploadIntent', () => {
   let editor: LexicalEditor
 
   beforeEach(() => {
@@ -49,7 +49,7 @@ describe('fileUploadHandler', () => {
     const upload = vi.fn()
     const nodeKey = await createFileNodeInEditor()
 
-    await fileUploadHandler(null, nodeKey, editor, upload)
+    await fileUploadIntent({ files: null, nodeKey, editor, upload })
 
     expect(upload).not.toHaveBeenCalled()
     expect(readFileFields(nodeKey).src).toBe('/existing.pdf')
@@ -60,7 +60,7 @@ describe('fileUploadHandler', () => {
     const nodeKey = await createFileNodeInEditor()
     const file = new File(['file-body'], 'report.pdf', { type: 'application/pdf' })
 
-    await fileUploadHandler([file], nodeKey, editor, upload)
+    await fileUploadIntent({ files: [file], nodeKey, editor, upload })
 
     expect(upload).toHaveBeenCalledExactlyOnceWith([file])
     expect(readFileFields(nodeKey)).toEqual({
@@ -76,7 +76,7 @@ describe('fileUploadHandler', () => {
     const nodeKey = await createFileNodeInEditor()
     const file = new File(['file-body'], 'report.pdf', { type: 'application/pdf' })
 
-    await fileUploadHandler([file], nodeKey, editor, upload)
+    await fileUploadIntent({ files: [file], nodeKey, editor, upload })
 
     expect(upload).toHaveBeenCalledExactlyOnceWith([file])
     expect(readFileFields(nodeKey).src).toBe('/existing.pdf')
@@ -87,7 +87,7 @@ describe('fileUploadHandler', () => {
     const nodeKey = await createFileNodeInEditor()
     const file = new File(['file-body'], 'report.pdf', { type: 'application/pdf' })
 
-    await fileUploadHandler([file], nodeKey, editor, upload)
+    await fileUploadIntent({ files: [file], nodeKey, editor, upload })
 
     expect(readFileFields(nodeKey)).toEqual({
       src: 'https://example.com/report.pdf',
@@ -102,7 +102,7 @@ describe('fileUploadHandler', () => {
     const nodeKey = await createFileNodeInEditor()
     const file = new File(['file-body'], 'report.pdf', { type: 'application/pdf' })
 
-    await fileUploadHandler([file], nodeKey, editor, upload)
+    await fileUploadIntent({ files: [file], nodeKey, editor, upload })
 
     expect(readFileFields(nodeKey)).toEqual({
       src: '',

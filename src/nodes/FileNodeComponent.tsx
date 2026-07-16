@@ -10,8 +10,8 @@ import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { $isFileNode, $updateCardNode } from '@/nodes/base'
-import { fileUploadHandler } from '@/utils/fileUploadHandler'
 import { openFileSelection } from '@/utils/openFileSelection'
+import { fileUploadIntent } from '@/utils/upload-intent'
 
 export interface FileNodeComponentProps {
   fileDesc: string
@@ -47,8 +47,22 @@ function FileNodeComponent({
 
   const uploader = fileUploader.useFileUpload('file')
 
+  const uploadFile = (files: FileList | File[] | null, { resetSrc = false } = {}) =>
+    fileUploadIntent({
+      editor,
+      nodeKey,
+      upload: uploader.upload,
+      files,
+      // reset original src so it can be replaced with preview and upload progress
+      prePatch: resetSrc
+        ? (node) => {
+            node.src = ''
+          }
+        : undefined,
+    })
+
   const handleFileDrop = async (files: File[] | FileList): Promise<void> => {
-    await fileUploadHandler(files, nodeKey, editor, uploader.upload)
+    await uploadFile(files)
   }
 
   const fileDragHandler = useFileDragAndDrop({ handleDrop: handleFileDrop })
@@ -56,7 +70,7 @@ function FileNodeComponent({
   React.useEffect(() => {
     const uploadInitialFile = async (file: File | undefined): Promise<void> => {
       if (file && !fileSrc) {
-        await fileUploadHandler([file], nodeKey, editor, uploader.upload)
+        await uploadFile([file])
       }
     }
 
@@ -68,14 +82,7 @@ function FileNodeComponent({
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const files = e.target.files
 
-    // reset original src so it can be replaced with preview and upload progress
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isFileNode, (node) => {
-        node.src = ''
-      })
-    })
-
-    return await fileUploadHandler(files, nodeKey, editor, uploader.upload)
+    await uploadFile(files, { resetSrc: true })
   }
 
   React.useEffect(() => {

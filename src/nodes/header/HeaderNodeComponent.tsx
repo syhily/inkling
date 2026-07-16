@@ -16,8 +16,8 @@ import { $updateCardNode } from '@/nodes/base'
 import { $isHeaderNode } from '@/nodes/HeaderNode'
 import { EDIT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 import { getAccentColor } from '@/utils/getAccentColor'
-import { backgroundImageUploadHandler } from '@/utils/imageUploadHandler'
 import { openFileSelection } from '@/utils/openFileSelection'
+import { backgroundImageUploadHandler } from '@/utils/upload-intent'
 
 interface HeaderNodeComponentProps {
   alignment: string

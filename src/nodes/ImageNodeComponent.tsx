@@ -23,9 +23,9 @@ import { dataSrcToFile } from '@/utils/dataSrcToFile'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import { getImageFilenameFromSrc } from '@/utils/getImageFilenameFromSrc'
 import { getAllowedImageCardWidths, getDefaultImageCardWidth } from '@/utils/image-card-widths'
-import { imageUploadHandler } from '@/utils/imageUploadHandler'
 import { isGif } from '@/utils/isGif'
 import { openFileSelection } from '@/utils/openFileSelection'
+import { imageUploadIntent } from '@/utils/upload-intent'
 
 export interface ImageNodeComponentProps {
   nodeKey: NodeKey
@@ -59,6 +59,23 @@ export function ImageNodeComponent({
   const [showSnippetToolbar, setShowSnippetToolbar] = React.useState(false)
 
   const imageUploader = fileUploader.useFileUpload('image')
+
+  const uploadImage = React.useCallback(
+    (files: FileList | File[] | null, { resetSrc = false } = {}) =>
+      imageUploadIntent({
+        editor,
+        nodeKey,
+        upload: imageUploader.upload,
+        files,
+        // reset original src so it can be replaced with preview and upload progress
+        prePatch: resetSrc
+          ? (node) => {
+              node.src = ''
+            }
+          : undefined,
+      }),
+    [editor, imageUploader.upload, nodeKey],
+  )
 
   const onDropImageCard = React.useCallback(
     (draggable: DraggableInfo): boolean | undefined => {
@@ -139,7 +156,7 @@ export function ImageNodeComponent({
     const uploadFile = async () => {
       const file = await dataSrcToFile(src)
       if (isMounted && file) {
-        await imageUploadHandler([file], nodeKey, editor, imageUploader.upload)
+        await uploadImage([file])
       }
     }
 
@@ -148,13 +165,13 @@ export function ImageNodeComponent({
     return () => {
       isMounted = false
     }
-  }, [editor, imageUploader.isLoading, imageUploader.upload, nodeKey, src])
+  }, [imageUploader.isLoading, src, uploadImage])
 
   React.useEffect(() => {
     // If an initial file is provided, upload it
     const uploadInitialFile = async (file: File) => {
       if (file && !src) {
-        await imageUploadHandler([file], nodeKey, editor, imageUploader.upload)
+        await uploadImage([file])
       }
     }
 
@@ -201,15 +218,7 @@ export function ImageNodeComponent({
       return
     }
 
-    // reset original src so it can be replaced with preview and upload progress
-    editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if ($isImageNode(node)) {
-        node.src = ''
-      }
-    })
-
-    return await imageUploadHandler(files, nodeKey, editor, imageUploader.upload)
+    return await uploadImage(files, { resetSrc: true })
   }
 
   const setHref = (newHref: string) => {
@@ -292,7 +301,7 @@ export function ImageNodeComponent({
   }
 
   async function handleImageDrop(files: File[]) {
-    await imageUploadHandler(files, nodeKey, editor, imageUploader.upload)
+    await uploadImage(files)
   }
 
   const setFigureRef = React.useCallback(() => {

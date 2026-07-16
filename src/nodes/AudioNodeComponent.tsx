@@ -10,9 +10,8 @@ import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { $isAudioNode, $updateCardNode } from '@/nodes/base'
-import { audioUploadHandler } from '@/utils/audioUploadHandler'
 import { openFileSelection } from '@/utils/openFileSelection'
-import { thumbnailUploadHandler } from '@/utils/thumbnailUploadHandler'
+import { audioThumbnailUploadIntent, audioUploadIntent } from '@/utils/upload-intent'
 
 interface AudioNodeComponentProps {
   duration: number
@@ -46,10 +45,15 @@ export function AudioNodeComponent({
   const audioDragHandler = useFileDragAndDrop({ handleDrop: handleAudioDrop })
   const thumbnailDragHandler = useFileDragAndDrop({ handleDrop: handleThumbnailDrop, disabled: !isEditing })
 
+  const uploadAudio = (files: FileList | File[] | null) =>
+    audioUploadIntent({ editor, nodeKey, upload: audioUploader.upload, files })
+  const uploadThumbnail = (files: FileList | File[] | null) =>
+    audioThumbnailUploadIntent({ editor, nodeKey, upload: thumbnailUploader.upload, files })
+
   React.useEffect(() => {
     const uploadInitialFile = async (file: File) => {
       if (file && !src && !audioUploader.isLoading) {
-        await audioUploadHandler([file], nodeKey, editor, audioUploader.upload)
+        await uploadAudio([file])
       }
     }
 
@@ -63,12 +67,12 @@ export function AudioNodeComponent({
 
   const onAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fls = e.target.files
-    return await audioUploadHandler(fls, nodeKey, editor, audioUploader.upload)
+    return await uploadAudio(fls)
   }
 
   const onThumbnailFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fls = e.target.files
-    return await thumbnailUploadHandler(fls, nodeKey, editor, thumbnailUploader.upload)
+    return await uploadThumbnail(fls)
   }
 
   const setTitle = (newTitle: string) => {
@@ -88,11 +92,11 @@ export function AudioNodeComponent({
   }
 
   async function handleAudioDrop(files: File[]) {
-    await audioUploadHandler(files, nodeKey, editor, audioUploader.upload)
+    await uploadAudio(files)
   }
 
   async function handleThumbnailDrop(files: File[]) {
-    await thumbnailUploadHandler(files, nodeKey, editor, thumbnailUploader.upload)
+    await uploadThumbnail(files)
   }
 
   const handleToolbarEdit = (event: React.MouseEvent) => {

@@ -3,8 +3,8 @@ import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AudioNode, $createAudioNode, type AudioNode as AudioNodeType } from '@/nodes/AudioNode'
-import { audioUploadHandler } from '@/utils/audioUploadHandler'
 import { getAudioMetadata } from '@/utils/getAudioMetadata'
+import { audioUploadIntent } from '@/utils/upload-intent'
 
 vi.mock('@/utils/getAudioMetadata', () => ({
   getAudioMetadata: vi.fn(),
@@ -22,7 +22,7 @@ function flushMacrotask(): Promise<void> {
   })
 }
 
-describe('audioUploadHandler', () => {
+describe('audioUploadIntent', () => {
   let editor: LexicalEditor
   let createObjectURLSpy: ReturnType<typeof vi.spyOn>
   let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>
@@ -53,7 +53,7 @@ describe('audioUploadHandler', () => {
     const upload = vi.fn().mockResolvedValue([{ url: 'https://example.com/audio.mp3' }])
     const nodeKey = await createAudioNodeInEditor()
 
-    await audioUploadHandler([file], nodeKey, editor, upload)
+    await audioUploadIntent({ files: [file], nodeKey, editor, upload })
     await flushMacrotask()
 
     expect(createObjectURLSpy).toHaveBeenCalledExactlyOnceWith(file)
@@ -74,7 +74,7 @@ describe('audioUploadHandler', () => {
     const upload = vi.fn().mockRejectedValue(new Error('upload failed'))
     const nodeKey = await createAudioNodeInEditor()
 
-    await expect(audioUploadHandler([file], nodeKey, editor, upload)).rejects.toThrow('upload failed')
+    await expect(audioUploadIntent({ files: [file], nodeKey, editor, upload })).rejects.toThrow('upload failed')
 
     expect(createObjectURLSpy).toHaveBeenCalledExactlyOnceWith(file)
     expect(revokeObjectURLSpy).toHaveBeenCalledExactlyOnceWith('blob://audio-preview')
@@ -85,7 +85,7 @@ describe('audioUploadHandler', () => {
     const upload = vi.fn().mockResolvedValue([{}])
     const nodeKey = await createAudioNodeInEditor()
 
-    await audioUploadHandler([file], nodeKey, editor, upload)
+    await audioUploadIntent({ files: [file], nodeKey, editor, upload })
 
     expect(createObjectURLSpy).toHaveBeenCalledExactlyOnceWith(file)
     expect(revokeObjectURLSpy).toHaveBeenCalledExactlyOnceWith('blob://audio-preview')
