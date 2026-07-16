@@ -11,7 +11,14 @@ import { renderGalleryNode } from '@/nodes/base/nodes/gallery/gallery-renderer'
 import { pick } from '@/utils/objects'
 
 const galleryProperties = [
-  { name: 'images', default: [] as unknown[] },
+  {
+    name: 'images',
+    // getter default (the visibility idiom): every construction/property-default
+    // read gets a fresh array, so default nodes never share one instance
+    get default() {
+      return [] as GalleryImage[]
+    },
+  },
   { name: 'caption', default: '', wordCount: true },
 ] as const satisfies readonly DecoratorNodeProperty[]
 

@@ -2,6 +2,8 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
 import { $getRoot, LexicalEditor } from 'lexical'
 
+import type { GalleryImage } from '@/types/gallery'
+
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { GalleryNode, $createGalleryNode, $isGalleryNode, ImageNode } from '@/nodes/base/index'
@@ -1318,7 +1320,10 @@ describe('GalleryNode', function () {
               width: 3200,
               height: 1600,
             },
-          ],
+            // the junk entries above stay `as unknown`: the array is asserted
+            // once here so the test can feed deliberately-invalid images
+            // (the untrusted-payload path isValidImage filters at runtime)
+          ] as GalleryImage[],
           caption: 'Test caption',
         })
         const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })

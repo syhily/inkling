@@ -17,7 +17,7 @@ interface ValidGalleryImage extends GalleryImage {
 }
 
 interface GalleryNodeData {
-  images: unknown[]
+  images: GalleryImage[]
   caption: string
 }
 
