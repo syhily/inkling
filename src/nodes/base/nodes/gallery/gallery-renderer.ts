@@ -1,34 +1,34 @@
 import type { RenderContext } from '@/nodes/base/render-context'
+import type { GalleryImage } from '@/types/gallery'
 
 import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 
-interface GalleryImage {
+// the renderer can only lay out images that carry these fields; isValidImage
+// narrows the canonical (all-optional) GalleryImage to this stricter view
+interface ValidGalleryImage extends GalleryImage {
   fileName: string
   src: string
   width: number
   height: number
-  alt?: string
-  title?: string
   row: number
-  href?: string
 }
 
 interface GalleryNodeData {
-  images: GalleryImage[]
+  images: ValidGalleryImage[]
   caption: string
 }
 
 const MAX_IMG_PER_ROW = 3
 
-function isValidImage(image: unknown, context: RenderContext): image is GalleryImage {
+function isValidImage(image: unknown, context: RenderContext): image is ValidGalleryImage {
   if (typeof image !== 'object' || image === null) {
     return false
   }
 
-  const candidate = image as Partial<GalleryImage>
+  const candidate = image as Partial<ValidGalleryImage>
   const width = candidate.width
   const height = candidate.height
   const row = candidate.row
@@ -50,11 +50,11 @@ function isValidImage(image: unknown, context: RenderContext): image is GalleryI
   )
 }
 
-function buildStructure(images: GalleryImage[]) {
-  const rows: GalleryImage[][] = []
+function buildStructure(images: ValidGalleryImage[]) {
+  const rows: ValidGalleryImage[][] = []
   const noOfImages = images.length
 
-  images.forEach((image: GalleryImage, idx: number) => {
+  images.forEach((image: ValidGalleryImage, idx: number) => {
     let row = image.row
 
     if (noOfImages > 1 && noOfImages % MAX_IMG_PER_ROW === 1 && idx === noOfImages - 2) {
@@ -91,7 +91,7 @@ export function renderGalleryNode(node: GalleryNodeData, context: RenderContext)
     const rowDiv = document.createElement('div')
     rowDiv.setAttribute('class', 'inkling-gallery-row')
 
-    row.forEach((image: GalleryImage) => {
+    row.forEach((image: ValidGalleryImage) => {
       const imgDiv = document.createElement('div')
       imgDiv.setAttribute('class', 'inkling-gallery-image')
 

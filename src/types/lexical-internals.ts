@@ -8,9 +8,8 @@ import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator
 // Additional methods are defined on specific subclasses but used generically across the codebase.
 export type CardNode = LexicalNode &
   GeneratedDecoratorNodeBase & {
-    isEmpty(): boolean
+    // only some card classes implement isEmpty; cards without it are never auto-removed
+    isEmpty?(): boolean
     __openInEditMode?: boolean
     clearOpenInEditMode?(): void
-    selectPrevious?(): void
-    selectNext?(): void
   }

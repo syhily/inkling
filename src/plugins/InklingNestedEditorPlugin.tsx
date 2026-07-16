@@ -10,6 +10,8 @@ import {
 } from 'lexical'
 import React from 'react'
 
+import type { NestedKeyboardEvent } from '@/types/events'
+
 import CardContext from '@/context/CardContext'
 import { getParentEditor } from '@/utils/lexical-internals'
 
@@ -91,8 +93,7 @@ function InklingNestedEditorPlugin({
             if (!parentEditor) {
               return true
             }
-            // oxlint-disable-next-line typescript/no-explicit-any
-            ;(event as Event & { _fromNested?: boolean })._fromNested = true
+            ;(event as NestedKeyboardEvent)._fromNested = true
             parentEditor.dispatchCommand(KEY_ENTER_COMMAND, event)
             return true
           }
@@ -118,9 +119,8 @@ function InklingNestedEditorPlugin({
             if (!parentEditor) {
               return false
             }
-            // oxlint-disable-next-line typescript/no-explicit-any
             if (event) {
-              ;(event as Event & { _fromNested?: boolean })._fromNested = true
+              ;(event as NestedKeyboardEvent)._fromNested = true
             }
             parentEditor.dispatchCommand(KEY_ENTER_COMMAND, event)
 

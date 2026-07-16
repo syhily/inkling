@@ -22,11 +22,9 @@ const defaultTheme = {
   text: {
     bold: undefined,
     italic: 'italic',
-    overflowed: undefined,
-    hashtag: undefined,
     underline: 'underline',
     strikethrough: 'line-through',
-    underlinestrikethrough: undefined,
+    underlineStrikethrough: undefined,
     code: undefined,
   },
   code: undefined,

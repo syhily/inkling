@@ -39,6 +39,20 @@ export interface ImageNodeComponentProps {
   href?: string
 }
 
+// image card datasets allow null dimensions and carry card-only keys, while
+// GalleryImage keeps every field optional — map the fields addImages persists
+// (ALLOWED_IMAGE_PROPS) explicitly instead of casting the whole dataset
+function toGalleryImage(imageDataset: Record<string, unknown>): GalleryImage {
+  return {
+    src: typeof imageDataset.src === 'string' ? imageDataset.src : undefined,
+    fileName: typeof imageDataset.fileName === 'string' ? imageDataset.fileName : undefined,
+    width: typeof imageDataset.width === 'number' ? imageDataset.width : undefined,
+    height: typeof imageDataset.height === 'number' ? imageDataset.height : undefined,
+    alt: typeof imageDataset.alt === 'string' ? imageDataset.alt : undefined,
+    caption: typeof imageDataset.caption === 'string' ? imageDataset.caption : undefined,
+  }
+}
+
 export function ImageNodeComponent({
   nodeKey,
   initialFile,
@@ -101,7 +115,7 @@ export function ImageNodeComponent({
 
           // image datasets allow null dimensions while GalleryImage keeps them
           // optional; the conversion only carries keys allowed by addImages
-          galleryNode.addImages([targetImageDataset as GalleryImage, dataset])
+          galleryNode.addImages([toGalleryImage(targetImageDataset), toGalleryImage(dataset)])
 
           targetImageNode.replace(galleryNode)
           droppedImageNode.remove()

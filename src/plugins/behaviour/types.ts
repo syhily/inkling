@@ -23,8 +23,3 @@ export interface DeleteCardPayload {
 export interface LinkMatchPayload {
   linkMatch: RegExpMatchArray
 }
-
-export interface CardKeyboardEvent extends KeyboardEvent {
-  _fromNested?: boolean
-  _fromCaptionEditor?: boolean
-}

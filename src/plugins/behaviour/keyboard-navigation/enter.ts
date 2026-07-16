@@ -11,11 +11,12 @@ import {
   KEY_ENTER_COMMAND,
 } from 'lexical'
 
+import type { NestedKeyboardEvent } from '@/types/events'
+
 import { $insertCodeBlockForShortcut, FENCE_KEYBOARD_REGEXP } from '@/markdown/card-shortcuts'
 import { $isInklingCard } from '@/nodes/base'
 import { $selectDecoratorNode } from '@/utils'
 
-import type { CardKeyboardEvent } from '../types'
 import type { KeyboardNavigationDeps } from './types'
 
 import { $selectCard } from '../card-adjacency'
@@ -83,7 +84,7 @@ export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNaviga
 
       // let the browser handle selection when in a card inner element (e.g. nested editor)
       // NOTE: must come after ctrl/cmd+enter because that always toggles no matter the selection
-      if (event && !(event as CardKeyboardEvent)._fromNested && document.activeElement !== editor.getRootElement()) {
+      if (event && !(event as NestedKeyboardEvent)._fromNested && document.activeElement !== editor.getRootElement()) {
         return true
       }
 

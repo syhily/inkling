@@ -19,7 +19,8 @@ export type InklingCard = InklingDecoratorNode & {
   isInklingCard(): true
   exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): ExportDOMOutput
   hasEditMode(): boolean
-  isEmpty(): boolean
+  // optional: the generated card classes do not define isEmpty
+  isEmpty?(): boolean
 }
 
 export function $isInklingCard(node: unknown): node is InklingCard {
