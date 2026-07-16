@@ -1,13 +1,8 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import {
-  $createParagraphNode,
-  $getSelection,
-  $isParagraphNode,
-  $isRangeSelection,
-  COMMAND_PRIORITY_EDITOR,
-} from 'lexical'
+import { $getSelection, $isParagraphNode, $isRangeSelection, COMMAND_PRIORITY_EDITOR } from 'lexical'
 import { useEffect } from 'react'
 
+import { $insertHorizontalRuleForUpdateScanTrigger, DIVIDER_REGEXP } from '@/markdown/card-shortcuts'
 import { $createHorizontalRuleNode, INSERT_HORIZONTAL_RULE_COMMAND } from '@/nodes/HorizontalRuleNode'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
@@ -49,7 +44,8 @@ export const HorizontalRulePlugin = () => {
     )
   }, [editor])
 
-  // added markdown shortcut to divider card
+  // divider card shortcut — per-update scan trigger only; the regex and
+  // replace-and-select live in the card-shortcut seam (@/markdown/card-shortcuts)
   useEffect(() => {
     return editor.registerUpdateListener(() => {
       editor.update(() => {
@@ -63,9 +59,8 @@ export const HorizontalRulePlugin = () => {
           return
         }
 
-        const dividerRegExp = /^(---|\*\*\*|___)\s?$/
         const node = getSelectedNode(selection).getTopLevelElement()
-        if (!node || !$isParagraphNode(node) || !node.getTextContent().match(dividerRegExp)) {
+        if (!node || !$isParagraphNode(node) || !node.getTextContent().match(DIVIDER_REGEXP)) {
           return
         }
 
@@ -80,21 +75,7 @@ export const HorizontalRulePlugin = () => {
           return
         }
 
-        const line = $createHorizontalRuleNode()
-        const parentNode = node.getTopLevelElement()
-
-        if (!parentNode) {
-          return
-        }
-
-        if (parentNode.getNextSibling()) {
-          parentNode.replace(line)
-        } else {
-          parentNode.insertBefore(line)
-          parentNode.replace($createParagraphNode())
-        }
-
-        line.selectNext()
+        $insertHorizontalRuleForUpdateScanTrigger(node)
       })
     })
   }, [editor])

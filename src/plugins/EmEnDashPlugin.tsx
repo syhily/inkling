@@ -25,7 +25,8 @@ function $replaceDashes(dirtyLeaves: Set<string>, supportsHrShortcut: boolean) {
     let text = node.getTextContent()
 
     // '---' as the sole content of a paragraph is the horizontal-rule
-    // markdown shortcut - leave it alone so the HR transform can fire
+    // card shortcut - leave it alone so the seam's HR trigger can fire
+    // (@/markdown/card-shortcuts)
     if (supportsHrShortcut && text === '---' && node.getParent()?.getTextContent() === '---') {
       return
     }
@@ -93,9 +94,10 @@ export const EmEnDashPlugin = () => {
   }, [])
 
   useEffect(() => {
-    // '---' as the sole content of a paragraph is the horizontal-rule markdown
-    // shortcut - leave it alone so the HR transform can fire. Only relevant
-    // when a horizontalrule node is actually registered.
+    // '---' as the sole content of a paragraph is the horizontal-rule card
+    // shortcut - leave it alone so the seam's HR trigger can fire
+    // (@/markdown/card-shortcuts). Only relevant when a horizontalrule node
+    // is actually registered.
     const supportsHrShortcut = [...getRegisteredNodeMap(editor).values()].some(
       ({ klass }) => klass.getType() === 'horizontalrule',
     )

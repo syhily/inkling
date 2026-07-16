@@ -10,27 +10,25 @@ import {
   type Transformer,
 } from '@lexical/markdown'
 
-import { $insertCodeBlockForShortcut, FENCE_TRANSFORMER_REGEXP } from '@/markdown/card-shortcuts'
+import {
+  $insertCodeBlockForShortcut,
+  $insertHorizontalRuleForMarkdownTrigger,
+  DIVIDER_REGEXP,
+  FENCE_TRANSFORMER_REGEXP,
+} from '@/markdown/card-shortcuts'
 import { $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
-import { $createHorizontalRuleNode, $isHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
+import { $isHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 
 export const HR = {
   dependencies: [HorizontalRuleNode],
   export: (node: LexicalNode) => {
     return $isHorizontalRuleNode(node) ? '---' : null
   },
-  regExp: /^(---|\*\*\*|___)\s?$/,
+  // trigger only: the regex and replace-and-select live in the card-shortcut
+  // seam (@/markdown/card-shortcuts)
+  regExp: DIVIDER_REGEXP,
   replace: (parentNode: ElementNode, _children: LexicalNode[], _match: string[], isImport: boolean) => {
-    const line = $createHorizontalRuleNode()
-
-    // TODO: Get rid of isImport flag
-    if (isImport || parentNode.getNextSibling() !== null) {
-      parentNode.replace(line)
-    } else {
-      parentNode.insertBefore(line)
-    }
-
-    line.selectNext()
+    $insertHorizontalRuleForMarkdownTrigger(parentNode, isImport)
   },
   type: 'element' as const,
 }

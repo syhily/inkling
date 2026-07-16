@@ -24,12 +24,24 @@
 // triggers: `replace` and `insertAfter` + `remove` were pinned net-identical
 // for this rewrite (same position, paragraph children dropped either way,
 // same NodeSelection), so one body serves every trigger.
+//
+// The divider regex is single-sourced — both HR triggers already tested the
+// paragraph's full text against the byte-identical expression. The HR
+// replace bodies stay TWO named per-trigger variants because the step-1 pins
+// showed observable divergence: at the document end the markdown trigger
+// KEEPS the emptied paragraph after the rule, while the per-update scan
+// creates a FRESH paragraph (different node identity, pinned in
+// test/unit/plugins/HorizontalRulePlugin.test.tsx), and only the markdown
+// trigger has an isImport branch (import replaces the paragraph outright).
+// Converging them would move a pinned behavior, so each variant names its
+// trigger.
 
 import type { ElementNode } from 'lexical'
 
-import { $createNodeSelection, $setSelection } from 'lexical'
+import { $createNodeSelection, $createParagraphNode, $setSelection } from 'lexical'
 
 import { $createCodeBlockNode } from '@/nodes/CodeBlockNode'
+import { $createHorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 
 /** enter/tab trigger: fires on the key regardless of trailing space. NOT
  * end-anchored, so the `(\w{1,10})` group does not cap the language length
@@ -53,4 +65,47 @@ export function $insertCodeBlockForShortcut(topLevelElement: ElementNode, langua
   const replacementSelection = $createNodeSelection()
   replacementSelection.add(replacementNode.getKey())
   $setSelection(replacementSelection)
+}
+
+/** divider trigger, single-sourced: both the markdown transformer and the
+ * HorizontalRulePlugin per-update scan test the paragraph's full text
+ * against this expression. */
+export const DIVIDER_REGEXP = /^(---|\*\*\*|___)\s?$/
+
+/**
+ * markdown transformer trigger (typing + import). On import, or when a next
+ * sibling exists, the paragraph is replaced outright; at the document end on
+ * a typing keystroke the (framework-emptied) paragraph is KEPT after the
+ * rule. Branch structure preserved exactly, including the isImport flag.
+ */
+export function $insertHorizontalRuleForMarkdownTrigger(parentNode: ElementNode, isImport: boolean): void {
+  const line = $createHorizontalRuleNode()
+
+  // TODO: Get rid of isImport flag
+  if (isImport || parentNode.getNextSibling() !== null) {
+    parentNode.replace(line)
+  } else {
+    parentNode.insertBefore(line)
+  }
+
+  line.selectNext()
+}
+
+/**
+ * per-update scan trigger (HorizontalRulePlugin). Same sibling branch as the
+ * markdown trigger, but at the document end it creates a FRESH paragraph
+ * after the rule (the emptied one is discarded) — the observable divergence
+ * that keeps these bodies per-trigger.
+ */
+export function $insertHorizontalRuleForUpdateScanTrigger(parentNode: ElementNode): void {
+  const line = $createHorizontalRuleNode()
+
+  if (parentNode.getNextSibling()) {
+    parentNode.replace(line)
+  } else {
+    parentNode.insertBefore(line)
+    parentNode.replace($createParagraphNode())
+  }
+
+  line.selectNext()
 }
