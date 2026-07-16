@@ -275,10 +275,11 @@ describe('AudioNodeComponent', () => {
       const toolbar = toolbars[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(3)
 
-      // "Snippet" is audio's deviant label (the other cards read "Save as
-      // snippet") — pinned AS-IS; plan 046 step 3 deliberately renames it
+      // plan 046 step 3 deliberate change: audio's snippet item read
+      // "Snippet" before the migration; it now reads "Save as snippet"
+      // like the other ten cards
       const labels = Array.from(toolbar.querySelectorAll('button')).map((button) => button.getAttribute('aria-label'))
-      expect(labels).toEqual(['Edit', 'Snippet'])
+      expect(labels).toEqual(['Edit', 'Save as snippet'])
       expect(toolbar.querySelectorAll('button svg')).toHaveLength(2)
       expect(screen.getByTestId('create-snippet')).toBeTruthy()
     })

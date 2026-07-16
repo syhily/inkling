@@ -2,10 +2,8 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { type NodeKey } from 'lexical'
 import React from 'react'
 
-import { ActionToolbar } from '@/components/ui/ActionToolbar'
+import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { AudioCard } from '@/components/ui/cards/AudioCard'
-import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
-import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
@@ -34,12 +32,10 @@ export function AudioNodeComponent({
   triggerFileDialog,
 }: AudioNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const { fileUploader, cardConfig } = React.useContext(InklingComposerContext)
-  const { isSelected, isEditing, setEditing } = React.useContext(CardContext)
+  const { fileUploader } = React.useContext(InklingComposerContext)
+  const { isEditing } = React.useContext(CardContext)
   const audioFileInputRef = React.useRef<HTMLInputElement>(null)
   const thumbnailFileInputRef = React.useRef<HTMLInputElement>(null)
-  const cardContext = React.useContext(CardContext)
-  const [showSnippetToolbar, setShowSnippetToolbar] = React.useState(false)
 
   const audioUploader = fileUploader.useFileUpload('audio')
   const thumbnailUploader = fileUploader.useFileUpload('mediaThumbnail')
@@ -91,12 +87,6 @@ export function AudioNodeComponent({
     await uploadThumbnail(files)
   }
 
-  const handleToolbarEdit = (event: React.MouseEvent) => {
-    event.preventDefault()
-    event.stopPropagation()
-    setEditing(true)
-  }
-
   useTriggerFileDialog({
     editor,
     nodeKey,
@@ -113,7 +103,7 @@ export function AudioNodeComponent({
         audioMimeTypes={fileUploader.fileTypes?.audio?.mimeTypes}
         audioUploader={audioUploader}
         duration={duration}
-        isEditing={cardContext.isEditing}
+        isEditing={isEditing}
         removeThumbnail={removeThumbnail}
         src={src}
         thumbnailDragHandler={thumbnailDragHandler}
@@ -126,27 +116,7 @@ export function AudioNodeComponent({
         onAudioFileChange={onAudioFileChange}
         onThumbnailFileChange={onThumbnailFileChange}
       />
-      <ActionToolbar data-inkling-card-toolbar="audio" isVisible={showSnippetToolbar}>
-        <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
-      </ActionToolbar>
-
-      <ActionToolbar
-        data-inkling-card-toolbar="audio"
-        isVisible={!!src && isSelected && !isEditing && !showSnippetToolbar}
-      >
-        <ToolbarMenu>
-          <ToolbarMenuItem icon="edit" isActive={false} label="Edit" onClick={handleToolbarEdit} />
-          <ToolbarMenuSeparator hide={!cardConfig.createSnippet} />
-          <ToolbarMenuItem
-            dataTestId="create-snippet"
-            hide={!cardConfig.createSnippet}
-            icon="snippet"
-            isActive={false}
-            label="Snippet"
-            onClick={() => setShowSnippetToolbar(true)}
-          />
-        </ToolbarMenu>
-      </ActionToolbar>
+      <CardActionToolbar card="audio" nodeKey={nodeKey} visibleWhen={!!src} />
     </>
   )
 }

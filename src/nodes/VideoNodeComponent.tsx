@@ -4,10 +4,8 @@ import React, { useState } from 'react'
 
 import type { FileChangeEvent } from '@/components/ui/cards/card-ui-types'
 
-import { ActionToolbar } from '@/components/ui/ActionToolbar'
+import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { VideoCard } from '@/components/ui/cards/VideoCard'
-import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
-import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
@@ -50,7 +48,7 @@ export function VideoNodeComponent({
   initialFile,
 }: VideoNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const { fileUploader, cardConfig } = React.useContext(InklingComposerContext)
+  const { fileUploader } = React.useContext(InklingComposerContext)
   const cardContext = React.useContext(CardContext)
   const videoFileInputRef = React.useRef<HTMLInputElement | null>(null)
   const [previewThumbnail, setThumbnailPreview] = usePreviewLease()
@@ -61,7 +59,6 @@ export function VideoNodeComponent({
   const videoDragHandler = useFileDragAndDrop({ handleDrop: handleVideoDrop })
   const thumbnailDragHandler = useFileDragAndDrop({ handleDrop: handleThumbnailDrop })
   const [metadataExtractionErrors, setMetadataExtractionErrors] = useState<VideoNodeMetadataError[]>([])
-  const [showSnippetToolbar, setShowSnippetToolbar] = useState<boolean>(false)
 
   const videoMimeTypes: string[] = fileUploader.fileTypes?.video?.mimeTypes || ['video/*']
 
@@ -174,12 +171,6 @@ export function VideoNodeComponent({
     })
   }
 
-  const handleToolbarEdit = (event: React.MouseEvent) => {
-    event.preventDefault()
-    event.stopPropagation()
-    cardContext.setEditing(true)
-  }
-
   useTriggerFileDialog({
     editor,
     nodeKey,
@@ -220,33 +211,12 @@ export function VideoNodeComponent({
         onRemoveCustomThumbnail={onRemoveCustomThumbnail}
         onVideoFileChange={onVideoFileChange}
       />
-      <ActionToolbar data-inkling-card-toolbar="video" isVisible={showSnippetToolbar}>
-        <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
-      </ActionToolbar>
-
-      <ActionToolbar
-        data-inkling-card-toolbar="video"
-        isVisible={!!isCardPopulated && cardContext.isSelected && !cardContext.isEditing && !showSnippetToolbar}
-      >
-        <ToolbarMenu>
-          <ToolbarMenuItem
-            dataTestId="edit-video-card"
-            icon="edit"
-            isActive={false}
-            label="Edit"
-            onClick={handleToolbarEdit}
-          />
-          <ToolbarMenuSeparator hide={!cardConfig.createSnippet} />
-          <ToolbarMenuItem
-            dataTestId="create-snippet"
-            hide={!cardConfig.createSnippet}
-            icon="snippet"
-            isActive={false}
-            label="Save as snippet"
-            onClick={() => setShowSnippetToolbar(true)}
-          />
-        </ToolbarMenu>
-      </ActionToolbar>
+      <CardActionToolbar
+        card="video"
+        items={[{ kind: 'edit', dataTestId: 'edit-video-card' }, { kind: 'separator' }, { kind: 'snippet' }]}
+        nodeKey={nodeKey}
+        visibleWhen={!!isCardPopulated}
+      />
     </>
   )
 }
