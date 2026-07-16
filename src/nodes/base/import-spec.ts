@@ -75,11 +75,15 @@ export interface ImportClassMapEntry {
  * `parse` is a per-card hand-written lambda (file's `sizeToBytes`, audio's
  * and video's deliberately separate duration parses); returning `undefined`
  * omits the key.
+ *
+ * The union is discriminated on `kind`: the fields a kind requires exist on
+ * its member, so the pipeline reads them without assertions.
+ * `validateImportSpec` re-checks them at class-creation time for untyped
+ * consumers.
  */
-export interface ImportReadSpec {
+interface ImportReadSpecBase {
   /** The card property the read writes; must name a key of the node's `properties` (enforced by `validateImportSpec`). Ignored for `kind: 'composite'`, whose writes are named by `provides` instead. */
   name: string
-  kind: 'attribute' | 'property' | 'text' | 'html' | 'caption' | 'classMap' | 'composite'
   /** `querySelector` locating the element to read from; reads from the matched element itself when unset. */
   selector?: string
   /** Trim the extracted string before later steps. */
@@ -92,17 +96,36 @@ export interface ImportReadSpec {
   omit?: 'falsy'
   /** Abort the whole conversion (return `null`) when the extracted value is falsy — mirrors video's `if (!videoSrc) return null`. */
   required?: boolean
-  /** kind `attribute`: the attribute name (e.g. `href`, `data-inkling-thumbnail`). */
-  attribute?: string
-  /** kind `property`: the element property name (e.g. `src`, `loop`). */
-  property?: string
-  /** kind `classMap`: the ordered class-regex entries. */
-  classMap?: readonly ImportClassMapEntry[]
-  /** kind `composite`: the helper producing the partial payload. */
-  read?: (element: HTMLElement) => Record<string, unknown>
-  /** kind `composite`: the payload keys the helper provides; each must name a card property. */
-  provides?: readonly string[]
 }
+
+export type ImportReadSpec =
+  | (ImportReadSpecBase & {
+      kind: 'attribute'
+      /** The attribute name (e.g. `href`, `data-inkling-thumbnail`). */
+      attribute: string
+    })
+  | (ImportReadSpecBase & {
+      kind: 'property'
+      /** The element property name (e.g. `src`, `loop`). */
+      property: string
+    })
+  | (ImportReadSpecBase & { kind: 'text' | 'html' | 'caption' })
+  | (ImportReadSpecBase & {
+      kind: 'classMap'
+      /** The ordered class-regex entries. */
+      classMap: readonly ImportClassMapEntry[]
+    })
+  | {
+      /** Kept for parity with the other kinds; the writes are named by `provides` instead. */
+      name: string
+      kind: 'composite'
+      /** `querySelector` locating the element to read from; reads from the matched element itself when unset. */
+      selector?: string
+      /** The helper producing the partial payload. */
+      read: (element: HTMLElement) => Record<string, unknown>
+      /** The payload keys the helper provides; each must name a card property. */
+      provides: readonly string[]
+    }
 
 // The generated node constructors take a partial dataset of their own value
 // map, which is not provably assignable to `Record<string, unknown>` under
@@ -115,7 +138,9 @@ type ImportNodeClass = new (data: any) => LexicalNode
  * Throws when an import-spec read names a property absent from the node's
  * `properties` — the structural agreement check between the field list and
  * the reads, run at class-creation time. Composite reads are checked through
- * their `provides` list.
+ * their `provides` list. Also re-checks the per-kind required fields the
+ * `ImportReadSpec` union declares, so untyped consumers fail loudly here
+ * instead of degrading silently at import time.
  */
 export function validateImportSpec(
   spec: CardImportSpec,
@@ -126,7 +151,18 @@ export function validateImportSpec(
 
   spec.conversions.forEach((conversion) => {
     conversion.reads.forEach((read) => {
-      const names = read.kind === 'composite' ? (read.provides ?? []) : [read.name]
+      if (
+        (read.kind === 'attribute' && !read.attribute) ||
+        (read.kind === 'property' && !read.property) ||
+        (read.kind === 'classMap' && (!read.classMap || read.classMap.length === 0)) ||
+        (read.kind === 'composite' && (!read.read || !read.provides || read.provides.length === 0))
+      ) {
+        throw new Error(
+          `[generateDecoratorNode] ${nodeType ? `${nodeType}: ` : ''}importSpec read "${read.name}" (tag "${conversion.tag}") is missing the fields its "${read.kind}" kind requires`,
+        )
+      }
+
+      const names = read.kind === 'composite' ? read.provides : [read.name]
       names.forEach((name) => {
         if (!propertyNames.has(name)) {
           throw new Error(
@@ -193,9 +229,8 @@ function readImportPayload(conversion: ImportConversionSpec, domNode: HTMLElemen
       if (!element) {
         return null
       }
-      const provided = read.read!(element as HTMLElement)
-      const provides = read.provides ?? []
-      provides.forEach((key) => {
+      const provided = read.read(element as HTMLElement)
+      read.provides.forEach((key) => {
         if (key in provided) {
           payload[key] = provided[key]
         }
@@ -251,13 +286,13 @@ function readImportPayload(conversion: ImportConversionSpec, domNode: HTMLElemen
 function extractValue(read: ImportReadSpec, element: Element): unknown {
   switch (read.kind) {
     case 'attribute':
-      return element.getAttribute(read.attribute!)
+      return element.getAttribute(read.attribute)
     case 'property':
-      return (element as unknown as Record<string, unknown>)[read.property!]
+      return Reflect.get(element, read.property)
     case 'text':
       return element.textContent
     case 'html':
-      return (element as HTMLElement).innerHTML
+      return element.innerHTML
     case 'caption':
       return readCaptionFromElement(element)
     default:
@@ -265,8 +300,8 @@ function extractValue(read: ImportReadSpec, element: Element): unknown {
   }
 }
 
-function matchClassMap(read: ImportReadSpec, domNode: HTMLElement): string | null {
-  for (const entry of read.classMap ?? []) {
+function matchClassMap(read: Extract<ImportReadSpec, { kind: 'classMap' }>, domNode: HTMLElement): string | null {
+  for (const entry of read.classMap) {
     const match = domNode.className.match(entry.pattern)
     if (match) {
       const raw = match[1]
