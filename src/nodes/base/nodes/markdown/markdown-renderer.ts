@@ -8,23 +8,17 @@ interface MarkdownNodeData {
   markdown: string
 }
 
-interface MarkdownRenderOptions extends ExportDOMOptions {}
-
 export function renderMarkdownNode(
   node: MarkdownNodeData,
-  options: MarkdownRenderOptions = {},
+  options: ExportDOMOptions = {},
   context: RenderContext,
 ): ExportDOMOutput<'inner'> {
-  // A truthy non-function `createDocument` reaches the context verbatim from
-  // the options bag; the TypeError for that caller bug is pinned
-  // (test/nodes-base/nodes/markdown.test.ts).
-  if (options.createDocument && typeof options.createDocument !== 'function') {
-    throw new TypeError('renderMarkdownNode requires options.createDocument to be a function')
-  }
-
   const document = context.createDocument()
 
-  const html = sanitizeHtml(render(node.markdown || '', options as Record<string, unknown>))
+  // markdown-html-renderer reads exactly one key off the options bag —
+  // `inklingVersion` (its slug-policy input) — so the pass is narrowed to
+  // that key, byte-identical to forwarding the whole bag.
+  const html = sanitizeHtml(render(node.markdown || '', { inklingVersion: context.inklingVersion }))
 
   const element = document.createElement('div')
   element.innerHTML = html

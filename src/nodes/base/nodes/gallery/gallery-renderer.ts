@@ -22,14 +22,6 @@ interface GalleryNodeData {
   caption: string
 }
 
-interface GalleryRenderOptions extends ExportDOMOptions {
-  imageOptimization?: {
-    defaultMaxWidth?: number
-    contentImageSizes?: Record<string, { width: number }>
-    [key: string]: unknown
-  }
-}
-
 const MAX_IMG_PER_ROW = 3
 
 function isValidImage(image: unknown, context: RenderContext): image is GalleryImage {
@@ -79,7 +71,7 @@ function buildStructure(images: GalleryImage[]) {
   return rows
 }
 
-export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderOptions = {}, context: RenderContext) {
+export function renderGalleryNode(node: GalleryNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
   const document = context.createDocument()
 
   const validImages = node.images.filter((image) => isValidImage(image, context))
@@ -117,8 +109,8 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
       // images can be resized to max width, if that's the case output
       // the resized width/height attrs to ensure 3rd party gallery plugins
       // aren't affected by differing sizes
-      const { canTransformImage } = options
-      const { defaultMaxWidth } = options.imageOptimization || {}
+      const { canTransformImage } = context
+      const { defaultMaxWidth } = context.imageOptimization || {}
       if (
         defaultMaxWidth &&
         image.width > defaultMaxWidth &&
@@ -133,7 +125,7 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
 
       // add srcset+sizes except for email clients which do not have good support for either
       if (context.variant({ web: true, email: false })) {
-        setSrcsetAttribute(img, image, options, context)
+        setSrcsetAttribute(img, image, context)
 
         if (img.getAttribute('srcset') && image.width >= 720) {
           if (rows.length === 1 && row.length === 1 && image.width >= 1200) {
@@ -155,8 +147,8 @@ export function renderGalleryNode(node: GalleryNodeData, options: GalleryRenderO
           img.setAttribute('height', String(newImageDimensions.height))
         }
 
-        const contentImageSizes = options.imageOptimization?.contentImageSizes
-        if (contentImageSizes && context.isLocalContentImage(image.src) && options.canTransformImage?.(image.src)) {
+        const contentImageSizes = context.imageOptimization?.contentImageSizes
+        if (contentImageSizes && context.isLocalContentImage(image.src) && context.canTransformImage?.(image.src)) {
           // find available image size next up from 2x600 so we can use it for the "retina" src
           const availableImageWidths = getAvailableImageWidths(image, contentImageSizes)
           const srcWidth = availableImageWidths.find((width) => width >= 1200)

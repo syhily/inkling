@@ -1,3 +1,4 @@
+import { createRenderContext } from '@/nodes/base/render-context'
 import { getSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 
 const options = {
@@ -10,12 +11,14 @@ const options = {
   },
 }
 
+const context = createRenderContext(options)
+
 describe('srcsetAttribute', function () {
   it('returns undefined when a local image path does not match the content/images capture pattern', function () {
     const result = getSrcsetAttribute({
       src: '/xcontent/images/2024/04/example.jpg',
       width: 1200,
-      options,
+      context,
     })
 
     expect(result).toBeUndefined()
@@ -25,7 +28,7 @@ describe('srcsetAttribute', function () {
     const result = getSrcsetAttribute({
       src: '/content/images/2024/04/example.jpg',
       width: 1200,
-      options,
+      context,
       format: 'webp',
     })
 
@@ -38,7 +41,7 @@ describe('srcsetAttribute', function () {
     const result = getSrcsetAttribute({
       src: '/content/images/2024/04/example.jpg',
       width: 600,
-      options,
+      context,
       format: 'avif',
     })
 
@@ -49,7 +52,7 @@ describe('srcsetAttribute', function () {
     const result = getSrcsetAttribute({
       src: '/content/images/2024/04/example.jpg',
       width: 600,
-      options,
+      context,
     })
 
     expect(result).toBe('/content/images/2024/04/example.jpg 600w')
@@ -59,7 +62,7 @@ describe('srcsetAttribute', function () {
     const result = getSrcsetAttribute({
       src: 'https://cdn.example.com/content/images/2024/04/example.jpg',
       width: 1200,
-      options: { ...options, imageBaseUrl: 'https://cdn.example.com' },
+      context: createRenderContext({ ...options, imageBaseUrl: 'https://cdn.example.com' }),
     })
 
     expect(result).toBe(

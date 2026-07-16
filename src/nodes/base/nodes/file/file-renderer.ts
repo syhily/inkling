@@ -22,7 +22,7 @@ export function renderFileNode(node: FileNodeData, options: ExportDOMOptions = {
   }
 
   if (context.variant({ web: false, email: true })) {
-    return emailTemplate(node, document, options, context)
+    return emailTemplate(node, document, context)
   } else {
     return cardTemplate(node, document, context)
   }
@@ -42,7 +42,7 @@ function wrapWithAnchor(
   return `<span class="${cls}">${content}</span>`
 }
 
-function emailTemplate(node: FileNodeData, document: Document, options: ExportDOMOptions, context: RenderContext) {
+function emailTemplate(node: FileNodeData, document: Document, context: RenderContext) {
   let iconCls
   if (!node.fileTitle && !node.fileCaption) {
     iconCls = 'margin-top: 6px; height: 20px; width: 20px; max-width: 20px; padding-top: 4px; padding-bottom: 4px;'
@@ -50,7 +50,7 @@ function emailTemplate(node: FileNodeData, document: Document, options: ExportDO
     iconCls = 'margin-top: 6px; height: 24px; width: 24px; max-width: 24px;'
   }
 
-  const href = options.postUrl || node.src || undefined
+  const href = context.postUrl || node.src || undefined
   // safeUrl's '' sentinel maps back to the undefined sentinel this template branches on
   const safeHref = context.safeUrl('navigation', href ?? '') || undefined
 

@@ -28,15 +28,7 @@ interface ImageNodeData {
   href: string
 }
 
-interface ImageRenderOptions extends ExportDOMOptions {
-  imageOptimization?: {
-    defaultMaxWidth?: number
-    contentImageSizes?: Record<string, { width: number }>
-    [key: string]: unknown
-  }
-}
-
-export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions = {}, context: RenderContext) {
+export function renderImageNode(node: ImageNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
   const document = context.createDocument()
 
   if (!node.src || node.src.trim() === '' || context.safeUrl('media', node.src) === '') {
@@ -73,8 +65,8 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
   // images can be resized to max width, if that's the case output
   // the resized width/height attrs to ensure 3rd party gallery plugins
   // aren't affected by differing sizes
-  const { canTransformImage } = options
-  const { defaultMaxWidth } = options.imageOptimization || {}
+  const { canTransformImage } = context
+  const { defaultMaxWidth } = context.imageOptimization || {}
   if (
     defaultMaxWidth &&
     node.width > defaultMaxWidth &&
@@ -99,7 +91,7 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
       width: node.width,
       height: node.height,
     }
-    setSrcsetAttribute(img, imgAttributes, options, context)
+    setSrcsetAttribute(img, imgAttributes, context)
 
     let sizes: string | undefined
     if (img.getAttribute('srcset') && node.width && node.width >= 720) {
@@ -122,8 +114,8 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
       img.getAttribute('srcset') &&
       !isAnimatedImage(node.src) &&
       context.isLocalContentImage(node.src) &&
-      options.canTransformImage?.(node.src) &&
-      typeof options.canTransformImageToFormat === 'function',
+      context.canTransformImage?.(node.src) &&
+      typeof context.canTransformImageToFormat === 'function',
     )
 
     if (shouldRenderPicture) {
@@ -131,16 +123,15 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
       let sourcesAdded = false
 
       MODERN_IMAGE_FORMATS.forEach((format) => {
-        if (!options.canTransformImageToFormat!(format)) {
+        if (!context.canTransformImageToFormat!(format)) {
           return
         }
 
         const formattedSrcset = getSrcsetAttribute({
           src: node.src,
           width: node.width,
-          options,
-          format,
           context,
+          format,
         })
 
         if (!formattedSrcset) {
@@ -181,8 +172,8 @@ export function renderImageNode(node: ImageNodeData, options: ImageRenderOptions
     img.setAttribute('width', String(imageDimensions.width))
     img.setAttribute('height', String(imageDimensions.height))
 
-    const contentImageSizes = options.imageOptimization?.contentImageSizes
-    if (contentImageSizes && context.isLocalContentImage(node.src) && options.canTransformImage?.(node.src)) {
+    const contentImageSizes = context.imageOptimization?.contentImageSizes
+    if (contentImageSizes && context.isLocalContentImage(node.src) && context.canTransformImage?.(node.src)) {
       // find available image size next up from 2x600 so we can use it for the "retina" src
       const availableImageWidths = getAvailableImageWidths(node, contentImageSizes)
       const srcWidth = availableImageWidths.find((width) => width >= 1200)

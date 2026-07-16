@@ -3,7 +3,7 @@ import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import { isSafeColorValue, type RenderContext } from '@/nodes/base/render-context'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { renderEmailButton } from '@/nodes/base/utils/render-helpers/email-button'
-import { getSrcsetAttribute, type ImageRenderOptions } from '@/nodes/base/utils/srcset-attribute'
+import { getSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 import { slugify } from '@/utils/slugify'
 
 interface HeaderV2NodeData {
@@ -57,7 +57,7 @@ function safeColor(value: string, fallback: string): string {
   return isSafeColorValue(value) ? value : fallback
 }
 
-function cardTemplate(nodeData: HeaderV2NodeData, context: RenderContext, options: HeaderV2RenderOptions = {}) {
+function cardTemplate(nodeData: HeaderV2NodeData, context: RenderContext) {
   const cardClasses = getCardClasses(nodeData).join(' ')
 
   const safeBackgroundImageSrc = context.safeUrl('media', nodeData.backgroundImageSrc)
@@ -94,7 +94,6 @@ function cardTemplate(nodeData: HeaderV2NodeData, context: RenderContext, option
         ? getSrcsetAttribute({
             src: bgImage.src,
             width: bgImage.width,
-            options: options as ImageRenderOptions,
             context,
           })
         : ''
@@ -381,7 +380,7 @@ export function renderHeaderNodeV2(
     }
   }
 
-  const htmlString = cardTemplate(node, context, options)
+  const htmlString = cardTemplate(node, context)
 
   const element = document.createElement('div')
   element.innerHTML = htmlString?.trim()
