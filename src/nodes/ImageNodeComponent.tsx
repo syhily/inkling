@@ -6,11 +6,10 @@ import type { GalleryImage } from '@/types/gallery'
 import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
+import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { ImageCard } from '@/components/ui/cards/ImageCard'
 import { ImageUploadForm } from '@/components/ui/ImageUploadForm'
 import { LinkInput } from '@/components/ui/LinkInput'
-import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
-import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useCardDragAndDrop from '@/hooks/useCardDragAndDrop'
@@ -57,7 +56,6 @@ export function ImageNodeComponent({
   const { isSelected, cardWidth, setCardWidth } = React.useContext(CardContext)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
   const toolbarFileInputRef = React.useRef<HTMLInputElement | null>(null)
-  const [showSnippetToolbar, setShowSnippetToolbar] = React.useState(false)
 
   const imageUploader = fileUploader.useFileUpload('image')
 
@@ -310,61 +308,57 @@ export function ImageNodeComponent({
         />
       </ActionToolbar>
 
-      <ActionToolbar data-inkling-card-toolbar="image" isVisible={showSnippetToolbar}>
-        <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
-      </ActionToolbar>
-
-      <ActionToolbar
-        data-inkling-card-toolbar="image"
-        isVisible={!!src && isSelected && !showLink && !showSnippetToolbar}
-      >
-        <ImageUploadForm
-          fileInputRef={toolbarFileInputRef}
-          mimeTypes={fileUploader.fileTypes?.image?.mimeTypes ?? []}
-          onFileChange={onFileChange}
-        />
-        <ToolbarMenu>
-          <ToolbarMenuItem
-            hide={isGif(src) || !hasMultipleImageCardWidths || !allowedImageCardWidths.includes('regular')}
-            icon="imgRegular"
-            isActive={cardWidth === 'regular'}
-            label="Regular width"
-            onClick={() => handleImageCardResize('regular')}
+      <CardActionToolbar
+        beforeMenu={
+          <ImageUploadForm
+            fileInputRef={toolbarFileInputRef}
+            mimeTypes={fileUploader.fileTypes?.image?.mimeTypes ?? []}
+            onFileChange={onFileChange}
           />
-          <ToolbarMenuItem
-            hide={isGif(src) || !hasMultipleImageCardWidths || !allowedImageCardWidths.includes('wide')}
-            icon="imgWide"
-            isActive={cardWidth === 'wide'}
-            label="Wide width"
-            onClick={() => handleImageCardResize('wide')}
-          />
-          <ToolbarMenuItem
-            hide={isGif(src) || !hasMultipleImageCardWidths || !allowedImageCardWidths.includes('full')}
-            icon="imgFull"
-            isActive={cardWidth === 'full'}
-            label="Full width"
-            onClick={() => handleImageCardResize('full')}
-          />
-          <ToolbarMenuSeparator hide={isGif(src) || !hasMultipleImageCardWidths} />
-          <ToolbarMenuItem
-            icon="link"
-            isActive={!!href}
-            label="Link"
-            onClick={() => {
+        }
+        card="image"
+        hideWhileEditing={false}
+        items={[
+          {
+            kind: 'custom',
+            hide: isGif(src) || !hasMultipleImageCardWidths || !allowedImageCardWidths.includes('regular'),
+            icon: 'imgRegular',
+            isActive: cardWidth === 'regular',
+            label: 'Regular width',
+            onClick: () => handleImageCardResize('regular'),
+          },
+          {
+            kind: 'custom',
+            hide: isGif(src) || !hasMultipleImageCardWidths || !allowedImageCardWidths.includes('wide'),
+            icon: 'imgWide',
+            isActive: cardWidth === 'wide',
+            label: 'Wide width',
+            onClick: () => handleImageCardResize('wide'),
+          },
+          {
+            kind: 'custom',
+            hide: isGif(src) || !hasMultipleImageCardWidths || !allowedImageCardWidths.includes('full'),
+            icon: 'imgFull',
+            isActive: cardWidth === 'full',
+            label: 'Full width',
+            onClick: () => handleImageCardResize('full'),
+          },
+          { kind: 'separator', hide: isGif(src) || !hasMultipleImageCardWidths },
+          {
+            kind: 'custom',
+            icon: 'link',
+            isActive: !!href,
+            label: 'Link',
+            onClick: () => {
               setShowLink(true)
-            }}
-          />
-          <ToolbarMenuSeparator hide={!cardConfig.createSnippet} />
-          <ToolbarMenuItem
-            dataTestId="create-snippet"
-            hide={!cardConfig.createSnippet}
-            icon="snippet"
-            isActive={false}
-            label="Save as snippet"
-            onClick={() => setShowSnippetToolbar(true)}
-          />
-        </ToolbarMenu>
-      </ActionToolbar>
+            },
+          },
+          { kind: 'separator' },
+          { kind: 'snippet' },
+        ]}
+        nodeKey={nodeKey}
+        visibleWhen={!!src && !showLink}
+      />
     </>
   )
 }

@@ -2,24 +2,21 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getNodeByKey } from 'lexical'
 import React from 'react'
 
-import { ActionToolbar } from '@/components/ui/ActionToolbar'
+import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { HtmlCard } from '@/components/ui/cards/HtmlCard'
 import { SettingsPanel } from '@/components/ui/SettingsPanel'
-import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
-import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import { VisibilitySettings } from '@/components/ui/VisibilitySettings'
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { useVisibilityToggle } from '@/hooks/useVisibilityToggle'
 import { $isHtmlNode } from '@/nodes/HtmlNode'
-import { EDIT_CARD_COMMAND, SHOW_CARD_VISIBILITY_SETTINGS_COMMAND } from '@/plugins/InklingBehaviourPlugin'
+import { SHOW_CARD_VISIBILITY_SETTINGS_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
 export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: string }) {
   const [editor] = useLexicalComposerContext()
   const cardContext = React.useContext(CardContext)
   const { cardConfig, darkMode } = React.useContext(InklingComposerContext)
-  const [showSnippetToolbar, setShowSnippetToolbar] = React.useState(false)
 
   const { showVisibilitySettings } = useInklingSelectedCardContext()
 
@@ -32,12 +29,6 @@ export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: s
         node.html = value
       }
     })
-  }
-
-  const handleToolbarEdit = (event: React.MouseEvent) => {
-    event.preventDefault()
-    event.stopPropagation()
-    editor.dispatchCommand(EDIT_CARD_COMMAND, { cardKey: nodeKey, focusEditor: false })
   }
 
   const visibilitySettings = (
@@ -57,45 +48,25 @@ export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: s
     <>
       <HtmlCard darkMode={darkMode} html={html} isEditing={cardContext.isEditing} updateHtml={updateHtml} />
 
-      <ActionToolbar data-inkling-card-toolbar="html" isVisible={showSnippetToolbar}>
-        <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
-      </ActionToolbar>
-
-      <ActionToolbar
-        data-inkling-card-toolbar="html"
-        isVisible={cardContext.isSelected && !showSnippetToolbar && !cardContext.isEditing}
-      >
-        <ToolbarMenu>
-          <ToolbarMenuItem
-            dataTestId="edit-html"
-            icon="edit"
-            isActive={false}
-            label="Edit"
-            onClick={handleToolbarEdit}
-          />
-          {isVisibilityEnabled && (
-            <>
-              <ToolbarMenuSeparator />
-              <ToolbarMenuItem
-                dataTestId="show-visibility"
-                icon="visibility"
-                isActive={showVisibilitySettings}
-                label="Visibility"
-                onClick={handleVisibilityToggle}
-              />
-            </>
-          )}
-          <ToolbarMenuSeparator hide={!cardConfig.createSnippet} />
-          <ToolbarMenuItem
-            dataTestId="create-snippet"
-            hide={!cardConfig.createSnippet}
-            icon="snippet"
-            isActive={false}
-            label="Save as snippet"
-            onClick={() => setShowSnippetToolbar(true)}
-          />
-        </ToolbarMenu>
-      </ActionToolbar>
+      <CardActionToolbar
+        card="html"
+        items={[
+          { kind: 'edit', dataTestId: 'edit-html' },
+          { kind: 'separator', hide: !isVisibilityEnabled },
+          {
+            kind: 'custom',
+            dataTestId: 'show-visibility',
+            hide: !isVisibilityEnabled,
+            icon: 'visibility',
+            isActive: showVisibilitySettings,
+            label: 'Visibility',
+            onClick: handleVisibilityToggle,
+          },
+          { kind: 'separator' },
+          { kind: 'snippet' },
+        ]}
+        nodeKey={nodeKey}
+      />
 
       {isVisibilityEnabled && showVisibilitySettings && cardContext.isSelected && (
         <SettingsPanel darkMode={darkMode} defaultTab="visibility" tabs>
