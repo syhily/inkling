@@ -8,14 +8,14 @@ import { $isHeadingNode, $isQuoteNode, HeadingNode, QuoteNode } from '@lexical/r
 import { $getRoot, $isParagraphNode, $isTextNode } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
-import { $createCodeBlockNode, $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
-import { $isHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import {
   BASIC_TRANSFORMERS,
   DEFAULT_TRANSFORMERS,
   ELEMENT_TRANSFORMERS,
   MINIMAL_TRANSFORMERS,
-} from '@/plugins/MarkdownShortcutPlugin'
+} from '@/markdown/transformers'
+import { $createCodeBlockNode, $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
+import { $isHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 
 function createTestEditor() {
   return createHeadlessEditor({

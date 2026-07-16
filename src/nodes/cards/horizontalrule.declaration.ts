@@ -13,7 +13,7 @@ export const horizontalRuleDeclaration = {
     emailEditor: true,
     emailRenderer: true,
     // Markdown-eligible with no card transformer: `---` is handled by
-    // DEFAULT_TRANSFORMERS (`HR` in `@/plugins/MarkdownShortcutPlugin`).
+    // DEFAULT_TRANSFORMERS (`HR` in `@/markdown/transformers`).
     markdown: true,
   },
 } satisfies CardDeclaration<'horizontalrule'>

@@ -11,6 +11,16 @@ import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingComposer from '@/components/InklingComposer'
 import InklingEditor from '@/components/InklingEditor'
 import InklingNestedComposer from '@/components/InklingNestedComposer'
+/* Transformers */
+import {
+  BASIC_TRANSFORMERS,
+  CODE_BLOCK as CODE_BLOCK_TRANSFORMER,
+  DEFAULT_TRANSFORMERS,
+  ELEMENT_TRANSFORMERS,
+  EMAIL_TRANSFORMERS,
+  HR as HR_TRANSFORMER,
+  MINIMAL_TRANSFORMERS,
+} from '@/markdown/transformers'
 /* Nodes */
 import BASIC_NODES from '@/nodes/BasicNodes'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
@@ -32,16 +42,7 @@ import HtmlOutputPlugin from '@/plugins/HtmlOutputPlugin'
 import InklingBehaviourPlugin from '@/plugins/InklingBehaviourPlugin'
 import InklingSelectorPlugin from '@/plugins/InklingSelectorPlugin'
 import InklingSnippetPlugin from '@/plugins/InklingSnippetPlugin'
-/* Transformers */
-import MarkdownShortcutPlugin, {
-  BASIC_TRANSFORMERS,
-  CODE_BLOCK as CODE_BLOCK_TRANSFORMER,
-  DEFAULT_TRANSFORMERS,
-  ELEMENT_TRANSFORMERS,
-  EMAIL_TRANSFORMERS,
-  HR as HR_TRANSFORMER,
-  MINIMAL_TRANSFORMERS,
-} from '@/plugins/MarkdownShortcutPlugin'
+import MarkdownShortcutPlugin from '@/plugins/MarkdownShortcutPlugin'
 import PlusCardMenuPlugin from '@/plugins/PlusCardMenuPlugin'
 import ReplacementStringsPlugin from '@/plugins/ReplacementStringsPlugin'
 import RestrictContentPlugin from '@/plugins/RestrictContentPlugin'

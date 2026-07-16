@@ -7,10 +7,10 @@ import { $convertFromMarkdownString, $convertToMarkdownString, type Transformer 
 import { HeadingNode, QuoteNode } from '@lexical/rich-text'
 
 import { MARKDOWN_CARD_TRANSFORMER } from '@/markdown/card-transformers'
+import { DEFAULT_TRANSFORMERS } from '@/markdown/transformers'
 import { MarkdownNode } from '@/nodes/base/nodes/markdown/MarkdownNode'
 import { CARD_MARKDOWN_DECLARATIONS } from '@/nodes/cards/card-markdown-transformers'
 import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
-import { DEFAULT_TRANSFORMERS } from '@/plugins/MarkdownShortcutPlugin'
 
 /**
  * Public markdown import/export API.

@@ -16,9 +16,9 @@ import type { NestedKeyboardEvent } from '@/types/events'
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingNestedComposer from '@/components/InklingNestedComposer'
 import CardContext from '@/context/CardContext'
+import { MINIMAL_TRANSFORMERS } from '@/markdown/transformers'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { EmojiPickerPlugin } from '@/plugins/EmojiPickerPlugin'
-import { MINIMAL_TRANSFORMERS } from '@/plugins/MarkdownShortcutPlugin'
 import RestrictContentPlugin from '@/plugins/RestrictContentPlugin'
 
 const Placeholder = ({ text = 'Type here' }) => {
