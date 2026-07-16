@@ -100,14 +100,17 @@ export class ImageNode extends generateDecoratorNode({
   // from the declaration and inherits it; renderer surfaces never invoke it.
   static uploadType = 'image'
 
-  declare __previewSrc: string | null
+  // The transient-prop spec (image.declaration.ts) initializes this only on
+  // spec-adopting assembled classes; a raw `new ImageNode()` leaves it unset,
+  // so `undefined` is part of the honest type for spec-less base instances
+  declare __previewSrc: string | null | undefined
 
   get previewSrc() {
     const self = this.getLatest()
     return self.__previewSrc
   }
 
-  set previewSrc(previewSrc: string | null) {
+  set previewSrc(previewSrc: string | null | undefined) {
     const writable = this.getWritable()
     writable.__previewSrc = previewSrc
   }
