@@ -6,9 +6,7 @@ export type { Transformer } from '@lexical/markdown'
 export type { EditorState, LexicalEditor, SerializedEditorState } from 'lexical'
 
 /* Components */
-import DesignSandbox from '@/components/DesignSandbox'
 import EmailEditor, { EMAIL_EDITOR_CARD_CONFIG, getEmailEditorCardConfig } from '@/components/EmailEditor'
-import InklingCardWrapper from '@/components/InklingCardWrapper'
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingComposer from '@/components/InklingComposer'
 import InklingEditor from '@/components/InklingEditor'
@@ -87,13 +85,11 @@ export * from '@/utils'
 export { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown'
 
 export {
-  DesignSandbox,
   EmailEditor,
   InklingComposableEditor,
   InklingComposer,
   InklingEditor,
   InklingNestedComposer,
-  InklingCardWrapper,
   AllDefaultPlugins,
   CardInsertPlugin,
   CardMenuPlugin,

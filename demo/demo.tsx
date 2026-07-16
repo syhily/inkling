@@ -3,8 +3,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Route, HashRouter as Router, Routes } from 'react-router-dom'
 
-import { DesignSandbox } from '@/'
-
+import DesignSandbox from './components/DesignSandbox'
 import Navigator from './components/Navigator'
 import DemoApp from './DemoApp'
 import HtmlOutputDemo from './HtmlOutputDemo'

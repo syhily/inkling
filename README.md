@@ -63,9 +63,7 @@ Everything below is exported from the package entry point.
 - `InklingComposableEditor` — editor shell for composing your own plugin set.
 - `InklingComposer` — low-level Lexical composer (theme, nodes, error handling, optional multiplayer via `enableMultiplayer`).
 - `InklingNestedComposer` — composer for nested editors inside cards.
-- `InklingCardWrapper` — shared wrapper handling card selection, editing, and visibility settings.
 - `EmailEditor` — preconfigured editor variant for email content.
-- `DesignSandbox` — development sandbox showcasing editor UI pieces such as the text toolbar.
 
 ### Plugins
 
