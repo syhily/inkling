@@ -1,7 +1,6 @@
 import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface AudioNodeData {
@@ -226,11 +225,11 @@ function emailTemplate(
                         <table cellspacing="0" cellpadding="0" border="0" width="100%">
                             <tr>
                                 <td width="60">
-                                    <a href="${escapeHtml(postUrl)}" style="display: block; width: 60px; height: 60px; padding-top: 4px; padding-right: 16px; padding-bottom: 4px; padding-left: 4px; border-radius: 2px;">
+                                    <a href="${context.escapeText(postUrl)}" style="display: block; width: 60px; height: 60px; padding-top: 4px; padding-right: 16px; padding-bottom: 4px; padding-left: 4px; border-radius: 2px;">
                                         ${
                                           safeThumbnailSrc
                                             ? `
-                                        <img src="${escapeHtml(safeThumbnailSrc)}" class="${thumbnailCls}" style="width: 60px; height: 60px; object-fit: cover; border: 0; border-radius: 2px;">
+                                        <img src="${context.escapeText(safeThumbnailSrc)}" class="${thumbnailCls}" style="width: 60px; height: 60px; object-fit: cover; border: 0; border-radius: 2px;">
                                         `
                                             : `
                                         <img src="https://static.inkling.local/v4.0.0/images/audio-file-icon.png" class="${emptyThumbnailCls}" style="width: 24px; height: 24px; padding: 18px; border-radius: 2px;">
@@ -239,11 +238,11 @@ function emailTemplate(
                                     </a>
                                 </td>
                                 <td style="position: relative; vertical-align: center;" valign="middle">
-                                    <a href="${escapeHtml(postUrl)}" style="position: absolute; display: block; top: 0; right: 0; bottom: 0; left: 0;"></a>
+                                    <a href="${context.escapeText(postUrl)}" style="position: absolute; display: block; top: 0; right: 0; bottom: 0; left: 0;"></a>
                                     <table cellspacing="0" cellpadding="0" border="0" width="100%">
                                         <tr>
                                             <td>
-                                                <a href="${escapeHtml(postUrl)}" class="inkling-audio-title">${context.escapeText(node.title)}</a>
+                                                <a href="${context.escapeText(postUrl)}" class="inkling-audio-title">${context.escapeText(node.title)}</a>
                                             </td>
                                         </tr>
                                         <tr>
@@ -251,10 +250,10 @@ function emailTemplate(
                                                 <table cellspacing="0" cellpadding="0" border="0" width="100%">
                                                     <tr>
                                                         <td width="24" style="vertical-align: middle;" valign="middle">
-                                                            <a href="${escapeHtml(postUrl)}" class="inkling-audio-play-button"></a>
+                                                            <a href="${context.escapeText(postUrl)}" class="inkling-audio-play-button"></a>
                                                         </td>
                                                         <td style="vertical-align: middle;" valign="middle">
-                                                            <a href="${escapeHtml(postUrl)}" class="inkling-audio-duration">${getFormattedDuration(node.duration)}<span class="inkling-audio-link"> • Click to play audio</span></a>
+                                                            <a href="${context.escapeText(postUrl)}" class="inkling-audio-duration">${getFormattedDuration(node.duration)}<span class="inkling-audio-link"> • Click to play audio</span></a>
                                                         </td>
                                                     </tr>
                                                 </table>

@@ -1,7 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
@@ -68,17 +67,17 @@ export function cardTemplate({
   const hideControlsClass = node.loop ? ' inkling-video-hide' : ''
 
   return `
-        <figure class="${cardClasses}" data-inkling-thumbnail="${escapeHtml(safeThumbnailSrc)}" data-inkling-custom-thumbnail="${escapeHtml(safeCustomThumbnailSrc)}">
+        <figure class="${cardClasses}" data-inkling-thumbnail="${context.escapeText(safeThumbnailSrc)}" data-inkling-custom-thumbnail="${context.escapeText(safeCustomThumbnailSrc)}">
             <div class="inkling-video-container">
                 <video
-                    src="${escapeHtml(context.safeUrl('media', node.src))}"
+                    src="${context.escapeText(context.safeUrl('media', node.src))}"
                     ${posterAttr}
                     ${widthAttr}
                     ${heightAttr}
                     ${autoplayAttr}
                     playsinline
                     preload="metadata"
-                    style="background: transparent url('${escapeHtml(thumbnailSrc)}') 50% 50% / cover no-repeat;"
+                    style="background: transparent url('${context.escapeText(thumbnailSrc)}') 50% 50% / cover no-repeat;"
                 ></video>
                 <div class="inkling-video-overlay">
                     <button class="inkling-video-large-play-icon" aria-label="Play video">

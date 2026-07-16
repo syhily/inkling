@@ -12,21 +12,13 @@ import { join, sep } from 'node:path'
 
 const POLICY_MODULES = new Set(['is-safe-url', 'escape-html', 'clean-dom', 'sanitize-html'])
 
-// escape-html exceptions: template interpolation of plain text or
-// already-policy-checked URLs in the card email/web templates. Step 4
-// (1cf558c) routed every sanitizer *selection* through the seam; deterministic
-// string escaping stayed on the shared util except the pinned-corpus
-// plain-text cases, which use context.escapeText.
+// escape-html: no exceptions — all card-template escaping goes through
+// context.escapeText (plan 041); the escape-html implementation is private to
+// the seam.
 // sanitize-html exception: the markdown card sanitizes markdown-it's rendered
 // output with the same DOMPurify-backed helper the seam wraps.
 const ALLOWED_DIRECT_IMPORTS: Record<string, string[]> = {
-  'audio/audio-renderer.ts': ['escape-html'],
-  'bookmark/bookmark-renderer.ts': ['escape-html'],
-  'button/button-renderer.ts': ['escape-html'],
-  'file/file-renderer.ts': ['escape-html'],
-  'header/renderers/header-renderer.ts': ['escape-html'],
   'markdown/markdown-renderer.ts': ['sanitize-html'],
-  'video/video-renderer.ts': ['escape-html'],
 }
 
 // is-safe-url has exactly one documented importer besides the seam:

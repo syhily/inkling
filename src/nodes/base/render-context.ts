@@ -138,8 +138,10 @@ export interface RenderContext {
   /** Caption sanitization, routed through the DOMPurify-backed `sanitizeHtml`. */
   sanitizeCaption(html: string): string
   /**
-   * Plain-text escaping for fields whose pinned output is `escapeHtml`'s
-   * (video captions, the audio email title). Recorded divergence (plan 040
+   * Plain-text template escaping — the single escaping path behind the seam.
+   * Introduced for the fields whose pinned output is `escapeHtml`'s (video
+   * captions, the audio email title); plan 041 routed every card renderer's
+   * template escaping through it. Recorded divergence (plan 040
    * Step 4 STOP condition): the DOMPurify caption path cannot reproduce
    * `escapeHtml` on the pinned corpus — it preserves benign inline markup
    * (`This is a <b>caption</b>` keeps `<b>` instead of escaping it), strips

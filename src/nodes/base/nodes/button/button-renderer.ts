@@ -1,7 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { renderEmailButton } from '@/nodes/base/utils/render-helpers/email-button'
 import { html } from '@/nodes/base/utils/tagged-template-fns'
@@ -81,13 +80,13 @@ function emailTemplate(node: ButtonNodeData, document: Document, context: Render
 
   // Legacy branch preserved byte-for-byte when no customization/design option
   // is supplied.
-  const escapedButtonText = escapeHtml(buttonText)
+  const escapedButtonText = context.escapeText(buttonText)
   const cardHtml = html`
     <div class="btn btn-accent">
       <table border="0" cellspacing="0" cellpadding="0" align="${node.alignment}">
         <tr>
           <td align="center">
-            <a href="${escapeHtml(safeButtonUrl)}">${escapedButtonText}</a>
+            <a href="${context.escapeText(safeButtonUrl)}">${escapedButtonText}</a>
           </td>
         </tr>
       </table>

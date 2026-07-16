@@ -1,7 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { bytesToSize } from '@/nodes/base/utils/size-byte-converter'
@@ -29,10 +28,16 @@ export function renderFileNode(node: FileNodeData, options: ExportDOMOptions = {
   }
 }
 
-function wrapWithAnchor(content: string, href: string | undefined, cls: string, style?: string) {
+function wrapWithAnchor(
+  content: string,
+  href: string | undefined,
+  cls: string,
+  context: RenderContext,
+  style?: string,
+) {
   if (href) {
     const styleAttr = style ? ` style="${style}"` : ''
-    return `<a href="${escapeHtml(href)}" class="${cls}"${styleAttr}>${content}</a>`
+    return `<a href="${context.escapeText(href)}" class="${cls}"${styleAttr}>${content}</a>`
   }
   return `<span class="${cls}">${content}</span>`
 }
@@ -60,7 +65,7 @@ function emailTemplate(node: FileNodeData, document: Document, options: ExportDO
                                   node.fileTitle
                                     ? `
                                 <table cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td>
-                                    ${wrapWithAnchor(escapeHtml(node.fileTitle), safeHref, 'inkling-file-title')}
+                                    ${wrapWithAnchor(context.escapeText(node.fileTitle), safeHref, 'inkling-file-title', context)}
                                 </td></tr></table>
                                 `
                                     : ``
@@ -69,22 +74,22 @@ function emailTemplate(node: FileNodeData, document: Document, options: ExportDO
                                   node.fileCaption
                                     ? `
                                 <table cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td>
-                                    ${wrapWithAnchor(escapeHtml(node.fileCaption), safeHref, 'inkling-file-description')}
+                                    ${wrapWithAnchor(context.escapeText(node.fileCaption), safeHref, 'inkling-file-description', context)}
                                 </td></tr></table>
                                 `
                                     : ``
                                 }
                                 <table cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td>
-                                    ${wrapWithAnchor(`<span class="inkling-file-name">${escapeHtml(node.fileName)}</span> &bull; ${bytesToSize(node.fileSize)}`, safeHref, 'inkling-file-meta')}
+                                    ${wrapWithAnchor(`<span class="inkling-file-name">${context.escapeText(node.fileName)}</span> &bull; ${bytesToSize(node.fileSize)}`, safeHref, 'inkling-file-meta', context)}
                                 </td></tr></table>
                             </td>
                             <td width="80" valign="middle" class="inkling-file-thumbnail">
                                 ${
                                   href && safeHref
-                                    ? `<a href="${escapeHtml(safeHref)}" style="display: block; top: 0; right: 0; bottom: 0; left: 0;">
-                                    <img src="https://static.inkling.local/v4.0.0/images/download-icon-darkmode.png" style="${escapeHtml(iconCls)}">
+                                    ? `<a href="${context.escapeText(safeHref)}" style="display: block; top: 0; right: 0; bottom: 0; left: 0;">
+                                    <img src="https://static.inkling.local/v4.0.0/images/download-icon-darkmode.png" style="${context.escapeText(iconCls)}">
                                 </a>`
-                                    : `<img src="https://static.inkling.local/v4.0.0/images/download-icon-darkmode.png" style="${escapeHtml(iconCls)}">`
+                                    : `<img src="https://static.inkling.local/v4.0.0/images/download-icon-darkmode.png" style="${context.escapeText(iconCls)}">`
                                 }
                             </td>
                         </tr>

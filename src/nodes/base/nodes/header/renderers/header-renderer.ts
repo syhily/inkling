@@ -1,7 +1,6 @@
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 
 import { isSafeColorValue, type RenderContext } from '@/nodes/base/render-context'
-import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { renderEmailButton } from '@/nodes/base/utils/render-helpers/email-button'
 import { getSrcsetAttribute, type ImageRenderOptions } from '@/nodes/base/utils/srcset-attribute'
@@ -63,9 +62,9 @@ function cardTemplate(nodeData: HeaderV2NodeData, context: RenderContext, option
 
   const safeBackgroundImageSrc = context.safeUrl('media', nodeData.backgroundImageSrc)
   const safeButtonUrl = context.safeUrl('navigation', nodeData.buttonUrl)
-  const headerText = nodeData.header ? escapeHtml(nodeData.header) : ''
-  const subheaderText = nodeData.subheader ? escapeHtml(nodeData.subheader) : ''
-  const buttonText = nodeData.buttonText ? escapeHtml(nodeData.buttonText) : ''
+  const headerText = nodeData.header ? context.escapeText(nodeData.header) : ''
+  const subheaderText = nodeData.subheader ? context.escapeText(nodeData.subheader) : ''
+  const buttonText = nodeData.buttonText ? context.escapeText(nodeData.buttonText) : ''
 
   const textColor = safeColor(nodeData.textColor, '#000000')
   const buttonTextColor = safeColor(nodeData.buttonTextColor, '#000000')
@@ -225,9 +224,9 @@ function generateMSOContentClosing(nodeData: MSOHeaderData) {
 function emailTemplate(nodeData: HeaderV2NodeData, context: RenderContext) {
   const safeBackgroundImageSrc = context.safeUrl('media', nodeData.backgroundImageSrc)
   const safeButtonUrl = context.safeUrl('navigation', nodeData.buttonUrl)
-  const headerText = nodeData.header ? escapeHtml(nodeData.header) : ''
-  const subheaderText = nodeData.subheader ? escapeHtml(nodeData.subheader) : ''
-  const buttonText = nodeData.buttonText ? escapeHtml(nodeData.buttonText) : ''
+  const headerText = nodeData.header ? context.escapeText(nodeData.header) : ''
+  const subheaderText = nodeData.subheader ? context.escapeText(nodeData.subheader) : ''
+  const buttonText = nodeData.buttonText ? context.escapeText(nodeData.buttonText) : ''
 
   const textColor = safeColor(nodeData.textColor, '#000000')
   const buttonColor = nodeData.buttonColor === 'accent' ? 'accent' : safeColor(nodeData.buttonColor, 'transparent')
