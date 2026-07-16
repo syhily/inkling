@@ -72,7 +72,17 @@ export interface UnwrapAllowlistConfig {
   readonly allowedTags: string[]
 }
 
-export type CardHtmlConfig = DOMPurifyConfig | UnwrapAllowlistConfig
+/**
+ * A DOMPurify config whose `sanitize()` still returns a string. Omitting
+ * the DOM/fragment/trusted-type return keys keeps the seam's string return
+ * honest: DOMPurify's own overloads then resolve the `string` signature
+ * directly (dompurify 3.x ships overloads keyed on those config flags).
+ * Structurally a pre-typed `Config` variable still assigns in — the seam
+ * guards the literal case, which is how configs are passed in-repo.
+ */
+export type SanitizeToStringConfig = Omit<DOMPurifyConfig, 'RETURN_DOM' | 'RETURN_DOM_FRAGMENT' | 'RETURN_TRUSTED_TYPE'>
+
+export type CardHtmlConfig = SanitizeToStringConfig | UnwrapAllowlistConfig
 
 /**
  * Callout's nested-editor allowlist, kept behind cleanDOM as a named
@@ -288,7 +298,7 @@ export function createRenderContext(options: ExportDOMOptionsBase): RenderContex
         cleanDOM(container, config.allowedTags, context)
         return container.innerHTML
       }
-      return DOMPurify.sanitize(html, config) as string
+      return DOMPurify.sanitize(html, config)
     },
     variant<T>({ web, email }: { web: T; email: T }): T {
       return target === 'email' ? email : web
