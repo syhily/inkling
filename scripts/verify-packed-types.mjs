@@ -52,6 +52,25 @@ function run(label, command, args, options = {}) {
   }
 }
 
+// Expected-failure variant of run(): a non-zero exit is the WANTED outcome,
+// so the error is returned to the caller instead of recorded as a failure.
+// Returns { failed: true, error } when the command fails as expected, and
+// { failed: false, output } when it unexpectedly succeeds.
+function runExpectingFailure(command, args, options = {}) {
+  try {
+    const output = execFileSync(command, args, {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      ...options,
+    })
+    return { failed: false, output }
+  } catch (error) {
+    return { failed: true, error }
+  }
+}
+
 function makeTsconfig(module, moduleResolution) {
   return JSON.stringify(
     {
@@ -77,6 +96,21 @@ function makeTsconfig(module, moduleResolution) {
 
 const tempRoot = mkdtempSync(join(tmpdir(), 'inkling-pack-types-'))
 
+// Hermetic fixture deps pinned to the repo's exact versions: the gate must be
+// deterministic — floating `^` ranges made the outcome resolution-dependent
+// (an @types/react float once produced a phantom TS2578 mid-review). Peer
+// range breadth (^19) is deliberately NOT exercised; that is a version-matrix
+// job, not this gate's.
+const CONSUMER_DEPENDENCIES = {
+  react: '19.2.7',
+  'react-dom': '19.2.7',
+}
+const CONSUMER_DEV_DEPENDENCIES = {
+  typescript: '6.0.3',
+  '@types/react': '19.2.17',
+  '@types/react-dom': '19.2.3',
+}
+
 function checkConsumer(label, consumerDir, module, moduleResolution) {
   phase(label)
   mkdirSync(consumerDir, { recursive: true })
@@ -89,14 +123,9 @@ function checkConsumer(label, consumerDir, module, moduleResolution) {
         type: 'module',
         dependencies: {
           '@inkling/editor': `file:${tarballPath}`,
-          react: '^19.0.0',
-          'react-dom': '^19.0.0',
+          ...CONSUMER_DEPENDENCIES,
         },
-        devDependencies: {
-          typescript: '^5.5.0',
-          '@types/react': '^19.0.0',
-          '@types/react-dom': '^19.0.0',
-        },
+        devDependencies: { ...CONSUMER_DEV_DEPENDENCIES },
       },
       null,
       2,
@@ -112,11 +141,14 @@ function checkConsumer(label, consumerDir, module, moduleResolution) {
   const output = run(`${label} tsc`, 'pnpm', ['exec', 'tsc', '--project', 'tsconfig.json'], {
     cwd: consumerDir,
   })
+  // tsc prints nothing on success — null (not the empty string) means failure
+  if (output === null) {
+    return false
+  }
   if (output) {
     process.stdout.write(output)
-    return true
   }
-  return false
+  return true
 }
 
 let tarballPath = ''
@@ -150,14 +182,9 @@ try {
           type: 'module',
           dependencies: {
             '@inkling/editor': `file:${tarballPath}`,
-            react: '^19.0.0',
-            'react-dom': '^19.0.0',
+            ...CONSUMER_DEPENDENCIES,
           },
-          devDependencies: {
-            typescript: '^5.5.0',
-            '@types/react': '^19.0.0',
-            '@types/react-dom': '^19.0.0',
-          },
+          devDependencies: { ...CONSUMER_DEV_DEPENDENCIES },
         },
         null,
         2,
@@ -170,10 +197,12 @@ try {
       const typesPath = join(brokenDir, 'node_modules', '@inkling', 'editor', 'dist', 'editor.d.ts')
       rmSync(typesPath, { force: true })
       console.log(`removed ${typesPath}`)
-      const brokenOutput = run('broken-decl tsc (should fail)', 'pnpm', ['exec', 'tsc', '--project', 'tsconfig.json'], {
+      // tsc MUST fail here — run it off the failure log so the expected
+      // failure isn't recorded as one
+      const broken = runExpectingFailure('pnpm', ['exec', 'tsc', '--project', 'tsconfig.json'], {
         cwd: brokenDir,
       })
-      if (brokenOutput) {
+      if (!broken.failed) {
         recordFailure('negative check', {
           message: 'broken declaration file was removed but tsc still succeeded',
         })
