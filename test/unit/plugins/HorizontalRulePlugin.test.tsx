@@ -22,10 +22,11 @@ import { HorizontalRulePlugin } from '@/plugins/HorizontalRulePlugin'
 
 // Plan 052 Step 1: characterization pins for the hand-rolled HR update
 // listener, mounted with NO markdown transformers so the listener is the only
-// `---` → HR path. They pin CURRENT behavior (including the undo hazard)
-// ahead of the card-shortcut seam migration. The `editor.isComposing()` IME
-// bail is not simulable in jsdom (no composition events) and has no e2e
-// coverage either; the guard is carried verbatim through the seam.
+// `---` → HR path. They pin CURRENT behavior ahead of the card-shortcut seam
+// migration (the undo pin was updated in step 5, when the historic-tag gate
+// fixed the re-fire it had recorded). The `editor.isComposing()` IME bail is
+// not simulable in jsdom (no composition events) and has no e2e coverage
+// either; the guard is carried verbatim through the seam.
 
 function createTestEditor() {
   return createEditor({
@@ -204,12 +205,12 @@ describe('HorizontalRulePlugin shortcut listener', () => {
     expect(editor.getEditorState().read(() => $getRoot().getTextContent())).toBe('a---b')
   })
 
-  it('resurrects the HR card on undo of its creation (undo hazard, records current behavior)', async () => {
-    // Undo hazard (plan 052): the hand-rolled listener has no historic-tag
-    // skip. Today the undo restores the '---' paragraph AND the listener
-    // re-fires on the undo update, resurrecting the card — where Lexical's
-    // own markdown listener skips historic updates. Step 5's tag gate fixes
-    // this; this pin is the before/after evidence and is updated there.
+  it('keeps the restored --- paragraph on undo of the HR creation (historic-tag gate)', async () => {
+    // Plan 052 step 5 (the sanctioned pin update): before the dirty-set/tag
+    // gate, the listener had no historic-tag skip and RE-FIRED on the undo
+    // update — undo of the HR creation resurrected the card (the step-1
+    // version of this pin expected ['horizontalrule', 'paragraph'] here).
+    // With the gate, the restored '---' paragraph stays.
     trackNativeSelection()
     await mountPlugin()
     await setContent([''])
@@ -223,6 +224,7 @@ describe('HorizontalRulePlugin shortcut listener', () => {
       setTimeout(resolve, 0)
     })
 
-    expect(rootChildTypes()).toEqual(['horizontalrule', 'paragraph'])
+    expect(rootChildTypes()).toEqual(['paragraph'])
+    expect(editor.getEditorState().read(() => $getRoot().getTextContent())).toBe('---')
   })
 })

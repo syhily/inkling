@@ -54,7 +54,21 @@ export const HorizontalRulePlugin = () => {
     if (!editor.hasNodes([HorizontalRuleNode])) {
       return
     }
-    return editor.registerUpdateListener(() => {
+    return editor.registerUpdateListener(({ dirtyElements, dirtyLeaves, tags }) => {
+      // Skip undo/redo and coalesced history updates: the restored '---'
+      // paragraph matches the divider regex, so without this gate the scan
+      // re-fires on undo and resurrects the card (pinned in
+      // test/unit/plugins/HorizontalRulePlugin.test.tsx). Same idiom as
+      // EmEnDashPlugin.
+      if (tags.has('historic') || tags.has('history-push') || tags.has('history-merge')) {
+        return
+      }
+
+      // selection-only updates cannot have produced a matching paragraph
+      if (dirtyLeaves.size === 0 && dirtyElements.size === 0) {
+        return
+      }
+
       editor.update(() => {
         // don't do anything when using IME input
         if (editor.isComposing()) {
