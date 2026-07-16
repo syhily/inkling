@@ -143,7 +143,7 @@ function useFloatingFormatToolbar(
       <FloatingFormatToolbar
         anchorElem={anchorElem}
         editor={editor}
-        hiddenFormats={hiddenFormats as never[]}
+        hiddenFormats={hiddenFormats}
         href={href}
         isSnippetsEnabled={isSnippetsEnabled}
         setToolbarItemType={setToolbarItemType}

@@ -130,7 +130,9 @@ export function migrateOldVisibilityFormat(visibility: Visibility) {
 export function renderWithVisibility(
   originalRenderOutput: ExportDOMOutput,
   visibility: Visibility | undefined,
-  context: Pick<RenderContext, 'target'>,
+  // `target` is optional: omitting it takes the web path (context.target is
+  // only ever compared against 'email')
+  context: Partial<Pick<RenderContext, 'target'>>,
 ) {
   if (!visibility) {
     return originalRenderOutput

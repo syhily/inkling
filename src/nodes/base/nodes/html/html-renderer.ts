@@ -35,8 +35,8 @@ export function renderHtmlNode(node: HtmlNodeData, context: RenderContext): Html
 
   if (node.visibility) {
     const renderOutput: ExportDOMOutput<'value'> = { element: textarea, type: 'value' }
-    // renderWithVisibility takes Pick<RenderContext, 'target'> — the frozen
-    // context is passed straight through.
+    // renderWithVisibility takes Partial<Pick<RenderContext, 'target'>> — the
+    // frozen context is passed straight through.
     return renderWithVisibility(renderOutput, node.visibility, context) as HtmlExportDOMOutput
   }
 

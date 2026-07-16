@@ -164,7 +164,7 @@ const InklingComposableEditor = ({
       {floatingAnchorElem && (
         <FloatingToolbarPlugin
           anchorElem={floatingAnchorElem}
-          hiddenFormats={hiddenFormats as never[]}
+          hiddenFormats={hiddenFormats}
           isSnippetsEnabled={isSnippetsEnabled}
         />
       )}

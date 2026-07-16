@@ -1,6 +1,4 @@
 import '@/styles/index.css'
-import type { SerializedEditorState } from 'lexical'
-
 import { ListPlugin } from '@lexical/react/LexicalListPlugin'
 import React from 'react'
 
@@ -57,11 +55,8 @@ export function getEmailEditorCardConfig(cardConfig: Record<string, unknown> = {
 }
 
 export interface EmailEditorProps
-  extends
-    Omit<InklingComposerProps, 'cardConfig' | 'children' | 'nodes'>,
-    Omit<InklingComposableEditorProps, 'onChange'> {
+  extends Omit<InklingComposerProps, 'cardConfig' | 'children' | 'nodes'>, InklingComposableEditorProps {
   cardConfig?: CardConfig
-  onChange?: (editorState: SerializedEditorState) => void
 }
 
 const EmailEditor = ({

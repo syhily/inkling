@@ -401,7 +401,6 @@ export function HeaderCard({
                 )}
                 placeholderText={headerPlaceholder}
                 singleParagraph={true}
-                style={{ color: matchingTextColor(backgroundColor || '') }}
                 textClassName={clsx(
                   'inkling-lexical-heading relative w-full font-bold whitespace-normal caret-current',
                   !isEditing && isEditorEmpty(headerTextEditor) ? 'hidden' : 'peer',
@@ -431,7 +430,6 @@ export function HeaderCard({
                 )}
                 placeholderText={subheaderPlaceholder}
                 singleParagraph={true}
-                style={{ color: matchingTextColor(backgroundColor || '') }}
                 textClassName={clsx(
                   'inkling-lexical-subheading relative w-full whitespace-normal caret-current',
                   !isEditing && isEditorEmpty(subheaderTextEditor) ? 'hidden' : 'peer',

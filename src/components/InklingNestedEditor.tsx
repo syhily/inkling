@@ -38,8 +38,6 @@ interface InklingNestedEditorProps {
   useDefaultClasses?: boolean
   dataTestId?: string
   children?: React.ReactNode
-  readOnly?: boolean
-  style?: React.CSSProperties
 }
 
 const InklingNestedEditor = ({
