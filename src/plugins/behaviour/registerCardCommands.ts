@@ -145,7 +145,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
             // decorator nodes have selectEnd, so this needs to come after that check
             previousSibling.selectEnd()
           } else {
-            cardNode.selectPrevious?.()
+            cardNode.selectPrevious()
           }
         } else if (nextSibling) {
           // from-mode: cardNode comes from the payload, not the selection
@@ -158,7 +158,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
             // decorator nodes have selectStart, so this needs to come after that check
             nextSibling.selectStart()
           } else {
-            cardNode.selectNext?.()
+            cardNode.selectNext()
           }
         } else {
           // ensure we still have a paragraph if the deleted card was the only node

@@ -249,6 +249,19 @@ describe('Utils: visibility', function () {
         'handles {emailOnly: false, segment: ""} as visible to all',
         testEmailMigration({ emailOnly: false }, { memberSegment: 'status:free,status:-free' }),
       )
+
+      it(
+        'passes the documented all-members segment through verbatim (no "undefined" emission)',
+        testEmailMigration(
+          { showOnEmail: true, segment: 'status:free,status:-free' },
+          { memberSegment: 'status:free,status:-free' },
+        ),
+      )
+
+      it(
+        'passes unrecognized segments through verbatim',
+        testEmailMigration({ showOnEmail: true, segment: 'status:comped' }, { memberSegment: 'status:comped' }),
+      )
     })
   })
 
