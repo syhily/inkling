@@ -81,7 +81,7 @@ Repo quick reference (verification gates used by every plan):
 | 043 | Derive the card insert plugins from the declaration | P1 | M | — | DONE (`6bb6bf9`) |
 | 044 | Put card-node writes behind a typed seam | P1 | L | — | DONE (`0cf0929`) |
 | 045 | One media-upload intent module | P2 | M | 044 | DONE (`e60b07a`) |
-| 046 | Collapse the card action toolbar into one module | P2 | M | 043 | TODO |
+| 046 | Collapse the card action toolbar into one module | P2 | M | 043 | DONE (`a962f9a`) |
 | 047 | Split the composer context by lifecycle | P1 | L | — | TODO |
 | 048 | Make the host interface honest (2.0.0) | P1 | M | 047 | TODO |
 | 049 | Name the clipboard-protocol module | P2 | M | — | TODO |

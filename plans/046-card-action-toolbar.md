@@ -509,3 +509,60 @@ to the hand-written code if they must ship without the refactor — each
 touches one card file and one pin. No step touches shared renderer,
 command-handler, or context code, so no revert can strand another plan's
 work.
+
+## Execution notes
+
+Plan 046 landed in seven commits on main (`a8e4f54..a962f9a`) plus a
+post-review cleanup (`5726490`). Step 1 (`a8e4f54`) characterized the
+twelve per-card toolbars — visibility matrix, item lists, both edit
+idioms, the snippet swap, and the `InklingCardWrapper` equivalence pin
+(`setEditing(true)` → `EDIT_CARD_COMMAND`). Step 2 (`d4cd813`) introduced
+`src/components/ui/CardActionToolbar.tsx` and migrated the five simple
+cards. Steps 3–6 (`205a55c`, `b54d7bc`, `49e38e8`, `4df68a1`) migrated
+audio/video, file, html/image, and gallery/bookmark. Step 7 (`a962f9a`)
+is the plan-prescribed empty verification commit. Net: ~455 lines deleted
+against ~275 added; `showSnippetToolbar` exists only in the module.
+
+The three pre-authorized behavior changes shipped, each with before/after
+pin evidence in its commit message: audio's label "Snippet" → "Save as
+snippet"; file's edit item wired to `setEditing(true)` (no recorded
+product decision made it intentionally inert); file's snippet item +
+separator gated on `createSnippet`. The edit-dispatch unification went to
+`setEditing(true)` as the plan prescribes; `focusEditor` is written at
+payload sites but read by no handler (grep-verified), so the unification
+is zero-drift.
+
+One judgment call, adjudicated in review as within the plan's letter and
+spirit (a plan defect, not an implementation defect): gallery's menu
+toolbar now unmounts while its snippet input is open. The old gallery
+never referenced `showSnippetToolbar`, so both toolbar divs mounted
+simultaneously (overlapping at the same anchor — a latent Playwright
+strict-mode hazard). The plan's evidence documented the divergence but
+never adjudicated it, while its module shape, Step-6 prescription, and
+acceptance criteria forced the normalization; the implementer disclosed
+it in `4df68a1` rather than pinning the occluded double-render. The new
+behavior matches the other eleven cards and the plan's own
+one-toolbar-div invariant.
+
+Reviews: spec and quality both APPROVED. Post-review fixes in `5726490`:
+the gallery snippet-swap pin strengthened to assert exclusivity
+(`toHaveLength(1)`, menu `ul` absent, `snippet-name` present — the old
+assertion would have passed even if the occlusion regressed), and
+`CardActionToolbar`'s unused default export dropped. Two plan-evidence
+nits recorded for the record: the plan claimed File had no NodeComponent
+unit tests (it did), and its baselines were stale after 044/045 (actuals
+recorded in the commits). A commit-message nit (`4df68a1` inverts which
+toolbar painted over which) is on record here; history is not rewritten.
+
+Divergence preserved as data (pinned, green): bookmark's snippet-only
+double gate (`visibleWhen: !!title && !!createSnippet`,
+`hideWhileEditing: false`); gallery's drag-aware `visibleWhen` with no
+edit item; image's custom width/link items, `beforeMenu`
+(`ImageUploadForm`), and its out-of-scope link `ActionToolbar`. Gates at
+HEAD: full unit 217 files / 1892 passed / 21 todo; nodes-base+html-renderer
+46 files / 735 passed / 21 todo; typecheck/lint/format clean; scoped e2e
+(16 specs) 332 passed / 2 skipped (pre-existing skips), every assertHTML
+snapshot unedited. `src/index.ts` untouched. One pre-existing flake
+noted: `toggle-card.test.ts:268` (undo/redo timing) failed at baseline
+under parallel workers before any change; passes in isolation and in the
+final full run — unrelated, no action.
