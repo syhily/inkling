@@ -29,9 +29,7 @@ const atLinkContextValue = {
   cardConfig: {},
   darkMode: false,
   enableMultiplayer: false,
-  editorContainerRef: { current: null },
   createWebsocketProvider: vi.fn(),
-  onWordCountChangeRef: { current: null },
   onError: vi.fn(),
 }
 

@@ -109,5 +109,40 @@ describe('useCardDragAndDrop', () => {
     rerender({ enabled: true })
     expect(mockContainer.enableDrag).toHaveBeenCalledTimes(1)
     expect(mockContainer.disableDrag).toHaveBeenCalledTimes(1)
+
+    // enabled toggles flow through the enable/disable pair only — the
+    // container is never destroyed and re-registered (that was the orphaned-
+    // container bug plan 047 removed)
+    expect(mockDragDropHandler.registerContainer).toHaveBeenCalledTimes(1)
+    expect(mockContainer.destroy).not.toHaveBeenCalled()
+  })
+
+  it('registers when the handler arrives after the hook mounted', async () => {
+    // the mount-order improvement: the reorder plugin can publish the handler
+    // after card hooks already mounted, and they register on its arrival
+    const dragDropHandle = createDragDropHandle()
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      React.createElement(DragDropHandleContext.Provider, { value: dragDropHandle }, children)
+    const { result } = renderHook(
+      () =>
+        useCardDragAndDrop({
+          enabled: true,
+          canDrop: stableCanDrop,
+          draggableSelector: '[data-draggable]',
+          droppableSelector: '[data-droppable]',
+        }),
+      { wrapper },
+    )
+
+    await act(async () => {
+      result.current.setRef(document.createElement('div'))
+    })
+    expect(mockDragDropHandler.registerContainer).not.toHaveBeenCalled()
+
+    await act(async () => {
+      dragDropHandle.setState({ handler: mockDragDropHandler as never })
+    })
+
+    expect(mockDragDropHandler.registerContainer).toHaveBeenCalledTimes(1)
   })
 })

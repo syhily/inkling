@@ -276,10 +276,8 @@ export default function useGalleryReorder({
     dragDropContainer.current = container
 
     return () => {
-      if (dragDropContainer.current) {
-        dragDropContainer.current.destroy()
-        dragDropContainer.current = null
-      }
+      container.destroy()
+      dragDropContainer.current = null
     }
 
     // we want to be specific about when we want the drag/drop handler to

@@ -132,8 +132,7 @@ export default function useCardDragAndDrop({
         onDropEnd: _onDropEnd,
       },
     })
-    // oxlint-disable-next-line typescript/no-explicit-any
-    dragDropContainer.current = container as any
+    dragDropContainer.current = container
 
     // unregister on handler swap/unmount; calling destroy() after the handler
     // itself was destroyed is harmless (DragDropHandler disables and filters)

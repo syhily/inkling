@@ -51,9 +51,7 @@ function createComposerContext(cardConfig: Record<string, unknown> = {}) {
     cardConfig,
     darkMode: false,
     enableMultiplayer: false,
-    editorContainerRef: { current: null } as React.RefObject<HTMLElement | null>,
     createWebsocketProvider: vi.fn(),
-    onWordCountChangeRef: { current: null },
     onError: vi.fn(),
   }
 }

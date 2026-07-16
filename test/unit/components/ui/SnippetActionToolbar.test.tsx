@@ -44,9 +44,7 @@ function createComposerContext(createSnippet?: (args: { name: string; value: str
     cardConfig: { createSnippet, snippets: [] as Array<{ name: string; value: string }> },
     darkMode: false,
     enableMultiplayer: false,
-    editorContainerRef: { current: null } as React.RefObject<HTMLElement | null>,
     createWebsocketProvider: vi.fn(),
-    onWordCountChangeRef: { current: null },
     onError: vi.fn(),
   }
 }
