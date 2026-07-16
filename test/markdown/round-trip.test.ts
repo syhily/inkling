@@ -1,3 +1,4 @@
+import { IS_HIGHLIGHT, IS_SUBSCRIPT, IS_SUPERSCRIPT, type SerializedEditorState } from 'lexical'
 import { describe, it } from 'vitest'
 
 import { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown/round-trip'
@@ -51,5 +52,36 @@ describe('Markdown round-trip', function () {
   it('round-trips a markdown card', function () {
     const markdown = '```inkling:markdown\nSome **bold** text\n```'
     expect(roundTrip(markdown).trim()).toBe(markdown)
+  })
+
+  // The card-aware round-trip dialect's coverage vs the paste dialect (plan
+  // 050 pins). Card-fence import itself is pinned in
+  // round-trip-cards.test.ts (```inkling:bookmark``` → BookmarkNode) and not
+  // re-pinned here.
+  function firstTextOf(state: SerializedEditorState) {
+    const paragraph = state.root.children[0] as unknown as { children: Array<{ text: string; format: number }> }
+    return paragraph.children[0]
+  }
+
+  it('imports ==marked== as highlight-formatted text', function () {
+    // @lexical/markdown's TEXT_FORMAT_TRANSFORMERS include HIGHLIGHT, so this
+    // dialect speaks ==mark== as well — same result as the paste dialect's
+    // <mark> import (pinned in test/unit/plugins/MarkdownPastePlugin.test.tsx).
+    const text = firstTextOf(markdownToLexicalState('==marked=='))
+    expect(text.text).toBe('marked')
+    expect(text.format).toBe(IS_HIGHLIGHT)
+  })
+
+  it('imports a footnote reference as literal text', function () {
+    // No footnote transformer exists in this dialect; the paste dialect's
+    // markdown-it-footnote handling is pinned in MarkdownPastePlugin.test.tsx.
+    const text = firstTextOf(markdownToLexicalState('text[^1]'))
+    expect(text.text).toBe('text[^1]')
+    expect(text.format).toBe(0)
+  })
+
+  it('converts ~sub~ and ^sup^ via the custom text format transformers', function () {
+    expect(firstTextOf(markdownToLexicalState('~sub~')).format).toBe(IS_SUBSCRIPT)
+    expect(firstTextOf(markdownToLexicalState('^sup^')).format).toBe(IS_SUPERSCRIPT)
   })
 })

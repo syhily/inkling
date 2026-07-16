@@ -7,11 +7,13 @@ import {
   $getRoot,
   $isLineBreakNode,
   $isParagraphNode,
+  $isTextNode,
   createEditor,
 } from 'lexical'
 import React, { useMemo } from 'react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { PASTE_MARKDOWN_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
 import { MarkdownPastePlugin } from '@/plugins/MarkdownPastePlugin'
 
@@ -35,7 +37,9 @@ const originalDataTransfer = globalThis.DataTransfer
 function createTestEditor() {
   return createEditor({
     namespace: 'test',
-    nodes: [HeadingNode],
+    // CodeBlockNode is registered so the paste-dialect card-fence pin below
+    // exercises the real import path (pre/code → code block card).
+    nodes: [HeadingNode, CodeBlockNode],
     onError: () => {},
     theme: {},
   })
@@ -137,6 +141,107 @@ describe('MarkdownPastePlugin', () => {
       const paragraph = $getRoot().getFirstChild()
       expect($isParagraphNode(paragraph)).toBe(true)
       expect($isParagraphNode(paragraph) && paragraph.getChildren().some((node) => $isLineBreakNode(node))).toBe(true)
+    })
+  })
+
+  // The paste dialect (plan 050): markdown-it + plugins → sanitizeHtml →
+  // Lexical HTML import. It speaks ==mark==, ~sub~, ^sup^, and footnotes —
+  // but has no card-fence grammar. The card-aware round-trip dialect's
+  // coverage is pinned separately in test/markdown/round-trip.test.ts.
+  describe('paste dialect coverage', () => {
+    it('turns a pasted inkling:* card fence into a code block card, not the named card', async () => {
+      const json = '{"url":"https://example.com","title":"Example"}'
+      await pasteMarkdown(editor, '```inkling:bookmark\n' + json + '\n```', false)
+
+      editor.getEditorState().read(() => {
+        // markdown-it renders the fence as <pre><code class="language-inkling:bookmark">,
+        // which CodeBlockNode.importDOM claims — the JSON body becomes the
+        // code, trailing newline included. The card-aware round-trip dialect
+        // recreates a BookmarkNode from the same string instead (pinned in
+        // test/markdown/round-trip-cards.test.ts).
+        const children = $getRoot().getChildren()
+        expect(children).toHaveLength(1)
+
+        const node = children[0]
+        expect($isCodeBlockNode(node)).toBe(true)
+        if ($isCodeBlockNode(node)) {
+          expect(node.language).toBe('inkling:bookmark')
+          expect(node.code).toBe(json + '\n')
+        }
+      })
+    })
+
+    it('converts ==marked== into highlight-formatted text', async () => {
+      await pasteMarkdown(editor, '==marked==', false)
+
+      editor.getEditorState().read(() => {
+        const paragraph = $getRoot().getFirstChild()
+        expect($isParagraphNode(paragraph)).toBe(true)
+
+        // markdown-it-mark renders <mark>, which Lexical's HTML import maps
+        // to the highlight text format.
+        const text = $isParagraphNode(paragraph) ? paragraph.getFirstChild() : null
+        expect($isTextNode(text)).toBe(true)
+        if ($isTextNode(text)) {
+          expect(text.getTextContent()).toBe('marked')
+          expect(text.hasFormat('highlight')).toBe(true)
+        }
+      })
+    })
+
+    it('converts ~sub~ and ^sup^ into subscript- and superscript-formatted text', async () => {
+      await pasteMarkdown(editor, '~sub~ and ^sup^', false)
+
+      editor.getEditorState().read(() => {
+        const paragraph = $getRoot().getFirstChild()
+        expect($isParagraphNode(paragraph)).toBe(true)
+        if (!$isParagraphNode(paragraph)) {
+          return
+        }
+
+        // markdown-it-sub/sup render <sub>/<sup>, which Lexical's HTML import
+        // maps to the subscript/superscript text formats.
+        const [sub, between, sup] = paragraph.getChildren()
+        expect($isTextNode(sub) && sub.hasFormat('subscript')).toBe(true)
+        expect($isTextNode(between) && between.getTextContent()).toBe(' and ')
+        expect($isTextNode(sup) && sup.hasFormat('superscript')).toBe(true)
+      })
+    })
+
+    it('flattens a footnote into a superscript ref plus plain body text, links stripped', async () => {
+      await pasteMarkdown(editor, 'Here is a note.[^1]\n\n[^1]: The footnote text.', false)
+
+      editor.getEditorState().read(() => {
+        const children = $getRoot().getChildren()
+        expect(children).toHaveLength(3)
+
+        // markdown-it-footnote renders <sup class="footnote-ref"><a href="#fn1">[1]</a></sup>;
+        // the href fails sanitizeHtml's ALLOWED_URI_REGEXP, so the ref lands
+        // as superscript text without a link.
+        const lead = children[0]
+        expect($isParagraphNode(lead)).toBe(true)
+        if ($isParagraphNode(lead)) {
+          const [plain, ref] = lead.getChildren()
+          expect($isTextNode(plain) && plain.getTextContent()).toBe('Here is a note.')
+          expect($isTextNode(ref) && ref.getTextContent()).toBe('[1]')
+          expect($isTextNode(ref) && ref.hasFormat('superscript')).toBe(true)
+        }
+
+        // The <hr class="footnotes-sep"> separator (HorizontalRuleNode is not
+        // registered here) leaves an empty paragraph.
+        const separator = children[1]
+        expect($isParagraphNode(separator) && separator.getChildren()).toHaveLength(0)
+
+        // The footnote body unwraps out of <section>/<ol>/<li> (unregistered
+        // here) into plain text; the ↩︎ backlink loses its href the same way.
+        const body = children[2]
+        expect($isParagraphNode(body)).toBe(true)
+        if ($isParagraphNode(body)) {
+          expect(body.getTextContent()).toBe('The footnote text. ↩︎')
+          const bodyText = body.getFirstChild()
+          expect($isTextNode(bodyText) && bodyText.getFormat()).toBe(0)
+        }
+      })
     })
   })
 })
