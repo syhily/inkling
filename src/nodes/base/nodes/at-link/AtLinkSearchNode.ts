@@ -46,7 +46,7 @@ export class AtLinkSearchNode extends TextNode {
     } else {
       span.dataset.placeholder = this.__placeholder || ''
     }
-    span.classList.add(...config.theme.atLinkSearch.split(' '))
+    span.classList.add(...(config.theme.atLinkSearch || '').split(' ').filter(Boolean))
 
     return span
   }
