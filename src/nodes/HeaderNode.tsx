@@ -18,9 +18,10 @@ export type HeaderNodeDataset = HeaderData & {
 export class HeaderNode extends BaseHeaderNode {
   // nested editors live on the generated base class (static `nestedEditors`);
   // `declare` keeps these type-only so the field initializers don't clobber
-  // the instances the base constructor sets up
-  declare __headerTextEditor: LexicalEditor | null
-  declare __subheaderTextEditor: LexicalEditor | null
+  // the instances the base constructor sets up. Non-null: setupNestedEditor
+  // always assigns an editor instance (src/utils/nested-editors.ts).
+  declare __headerTextEditor: LexicalEditor
+  declare __subheaderTextEditor: LexicalEditor
   declare __headerTextEditorInitialState: EditorState | undefined
   declare __subheaderTextEditorInitialState: EditorState | undefined
 

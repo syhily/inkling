@@ -1,8 +1,8 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
+import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import { useContext, useEffect, useRef, useState } from 'react'
 
-import type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
+import type { FileChangeEvent } from '@/components/ui/cards/AudioCard'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
@@ -12,6 +12,8 @@ import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
+import { $updateCardNode } from '@/nodes/base'
+import { $isHeaderNode } from '@/nodes/HeaderNode'
 import { EDIT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 import { getAccentColor } from '@/utils/getAccentColor'
 import { backgroundImageUploadHandler } from '@/utils/imageUploadHandler'
@@ -31,12 +33,12 @@ interface HeaderNodeComponentProps {
   buttonEnabled: boolean
   nodeKey: NodeKey
   header?: string
-  headerTextEditor: LexicalEditor | null
+  headerTextEditor: LexicalEditor
   headerTextEditorInitialState?: EditorState | undefined
   headerTextEditorState?: EditorState | undefined
   layout: string
   subheader?: string
-  subheaderTextEditor: LexicalEditor | null
+  subheaderTextEditor: LexicalEditor
   subheaderTextEditorInitialState?: EditorState | undefined
   subheaderTextEditorState?: EditorState | undefined
   textColor: string
@@ -100,29 +102,26 @@ function HeaderNodeComponent({
 
     if (accent) {
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if (node) {
-          ;(node as GeneratedDecoratorNodeBase).accentColor = accent
-        }
+        $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+          node.accentColor = accent
+        })
       })
     }
   }, [editor, nodeKey])
 
   const handleAlignment = (a: string): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).alignment = a
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.alignment = a
+      })
     })
   }
 
   const handleBackgroundSize = (a: string): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).backgroundSize = a
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.backgroundSize = a
+      })
     })
   }
 
@@ -137,10 +136,9 @@ function HeaderNodeComponent({
   const handleImageChange = async (files: FileList | File[] | null): Promise<void> => {
     // reset original src so it can be replaced with preview and upload progress
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).backgroundImageSrc = ''
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.backgroundImageSrc = ''
+      })
     })
 
     const bgResult = await backgroundImageUploadHandler(files, imageUploader.upload)
@@ -149,20 +147,18 @@ function HeaderNodeComponent({
     const height = bgResult?.height ?? 0
 
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        const n = node as GeneratedDecoratorNodeBase
-        n.backgroundImageSrc = imageSrc ?? ''
-        n.backgroundImageWidth = width
-        n.backgroundImageHeight = height
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.backgroundImageSrc = imageSrc ?? ''
+        node.backgroundImageWidth = width
+        node.backgroundImageHeight = height
+      })
     })
 
     setLastBackgroundImage(imageSrc ?? '')
     setImageRemoved(false)
   }
 
-  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+  const onFileChange = async (e: FileChangeEvent): Promise<void> => {
     await handleImageChange(e.target.files)
   }
 
@@ -170,39 +166,35 @@ function HeaderNodeComponent({
 
   const handleLayout = (l: string): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).layout = l
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.layout = l
+      })
     })
   }
 
   const handleButtonText = (event: React.ChangeEvent<HTMLInputElement>): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).buttonText = event.target.value
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.buttonText = event.target.value
+      })
     })
   }
 
   const handleButtonTextBlur = (event: React.FocusEvent<HTMLInputElement>): void => {
     if (!event.target.value) {
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if (node) {
-          ;(node as GeneratedDecoratorNodeBase).buttonText = ''
-        }
+        $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+          node.buttonText = ''
+        })
       })
     }
   }
 
   const handleClearBackgroundImage = (): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).backgroundImageSrc = ''
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.backgroundImageSrc = ''
+      })
     })
     setImageRemoved(true)
   }
@@ -212,10 +204,9 @@ function HeaderNodeComponent({
 
     if (lastBackgroundImage && !imageRemoved) {
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if (node) {
-          ;(node as GeneratedDecoratorNodeBase).backgroundImageSrc = lastBackgroundImage
-        }
+        $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+          node.backgroundImageSrc = lastBackgroundImage
+        })
       })
     } else {
       openFileSelection({ fileInputRef })
@@ -225,82 +216,72 @@ function HeaderNodeComponent({
   const handleHideBackgroundImage = (): void => {
     setShowBackgroundImage(false)
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).backgroundImageSrc = ''
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.backgroundImageSrc = ''
+      })
     })
   }
 
   const handleBackgroundColor = (color: string, matchingTextColor: string): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        const n = node as GeneratedDecoratorNodeBase
-        n.backgroundColor = color
-        n.textColor = matchingTextColor
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.backgroundColor = color
+        node.textColor = matchingTextColor
 
         if (layout !== 'split') {
           handleHideBackgroundImage()
         }
-      }
+      })
     })
   }
 
   const handleTextColor = (color: string): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).textColor = color
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.textColor = color
+      })
     })
   }
 
   const handleButtonColor = (color: string, matchingTextColor: string): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        const n = node as GeneratedDecoratorNodeBase
-        n.buttonColor = color
-        n.buttonTextColor = matchingTextColor
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.buttonColor = color
+        node.buttonTextColor = matchingTextColor
+      })
     })
   }
 
   const handleSwapLayout = (): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).swapped = !isSwapped
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.swapped = !isSwapped
+      })
     })
   }
 
   const handleButtonEnabled = (): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).buttonEnabled = !buttonEnabled
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.buttonEnabled = !buttonEnabled
+      })
     })
   }
 
   const handleButtonUrl = (val: string): void => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node) {
-        ;(node as GeneratedDecoratorNodeBase).buttonUrl = val
-      }
+      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+        node.buttonUrl = val
+      })
     })
   }
 
   const handleButtonUrlBlur = (event: React.FocusEvent<HTMLInputElement>): void => {
     if (!event.target.value) {
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey)
-        if (node) {
-          ;(node as GeneratedDecoratorNodeBase).buttonUrl = 'https://'
-        }
+        $updateCardNode(nodeKey, $isHeaderNode, (node) => {
+          node.buttonUrl = 'https://'
+        })
       })
     }
   }
@@ -312,9 +293,8 @@ function HeaderNodeComponent({
 
   return (
     <>
-      {/* oxlint-disable-next-line typescript/no-explicit-any */}
       <HeaderCard
-        {...({
+        {...{
           alignment,
           backgroundColor,
           backgroundImageSrc,
@@ -340,7 +320,6 @@ function HeaderNodeComponent({
           handleShowBackgroundImage,
           handleSwapLayout,
           handleTextColor,
-          header,
           headerTextEditor,
           headerTextEditorInitialState,
           imageDragHandler,
@@ -353,13 +332,11 @@ function HeaderNodeComponent({
             fileInputRef.current = ref?.current ?? null
           },
           showBackgroundImage,
-          subheader,
           subheaderTextEditor,
           subheaderTextEditorInitialState,
           textColor,
           onFileChange,
-          // oxlint-disable-next-line typescript/no-explicit-any
-        } as any)}
+        }}
       />
       <ActionToolbar data-inkling-card-toolbar="header" isVisible={showSnippetToolbar}>
         <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />

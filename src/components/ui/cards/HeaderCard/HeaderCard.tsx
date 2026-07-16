@@ -77,7 +77,6 @@ interface HeaderCardProps {
   handleButtonUrlBlur: (event: React.FocusEvent<HTMLInputElement>) => void
   handleButtonUrl: (value: string) => void
   setFileInputRef: (ref: React.MutableRefObject<HTMLInputElement | null>) => void
-  [key: string]: unknown
 }
 
 export function HeaderCard({
