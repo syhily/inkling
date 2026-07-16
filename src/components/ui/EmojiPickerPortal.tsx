@@ -3,7 +3,7 @@ import React from 'react'
 
 import Picker from '@/components/ui/EmojiPicker'
 import Portal from '@/components/ui/Portal'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 
 interface EmojiPickerPortalProps {
   onEmojiClick: (emoji: unknown) => void
@@ -60,7 +60,7 @@ const EmojiPickerPortal = ({
   ...props
 }: EmojiPickerPortalProps) => {
   const [position, setPosition] = React.useState<PickerPosition | null>(null)
-  const { darkMode } = React.useContext(InklingComposerContext)
+  const { darkMode } = React.useContext(InklingUiPrefsContext)
 
   const shiftPixels = 35 // how many pixels we want to move it up when it's at the bottom of the screen
   const handleScroll = React.useCallback(() => {

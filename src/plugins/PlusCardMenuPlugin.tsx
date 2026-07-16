@@ -4,7 +4,7 @@ import React from 'react'
 
 import { CardMenu, type CardMenuItemData } from '@/components/ui/CardMenu'
 import { PlusButton, PlusMenu } from '@/components/ui/PlusMenu'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { buildCardMenu } from '@/utils/buildCardMenu'
 import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
 import { getSelectedNode } from '@/utils/getSelectedNode'
@@ -19,7 +19,7 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
     maxItemIndex: 0,
   })
   const containerRef = React.useRef<HTMLDivElement | null>(null)
-  const { cardConfig } = React.useContext(InklingComposerContext)
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
 
   function getTopPosition(elem: Element): number {
     const elemRect = elem.getBoundingClientRect()

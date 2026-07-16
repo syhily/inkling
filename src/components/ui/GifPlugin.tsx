@@ -4,7 +4,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import React from 'react'
 
 import GifSelector from '@/components/ui/GifSelector'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { DELETE_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { INSERT_FROM_GIF_COMMAND } from '@/plugins/InklingSelectorPlugin'
 import { getGifProviderConfig, useGif } from '@/utils/services/gif'
@@ -14,7 +14,7 @@ interface GifPluginProps {
 }
 
 const GifPlugin = ({ nodeKey }: GifPluginProps) => {
-  const { cardConfig } = React.useContext(InklingComposerContext)
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const providerConfig = getGifProviderConfig(cardConfig)
   const gifHook = useGif({ config: providerConfig! })
   const [editor] = useLexicalComposerContext()

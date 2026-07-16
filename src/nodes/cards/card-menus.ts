@@ -1,6 +1,6 @@
 import { createCommand, type LexicalCommand } from 'lexical'
 
-import type { CardConfig } from '@/context/InklingComposerContext'
+import type { CardConfig } from '@/context/InklingHostIntegrationContext'
 import type { AudioNodeDataset } from '@/nodes/AudioNode'
 import type { BookmarkNodeDataset } from '@/nodes/BookmarkNode'
 import type { ButtonNodeDataset } from '@/nodes/ButtonNode'

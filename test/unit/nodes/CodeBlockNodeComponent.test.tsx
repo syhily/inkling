@@ -4,7 +4,8 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { CodeBlockNodeComponent } from '@/nodes/CodeBlockNodeComponent'
 
@@ -71,11 +72,13 @@ function renderComponent(nodeKey: NodeKey, setEditing: () => void, darkMode: boo
   const composerValue = createComposerContext(darkMode)
   const cardValue = createCardContext(setEditing, { nodeKey })
   return render(
-    <InklingComposerContext.Provider value={composerValue}>
-      <CardContext.Provider value={cardValue}>
-        <CodeBlockNodeComponent code="const a = 1" language="javascript" nodeKey={nodeKey} />
-      </CardContext.Provider>
-    </InklingComposerContext.Provider>,
+    <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingUiPrefsContext.Provider value={composerValue}>
+        <CardContext.Provider value={cardValue}>
+          <CodeBlockNodeComponent code="const a = 1" language="javascript" nodeKey={nodeKey} />
+        </CardContext.Provider>
+      </InklingUiPrefsContext.Provider>
+    </InklingHostIntegrationContext.Provider>,
   )
 }
 
@@ -121,11 +124,13 @@ describe('CodeBlockNodeComponent', () => {
       const composerValue = createComposerContext(false, cardConfig)
       const cardValue = createCardContext(vi.fn(), cardOverrides)
       return render(
-        <InklingComposerContext.Provider value={composerValue}>
-          <CardContext.Provider value={cardValue}>
-            <CodeBlockNodeComponent code="const a = 1" language="javascript" nodeKey="code-1" />
-          </CardContext.Provider>
-        </InklingComposerContext.Provider>,
+        <InklingHostIntegrationContext.Provider value={composerValue}>
+          <InklingUiPrefsContext.Provider value={composerValue}>
+            <CardContext.Provider value={cardValue}>
+              <CodeBlockNodeComponent code="const a = 1" language="javascript" nodeKey="code-1" />
+            </CardContext.Provider>
+          </InklingUiPrefsContext.Provider>
+        </InklingHostIntegrationContext.Provider>,
       )
     }
 

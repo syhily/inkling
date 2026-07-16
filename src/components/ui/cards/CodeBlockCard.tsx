@@ -11,7 +11,7 @@ import React from 'react'
 
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { darkBaseExtensions, lightBaseExtensions } from '@/utils/codemirror-config'
 
 const languageMap = new Map<string, () => LanguageSupport>([
@@ -31,7 +31,7 @@ interface CodeEditorProps {
 
 export function CodeEditor({ code, language, updateCode, updateLanguage, onEscape }: CodeEditorProps) {
   const [showLanguage, setShowLanguage] = React.useState(true)
-  const { darkMode } = React.useContext(InklingComposerContext)
+  const { darkMode } = React.useContext(InklingUiPrefsContext)
   const viewRef = React.useRef<EditorView | null>(null)
   const codeRef = React.useRef(code)
 

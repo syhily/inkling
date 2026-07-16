@@ -5,6 +5,7 @@ import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin'
 import { LexicalNestedComposer, type LexicalNestedComposerProps } from '@lexical/react/LexicalNestedComposer'
 import React from 'react'
 
+import InklingCollaborationContext from '@/context/InklingCollaborationContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import ReplacementStringsPlugin from '@/plugins/ReplacementStringsPlugin'
 import TKPlugin from '@/plugins/TKPlugin'
@@ -29,7 +30,8 @@ const InklingNestedComposer = ({
   children,
 }: InklingNestedComposerProps) => {
   const { isCollabActive } = useCollaborationContext()
-  const { createWebsocketProvider, onWordCountChangeRef } = React.useContext(InklingComposerContext)
+  const { createWebsocketProvider } = React.useContext(InklingCollaborationContext)
+  const { onWordCountChangeRef } = React.useContext(InklingComposerContext)
 
   return (
     <LexicalNestedComposer

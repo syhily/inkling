@@ -21,7 +21,7 @@ import React from 'react'
 
 import { AtLinkResultsPopup } from '@/components/ui/AtLinkResultsPopup'
 import Portal from '@/components/ui/Portal'
-import InklingComposerContext, { type CardConfig } from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { useSearchLinks, type ListOptionItem, type ListOptionSection } from '@/hooks/useSearchLinks'
 import {
   $createAtLinkNode,
@@ -633,7 +633,7 @@ export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps)
 // wrapping InklingAtLinkPlugin means we can ensure all dependencies are available
 // before rendering the plugin, avoiding complex conditionals in the plugin itself
 export const AtLinkPlugin = () => {
-  const { cardConfig } = React.useContext(InklingComposerContext)
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const [editor] = useLexicalComposerContext()
 
   // do nothing if we haven't been passed a way to search internal links

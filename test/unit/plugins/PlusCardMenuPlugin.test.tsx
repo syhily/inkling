@@ -4,7 +4,7 @@ import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type Lex
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import { INSERT_HTML_COMMAND } from '@/nodes/HtmlNode'
 import PlusCardMenuPlugin from '@/plugins/PlusCardMenuPlugin'
@@ -69,9 +69,9 @@ async function setupPlusPlugin() {
   const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
 
   render(
-    <InklingComposerContext.Provider value={contextValue}>
+    <InklingHostIntegrationContext.Provider value={contextValue}>
       <PlusCardMenuPlugin />
-    </InklingComposerContext.Provider>,
+    </InklingHostIntegrationContext.Provider>,
   )
 
   return { editor, rootElement, paragraphElement, dispatchCommandSpy }

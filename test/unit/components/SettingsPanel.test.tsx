@@ -17,14 +17,14 @@ import {
   ToggleSetting,
 } from '@/components/ui/SettingsPanel'
 
-import type { CardConfig } from '../../../src/context/InklingComposerContext'
+import type { CardConfig } from '../../../src/context/InklingHostIntegrationContext'
 
 const mocks = vi.hoisted(() => ({
   contextValue: { cardConfig: {} as CardConfig },
 }))
 
-// Mock the composer context used by InputUrlSetting
-vi.mock('../../../src/context/InklingComposerContext', async () => {
+// Mock the host-integration context used by InputUrlSetting
+vi.mock('../../../src/context/InklingHostIntegrationContext', async () => {
   const React = await import('react')
   return { default: React.createContext(mocks.contextValue) }
 })

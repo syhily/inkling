@@ -4,7 +4,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { ButtonNode } from '@/nodes/ButtonNode'
 import { ButtonNodeComponent } from '@/nodes/ButtonNodeComponent'
 
@@ -90,7 +90,7 @@ describe('ButtonNodeComponent', () => {
     const composerValue = createComposerContext()
     const cardValue = createCardContext()
     render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardContext.Provider value={cardValue}>
           <ButtonNodeComponent
             alignment="center"
@@ -99,7 +99,7 @@ describe('ButtonNodeComponent', () => {
             nodeKey={nodeKey}
           />
         </CardContext.Provider>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
 
     expect(screen.getByTestId('button-card')).toBeTruthy()
@@ -113,7 +113,7 @@ describe('ButtonNodeComponent', () => {
     const cardValue = createCardContext({ isSelected: true, isEditing: false, setEditing })
 
     render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardContext.Provider value={cardValue}>
           <ButtonNodeComponent
             alignment="center"
@@ -122,7 +122,7 @@ describe('ButtonNodeComponent', () => {
             nodeKey={nodeKey}
           />
         </CardContext.Provider>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
 
     fireEvent.click(screen.getByTestId('edit-button-card'))
@@ -133,7 +133,7 @@ describe('ButtonNodeComponent', () => {
     function renderWithToolbar(cardValue: ReturnType<typeof createCardContext>, cardConfig = {}) {
       const composerValue = createComposerContext(cardConfig)
       return render(
-        <InklingComposerContext.Provider value={composerValue}>
+        <InklingHostIntegrationContext.Provider value={composerValue}>
           <CardContext.Provider value={cardValue}>
             <ButtonNodeComponent
               alignment="center"
@@ -142,7 +142,7 @@ describe('ButtonNodeComponent', () => {
               nodeKey="button-1"
             />
           </CardContext.Provider>
-        </InklingComposerContext.Provider>,
+        </InklingHostIntegrationContext.Provider>,
       )
     }
 

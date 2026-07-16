@@ -1,6 +1,6 @@
 import type { ChangeEvent, MutableRefObject } from 'react'
 
-import type { FileUploader } from '@/context/InklingComposerContext'
+import type { FileUploader } from '@/context/InklingHostIntegrationContext'
 import type { UseFileDragAndDropResult } from '@/hooks/useFileDragAndDrop'
 import type { UseGalleryReorderResult } from '@/hooks/useGalleryReorder'
 

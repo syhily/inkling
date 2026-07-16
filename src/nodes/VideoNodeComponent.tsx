@@ -7,7 +7,7 @@ import type { FileChangeEvent } from '@/components/ui/cards/card-ui-types'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { VideoCard } from '@/components/ui/cards/VideoCard'
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import { usePreviewLease } from '@/hooks/usePreviewLease'
@@ -48,7 +48,7 @@ export function VideoNodeComponent({
   initialFile,
 }: VideoNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const { fileUploader } = React.useContext(InklingComposerContext)
+  const { fileUploader } = React.useContext(InklingHostIntegrationContext)
   const cardContext = React.useContext(CardContext)
   const videoFileInputRef = React.useRef<HTMLInputElement | null>(null)
   const [previewThumbnail, setThumbnailPreview] = usePreviewLease()

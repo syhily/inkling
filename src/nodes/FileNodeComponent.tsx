@@ -5,7 +5,7 @@ import React from 'react'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { FileCard } from '@/components/ui/cards/FileCard'
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
@@ -39,7 +39,7 @@ function FileNodeComponent({
 }: FileNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
   const [isPopulated, setIsPopulated] = React.useState<boolean>(false)
-  const { fileUploader } = React.useContext(InklingComposerContext)
+  const { fileUploader } = React.useContext(InklingHostIntegrationContext)
   const { isEditing } = React.useContext(CardContext)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
 

@@ -5,7 +5,7 @@ import { $getRoot, $isDecoratorNode } from 'lexical'
 import React, { useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 
-import type { CardConfig, FileUploader } from '@/context/InklingComposerContext'
+import type { CardConfig, FileUploader } from '@/context/InklingHostIntegrationContext'
 
 import {
   BASIC_NODES,

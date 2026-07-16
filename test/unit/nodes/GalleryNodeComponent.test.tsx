@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GalleryImage } from '@/types/gallery'
 
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { GalleryNode } from '@/nodes/GalleryNode'
 import { GalleryNodeComponent } from '@/nodes/GalleryNodeComponent'
 import { getImageDimensions } from '@/utils/getImageDimensions'
@@ -112,7 +112,7 @@ describe('GalleryNodeComponent', () => {
     const composerValue = createComposerContext(upload)
     const cardValue = createCardContext()
     return render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardContext.Provider value={cardValue}>
           <GalleryNodeComponent
             captionEditor={createTestEditor()}
@@ -120,7 +120,7 @@ describe('GalleryNodeComponent', () => {
             nodeKey={nodeKey}
           />
         </CardContext.Provider>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
   }
 
@@ -246,7 +246,7 @@ describe('GalleryNodeComponent', () => {
       const composerValue = createComposerContext(undefined, cardConfig)
       const cardValue = createCardContext(cardOverrides)
       return render(
-        <InklingComposerContext.Provider value={composerValue}>
+        <InklingHostIntegrationContext.Provider value={composerValue}>
           <CardContext.Provider value={cardValue}>
             <GalleryNodeComponent
               captionEditor={createTestEditor()}
@@ -254,7 +254,7 @@ describe('GalleryNodeComponent', () => {
               nodeKey={nodeKey}
             />
           </CardContext.Provider>
-        </InklingComposerContext.Provider>,
+        </InklingHostIntegrationContext.Provider>,
       )
     }
 

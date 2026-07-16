@@ -8,7 +8,7 @@ import type { CardWidth } from '@/nodes/base/utils/card-widths'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import CardContext from '@/context/CardContext'
 import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { buildDefaultVisibility } from '@/nodes/base/utils/visibility'
 import { HtmlNode } from '@/nodes/HtmlNode'
@@ -68,14 +68,14 @@ function renderWrapper(
 ) {
   const composerValue = createComposerContext(cardConfig)
   return render(
-    <InklingComposerContext.Provider value={composerValue}>
+    <InklingHostIntegrationContext.Provider value={composerValue}>
       <InklingSelectedCardContext>
         {select ? <SelectCard nodeKey={nodeKey} /> : null}
         <InklingCardWrapper nodeKey={nodeKey}>
           <div data-testid="card-content">card content</div>
         </InklingCardWrapper>
       </InklingSelectedCardContext>
-    </InklingComposerContext.Provider>,
+    </InklingHostIntegrationContext.Provider>,
   )
 }
 
@@ -90,13 +90,13 @@ function CardWidthProbe({ widths }: { widths: CardWidth[] }) {
 function renderWrapperWithWidth(nodeKey: NodeKey, width: string, widths: CardWidth[]) {
   const composerValue = createComposerContext()
   const tree = (nextWidth: string) => (
-    <InklingComposerContext.Provider value={composerValue}>
+    <InklingHostIntegrationContext.Provider value={composerValue}>
       <InklingSelectedCardContext>
         <InklingCardWrapper nodeKey={nodeKey} width={nextWidth}>
           <CardWidthProbe widths={widths} />
         </InklingCardWrapper>
       </InklingSelectedCardContext>
-    </InklingComposerContext.Provider>
+    </InklingHostIntegrationContext.Provider>
   )
   const result = render(tree(width))
   return { ...result, rerenderWidth: (nextWidth: string) => result.rerender(tree(nextWidth)) }
@@ -187,13 +187,13 @@ describe('InklingCardWrapper', () => {
     }
 
     render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <InklingSelectedCardContext>
           <InklingCardWrapper nodeKey={nodeKey}>
             <ContextProbe />
           </InklingCardWrapper>
         </InklingSelectedCardContext>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
 
     act(() => {

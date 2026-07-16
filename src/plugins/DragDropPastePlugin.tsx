@@ -13,9 +13,9 @@ import {
 } from 'lexical'
 import React from 'react'
 
-import type { FileUploader } from '@/context/InklingComposerContext'
+import type { FileUploader } from '@/context/InklingHostIntegrationContext'
 
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
 
 export const INSERT_MEDIA_COMMAND: LexicalCommand<{ type: string | undefined; file: File }> = createCommand()
@@ -83,7 +83,7 @@ async function getListOfAcceptableMimeTypes(
 
 function DragDropPastePlugin() {
   const [editor] = useLexicalComposerContext()
-  const { fileUploader } = React.useContext(InklingComposerContext)
+  const { fileUploader } = React.useContext(InklingHostIntegrationContext)
 
   const handleFileUpload = React.useCallback(
     async (files: File[]): Promise<void> => {

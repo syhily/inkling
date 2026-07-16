@@ -1,7 +1,7 @@
 import React from 'react'
 import { createPortal } from 'react-dom'
 
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 
 function Portal({
   children,
@@ -14,7 +14,7 @@ function Portal({
   className?: string
   [key: string]: unknown
 }) {
-  const { darkMode } = React.useContext(InklingComposerContext)
+  const { darkMode } = React.useContext(InklingUiPrefsContext)
 
   const container = to || document.body
   if (!container) {

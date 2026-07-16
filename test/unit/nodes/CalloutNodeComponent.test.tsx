@@ -6,7 +6,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { CalloutNodeComponent } from '@/nodes/CalloutNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
@@ -77,7 +77,7 @@ describe('CalloutNodeComponent', () => {
     return render(
       <CollaborationContext.Provider value={collaborationValue}>
         <LexicalComposerContext.Provider value={composerValue}>
-          <InklingComposerContext.Provider value={inklingComposerValue}>
+          <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
             <CardContext.Provider value={cardValue}>
               <CalloutNodeComponent
                 backgroundColor="blue"
@@ -86,7 +86,7 @@ describe('CalloutNodeComponent', () => {
                 nodeKey="callout-1"
               />
             </CardContext.Provider>
-          </InklingComposerContext.Provider>
+          </InklingHostIntegrationContext.Provider>
         </LexicalComposerContext.Provider>
       </CollaborationContext.Provider>,
     )

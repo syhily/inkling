@@ -5,7 +5,7 @@ import React from 'react'
 
 import { LinkInputWithSearch } from '@/components/ui/LinkInputWithSearch'
 import Portal from '@/components/ui/Portal'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { $getSelectionRangeRect } from '@/utils/$getSelectionRangeRect'
 import trackEvent from '@/utils/analytics'
 import { getScrollParent } from '@/utils/getScrollParent'
@@ -20,7 +20,7 @@ interface LinkActionToolbarWithSearchProps {
 
 export function LinkActionToolbarWithSearch({ anchorElem, href, onClose, ...props }: LinkActionToolbarWithSearchProps) {
   const [editor] = useLexicalComposerContext()
-  const { cardConfig } = React.useContext(InklingComposerContext)
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
 
   const scrollContainer = React.useMemo(() => {
     return getScrollParent(editor.getRootElement())

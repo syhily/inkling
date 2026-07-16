@@ -7,7 +7,7 @@ import InklingNestedEditor from '@/components/InklingNestedEditor'
 import EmojiPickerPortal from '@/components/ui/EmojiPickerPortal'
 import { ReadOnlyOverlay } from '@/components/ui/ReadOnlyOverlay'
 import { ColorOptionSetting, SettingsPanel, ToggleSetting } from '@/components/ui/SettingsPanel'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 
 export type CalloutColorName = 'white' | 'grey' | 'blue' | 'green' | 'yellow' | 'red' | 'pink' | 'purple' | 'accent'
 
@@ -120,7 +120,7 @@ export function CalloutCard({
   showEmojiPicker,
 }: CalloutCardProps) {
   const emojiButtonRef = React.useRef<HTMLButtonElement | null>(null)
-  const { darkMode } = React.useContext(InklingComposerContext)
+  const { darkMode } = React.useContext(InklingUiPrefsContext)
 
   React.useEffect(() => {
     if (!isEditing) {

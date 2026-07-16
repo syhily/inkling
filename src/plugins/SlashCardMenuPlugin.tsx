@@ -20,7 +20,7 @@ import type { BuildCardMenuResult } from '@/utils/buildCardMenu'
 
 import { CardMenu } from '@/components/ui/CardMenu'
 import { SlashMenu } from '@/components/ui/SlashMenu'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { buildCardMenu } from '@/utils/buildCardMenu'
 import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
 import { getSelectedNode } from '@/utils/getSelectedNode'
@@ -41,7 +41,7 @@ function useSlashCardMenu(editor: LexicalEditor) {
   const [scrollToSelectedItem, setScrollToSelectedItem] = React.useState(false)
   const cachedRange = React.useRef<Range | null>(null)
   const containerRef = React.useRef<HTMLDivElement | null>(null)
-  const { cardConfig } = React.useContext(InklingComposerContext)
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
 
   function setMenuPosition(elem: HTMLElement) {
     const elemRect = elem.getBoundingClientRect()

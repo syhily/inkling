@@ -11,7 +11,7 @@ import { ImageCard } from '@/components/ui/cards/ImageCard'
 import { ImageUploadForm } from '@/components/ui/ImageUploadForm'
 import { LinkInput } from '@/components/ui/LinkInput'
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import useCardDragAndDrop from '@/hooks/useCardDragAndDrop'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
@@ -52,7 +52,7 @@ export function ImageNodeComponent({
 }: ImageNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
   const [showLink, setShowLink] = React.useState(false)
-  const { fileUploader, cardConfig } = React.useContext(InklingComposerContext)
+  const { fileUploader, cardConfig } = React.useContext(InklingHostIntegrationContext)
   const { isSelected, cardWidth, setCardWidth } = React.useContext(CardContext)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
   const toolbarFileInputRef = React.useRef<HTMLInputElement | null>(null)

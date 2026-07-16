@@ -19,7 +19,7 @@ import {
 import React from 'react'
 
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { $createAsideNode } from '@/nodes/AsideNode'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 import { isNestedEditor } from '@/utils/lexical-internals'
@@ -74,7 +74,7 @@ export default function FormatToolbar({
   const [blockType, setBlockType] = React.useState<string>('paragraph')
   const {
     cardConfig: { createSnippet },
-  } = React.useContext(InklingComposerContext)
+  } = React.useContext(InklingHostIntegrationContext)
 
   let hideHeading = false
   if (!editor.hasNodes([HeadingNode])) {

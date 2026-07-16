@@ -16,6 +16,7 @@ import type { ExternalControlAPI } from '@/plugins/ExternalControlPlugin'
 import InklingErrorBoundary from '@/components/InklingErrorBoundary'
 import { EditorPlaceholder } from '@/components/ui/EditorPlaceholder'
 import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useSharedHistoryContext } from '@/context/SharedHistoryContext'
 import { useSharedOnChangeContext } from '@/context/SharedOnChangeContext'
 import DragDropPastePlugin from '@/plugins/DragDropPastePlugin'
@@ -77,7 +78,8 @@ const InklingComposableEditor = ({
   const { historyState } = useSharedHistoryContext()
   const [editor] = useLexicalComposerContext()
   const { isCollabActive } = useCollaborationContext()
-  const { editorContainerRef, darkMode, isTKEnabled } = React.useContext(InklingComposerContext)
+  const { editorContainerRef } = React.useContext(InklingComposerContext)
+  const { darkMode, isTKEnabled } = React.useContext(InklingUiPrefsContext)
 
   const parentEditor = getParentEditor(editor)
   const isNested = parentEditor !== null

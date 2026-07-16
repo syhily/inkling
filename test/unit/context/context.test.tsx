@@ -3,10 +3,62 @@ import React from 'react'
 import { describe, expect, it } from 'vitest'
 
 import CardContext from '@/context/CardContext'
+import InklingCollaborationContext from '@/context/InklingCollaborationContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { InklingSelectedCardContext, useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { TKContext, useTKContext } from '@/context/TKContext'
 
+describe('InklingHostIntegrationContext', () => {
+  it('provides the default context value', () => {
+    let captured: typeof InklingHostIntegrationContext extends React.Context<infer V> ? V : never
+
+    function Consumer() {
+      captured = React.useContext(InklingHostIntegrationContext)
+      return null
+    }
+
+    render(<Consumer />)
+
+    expect(captured!.fileUploader).toBeDefined()
+    expect(captured!.cardConfig).toEqual({})
+    expect(captured!.onError).toBeDefined()
+  })
+})
+
+describe('InklingCollaborationContext', () => {
+  it('provides the default context value', () => {
+    let captured: typeof InklingCollaborationContext extends React.Context<infer V> ? V : never
+
+    function Consumer() {
+      captured = React.useContext(InklingCollaborationContext)
+      return null
+    }
+
+    render(<Consumer />)
+
+    expect(captured!.enableMultiplayer).toBe(false)
+    expect(captured!.createWebsocketProvider).toBeDefined()
+  })
+})
+
+describe('InklingUiPrefsContext', () => {
+  it('provides the default context value', () => {
+    let captured: typeof InklingUiPrefsContext extends React.Context<infer V> ? V : never
+
+    function Consumer() {
+      captured = React.useContext(InklingUiPrefsContext)
+      return null
+    }
+
+    render(<Consumer />)
+
+    expect(captured!.darkMode).toBe(false)
+  })
+})
+
+// legacy module — plan 047 deletes it once steps 3/5 land the handles
 describe('InklingComposerContext', () => {
   it('provides the default context value', () => {
     let captured: typeof InklingComposerContext extends React.Context<infer V> ? V : never
@@ -18,9 +70,6 @@ describe('InklingComposerContext', () => {
 
     render(<Consumer />)
 
-    expect(captured!.fileUploader).toBeDefined()
-    expect(captured!.cardConfig).toEqual({})
-    expect(captured!.darkMode).toBe(false)
     expect(captured!.dragDropHandler).toBeUndefined()
   })
 })

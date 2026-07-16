@@ -1,4 +1,4 @@
-import type { CardConfig } from '@/context/InklingComposerContext'
+import type { CardConfig } from '@/context/InklingHostIntegrationContext'
 import type { CardMenuNodeClass } from '@/utils/inkling-node-class'
 
 import SnippetCardIcon from '@/assets/icons/inkling-card-type-snippet.svg?react'

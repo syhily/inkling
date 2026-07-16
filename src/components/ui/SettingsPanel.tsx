@@ -15,7 +15,7 @@ import { MultiSelectDropdown } from '@/components/ui/MultiSelectDropdown'
 import { Slider } from '@/components/ui/Slider'
 import { TabView } from '@/components/ui/TabView'
 import { Toggle } from '@/components/ui/Toggle'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import useSettingsPanelReposition from '@/hooks/useSettingsPanelReposition'
 
 export interface SettingsPanelProps {
@@ -203,7 +203,7 @@ interface InputUrlSettingProps {
 }
 
 export function InputUrlSetting({ dataTestId, label, value, onChange }: InputUrlSettingProps) {
-  const { cardConfig } = React.useContext(InklingComposerContext)
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const [listOptions, setListOptions] = React.useState<ListOption[]>([])
 
   React.useEffect(() => {

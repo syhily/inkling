@@ -6,7 +6,7 @@ import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 
 export type CardToolbarItem =
   | { kind: 'edit'; dataTestId?: string }
@@ -50,7 +50,7 @@ export function CardActionToolbar({
   items = DEFAULT_ITEMS,
   beforeMenu,
 }: CardActionToolbarProps) {
-  const { cardConfig } = React.useContext(InklingComposerContext)
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const { isSelected, isEditing, setEditing } = React.useContext(CardContext)
   const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
 

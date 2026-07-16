@@ -6,7 +6,7 @@ import type { CardNode } from '@/types/lexical-internals'
 
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
 import { normalizeCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
@@ -27,7 +27,7 @@ interface InklingCardWrapperProps {
 }
 
 const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, children }: InklingCardWrapperProps) => {
-  const { cardConfig } = React.useContext(InklingComposerContext)
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const [editor] = useLexicalComposerContext()
   const [cardType, setCardType] = React.useState<string | null>(null)
   const [captionHasFocus, setCaptionHasFocus] = React.useState<boolean | null>(null)

@@ -7,7 +7,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import InklingComposer from '@/components/InklingComposer'
 import InklingErrorBoundary from '@/components/InklingErrorBoundary'
-import InklingComposerContext, { type LexicalProviderFactory } from '@/context/InklingComposerContext'
+import InklingCollaborationContext, { type LexicalProviderFactory } from '@/context/InklingCollaborationContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { normalizeInitialEditorState } from '@/utils/normalizeInitialEditorState'
 
 vi.mock('@lexical/react/LexicalCollaborationPlugin', () => ({
@@ -87,7 +88,7 @@ describe('InklingComposer', function () {
     let upload: ((files: FileList | File[]) => Promise<unknown>) | undefined
 
     function FileUploadConsumer() {
-      const { fileUploader } = React.useContext(InklingComposerContext)
+      const { fileUploader } = React.useContext(InklingHostIntegrationContext)
       const uploader = fileUploader.useFileUpload('image')
       upload = uploader.upload
       return null
@@ -146,7 +147,7 @@ describe('InklingComposer', function () {
     let factory: LexicalProviderFactory | undefined
 
     function FactoryConsumer() {
-      const { createWebsocketProvider } = React.useContext(InklingComposerContext)
+      const { createWebsocketProvider } = React.useContext(InklingCollaborationContext)
       factory = createWebsocketProvider
       return null
     }

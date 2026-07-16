@@ -45,14 +45,8 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
 }
 
 const contextValue = {
-  fileUploader: { useFileUpload: () => ({ upload: vi.fn() }) },
-  cardConfig: {},
-  darkMode: false,
-  enableMultiplayer: false,
   editorContainerRef: { current: null },
-  createWebsocketProvider: vi.fn(),
   onWordCountChangeRef: { current: null },
-  onError: vi.fn(),
 }
 
 class TestDecoratorNode extends DecoratorNode {

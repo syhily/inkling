@@ -18,7 +18,7 @@ import { default as FormatToolbar } from '@/components/ui/FormatToolbar'
 import { LinkActionToolbarWithSearch } from '@/components/ui/LinkActionToolbarWithSearch'
 import { LinkInput } from '@/components/ui/LinkInput'
 import { SnippetActionToolbar } from '@/components/ui/SnippetActionToolbar'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { debounce } from '@/utils'
 
 // don't show the toolbar until the mouse has moved a certain distance,
@@ -48,7 +48,7 @@ export function FloatingFormatToolbar({
   setToolbarItemType: (type: string | null) => void
   hiddenFormats?: string[]
 }) {
-  const { cardConfig } = React.useContext(InklingComposerContext)
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const isLinkSearchEnabled = typeof cardConfig?.searchLinks === 'function' || false
 
   const toolbarRef = React.useRef<HTMLDivElement>(null)

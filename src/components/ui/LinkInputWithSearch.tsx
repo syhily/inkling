@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/Input'
 import { InputListGroup, InputListLoadingItem } from '@/components/ui/InputList'
 import { KeyboardSelectionWithGroups } from '@/components/ui/KeyboardSelectionWithGroups'
 import { LinkInputSearchItem } from '@/components/ui/LinkInputSearchItem'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useSearchLinks, type ListOptionItem, type ListOptionSection } from '@/hooks/useSearchLinks'
 import trackEvent from '@/utils/analytics'
 
@@ -17,7 +17,7 @@ interface LinkInputWithSearchProps {
 export function LinkInputWithSearch({ href, update, cancel }: LinkInputWithSearchProps) {
   const {
     cardConfig: { searchLinks },
-  } = React.useContext(InklingComposerContext)
+  } = React.useContext(InklingHostIntegrationContext)
 
   // store the href/query in state so we can update it without affecting the saved editor value
   const [_href, setHref] = React.useState(href)

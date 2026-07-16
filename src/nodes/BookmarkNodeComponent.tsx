@@ -14,7 +14,7 @@ import React, { useCallback } from 'react'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { $isBookmarkNode, $updateCardNode } from '@/nodes/base'
 import trackEvent from '@/utils/analytics'
 import { isInternalUrl } from '@/utils/isInternalUrl'
@@ -48,7 +48,7 @@ export function BookmarkNodeComponent({
 }: BookmarkNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
 
-  const { cardConfig } = React.useContext(InklingComposerContext)
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const { isSelected } = React.useContext(CardContext)
   const [urlInputValue, setUrlInputValue] = React.useState<string>(url)
   const [loading, setLoading] = React.useState<boolean>(false)

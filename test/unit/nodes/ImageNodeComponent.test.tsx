@@ -4,7 +4,7 @@ import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import { openFileSelection } from '@/utils/openFileSelection'
@@ -98,11 +98,11 @@ describe('ImageNodeComponent', () => {
     const composerValue = createComposerContext({})
     const cardValue = createCardContext()
     render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardContext.Provider value={cardValue}>
           <ImageNodeComponent nodeKey="img-1" src="/image.png" />
         </CardContext.Provider>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
 
     expect(screen.getByTestId('image-card-populated')).toBeTruthy()
@@ -112,11 +112,11 @@ describe('ImageNodeComponent', () => {
     const composerValue = createComposerContext({ image: { mimeTypes: ['image/png', 'image/jpeg'] } })
     const cardValue = createCardContext()
     render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardContext.Provider value={cardValue}>
           <ImageNodeComponent nodeKey="img-1" src="/image.png" altText="Alt text" />
         </CardContext.Provider>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
 
     expect(screen.getByTestId('image-card-populated')).toBeTruthy()
@@ -126,11 +126,11 @@ describe('ImageNodeComponent', () => {
     const composerValue = createComposerContext({ image: { mimeTypes: ['image/png'] } })
     const cardValue = createCardContext()
     render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardContext.Provider value={cardValue}>
           <ImageNodeComponent nodeKey="img-1" src="/image.png" triggerFileDialog />
         </CardContext.Provider>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
 
     await waitFor(() => expect(openFileSelection).toHaveBeenCalledTimes(1))
@@ -143,11 +143,11 @@ describe('ImageNodeComponent', () => {
     const file = new File(['image'], 'photo.png', { type: 'image/png' })
 
     render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardContext.Provider value={cardValue}>
           <ImageNodeComponent nodeKey="img-1" src="" initialFile={file} />
         </CardContext.Provider>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
 
     await waitFor(() => expect(upload).toHaveBeenCalledWith([file]))
@@ -164,11 +164,11 @@ describe('ImageNodeComponent', () => {
     const file = new File(['image'], 'photo.png', { type: 'image/png' })
 
     render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardContext.Provider value={cardValue}>
           <ImageNodeComponent nodeKey="img-1" src="/image.png" initialFile={file} />
         </CardContext.Provider>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
 
     // the mount effect runs synchronously; give any async work a chance to fire
@@ -188,11 +188,11 @@ describe('ImageNodeComponent', () => {
       const composerValue = createComposerContext({ image: { mimeTypes: ['image/png'] } }, undefined, cardConfig)
       const cardValue = createCardContext(cardOverrides)
       return render(
-        <InklingComposerContext.Provider value={composerValue}>
+        <InklingHostIntegrationContext.Provider value={composerValue}>
           <CardContext.Provider value={cardValue}>
             <ImageNodeComponent href={href} nodeKey="img-1" src={src} />
           </CardContext.Provider>
-        </InklingComposerContext.Provider>,
+        </InklingHostIntegrationContext.Provider>,
       )
     }
 

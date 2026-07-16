@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react'
 import { createEditor, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { $createAtLinkNode, $createAtLinkSearchNode, $createZWNJNode, AtLinkNode, AtLinkSearchNode } from '@/nodes/base'
 import { AtLinkPlugin, InklingAtLinkPlugin } from '@/plugins/AtLinkPlugin'
 
@@ -49,7 +49,9 @@ describe('AtLinkPlugin', () => {
 
     const { result } = renderHook(() => AtLinkPlugin(), {
       wrapper: ({ children }) => (
-        <InklingComposerContext.Provider value={atLinkContextValue}>{children}</InklingComposerContext.Provider>
+        <InklingHostIntegrationContext.Provider value={atLinkContextValue}>
+          {children}
+        </InklingHostIntegrationContext.Provider>
       ),
     })
     expect(result.current).toBeNull()

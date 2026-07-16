@@ -3,7 +3,7 @@ import { $getNodeByKey } from 'lexical'
 import React from 'react'
 
 import { SnippetInput } from '@/components/ui/SnippetInput'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 
 export interface SnippetCreateToolbarProps {
   nodeKey: string
@@ -12,7 +12,7 @@ export interface SnippetCreateToolbarProps {
 
 export function SnippetCreateToolbar({ nodeKey, onClose }: SnippetCreateToolbarProps) {
   const [editor] = useLexicalComposerContext()
-  const { cardConfig } = React.useContext(InklingComposerContext)
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const [name, setName] = React.useState('')
 
   const handleClose = React.useCallback(() => {

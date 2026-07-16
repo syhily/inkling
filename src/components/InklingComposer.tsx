@@ -5,15 +5,14 @@ import React from 'react'
 import { WebsocketProvider } from 'y-websocket'
 import { Doc } from 'yjs'
 
-import type {
-  CardConfig,
-  FileUploader,
-  FileUploaderInput,
-  LexicalProviderFactory,
-} from '@/context/InklingComposerContext'
+import type { LexicalProviderFactory } from '@/context/InklingCollaborationContext'
+import type { CardConfig, FileUploader, FileUploaderInput } from '@/context/InklingHostIntegrationContext'
 
+import InklingCollaborationContext from '@/context/InklingCollaborationContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { TKContext } from '@/context/TKContext'
 import { DEFAULT_CONFIG } from '@/nodes/base'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
@@ -142,57 +141,70 @@ const InklingComposer = ({
     [multiplayerEndpoint, multiplayerDocId, multiplayerDebug],
   )
 
-  const composerContextValue = React.useMemo(
+  const hostIntegrationValue = React.useMemo(
     () => ({
       fileUploader: normalizedFileUploader,
-      editorContainerRef,
       cardConfig,
-      darkMode,
-      enableMultiplayer,
-      isTKEnabled,
-      multiplayerEndpoint,
-      multiplayerDocId,
-      multiplayerUsername,
-      createWebsocketProvider,
-      onWordCountChangeRef,
       onError,
     }),
-    [
-      normalizedFileUploader,
-      cardConfig,
-      createWebsocketProvider,
-      darkMode,
-      editorContainerRef,
+    [normalizedFileUploader, cardConfig, onError],
+  )
+
+  const collaborationValue = React.useMemo(
+    () => ({
       enableMultiplayer,
-      isTKEnabled,
-      multiplayerDocId,
       multiplayerEndpoint,
+      multiplayerDocId,
       multiplayerUsername,
-      onError,
+      createWebsocketProvider,
+    }),
+    [createWebsocketProvider, enableMultiplayer, multiplayerDocId, multiplayerEndpoint, multiplayerUsername],
+  )
+
+  const uiPrefsValue = React.useMemo(
+    () => ({
+      darkMode,
+      isTKEnabled,
+    }),
+    [darkMode, isTKEnabled],
+  )
+
+  // legacy per-composer channels — plan 047 steps 3/5 replace these with
+  // editor-side handles
+  const composerContextValue = React.useMemo(
+    () => ({
+      editorContainerRef,
       onWordCountChangeRef,
-    ],
+    }),
+    [editorContainerRef, onWordCountChangeRef],
   )
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <InklingComposerContext.Provider value={composerContextValue}>
-        <InklingSelectedCardContext>
-          <TKContext>
-            <LexicalCollaboration>
-              {enableMultiplayer ? (
-                <CollaborationPlugin
-                  id="main"
-                  initialEditorState={normalizedInitialEditorState}
-                  providerFactory={createWebsocketProvider}
-                  shouldBootstrap={true}
-                  username={multiplayerUsername}
-                />
-              ) : null}
-              {children}
-            </LexicalCollaboration>
-          </TKContext>
-        </InklingSelectedCardContext>
-      </InklingComposerContext.Provider>
+      <InklingHostIntegrationContext.Provider value={hostIntegrationValue}>
+        <InklingCollaborationContext.Provider value={collaborationValue}>
+          <InklingUiPrefsContext.Provider value={uiPrefsValue}>
+            <InklingComposerContext.Provider value={composerContextValue}>
+              <InklingSelectedCardContext>
+                <TKContext>
+                  <LexicalCollaboration>
+                    {enableMultiplayer ? (
+                      <CollaborationPlugin
+                        id="main"
+                        initialEditorState={normalizedInitialEditorState}
+                        providerFactory={createWebsocketProvider}
+                        shouldBootstrap={true}
+                        username={multiplayerUsername}
+                      />
+                    ) : null}
+                    {children}
+                  </LexicalCollaboration>
+                </TKContext>
+              </InklingSelectedCardContext>
+            </InklingComposerContext.Provider>
+          </InklingUiPrefsContext.Provider>
+        </InklingCollaborationContext.Provider>
+      </InklingHostIntegrationContext.Provider>
     </LexicalComposer>
   )
 }

@@ -7,8 +7,9 @@ import { HtmlCard } from '@/components/ui/cards/HtmlCard'
 import { SettingsPanel } from '@/components/ui/SettingsPanel'
 import { VisibilitySettings } from '@/components/ui/VisibilitySettings'
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useVisibilityToggle } from '@/hooks/useVisibilityToggle'
 import { $isHtmlNode } from '@/nodes/HtmlNode'
 import { SHOW_CARD_VISIBILITY_SETTINGS_COMMAND } from '@/plugins/InklingBehaviourPlugin'
@@ -16,7 +17,8 @@ import { SHOW_CARD_VISIBILITY_SETTINGS_COMMAND } from '@/plugins/InklingBehaviou
 export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: string }) {
   const [editor] = useLexicalComposerContext()
   const cardContext = React.useContext(CardContext)
-  const { cardConfig, darkMode } = React.useContext(InklingComposerContext)
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
+  const { darkMode } = React.useContext(InklingUiPrefsContext)
 
   const { showVisibilitySettings } = useInklingSelectedCardContext()
 

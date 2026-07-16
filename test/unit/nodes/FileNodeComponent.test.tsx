@@ -4,7 +4,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { FileNode, $createFileNode } from '@/nodes/FileNode'
 import FileNodeComponent from '@/nodes/FileNodeComponent'
 import { openFileSelection } from '@/utils/openFileSelection'
@@ -106,7 +106,7 @@ describe('FileNodeComponent', () => {
     const composerValue = createComposerContext(upload)
     const cardValue = createCardContext()
     return render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardContext.Provider value={cardValue}>
           <FileNodeComponent
             fileDesc=""
@@ -121,7 +121,7 @@ describe('FileNodeComponent', () => {
             triggerFileDialog={triggerFileDialog}
           />
         </CardContext.Provider>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
   }
 
@@ -187,7 +187,7 @@ describe('FileNodeComponent', () => {
       const cardValue = createCardContext(cardOverrides)
       const fileProps = populated ? populatedProps : { fileName: '', fileSize: '', fileSrc: '' }
       return render(
-        <InklingComposerContext.Provider value={composerValue}>
+        <InklingHostIntegrationContext.Provider value={composerValue}>
           <CardContext.Provider value={cardValue}>
             <FileNodeComponent
               fileDesc=""
@@ -201,7 +201,7 @@ describe('FileNodeComponent', () => {
               triggerFileDialog={false}
             />
           </CardContext.Provider>
-        </InklingComposerContext.Provider>,
+        </InklingHostIntegrationContext.Provider>,
       )
     }
 

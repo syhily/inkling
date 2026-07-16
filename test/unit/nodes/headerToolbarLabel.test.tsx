@@ -6,7 +6,7 @@ import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import HeaderNodeComponent from '@/nodes/header/HeaderNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
@@ -72,7 +72,7 @@ describe('headerToolbarLabel', () => {
     const { container } = render(
       <CollaborationContext.Provider value={collaborationValue}>
         <LexicalComposerContext.Provider value={composerValue}>
-          <InklingComposerContext.Provider value={inklingComposerValue}>
+          <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
             <CardContext.Provider value={cardValue}>
               <HeaderNodeComponent
                 alignment="left"
@@ -98,7 +98,7 @@ describe('headerToolbarLabel', () => {
                 textColor=""
               />
             </CardContext.Provider>
-          </InklingComposerContext.Provider>
+          </InklingHostIntegrationContext.Provider>
         </LexicalComposerContext.Provider>
       </CollaborationContext.Provider>,
     )

@@ -1,6 +1,6 @@
 import { $getNodeByKey, type LexicalEditor, type NodeKey } from 'lexical'
 
-import type { CardConfig } from '@/context/InklingComposerContext'
+import type { CardConfig } from '@/context/InklingHostIntegrationContext'
 import type { Visibility } from '@/nodes/base/utils/visibility'
 
 import { GeneratedDecoratorNodeBase } from '@/nodes/base'

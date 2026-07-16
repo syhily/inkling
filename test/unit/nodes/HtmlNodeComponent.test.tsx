@@ -4,7 +4,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { HtmlNode } from '@/nodes/HtmlNode'
 import { HtmlNodeComponent } from '@/nodes/HtmlNodeComponent'
@@ -81,13 +81,13 @@ describe('HtmlNodeComponent', () => {
     const composerValue = createComposerContext()
     const cardValue = createCardContext()
     render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <InklingSelectedCardContext>
           <CardContext.Provider value={cardValue}>
             <HtmlNodeComponent html="<p>Hello</p>" nodeKey={nodeKey} />
           </CardContext.Provider>
         </InklingSelectedCardContext>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
 
     expect(screen.getByText('Hello')).toBeTruthy()
@@ -98,13 +98,13 @@ describe('HtmlNodeComponent', () => {
       const composerValue = createComposerContext(cardConfig)
       const cardValue = createCardContext(cardOverrides)
       return render(
-        <InklingComposerContext.Provider value={composerValue}>
+        <InklingHostIntegrationContext.Provider value={composerValue}>
           <InklingSelectedCardContext>
             <CardContext.Provider value={cardValue}>
               <HtmlNodeComponent html="<p>Hello</p>" nodeKey="html-1" />
             </CardContext.Provider>
           </InklingSelectedCardContext>
-        </InklingComposerContext.Provider>,
+        </InklingHostIntegrationContext.Provider>,
       )
     }
 

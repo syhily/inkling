@@ -5,7 +5,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { BookmarkNode, $createBookmarkNode } from '@/nodes/BookmarkNode'
 import { BookmarkNodeComponent } from '@/nodes/BookmarkNodeComponent'
 
@@ -96,7 +96,7 @@ describe('BookmarkNodeComponent', () => {
     const cardValue = createCardContext({ nodeKey })
 
     render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardContext.Provider value={cardValue}>
           <BookmarkNodeComponent
             captionEditor={null}
@@ -106,7 +106,7 @@ describe('BookmarkNodeComponent', () => {
             url="https://example.com"
           />
         </CardContext.Provider>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
 
     await waitFor(() => {
@@ -129,7 +129,7 @@ describe('BookmarkNodeComponent', () => {
       const composerValue = createComposerContext(cardConfig)
       const cardValue = createCardContext(cardOverrides)
       return render(
-        <InklingComposerContext.Provider value={composerValue}>
+        <InklingHostIntegrationContext.Provider value={composerValue}>
           <CardContext.Provider value={cardValue}>
             <BookmarkNodeComponent
               captionEditor={null}
@@ -139,7 +139,7 @@ describe('BookmarkNodeComponent', () => {
               url="https://example.com"
             />
           </CardContext.Provider>
-        </InklingComposerContext.Provider>,
+        </InklingHostIntegrationContext.Provider>,
       )
     }
 

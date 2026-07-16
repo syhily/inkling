@@ -5,6 +5,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import InklingNestedComposer from '@/components/InklingNestedComposer'
+import InklingCollaborationContext from '@/context/InklingCollaborationContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import WordCountPlugin from '@/plugins/WordCountPlugin'
 
@@ -31,26 +32,32 @@ vi.mock('@/plugins/ReplacementStringsPlugin', () => ({
   default: () => null,
 }))
 
-function createContextValue(onWordCountChangeRef: { current: ((count: number) => void) | null }) {
+function createCollaborationValue() {
   return {
-    fileUploader: { useFileUpload: () => ({ upload: vi.fn() }) },
-    cardConfig: {},
-    darkMode: false,
     enableMultiplayer: false,
-    editorContainerRef: { current: null },
     createWebsocketProvider: vi.fn(),
+  }
+}
+
+function createLegacyValue(onWordCountChangeRef: { current: ((count: number) => void) | null }) {
+  return {
+    editorContainerRef: { current: null },
     onWordCountChangeRef,
-    onError: vi.fn(),
   }
 }
 
 function renderNestedComposer(onWordCountChangeRef: { current: ((count: number) => void) | null }) {
+  const collaborationValue = createCollaborationValue()
+  const legacyValue = createLegacyValue(onWordCountChangeRef)
+
   return render(
-    <InklingComposerContext.Provider value={createContextValue(onWordCountChangeRef)}>
-      <InklingNestedComposer initialEditor={{} as LexicalEditor}>
-        <div />
-      </InklingNestedComposer>
-    </InklingComposerContext.Provider>,
+    <InklingCollaborationContext.Provider value={collaborationValue}>
+      <InklingComposerContext.Provider value={legacyValue}>
+        <InklingNestedComposer initialEditor={{} as LexicalEditor}>
+          <div />
+        </InklingNestedComposer>
+      </InklingComposerContext.Provider>
+    </InklingCollaborationContext.Provider>,
   )
 }
 

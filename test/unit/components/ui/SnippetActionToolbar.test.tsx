@@ -4,7 +4,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { SnippetActionToolbar } from '@/components/ui/SnippetActionToolbar'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -57,9 +57,9 @@ function renderToolbar(
 ) {
   const composerValue = createComposerContext(createSnippet)
   return render(
-    <InklingComposerContext.Provider value={composerValue}>
+    <InklingHostIntegrationContext.Provider value={composerValue}>
       <SnippetActionToolbar onClose={onClose} />
-    </InklingComposerContext.Provider>,
+    </InklingHostIntegrationContext.Provider>,
   )
 }
 

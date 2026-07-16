@@ -6,7 +6,7 @@ import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { VideoNode, $createVideoNode } from '@/nodes/VideoNode'
 import { VideoNodeComponent } from '@/nodes/VideoNodeComponent'
@@ -180,7 +180,7 @@ describe('VideoNodeComponent', () => {
     return render(
       <CollaborationContext.Provider value={collaborationValue}>
         <LexicalComposerContext.Provider value={composerValue}>
-          <InklingComposerContext.Provider value={inklingComposerValue}>
+          <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
             <CardContext.Provider value={cardValue}>
               <VideoNodeComponent
                 captionEditor={captionEditor}
@@ -195,7 +195,7 @@ describe('VideoNodeComponent', () => {
                 triggerFileDialog={triggerFileDialog}
               />
             </CardContext.Provider>
-          </InklingComposerContext.Provider>
+          </InklingHostIntegrationContext.Provider>
         </LexicalComposerContext.Provider>
       </CollaborationContext.Provider>,
     )
@@ -433,7 +433,7 @@ describe('VideoNodeComponent', () => {
       return render(
         <CollaborationContext.Provider value={collaborationValue}>
           <LexicalComposerContext.Provider value={composerValue}>
-            <InklingComposerContext.Provider value={inklingComposerValue}>
+            <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
               <CardContext.Provider value={cardValue}>
                 <VideoNodeComponent
                   captionEditor={captionEditor}
@@ -448,7 +448,7 @@ describe('VideoNodeComponent', () => {
                   triggerFileDialog={false}
                 />
               </CardContext.Provider>
-            </InklingComposerContext.Provider>
+            </InklingHostIntegrationContext.Provider>
           </LexicalComposerContext.Provider>
         </CollaborationContext.Provider>,
       )

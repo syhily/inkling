@@ -4,7 +4,7 @@ import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { AudioNode, $createAudioNode } from '@/nodes/AudioNode'
 import { AudioNodeComponent } from '@/nodes/AudioNodeComponent'
 import { openFileSelection } from '@/utils/openFileSelection'
@@ -138,7 +138,7 @@ describe('AudioNodeComponent', () => {
     const composerValue = createComposerContext({ upload, isLoading })
     const cardValue = createCardContext()
     return render(
-      <InklingComposerContext.Provider value={composerValue}>
+      <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardContext.Provider value={cardValue}>
           <AudioNodeComponent
             duration={125}
@@ -150,7 +150,7 @@ describe('AudioNodeComponent', () => {
             triggerFileDialog={triggerFileDialog}
           />
         </CardContext.Provider>
-      </InklingComposerContext.Provider>,
+      </InklingHostIntegrationContext.Provider>,
     )
   }
 
@@ -226,7 +226,7 @@ describe('AudioNodeComponent', () => {
       const composerValue = createComposerContext({ cardConfig })
       const cardValue = createCardContext(cardOverrides)
       return render(
-        <InklingComposerContext.Provider value={composerValue}>
+        <InklingHostIntegrationContext.Provider value={composerValue}>
           <CardContext.Provider value={cardValue}>
             <AudioNodeComponent
               duration={125}
@@ -238,7 +238,7 @@ describe('AudioNodeComponent', () => {
               triggerFileDialog={false}
             />
           </CardContext.Provider>
-        </InklingComposerContext.Provider>,
+        </InklingHostIntegrationContext.Provider>,
       )
     }
 

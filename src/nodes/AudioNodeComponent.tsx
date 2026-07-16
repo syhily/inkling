@@ -5,7 +5,7 @@ import React from 'react'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { AudioCard } from '@/components/ui/cards/AudioCard'
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
@@ -32,7 +32,7 @@ export function AudioNodeComponent({
   triggerFileDialog,
 }: AudioNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const { fileUploader } = React.useContext(InklingComposerContext)
+  const { fileUploader } = React.useContext(InklingHostIntegrationContext)
   const { isEditing } = React.useContext(CardContext)
   const audioFileInputRef = React.useRef<HTMLInputElement>(null)
   const thumbnailFileInputRef = React.useRef<HTMLInputElement>(null)

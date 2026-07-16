@@ -3,7 +3,7 @@ import type { MouseEvent as ReactMouseEvent } from 'react'
 import { $getRoot, $isDecoratorNode } from 'lexical'
 import React, { useState } from 'react'
 
-import type { CardConfig, FileUploader } from '@/context/InklingComposerContext'
+import type { CardConfig, FileUploader } from '@/context/InklingHostIntegrationContext'
 
 import { HtmlOutputPlugin, InklingComposableEditor, InklingComposer } from '@/'
 

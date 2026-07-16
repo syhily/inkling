@@ -5,7 +5,7 @@ import React from 'react'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CodeBlockCard } from '@/components/ui/cards/CodeBlockCard'
 import CardContext from '@/context/CardContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { $isCodeBlockNode } from '@/nodes/CodeBlockNode'
 
 export interface CodeBlockNodeComponentProps {
@@ -24,7 +24,7 @@ export function CodeBlockNodeComponent({
   captionEditorInitialState,
 }: CodeBlockNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const { darkMode } = React.useContext(InklingComposerContext)
+  const { darkMode } = React.useContext(InklingUiPrefsContext)
   const { isEditing, isSelected } = React.useContext(CardContext)
 
   const updateCode = React.useCallback(
