@@ -33,6 +33,51 @@ interface BookmarkNodeComponentProps {
   createdWithUrl?: boolean
 }
 
+interface EmbedResponse {
+  url: string
+  metadata: {
+    author: string
+    icon: string
+    title: string
+    description: string
+    publisher: string
+    thumbnail: string
+  }
+}
+
+// The host's fetchEmbed contract returns `unknown` — validate the shape before
+// writing its fields into the node; a malformed response takes the urlError
+// path instead of throwing inside editor.update
+function isEmbedResponse(value: unknown): value is EmbedResponse {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+  if (!('url' in value) || typeof value.url !== 'string') {
+    return false
+  }
+  if (!('metadata' in value)) {
+    return false
+  }
+  const { metadata } = value
+  if (typeof metadata !== 'object' || metadata === null) {
+    return false
+  }
+  return (
+    'author' in metadata &&
+    typeof metadata.author === 'string' &&
+    'icon' in metadata &&
+    typeof metadata.icon === 'string' &&
+    'title' in metadata &&
+    typeof metadata.title === 'string' &&
+    'description' in metadata &&
+    typeof metadata.description === 'string' &&
+    'publisher' in metadata &&
+    typeof metadata.publisher === 'string' &&
+    'thumbnail' in metadata &&
+    typeof metadata.thumbnail === 'string'
+  )
+}
+
 export function BookmarkNodeComponent({
   author,
   nodeKey,
@@ -131,31 +176,19 @@ export function BookmarkNodeComponent({
     })
   }, [editor, nodeKey])
 
-  interface EmbedResponse {
-    url: string
-    metadata: {
-      author: string
-      icon: string
-      title: string
-      description: string
-      publisher: string
-      thumbnail: string
-    }
-  }
-
   const fetchMetadata = async (href: string): Promise<void> => {
     editor.getRootElement()?.focus({ preventScroll: true }) // focus editor before causing the input element to dismount
     setLoading(true)
-    let response: EmbedResponse | undefined
+    let response: unknown
     try {
       // set the test data return values in fetchEmbed.js
-      response = (await cardConfig.fetchEmbed?.(href, { type: 'bookmark' })) as EmbedResponse | undefined
+      response = await cardConfig.fetchEmbed?.(href, { type: 'bookmark' })
     } catch (e) {
       setLoading(false)
       setUrlError(true)
       return
     }
-    if (!response) {
+    if (!isEmbedResponse(response)) {
       setLoading(false)
       setUrlError(true)
       return
@@ -176,16 +209,16 @@ export function BookmarkNodeComponent({
 
   const fetchMetadataEffect = useCallback(async () => {
     setLoading(true)
-    let response: EmbedResponse | undefined
+    let response: unknown
     try {
       // set the test data return values in fetchEmbed.js
-      response = (await cardConfig.fetchEmbed?.(url, { type: 'bookmark' })) as EmbedResponse | undefined
+      response = await cardConfig.fetchEmbed?.(url, { type: 'bookmark' })
     } catch (e) {
       setLoading(false)
       setUrlError(true)
       throw e
     }
-    if (!response) {
+    if (!isEmbedResponse(response)) {
       setLoading(false)
       setUrlError(true)
       return
