@@ -1,3 +1,6 @@
+// Survives hand-written (no import spec, CONTEXT.md: "import spec"): a
+// comment-delimited sibling walker that removes nodes as it goes is
+// structural, not flat per-property reads.
 import type { LexicalNode } from 'lexical'
 
 export function parseHtmlNode(HtmlNode: new (data: Record<string, unknown>) => LexicalNode) {

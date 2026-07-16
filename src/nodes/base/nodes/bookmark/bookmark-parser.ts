@@ -1,3 +1,6 @@
+// Survives hand-written (no import spec, CONTEXT.md: "import spec"): the nested
+// metadata payload and the DOM-mutating mixtapeEmbed conversion are structural,
+// not flat per-property reads.
 import type { LexicalNode } from 'lexical'
 
 export function parseBookmarkNode(BookmarkNode: new (data: Record<string, unknown>) => LexicalNode) {

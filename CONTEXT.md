@@ -20,6 +20,10 @@ _Avoid_: card config, card definition
 The single per-card source of truth naming everything the editor must know about a card: its card spec, which editor surfaces it joins (node sets, markdown, email), and its insert-command registration (command, edit-mode flag, media claiming). Every registry is a derived view over the card declarations — the node sets, the menus, the decorate targets, and the insert registrar (`CardInsertPlugin`).
 _Avoid_: card registration, card manifest
 
+**Import spec**:
+The card declaration's DOM-import knowledge — how the card's markup reads back into node state on HTML import/paste: declarative conversion entries (tag, priority, guard, per-property reads) defined beside the card's `properties` in its base node module, from which the generated node machinery derives `importDOM`. The generator throws at class-creation time when a read names an unknown property. Cards whose parsing is structural (collection payloads, sibling walking, DOM mutation, derived payloads) keep hand-written parsers.
+_Avoid_: import parser, DOM conversion config
+
 **Render target**:
 Where a card's exported markup is going: **web** (the editor's own frontend) or **email** (email clients, with Outlook-grade markup constraints). A card can have structurally different output per target.
 _Avoid_: environment, platform

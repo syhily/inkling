@@ -1,3 +1,6 @@
+// Survives hand-written (no import spec, CONTEXT.md: "import spec"): the
+// `images` collection property, sibling walking with node removal, and the
+// SQS branch's DOM mutation are structural, not flat per-property reads.
 import type { LexicalNode } from 'lexical'
 
 import { readCaptionFromElement } from '@/nodes/base/utils/read-caption-from-element'

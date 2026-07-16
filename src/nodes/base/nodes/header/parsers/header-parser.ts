@@ -1,3 +1,7 @@
+// Survives hand-written (no import spec, CONTEXT.md: "import spec"): the
+// payload is derived, not read — layout from backgroundImageSrc presence,
+// buttonEnabled from element presence, two-source backgroundColor, and the
+// version: 2 constant.
 import type { LexicalNode } from 'lexical'
 
 export function parseHeaderNode(HeaderNode: new (data: Record<string, unknown>) => LexicalNode) {
