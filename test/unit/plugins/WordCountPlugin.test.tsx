@@ -133,6 +133,19 @@ describe('WordCountPlugin', () => {
     expect(onChange).toHaveBeenCalledWith(0)
   })
 
+  it('writes the shared callback into onWordCountChangeRef and clears it on unmount', async () => {
+    const onChange = vi.fn()
+    const { unmount } = await renderPlugin(onChange)
+
+    // a top-level plugin owns the shared callback so that nested composers can
+    // mount their own WordCountPlugin with it
+    expect(contextValue.onWordCountChangeRef.current).toBe(onChange)
+
+    unmount()
+
+    expect(contextValue.onWordCountChangeRef.current).toBeNull()
+  })
+
   it('counts words after typing', async () => {
     const onChange = vi.fn()
     await renderPlugin(onChange)
