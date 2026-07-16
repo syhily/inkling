@@ -1,6 +1,7 @@
 import type { Klass, LexicalNode } from 'lexical'
 
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type { CardImportSpec } from '@/nodes/base/import-spec'
 import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
 /**
@@ -106,6 +107,17 @@ export interface CardDeclaration<NodeType extends string = string> {
    * The card's decorate-target wrapper props; see `DecorateTargetSpec`.
    */
   decorateTarget?: DecorateTargetSpec
+  /**
+   * The card's DOM-import knowledge (CONTEXT.md: "import spec") — how the
+   * card's markup reads back into node state on HTML import/paste, as
+   * declarative conversion entries (tag, priority, guard, per-property
+   * reads). The spec object is defined beside `properties` in the base node
+   * module and the generated node machinery derives `importDOM` from it;
+   * this field makes the knowledge visible at declaration level. Cards
+   * whose parsing is structural keep hand-written parsers and leave it
+   * unset.
+   */
+  importSpec?: CardImportSpec
   /**
    * The card's insert-command registration; see `CardInsertSpec`. Presence
    * opts the card into the insert-command surface.

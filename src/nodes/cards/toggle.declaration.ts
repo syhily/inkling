@@ -1,6 +1,6 @@
 import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
 
-import { ToggleNode } from '@/nodes/base/nodes/toggle/ToggleNode'
+import { ToggleNode, toggleImportSpec } from '@/nodes/base/nodes/toggle/ToggleNode'
 import BASIC_NODES from '@/nodes/BasicNodes'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
@@ -25,6 +25,7 @@ export const toggleDeclaration = {
   nodeType: 'toggle',
   baseNode: ToggleNode,
   nestedEditors,
+  importSpec: toggleImportSpec,
   decorateTarget: {
     width: 'regular',
   },

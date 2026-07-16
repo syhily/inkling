@@ -1,15 +1,17 @@
+import type { CardImportSpec } from '@/nodes/base/import-spec'
+
 import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
-import { parseHorizontalRuleNode } from '@/nodes/base/nodes/horizontalrule/horizontalrule-parser'
 import { renderHorizontalRuleNode } from '@/nodes/base/nodes/horizontalrule/horizontalrule-renderer'
+
+export const horizontalRuleImportSpec = {
+  conversions: [{ tag: 'hr', priority: 0, reads: [] }],
+} satisfies CardImportSpec
 
 export class HorizontalRuleNode extends generateDecoratorNode({
   nodeType: 'horizontalrule',
   defaultRenderFn: renderHorizontalRuleNode,
+  importSpec: horizontalRuleImportSpec,
 }) {
-  static importDOM() {
-    return parseHorizontalRuleNode(this)
-  }
-
   getTextContent() {
     return '---\n\n'
   }

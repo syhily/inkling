@@ -1,4 +1,11 @@
-import type { Klass, LexicalEditor, LexicalNode, LexicalNodeReplacement, SerializedLexicalNode } from 'lexical'
+import type {
+  DOMConversionMap,
+  Klass,
+  LexicalEditor,
+  LexicalNode,
+  LexicalNodeReplacement,
+  SerializedLexicalNode,
+} from 'lexical'
 
 import { $generateHtmlFromNodes } from '@lexical/html'
 
@@ -7,6 +14,7 @@ import type { RenderContext } from '@/nodes/base/render-context'
 import type { Visibility } from '@/nodes/base/utils/visibility'
 
 import { cleanBasicHtml, type CleanBasicHtmlOptions } from '@/html/clean-basic-html'
+import { buildImportConversions, validateImportSpec, type CardImportSpec } from '@/nodes/base/import-spec'
 import { InklingDecoratorNode } from '@/nodes/base/InklingDecoratorNode'
 import { createRenderContext } from '@/nodes/base/render-context'
 import readTextContent from '@/nodes/base/utils/read-text-content'
@@ -209,6 +217,8 @@ export interface GeneratedDecoratorNodeClass<
   readonly nestedEditors?: readonly NestedEditorSpec[]
   readonly transientProps?: readonly TransientPropSpec[]
   readonly urlTransformMap: Record<string, string | Record<string, string>>
+  readonly importSpec: CardImportSpec | undefined
+  importDOM(): DOMConversionMap | null
   importJSON(serializedNode: Record<string, unknown>): GeneratedDecoratorNodeInstance<TDataset, TOutput>
 }
 
@@ -288,6 +298,7 @@ export function generateDecoratorNode<
   version = 1,
   hasVisibility,
   nestedEditors,
+  importSpec,
 }: {
   nodeType: string
   properties?: Props
@@ -295,6 +306,7 @@ export function generateDecoratorNode<
   version?: number
   hasVisibility?: HasVisibility
   nestedEditors?: readonly NestedEditorSpec[]
+  importSpec?: CardImportSpec
 }): GeneratedDecoratorNodeClass<DecoratorNodeValueMap<Props, HasVisibility>, TOutput> {
   type GeneratedDataset = DecoratorNodeValueMap<Props, HasVisibility>
 
@@ -331,6 +343,13 @@ export function generateDecoratorNode<
     })
   }
 
+  // The import spec names the card's DOM-import knowledge (CONTEXT.md:
+  // "import spec"); validate it against the property list at class-creation
+  // time so a read naming an unknown property fails loudly here.
+  if (importSpec) {
+    validateImportSpec(importSpec, internalProps)
+  }
+
   class GeneratedDecoratorNode extends InklingDecoratorNode {
     [key: string]: unknown
 
@@ -349,6 +368,25 @@ export function generateDecoratorNode<
      * subclasses) run no transient-prop behaviour.
      */
     static transientProps: readonly TransientPropSpec[] | undefined = undefined
+
+    /**
+     * The card's import spec (CONTEXT.md: "import spec"), exposed so the
+     * declaration layer can assert it references the same object. Undefined
+     * for cards whose structural parsing keeps a hand-written parser.
+     */
+    static importSpec: CardImportSpec | undefined = importSpec
+
+    /**
+     * The derived DOM-import conversions (CONTEXT.md: "import spec").
+     * Constructs through `this` — the class Lexical invokes `importDOM` on —
+     * so assembled/wrapper subclasses construct themselves and nested
+     * editors keep populating on paste. Spec-less classes (MarkdownNode;
+     * cards with structural hand-written parsers, which override this) yield
+     * no conversions; Lexical tolerates the null return.
+     */
+    static importDOM() {
+      return importSpec ? buildImportConversions(importSpec, this) : null
+    }
 
     constructor(data: Partial<DecoratorNodeValueMap<Props, HasVisibility>> = {}, key?: string) {
       super(key)
