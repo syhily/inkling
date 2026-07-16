@@ -1,5 +1,7 @@
 import type { ElementTransformer, MultilineElementTransformer, Transformer } from '@lexical/markdown'
-import type { Klass, LexicalEditor, LexicalNode } from 'lexical'
+import type { Klass, LexicalNode } from 'lexical'
+
+import type { GalleryImage } from '@/types/gallery'
 
 import { $createAudioNode, AudioNode } from '@/nodes/AudioNode'
 import { $createBookmarkNode, BookmarkNode } from '@/nodes/BookmarkNode'
@@ -66,7 +68,7 @@ function createCardTransformer<T extends LexicalNode>({
     regExpStart: new RegExp('^```inkling:' + card + '\\s*$'),
     replace: (rootNode, _children, _startMatch, _endMatch, linesInBetween, _isImport) => {
       const raw = linesInBetween?.join('\n') ?? ''
-      const data = raw.trim() ? JSON.parse(raw) : {}
+      const data: Record<string, unknown> = raw.trim() ? JSON.parse(raw) : {}
       rootNode.append(createNode(data))
     },
     type: 'multiline-element',
@@ -139,7 +141,7 @@ export const VIDEO_CARD_TRANSFORMER = createCardTransformer({
       thumbnailSrc: data.thumbnailSrc as string,
     })
     // Keep caption as plain text for round-trip; don't serialise the nested editor HTML.
-    ;(node as unknown as { __captionEditor: LexicalEditor | null }).__captionEditor = null
+    node.__captionEditor = null
     return node
   },
 })
@@ -148,16 +150,17 @@ export const GALLERY_CARD_TRANSFORMER = createCardTransformer({
   card: 'gallery',
   nodeClass: GalleryNode,
   getData: (node) => ({
-    images: node.images.map((image) => ({ src: (image as { src: string }).src })),
+    // mid-upload images carry no `src` yet; skip them rather than export `undefined`
+    images: node.images.flatMap((image) => (typeof image.src === 'string' ? [{ src: image.src }] : [])),
     caption: node.caption,
   }),
   createNode: (data) => {
     const node = $createGalleryNode({
-      images: data.images as Array<{ src: string }>,
+      images: data.images as GalleryImage[],
       caption: data.caption as string,
     })
     // Keep caption as plain text for round-trip; don't serialise the nested editor HTML.
-    ;(node as unknown as { __captionEditor: LexicalEditor | null }).__captionEditor = null
+    node.__captionEditor = null
     return node
   },
 })
@@ -193,8 +196,8 @@ export const TOGGLE_CARD_TRANSFORMER = createCardTransformer({
       content: data.content as string,
     })
     // Keep heading/content as plain text for round-trip; nested markdown is deferred.
-    ;(node as unknown as { __titleEditor: LexicalEditor | null }).__titleEditor = null
-    ;(node as unknown as { __contentEditor: LexicalEditor | null }).__contentEditor = null
+    node.__titleEditor = null
+    node.__contentEditor = null
     return node
   },
 })
@@ -212,7 +215,7 @@ export const CALLOUT_CARD_TRANSFORMER = createCardTransformer({
       backgroundColor: data.backgroundColor as string,
     })
     // Keep callout text as plain text for round-trip; nested markdown is deferred.
-    ;(node as unknown as { __calloutTextEditor: LexicalEditor | null }).__calloutTextEditor = null
+    node.__calloutTextEditor = null
     return node
   },
 })
