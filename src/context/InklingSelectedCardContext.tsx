@@ -7,6 +7,11 @@ import { CardSelectionStoreContext } from './CardSelectionStoreContext'
 export interface InklingSelectedCardContextValue {
   isDragging: boolean
   setIsDragging: React.Dispatch<React.SetStateAction<boolean>>
+  // Load-bearing, survives plan 038's shrink: written by the visibility
+  // command handlers (registerVisibilityHandler, registerCardCommands) and
+  // read only by HtmlNodeComponent — html is the sole indicator-icon card,
+  // and this state gates its visibility settings panel in selected mode.
+  // Folding it into the card selection store is a separate seam decision.
   showVisibilitySettings: boolean
   setShowVisibilitySettings: React.Dispatch<React.SetStateAction<boolean>>
 }
