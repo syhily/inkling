@@ -86,7 +86,7 @@ export default defineConfig(({ mode }) => {
         // plugins, CodeMirror, emoji-mart, fast-average-color, yjs,
         // y-websocket) are BUNDLED into the dist artifacts so the packed ESM
         // and CJS entries load with only React installed — see
-        // scripts/verify-packed-package.mjs, the packed-consumer gate.
+        // scripts/verify-packed-package.ts, the packed-consumer gate.
         // react/react-dom are the only true runtime peers and stay external
         // (including their jsx-runtime/client entry points). Do NOT add
         // feature packages back to this list without a packed-consumer test.

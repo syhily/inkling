@@ -6,7 +6,7 @@
 // resolution. Feature runtimes (Lexical, CodeMirror, emoji-mart, markdown-it,
 // Yjs, etc.) are deliberately NOT installed — the published declaration must
 // own its own type graph.
-import { execFileSync } from 'node:child_process'
+import { execFileSync, type ExecFileSyncOptionsWithStringEncoding } from 'node:child_process'
 import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
@@ -15,13 +15,19 @@ import { fileURLToPath } from 'node:url'
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const CONSUMER_SOURCE = join(REPO_ROOT, 'test', 'typecheck-consumer', 'consumer.tsx')
 
-const failures = []
+interface CommandFailure {
+  stdout?: string | Buffer
+  stderr?: string | Buffer
+  message?: string
+}
 
-function phase(label) {
+const failures: { label: string; stdout?: string; stderr?: string }[] = []
+
+function phase(label: string): void {
   console.log(`\n== ${label} ==`)
 }
 
-function recordFailure(label, error) {
+function recordFailure(label: string, error: CommandFailure): void {
   const stdout = error?.stdout?.toString().trim()
   const stderr = error?.stderr?.toString().trim()
   failures.push({ label, stdout, stderr })
@@ -37,7 +43,12 @@ function recordFailure(label, error) {
   }
 }
 
-function run(label, command, args, options = {}) {
+function run(
+  label: string,
+  command: string,
+  args: string[],
+  options: Omit<ExecFileSyncOptionsWithStringEncoding, 'encoding'> = {},
+): string | null {
   try {
     return execFileSync(command, args, {
       cwd: REPO_ROOT,
@@ -47,16 +58,22 @@ function run(label, command, args, options = {}) {
       ...options,
     })
   } catch (error) {
-    recordFailure(label, error)
+    recordFailure(label, error as CommandFailure)
     return null
   }
 }
+
+type ExpectedFailureResult = { failed: true; error: unknown } | { failed: false; output: string }
 
 // Expected-failure variant of run(): a non-zero exit is the WANTED outcome,
 // so the error is returned to the caller instead of recorded as a failure.
 // Returns { failed: true, error } when the command fails as expected, and
 // { failed: false, output } when it unexpectedly succeeds.
-function runExpectingFailure(command, args, options = {}) {
+function runExpectingFailure(
+  command: string,
+  args: string[],
+  options: Omit<ExecFileSyncOptionsWithStringEncoding, 'encoding'> = {},
+): ExpectedFailureResult {
   try {
     const output = execFileSync(command, args, {
       cwd: REPO_ROOT,
@@ -71,7 +88,7 @@ function runExpectingFailure(command, args, options = {}) {
   }
 }
 
-function makeTsconfig(module, moduleResolution) {
+function makeTsconfig(module: string, moduleResolution: string): string {
   return JSON.stringify(
     {
       compilerOptions: {
@@ -111,7 +128,7 @@ const CONSUMER_DEV_DEPENDENCIES = {
   '@types/react-dom': '19.2.3',
 }
 
-function checkConsumer(label, consumerDir, module, moduleResolution) {
+function checkConsumer(label: string, consumerDir: string, module: string, moduleResolution: string): boolean {
   phase(label)
   mkdirSync(consumerDir, { recursive: true })
   writeFileSync(

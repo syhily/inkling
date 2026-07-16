@@ -6,7 +6,7 @@
 // This is the release gate for the documented install contract: no consumer
 // installation of card/collaboration feature packages may be required to load
 // the package root. Invoked from `pnpm verify:package`.
-import { execFileSync } from 'node:child_process'
+import { execFileSync, type ExecFileSyncOptionsWithStringEncoding } from 'node:child_process'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
@@ -15,13 +15,19 @@ import { fileURLToPath } from 'node:url'
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const NODE = process.execPath
 
-const failures = []
+interface CommandFailure {
+  stdout?: string | Buffer
+  stderr?: string | Buffer
+  message?: string
+}
 
-function phase(label) {
+const failures: { label: string; stdout?: string; stderr?: string }[] = []
+
+function phase(label: string): void {
   console.log(`\n== ${label} ==`)
 }
 
-function recordFailure(label, error) {
+function recordFailure(label: string, error: CommandFailure): void {
   const stdout = error?.stdout?.toString().trim()
   const stderr = error?.stderr?.toString().trim()
   failures.push({ label, stdout, stderr })
@@ -37,7 +43,12 @@ function recordFailure(label, error) {
   }
 }
 
-function run(label, command, args, options = {}) {
+function run(
+  label: string,
+  command: string,
+  args: string[],
+  options: Omit<ExecFileSyncOptionsWithStringEncoding, 'encoding'> = {},
+): string | null {
   try {
     return execFileSync(command, args, {
       cwd: REPO_ROOT,
@@ -47,7 +58,7 @@ function run(label, command, args, options = {}) {
       ...options,
     })
   } catch (error) {
-    recordFailure(label, error)
+    recordFailure(label, error as CommandFailure)
     return null
   }
 }
@@ -107,7 +118,10 @@ try {
     throw new Error('pnpm pack failed; see errors above')
   }
   const jsonStart = packOutput.indexOf('{')
-  const packJson = JSON.parse(jsonStart === -1 ? packOutput : packOutput.slice(jsonStart))
+  const packJson = JSON.parse(jsonStart === -1 ? packOutput : packOutput.slice(jsonStart)) as {
+    filename: string
+    files?: { path: string }[]
+  }
   const tarballPath = isAbsolute(packJson.filename) ? packJson.filename : join(tempRoot, packJson.filename)
   console.log(`tarball: ${packJson.filename}`)
 

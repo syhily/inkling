@@ -7,20 +7,25 @@ import { readFileSync } from 'node:fs'
 
 const DIRS = ['test/e2e', 'test/unit']
 
+// grep exits 1 when nothing matches — that is the clean case, not an error
+function isGrepNoMatch(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'status' in error && error.status === 1
+}
+
 let grepOutput = ''
 try {
   grepOutput = execSync(`grep -rnE "\\.(skip|todo)\\(" ${DIRS.join(' ')} --include='*.ts' --include='*.tsx'`, {
     encoding: 'utf8',
   })
 } catch (error) {
-  if (error.status === 1) {
+  if (isGrepNoMatch(error)) {
     process.exit(0) // no matches at all
   }
   throw error
 }
 
-const fileCache = new Map()
-const offenders = []
+const fileCache = new Map<string, string[]>()
+const offenders: string[] = []
 
 for (const line of grepOutput.split('\n').filter(Boolean)) {
   const match = line.match(/^([^:]+):(\d+):(.*)$/)
@@ -31,10 +36,12 @@ for (const line of grepOutput.split('\n').filter(Boolean)) {
   if (content.includes('SKIP-REASON')) {
     continue
   }
-  if (!fileCache.has(file)) {
-    fileCache.set(file, readFileSync(file, 'utf8').split('\n'))
+  let lines = fileCache.get(file)
+  if (!lines) {
+    lines = readFileSync(file, 'utf8').split('\n')
+    fileCache.set(file, lines)
   }
-  const lineAbove = fileCache.get(file)[Number(lineNumber) - 2] ?? ''
+  const lineAbove = lines[Number(lineNumber) - 2] ?? ''
   if (!lineAbove.includes('SKIP-REASON')) {
     offenders.push(`${file}:${lineNumber}`)
   }

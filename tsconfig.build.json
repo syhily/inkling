@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    // declaration emission is driven by scripts/build-types.mjs after
+    // declaration emission is driven by scripts/build-types.ts after
     // `vite build`; this config only narrows the graph the generator reads
     "noEmit": true,
     "types": ["node"]

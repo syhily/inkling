@@ -8,7 +8,7 @@
 // dts-bundle-generator, which runs on the repo's own TypeScript. React stays
 // external (it is the only runtime peer); every other type package referenced
 // by the public graph is inlined so consumers need no second Lexical install —
-// the same ownership contract as scripts/verify-packed-package.mjs.
+// the same ownership contract as scripts/verify-packed-package.ts.
 import { execFileSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -48,7 +48,7 @@ const INLINED_LIBRARIES = [
   'react-error-boundary',
 ]
 
-const { generateDtsBundle } = require('dts-bundle-generator')
+const { generateDtsBundle } = require('dts-bundle-generator') as typeof import('dts-bundle-generator')
 
 const [content] = generateDtsBundle(
   [
@@ -72,7 +72,7 @@ const [content] = generateDtsBundle(
 // get aliased to the same identifier. The output then contains a duplicate
 // import binding plus `import("react").<alias>.X` references that do not
 // resolve. Rewrite both to the single namespace import.
-function fixReactAliasCollision(source) {
+function fixReactAliasCollision(source: string): string {
   const aliasMatch = source.match(/^import \* as ([\w$]+) from 'react';$/m)
   if (!aliasMatch) {
     return source
@@ -83,8 +83,8 @@ function fixReactAliasCollision(source) {
     .replaceAll(`import("react").${alias}.`, `${alias}.`)
 }
 
-function collectExternals(source) {
-  const externals = new Set()
+function collectExternals(source: string): string[] {
+  const externals = new Set<string>()
   for (const match of source.matchAll(/from '([^']+)'/g)) {
     externals.add(match[1])
   }
@@ -94,7 +94,7 @@ function collectExternals(source) {
   return [...externals].sort()
 }
 
-const failures = []
+const failures: string[] = []
 const fixed = fixReactAliasCollision(content)
 
 const forbidden = /(?:from|import\()\s*['"](@\/|\/Users\/|\.\.\/src|src\/|test\/|demo\/)/

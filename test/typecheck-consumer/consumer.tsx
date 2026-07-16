@@ -2,7 +2,7 @@
  * Clean-consumer type fixture for the published @inkling/editor declaration.
  *
  * This file is installed into isolated temp projects in
- * scripts/verify-packed-types.mjs and type-checked against the packed tarball
+ * scripts/verify-packed-types.ts and type-checked against the packed tarball
  * only — it must not import from workspace aliases or undocumented paths.
  */
 import {

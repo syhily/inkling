@@ -20,6 +20,6 @@
       "#/*": ["./test/*"]
     }
   },
-  "include": ["src/**/*", "test/**/*", "demo/**/*"],
+  "include": ["src/**/*", "test/**/*", "demo/**/*", "scripts/**/*"],
   "exclude": ["test/e2e/**/*", "test/unit/**/*", "test/utils/**/*", "test/typecheck-consumer/**/*"]
 }
