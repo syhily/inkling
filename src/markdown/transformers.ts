@@ -9,9 +9,9 @@ import {
   UNORDERED_LIST,
   type Transformer,
 } from '@lexical/markdown'
-import { $createNodeSelection, $setSelection } from 'lexical'
 
-import { $createCodeBlockNode, $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
+import { $insertCodeBlockForShortcut, FENCE_TRANSFORMER_REGEXP } from '@/markdown/card-shortcuts'
+import { $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $createHorizontalRuleNode, $isHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 
 export const HR = {
@@ -44,16 +44,11 @@ export const CODE_BLOCK = {
     const textContent = node.getTextContent()
     return '```' + (node.language || '') + (textContent ? '\n' + textContent : '') + '\n' + '```'
   },
-  regExp: /^```(\w{1,10})?\s/,
+  // trigger only: the regex lives in the card-shortcut seam, and the trailing
+  // `\s` there is what makes the fence fire on the space keystroke
+  regExp: FENCE_TRANSFORMER_REGEXP,
   replace: (parentNode: ElementNode, _children: LexicalNode[], match: string[]) => {
-    const language = match[1]
-    const codeBlockNode = $createCodeBlockNode({ language, _openInEditMode: true })
-    const replacementNode = parentNode.replace(codeBlockNode)
-
-    // select node when replacing so it immediately renders in editing mode
-    const replacementSelection = $createNodeSelection()
-    replacementSelection.add(replacementNode.getKey())
-    $setSelection(replacementSelection)
+    $insertCodeBlockForShortcut(parentNode, match[1])
   },
   type: 'element' as const,
 }

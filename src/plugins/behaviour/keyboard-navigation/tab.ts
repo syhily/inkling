@@ -2,18 +2,16 @@ import type { LexicalEditor } from 'lexical'
 
 import { $isListItemNode } from '@lexical/list'
 import {
-  $createNodeSelection,
   $getSelection,
   $isElementNode,
   $isNodeSelection,
   $isRangeSelection,
   $isTextNode,
-  $setSelection,
   COMMAND_PRIORITY_LOW,
   KEY_TAB_COMMAND,
 } from 'lexical'
 
-import { $createCodeBlockNode } from '@/nodes/CodeBlockNode'
+import { $insertCodeBlockForShortcut, FENCE_KEYBOARD_REGEXP } from '@/markdown/card-shortcuts'
 
 import type { KeyboardNavigationDeps } from './types'
 
@@ -60,28 +58,20 @@ export function registerTabCommand(editor: LexicalEditor, deps: KeyboardNavigati
         }
       }
 
-      // code card shortcut
+      // code card shortcut — trigger only; the regex and replace-and-select
+      // live in the card-shortcut seam (@/markdown/card-shortcuts)
       if (!isNested && event) {
         const selection = $getSelection()
         const currentNode = selection?.getNodes()[0]
         if ($isTextNode(currentNode)) {
           const textContent = currentNode.getTextContent()
-          if (textContent.match(/^```(\w{1,10})?/)) {
+          if (textContent.match(FENCE_KEYBOARD_REGEXP)) {
             event.preventDefault()
-            const language = textContent.replace(/^```/, '')
             const topLevelElement = currentNode.getTopLevelElement()
             if (!topLevelElement) {
               return false
             }
-            const replacementNode = topLevelElement.insertAfter(
-              $createCodeBlockNode({ language, _openInEditMode: true }),
-            )
-            topLevelElement.remove()
-
-            // select node when replacing so it immediately renders in editing mode
-            const replacementSelection = $createNodeSelection()
-            replacementSelection.add(replacementNode.getKey())
-            $setSelection(replacementSelection)
+            $insertCodeBlockForShortcut(topLevelElement, textContent.replace(/^```/, ''))
             return true
           }
         }

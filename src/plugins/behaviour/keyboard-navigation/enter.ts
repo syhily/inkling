@@ -1,20 +1,18 @@
 import type { LexicalEditor } from 'lexical'
 
 import {
-  $createNodeSelection,
   $createParagraphNode,
   $getNodeByKey,
   $getRoot,
   $getSelection,
   $isDecoratorNode,
   $isTextNode,
-  $setSelection,
   COMMAND_PRIORITY_LOW,
   KEY_ENTER_COMMAND,
 } from 'lexical'
 
+import { $insertCodeBlockForShortcut, FENCE_KEYBOARD_REGEXP } from '@/markdown/card-shortcuts'
 import { $isInklingCard } from '@/nodes/base'
-import { $createCodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $selectDecoratorNode } from '@/utils'
 
 import type { CardKeyboardEvent } from '../types'
@@ -101,28 +99,20 @@ export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNaviga
         return true
       }
 
-      // code card shortcut
+      // code card shortcut — trigger only; the regex and replace-and-select
+      // live in the card-shortcut seam (@/markdown/card-shortcuts)
       if (!isNested && event) {
         const selection = $getSelection()
         const currentNode = selection?.getNodes()[0]
         if ($isTextNode(currentNode)) {
           const textContent = currentNode.getTextContent()
-          if (textContent.match(/^```(\w{1,10})?/)) {
+          if (textContent.match(FENCE_KEYBOARD_REGEXP)) {
             event.preventDefault()
-            const language = textContent.replace(/^```/, '')
             const topLevelElement = currentNode.getTopLevelElement()
             if (!topLevelElement) {
               return false
             }
-            const replacementNode = topLevelElement.insertAfter(
-              $createCodeBlockNode({ language, _openInEditMode: true }),
-            )
-            topLevelElement.remove()
-
-            // select node when replacing so it immediately renders in editing mode
-            const replacementSelection = $createNodeSelection()
-            replacementSelection.add(replacementNode.getKey())
-            $setSelection(replacementSelection)
+            $insertCodeBlockForShortcut(topLevelElement, textContent.replace(/^```/, ''))
             return true
           }
         }
