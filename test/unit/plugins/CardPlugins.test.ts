@@ -11,15 +11,8 @@ import { INSERT_FILE_COMMAND } from '@/nodes/FileNode'
 import { INSERT_GALLERY_COMMAND } from '@/nodes/GalleryNode'
 import { INSERT_TOGGLE_COMMAND } from '@/nodes/ToggleNode'
 import { INSERT_VIDEO_COMMAND } from '@/nodes/VideoNode'
-import { AudioPlugin } from '@/plugins/AudioPlugin'
-import { BookmarkPlugin } from '@/plugins/BookmarkPlugin'
-import { ButtonPlugin } from '@/plugins/ButtonPlugin'
-import { CalloutPlugin } from '@/plugins/CalloutPlugin'
-import { FilePlugin } from '@/plugins/FilePlugin'
-import { GalleryPlugin } from '@/plugins/GalleryPlugin'
+import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
-import { TogglePlugin } from '@/plugins/TogglePlugin'
-import { VideoPlugin } from '@/plugins/VideoPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -39,27 +32,27 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
   })
 }
 
-async function setupPluginTest(editor: LexicalEditor, Plugin: () => null) {
+async function setupPluginTest(editor: LexicalEditor) {
   const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
   useLexicalComposerContext.mockReturnValue([editor])
-  renderHook(() => Plugin())
+  renderHook(() => CardInsertPlugin())
   // allow React effects to register commands
   await new Promise((resolve) => {
     setTimeout(resolve, 0)
   })
 }
 
-describe('Card plugins', () => {
+describe('Card insert commands (CardInsertPlugin)', () => {
   let editor: LexicalEditor
 
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('AudioPlugin dispatches INSERT_CARD_COMMAND for an audio dataset', async () => {
+  it('audio insert dispatches INSERT_CARD_COMMAND for an audio dataset', async () => {
     const { AudioNode } = await import('@/nodes/AudioNode')
     editor = createTestEditor([AudioNode])
-    await setupPluginTest(editor, AudioPlugin)
+    await setupPluginTest(editor)
 
     let dispatchedCardNode
     const removeListener = editor.registerCommand(
@@ -78,10 +71,10 @@ describe('Card plugins', () => {
     removeListener()
   })
 
-  it('BookmarkPlugin requires a range selection and dispatches INSERT_CARD_COMMAND', async () => {
+  it('bookmark insert requires a range selection and dispatches INSERT_CARD_COMMAND', async () => {
     const { BookmarkNode } = await import('@/nodes/BookmarkNode')
     editor = createTestEditor([BookmarkNode])
-    await setupPluginTest(editor, BookmarkPlugin)
+    await setupPluginTest(editor)
 
     await updateEditor(editor, () => {
       const root = $getRoot()
@@ -109,19 +102,19 @@ describe('Card plugins', () => {
     removeListener()
   })
 
-  it('ButtonPlugin rejects non-object payloads', async () => {
+  it('button insert rejects non-object payloads', async () => {
     const { ButtonNode } = await import('@/nodes/ButtonNode')
     editor = createTestEditor([ButtonNode])
-    await setupPluginTest(editor, ButtonPlugin)
+    await setupPluginTest(editor)
 
     const dispatched = editor.dispatchCommand(INSERT_BUTTON_COMMAND, null)
     expect(dispatched).toBe(false)
   })
 
-  it('CalloutPlugin dispatches INSERT_CARD_COMMAND for a callout dataset', async () => {
+  it('callout insert dispatches INSERT_CARD_COMMAND for a callout dataset', async () => {
     const { CalloutNode } = await import('@/nodes/CalloutNode')
     editor = createTestEditor([CalloutNode])
-    await setupPluginTest(editor, CalloutPlugin)
+    await setupPluginTest(editor)
 
     let dispatchedCardNode
     const removeListener = editor.registerCommand(
@@ -140,10 +133,10 @@ describe('Card plugins', () => {
     removeListener()
   })
 
-  it('FilePlugin dispatches INSERT_CARD_COMMAND for a file dataset', async () => {
+  it('file insert dispatches INSERT_CARD_COMMAND for a file dataset', async () => {
     const { FileNode } = await import('@/nodes/FileNode')
     editor = createTestEditor([FileNode])
-    await setupPluginTest(editor, FilePlugin)
+    await setupPluginTest(editor)
 
     let dispatchedCardNode
     const removeListener = editor.registerCommand(
@@ -162,10 +155,10 @@ describe('Card plugins', () => {
     removeListener()
   })
 
-  it('GalleryPlugin dispatches INSERT_CARD_COMMAND for a gallery dataset', async () => {
+  it('gallery insert dispatches INSERT_CARD_COMMAND for a gallery dataset', async () => {
     const { GalleryNode } = await import('@/nodes/GalleryNode')
     editor = createTestEditor([GalleryNode])
-    await setupPluginTest(editor, GalleryPlugin)
+    await setupPluginTest(editor)
 
     let dispatchedCardNode
     const removeListener = editor.registerCommand(
@@ -184,10 +177,10 @@ describe('Card plugins', () => {
     removeListener()
   })
 
-  it('TogglePlugin dispatches INSERT_CARD_COMMAND for a toggle dataset', async () => {
+  it('toggle insert dispatches INSERT_CARD_COMMAND for a toggle dataset', async () => {
     const { ToggleNode } = await import('@/nodes/ToggleNode')
     editor = createTestEditor([ToggleNode])
-    await setupPluginTest(editor, TogglePlugin)
+    await setupPluginTest(editor)
 
     let dispatchedCardNode
     const removeListener = editor.registerCommand(
@@ -206,10 +199,10 @@ describe('Card plugins', () => {
     removeListener()
   })
 
-  it('VideoPlugin dispatches INSERT_CARD_COMMAND for a video dataset', async () => {
+  it('video insert dispatches INSERT_CARD_COMMAND for a video dataset', async () => {
     const { VideoNode } = await import('@/nodes/VideoNode')
     editor = createTestEditor([VideoNode])
-    await setupPluginTest(editor, VideoPlugin)
+    await setupPluginTest(editor)
 
     let dispatchedCardNode
     const removeListener = editor.registerCommand(

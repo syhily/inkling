@@ -21,24 +21,16 @@ import EMAIL_NODES from '@/nodes/EmailNodes'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 /* Plugins */
 import AllDefaultPlugins from '@/plugins/AllDefaultPlugins'
-import AudioPlugin from '@/plugins/AudioPlugin'
-import BookmarkPlugin from '@/plugins/BookmarkPlugin'
-import ButtonPlugin from '@/plugins/ButtonPlugin'
-import CalloutPlugin from '@/plugins/CalloutPlugin'
+import CardInsertPlugin from '@/plugins/CardInsertPlugin'
 import CardMenuPlugin from '@/plugins/CardMenuPlugin'
 import DragDropPastePlugin from '@/plugins/DragDropPastePlugin'
 import DragDropReorderPlugin from '@/plugins/DragDropReorderPlugin'
 import EmEnDashPlugin from '@/plugins/EmEnDashPlugin'
 import EmojiPickerPlugin from '@/plugins/EmojiPickerPlugin'
 import ExternalControlPlugin from '@/plugins/ExternalControlPlugin'
-import FilePlugin from '@/plugins/FilePlugin'
 import FloatingToolbarPlugin from '@/plugins/FloatingToolbarPlugin'
-import GalleryPlugin from '@/plugins/GalleryPlugin'
-import HeaderPlugin from '@/plugins/HeaderPlugin'
 import HorizontalRulePlugin from '@/plugins/HorizontalRulePlugin'
 import HtmlOutputPlugin from '@/plugins/HtmlOutputPlugin'
-import HtmlPlugin from '@/plugins/HtmlPlugin'
-import ImagePlugin from '@/plugins/ImagePlugin'
 import InklingBehaviourPlugin from '@/plugins/InklingBehaviourPlugin'
 import InklingSelectorPlugin from '@/plugins/InklingSelectorPlugin'
 import InklingSnippetPlugin from '@/plugins/InklingSnippetPlugin'
@@ -57,8 +49,6 @@ import ReplacementStringsPlugin from '@/plugins/ReplacementStringsPlugin'
 import RestrictContentPlugin from '@/plugins/RestrictContentPlugin'
 import SlashCardMenuPlugin from '@/plugins/SlashCardMenuPlugin'
 import TKCountPlugin from '@/plugins/TKCountPlugin'
-import TogglePlugin from '@/plugins/TogglePlugin'
-import VideoPlugin from '@/plugins/VideoPlugin'
 import WordCountPlugin from '@/plugins/WordCountPlugin'
 
 /* Exports ------------------------------------------------------------------ */
@@ -90,24 +80,16 @@ export {
   InklingNestedComposer,
   InklingCardWrapper,
   AllDefaultPlugins,
-  AudioPlugin,
-  BookmarkPlugin,
-  ButtonPlugin,
-  CalloutPlugin,
+  CardInsertPlugin,
   CardMenuPlugin,
   DragDropPastePlugin,
   DragDropReorderPlugin,
   EmEnDashPlugin,
   EmojiPickerPlugin,
   ExternalControlPlugin,
-  FilePlugin,
   FloatingToolbarPlugin,
-  GalleryPlugin,
-  HeaderPlugin,
   HorizontalRulePlugin,
   HtmlOutputPlugin,
-  HtmlPlugin,
-  ImagePlugin,
   InklingBehaviourPlugin,
   InklingSelectorPlugin,
   InklingSnippetPlugin,
@@ -118,8 +100,6 @@ export {
   RestrictContentPlugin,
   SlashCardMenuPlugin,
   TKCountPlugin,
-  TogglePlugin,
-  VideoPlugin,
   WordCountPlugin,
   DEFAULT_NODES,
   BASIC_NODES,

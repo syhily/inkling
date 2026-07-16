@@ -1,23 +1,13 @@
 import { ListPlugin } from '@lexical/react/LexicalListPlugin'
 
 import AtLinkPlugin from '@/plugins/AtLinkPlugin'
-import { AudioPlugin } from '@/plugins/AudioPlugin'
-import { BookmarkPlugin } from '@/plugins/BookmarkPlugin'
-import { ButtonPlugin } from '@/plugins/ButtonPlugin'
-import { CalloutPlugin } from '@/plugins/CalloutPlugin'
+import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
 import { CardMenuPlugin } from '@/plugins/CardMenuPlugin'
 import EmEnDashPlugin from '@/plugins/EmEnDashPlugin'
 import { EmojiPickerPlugin } from '@/plugins/EmojiPickerPlugin'
-import { FilePlugin } from '@/plugins/FilePlugin'
-import { GalleryPlugin } from '@/plugins/GalleryPlugin'
-import { HeaderPlugin } from '@/plugins/HeaderPlugin'
 import HorizontalRulePlugin from '@/plugins/HorizontalRulePlugin'
-import HtmlPlugin from '@/plugins/HtmlPlugin'
-import ImagePlugin from '@/plugins/ImagePlugin'
 import InklingSelectorPlugin from '@/plugins/InklingSelectorPlugin'
 import { InklingSnippetPlugin } from '@/plugins/InklingSnippetPlugin'
-import { TogglePlugin } from '@/plugins/TogglePlugin'
-import { VideoPlugin } from '@/plugins/VideoPlugin'
 
 export const AllDefaultPlugins = () => {
   return (
@@ -32,19 +22,9 @@ export const AllDefaultPlugins = () => {
       <EmojiPickerPlugin />
       <AtLinkPlugin />
       {/* Card Plugins */}
-      <AudioPlugin />
-      <ImagePlugin />
-      <GalleryPlugin />
-      <VideoPlugin />
+      <CardInsertPlugin />
       <EmEnDashPlugin />
       <HorizontalRulePlugin />
-      <CalloutPlugin />
-      <HtmlPlugin />
-      <FilePlugin />
-      <ButtonPlugin />
-      <TogglePlugin />
-      <HeaderPlugin />
-      <BookmarkPlugin />
     </>
   )
 }

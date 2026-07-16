@@ -3,10 +3,9 @@ import { act, renderHook } from '@testing-library/react'
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import InklingComposerContext from '@/context/InklingComposerContext'
 import { ImageNode, INSERT_IMAGE_COMMAND } from '@/nodes/ImageNode'
+import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
 import { INSERT_MEDIA_COMMAND } from '@/plugins/DragDropPastePlugin'
-import ImagePlugin from '@/plugins/ImagePlugin'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -21,28 +20,7 @@ function createTestEditor(): LexicalEditor {
   })
 }
 
-function createComposerContext() {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload: vi.fn(() => Promise.resolve(undefined)),
-        progress: 0,
-        errors: [],
-      }),
-      fileTypes: { image: { mimeTypes: ['image/png'] } },
-    },
-    cardConfig: {},
-    darkMode: false,
-    enableMultiplayer: false,
-    editorContainerRef: { current: null },
-    createWebsocketProvider: vi.fn(),
-    onWordCountChangeRef: { current: null },
-    onError: vi.fn(),
-  }
-}
-
-describe('ImagePlugin', () => {
+describe('Image insert commands (CardInsertPlugin)', () => {
   let editor: LexicalEditor
 
   beforeEach(() => {
@@ -52,24 +30,14 @@ describe('ImagePlugin', () => {
   })
 
   it('returns null', () => {
-    const contextValue = createComposerContext()
-    const { result } = renderHook(() => ImagePlugin(), {
-      wrapper: ({ children }) => (
-        <InklingComposerContext.Provider value={contextValue}>{children}</InklingComposerContext.Provider>
-      ),
-    })
+    const { result } = renderHook(() => CardInsertPlugin())
     expect(result.current).toBeNull()
   })
 
   it('registers INSERT_IMAGE_COMMAND and dispatches INSERT_CARD_COMMAND', async () => {
     const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
-    const contextValue = createComposerContext()
 
-    renderHook(() => ImagePlugin(), {
-      wrapper: ({ children }) => (
-        <InklingComposerContext.Provider value={contextValue}>{children}</InklingComposerContext.Provider>
-      ),
-    })
+    renderHook(() => CardInsertPlugin())
 
     await act(async () => {
       editor.update(() => {
@@ -91,13 +59,8 @@ describe('ImagePlugin', () => {
 
   it('registers INSERT_MEDIA_COMMAND for image type', async () => {
     const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
-    const contextValue = createComposerContext()
 
-    renderHook(() => ImagePlugin(), {
-      wrapper: ({ children }) => (
-        <InklingComposerContext.Provider value={contextValue}>{children}</InklingComposerContext.Provider>
-      ),
-    })
+    renderHook(() => CardInsertPlugin())
 
     await act(async () => {
       editor.dispatchCommand(INSERT_MEDIA_COMMAND, {
@@ -110,12 +73,7 @@ describe('ImagePlugin', () => {
   })
 
   it('does nothing for non-image INSERT_MEDIA_COMMAND', async () => {
-    const contextValue = createComposerContext()
-    renderHook(() => ImagePlugin(), {
-      wrapper: ({ children }) => (
-        <InklingComposerContext.Provider value={contextValue}>{children}</InklingComposerContext.Provider>
-      ),
-    })
+    renderHook(() => CardInsertPlugin())
 
     const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
 
@@ -131,12 +89,7 @@ describe('ImagePlugin', () => {
   })
 
   it('does not dispatch INSERT_CARD_COMMAND for invalid dataset', async () => {
-    const contextValue = createComposerContext()
-    renderHook(() => ImagePlugin(), {
-      wrapper: ({ children }) => (
-        <InklingComposerContext.Provider value={contextValue}>{children}</InklingComposerContext.Provider>
-      ),
-    })
+    renderHook(() => CardInsertPlugin())
 
     const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
 

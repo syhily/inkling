@@ -12,15 +12,11 @@ import InklingComposer from '@/components/InklingComposer'
 import { SharedHistoryContext } from '@/context/SharedHistoryContext'
 import { SharedOnChangeContext } from '@/context/SharedOnChangeContext'
 import EMAIL_EDITOR_NODES from '@/nodes/EmailEditorNodes'
-import BookmarkPlugin from '@/plugins/BookmarkPlugin'
-import ButtonPlugin from '@/plugins/ButtonPlugin'
-import CalloutPlugin from '@/plugins/CalloutPlugin'
+import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
 import CardMenuPlugin from '@/plugins/CardMenuPlugin'
 import EmEnDashPlugin from '@/plugins/EmEnDashPlugin'
 import EmojiPickerPlugin from '@/plugins/EmojiPickerPlugin'
 import HorizontalRulePlugin from '@/plugins/HorizontalRulePlugin'
-import HtmlPlugin from '@/plugins/HtmlPlugin'
-import ImagePlugin from '@/plugins/ImagePlugin'
 import InklingSelectorPlugin from '@/plugins/InklingSelectorPlugin'
 import InklingSnippetPlugin from '@/plugins/InklingSnippetPlugin'
 import { EMAIL_TRANSFORMERS } from '@/plugins/MarkdownShortcutPlugin'
@@ -103,15 +99,11 @@ const EmailEditor = ({
             markdownTransformers={markdownTransformers}
             placeholderText={placeholderText}
           >
-            <BookmarkPlugin />
-            <ButtonPlugin />
-            <CalloutPlugin />
+            <CardInsertPlugin />
             <CardMenuPlugin />
             <EmEnDashPlugin />
             <EmojiPickerPlugin />
             <HorizontalRulePlugin />
-            <HtmlPlugin />
-            <ImagePlugin />
             <InklingSelectorPlugin />
             <InklingSnippetPlugin />
             <ListPlugin />
