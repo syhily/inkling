@@ -7,7 +7,12 @@ read-only Koenig reference checkout `97403cf`; it produced plans 025–035. A
 third architecture review on 2026-07-15 against commit `1cad78b` (report:
 temp-dir HTML, `architecture-review-20260715-172040.html`) produced plans
 036–040, a set of module-deepening refactors decided in interview and recorded
-in `CONTEXT.md`.
+in `CONTEXT.md`. A fourth architecture review on 2026-07-16 against commit
+`d998080` (report: temp-dir HTML, `architecture-review-20260716-094428.html`)
+produced plans 041–054, decided in interview: the card declaration completes
+its UI and registration half, the composer context splits by lifecycle, the
+host interface becomes honest at 2.0.0, the input side gains named seams, and
+plan 040's two recorded follow-ups land.
 
 Execute TODO plans in the order below unless dependencies say otherwise. Each
 executor must read the plan fully before starting, run its drift check, honor
@@ -57,7 +62,7 @@ Repo quick reference (verification gates used by every plan):
 | 025  | Type wrapper-node datasets and insert-command payloads            | P1       | L      | —                                | DONE (`de9f674`) |
 | 026  | Make exported editor prop contracts honest                        | P1       | M      | —                                | DONE (`3892705`) |
 | 027  | Fix the packed ESM/CommonJS runtime contract                      | P1       | L      | —                                | DONE (`7d3eb96`) |
-| 028  | Publish bundled TypeScript declaration files                      | P1       | M      | 025, 026, 027                    | TODO             |
+| 028  | Publish bundled TypeScript declaration files                      | P1       | M      | 025, 026, 027                    | DONE (`242640a`) |
 | 029  | Align HTML importer/renderer default node sets                    | P2       | M      | —                                | DONE (`e201d66`) |
 | 030  | Validate every exported media URL                                 | P1       | M      | —                                | DONE (`66a31dd`) |
 | 031  | Centralize remaining Lexical private-field access                 | P2       | M      | —                                | DONE (`cd9628c`) |
@@ -71,6 +76,20 @@ Repo quick reference (verification gates used by every plan):
 | 039  | One declaration per card — deepen generator, derive registries    | P1       | L      | 037, 038                         | DONE (`4512bef`) |
 | 040  | Put renderer policy behind a render-context seam                  | P1       | M      | 037                              | DONE (`c6add85`) |
 
+| 041  | Shrink the escape-html allowlist onto context.escapeText          | P2       | S      | —                              | TODO             |
+| 042  | Renderers receive only the render context                         | P1       | M      | 041                            | TODO             |
+| 043  | Derive the card insert plugins from the declaration               | P1       | M      | —                              | TODO             |
+| 044  | Put card-node writes behind a typed seam                          | P1       | L      | —                              | TODO             |
+| 045  | One media-upload intent module                                    | P2       | M      | 044                            | TODO             |
+| 046  | Collapse the card action toolbar into one module                  | P2       | M      | 043                            | TODO             |
+| 047  | Split the composer context by lifecycle                           | P1       | L      | —                              | TODO             |
+| 048  | Make the host interface honest (2.0.0)                            | P1       | M      | 047                            | TODO             |
+| 049  | Name the clipboard-protocol module                                | P2       | M      | —                              | TODO             |
+| 050  | One markdown module, two named dialects                           | P2       | S      | 049                            | TODO             |
+| 051  | Card import spec joins the declaration                            | P2       | L      | 043                            | TODO             |
+| 052  | Collapse the card shortcuts into one seam                         | P2       | S      | —                              | TODO             |
+| 053  | Split the at-link module at its node/session seam                 | P3       | M      | —                              | TODO             |
+| 054  | Latent-fix batch from the 2026-07-16 review                       | P1       | S      | —                              | TODO             |
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale — finding fixed independently or approach
 abandoned)
@@ -122,6 +141,21 @@ abandoned)
 - **038 → 039**: 039's shared decorate adapter and `InklingCardWrapper`
   changes build on settled selection state, not the React context mirror.
 - **036, 037** are independent of each other and can run in either order.
+- **041 → 042**: both touch the render-context seam; the allowlist shrink
+  lands first so 042's options-bag fold sees the final import-guard shape.
+- **044 → 045**: the upload-intent module patches nodes through the typed
+  write seam; 045's STOP conditions forbid bridging with the raw
+  `GeneratedDecoratorNodeBase` cast.
+- **043 → 046, 051**: both extend the card declaration following the
+  derivation pattern 043 establishes; each instructs its executor to read
+  043's landed commits before its own Step 2.
+- **047 → 048**: `CardConfig` lives in the composer context 047 splits; 048
+  locates the landed shape by grep and STOPs if 047 hasn't landed. 048 is
+  the batch's only public-surface break and ships the 2.0.0 version bump.
+- **049 → 050**: 050's dialect module references the transformer data and
+  MIME constants 049 relocates to a headless home.
+- **054** is independent and absorbs none of its siblings' scope; the plan
+  records which review findings are owned by 043/047/048/053.
 
 Recommended first wave (all independent): 001, 004, 005, 006, 013, 015, 019.
 Second wave: 002, 003 (after 001), 007, 009, 010, 011, 016, 017, 020, 023.
@@ -149,6 +183,22 @@ For the 2026-07-15 deepening set, execute in the interview-agreed order:
    commit per batch.
 5. **040** (render-context policy seam) — after 037; independent of 036/038/
    039 and may slot in earlier if a security-focused window opens.
+
+For the 2026-07-16 deepening set, execute in the interview-agreed order. All
+commits land directly on `main` — the `advisor/NNN-<slug>` branch convention
+is suspended for this set by user decision:
+
+1. **041, 042** — the render-context follow-ups recorded in 040's execution
+   notes; 041 first (same seam module).
+2. **054** (latent fixes) — independent; user-facing fixes land early.
+3. **043** (insert plugins from the declaration), **044** (typed write seam)
+   — independent foundations.
+4. **045** (upload intent) — after 044. **046** (action toolbar) — after 043.
+5. **047** (composer context split), **048** (honest host interface) — 048
+   after 047; ships 2.0.0 with `verify:package`/`verify:types` gates.
+6. **049** (clipboard protocol), **050** (markdown dialects) — 050 after 049.
+7. **051** (import spec) — after 043. **052** (shortcut seam), **053**
+   (at-link split) — independent; 053 is speculative and lands last.
 
 ## 2026-07-14 evidence map
 
