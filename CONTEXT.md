@@ -35,3 +35,11 @@ _Avoid_: `$getNodeByKey` + `as GeneratedDecoratorNodeBase`
 **Card selection store**:
 The per-top-level-composer, editor-side store owning card-selection truth for non-React code: the selected card key and the edit-mode flag. Fed once by registerCardSelection, read synchronously by command handlers, subscribed to render-only by React via useCardSelection.
 _Avoid_: selection context, selection mirror, selected-card state
+
+**Upload intent**:
+The one media-upload flow module (src/utils/upload-intent.ts): file(s) plus per-card metadata extraction in, a typed node patch out through the card write seam, and the object-URL preview lifecycle created and revoked in one place. Each media card's upload is a configuration of these primitives — per-card variance (metadata extraction, empty-result policy, pre-upload src reset) stays per-card data, never a copied skeleton.
+_Avoid_: upload handler, upload helper
+
+**Preview lease**:
+The owned lifetime of a blob object URL used as an in-editor preview: created by `createPreviewLease`, released exactly once by `release()` (idempotent), bridged to React state by `usePreviewLease`. Replacing or clearing a preview releases the previous lease; unmounting releases whatever is still held.
+_Avoid_: preview URL ref, object-URL ref

@@ -342,7 +342,7 @@ export function audioUploadIntent({
   })
 }
 
-export const stripFileExtension = (fileName: string): string => {
+const stripFileExtension = (fileName: string): string => {
   const fileExtension = fileName.split('.').pop() ?? ''
   const fileNameWithoutExtension = fileName.replace(`.${fileExtension}`, '')
   return fileNameWithoutExtension
@@ -401,12 +401,6 @@ export function audioThumbnailUploadIntent({
       node.thumbnailSrc = resultUrl ?? ''
     },
   })
-}
-
-export interface BackgroundImageUploadResult {
-  imageSrc: string | undefined
-  width: number
-  height: number
 }
 
 export interface VideoUploadMetadata {
