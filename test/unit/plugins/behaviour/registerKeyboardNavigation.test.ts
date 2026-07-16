@@ -373,6 +373,64 @@ describe('registerKeyboardNavigation', () => {
     unregister()
   })
 
+  it('does not handle escape when nothing is selected in a top-level editor', async () => {
+    mounted = mountEditor(editor)
+    const cleanup = registerWithCardKey(null)
+
+    const result = await dispatchAndCommit(editor, KEY_ESCAPE_COMMAND, new KeyboardEvent('keydown', { key: 'Escape' }))
+    expect(result).toBe(false)
+
+    cleanup()
+  })
+
+  it('does not handle escape when a card is selected but not editing', async () => {
+    let cardKey = ''
+    await updateEditor(editor, () => {
+      const root = $getRoot()
+      const image = $createImageNode({ src: '/image.png' })
+      root.append(image)
+      cardKey = image.getKey()
+    })
+
+    mounted = mountEditor(editor)
+    const cleanup = registerWithCardKey(cardKey)
+
+    const result = await dispatchAndCommit(editor, KEY_ESCAPE_COMMAND, new KeyboardEvent('keydown', { key: 'Escape' }))
+    expect(result).toBe(false)
+
+    cleanup()
+  })
+
+  it('handles escape in a nested editor by focusing the parent root', async () => {
+    const parentEditor = createTestEditor()
+    const parentRoot = document.createElement('div')
+    parentRoot.contentEditable = 'true'
+    document.body.appendChild(parentRoot)
+    parentEditor.setRootElement(parentRoot)
+    const focusSpy = vi.spyOn(parentRoot, 'focus')
+
+    const nestedEditor = createEditor({
+      namespace: 'nested',
+      nodes: KEYBOARD_TEST_NODES as [],
+      parentEditor,
+      onError: () => {},
+    })
+    mounted = mountEditor(nestedEditor)
+    const cleanup = registerKeyboardNavigation(nestedEditor, { store })
+
+    const result = await dispatchAndCommit(
+      nestedEditor,
+      KEY_ESCAPE_COMMAND,
+      new KeyboardEvent('keydown', { key: 'Escape' }),
+    )
+    expect(result).toBe(true)
+    expect(focusSpy).toHaveBeenCalled()
+
+    cleanup()
+    focusSpy.mockRestore()
+    parentRoot.remove()
+  })
+
   it('prevents tab from leaving the editor', async () => {
     await updateEditor(editor, () => {
       const root = $getRoot()

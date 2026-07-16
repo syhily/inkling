@@ -16,18 +16,23 @@ export function registerEscapeCommand(editor: LexicalEditor, deps: KeyboardNavig
     () => {
       const { selectedCardKey, isEditingCard } = store.getState()
       const parentEditor = getParentEditor(editor)
+      let handled = false
 
       if (selectedCardKey && isEditingCard) {
         ;(parentEditor || editor).dispatchCommand(SELECT_CARD_COMMAND, {
           cardKey: selectedCardKey,
         })
+        handled = true
       }
 
       if (parentEditor) {
         parentEditor.getRootElement()?.focus()
+        handled = true
       }
 
-      return true
+      // only claim the event when something acted so Escape can propagate to
+      // lower-priority listeners otherwise
+      return handled
     },
     COMMAND_PRIORITY_LOW,
   )
