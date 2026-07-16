@@ -41,8 +41,8 @@ export class HeaderNode extends BaseHeaderNode {
   // override the default `isEmpty` check because we need to check the nested editors
   // rather than the data properties themselves
   isEmpty() {
-    const isHtmlEmpty = this.__headerTextEditor!.getEditorState().read($canShowPlaceholderCurry(false))
-    const isSubHtmlEmpty = this.__subheaderTextEditor!.getEditorState().read($canShowPlaceholderCurry(false))
+    const isHtmlEmpty = this.__headerTextEditor.getEditorState().read($canShowPlaceholderCurry(false))
+    const isSubHtmlEmpty = this.__subheaderTextEditor.getEditorState().read($canShowPlaceholderCurry(false))
     return (
       isHtmlEmpty &&
       isSubHtmlEmpty &&

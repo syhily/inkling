@@ -24,7 +24,8 @@ export type CodeBlockNodeDataset = CodeBlockData &
 export const CodeBlockNode = assembleCardNode(codeBlockDeclaration)
 export type CodeBlockNode = InstanceType<typeof CodeBlockNode> & {
   __openInEditMode: boolean
-  __captionEditor: LexicalEditor | null
+  // non-null: the constructor's nested-editor setup always assigns an editor
+  __captionEditor: LexicalEditor
   __captionEditorInitialState: EditorState | undefined
 }
 

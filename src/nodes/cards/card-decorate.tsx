@@ -76,15 +76,24 @@ const DECORATE_RENDER = {
       nodeKey={node.getKey()}
     />
   ),
-  callout: (node: CalloutNode) => (
-    <CalloutNodeComponent
-      backgroundColor={node.backgroundColor}
-      calloutEmoji={node.calloutEmoji}
-      calloutTextEditor={node.__calloutTextEditor}
-      calloutTextEditorInitialState={node.__calloutTextEditorInitialState}
-      nodeKey={node.getKey()}
-    />
-  ),
+  callout: (node: CalloutNode) => {
+    // Null only inside the headless markdown round-trip editor (the card
+    // transformers null the nested editors after plain-text import), which
+    // never reconciles decorators — guard so the field type stays honest.
+    if (!node.__calloutTextEditor) {
+      return null
+    }
+
+    return (
+      <CalloutNodeComponent
+        backgroundColor={node.backgroundColor}
+        calloutEmoji={node.calloutEmoji}
+        calloutTextEditor={node.__calloutTextEditor}
+        calloutTextEditorInitialState={node.__calloutTextEditorInitialState}
+        nodeKey={node.getKey()}
+      />
+    )
+  },
   codeblock: (node: CodeBlockNode) => (
     <CodeBlockNodeComponent
       captionEditor={node.__captionEditor}
@@ -167,15 +176,22 @@ const DECORATE_RENDER = {
       </>
     )
   },
-  toggle: (node: ToggleNode) => (
-    <ToggleNodeComponent
-      contentEditor={node.__contentEditor!}
-      contentEditorInitialState={node.__contentEditorInitialState}
-      headingEditor={node.__titleEditor!}
-      headingEditorInitialState={node.__titleEditorInitialState}
-      nodeKey={node.getKey()}
-    />
-  ),
+  toggle: (node: ToggleNode) => {
+    // Same headless-round-trip invariant as callout's nested editor above.
+    if (!node.__titleEditor || !node.__contentEditor) {
+      return null
+    }
+
+    return (
+      <ToggleNodeComponent
+        contentEditor={node.__contentEditor}
+        contentEditorInitialState={node.__contentEditorInitialState}
+        headingEditor={node.__titleEditor}
+        headingEditorInitialState={node.__titleEditorInitialState}
+        nodeKey={node.getKey()}
+      />
+    )
+  },
   video: (node: VideoNode) => {
     const cardWidth = normalizeCardWidth(node.cardWidth) ?? 'regular'
 

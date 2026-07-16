@@ -35,8 +35,16 @@ export class ToggleNode extends BaseToggleNode {
   static cardMenu = CARD_MENUS.toggle
 
   isEmpty() {
-    const isTitleEmpty = this.__titleEditor!.getEditorState().read($canShowPlaceholderCurry(false))
-    const isContentEmpty = this.__contentEditor!.getEditorState().read($canShowPlaceholderCurry(false))
+    // Null only inside the headless markdown round-trip editor (the toggle
+    // card transformer nulls both nested editors after plain-text import), and
+    // isEmpty is dispatched from commands those transient nodes never see —
+    // guard so the `| null` field type stays honest. A nulled toggle is never
+    // auto-removed.
+    if (!this.__titleEditor || !this.__contentEditor) {
+      return false
+    }
+    const isTitleEmpty = this.__titleEditor.getEditorState().read($canShowPlaceholderCurry(false))
+    const isContentEmpty = this.__contentEditor.getEditorState().read($canShowPlaceholderCurry(false))
     return isTitleEmpty && isContentEmpty
   }
 

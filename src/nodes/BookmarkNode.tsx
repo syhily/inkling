@@ -19,8 +19,10 @@ export type BookmarkNodeDataset = BookmarkData &
 export class BookmarkNode extends BaseBookmarkNode {
   // nested editors live on the generated base class (static `nestedEditors`);
   // `declare` keeps these type-only so the field initializers don't clobber
-  // the instances the base constructor sets up
-  declare __captionEditor: LexicalEditor | null
+  // the instances the base constructor sets up. Non-null: the constructor's
+  // nested-editor setup always assigns an editor (only the video/gallery/
+  // callout/toggle editors are ever nulled, by the markdown card transformers).
+  declare __captionEditor: LexicalEditor
   declare __captionEditorInitialState: import('lexical').EditorState | undefined
   __createdWithUrl
 

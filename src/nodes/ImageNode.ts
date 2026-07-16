@@ -33,7 +33,10 @@ export const ImageNode = assembleCardNode(imageDeclaration)
 export type ImageNode = InstanceType<typeof ImageNode> & {
   __triggerFileDialog: boolean
   __previewSrc: string | null
-  __captionEditor: LexicalEditor | undefined
+  // non-null: the constructor's nested-editor setup always assigns an editor
+  // (only the video/gallery/callout/toggle editors are ever nulled, by the
+  // markdown card transformers)
+  __captionEditor: LexicalEditor
   __captionEditorInitialState: EditorState | undefined
   __initialFile: File | undefined
   __selector: React.ComponentType<{ nodeKey: NodeKey }> | undefined
