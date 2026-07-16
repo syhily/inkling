@@ -486,3 +486,33 @@ Reverting commit 3 restores the dual-argument dispatch and `RendererOptions`
 wholesale; commits 1-2 remain valid underneath it. The characterization
 evidence is the pre-existing per-card suite — no new fixtures to preserve or
 restore.
+
+## Execution notes
+
+Plan 042 landed in three commits on main (`9cf6642..c40363f`), after the
+plan-041 drift check confirmed its evidence was still fresh. Commit 1
+(`9cf6642`) carried the image (`imageOptimization` as a frozen snapshot, the
+`canTransformImage*` callbacks by reference) and markdown (`inklingVersion`)
+data fields onto the context and moved the pinned markdown `TypeError` into
+the factory — for non-markdown cards a truthy-non-function `createDocument`
+now throws at context construction instead of first document use (unpinned,
+both `TypeError`s). Commit 2 (`fd4c49f`) migrated the remaining options
+reads; the only test edit was `srcset-attribute.test.ts`, whose five call
+sites now build a context via `createRenderContext(...)` with identical
+expectations. Commit 3 (`c40363f`) folded the signatures: `RenderFn` is
+`(node, context)` (bivariant hack kept and re-commented), all 14 card
+renderers, the transformers, and `TextContent` receive only the context;
+`RendererOptions`, `src/html/renderer/types.ts`, and the five renderer-local
+options interfaces were deleted; `TextContent`'s unreachable dom-guard throw
+was removed (unpinned). The public entry points (`exportDOM(editor,
+options)`, `$convertToHtmlString`, `LexicalHTMLRenderer.render`) are
+unchanged — the fold is internal. `27a233a` mapped the plan-042 data fields
+in the seam's module header after review. One review nit deferred to plan
+048: public `utils.visibility.renderWithVisibility`'s third param retyped
+from `{ target?: string }` to `Pick<RenderContext, 'target'>`, making the
+key required — 048's public-surface pass owns the decision. Gates at HEAD:
+nodes-base+html-renderer 46 files / 735 passed / 21 todo (730 + 5 new seam
+tests); full unit 206 files / 1712 passed / 21 todo; typecheck clean; lint
+0/0; format:check clean; verify:package PASS (76 exports); verify:types
+PASS. The packed declaration gained only the deliberate additive
+`inklingVersion?: string` on `ExportDOMOptionsBase`.
