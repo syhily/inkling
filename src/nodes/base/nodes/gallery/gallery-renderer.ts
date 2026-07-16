@@ -1,6 +1,7 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 import type { GalleryImage } from '@/types/gallery'
 
+import { MAX_PER_ROW } from '@/nodes/base/nodes/gallery/GalleryNode'
 import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
@@ -20,8 +21,6 @@ interface GalleryNodeData {
   images: GalleryImage[]
   caption: string
 }
-
-const MAX_IMG_PER_ROW = 3
 
 function isValidImage(image: unknown, context: RenderContext): image is ValidGalleryImage {
   if (typeof image !== 'object' || image === null) {
@@ -57,7 +56,7 @@ function buildStructure(images: ValidGalleryImage[]) {
   images.forEach((image: ValidGalleryImage, idx: number) => {
     let row = image.row
 
-    if (noOfImages > 1 && noOfImages % MAX_IMG_PER_ROW === 1 && idx === noOfImages - 2) {
+    if (noOfImages > 1 && noOfImages % MAX_PER_ROW === 1 && idx === noOfImages - 2) {
       row = row + 1
     }
     if (!rows[row]) {
