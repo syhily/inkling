@@ -357,14 +357,9 @@ function useSlashCardMenu(editor: LexicalEditor) {
   // build up the card menu based on registered nodes and current search
   React.useEffect(() => {
     const cardNodes = getEditorCardNodes(editor)
-    setCardMenu(
-      buildCardMenu(cardNodes, { insert, query, config: cardConfig } as {
-        query?: string
-        config?: typeof cardConfig
-      }),
-    )
+    setCardMenu(buildCardMenu(cardNodes, { query, config: cardConfig }))
     setSelectedItemIndex(0)
-  }, [editor, query, insert, setCardMenu, setSelectedItemIndex, cardConfig])
+  }, [editor, query, setCardMenu, setSelectedItemIndex, cardConfig])
 
   // attach a resize observer to call setMenuPosition when the window resizes
   React.useEffect(() => {
