@@ -316,3 +316,51 @@ naming state, including `docs/markdown-api.md` and `CONTEXT.md`, with zero
 test churn. If only the docs edits prove contentious, they can be reverted
 in isolation from the same commit since the module itself is internal and
 inert.
+
+## Execution notes
+
+Plan 050 landed in two commits on main (`a0a8662..daa4f9f`) plus a
+post-review cleanup (`f1d058d`). Step 1 (`a0a8662`) pinned the two
+dialects: card-fence paste imports as a code block card (language
+`inkling:bookmark`, code = JSON body + trailing `\n` — not a bookmark
+card), the paste extras (`==marked==` → highlight, `~sub~`/`^sup^` →
+sub/superscript, footnote flattened with href stripped by sanitizeHtml),
+and the round-trip side (footnote literal, sub/sup symmetry). Step 2
+(`daa4f9f`) created `src/markdown/dialects.ts` naming the seam
+(`PASTE_DIALECT`, `CARD_AWARE_ROUND_TRIP_DIALECT`, `MarkdownDialect`) with
+the merge question deliberately open; citations are header comments only
+(the plan sanctions a name-only seam over contrived imports), the barrel
+and public signatures untouched.
+
+One plan-evidence defect, handled per the plan's own "pin the code"
+override: the plan claimed `==marked==` does not convert in the
+round-trip dialect — it does (`@lexical/markdown`'s
+TEXT_FORMAT_TRANSFORMERS include HIGHLIGHT). The pins, the dialects
+header, `docs/markdown-api.md`, and CONTEXT.md all state the corrected
+fact: footnotes are the round-trip dialect's only real miss among the
+extras; `==`/`~`/`^` convert in both. The orchestration correction about
+the image card (`![alt](src)`, not a fence) was confirmed against
+`IMAGE_CARD_TRANSFORMER` and is reflected everywhere the fence family is
+listed.
+
+Judgment calls recorded in `daa4f9f` and ratified in review: no
+clipboard-protocol wiring into `dialects.ts` (plan 049 put the MIME
+constants in `src/plugins/behaviour/`, so it would not have been the pure
+import change the plan conditioned on); the internal barrel re-export
+skipped as dead surface; the dialect module's exports intentionally have
+no runtime importer — the header owns facts stated nowhere else, and the
+pins anchor most of them against drift.
+
+Reviews: spec and quality both APPROVED. Post-review fixes in `f1d058d`:
+the footnote pin now registers `HorizontalRuleNode` in the harness and
+asserts the real-editor result (an HR card, not an empty-paragraph
+harness artifact); four doc/comment nits (stale `MARKDOWN_NODES` line
+range, "this dialect's" → "the round-trip dialect's", `<br>` strip
+qualified as unless-`allowBr` in both places, and the `inkling:markdown`
+fence's actual home `@/markdown/card-transformers` cited).
+
+Gates at HEAD: full unit 222 files / 1935 passed / 21 todo;
+nodes-base+html-renderer 46 files / 736 passed / 21 todo;
+typecheck/lint/format clean; `verify:package` PASS (64 exports unchanged
+— the barrel never moved); `verify:types` PASS. Zero edits to
+pre-existing test expectations across the range.
