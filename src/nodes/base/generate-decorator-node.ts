@@ -73,17 +73,14 @@ function validateArguments(nodeType: string, properties: readonly DecoratorNodeP
 }
 
 /**
- * @typedef {Object} DecoratorNodeProperty
- * @property {string} name - The property's name.
- * @property {*} default - The property's default value
- * @property {('url'|'html'|'markdown'|null)} urlType - If the property contains a URL, the URL's type: 'url', 'html' or 'markdown'. Use 'url' is the property contains only a URL, 'html' or 'markdown' if the property contains HTML or markdown code, that may contain URLs.
- * @property {boolean} wordCount - Whether the property should be counted in the word count
- *
- * @param {string} nodeType – The node's type (must be unique)
- * @param {DecoratorNodeProperty[]} properties - An array of properties for the generated class
- * @param {boolean} hasVisibility - Whether to add a visibility property to the node
- * @param {Function} defaultRenderFn - A function that returns an ExportDOM-compatible object, e.g. {element: Div, type: 'inner}
- * @returns {Object} - The generated class.
+ * One declarative property of a generated card node. `name` and `default`
+ * drive the dataset typing (via `DecoratorNodeValueMap`); `default` also
+ * seeds the constructor and `getPropertyDefaults`. `urlType` marks the
+ * property as URL-bearing — 'url' when it holds only a URL, 'html' or
+ * 'markdown' when its content may contain URLs — for the out-of-repo
+ * `urlTransformMap` consumer, and `urlPath` remaps the key used there.
+ * `wordCount` includes the property in the node's text content.
+ * `privateName` overrides the backing `__<name>` field.
  */
 export interface DecoratorNodeProperty<Name extends string = string, Default = unknown> {
   name: Name
@@ -321,7 +318,7 @@ export function generateDecoratorNode<
   validateArguments(nodeType, nodeProperties)
 
   // Adds a `privateName` field to the properties for convenience (e.g. `__name`):
-  // properties: [{name: 'name', privateName: '__name', type: 'string', default: 'hello'}, {...}]
+  // properties: [{name: 'name', privateName: '__name', default: 'hello'}, {...}]
   const internalProps = nodeProperties.map((prop) => {
     return Object.defineProperties(
       {},

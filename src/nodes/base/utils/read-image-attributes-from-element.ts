@@ -17,12 +17,17 @@ export function readImageAttributesFromElement(element: HTMLImageElement) {
     attrs.height = parseInt(element.dataset.height, 10)
   }
 
-  if (!element.width && !element.height && element.getAttribute('data-image-dimensions')) {
-    const match = /^(\d*)x(\d*)$/gi.exec(element.getAttribute('data-image-dimensions')!)
-    if (match) {
-      const [, width, height] = match
-      attrs.width = parseInt(width, 10)
-      attrs.height = parseInt(height, 10)
+  if (!element.width && !element.height) {
+    const dimensions = element.getAttribute('data-image-dimensions')
+    if (dimensions) {
+      // both capture groups must carry digits — /^(\d*)x(\d*)$/ matched
+      // inputs like 'x' or '640x' and stored NaN widths/heights
+      const match = /^(\d+)x(\d+)$/gi.exec(dimensions)
+      if (match) {
+        const [, width, height] = match
+        attrs.width = parseInt(width, 10)
+        attrs.height = parseInt(height, 10)
+      }
     }
   }
 
@@ -34,8 +39,13 @@ export function readImageAttributesFromElement(element: HTMLImageElement) {
     attrs.title = element.title
   }
 
-  if (element.parentNode && (element.parentNode as HTMLElement).tagName === 'A') {
-    const href = (element.parentNode as HTMLAnchorElement).href
+  // tagName rather than instanceof: the imported document can come from
+  // another realm (a separate JSDOM in tests), where the global
+  // HTMLAnchorElement wouldn't match; the `in` + typeof checks then prove
+  // the href property without a cast
+  const parent = element.parentElement
+  if (parent?.tagName === 'A' && 'href' in parent && typeof parent.href === 'string') {
+    const href = parent.href
 
     if (href !== attrs.src) {
       attrs.href = href

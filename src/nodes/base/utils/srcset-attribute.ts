@@ -68,7 +68,7 @@ export const setSrcsetAttribute = function (
   image: { src: string; width: number },
   context: RenderContext,
 ) {
-  if (!elem || !['IMG', 'SOURCE'].includes(elem.tagName) || !elem.getAttribute('src') || !image) {
+  if (!elem || !['IMG', 'SOURCE'].includes(elem.tagName) || !elem.getAttribute('src')) {
     return
   }
 

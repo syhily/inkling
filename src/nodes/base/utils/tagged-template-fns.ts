@@ -14,7 +14,8 @@ const oneline = function (strings: TemplateStringsArray | string, ...values: unk
 
   // Handle tagged template literal case
   const result = strings.reduce((acc: string, str: string, i: number) => {
-    return acc + str + (values[i] || '')
+    // String() so falsy-but-real values (0, false) render instead of vanishing
+    return acc + str + String(values[i] ?? '')
   }, '')
   // Remove newline+indentation patterns while preserving intentional whitespace
   return _oneline(result)

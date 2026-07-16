@@ -24,7 +24,6 @@ export function wrapReplacementStrings(html: string) {
 }
 
 /**
- // oxlint-disable-next-line typescript/no-explicit-any
  * Removes any <code> wrappers around replacement strings {foo}
  * Example input:  <code><span>{foo}</span></code>
  * Example output:       <span>{foo}</span>

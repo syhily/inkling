@@ -1,10 +1,10 @@
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 
 export function truncateText(text: string, maxLength: number) {
-  if (text && text.length > maxLength) {
+  if (text.length > maxLength) {
     return text.substring(0, maxLength - 1).trim() + '\u2026'
   } else {
-    return text ?? ''
+    return text
   }
 }
 
@@ -20,7 +20,7 @@ export function truncateHtml(text: string, maxLength: number, maxLengthMobile?: 
     return escapeHtml(text)
   }
 
-  if (text && text.length > maxLengthMobile) {
+  if (text.length > maxLengthMobile) {
     let ellipsis = ''
 
     if (text.length > maxLengthMobile && text.length <= maxLength) {
@@ -37,6 +37,6 @@ export function truncateHtml(text: string, maxLength: number, maxLengthMobile?: 
       ellipsis
     )
   } else {
-    return escapeHtml(text ?? '')
+    return escapeHtml(text)
   }
 }
