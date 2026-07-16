@@ -1,12 +1,12 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
-import { AudioNode, $createAudioNode } from '@/nodes/AudioNode'
-import { AudioNodeComponent } from '@/nodes/AudioNodeComponent'
+import { FileNode, $createFileNode } from '@/nodes/FileNode'
+import FileNodeComponent from '@/nodes/FileNodeComponent'
 import { openFileSelection } from '@/utils/openFileSelection'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -18,7 +18,7 @@ vi.mock('@/utils/openFileSelection', () => ({
 }))
 
 function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes: [AudioNode], onError: () => {} })
+  return createEditor({ namespace: 'test', nodes: [FileNode], onError: () => {} })
 }
 
 function flushMacrotask(): Promise<void> {
@@ -33,7 +33,7 @@ function createCardContext(overrides: Partial<React.ContextType<typeof CardConte
     isEditing: false,
     captionHasFocus: null,
     cardWidth: 'regular',
-    nodeKey: 'audio-1',
+    nodeKey: 'file-1',
     cardContainerRef: { current: null } as React.RefObject<HTMLElement | null>,
     setCardWidth: vi.fn(),
     setCaptionHasFocus: vi.fn(),
@@ -42,15 +42,15 @@ function createCardContext(overrides: Partial<React.ContextType<typeof CardConte
   }
 }
 
-function createComposerContext({ upload = vi.fn(() => Promise.resolve(undefined)), isLoading = false } = {}) {
+function createComposerContext(upload: ReturnType<typeof vi.fn> = vi.fn(() => Promise.resolve(undefined))) {
   return {
     fileUploader: {
       useFileUpload: () => ({
-        isLoading,
+        isLoading: false,
         upload,
         errors: [],
       }),
-      fileTypes: { audio: { mimeTypes: ['audio/mpeg'] }, image: { mimeTypes: ['image/png'] } },
+      fileTypes: { file: { mimeTypes: ['application/pdf'] } },
     },
     cardConfig: {},
     darkMode: false,
@@ -62,24 +62,12 @@ function createComposerContext({ upload = vi.fn(() => Promise.resolve(undefined)
   }
 }
 
-function addAudioNode(editor: LexicalEditor) {
+function addFileNode(editor: LexicalEditor, dataset: { src?: string; triggerFileDialog?: boolean } = {}) {
   return new Promise<NodeKey>((resolve) => {
     editor.update(
       () => {
-        const audioNode = new AudioNode({ src: '/audio.mp3', title: 'Episode 1', duration: 125 })
-        $getRoot().append(audioNode)
-      },
-      { onUpdate: () => resolve(editor.getEditorState().read(() => $getRoot().getFirstChildOrThrow().getKey())) },
-    )
-  })
-}
-
-function addTriggerAudioNode(editor: LexicalEditor) {
-  return new Promise<NodeKey>((resolve) => {
-    editor.update(
-      () => {
-        const audioNode = $createAudioNode({ triggerFileDialog: true })
-        $getRoot().append(audioNode)
+        const fileNode = $createFileNode(dataset)
+        $getRoot().append(fileNode)
       },
       { onUpdate: () => resolve(editor.getEditorState().read(() => $getRoot().getFirstChildOrThrow().getKey())) },
     )
@@ -88,57 +76,45 @@ function addTriggerAudioNode(editor: LexicalEditor) {
 
 function readTriggerFileDialog(editor: LexicalEditor, nodeKey: NodeKey) {
   return editor.getEditorState().read(() => {
-    const node = $getNodeByKey(nodeKey) as AudioNode | null
+    const node = $getNodeByKey(nodeKey) as FileNode | null
     return node?.__triggerFileDialog
   })
 }
 
-describe('AudioNodeComponent', () => {
+describe('FileNodeComponent', () => {
   let editor: LexicalEditor
-  let createObjectURLSpy: ReturnType<typeof vi.spyOn>
-  let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(async () => {
     vi.clearAllMocks()
     editor = createTestEditor()
     const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
     useLexicalComposerContext.mockReturnValue([editor])
-    createObjectURLSpy = vi.spyOn(globalThis.URL, 'createObjectURL').mockReturnValue('blob:audio-preview')
-    revokeObjectURLSpy = vi.spyOn(globalThis.URL, 'revokeObjectURL').mockImplementation(() => {})
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   interface RenderOptions {
-    src?: string
+    fileSrc?: string
     triggerFileDialog?: boolean
     initialFile?: File
     upload?: ReturnType<typeof vi.fn>
-    isLoading?: boolean
   }
 
   function renderComponent(nodeKey: NodeKey, options: RenderOptions = {}) {
-    const {
-      src = '/audio.mp3',
-      triggerFileDialog = false,
-      initialFile = undefined,
-      upload = vi.fn(() => Promise.resolve(undefined)),
-      isLoading = false,
-    } = options
-    const composerValue = createComposerContext({ upload, isLoading })
+    const { fileSrc = '', triggerFileDialog = false, initialFile = undefined, upload } = options
+    const composerValue = createComposerContext(upload)
     const cardValue = createCardContext()
     return render(
       <InklingComposerContext.Provider value={composerValue}>
         <CardContext.Provider value={cardValue}>
-          <AudioNodeComponent
-            duration={125}
+          <FileNodeComponent
+            fileDesc=""
+            fileDescPlaceholder="Add a description"
+            fileName=""
+            fileSize=""
+            fileSrc={fileSrc}
+            fileTitle=""
+            fileTitlePlaceholder="Add a title"
             initialFile={initialFile}
             nodeKey={nodeKey}
-            src={src}
-            thumbnailSrc=""
-            title="Episode 1"
             triggerFileDialog={triggerFileDialog}
           />
         </CardContext.Provider>
@@ -146,19 +122,18 @@ describe('AudioNodeComponent', () => {
     )
   }
 
-  it('renders with typed audio card props', async () => {
-    const nodeKey = await addAudioNode(editor)
+  it('renders the empty card when no file is set', async () => {
+    const nodeKey = await addFileNode(editor)
 
     renderComponent(nodeKey)
 
-    expect(screen.getByTestId('audio-card-populated')).toBeTruthy()
-    expect((screen.getByTestId('audio-title') as HTMLInputElement).value).toBe('Episode 1')
+    expect(screen.getByTestId('media-placeholder')).toBeTruthy()
   })
 
   it('opens the file dialog once when triggerFileDialog is true', async () => {
-    const nodeKey = await addTriggerAudioNode(editor)
+    const nodeKey = await addFileNode(editor, { triggerFileDialog: true })
 
-    renderComponent(nodeKey, { src: '', triggerFileDialog: true })
+    renderComponent(nodeKey, { triggerFileDialog: true })
 
     await waitFor(() => {
       expect(openFileSelection).toHaveBeenCalledTimes(1)
@@ -171,39 +146,23 @@ describe('AudioNodeComponent', () => {
   })
 
   it('uploads the initial file when the card has no src', async () => {
-    const nodeKey = await addTriggerAudioNode(editor)
+    const nodeKey = await addFileNode(editor)
     const upload = vi.fn(() => Promise.resolve(undefined))
-    const file = new File(['audio'], 'episode.mp3', { type: 'audio/mpeg' })
+    const file = new File(['file-body'], 'report.pdf', { type: 'application/pdf' })
 
-    renderComponent(nodeKey, { src: '', initialFile: file, upload })
+    renderComponent(nodeKey, { initialFile: file, upload })
 
     await waitFor(() => {
       expect(upload).toHaveBeenCalledWith([file])
     })
-
-    // the object URL is leased for metadata and released when the flow ends
-    expect(createObjectURLSpy).toHaveBeenCalledExactlyOnceWith(file)
-    expect(revokeObjectURLSpy).toHaveBeenCalledExactlyOnceWith('blob:audio-preview')
   })
 
   it('does not upload the initial file when the card already has a src', async () => {
-    const nodeKey = await addAudioNode(editor)
+    const nodeKey = await addFileNode(editor, { src: '/existing.pdf' })
     const upload = vi.fn(() => Promise.resolve(undefined))
-    const file = new File(['audio'], 'episode.mp3', { type: 'audio/mpeg' })
+    const file = new File(['file-body'], 'report.pdf', { type: 'application/pdf' })
 
-    renderComponent(nodeKey, { src: '/audio.mp3', initialFile: file, upload })
-
-    // the mount effect runs synchronously; give any async work a chance to fire
-    await flushMacrotask()
-    expect(upload).not.toHaveBeenCalled()
-  })
-
-  it('does not upload the initial file while the uploader is loading', async () => {
-    const nodeKey = await addTriggerAudioNode(editor)
-    const upload = vi.fn(() => Promise.resolve(undefined))
-    const file = new File(['audio'], 'episode.mp3', { type: 'audio/mpeg' })
-
-    renderComponent(nodeKey, { src: '', initialFile: file, upload, isLoading: true })
+    renderComponent(nodeKey, { fileSrc: '/existing.pdf', initialFile: file, upload })
 
     // the mount effect runs synchronously; give any async work a chance to fire
     await flushMacrotask()

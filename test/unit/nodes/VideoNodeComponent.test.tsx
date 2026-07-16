@@ -3,13 +3,23 @@ import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { VideoNode, $createVideoNode } from '@/nodes/VideoNode'
 import { VideoNodeComponent } from '@/nodes/VideoNodeComponent'
+import extractVideoMetadata from '@/utils/extractVideoMetadata'
+import { openFileSelection } from '@/utils/openFileSelection'
+
+vi.mock('@/utils/extractVideoMetadata', () => ({
+  default: vi.fn(),
+}))
+
+vi.mock('@/utils/openFileSelection', () => ({
+  openFileSelection: vi.fn(),
+}))
 
 function createTestEditor(): LexicalEditor {
   const editor = createEditor({ namespace: 'test', nodes: [VideoNode], onError: () => {} })
@@ -41,14 +51,26 @@ function createLexicalComposerContext(editor: LexicalEditor): [LexicalEditor, { 
   return [editor, { getTheme: () => undefined }]
 }
 
-function createComposerContext() {
+type UploadMock = {
+  isLoading: boolean
+  upload: ReturnType<typeof vi.fn>
+  errors: Error[]
+}
+
+function createUploadMock(overrides: Partial<UploadMock> = {}): UploadMock {
+  return {
+    isLoading: false,
+    upload: vi.fn(() => Promise.resolve(undefined)),
+    errors: [],
+    ...overrides,
+  }
+}
+
+function createComposerContext(uploads: Record<string, UploadMock> = {}) {
+  const defaultUpload = createUploadMock()
   return {
     fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload: vi.fn(() => Promise.resolve(undefined)),
-        errors: [],
-      }),
+      useFileUpload: (type: string) => uploads[type] ?? defaultUpload,
       fileTypes: { image: { mimeTypes: ['image/png'] }, video: { mimeTypes: ['video/mp4'] } },
     },
     cardConfig: {},
@@ -81,19 +103,78 @@ function readLoop(editor: LexicalEditor, nodeKey: NodeKey) {
   return editor.getEditorState().read(() => ($getNodeByKey(nodeKey) as VideoNode | null)?.loop)
 }
 
+function flushMacrotask(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0)
+  })
+}
+
+function readVideoFields(editor: LexicalEditor, nodeKey: NodeKey) {
+  return editor.getEditorState().read(() => {
+    const node = $getNodeByKey(nodeKey) as VideoNode | null
+    if (!node) {
+      return null
+    }
+    return {
+      src: node.src,
+      duration: node.duration,
+      fileName: node.fileName,
+      width: node.width,
+      height: node.height,
+      mimeType: node.mimeType,
+      thumbnailSrc: node.thumbnailSrc,
+      thumbnailWidth: node.thumbnailWidth,
+      thumbnailHeight: node.thumbnailHeight,
+      customThumbnailSrc: node.customThumbnailSrc,
+      triggerFileDialog: node.__triggerFileDialog,
+    }
+  })
+}
+
 describe('VideoNodeComponent', () => {
   let editor: LexicalEditor
   let captionEditor: LexicalEditor
+  let createObjectURLSpy: ReturnType<typeof vi.spyOn>
+  let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
+    vi.clearAllMocks()
     editor = createTestEditor()
     captionEditor = createEditor({ namespace: 'caption', nodes: MINIMAL_NODES, onError: () => {} })
+    vi.mocked(extractVideoMetadata).mockResolvedValue({
+      duration: 61,
+      width: 640,
+      height: 360,
+      mimeType: 'video/mp4',
+      thumbnailBlob: new Blob(['thumb'], { type: 'image/jpeg' }),
+    })
+    createObjectURLSpy = vi.spyOn(globalThis.URL, 'createObjectURL').mockReturnValue('blob:video-thumb-preview')
+    revokeObjectURLSpy = vi.spyOn(globalThis.URL, 'revokeObjectURL').mockImplementation(() => {})
   })
 
-  function renderComponent(nodeKey: NodeKey, isLoopChecked: boolean) {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  interface RenderOptions {
+    initialFile?: File | null
+    thumbnail?: string
+    customThumbnail?: string
+    triggerFileDialog?: boolean
+    uploads?: Record<string, UploadMock>
+  }
+
+  function renderComponent(nodeKey: NodeKey, isLoopChecked: boolean, options: RenderOptions = {}) {
+    const {
+      initialFile = null,
+      thumbnail = 'https://example.com/thumb.jpg',
+      customThumbnail = '',
+      triggerFileDialog = false,
+      uploads = {},
+    } = options
     const collaborationValue = createCollaborationContext()
     const composerValue = createLexicalComposerContext(editor)
-    const inklingComposerValue = createComposerContext()
+    const inklingComposerValue = createComposerContext(uploads)
     const cardValue = createCardContext({ nodeKey })
 
     return render(
@@ -105,13 +186,13 @@ describe('VideoNodeComponent', () => {
                 captionEditor={captionEditor}
                 captionEditorInitialState={undefined}
                 cardWidth="regular"
-                customThumbnail=""
-                initialFile={null}
+                customThumbnail={customThumbnail}
+                initialFile={initialFile}
                 isLoopChecked={isLoopChecked}
                 nodeKey={nodeKey}
-                thumbnail="https://example.com/thumb.jpg"
+                thumbnail={thumbnail}
                 totalDuration="1:23"
-                triggerFileDialog={false}
+                triggerFileDialog={triggerFileDialog}
               />
             </CardContext.Provider>
           </InklingComposerContext.Provider>
@@ -140,5 +221,202 @@ describe('VideoNodeComponent', () => {
     await waitFor(() => {
       expect(readLoop(editor, nodeKey)).toBe(true)
     })
+  })
+
+  it('surfaces the exact metadata error and writes nothing when metadata extraction fails', async () => {
+    const nodeKey = await addVideoNode(editor, false)
+    vi.mocked(extractVideoMetadata).mockRejectedValue(new Error('Failed to load video metadata'))
+    const file = new File(['video'], 'clip.mp4', { type: 'video/mp4' })
+    const videoUpload = createUploadMock()
+
+    renderComponent(nodeKey, false, { initialFile: file, thumbnail: '', uploads: { video: videoUpload } })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('media-placeholder-errors')).toHaveTextContent(
+        'The file type you uploaded is not supported. Please use .VIDEO/MP4',
+      )
+    })
+
+    expect(videoUpload.upload).not.toHaveBeenCalled()
+    expect(readVideoFields(editor, nodeKey)).toMatchObject({
+      src: 'https://example.com/video.mp4',
+      thumbnailSrc: 'https://example.com/thumb.jpg',
+      fileName: '',
+      duration: 0,
+    })
+  })
+
+  it('writes the full patch, uploads a synthesized thumbnail, and clears the preview', async () => {
+    const nodeKey = await addVideoNode(editor, false)
+    const thumbnailBlob = new Blob(['thumb'], { type: 'image/jpeg' })
+    vi.mocked(extractVideoMetadata).mockResolvedValue({
+      duration: 61,
+      width: 640,
+      height: 360,
+      mimeType: 'video/mp4',
+      thumbnailBlob,
+    })
+    const file = new File(['video'], 'clip.mp4', { type: 'video/mp4' })
+    const videoUpload = createUploadMock({
+      upload: vi.fn().mockResolvedValue([{ url: 'https://cdn.example.com/clip.mp4' }]),
+    })
+    const thumbnailUpload = createUploadMock({
+      upload: vi.fn().mockResolvedValue([{ url: 'https://cdn.example.com/clip.mp4.jpg' }]),
+    })
+
+    renderComponent(nodeKey, false, {
+      initialFile: file,
+      uploads: { video: videoUpload, mediaThumbnail: thumbnailUpload },
+    })
+
+    await waitFor(() => {
+      expect(readVideoFields(editor, nodeKey)?.src).toBe('https://cdn.example.com/clip.mp4')
+    })
+
+    // full patch, with thumbnail dimensions backfilled because no custom thumbnail is set
+    expect(readVideoFields(editor, nodeKey)).toMatchObject({
+      src: 'https://cdn.example.com/clip.mp4',
+      duration: 61,
+      fileName: 'clip.mp4',
+      width: 640,
+      height: 360,
+      mimeType: 'video/mp4',
+      thumbnailWidth: 640,
+      thumbnailHeight: 360,
+      thumbnailSrc: 'https://cdn.example.com/clip.mp4.jpg',
+    })
+
+    // thumbnail sub-flow: a synthesized jpg File through the mediaThumbnail uploader
+    expect(thumbnailUpload.upload).toHaveBeenCalledTimes(1)
+    const [thumbnailFiles, thumbnailOptions] = thumbnailUpload.upload.mock.calls[0]
+    expect(thumbnailFiles).toHaveLength(1)
+    expect(thumbnailFiles[0]).toBeInstanceOf(File)
+    expect(thumbnailFiles[0].name).toBe('clip.mp4.jpg')
+    expect(thumbnailFiles[0].type).toBe('image/jpeg')
+    expect(thumbnailOptions).toEqual({ formData: { url: 'https://cdn.example.com/clip.mp4' } })
+
+    // the preview thumbnail is leased for the extracted blob, then released when the flow completes
+    expect(createObjectURLSpy).toHaveBeenCalledExactlyOnceWith(thumbnailBlob)
+    expect(revokeObjectURLSpy).toHaveBeenCalledExactlyOnceWith('blob:video-thumb-preview')
+  })
+
+  it('keeps custom thumbnail dimensions when a custom thumbnail is set', async () => {
+    let nodeKey = ''
+    await new Promise<void>((resolve) => {
+      editor.update(
+        () => {
+          const videoNode = $createVideoNode({
+            src: 'https://example.com/video.mp4',
+            thumbnailSrc: 'https://example.com/thumb.jpg',
+            customThumbnailSrc: 'https://example.com/custom.jpg',
+            thumbnailWidth: 111,
+            thumbnailHeight: 55,
+          })
+          $getRoot().append(videoNode)
+          nodeKey = videoNode.getKey()
+        },
+        { onUpdate: () => resolve() },
+      )
+    })
+
+    const file = new File(['video'], 'clip.mp4', { type: 'video/mp4' })
+    const videoUpload = createUploadMock({
+      upload: vi.fn().mockResolvedValue([{ url: 'https://cdn.example.com/clip.mp4' }]),
+    })
+    const thumbnailUpload = createUploadMock({
+      upload: vi.fn().mockResolvedValue([{ url: 'https://cdn.example.com/clip.mp4.jpg' }]),
+    })
+
+    renderComponent(nodeKey, false, {
+      initialFile: file,
+      customThumbnail: 'https://example.com/custom.jpg',
+      uploads: { video: videoUpload, mediaThumbnail: thumbnailUpload },
+    })
+
+    await waitFor(() => {
+      expect(readVideoFields(editor, nodeKey)?.src).toBe('https://cdn.example.com/clip.mp4')
+    })
+
+    // thumbnail dimensions are left to the custom thumbnail; the uploaded
+    // thumbnail still lands on thumbnailSrc
+    expect(readVideoFields(editor, nodeKey)).toMatchObject({
+      thumbnailWidth: 111,
+      thumbnailHeight: 55,
+      thumbnailSrc: 'https://cdn.example.com/clip.mp4.jpg',
+    })
+  })
+
+  it('clears the preview and leaves the node untouched when the upload returns no url', async () => {
+    const nodeKey = await addVideoNode(editor, false)
+    const file = new File(['video'], 'clip.mp4', { type: 'video/mp4' })
+    const videoUpload = createUploadMock({ upload: vi.fn().mockResolvedValue([{}]) })
+    const thumbnailUpload = createUploadMock()
+
+    renderComponent(nodeKey, false, {
+      initialFile: file,
+      uploads: { video: videoUpload, mediaThumbnail: thumbnailUpload },
+    })
+
+    await waitFor(() => {
+      expect(revokeObjectURLSpy).toHaveBeenCalledExactlyOnceWith('blob:video-thumb-preview')
+    })
+
+    expect(readVideoFields(editor, nodeKey)).toMatchObject({
+      src: 'https://example.com/video.mp4',
+      thumbnailSrc: 'https://example.com/thumb.jpg',
+      fileName: '',
+      duration: 0,
+    })
+    expect(thumbnailUpload.upload).not.toHaveBeenCalled()
+  })
+
+  it('opens the file dialog once when triggerFileDialog is true', async () => {
+    let nodeKey = ''
+    await new Promise<void>((resolve) => {
+      editor.update(
+        () => {
+          const videoNode = $createVideoNode({ triggerFileDialog: true })
+          $getRoot().append(videoNode)
+          nodeKey = videoNode.getKey()
+        },
+        { onUpdate: () => resolve() },
+      )
+    })
+
+    renderComponent(nodeKey, false, { triggerFileDialog: true, thumbnail: '' })
+
+    await waitFor(() => {
+      expect(openFileSelection).toHaveBeenCalledTimes(1)
+    })
+
+    // the flag is cleared on the node so a re-render does not trigger it again
+    await waitFor(() => {
+      expect(readVideoFields(editor, nodeKey)?.triggerFileDialog).toBe(false)
+    })
+  })
+
+  it('uploads the initial file even when the card already has a src', async () => {
+    const nodeKey = await addVideoNode(editor, false)
+    const file = new File(['video'], 'clip.mp4', { type: 'video/mp4' })
+    const videoUpload = createUploadMock()
+
+    renderComponent(nodeKey, false, { initialFile: file, uploads: { video: videoUpload } })
+
+    await waitFor(() => {
+      expect(videoUpload.upload).toHaveBeenCalledWith([file])
+    })
+  })
+
+  it('does not upload the initial file while the uploader is loading', async () => {
+    const nodeKey = await addVideoNode(editor, false)
+    const file = new File(['video'], 'clip.mp4', { type: 'video/mp4' })
+    const videoUpload = createUploadMock({ isLoading: true })
+
+    renderComponent(nodeKey, false, { initialFile: file, uploads: { video: videoUpload } })
+
+    // the mount effect runs synchronously; give any async work a chance to fire
+    await flushMacrotask()
+    expect(videoUpload.upload).not.toHaveBeenCalled()
+    expect(extractVideoMetadata).not.toHaveBeenCalled()
   })
 })
