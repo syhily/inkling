@@ -20,7 +20,10 @@ import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
  * node set and transformers (headings, lists, quotes, links, code blocks,
  * horizontal rules, sub/superscript, etc.).
  *
- * Design notes and limitations are documented in `docs/markdown-api.md`.
+ * This is the card-aware round-trip dialect of Inkling's two markdown
+ * dialects — see `@/markdown/dialects` for the seam facts and the open
+ * merge question. Design notes and limitations are documented in
+ * `docs/markdown-api.md`.
  */
 
 // The pre-declaration markdown card order — pinned so the derived views stay

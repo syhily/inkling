@@ -1,3 +1,6 @@
+// The paste dialect of Inkling's two markdown dialects — markdown-it →
+// sanitize → Lexical HTML import. See `@/markdown/dialects` for the seam
+// facts and the open merge question.
 import { $insertDataTransferForRichText } from '@lexical/clipboard'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { mergeRegister, $getSelection, $isRangeSelection, COMMAND_PRIORITY_LOW } from 'lexical'

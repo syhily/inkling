@@ -1,6 +1,8 @@
 import type { ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
+// The markdown card's HTML export shares the paste dialect's markdown-it
+// engine (`@/markdown/markdown-html-renderer`) — see `@/markdown/dialects`.
 import { render } from '@/markdown/markdown-html-renderer'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 
