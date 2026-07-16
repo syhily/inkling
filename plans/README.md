@@ -89,7 +89,7 @@ Repo quick reference (verification gates used by every plan):
 | 051 | Card import spec joins the declaration | P2 | L | 043 | TODO |
 | 052 | Collapse the card shortcuts into one seam | P2 | S | — | TODO |
 | 053 | Split the at-link module at its node/session seam | P3 | M | — | TODO |
-| 054 | Latent-fix batch from the 2026-07-16 review | P1 | S | — | TODO |
+| 054 | Latent-fix batch from the 2026-07-16 review | P1 | S | — | DONE (`8a131e6`) |
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale — finding fixed independently or approach
 abandoned)

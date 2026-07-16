@@ -337,3 +337,28 @@ Step 5 touches only a context comment), so reverts do not cascade. If the
 batch must be abandoned wholesale, `git revert` the step commits in reverse
 order; the baseline totals above are the proof the tree is back to
 `d998080` behavior.
+
+## Execution notes
+
+Plan 054 landed in five commits on main (`48be55d..8a131e6`), one per item.
+Item 1 (`48be55d`) repaired the cardWidth sync in `InklingCardWrapper` — the
+`setCardWidth(cardWidth)` self-write was a true no-op; the context state is
+load-bearing (image toolbar active states, the figure data attribute), so a
+dedicated effect keyed on the normalized width now syncs state from the
+prop. Two new tests fail pre-fix and pass post-fix. Item 2 (`ffc5ee8`)
+replaced the dead, cross-scoping `.inkling-editor` querySelector fallback
+with a memoized lazy root-element ref (`.inkling-editor` exists nowhere in
+src/styles/demo) and added the first `registerMouseEvents` suite (5 cases)
+plus a plugin-level fallback pin. Item 3 (`80c6c06`) made `escape.ts` return
+its handled status instead of unconditional `true`; three new pins
+(nothing-selected → false, selected-not-editing → false, nested → true with
+parent-root focus). Item 4 (`c2b1bbc`) deleted `ctrlOrCmd.ts` and its test
+(zero production importers; e2e keeps its own helper). Item 5 (`8a131e6`)
+investigated `showVisibilitySettings` — load-bearing end-to-end (writers
+`registerVisibilityHandler.ts`/`registerCardCommands.ts`, sole reader
+`HtmlNodeComponent.tsx`, html being the only indicator-icon card), kept with
+a documenting comment; no code change. Gates at HEAD: full unit 206 files /
+1721 passed / 21 todo (1712 + 9 net new pins); nodes-base+html-renderer
+735/21 unchanged; typecheck clean; lint 0/0; format:check clean; targeted
+e2e diagnostics green (card-behaviour 63, slash-menu + EmojiPickerPlugin 39)
+— no full e2e suite, no demo-visible path changed.
