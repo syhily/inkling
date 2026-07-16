@@ -1,6 +1,6 @@
 import type { RefObject } from 'react'
 
-import type { DragHandlerLike, FileChangeEvent, FileUploaderLike } from '@/components/ui/cards/AudioCard'
+import type { DragHandlerLike, FileChangeEvent, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
 
 import ImgFullIcon from '@/assets/icons/inkling-img-full.svg?react'
 import ImgRegularIcon from '@/assets/icons/inkling-img-regular.svg?react'
@@ -35,8 +35,8 @@ function PopulatedVideoCard({
   thumbnail,
   customThumbnail,
   onCustomThumbnailChange,
-  videoUploader = {} as FileUploaderLike,
-  customThumbnailUploader = {} as FileUploaderLike,
+  videoUploader,
+  customThumbnailUploader,
   onRemoveCustomThumbnail,
   totalDuration,
   cardWidth,
@@ -45,10 +45,10 @@ function PopulatedVideoCard({
   onCardWidthChange,
   isEditing,
   thumbnailMimeTypes,
-  thumbnailDragHandler = {} as DragHandlerLike,
+  thumbnailDragHandler,
 }: PopulatedVideoCardProps) {
   const progressStyle = {
-    width: `${videoUploader.progress?.toFixed(0) ?? '0'}%`,
+    width: `${videoUploader?.progress?.toFixed(0) ?? '0'}%`,
   }
 
   const buttonGroupChildren = [
@@ -84,7 +84,7 @@ function PopulatedVideoCard({
           )}
         </div>
         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/0 via-black/5 to-black/30">
-          {videoUploader.isLoading || (
+          {videoUploader?.isLoading || (
             <button className="flex size-20 items-center justify-center rounded-full bg-black/50" type="button">
               <PlayIcon className="h-auto w-5 fill-white" />
             </button>
@@ -98,7 +98,7 @@ function PopulatedVideoCard({
         {/* This prevents interacting with the buttons that don't do anything, causing focus loss */}
         <ReadOnlyOverlay />
       </div>
-      {videoUploader.isLoading && (
+      {videoUploader?.isLoading && (
         <div
           className="absolute inset-0 flex min-w-full items-center justify-center overflow-hidden bg-white/50"
           data-testid="video-progress"
@@ -107,7 +107,7 @@ function PopulatedVideoCard({
         </div>
       )}
 
-      {!!thumbnail && !videoUploader.isLoading && isEditing && (
+      {!!thumbnail && !videoUploader?.isLoading && isEditing && (
         <SettingsPanel>
           <ButtonGroupSetting
             buttons={buttonGroupChildren}
@@ -126,14 +126,14 @@ function PopulatedVideoCard({
             alt="Custom thumbnail"
             borderStyle={'simple'}
             dataTestId="custom-thumbnail-replace"
-            errors={customThumbnailUploader.errors}
+            errors={customThumbnailUploader?.errors}
             icon="file"
-            isDraggedOver={thumbnailDragHandler.isDraggedOver}
-            isLoading={customThumbnailUploader.isLoading}
+            isDraggedOver={thumbnailDragHandler?.isDraggedOver}
+            isLoading={customThumbnailUploader?.isLoading}
             label="Custom thumbnail"
             mimeTypes={thumbnailMimeTypes}
-            placeholderRef={thumbnailDragHandler.setRef as (node: HTMLElement | null) => void}
-            progress={customThumbnailUploader.progress}
+            placeholderRef={thumbnailDragHandler?.setRef}
+            progress={customThumbnailUploader?.progress}
             size="xsmall"
             src={customThumbnail}
             onFileChange={onCustomThumbnailChange}
@@ -158,7 +158,7 @@ function EmptyVideoCard({
   fileInputRef,
   errors,
   videoMimeTypes = [],
-  videoDragHandler = {} as DragHandlerLike,
+  videoDragHandler,
 }: EmptyVideoCardProps) {
   return (
     <>
@@ -169,8 +169,8 @@ function EmptyVideoCard({
         filePicker={() => openFileSelection({ fileInputRef })}
         icon="video"
         size="small"
-        isDraggedOver={videoDragHandler.isDraggedOver}
-        placeholderRef={videoDragHandler.setRef as (node: HTMLElement | null) => void}
+        isDraggedOver={videoDragHandler?.isDraggedOver}
+        placeholderRef={videoDragHandler?.setRef}
       />
       <form>
         <input
@@ -185,53 +185,6 @@ function EmptyVideoCard({
       </form>
     </>
   )
-}
-
-interface VideoHolderProps {
-  fileInputRef: RefObject<HTMLInputElement | null>
-  onVideoFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  videoDragHandler: DragHandlerLike
-  videoUploader?: FileUploaderLike
-  videoUploadErrors?: Array<{ message?: string }>
-  videoMimeTypes: string[]
-  customThumbnail: string
-  thumbnail: string
-  onCustomThumbnailChange: (e: FileChangeEvent) => void
-  customThumbnailUploader?: FileUploaderLike
-  onRemoveCustomThumbnail: () => void
-  totalDuration: string
-  cardWidth: string
-  isLoopChecked: boolean
-  onLoopChange: (checked: boolean) => void
-  onCardWidthChange: (width: string) => void
-  isEditing?: boolean
-  thumbnailMimeTypes: string[]
-  thumbnailDragHandler?: DragHandlerLike
-}
-
-const VideoHolder = ({
-  fileInputRef,
-  onVideoFileChange,
-  videoDragHandler,
-  videoUploader = {} as FileUploaderLike,
-  videoUploadErrors,
-  videoMimeTypes,
-  ...props
-}: VideoHolderProps) => {
-  const showPopulatedCard = props.customThumbnail || props.thumbnail || videoUploader.isLoading
-  if (showPopulatedCard) {
-    return <PopulatedVideoCard {...props} videoUploader={videoUploader} />
-  } else {
-    return (
-      <EmptyVideoCard
-        errors={videoUploadErrors}
-        fileInputRef={fileInputRef}
-        videoDragHandler={videoDragHandler}
-        videoMimeTypes={videoMimeTypes}
-        onFileChange={onVideoFileChange}
-      />
-    )
-  }
 }
 
 export interface VideoCardProps {
@@ -264,11 +217,29 @@ export function VideoCard({
   captionEditorInitialState,
   isSelected,
   isEditing,
+  fileInputRef,
+  onVideoFileChange,
+  videoDragHandler,
+  videoUploader,
+  videoUploadErrors,
+  videoMimeTypes,
   ...props
 }: VideoCardProps) {
+  const showPopulatedCard = props.customThumbnail || props.thumbnail || videoUploader?.isLoading
+
   return (
     <figure className="not-inkling-prose">
-      <VideoHolder {...props} isEditing={isEditing} />
+      {showPopulatedCard ? (
+        <PopulatedVideoCard {...props} isEditing={isEditing} videoUploader={videoUploader} />
+      ) : (
+        <EmptyVideoCard
+          errors={videoUploadErrors}
+          fileInputRef={fileInputRef}
+          videoDragHandler={videoDragHandler}
+          videoMimeTypes={videoMimeTypes}
+          onFileChange={onVideoFileChange}
+        />
+      )}
       <CardCaptionEditor
         captionEditor={captionEditor!}
         captionEditorInitialState={captionEditorInitialState}

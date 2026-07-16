@@ -17,7 +17,7 @@ interface UseGalleryReorderOptions {
   disabled?: boolean
 }
 
-interface UseGalleryReorderResult {
+export interface UseGalleryReorderResult {
   setContainerRef: React.Dispatch<React.SetStateAction<HTMLElement | null>>
   isDraggedOver: boolean
 }

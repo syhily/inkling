@@ -3,7 +3,7 @@ import type { MutableRefObject } from 'react'
 import clsx from 'clsx'
 import React, { useRef } from 'react'
 
-import type { DragHandlerLike, FileChangeEvent } from '@/components/ui/cards/AudioCard'
+import type { DragHandlerLike, FileChangeEvent } from '@/components/ui/cards/card-ui-types'
 
 import DeleteIcon from '@/assets/icons/inkling-trash.svg?react'
 import WandIcon from '@/assets/icons/inkling-wand.svg?react'

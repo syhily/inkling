@@ -13,11 +13,6 @@ import { $isFileNode, $updateCardNode } from '@/nodes/base'
 import { fileUploadHandler } from '@/utils/fileUploadHandler'
 import { openFileSelection } from '@/utils/openFileSelection'
 
-interface DragHandlerLike {
-  isDraggedOver?: boolean
-  setRef: (node: HTMLElement | null) => void
-}
-
 export interface FileNodeComponentProps {
   fileDesc: string
   fileDescPlaceholder: string
@@ -56,7 +51,7 @@ function FileNodeComponent({
     await fileUploadHandler(files, nodeKey, editor, uploader.upload)
   }
 
-  const fileDragHandler = useFileDragAndDrop({ handleDrop: handleFileDrop }) as DragHandlerLike
+  const fileDragHandler = useFileDragAndDrop({ handleDrop: handleFileDrop })
 
   React.useEffect(() => {
     const uploadInitialFile = async (file: File | undefined): Promise<void> => {

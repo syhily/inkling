@@ -28,7 +28,7 @@ function GalleryCardStory({
   captionEditorInitialState,
   clearErrorMessage = () => {},
   deleteImage = () => {},
-  filesDropper = { setRef: () => {} },
+  filesDropper = { isDraggedOver: false, setRef: () => {} },
   errorMessage,
   fileInputRef: fileInputRefProp,
   imageMimeTypes = [],
@@ -36,7 +36,7 @@ function GalleryCardStory({
   isSelected: isSelectedProp,
   onFileChange = () => {},
   uploader,
-  reorderHandler = { setContainerRef: () => {} },
+  reorderHandler = { isDraggedOver: false, setContainerRef: () => {} },
 }: GalleryCardStoryArgs) {
   const captionEditor = React.useMemo(() => {
     if (captionEditorProp) {
@@ -127,6 +127,6 @@ export const Empty: Story = {
   args: {
     display: 'Selected',
     caption: '',
-    filesDropper: {},
+    filesDropper: { isDraggedOver: false, setRef: () => {} },
   },
 }

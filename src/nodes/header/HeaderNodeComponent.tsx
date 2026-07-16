@@ -2,7 +2,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import { useContext, useEffect, useRef, useState } from 'react'
 
-import type { FileChangeEvent } from '@/components/ui/cards/AudioCard'
+import type { FileChangeEvent } from '@/components/ui/cards/card-ui-types'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'

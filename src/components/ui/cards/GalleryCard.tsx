@@ -1,5 +1,6 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
+import type { DragHandlerLike, FileUploaderLike, ReorderHandlerLike } from '@/components/ui/cards/card-ui-types'
 import type { GalleryImage } from '@/types/gallery'
 
 import DeleteIcon from '@/assets/icons/inkling-trash.svg?react'
@@ -99,15 +100,10 @@ function GalleryImage({ image, deleteImage, position, isDragging }: GalleryImage
   )
 }
 
-interface ReorderHandlerLike {
-  setContainerRef?: (node: HTMLElement | null) => void
-  isDraggedOver?: boolean
-}
-
 interface PopulatedGalleryCardProps {
   images: GalleryImage[]
   deleteImage: (image: GalleryImage) => void
-  reorderHandler: ReorderHandlerLike
+  reorderHandler?: ReorderHandlerLike
   isDragging: boolean
 }
 
@@ -146,7 +142,7 @@ function PopulatedGalleryCard({ images, deleteImage, reorderHandler, isDragging 
   })
 
   return (
-    <div ref={reorderHandler.setContainerRef} className="not-inkling-prose flex flex-col" data-gallery>
+    <div ref={reorderHandler?.setContainerRef} className="not-inkling-prose flex flex-col" data-gallery>
       {GalleryRows}
     </div>
   )
@@ -155,7 +151,7 @@ function PopulatedGalleryCard({ images, deleteImage, reorderHandler, isDragging 
 interface EmptyGalleryCardProps {
   openFilePicker: () => void
   isDraggedOver?: boolean
-  reorderHandler: ReorderHandlerLike
+  reorderHandler?: ReorderHandlerLike
 }
 
 function EmptyGalleryCard({ openFilePicker, isDraggedOver, reorderHandler }: EmptyGalleryCardProps) {
@@ -166,7 +162,7 @@ function EmptyGalleryCard({ openFilePicker, isDraggedOver, reorderHandler }: Emp
       icon="gallery"
       isDraggedOver={isDraggedOver}
       multiple={true}
-      placeholderRef={reorderHandler.setContainerRef}
+      placeholderRef={reorderHandler?.setContainerRef}
       size="large"
       type="image"
     />
@@ -205,30 +201,19 @@ function FileDragOverlay() {
   )
 }
 
-interface FilesDropperLike {
-  setRef?: (node: HTMLElement | null) => void
-  isDraggedOver?: boolean
-}
-
-interface UploaderLike {
-  isLoading?: boolean
-  progress?: number
-  errors?: Error[]
-}
-
 export interface GalleryCardProps {
   captionEditor: LexicalEditor | null
   captionEditorInitialState: EditorState | undefined
   clearErrorMessage: () => void
   deleteImage: (image: GalleryImage) => void
-  filesDropper: FilesDropperLike
+  filesDropper: DragHandlerLike
   errorMessage?: string
   fileInputRef: React.RefObject<HTMLInputElement | null>
   imageMimeTypes?: string[]
   images?: GalleryImage[]
   isSelected?: boolean
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  uploader?: UploaderLike
+  uploader?: FileUploaderLike
   reorderHandler?: ReorderHandlerLike
 }
 
@@ -244,16 +229,16 @@ export function GalleryCard({
   images = [],
   isSelected,
   onFileChange,
-  uploader = {} as UploaderLike,
-  reorderHandler = {} as ReorderHandlerLike,
+  uploader,
+  reorderHandler,
 }: GalleryCardProps) {
   const openFilePicker = (): void => {
     fileInputRef.current?.click()
   }
 
-  const { isLoading, progress } = uploader
+  const { isLoading, progress } = uploader ?? {}
   const { isDraggedOver: filesDraggedOver } = filesDropper
-  const { isDraggedOver: reorderDraggedOver } = reorderHandler
+  const reorderDraggedOver = reorderHandler?.isDraggedOver
   const isDragging = filesDraggedOver || reorderDraggedOver
 
   return (

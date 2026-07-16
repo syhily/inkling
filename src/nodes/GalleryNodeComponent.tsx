@@ -17,21 +17,6 @@ import { MAX_IMAGES, recalculateImageRows } from '@/nodes/GalleryNode'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import { revokePreviewUrl } from '@/utils/revokePreviewUrl'
 
-interface DragHandlerLike {
-  isDraggedOver?: boolean
-  setRef: (node: HTMLElement | null) => void
-}
-
-interface ImageUploaderLike {
-  isLoading?: boolean
-  upload?: (
-    files: FileList | File[],
-    options?: { formData?: Record<string, string> },
-  ) => Promise<Array<{ url?: string; fileName?: string }> | undefined>
-  progress?: number
-  errors?: Error[]
-}
-
 export interface GalleryNodeComponentProps {
   nodeKey: NodeKey
   captionEditor: LexicalEditor | null
@@ -56,13 +41,13 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
   const previewUrlsRef = React.useRef<Set<string>>(new Set())
 
   const galleryReorder = useGalleryReorder({ images, updateImages: reorderImages, isSelected })
-  const imageUploader: ImageUploaderLike = fileUploader.useFileUpload('image')
+  const imageUploader = fileUploader.useFileUpload('image')
 
   const handleImageFilesDrop = async (files: File[] | FileList): Promise<void> => {
     await handleImageUploads(files)
   }
 
-  const imageFilesDropper = useFileDragAndDrop({ handleDrop: handleImageFilesDrop }) as DragHandlerLike
+  const imageFilesDropper = useFileDragAndDrop({ handleDrop: handleImageFilesDrop })
 
   function reorderImages(newImages: GalleryImage[]): void {
     recalculateImageRows(newImages)

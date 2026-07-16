@@ -2,7 +2,12 @@ import type { EditorState, LexicalEditor } from 'lexical'
 
 import React from 'react'
 
-import type { DragHandlerLike, FileChangeEvent, FileInputRef, FileUploaderLike } from '@/components/ui/cards/AudioCard'
+import type {
+  DragHandlerLike,
+  FileChangeEvent,
+  FileInputRef,
+  FileUploaderLike,
+} from '@/components/ui/cards/card-ui-types'
 
 import WandIcon from '@/assets/icons/inkling-wand.svg?react'
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
@@ -30,19 +35,6 @@ interface EmptyImageCardProps {
   setFileInputRef: (ref: FileInputRef) => void
   imageFileDragHandler?: DragHandlerLike
   errors?: Error[] | { message?: string }[]
-}
-
-interface ImageHolderProps {
-  src?: string
-  altText?: string
-  previewSrc?: string | null
-  imageUploader: FileUploaderLike
-  onFileChange: (e: FileChangeEvent) => void
-  setFileInputRef: (ref: FileInputRef) => void
-  imageCardDragHandler?: DragHandlerLike
-  imageFileDragHandler?: DragHandlerLike
-  isPinturaEnabled?: boolean
-  openImageEditor?: (options: { image: string; handleSave: (blob: Blob) => void }) => void
 }
 
 export interface ImageCardProps {
@@ -183,44 +175,6 @@ function EmptyImageCard({ onFileChange, setFileInputRef, imageFileDragHandler, e
   )
 }
 
-const ImageHolder = ({
-  src,
-  altText,
-  previewSrc,
-  imageUploader,
-  onFileChange,
-  setFileInputRef,
-  imageCardDragHandler,
-  imageFileDragHandler,
-  isPinturaEnabled,
-  openImageEditor,
-}: ImageHolderProps) => {
-  if (previewSrc || src) {
-    return (
-      <PopulatedImageCard
-        alt={altText}
-        imageCardDragHandler={imageCardDragHandler}
-        imageFileDragHandler={imageFileDragHandler}
-        imageUploader={imageUploader}
-        isPinturaEnabled={isPinturaEnabled}
-        openImageEditor={openImageEditor}
-        previewSrc={previewSrc}
-        src={src!}
-        onFileChange={onFileChange}
-      />
-    )
-  } else {
-    return (
-      <EmptyImageCard
-        errors={imageUploader.errors}
-        imageFileDragHandler={imageFileDragHandler}
-        setFileInputRef={setFileInputRef}
-        onFileChange={onFileChange}
-      />
-    )
-  }
-}
-
 export function ImageCard({
   isSelected,
   src,
@@ -255,18 +209,26 @@ export function ImageCard({
   return (
     <>
       <figure ref={figureRef} data-inkling-card-width={cardWidth}>
-        <ImageHolder
-          altText={altText}
-          imageCardDragHandler={imageCardDragHandler}
-          imageFileDragHandler={imageFileDragHandler}
-          imageUploader={imageUploader}
-          isPinturaEnabled={isPinturaEnabled}
-          openImageEditor={openImageEditor}
-          previewSrc={previewSrc}
-          setFileInputRef={setFileInputRef}
-          src={src}
-          onFileChange={onFileChange}
-        />
+        {previewSrc || src ? (
+          <PopulatedImageCard
+            alt={altText}
+            imageCardDragHandler={imageCardDragHandler}
+            imageFileDragHandler={imageFileDragHandler}
+            imageUploader={imageUploader}
+            isPinturaEnabled={isPinturaEnabled}
+            openImageEditor={openImageEditor}
+            previewSrc={previewSrc}
+            src={src!}
+            onFileChange={onFileChange}
+          />
+        ) : (
+          <EmptyImageCard
+            errors={imageUploader.errors}
+            imageFileDragHandler={imageFileDragHandler}
+            setFileInputRef={setFileInputRef}
+            onFileChange={onFileChange}
+          />
+        )}
         <CardCaptionEditor
           altText={altText || ''}
           altTextPlaceholder="Type alt text for image (optional)"

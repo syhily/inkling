@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import { FastAverageColor } from 'fast-average-color'
 import React, { useEffect, useState } from 'react'
 
-import type { FileChangeEvent } from '@/components/ui/cards/AudioCard'
+import type { DragHandlerLike, FileChangeEvent, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
 import type { ColorSwatchData } from '@/components/ui/ColorPicker'
 
 import CenterAlignIcon from '@/assets/icons/inkling-align-center.svg?react'
@@ -50,7 +50,7 @@ interface HeaderCardProps {
   buttonTextColor?: string
   textColor?: string
   isEditing?: boolean
-  fileUploader?: { isLoading?: boolean; progress?: number; errors?: Error[] }
+  fileUploader?: FileUploaderLike
   handleAlignment: (alignment: string) => void
   handleButtonText: (event: React.ChangeEvent<HTMLInputElement>) => void
   handleButtonEnabled: () => void
@@ -65,7 +65,7 @@ interface HeaderCardProps {
   layout?: string
   onFileChange: (event: FileChangeEvent) => void
   openImageEditor: (options: { image: string; handleSave: (blob: Blob) => void }) => void
-  imageDragHandler: { isDraggedOver?: boolean; setRef?: (element: HTMLElement | null) => void }
+  imageDragHandler: DragHandlerLike
   headerTextEditor: LexicalEditor
   headerTextEditorInitialState?: InitialEditorStateType
   subheaderTextEditor: LexicalEditor

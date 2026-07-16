@@ -24,8 +24,8 @@ function AudioCardStory({ display = 'Default', titlePlaceholder, ...args }: Audi
     updateTitle: () => {},
     onAudioFileChange: () => {},
     onThumbnailFileChange: () => {},
-    audioUploader: {},
-    thumbnailUploader: {},
+    audioUploader: { upload: () => Promise.resolve(undefined) },
+    thumbnailUploader: { upload: () => Promise.resolve(undefined) },
     ...args,
   }
 
@@ -76,8 +76,8 @@ export const Empty: Story = {
     duration: 0,
     title: '',
     titlePlaceholder: 'Add a title...',
-    audioUploader: {},
-    thumbnailUploader: {},
+    audioUploader: { upload: () => Promise.resolve(undefined) },
+    thumbnailUploader: { upload: () => Promise.resolve(undefined) },
   },
 }
 
@@ -88,8 +88,8 @@ export const Uploading: Story = {
     duration: 0,
     title: '',
     titlePlaceholder: 'Add a title...',
-    audioUploader: { progress: 50, isLoading: true },
-    thumbnailUploader: {},
+    audioUploader: { progress: 50, isLoading: true, upload: () => Promise.resolve(undefined) },
+    thumbnailUploader: { upload: () => Promise.resolve(undefined) },
   },
 }
 
@@ -99,10 +99,11 @@ export const DraggedOver: Story = {
     src: '',
     duration: 0,
     title: '',
-    audioUploader: {},
-    thumbnailUploader: {},
+    audioUploader: { upload: () => Promise.resolve(undefined) },
+    thumbnailUploader: { upload: () => Promise.resolve(undefined) },
     audioDragHandler: {
       isDraggedOver: true,
+      setRef: () => {},
     },
   },
 }
@@ -115,8 +116,8 @@ export const Populated: Story = {
     duration: 19,
     title: 'The Inkling Podcast',
     titlePlaceholder: 'Add a title...',
-    audioUploader: {},
-    thumbnailUploader: {},
+    audioUploader: { upload: () => Promise.resolve(undefined) },
+    thumbnailUploader: { upload: () => Promise.resolve(undefined) },
   },
 }
 
@@ -133,8 +134,9 @@ export const Error: Story = {
           message: 'The file type you uploaded is not supported. Please use .MP3, .WAV, .OGG, .M4A',
         },
       ],
+      upload: () => Promise.resolve(undefined),
     },
-    thumbnailUploader: {},
+    thumbnailUploader: { upload: () => Promise.resolve(undefined) },
   },
 }
 
@@ -145,7 +147,7 @@ export const ThumbnailUploading: Story = {
     duration: 19,
     title: 'The Inkling Podcast',
     titlePlaceholder: 'Add a title...',
-    thumbnailUploader: { progress: 50, isLoading: true },
+    thumbnailUploader: { progress: 50, isLoading: true, upload: () => Promise.resolve(undefined) },
   },
 }
 
@@ -158,9 +160,10 @@ export const ThumbnailDraggedOver: Story = {
     titlePlaceholder: 'Add a title...',
     thumbnailDragHandler: {
       isDraggedOver: true,
+      setRef: () => {},
     },
-    audioUploader: {},
-    thumbnailUploader: {},
+    audioUploader: { upload: () => Promise.resolve(undefined) },
+    thumbnailUploader: { upload: () => Promise.resolve(undefined) },
   },
 }
 
@@ -172,8 +175,8 @@ export const ThumbnailPopulated: Story = {
     duration: 19,
     title: 'The Inkling Podcast',
     titlePlaceholder: 'Add a title...',
-    audioUploader: {},
-    thumbnailUploader: {},
+    audioUploader: { upload: () => Promise.resolve(undefined) },
+    thumbnailUploader: { upload: () => Promise.resolve(undefined) },
   },
 }
 
@@ -188,6 +191,7 @@ export const ThumbnailError: Story = {
       progress: 100,
       isLoading: false,
       errors: [{ message: 'File not supported' }],
+      upload: () => Promise.resolve(undefined),
     },
   },
 }

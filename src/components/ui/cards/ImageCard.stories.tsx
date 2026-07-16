@@ -27,7 +27,7 @@ function ImageCardStory({ display = 'Default', caption = '', ...args }: ImageCar
   const componentProps = {
     onFileChange: () => {},
     setAltText: () => {},
-    imageUploader: {},
+    imageUploader: { upload: () => Promise.resolve(undefined) },
     ...args,
   }
 
@@ -83,9 +83,11 @@ export const Empty: Story = {
     imageUploader: {
       isLoading: false,
       progress: 100,
+      upload: () => Promise.resolve(undefined),
     },
     imageFileDragHandler: {
       isDraggedOver: false,
+      setRef: () => {},
     },
   },
 }
@@ -101,9 +103,11 @@ export const Uploading: Story = {
     imageUploader: {
       progress: 50,
       isLoading: true,
+      upload: () => Promise.resolve(undefined),
     },
     imageFileDragHandler: {
       isDraggedOver: false,
+      setRef: () => {},
     },
   },
 }
@@ -119,9 +123,11 @@ export const Populated: Story = {
     imageUploader: {
       isLoading: false,
       progress: 100,
+      upload: () => Promise.resolve(undefined),
     },
     imageFileDragHandler: {
       isDraggedOver: false,
+      setRef: () => {},
     },
   },
 }
@@ -140,9 +146,11 @@ export const Errors: Story = {
             'The file type you uploaded is not supported. Please use .GIF, .JPG, .JPEG, .PNG, .SVG, .SVGZ, .WEBP',
         },
       ],
+      upload: () => Promise.resolve(undefined),
     },
     imageFileDragHandler: {
       isDraggedOver: false,
+      setRef: () => {},
     },
   },
 }
@@ -161,9 +169,11 @@ export const DraggedOver: Story = {
             'The file type you uploaded is not supported. Please use .GIF, .JPG, .JPEG, .PNG, .SVG, .SVGZ, .WEBP',
         },
       ],
+      upload: () => Promise.resolve(undefined),
     },
     imageFileDragHandler: {
       isDraggedOver: true,
+      setRef: () => {},
     },
   },
 }

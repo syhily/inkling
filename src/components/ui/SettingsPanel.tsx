@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import React from 'react'
 
-import type { FileChangeEvent } from '@/components/ui/cards/AudioCard'
+import type { DragHandlerLike, FileChangeEvent } from '@/components/ui/cards/card-ui-types'
 
 import { ButtonGroup, type ButtonGroupButton } from '@/components/ui/ButtonGroup'
 import { ColorOptionButtons } from '@/components/ui/ColorOptionButtons'
@@ -529,7 +529,7 @@ interface MediaUploadSettingProps {
   hideLabel?: boolean
   onFileChange: (e: FileChangeEvent) => void
   isDraggedOver?: boolean
-  placeholderRef?: (node: HTMLElement | null) => void
+  placeholderRef?: DragHandlerLike['setRef']
   src?: string
   alt?: string
   isLoading?: boolean
@@ -593,7 +593,7 @@ export function MediaUploadSetting({
           !stacked && type !== 'button' && !src && 'h-[5.2rem] w-[7.2rem]',
         )}
         desc={desc}
-        dragHandler={{ isDraggedOver: !!isDraggedOver, setRef: placeholderRef }}
+        dragHandler={placeholderRef ? { isDraggedOver: !!isDraggedOver, setRef: placeholderRef } : undefined}
         errors={errors}
         icon={icon}
         imgClassName={imgClassName}

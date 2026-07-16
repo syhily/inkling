@@ -12,10 +12,13 @@ export type LexicalProviderFactory = React.ComponentProps<typeof CollaborationPl
 export interface FileUploader {
   useFileUpload: (type: 'image' | 'video' | 'audio' | 'file' | 'mediaThumbnail') => {
     isLoading?: boolean
+    // `fileName` lets multi-file uploads (gallery) map results back to the
+    // original file — the reference host (demo/utils/useFileUpload.ts) always
+    // returns it, and `GalleryNodeComponent` reads it
     upload: (
       files: FileList | File[],
       options?: { formData?: Record<string, string> },
-    ) => Promise<Array<{ url?: string }> | undefined>
+    ) => Promise<Array<{ url?: string; fileName?: string }> | undefined>
     errors?: Error[]
   }
   fileTypes?: {

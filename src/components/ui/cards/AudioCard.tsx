@@ -1,6 +1,6 @@
-import type { MutableRefObject } from 'react'
-
 import React from 'react'
+
+import type { DragHandlerLike, FileInputRef, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
 
 import AudioFileIcon from '@/assets/icons/inkling-audio-file.svg?react'
 import FilePlaceholderIcon from '@/assets/icons/inkling-file-placeholder.svg?react'
@@ -14,21 +14,6 @@ import { ProgressBar } from '@/components/ui/ProgressBar'
 import { ReadOnlyOverlay } from '@/components/ui/ReadOnlyOverlay'
 import { TextInput } from '@/components/ui/TextInput'
 import { openFileSelection } from '@/utils/openFileSelection'
-
-export interface DragHandlerLike {
-  isDraggedOver?: boolean
-  setRef?: (element: HTMLElement | null) => void
-}
-
-export interface FileUploaderLike {
-  isLoading?: boolean
-  progress?: number
-  errors?: Error[] | { message?: string }[]
-}
-
-export type FileInputRef = MutableRefObject<HTMLInputElement | null>
-
-export type FileChangeEvent = React.ChangeEvent<HTMLInputElement> | { target: { files: File[] } }
 
 interface AudioUploadingProps {
   progress?: number
@@ -111,7 +96,7 @@ function EmptyAudioCard({
   audioMimeTypes,
   onFileChange,
   setFileInputRef,
-  audioDragHandler = {},
+  audioDragHandler,
 }: EmptyAudioCardProps) {
   const { isLoading: isUploading, progress, errors } = audioUploader
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
@@ -136,8 +121,8 @@ function EmptyAudioCard({
           errors={errors}
           filePicker={() => openFileSelection({ fileInputRef: fileInputRef })}
           icon="audio"
-          isDraggedOver={audioDragHandler.isDraggedOver}
-          placeholderRef={audioDragHandler.setRef}
+          isDraggedOver={audioDragHandler?.isDraggedOver}
+          placeholderRef={audioDragHandler?.setRef}
           size="xsmall"
         />
         <AudioUploadForm fileInputRef={onFileInputRef} mimeTypes={audioMimeTypes} onFileChange={handleFileChange} />
@@ -249,7 +234,7 @@ function PopulatedAudioCard({
   setFileInputRef,
   onFileChange,
   removeThumbnail,
-  thumbnailDragHandler = {},
+  thumbnailDragHandler,
 }: PopulatedAudioCardProps) {
   const { isLoading: isUploading, progress, errors } = thumbnailUploader
   const formatDuration = (rawDuration: number) => {
@@ -267,13 +252,13 @@ function PopulatedAudioCard({
   return (
     <>
       <div
-        ref={thumbnailDragHandler.setRef}
+        ref={thumbnailDragHandler?.setRef}
         className="flex rounded-md border border-grey/30 p-2"
         data-testid="audio-card-populated"
       >
         <AudioThumbnail
           errors={errors}
-          isDraggedOver={thumbnailDragHandler.isDraggedOver}
+          isDraggedOver={thumbnailDragHandler?.isDraggedOver}
           isEditing={isEditing}
           isUploading={isUploading}
           mimeTypes={thumbnailMimeTypes}

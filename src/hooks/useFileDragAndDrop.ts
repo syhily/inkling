@@ -5,7 +5,7 @@ interface UseFileDragAndDropOptions {
   disabled?: boolean
 }
 
-interface UseFileDragAndDropResult {
+export interface UseFileDragAndDropResult {
   setRef: React.Dispatch<React.SetStateAction<HTMLElement | null>>
   isDraggedOver: boolean
 }

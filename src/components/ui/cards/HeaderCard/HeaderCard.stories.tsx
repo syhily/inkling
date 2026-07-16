@@ -47,7 +47,7 @@ function HeaderCardStory({ display = 'Default', header = '', subheader = '', ...
     handleTextColor: () => {},
     onFileChange: () => {},
     openImageEditor: () => {},
-    imageDragHandler: {},
+    imageDragHandler: { isDraggedOver: false, setRef: () => {} },
     handleSwapLayout: () => {},
     handleBackgroundSize: () => {},
     handleButtonTextBlur: () => {},

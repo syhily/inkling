@@ -1,4 +1,4 @@
-import type { DragHandlerLike, FileInputRef, FileUploaderLike } from '@/components/ui/cards/AudioCard'
+import type { DragHandlerLike, FileInputRef, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
 
 import FileUploadIcon from '@/assets/icons/inkling-file-upload.svg?react'
 import FileUploadForm from '@/components/ui/FileUploadForm'

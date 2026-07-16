@@ -20,7 +20,7 @@ interface FileCardStoryArgs extends Partial<FileCardProps> {
 function FileCardStory({ display = 'Default', ...args }: FileCardStoryArgs) {
   const displayState = displayOptions[display]
   const componentProps = {
-    fileDragHandler: {},
+    fileDragHandler: { isDraggedOver: false, setRef: () => {} },
     onFileChange: () => {},
     handleFileTitle: () => {},
     handleFileDesc: () => {},

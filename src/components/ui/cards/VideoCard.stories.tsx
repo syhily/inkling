@@ -30,7 +30,7 @@ function VideoCardStory({ display = 'Default', caption = '', ...args }: VideoCar
     captionEditorInitialState: undefined,
     fileInputRef,
     onVideoFileChange: () => {},
-    videoDragHandler: {},
+    videoDragHandler: { isDraggedOver: false, setRef: () => {} },
     videoMimeTypes: [],
     customThumbnail: '',
     thumbnail: '',
@@ -108,6 +108,7 @@ export const Uploading: Story = {
     videoUploader: {
       isLoading: true,
       progress: 60,
+      upload: () => Promise.resolve(undefined),
     },
   },
 }
@@ -121,6 +122,7 @@ export const DraggedOver: Story = {
     caption: '',
     videoDragHandler: {
       isDraggedOver: true,
+      setRef: () => {},
     },
   },
 }
@@ -160,6 +162,7 @@ export const ThumbnailUploading: Story = {
     customThumbnailUploader: {
       isLoading: true,
       progress: 60,
+      upload: () => Promise.resolve(undefined),
     },
   },
 }
@@ -174,6 +177,7 @@ export const ThumbnailDraggedOver: Story = {
     caption: 'Watch the full documentary here.',
     thumbnailDragHandler: {
       isDraggedOver: true,
+      setRef: () => {},
     },
   },
 }
@@ -201,6 +205,7 @@ export const ThumbnailError: Story = {
     caption: 'Watch the full documentary here.',
     customThumbnailUploader: {
       errors: [{ message: 'This file type is not supported. Please use .GIF, .JPG, .JPEG, .PNG, .SVG, .SVGZ, .WEBP' }],
+      upload: () => Promise.resolve(undefined),
     },
   },
 }
