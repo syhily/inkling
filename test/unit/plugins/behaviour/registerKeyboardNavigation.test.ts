@@ -28,7 +28,7 @@ import {
 } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { CodeBlockNode } from '@/nodes/CodeBlockNode'
+import { $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { createCardSelectionStore, type CardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
 import { DELETE_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
@@ -447,6 +447,146 @@ describe('registerKeyboardNavigation', () => {
     expect(result).toBe(true)
 
     cleanup()
+  })
+
+  // Plan 052 Step 1: characterization pins for the enter/tab code-fence
+  // shortcut, which had zero unit coverage. They pin CURRENT behavior per
+  // trigger ahead of the card-shortcut seam migration; enter/tab trigger
+  // semantics differ from the markdown transformer trigger on purpose.
+  describe('code fence shortcut', () => {
+    async function setupFenceParagraph(text: string) {
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        const paragraph = $createParagraphNode()
+        const textNode = $createTextNode(text)
+        paragraph.append(textNode)
+        root.append(paragraph)
+        textNode.select(text.length, text.length)
+      })
+    }
+
+    it('transforms ```js into a selected code block in edit mode on enter', async () => {
+      await setupFenceParagraph('```js')
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(editor, KEY_ENTER_COMMAND, new KeyboardEvent('keydown', { key: 'Enter' }))
+      expect(result).toBe(true)
+
+      editor.getEditorState().read(() => {
+        const root = $getRoot()
+        expect(root.getChildrenSize()).toBe(1)
+        const codeBlock = root.getFirstChild()
+        expect($isCodeBlockNode(codeBlock)).toBe(true)
+        expect(codeBlock).toMatchObject({ __openInEditMode: true, language: 'js' })
+        const selection = $getSelection()
+        expect($isNodeSelection(selection)).toBe(true)
+        expect(selection?.getNodes()[0]?.getKey()).toBe(codeBlock?.getKey())
+      })
+
+      cleanup()
+    })
+
+    it('transforms ```js into a selected code block in edit mode on tab', async () => {
+      await setupFenceParagraph('```js')
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(editor, KEY_TAB_COMMAND, new KeyboardEvent('keydown', { key: 'Tab' }))
+      expect(result).toBe(true)
+
+      editor.getEditorState().read(() => {
+        const root = $getRoot()
+        expect(root.getChildrenSize()).toBe(1)
+        const codeBlock = root.getFirstChild()
+        expect($isCodeBlockNode(codeBlock)).toBe(true)
+        expect(codeBlock).toMatchObject({ __openInEditMode: true, language: 'js' })
+        const selection = $getSelection()
+        expect($isNodeSelection(selection)).toBe(true)
+        expect(selection?.getNodes()[0]?.getKey()).toBe(codeBlock?.getKey())
+      })
+
+      cleanup()
+    })
+
+    it('transforms a bare ``` fence into a code block with an empty language on enter', async () => {
+      await setupFenceParagraph('```')
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(editor, KEY_ENTER_COMMAND, new KeyboardEvent('keydown', { key: 'Enter' }))
+      expect(result).toBe(true)
+
+      editor.getEditorState().read(() => {
+        const codeBlock = $getRoot().getFirstChild()
+        expect($isCodeBlockNode(codeBlock)).toBe(true)
+        expect(codeBlock).toMatchObject({ __openInEditMode: true, language: '' })
+      })
+
+      cleanup()
+    })
+
+    it('still transforms a fence whose language exceeds 10 word chars on enter', async () => {
+      // Records CURRENT enter/tab behavior for an over-long language: the
+      // enter/tab regex /^```(\w{1,10})?/ is not end-anchored, so the 10-char
+      // cap is NOT enforced on this trigger — the transform fires and the
+      // FULL rest of the line becomes the language. The markdown transformer
+      // trigger (regex terminated by \s) would not fire here; pinned as data
+      // for the plan-052 seam, not flattened.
+      await setupFenceParagraph('```abcdefghijkl')
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(editor, KEY_ENTER_COMMAND, new KeyboardEvent('keydown', { key: 'Enter' }))
+      expect(result).toBe(true)
+
+      editor.getEditorState().read(() => {
+        const codeBlock = $getRoot().getFirstChild()
+        expect($isCodeBlockNode(codeBlock)).toBe(true)
+        expect(codeBlock).toMatchObject({ language: 'abcdefghijkl' })
+      })
+
+      cleanup()
+    })
+
+    it('takes the full rest of the line as the language on enter (```js extra)', async () => {
+      // enter/tab extract the language via textContent.replace(/^```/, ''),
+      // diverging from the transformer trigger's match[1] capture — pinned
+      // as data for the plan-052 seam.
+      await setupFenceParagraph('```js extra')
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(editor, KEY_ENTER_COMMAND, new KeyboardEvent('keydown', { key: 'Enter' }))
+      expect(result).toBe(true)
+
+      editor.getEditorState().read(() => {
+        const codeBlock = $getRoot().getFirstChild()
+        expect($isCodeBlockNode(codeBlock)).toBe(true)
+        expect(codeBlock).toMatchObject({ language: 'js extra' })
+      })
+
+      cleanup()
+    })
+
+    it('does not transform the fence in a nested editor (isNested guard)', async () => {
+      await setupFenceParagraph('```js')
+      mounted = mountEditor(editor)
+      const cleanup = registerKeyboardNavigation(editor, { store, isNested: true })
+
+      const result = await dispatchAndCommit(editor, KEY_ENTER_COMMAND, new KeyboardEvent('keydown', { key: 'Enter' }))
+      expect(result).toBe(false)
+
+      editor.getEditorState().read(() => {
+        const root = $getRoot()
+        expect(root.getChildrenSize()).toBe(1)
+        const paragraph = root.getFirstChild()
+        expect($isParagraphNode(paragraph)).toBe(true)
+        expect(paragraph?.getTextContent()).toBe('```js')
+      })
+
+      cleanup()
+    })
   })
 
   describe('DELETE_LINE_COMMAND', () => {

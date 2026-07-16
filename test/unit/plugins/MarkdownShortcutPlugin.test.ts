@@ -3,9 +3,21 @@ import type { LexicalEditor } from 'lexical'
 import { createHeadlessEditor } from '@lexical/headless'
 import { LinkNode } from '@lexical/link'
 import { $isListItemNode, $isListNode, ListItemNode, ListNode } from '@lexical/list'
-import { $convertFromMarkdownString, $convertToMarkdownString, type Transformer } from '@lexical/markdown'
-import { $isHeadingNode, $isQuoteNode, HeadingNode, QuoteNode } from '@lexical/rich-text'
-import { $getRoot, $isParagraphNode, $isTextNode } from 'lexical'
+import {
+  $convertFromMarkdownString,
+  $convertToMarkdownString,
+  registerMarkdownShortcuts,
+  type Transformer,
+} from '@lexical/markdown'
+import { $isHeadingNode, $isQuoteNode, HeadingNode, QuoteNode, registerRichText } from '@lexical/rich-text'
+import {
+  $createParagraphNode,
+  $createTextNode,
+  $getRoot,
+  $isParagraphNode,
+  $isTextNode,
+  CONTROLLED_TEXT_INSERTION_COMMAND,
+} from 'lexical'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -133,6 +145,39 @@ describe('MarkdownShortcutPlugin transformers', () => {
       ).toBe(false)
     })
     expect(exportMarkdown(editor)).toBe('\\`\\`\\`js\nconst x = 1\n\\`\\`\\`')
+  })
+
+  it('transforms a typed fence into a code block on the trailing space keystroke (typing path)', async () => {
+    // plan 052 Step 1: pins the transformer trigger semantics — the fence
+    // fires on the space keystroke after ```lang, producing a code block in
+    // edit mode with the language from the match capture
+    const editor = createTestEditor()
+    registerRichText(editor)
+    const unregisterMarkdown = registerMarkdownShortcuts(editor, DEFAULT_TRANSFORMERS)
+
+    editor.update(() => {
+      const paragraph = $createParagraphNode()
+      paragraph.append($createTextNode(''))
+      $getRoot().append(paragraph)
+      paragraph.select()
+    })
+
+    for (const char of '```js ') {
+      editor.dispatchCommand(CONTROLLED_TEXT_INSERTION_COMMAND, char)
+      // headless editors defer non-discrete commits; flush per keystroke so
+      // each one lands as its own update, the way real typing reaches the
+      // markdown shortcut listener
+      await new Promise((resolve) => {
+        setTimeout(resolve, 0)
+      })
+    }
+
+    editor.getEditorState().read(() => {
+      const codeBlock = $getRoot().getFirstChild()
+      expect($isCodeBlockNode(codeBlock)).toBe(true)
+      expect(codeBlock).toMatchObject({ __openInEditMode: true, language: 'js' })
+    })
+    unregisterMarkdown()
   })
 
   it('imports and exports subscript via the custom ~ transformer', () => {
