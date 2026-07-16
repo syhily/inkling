@@ -72,11 +72,7 @@ export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: s
 
       {isVisibilityEnabled && showVisibilitySettings && cardContext.isSelected && (
         <SettingsPanel darkMode={darkMode} defaultTab="visibility" tabs>
-          {
-            {
-              visibility: visibilitySettings,
-            } as Record<string, React.ReactNode>
-          }
+          {{ visibility: visibilitySettings }}
         </SettingsPanel>
       )}
     </>

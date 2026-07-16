@@ -107,17 +107,17 @@ function FileNodeComponent({
         fileDesc={fileDesc}
         fileDescPlaceholder={fileDescPlaceholder}
         fileDragHandler={fileDragHandler}
-        fileInputRef={fileInputRef as Parameters<typeof FileCard>[0]['fileInputRef']}
+        fileInputRef={fileInputRef}
         fileName={fileName}
         fileSize={fileSize}
         fileTitle={fileTitle}
         fileTitlePlaceholder={fileTitlePlaceholder}
-        fileUploader={uploader as Parameters<typeof FileCard>[0]['fileUploader']}
+        fileUploader={uploader}
         handleFileDesc={handleFileDesc}
         handleFileTitle={handleFileTitle}
         isEditing={isEditing}
         isPopulated={isPopulated}
-        onFileChange={onFileChange as Parameters<typeof FileCard>[0]['onFileChange']}
+        onFileChange={onFileChange}
       />
       <CardActionToolbar
         card="file-upload"

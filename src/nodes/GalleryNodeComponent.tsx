@@ -29,8 +29,7 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
   const [images, setImages] = React.useState<GalleryImage[]>(() => {
     const existingImages = editor.getEditorState().read(() => {
       const node = $getNodeByKey(nodeKey)
-      // `images` is `unknown[]` on the node type; narrowed locally to GalleryImage[]
-      return $isGalleryNode(node) ? (node.images as GalleryImage[] | undefined) : undefined
+      return $isGalleryNode(node) ? node.images : undefined
     })
     return existingImages ?? []
   })
