@@ -11,12 +11,12 @@ import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components
 import CardContext from '@/context/CardContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
+import { usePreviewLease } from '@/hooks/usePreviewLease'
 import { $isVideoNode, $updateCardNode } from '@/nodes/base'
 import { isCardWidth } from '@/nodes/base/utils/card-widths'
-import extractVideoMetadata from '@/utils/extractVideoMetadata'
-import { getImageDimensions } from '@/utils/getImageDimensions'
+import extractVideoMetadata, { type VideoMetadata } from '@/utils/extractVideoMetadata'
 import { openFileSelection } from '@/utils/openFileSelection'
-import { revokePreviewUrl } from '@/utils/revokePreviewUrl'
+import { customThumbnailUploadIntent, videoThumbnailUploadIntent, videoUploadIntent } from '@/utils/upload-intent'
 
 interface VideoNodeComponentProps {
   nodeKey: NodeKey
@@ -52,8 +52,7 @@ export function VideoNodeComponent({
   const { fileUploader, cardConfig } = React.useContext(InklingComposerContext)
   const cardContext = React.useContext(CardContext)
   const videoFileInputRef = React.useRef<HTMLInputElement | null>(null)
-  const [previewThumbnail, setPreviewThumbnail] = useState<string>('')
-  const previewThumbnailUrlRef = React.useRef<string>('')
+  const [previewThumbnail, setThumbnailPreview] = usePreviewLease()
   const videoUploader = fileUploader.useFileUpload('video')
   const thumbnailUploader = fileUploader.useFileUpload('mediaThumbnail')
   const customThumbnailUploader = fileUploader.useFileUpload('image')
@@ -64,20 +63,6 @@ export function VideoNodeComponent({
   const [showSnippetToolbar, setShowSnippetToolbar] = useState<boolean>(false)
 
   const videoMimeTypes: string[] = fileUploader.fileTypes?.video?.mimeTypes || ['video/*']
-
-  const setPreviewThumbnailWithCleanup = React.useCallback((url: string) => {
-    revokePreviewUrl(previewThumbnailUrlRef.current)
-    previewThumbnailUrlRef.current = url
-    setPreviewThumbnail(url)
-  }, [])
-
-  // oxlint-disable react-hooks/exhaustive-deps
-  React.useEffect(() => {
-    return () => {
-      revokePreviewUrl(previewThumbnailUrlRef.current)
-    }
-  }, [])
-  // oxlint-enable react-hooks/exhaustive-deps
 
   React.useEffect(() => {
     const uploadInitialFiles = async (file: File | null) => {
@@ -96,13 +81,10 @@ export function VideoNodeComponent({
     if (!file) {
       return
     }
-    let thumbnailBlob: Blob | undefined
-    let duration = 0
-    let width = 0
-    let height = 0
-    let mimeType = ''
+
+    let metadata: VideoMetadata
     try {
-      ;({ thumbnailBlob, duration, width, height, mimeType } = await extractVideoMetadata(file))
+      metadata = await extractVideoMetadata(file)
     } catch (error) {
       setMetadataExtractionErrors([
         {
@@ -113,52 +95,33 @@ export function VideoNodeComponent({
       return
     }
 
-    if (thumbnailBlob) {
-      setPreviewThumbnailWithCleanup(URL.createObjectURL(thumbnailBlob))
+    if (metadata.thumbnailBlob) {
+      setThumbnailPreview(metadata.thumbnailBlob)
     }
 
-    const videoUploadResult = await videoUploader.upload([file])
-    const videoUrl = videoUploadResult?.[0]?.url
+    const videoUrl = await videoUploadIntent({
+      editor,
+      nodeKey,
+      upload: videoUploader.upload,
+      files: [file],
+      meta: metadata,
+      onEmptyPreview: () => setThumbnailPreview(null),
+    })
 
-    if (!videoUrl) {
-      setPreviewThumbnailWithCleanup('')
+    if (!videoUrl || !metadata.thumbnailBlob) {
       return
     }
 
-    if (videoUrl) {
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isVideoNode, (node) => {
-          node.src = videoUrl
-          node.duration = duration
-          node.fileName = file.name
-          node.width = width
-          node.height = height
-          node.mimeType = mimeType
-          if (!node.customThumbnailSrc) {
-            node.thumbnailWidth = width
-            node.thumbnailHeight = height
-          }
-        })
-      })
-    }
+    const thumbnailFile = new File([metadata.thumbnailBlob], `${file.name}.jpg`, { type: 'image/jpeg' })
+    await videoThumbnailUploadIntent({
+      editor,
+      nodeKey,
+      upload: thumbnailUploader.upload,
+      files: [thumbnailFile],
+      videoUrl,
+    })
 
-    if (!thumbnailBlob) {
-      return
-    }
-
-    const thumbnailFile = new File([thumbnailBlob], `${file.name}.jpg`, { type: 'image/jpeg' })
-    const imageUploadResult = await thumbnailUploader.upload([thumbnailFile], { formData: { url: videoUrl } })
-    const imageUrl = imageUploadResult?.[0]?.url
-
-    if (imageUrl) {
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isVideoNode, (node) => {
-          node.thumbnailSrc = imageUrl
-        })
-      })
-    }
-
-    setPreviewThumbnailWithCleanup('')
+    setThumbnailPreview(null)
   }
 
   const onVideoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,22 +133,7 @@ export function VideoNodeComponent({
   }
 
   const handleCustomThumbnailChange = async (files: FileList | File[]) => {
-    const customThumbnailUploadResult = await customThumbnailUploader.upload(files)
-    const imageUrl = customThumbnailUploadResult?.[0]?.url
-    if (!imageUrl) {
-      return
-    }
-    const { width, height } = await getImageDimensions(imageUrl)
-
-    if (imageUrl) {
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isVideoNode, (node) => {
-          node.customThumbnailSrc = imageUrl
-          node.thumbnailWidth = width
-          node.thumbnailHeight = height
-        })
-      })
-    }
+    await customThumbnailUploadIntent({ editor, nodeKey, upload: customThumbnailUploader.upload, files })
   }
 
   const onCustomThumbnailChange = async (e: FileChangeEvent) => {

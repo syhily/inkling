@@ -1,6 +1,14 @@
 import { $getNodeByKey, type LexicalEditor, type LexicalNode, type NodeKey } from 'lexical'
 
-import { $isAudioNode, $isFileNode, $isImageNode, $updateCardNode, type FileNode, type ImageNode } from '@/nodes/base'
+import {
+  $isAudioNode,
+  $isFileNode,
+  $isImageNode,
+  $isVideoNode,
+  $updateCardNode,
+  type FileNode,
+  type ImageNode,
+} from '@/nodes/base'
 import { getAudioMetadata } from '@/utils/getAudioMetadata'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import prettifyFileName from '@/utils/prettifyFileName'
@@ -386,6 +394,113 @@ export function audioThumbnailUploadIntent({
     onEmptyResult: 'bail',
     patch: (node, { resultUrl }) => {
       node.thumbnailSrc = resultUrl ?? ''
+    },
+  })
+}
+
+export interface BackgroundImageUploadResult {
+  imageSrc: string | undefined
+  width: number
+  height: number
+}
+
+export interface VideoUploadMetadata {
+  duration: number
+  width: number
+  height: number
+  mimeType: string
+}
+
+/**
+ * Video main flow: metadata arrives pre-extracted (`extractVideoMetadata`
+ * runs in the component, where its failure is caught and surfaced). An empty
+ * result bails with the node untouched and clears the component-owned preview
+ * via `onEmptyPreview`; the patch backfills thumbnail dimensions only when no
+ * custom thumbnail is set. Returns the uploaded video url for the thumbnail
+ * sub-flow.
+ */
+export function videoUploadIntent({
+  editor,
+  nodeKey,
+  upload,
+  files,
+  meta,
+  onEmptyPreview,
+}: CardUploadIntentDeps & { meta: VideoUploadMetadata; onEmptyPreview: () => void }): Promise<string | undefined> {
+  return runUploadIntent({
+    editor,
+    nodeKey,
+    guard: $isVideoNode,
+    files,
+    upload,
+    meta,
+    onEmptyResult: 'bail',
+    onBail: onEmptyPreview,
+    patch: (node, { meta: metadata, resultUrl, file }) => {
+      node.src = resultUrl ?? ''
+      node.duration = metadata.duration
+      node.fileName = file.name
+      node.width = metadata.width
+      node.height = metadata.height
+      node.mimeType = metadata.mimeType
+      if (!node.customThumbnailSrc) {
+        node.thumbnailWidth = metadata.width
+        node.thumbnailHeight = metadata.height
+      }
+    },
+  })
+}
+
+/**
+ * Video thumbnail sub-flow: uploads the synthesized `${file.name}.jpg` via
+ * the `mediaThumbnail` uploader with `formData: { url: videoUrl }`; writes
+ * `thumbnailSrc` only when a url comes back.
+ */
+export function videoThumbnailUploadIntent({
+  editor,
+  nodeKey,
+  upload,
+  files,
+  videoUrl,
+}: CardUploadIntentDeps & { videoUrl: string }): Promise<string | undefined> {
+  return runUploadIntent({
+    editor,
+    nodeKey,
+    guard: $isVideoNode,
+    files,
+    upload,
+    uploadOptions: { formData: { url: videoUrl } },
+    onEmptyResult: 'bail',
+    patch: (node, { resultUrl }) => {
+      node.thumbnailSrc = resultUrl ?? ''
+    },
+  })
+}
+
+/**
+ * Video custom thumbnail: no preview lease; dimensions come from the RESULT
+ * url after a non-empty upload; writes `customThumbnailSrc` plus the
+ * thumbnail dimensions.
+ */
+export function customThumbnailUploadIntent({
+  editor,
+  nodeKey,
+  upload,
+  files,
+}: CardUploadIntentDeps): Promise<string | undefined> {
+  return runUploadIntent({
+    editor,
+    nodeKey,
+    guard: $isVideoNode,
+    files,
+    upload,
+    metadataTiming: 'afterUpload',
+    extractMetadata: ({ resultUrl }) => getImageDimensions(resultUrl!),
+    onEmptyResult: 'bail',
+    patch: (node, { meta, resultUrl }) => {
+      node.customThumbnailSrc = resultUrl ?? ''
+      node.thumbnailWidth = meta.width
+      node.thumbnailHeight = meta.height
     },
   })
 }
