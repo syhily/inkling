@@ -8,7 +8,7 @@ export function readCaptionFromElement(element: Element, { selector = 'figcaptio
   const figcaptions = Array.from(element.querySelectorAll(selector))
   if (figcaptions.length) {
     figcaptions.forEach((figcaption) => {
-      const cleanHtml = cleanBasicHtml((figcaption as HTMLElement).innerHTML) ?? ''
+      const cleanHtml = cleanBasicHtml(figcaption.innerHTML)
       if (!cleanHtml.trim()) {
         return
       }
