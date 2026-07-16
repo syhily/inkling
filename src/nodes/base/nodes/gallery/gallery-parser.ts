@@ -39,8 +39,10 @@ export function parseGalleryNode(GalleryNode: new (data: Record<string, unknown>
     },
     div: (nodeElem: HTMLElement) => {
       // Medium "graf" galleries
-      function isGrafGallery(node: HTMLElement) {
-        return node.tagName === 'DIV' && node.dataset?.paragraphCount && node.querySelectorAll('img').length > 0
+      function isGrafGallery(node: Element) {
+        return (
+          node.tagName === 'DIV' && node.getAttribute('data-paragraph-count') && node.querySelectorAll('img').length > 0
+        )
       }
 
       if (isGrafGallery(nodeElem)) {
@@ -54,7 +56,7 @@ export function parseGalleryNode(GalleryNode: new (data: Record<string, unknown>
             let imgs = Array.from(domNode.querySelectorAll('img'))
 
             // ...and then iterate over any remaining divs until we run out of matches
-            let nextNode = domNode.nextElementSibling as HTMLElement | null
+            let nextNode = domNode.nextElementSibling
             while (nextNode && isGrafGallery(nextNode)) {
               const currentNode = nextNode
               imgs = imgs.concat(Array.from(currentNode.querySelectorAll('img')))
@@ -64,7 +66,7 @@ export function parseGalleryNode(GalleryNode: new (data: Record<string, unknown>
                 captions.push(currentNodeCaption)
               }
 
-              nextNode = currentNode.nextElementSibling as HTMLElement | null
+              nextNode = currentNode.nextElementSibling
 
               // remove nodes as we go so that they don't go through the parser
               currentNode.remove()

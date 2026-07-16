@@ -53,11 +53,7 @@ export function parseHtmlNode(HtmlNode: new (data: Record<string, unknown>) => L
       return null
     },
     table: (nodeElem: HTMLElement) => {
-      if (
-        nodeElem.nodeType === 1 &&
-        nodeElem.tagName === 'TABLE' &&
-        (nodeElem.parentNode as HTMLElement)?.tagName !== 'TABLE'
-      ) {
+      if (nodeElem.nodeType === 1 && nodeElem.tagName === 'TABLE' && nodeElem.parentElement?.tagName !== 'TABLE') {
         return {
           conversion(domNode: HTMLElement) {
             const payload: Record<string, unknown> = { html: domNode.outerHTML }

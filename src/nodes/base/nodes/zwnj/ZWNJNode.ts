@@ -1,4 +1,4 @@
-import type { EditorConfig, SerializedTextNode, TextModeType } from 'lexical'
+import type { EditorConfig, SerializedTextNode } from 'lexical'
 
 import { TextNode } from 'lexical'
 
@@ -16,9 +16,9 @@ export class ZWNJNode extends TextNode {
 
   static importJSON(serializedNode: SerializedTextNode): ZWNJNode {
     const node = new ZWNJNode(serializedNode.text)
-    node.setFormat(serializedNode.format as number)
-    node.setDetail(serializedNode.detail as number)
-    node.setMode(serializedNode.mode as TextModeType)
+    node.setFormat(serializedNode.format)
+    node.setDetail(serializedNode.detail)
+    node.setMode(serializedNode.mode)
     node.setStyle(serializedNode.style)
     return node
   }

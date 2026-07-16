@@ -47,7 +47,7 @@ export function parseBookmarkNode(BookmarkNode: new (data: Record<string, unknow
             const titleElement = anchorElement?.querySelector('.markup--mixtapeEmbed-strong')
             const descElement = anchorElement?.querySelector('.markup--mixtapeEmbed-em')
             // Image is a top level field inside it's own a tag
-            const imgElement = domNode.querySelector('.mixtapeImage') as HTMLElement | null
+            const imgElement = domNode.querySelector<HTMLElement>('.mixtapeImage')
 
             domNode.querySelector('br')?.remove()
 

@@ -147,7 +147,7 @@ export function renderGalleryNode(node: GalleryNodeData, context: RenderContext)
       if (context.variant({ web: false, email: true })) {
         // only resize if needed, width/height always exists for gallery image unline image cards
         if (image.width > 600) {
-          const newImageDimensions = getResizedImageDimensions(image, { width: 600 })!
+          const newImageDimensions = getResizedImageDimensions(image, { width: 600 })
           img.setAttribute('width', String(newImageDimensions.width))
           img.setAttribute('height', String(newImageDimensions.height))
         }

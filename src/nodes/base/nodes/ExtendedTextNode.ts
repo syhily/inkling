@@ -1,4 +1,4 @@
-import type { DOMConversion, DOMConversionOutput, LexicalNode, SerializedTextNode } from 'lexical'
+import type { DOMConversion, LexicalNode, SerializedTextNode } from 'lexical'
 
 import { $isTextNode, TextNode } from 'lexical'
 
@@ -73,7 +73,7 @@ function patchConversion(
     if (!original) {
       return null
     }
-    const originalOutput = original.conversion(node) as DOMConversionOutput
+    const originalOutput = original.conversion(node)
 
     if (!originalOutput) {
       return originalOutput
@@ -82,7 +82,7 @@ function patchConversion(
     return {
       ...originalOutput,
       forChild: (lexicalNode: LexicalNode, parent: LexicalNode | null | undefined) => {
-        const originalForChild = originalOutput?.forChild ?? ((x: LexicalNode) => x)
+        const originalForChild = originalOutput.forChild ?? ((x: LexicalNode) => x)
         const result = originalForChild(lexicalNode, parent)
         if ($isTextNode(result)) {
           return convertFn(result, node)
