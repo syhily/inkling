@@ -21,15 +21,28 @@ export default function readTextContent(node: Record<string, unknown>, property:
     return value.toString()
   }
 
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    'getEditorState' in value &&
-    typeof (value as { getEditorState: unknown }).getEditorState === 'function'
-  ) {
-    let text = ''
+  // the editor case: nested editors are created by `createEditor` and stored
+  // on the node (`@/utils/nested-editors`). Lexical 0.46 exports no
+  // editor-class value to instanceof against, so prove each call shape
+  // before invoking instead of asserting the whole chain
+  if (typeof value === 'object' && value !== null && 'getEditorState' in value) {
+    const { getEditorState } = value
+    if (typeof getEditorState !== 'function') {
+      return ''
+    }
 
-    ;(value as { getEditorState: () => { read: (fn: () => void) => void } }).getEditorState().read(() => {
+    const editorState: unknown = getEditorState.call(value)
+    if (typeof editorState !== 'object' || editorState === null || !('read' in editorState)) {
+      return ''
+    }
+
+    const { read } = editorState
+    if (typeof read !== 'function') {
+      return ''
+    }
+
+    let text = ''
+    read.call(editorState, () => {
       text = $getRoot().getTextContent()
     })
 
