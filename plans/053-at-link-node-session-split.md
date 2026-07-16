@@ -437,3 +437,63 @@ Step 2 itself is unsound, revert to the pre-Step-2 commit; the pins keep the
 at-link behavior characterized for a retry. Nothing in this plan touches the
 public barrel, node classes, or e2e specs, so no downstream cleanup is ever
 needed beyond the reverts.
+
+## Execution notes
+
+Plan 053 landed in three commits on main (`7609b22..1188ceb`) plus a
+post-review cleanup (`2f06e42`). Step 1 (`7609b22`) pinned both insertion
+paths and the node lifecycle — 19 black-box pins through the mounted
+plugin (real `dispatchCommand`, real `InputEvent`, real update listener);
+jsdom 29 constructs `InputEvent` with `data`/`inputType`, so the plan's
+jsdom STOP did not trigger. Step 2 (`4df1f9f`) extracted the headless
+`src/plugins/behaviour/at-link.ts` (verbatim move, diff-compared);
+`AtLinkPlugin.tsx` went 653 → 250 lines, honestly session-only, same path
+and both exports. This commit carried the plan's one sanctioned
+behavioral delta with before/after evidence: the command guards now
+register once per editor (`useEffect(..., [editor])`) instead of
+re-registering every render — the absorbed dependency-array fix; handler
+bodies close over only `editor` and module-level functions, so nothing
+goes stale. Step 3 (`1188ceb`) collapsed the native-input fallback to
+detection-only (`$shouldConvertInsertedAt` predicate + delete + shared
+`$insertAtLink`), keeping the double re-check with its rationale comment.
+
+Harness findings (documented in the test header, ratified in review as
+harness artifacts, not plugin hazards): in jsdom, Lexical's DOM-selection
+round-trip normalizes a caret at the empty search node's start onto the
+preceding ZWNJ node while the plugin's listener normalizes it back — the
+two cascade to Lexical's 99-cycle guard. The harness uses
+`setEditable(false)` (gates only model→DOM selection writeback; pinned
+states identical) plus a test-local `Selection.modify` polyfill. In a
+real browser the committed DOM selection sticks (no repeated
+selectionchange), the normalization is idempotent at the editor-state
+level, the e2e suite is green, and the listener is verbatim pre-existing
+code. Case (e) was realized with `['hello ', ' world']` so both the
+before-match sibling adjustment and the after-check exercise (a faithful
+refinement of the plan's wording). The escape pin records observed
+reality: the reverted `'@abc'` merges with the preceding same-format
+text node.
+
+Reviews: spec and quality both APPROVED. Post-review fixes in `2f06e42`:
+the module header now records the FIFTH asymmetry both reviewers caught —
+the native path captures the link's carried format post-deletion inside
+`$insertAtLink` (the old fallback captured it pre-deletion); identical in
+the common same-node case, divergent only when the just-typed '@' was its
+own differently-formatted text node (a plan-coverage gap, not
+implementation drift). The three helpers exported "for direct pinning"
+(`$shouldConvertAtLink`, `$insertAtLink`, `$shouldConvertInsertedAt`)
+were unexported — the pins are black-box and nothing imports them. A
+native empty-paragraph pin (case a) was added, closing the last unpinned
+insertion route; it matches the controlled path exactly.
+
+Preserved as prescribed: the four original insertion-path asymmetries
+documented not flattened; exactly one `$insertAtLink` (grep-verified);
+the native fallback's attach semantics (`getRootElement()` null at
+registration → no listener — a recorded latent limitation, NOT fixed);
+the plan-006 gate verbatim in the update listener; zero pre-existing
+expectation edits across the range (exactly three files touched).
+
+Gates at HEAD: full unit 226 files / 1985 passed / 21 todo;
+nodes-base+html-renderer 48 files / 754 passed / 21 todo; linking +
+bookmark-search e2e 35 passed / 6 skipped (identical pre-split and after
+each step); `verify:package` PASS (64 exports); `verify:types` PASS;
+typecheck/lint/format clean.
