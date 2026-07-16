@@ -1,12 +1,13 @@
+import type { CardImportSpec } from '@/nodes/base/import-spec'
+
 import {
   generateDecoratorNode,
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
 } from '@/nodes/base/generate-decorator-node'
-import { parseFileNode } from '@/nodes/base/nodes/file/file-parser'
 import { renderFileNode } from '@/nodes/base/nodes/file/file-renderer'
-import { bytesToSize } from '@/nodes/base/utils/size-byte-converter'
+import { bytesToSize, sizeToBytes } from '@/nodes/base/utils/size-byte-converter'
 
 const fileProperties = [
   { name: 'src', default: '', urlType: 'url' },
@@ -16,6 +17,25 @@ const fileProperties = [
   { name: 'fileSize', default: 0 },
 ] as const satisfies readonly DecoratorNodeProperty[]
 
+export const fileImportSpec = {
+  conversions: [
+    {
+      tag: 'div',
+      priority: 1,
+      guardClass: 'inkling-file-card',
+      reads: [
+        { name: 'src', kind: 'attribute', attribute: 'href', selector: 'a', fallback: '' },
+        { name: 'fileTitle', kind: 'text', selector: '.inkling-file-card-title', fallback: '' },
+        { name: 'fileCaption', kind: 'text', selector: '.inkling-file-card-caption', fallback: '' },
+        { name: 'fileName', kind: 'text', selector: '.inkling-file-card-filename', fallback: '' },
+        // sizeToBytes('') is 0 — the property default — so a missing size
+        // element still writes the key
+        { name: 'fileSize', kind: 'text', selector: '.inkling-file-card-filesize', fallback: '', parse: sizeToBytes },
+      ],
+    },
+  ],
+} satisfies CardImportSpec
+
 export type FileData = DecoratorNodeData<typeof fileProperties>
 
 export interface FileNode extends DecoratorNodeValueMap<typeof fileProperties> {}
@@ -24,6 +44,7 @@ export class FileNode extends generateDecoratorNode({
   nodeType: 'file',
   properties: fileProperties,
   defaultRenderFn: renderFileNode,
+  importSpec: fileImportSpec,
 }) {
   /* @override */
   exportJSON() {
@@ -39,10 +60,6 @@ export class FileNode extends generateDecoratorNode({
       fileName,
       fileSize,
     }
-  }
-
-  static importDOM() {
-    return parseFileNode(this)
   }
 
   // Editor-side upload behaviour the card spec doesn't cover lives on the

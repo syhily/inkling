@@ -2,7 +2,7 @@ import type { LexicalNode } from 'lexical'
 
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { VideoNode } from '@/nodes/base/nodes/video/VideoNode'
+import { VideoNode, videoImportSpec } from '@/nodes/base/nodes/video/VideoNode'
 import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
@@ -30,6 +30,7 @@ export const videoDeclaration = {
   baseNode: VideoNode,
   nestedEditors,
   transientProps,
+  importSpec: videoImportSpec,
   decorateTarget: {
     width: (node: LexicalNode) => normalizeCardWidth((node as VideoNode).cardWidth) ?? 'regular',
   },

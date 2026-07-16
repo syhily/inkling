@@ -1,6 +1,6 @@
 import type { TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { BaseAudioNode } from '@/nodes/base/nodes/audio/AudioNode'
+import { BaseAudioNode, audioImportSpec } from '@/nodes/base/nodes/audio/AudioNode'
 
 import type { CardDeclaration } from './card-declaration'
 
@@ -17,6 +17,7 @@ export const audioDeclaration = {
   nodeType: 'audio',
   baseNode: BaseAudioNode,
   transientProps,
+  importSpec: audioImportSpec,
   insert: { claimsMediaInsert: true },
   surfaces: {
     default: true,

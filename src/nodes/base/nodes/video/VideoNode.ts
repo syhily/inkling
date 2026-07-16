@@ -1,10 +1,11 @@
+import type { CardImportSpec } from '@/nodes/base/import-spec'
+
 import {
   generateDecoratorNode,
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
 } from '@/nodes/base/generate-decorator-node'
-import { parseVideoNode } from '@/nodes/base/nodes/video/video-parser'
 import { renderVideoNode } from '@/nodes/base/nodes/video/video-renderer'
 
 const videoProperties = [
@@ -23,6 +24,67 @@ const videoProperties = [
   { name: 'loop', default: false },
 ] as const satisfies readonly DecoratorNodeProperty[]
 
+export const videoImportSpec = {
+  conversions: [
+    {
+      tag: 'figure',
+      priority: 1,
+      guardClass: 'inkling-video-card',
+      reads: [
+        // property reads, not attributes — `.src` absolutizes; required:
+        // a card figure with no playable video aborts the conversion
+        {
+          name: 'src',
+          kind: 'property',
+          property: 'src',
+          selector: '.inkling-video-container video',
+          required: true,
+        },
+        { name: 'loop', kind: 'property', property: 'loop', selector: '.inkling-video-container video' },
+        {
+          name: 'cardWidth',
+          kind: 'classMap',
+          classMap: [{ pattern: /\binkling-width-(full)\b/ }, { pattern: /\binkling-width-(wide)\b/ }],
+          fallback: 'regular',
+        },
+        {
+          name: 'duration',
+          kind: 'html',
+          selector: '.inkling-video-duration',
+          trim: true,
+          omit: 'falsy',
+          // video's m:ss parse — deliberately not unified with audio's
+          // Number/isInteger variant
+          parse: (raw) => {
+            const [rawMinutes, rawSeconds = '0'] = raw.split(':')
+            const minutes = Number.parseInt(rawMinutes.trim(), 10)
+            const seconds = Number.parseInt(rawSeconds.trim(), 10)
+            return Number.isFinite(minutes) && Number.isFinite(seconds) ? minutes * 60 + seconds : undefined
+          },
+        },
+        { name: 'thumbnailSrc', kind: 'attribute', attribute: 'data-inkling-thumbnail', omit: 'falsy' },
+        { name: 'customThumbnailSrc', kind: 'attribute', attribute: 'data-inkling-custom-thumbnail', omit: 'falsy' },
+        { name: 'caption', kind: 'caption', omit: 'falsy' },
+        // truthy-guarded so a 0 width/height is excluded
+        {
+          name: 'width',
+          kind: 'property',
+          property: 'width',
+          selector: '.inkling-video-container video',
+          omit: 'falsy',
+        },
+        {
+          name: 'height',
+          kind: 'property',
+          property: 'height',
+          selector: '.inkling-video-container video',
+          omit: 'falsy',
+        },
+      ],
+    },
+  ],
+} satisfies CardImportSpec
+
 export type VideoData = DecoratorNodeData<typeof videoProperties>
 
 export interface VideoNode extends DecoratorNodeValueMap<typeof videoProperties> {}
@@ -31,6 +93,7 @@ export class VideoNode extends generateDecoratorNode({
   nodeType: 'video',
   properties: videoProperties,
   defaultRenderFn: renderVideoNode,
+  importSpec: videoImportSpec,
 }) {
   /* override */
   exportJSON() {
@@ -71,10 +134,6 @@ export class VideoNode extends generateDecoratorNode({
       cardWidth,
       loop,
     })
-  }
-
-  static importDOM() {
-    return parseVideoNode(this)
   }
 
   // Editor-side upload behaviour the card spec doesn't cover lives on the
