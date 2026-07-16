@@ -66,7 +66,7 @@ export function ImageNodeComponent({
 }: ImageNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
   const [showLink, setShowLink] = React.useState(false)
-  const { fileUploader, cardConfig } = React.useContext(InklingHostIntegrationContext)
+  const { fileUploader, cardConfig, onError } = React.useContext(InklingHostIntegrationContext)
   const { isSelected, cardWidth, setCardWidth } = React.useContext(CardContext)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
   const toolbarFileInputRef = React.useRef<HTMLInputElement | null>(null)
@@ -168,18 +168,22 @@ export function ImageNodeComponent({
     // When copy/pasting from Google Docs it's possible for images to be transferred with data: URLs.
     // Convert `data:` URL to File and upload it
     const uploadFile = async () => {
-      const file = await dataSrcToFile(src)
-      if (isMounted && file) {
-        await uploadImage([file])
+      try {
+        const file = await dataSrcToFile(src)
+        if (isMounted && file) {
+          await uploadImage([file])
+        }
+      } catch (error) {
+        onError(error, {})
       }
     }
 
-    uploadFile()
+    void uploadFile()
 
     return () => {
       isMounted = false
     }
-  }, [imageUploader.isLoading, src, uploadImage])
+  }, [imageUploader.isLoading, onError, src, uploadImage])
 
   // If an initial file is provided, upload it
   useInitialFileUpload({ initialFile, isReady: !src, run: (file) => uploadImage([file]) })
@@ -210,7 +214,10 @@ export function ImageNodeComponent({
     })
 
     if (hasMissingDimensions) {
-      populateImageDimensions()
+      // a broken/unloadable src rejects here; the dimensions simply stay unset
+      populateImageDimensions().catch((error: unknown) => {
+        onError(error, {})
+      })
     }
 
     // We only do this for init
