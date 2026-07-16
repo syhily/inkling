@@ -64,7 +64,10 @@ export const HorizontalRulePlugin = () => {
         return
       }
 
-      // selection-only updates cannot have produced a matching paragraph
+      // Selection-only updates cannot have produced a matching paragraph.
+      // Corner this changes: a '---' paragraph that already matched before
+      // this listener registered (pre-loaded content, late mount) no longer
+      // converts on a mere click into it — it converts after the next edit.
       if (dirtyLeaves.size === 0 && dirtyElements.size === 0) {
         return
       }

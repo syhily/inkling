@@ -34,7 +34,9 @@
 // test/unit/plugins/HorizontalRulePlugin.test.tsx), and only the markdown
 // trigger has an isImport branch (import replaces the paragraph outright).
 // Converging them would move a pinned behavior, so each variant names its
-// trigger.
+// trigger. (The fresh-key side is key-pinned in
+// test/unit/plugins/HorizontalRulePlugin.test.tsx; the kept-paragraph side is
+// covered by the import pin and typing e2e, not by key.)
 
 import type { ElementNode } from 'lexical'
 
