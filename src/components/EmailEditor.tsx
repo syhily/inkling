@@ -8,8 +8,7 @@ import type { CardConfig } from '@/context/InklingHostIntegrationContext'
 
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingComposer from '@/components/InklingComposer'
-import { SharedHistoryContext } from '@/context/SharedHistoryContext'
-import { SharedOnChangeContext } from '@/context/SharedOnChangeContext'
+import { SharedEditorStateContext } from '@/context/SharedEditorStateContext'
 import EMAIL_EDITOR_NODES from '@/nodes/EmailEditorNodes'
 import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
 import CardMenuPlugin from '@/plugins/CardMenuPlugin'
@@ -94,26 +93,24 @@ const EmailEditor = ({
       nodes={EMAIL_EDITOR_NODES}
       onError={onError}
     >
-      <SharedHistoryContext>
-        <SharedOnChangeContext onChange={onChange}>
-          <InklingComposableEditor
-            {...editorProps}
-            markdownTransformers={markdownTransformers}
-            placeholderText={placeholderText}
-          >
-            <CardInsertPlugin />
-            <CardMenuPlugin />
-            <EmEnDashPlugin />
-            <EmojiPickerPlugin />
-            <HorizontalRulePlugin />
-            <InklingSelectorPlugin />
-            <InklingSnippetPlugin />
-            <ListPlugin />
-            <ReplacementStringsPlugin />
-            {children}
-          </InklingComposableEditor>
-        </SharedOnChangeContext>
-      </SharedHistoryContext>
+      <SharedEditorStateContext onChange={onChange}>
+        <InklingComposableEditor
+          {...editorProps}
+          markdownTransformers={markdownTransformers}
+          placeholderText={placeholderText}
+        >
+          <CardInsertPlugin />
+          <CardMenuPlugin />
+          <EmEnDashPlugin />
+          <EmojiPickerPlugin />
+          <HorizontalRulePlugin />
+          <InklingSelectorPlugin />
+          <InklingSnippetPlugin />
+          <ListPlugin />
+          <ReplacementStringsPlugin />
+          {children}
+        </InklingComposableEditor>
+      </SharedEditorStateContext>
     </InklingComposer>
   )
 }

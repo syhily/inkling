@@ -4,22 +4,19 @@ import React from 'react'
 import type { InklingComposableEditorProps } from '@/components/InklingComposableEditor'
 
 import InklingComposableEditor from '@/components/InklingComposableEditor'
-import { SharedHistoryContext } from '@/context/SharedHistoryContext'
-import { SharedOnChangeContext } from '@/context/SharedOnChangeContext'
+import { SharedEditorStateContext } from '@/context/SharedEditorStateContext'
 import { AllDefaultPlugins } from '@/plugins/AllDefaultPlugins'
 
 export type InklingEditorProps = InklingComposableEditorProps
 
 const InklingEditor = ({ onChange, children, ...props }: InklingEditorProps) => {
   return (
-    <SharedHistoryContext>
-      <SharedOnChangeContext onChange={onChange}>
-        <InklingComposableEditor {...props}>
-          <AllDefaultPlugins />
-          {children}
-        </InklingComposableEditor>
-      </SharedOnChangeContext>
-    </SharedHistoryContext>
+    <SharedEditorStateContext onChange={onChange}>
+      <InklingComposableEditor {...props}>
+        <AllDefaultPlugins />
+        {children}
+      </InklingComposableEditor>
+    </SharedEditorStateContext>
   )
 }
 

@@ -17,8 +17,7 @@ import InklingErrorBoundary from '@/components/InklingErrorBoundary'
 import { EditorPlaceholder } from '@/components/ui/EditorPlaceholder'
 import { useDragDropHandle } from '@/context/DragDropHandleContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
-import { useSharedHistoryContext } from '@/context/SharedHistoryContext'
-import { useSharedOnChangeContext } from '@/context/SharedOnChangeContext'
+import { useSharedEditorStateContext } from '@/context/SharedEditorStateContext'
 import DragDropPastePlugin from '@/plugins/DragDropPastePlugin'
 import DragDropReorderPlugin from '@/plugins/DragDropReorderPlugin'
 import { ExternalControlPlugin } from '@/plugins/ExternalControlPlugin'
@@ -75,7 +74,7 @@ const InklingComposableEditor = ({
   useDefaultClasses = true,
   dataTestId,
 }: InklingComposableEditorProps) => {
-  const { historyState } = useSharedHistoryContext()
+  const { historyState, onChange: sharedOnChange } = useSharedEditorStateContext()
   const [editor] = useLexicalComposerContext()
   const { isCollabActive } = useCollaborationContext()
   const { darkMode, isTKEnabled } = React.useContext(InklingUiPrefsContext)
@@ -85,7 +84,6 @@ const InklingComposableEditor = ({
   const isNested = parentEditor !== null
   const isDragReorderEnabled = isDragEnabled && !readOnly && !isNested
 
-  const { onChange: sharedOnChange } = useSharedOnChangeContext()
   const _onChange = React.useCallback(
     (editorState: EditorState) => {
       if (sharedOnChange) {
