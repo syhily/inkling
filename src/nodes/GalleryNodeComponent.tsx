@@ -13,9 +13,8 @@ import InklingComposerContext from '@/context/InklingComposerContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import useGalleryReorder from '@/hooks/useGalleryReorder'
 import { $isGalleryNode, $updateCardNode } from '@/nodes/base'
-import { MAX_IMAGES, recalculateImageRows } from '@/nodes/GalleryNode'
-import { getImageDimensions } from '@/utils/getImageDimensions'
-import { revokePreviewUrl } from '@/utils/revokePreviewUrl'
+import { recalculateImageRows } from '@/nodes/GalleryNode'
+import { createPreviewLeasePool, galleryUploadIntent } from '@/utils/upload-intent'
 
 export interface GalleryNodeComponentProps {
   nodeKey: NodeKey
@@ -38,7 +37,7 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
     })
     return existingImages ?? []
   })
-  const previewUrlsRef = React.useRef<Set<string>>(new Set())
+  const [previewPool] = React.useState(() => createPreviewLeasePool())
 
   const galleryReorder = useGalleryReorder({ images, updateImages: reorderImages, isSelected })
   const imageUploader = fileUploader.useFileUpload('image')
@@ -62,10 +61,7 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
   }
 
   const deleteImage = (imageToDelete: GalleryImage): void => {
-    if (imageToDelete.previewSrc) {
-      revokePreviewUrl(imageToDelete.previewSrc)
-      previewUrlsRef.current.delete(imageToDelete.previewSrc)
-    }
+    previewPool.release(imageToDelete.previewSrc)
 
     const newImages = images.filter((image) => image.fileName !== imageToDelete.fileName)
     recalculateImageRows(newImages)
@@ -73,93 +69,23 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
     setNodeImages(newImages)
   }
 
-  // oxlint-disable react-hooks/exhaustive-deps
   React.useEffect(() => {
     return () => {
-      previewUrlsRef.current.forEach((url) => revokePreviewUrl(url))
-      previewUrlsRef.current.clear()
+      previewPool.releaseAll()
     }
-  }, [])
-  // oxlint-enable react-hooks/exhaustive-deps
+  }, [previewPool])
 
   const handleImageUploads = async (files: FileList | File[]): Promise<void> => {
-    const currentCount = images.length
-    const allowedCount = MAX_IMAGES - currentCount
-
-    const strippedFiles = Array.prototype.slice.call(files, 0, allowedCount) as File[]
-    if (strippedFiles.length < files.length) {
-      setErrorMessage('Galleries are limited to 9 images')
-    }
-
-    if (strippedFiles.length === 0) {
-      return
-    }
-
-    const newImages: GalleryImage[] = [...images]
-
-    // create preview images and capture dimensions
-    for (const file of strippedFiles) {
-      const previewSrc = URL.createObjectURL(file)
-      previewUrlsRef.current.add(previewSrc)
-      const { width, height } = await getImageDimensions(previewSrc)
-
-      newImages.push({
-        fileName: file.name,
-        previewSrc,
-        width,
-        height,
-      })
-    }
-
-    recalculateImageRows(newImages)
-
-    // show preview images immediately
-    setImages(newImages)
-
-    // start uploads
-    const uploadResult = await imageUploader.upload?.(strippedFiles)
-
-    if (!uploadResult) {
-      const cleanedImages = newImages.map((image, index) => (index < currentCount ? image : withoutPreviewSrc(image)))
-      newImages.slice(currentCount).forEach((image) => {
-        revokePreviewUrl(image.previewSrc)
-        previewUrlsRef.current.delete(image.previewSrc as string)
-      })
-      recalculateImageRows(cleanedImages)
-      setImages(cleanedImages)
-      setNodeImages(cleanedImages)
-      setErrorMessage('Something went wrong while uploading images. Please refresh the page and try again')
-      return
-    }
-
-    const uploadedImages = newImages.map((image, index) => {
-      if (index < currentCount) {
-        return image
-      }
-
-      const result = uploadResult.find((r) => r.fileName === image.fileName)
-      if (!result) {
-        return image
-      }
-
-      revokePreviewUrl(image.previewSrc)
-      previewUrlsRef.current.delete(image.previewSrc as string)
-
-      return {
-        ...image,
-        src: result.url,
-        previewSrc: undefined,
-      }
+    await galleryUploadIntent({
+      editor,
+      nodeKey,
+      upload: imageUploader.upload,
+      files,
+      images,
+      previews: previewPool,
+      setImages,
+      setErrorMessage,
     })
-
-    // update local state
-    setImages(uploadedImages)
-    setNodeImages(uploadedImages)
-  }
-
-  function withoutPreviewSrc(image: GalleryImage): GalleryImage {
-    const { previewSrc: _previewSrc, ...rest } = image
-    return rest
   }
 
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {

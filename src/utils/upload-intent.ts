@@ -1,11 +1,16 @@
 import { $getNodeByKey, type LexicalEditor, type LexicalNode, type NodeKey } from 'lexical'
 
+import type { GalleryImage } from '@/types/gallery'
+
 import {
   $isAudioNode,
   $isFileNode,
+  $isGalleryNode,
   $isImageNode,
   $isVideoNode,
   $updateCardNode,
+  MAX_IMAGES,
+  recalculateImageRows,
   type FileNode,
   type ImageNode,
 } from '@/nodes/base'
@@ -538,4 +543,121 @@ export const backgroundImageUploadHandler = async (
     width,
     height,
   }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Gallery's multi-file adapter. The single-intent runner cannot express     */
+/* this flow without distortion: previews are per-file, publish to LOCAL     */
+/* React state (never the node) before the batched upload, results merge     */
+/* back by fileName, and the failure path cleans up in-flow instead of       */
+/* propagating. The adapter keeps the pinned ordering — previews to local    */
+/* state first, node write (through 044's seam) only after the upload        */
+/* resolves — so in-flight uploads stay reorderable by previewSrc with       */
+/* stable image identity (useGalleryReorder).                                */
+/* ------------------------------------------------------------------------ */
+
+export interface GalleryUploadIntentDeps {
+  editor: LexicalEditor
+  nodeKey: NodeKey
+  upload: UploadFn
+  files: FileList | File[]
+  /** The card's current local images. */
+  images: GalleryImage[]
+  /** The component's preview pool — per-file previews lease from the one owner. */
+  previews: PreviewLeasePool
+  /** Local-state setter: preview publication and the result merge land here FIRST. */
+  setImages: (images: GalleryImage[]) => void
+  setErrorMessage: (message: string) => void
+}
+
+function withoutPreviewSrc(image: GalleryImage): GalleryImage {
+  const { previewSrc: _previewSrc, ...rest } = image
+  return rest
+}
+
+export async function galleryUploadIntent({
+  editor,
+  nodeKey,
+  upload,
+  files,
+  images,
+  previews,
+  setImages,
+  setErrorMessage,
+}: GalleryUploadIntentDeps): Promise<void> {
+  const setNodeImages = async (newImages: GalleryImage[]): Promise<void> => {
+    await editor.update(() => {
+      $updateCardNode(nodeKey, $isGalleryNode, (node) => node.setImages(newImages))
+    })
+  }
+
+  const currentCount = images.length
+  const allowedCount = MAX_IMAGES - currentCount
+
+  const strippedFiles = Array.prototype.slice.call(files, 0, allowedCount) as File[]
+  if (strippedFiles.length < files.length) {
+    setErrorMessage('Galleries are limited to 9 images')
+  }
+
+  if (strippedFiles.length === 0) {
+    return
+  }
+
+  const newImages: GalleryImage[] = [...images]
+
+  // create preview images and capture dimensions
+  for (const file of strippedFiles) {
+    const previewSrc = previews.lease(file)
+    const { width, height } = await getImageDimensions(previewSrc)
+
+    newImages.push({
+      fileName: file.name,
+      previewSrc,
+      width,
+      height,
+    })
+  }
+
+  recalculateImageRows(newImages)
+
+  // show preview images immediately
+  setImages(newImages)
+
+  // start uploads
+  const uploadResult = await upload(strippedFiles)
+
+  if (!uploadResult) {
+    const cleanedImages = newImages.map((image, index) => (index < currentCount ? image : withoutPreviewSrc(image)))
+    newImages.slice(currentCount).forEach((image) => {
+      previews.release(image.previewSrc)
+    })
+    recalculateImageRows(cleanedImages)
+    setImages(cleanedImages)
+    await setNodeImages(cleanedImages)
+    setErrorMessage('Something went wrong while uploading images. Please refresh the page and try again')
+    return
+  }
+
+  const uploadedImages = newImages.map((image, index) => {
+    if (index < currentCount) {
+      return image
+    }
+
+    const result = uploadResult.find((r) => r.fileName === image.fileName)
+    if (!result) {
+      return image
+    }
+
+    previews.release(image.previewSrc)
+
+    return {
+      ...image,
+      src: result.url,
+      previewSrc: undefined,
+    }
+  })
+
+  // update local state
+  setImages(uploadedImages)
+  await setNodeImages(uploadedImages)
 }
