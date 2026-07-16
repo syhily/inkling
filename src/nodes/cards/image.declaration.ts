@@ -2,7 +2,7 @@ import type { LexicalNode } from 'lexical'
 
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { ImageNode } from '@/nodes/base/nodes/image/ImageNode'
+import { ImageNode, imageImportSpec } from '@/nodes/base/nodes/image/ImageNode'
 import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
@@ -38,6 +38,7 @@ export const imageDeclaration = {
   baseNode: ImageNode,
   nestedEditors,
   transientProps,
+  importSpec: imageImportSpec,
   decorateTarget: {
     width: (node: LexicalNode) => normalizeCardWidth((node as ImageNode).cardWidth) ?? 'regular',
   },

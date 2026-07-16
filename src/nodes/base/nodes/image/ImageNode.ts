@@ -1,11 +1,13 @@
+import type { CardImportSpec } from '@/nodes/base/import-spec'
+
 import {
   generateDecoratorNode,
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
 } from '@/nodes/base/generate-decorator-node'
-import { parseImageNode } from '@/nodes/base/nodes/image/image-parser'
 import { renderImageNode } from '@/nodes/base/nodes/image/image-renderer'
+import { readImageAttributesFromElement } from '@/nodes/base/utils/read-image-attributes-from-element'
 
 const imageProperties = [
   { name: 'src', default: '', urlType: 'url' },
@@ -18,6 +20,49 @@ const imageProperties = [
   { name: 'href', default: '', urlType: 'url' },
 ] as const satisfies readonly DecoratorNodeProperty[]
 
+const imageAttributesRead = readImageAttributesFromElement as (element: HTMLElement) => Record<string, unknown>
+
+export const imageImportSpec = {
+  conversions: [
+    {
+      tag: 'img',
+      priority: 1,
+      reads: [
+        {
+          name: 'imageAttributes',
+          kind: 'composite',
+          read: imageAttributesRead,
+          provides: ['src', 'width', 'height', 'alt', 'title', 'href'],
+        },
+      ],
+    },
+    {
+      tag: 'figure',
+      // generically parses figure elements, so it must run after others (like the gallery)
+      priority: 0,
+      guardSelector: 'img',
+      reads: [
+        {
+          name: 'imageAttributes',
+          kind: 'composite',
+          selector: 'img',
+          read: imageAttributesRead,
+          provides: ['src', 'width', 'height', 'alt', 'title', 'href'],
+        },
+        {
+          name: 'cardWidth',
+          kind: 'classMap',
+          classMap: [
+            { pattern: /inkling-width-(wide|full)/ },
+            { pattern: /graf--layout(FillWidth|OutsetCenter)/, map: { FillWidth: 'full', OutsetCenter: 'wide' } },
+          ],
+        },
+        { name: 'caption', kind: 'caption', fallback: '' },
+      ],
+    },
+  ],
+} satisfies CardImportSpec
+
 export type ImageData = DecoratorNodeData<typeof imageProperties>
 
 export interface ImageNode extends DecoratorNodeValueMap<typeof imageProperties> {}
@@ -26,6 +71,7 @@ export class ImageNode extends generateDecoratorNode({
   nodeType: 'image',
   properties: imageProperties,
   defaultRenderFn: renderImageNode,
+  importSpec: imageImportSpec,
 }) {
   /* @override */
   exportJSON() {
@@ -47,10 +93,6 @@ export class ImageNode extends generateDecoratorNode({
       cardWidth,
       href,
     })
-  }
-
-  static importDOM() {
-    return parseImageNode(this)
   }
 
   // Editor-side upload behaviour the card spec doesn't cover lives on the
