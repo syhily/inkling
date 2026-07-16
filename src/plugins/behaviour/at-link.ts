@@ -45,6 +45,13 @@ import {
 // 4. The paths are mutually exclusive in practice: a consumed controlled
 //    command prevents DOM insertion, so no 'input' event fires. The native
 //    listener is fallback-only; both registrations stay.
+// 5. The link's carried format is captured at different moments: the
+//    controlled path reads the anchor text node's format pre-insertion,
+//    while the native path reads it post-deletion inside $insertAtLink
+//    (from whatever node the caret lands in, or 0 for an element anchor).
+//    Identical in the common same-node case; it can differ when the
+//    just-typed '@' was its own text node with a format unlike its
+//    neighbors (e.g. bold toggled immediately before typing '@').
 
 export function $removeAtLink(node: AtLinkNode, { focus = false } = {}) {
   if (!$isAtLinkNode(node)) {
@@ -65,7 +72,7 @@ export function $removeAtLink(node: AtLinkNode, { focus = false } = {}) {
   }
 }
 
-export function $shouldConvertAtLink(): boolean {
+function $shouldConvertAtLink(): boolean {
   const selection = $getSelection()
   if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
     return false
@@ -123,7 +130,7 @@ export function $shouldConvertAtLink(): boolean {
   return (textBeforeAnchor === '' || /\s$/.test(textBeforeAnchor)) && /^($|\s|\.)/.test(textAfterAnchor)
 }
 
-export function $insertAtLink(): boolean {
+function $insertAtLink(): boolean {
   if (!$shouldConvertAtLink()) {
     return false
   }
@@ -172,7 +179,7 @@ export function $insertAtLink(): boolean {
 // become an at-link? Text anchors only — the post-insertion selection is
 // always text (see the module header for the deliberate asymmetries with
 // the pre-insertion $shouldConvertAtLink).
-export function $shouldConvertInsertedAt(): boolean {
+function $shouldConvertInsertedAt(): boolean {
   // get the current selection
   const selection = $getSelection()
   if (!$isRangeSelection(selection) || !selection.isCollapsed()) {

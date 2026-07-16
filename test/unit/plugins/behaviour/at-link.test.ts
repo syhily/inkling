@@ -370,6 +370,16 @@ describe('at-link node lifecycle (through the mounted plugin)', () => {
   })
 
   describe('native input fallback path', () => {
+    it('(a) converts a "@" typed into an empty paragraph, matching the controlled path', async () => {
+      // what the browser produces after typing '@' into an empty paragraph
+      await buildSingleParagraph(editor, [{ text: '@' }], { segment: 0, anchorOffset: 1 })
+
+      await dispatchNativeAt()
+
+      expect(editor.getEditorState().toJSON()).toEqual(editorStateJSON(paragraphJSON([atLinkNodeJSON(0)])))
+      expect(readCollapsedPoint(editor)).toEqual({ nodeType: 'at-link-search', offset: 0, text: '' })
+    })
+
     it('(b) converts a trailing "@" after whitespace, matching the controlled path', async () => {
       await buildSingleParagraph(editor, [{ text: 'hello @' }], { segment: 0, anchorOffset: 7 })
 
