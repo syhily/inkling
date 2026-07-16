@@ -46,6 +46,9 @@ export interface ContainerDragHandlers {
 export interface DraggableInfo {
   type?: string
   cardName?: string
+  // the card node's key, set by the card drag producer (DragDropReorderPlugin)
+  // and read back on drop (image→gallery merge, reorder)
+  nodeKey?: string
   element: HTMLElement | null
   target: HTMLElement | null
   source: HTMLElement | null

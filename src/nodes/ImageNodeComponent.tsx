@@ -93,7 +93,7 @@ export function ImageNodeComponent({
   const onDropImageCard = React.useCallback(
     (draggable: DraggableInfo): boolean | undefined => {
       const { type, cardName, dataset } = draggable
-      const draggedNodeKey = draggable.nodeKey as string | undefined
+      const draggedNodeKey = draggable.nodeKey
 
       if (type === 'card' && cardName === 'image' && draggedNodeKey && dataset) {
         editor.update(() => {
@@ -107,11 +107,12 @@ export function ImageNodeComponent({
           const galleryNode = $createGalleryNode({})
 
           // images don't contain the filename dataset property so we need to add it
-          dataset.fileName = (dataset?.fileName as string | undefined) || getImageFilenameFromSrc(String(dataset.src))
+          const draggedFileName = typeof dataset.fileName === 'string' ? dataset.fileName : undefined
+          dataset.fileName = draggedFileName || getImageFilenameFromSrc(String(dataset.src))
           const targetImageDataset = targetImageNode.getDataset()
-          targetImageDataset.fileName =
-            (targetImageDataset?.fileName as string | undefined) ||
-            getImageFilenameFromSrc(String(targetImageDataset.src))
+          const targetFileName =
+            typeof targetImageDataset.fileName === 'string' ? targetImageDataset.fileName : undefined
+          targetImageDataset.fileName = targetFileName || getImageFilenameFromSrc(String(targetImageDataset.src))
 
           // image datasets allow null dimensions while GalleryImage keeps them
           // optional; the conversion only carries keys allowed by addImages
@@ -129,7 +130,7 @@ export function ImageNodeComponent({
 
   const canDropImageCard = React.useCallback(
     (draggable: DraggableInfo): boolean => {
-      const draggedNodeKey = draggable.nodeKey as string | undefined
+      const draggedNodeKey = draggable.nodeKey
       return draggable.type === 'card' && draggable.cardName === 'image' && draggedNodeKey !== nodeKey
     },
     [nodeKey],
