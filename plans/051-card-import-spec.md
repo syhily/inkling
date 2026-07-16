@@ -410,3 +410,58 @@ vocabulary itself (Step 2) proves unsound, revert to `main` before commit 2 —
 the surviving parsers and the deleted-file restorations return the tree to the
 pre-plan state, and the classification table in this plan remains the evidence
 for the next attempt.
+
+## Execution notes
+
+Plan 051 landed in five commits on main (`5be7279..78a3b6f`) plus a
+post-review cleanup (`57c5fc4`). Step 1 (`5be7279`) added the one
+characterization pin (video figure without a `video` element → no card).
+Steps 2–4 (`1ffc23e`, `e9f7ce7`, `b46ff8b`) introduced
+`src/nodes/base/import-spec.ts` (`CardImportSpec`, `buildImportConversions`
+with dynamic-`this` construction, `validateImportSpec` at class-creation)
+and derived the eight derivable parsers (hr, toggle, button, callout,
+file, audio, video, image); the five structural survivors (bookmark,
+codeblock, gallery, header, html) keep hand-written parsers with
+why-comments. Step 5 (`78a3b6f`) pinned the classification (derivable /
+structural sets, declaration↔baseNode spec identity, read↔property
+agreement) and added the CONTEXT.md "Import spec" entry.
+
+Note on the classification: the orchestration brief given to the
+implementer still described callout/toggle as structural, but the plan's
+own "Correction to the original evidence" section re-classifies them as
+derivable (their parsers read flat innerHTML/textContent; nested-editor
+population happens in the generated constructor from `nestedEditors`).
+The implementation follows the plan — callout WAS derived; the spec
+review confirmed the brief was stale, not the code.
+
+R3 refinements, all adjudicated in review as justified readings of the
+verbatim parser evidence (plan text imprecise, code right): `required`
+aborts on any falsy (video's `if (!videoSrc)`; only video's src uses
+`required`); `omit: 'falsy'` applies pre- AND post-parse (audio's
+`Number('') === 0` trap — an unguarded empty duration would have yielded
+`duration: 0`); classMap reuses `fallback` as the no-match default;
+duration parse lambdas stay deliberately separate with don't-unify
+comments. The one REAL divergence review caught — video's cardWidth `\b`
+regexes were a strict superset of the deleted `classList.contains` token
+semantics (`foo-inkling-width-full` would have imported as `full`) — is
+fixed in `57c5fc4` with token-anchored patterns.
+
+Reviews: spec and quality both APPROVED. Post-review fixes in `57c5fc4`:
+the token anchoring above; `validateImportSpec` now names the card
+(`nodeType`) in its throw; the composite-`name` doc exception recorded;
+`importDOM()` derives from `this.importSpec` (the `nestedEditors`
+adoption idiom — behavior-identical today, but exposure and derivation
+can no longer disagree if a subclass redeclares the static). Recorded,
+not fixed (both reviewers: non-blocking): `validateImportSpec` doesn't
+check kind-required fields (a composite without `read` throws a raw
+TypeError at import time instead of a validation error — hardening for
+future spec authors); duplicate-tag conversions within one spec silently
+overwrite (parity with the old object literals); the classMap
+fall-through-on-unmapped-capture is unexercised defensive generality.
+
+Gates at HEAD: full unit 224 files / 1953 passed / 21 todo;
+nodes-base+html-renderer 48 files / 754 passed / 21 todo; html-to-lexical
+2 files / 41 passed; paste e2e 28 passed; `verify:package` PASS (64
+exports — the eight `*ImportSpec` consts ride `@/nodes/base`, which the
+barrel doesn't re-export); `verify:types` PASS; typecheck/lint/format
+clean. Zero expectation edits across the range.
