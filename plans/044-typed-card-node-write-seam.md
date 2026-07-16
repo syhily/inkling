@@ -498,7 +498,7 @@ added an in-file comment pointing at it.
 
 Known limitation (pinned in `test/typecheck/card-node-write-seam.ts`):
 the generated card classes carry `[key: string]: unknown`, so the seam
-guarantees the value types of *known* fields, not exhaustiveness against
+guarantees the value types of _known_ fields, not exhaustiveness against
 arbitrary string keys.
 
 Reviews: spec and quality both APPROVED. Remaining quality nits
