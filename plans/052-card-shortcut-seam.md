@@ -24,6 +24,46 @@
 > / 21 todo; `pnpm vitest run test/nodes-base test/html-renderer` = 46 files
 > / 730 passed / 21 todo (subset — untouched by this plan, sanity only).
 
+## Amendment (2026-07-16, orchestrator ruling after drift-check STOP)
+
+The drift check fired correctly: plans 049–051 landed after this plan was
+written, and plan 050 (`daa4f9f`) moved the `HR` and `CODE_BLOCK`
+transformers out of `src/plugins/MarkdownShortcutPlugin.tsx` (now an 11-line
+wrapper) into **`src/markdown/transformers.ts`** — byte-identical contents
+(HR at :17-36, CODE_BLOCK at :38-59). Everywhere this plan says
+"`MarkdownShortcutPlugin.tsx:18-37` (HR)" or "`MarkdownShortcutPlugin.tsx:39-60`
+(CODE_BLOCK)", read the corresponding range in `src/markdown/transformers.ts`.
+Every behavioral claim in "Current-state evidence" still verifies.
+
+Rulings amending the steps and acceptance criteria:
+
+1. **Migration target**: Steps 2–3 migrate the transformers at their new
+   home, `src/markdown/transformers.ts`. Contents are identical to what the
+   plan quotes.
+2. **Seam home**: the seam module lives at **`src/markdown/card-shortcuts.ts`**,
+   not the illustrative `src/plugins/card-shortcuts.ts`. Import layering is
+   one-directional today (`src/plugins/*` → `src/markdown/*`; nothing in
+   `src/markdown/` imports from `src/plugins/`), and the transformers the
+   seam serves now live in the markdown layer. The keyboard-navigation call
+   sites (`enter.ts`/`tab.ts`) importing from the markdown layer is
+   precedented. This keeps the graph acyclic.
+3. **Public surface**: the barrel (`src/index.ts:122-128`) re-exports
+   `HR_TRANSFORMER`, `CODE_BLOCK_TRANSFORMER`, and the five transformer sets
+   with unchanged names and object shapes, origin `@/markdown/transformers`.
+   The acceptance criterion "MarkdownShortcutPlugin still exports HR,
+   CODE_BLOCK, and the five transformer sets" is replaced by: **the barrel
+   keeps those exports stable**; the seam module must NOT be added to
+   `src/index.ts`.
+4. **Refreshed facts**: `test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts`
+   has ~56 `it(` cases (not "exactly 50"); the trailing-whitespace pin is at
+   `test/unit/plugins/MarkdownShortcutPlugin.test.ts:123`; baselines are
+   stale (current: 224 files / 1953 passed / 21 todo) — re-baseline at Step 1
+   per the plan's drift-check clause.
+
+Everything else in the plan — the four call sites, the per-trigger pin
+strategy, the three drift axes, the HR gating step, the guard fix, the
+EmEnDash move, the STOP conditions — stands as written.
+
 ## Status
 
 - **Priority**: P2
