@@ -69,13 +69,14 @@ Everything below is exported from the package entry point.
 
 ### Plugins
 
-Around 30 plugins are exported:
+Around 20 plugins are exported:
 
-`AllDefaultPlugins`, `AudioPlugin`, `BookmarkPlugin`, `ButtonPlugin`, `CalloutPlugin`, `CardMenuPlugin`, `DragDropPastePlugin`, `DragDropReorderPlugin`, `EmEnDashPlugin`, `EmojiPickerPlugin`, `ExternalControlPlugin`, `FilePlugin`, `FloatingToolbarPlugin`, `GalleryPlugin`, `HeaderPlugin`, `HorizontalRulePlugin`, `HtmlOutputPlugin`, `HtmlPlugin`, `ImagePlugin`, `InklingBehaviourPlugin`, `InklingSelectorPlugin`, `InklingSnippetPlugin`, `ListPlugin`, `MarkdownShortcutPlugin`, `PlusCardMenuPlugin`, `ReplacementStringsPlugin`, `RestrictContentPlugin`, `SlashCardMenuPlugin`, `TKCountPlugin`, `TogglePlugin`, `VideoPlugin`, `WordCountPlugin`.
+`AllDefaultPlugins`, `CardInsertPlugin`, `CardMenuPlugin`, `DragDropPastePlugin`, `DragDropReorderPlugin`, `EmEnDashPlugin`, `EmojiPickerPlugin`, `ExternalControlPlugin`, `FloatingToolbarPlugin`, `HorizontalRulePlugin`, `HtmlOutputPlugin`, `InklingBehaviourPlugin`, `InklingSelectorPlugin`, `InklingSnippetPlugin`, `ListPlugin`, `MarkdownShortcutPlugin`, `PlusCardMenuPlugin`, `ReplacementStringsPlugin`, `RestrictContentPlugin`, `SlashCardMenuPlugin`, `TKCountPlugin`, `WordCountPlugin`.
 
 Most map to a card or an obvious editor feature. The less obvious ones:
 
 - `AllDefaultPlugins` — the full default plugin bundle used by `InklingEditor`.
+- `CardInsertPlugin` — registers every card's insert command, derived from the card declarations.
 - `InklingBehaviourPlugin` — core keyboard and paste behaviors plus card commands.
 - `CardMenuPlugin` — bundles `PlusCardMenuPlugin` and `SlashCardMenuPlugin`.
 - `EmEnDashPlugin` — auto-replaces typed hyphens with em/en dashes.
