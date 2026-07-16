@@ -88,6 +88,12 @@ function assertExports(mod) {
   if (missing.length > 0) {
     throw new Error('missing or invalid exports: ' + missing.join(', '))
   }
+  const unexpected = []
+  if (mod.DesignSandbox) unexpected.push('DesignSandbox')
+  if (mod.InklingCardWrapper) unexpected.push('InklingCardWrapper')
+  if (unexpected.length > 0) {
+    throw new Error('unexpected exports (removed from the barrel in 2.0.0): ' + unexpected.join(', '))
+  }
   console.log('exports OK: ' + Object.keys(mod).length + ' exports')
 }
 `

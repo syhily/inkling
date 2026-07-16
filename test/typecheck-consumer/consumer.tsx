@@ -7,7 +7,15 @@
  */
 import {
   BASIC_TRANSFORMERS,
+  type CardConfig,
+  // @ts-expect-error - DesignSandbox was removed from the public barrel in 2.0.0
+  DesignSandbox,
   type ExternalControlAPI,
+  type FileUploader,
+  type FileUploaderInput,
+  type GifSettings,
+  // @ts-expect-error - InklingCardWrapper was removed from the public barrel in 2.0.0
+  InklingCardWrapper,
   InklingComposer,
   InklingComposableEditor,
   type InklingComposableEditorProps,
@@ -16,7 +24,14 @@ import {
   type InklingInitialEditorState,
   INSERT_AUDIO_COMMAND,
   type LexicalEditor,
+  type LinkingSettings,
+  type ListOptionItem,
+  type SearchResult,
   type SerializedEditorState,
+  type SnippetItem,
+  type SnippetSettings,
+  type UploadSettings,
+  type VisibilitySettings,
   type AudioNodeDataset,
 } from '@inkling/editor'
 
@@ -81,3 +96,64 @@ void badAudioPayload
 
 // @ts-expect-error - INSERT_AUDIO_COMMAND payload must match AudioNodeDataset
 editor.dispatchCommand(INSERT_AUDIO_COMMAND, { html: '<p>not audio</p>' })
+
+// --- host-config type family (2.0.0) -----------------------------------------
+
+const gifSettings: GifSettings = {
+  klipy: { apiKey: 'key', contentFilter: 'high' },
+  tenor: { googleApiKey: 'key' },
+}
+const snippetItems: SnippetItem[] = [{ name: 'welcome', value: '{"root":{}}' }]
+const snippetSettings: SnippetSettings = {
+  snippets: snippetItems,
+  createSnippet: ({ name, value }) => void (name + value),
+  deleteSnippet: ({ name }) => Promise.resolve(void name),
+}
+const linkingSettings: LinkingSettings = {
+  fetchAutocompleteLinks: () => Promise.resolve(undefined),
+  fetchEmbed: (href, opts) => Promise.resolve({ href, opts }),
+  searchLinks: (term) => Promise.resolve(term ? [] : undefined),
+  siteUrl: 'https://example.com',
+}
+const visibilitySettings: VisibilitySettings = { stripeEnabled: true, visibilitySettings: 'web' }
+const uploadSettings: UploadSettings = { image: { allowedWidths: ['regular'] }, pinturaConfig: {} }
+
+const searchResult: SearchResult = { label: 'Pages', items: [{ title: 'Home', url: 'https://example.com' }] }
+const listOption: ListOptionItem = {
+  label: 'Home',
+  value: 'https://example.com',
+  Icon: () => null,
+  highlight: false,
+  type: 'url',
+}
+
+const fileUploader: FileUploader = {
+  useFileUpload: () => ({ upload: () => Promise.resolve(undefined) }),
+  fileTypes: { image: { mimeTypes: ['image/png'] } },
+}
+const fileUploaderInput: FileUploaderInput = { fileTypes: { image: { mimeTypes: ['image/png'] } } }
+
+// a full closed CardConfig literal is accepted on InklingComposer
+const cardConfig: CardConfig = {
+  ...gifSettings,
+  ...linkingSettings,
+  ...snippetSettings,
+  ...uploadSettings,
+  ...visibilitySettings,
+  post: { displayName: 'post' },
+}
+const composerWithConfig = (
+  <InklingComposer cardConfig={cardConfig} fileUploader={fileUploader}>
+    {null}
+  </InklingComposer>
+)
+void composerWithConfig
+void searchResult
+void listOption
+void fileUploaderInput
+void DesignSandbox
+void InklingCardWrapper
+
+// @ts-expect-error - unknown cardConfig keys are rejected by the closed type
+const composerWithUnknownKey = <InklingComposer cardConfig={{ membersEnabled: true }} />
+void composerWithUnknownKey
