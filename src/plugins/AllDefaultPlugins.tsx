@@ -21,9 +21,9 @@ export const AllDefaultPlugins = () => {
       <InklingSelectorPlugin /> {/* Gif selector */}
       <EmojiPickerPlugin />
       <AtLinkPlugin />
+      <EmEnDashPlugin />
       {/* Card Plugins */}
       <CardInsertPlugin />
-      <EmEnDashPlugin />
       <HorizontalRulePlugin />
     </>
   )
