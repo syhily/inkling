@@ -673,6 +673,47 @@ describe('BookmarkNode', function () {
           }
         })
       }))
+
+    it('coerces junk fields at the importJSON boundary', () =>
+      new Promise<void>((resolve, reject) => {
+        const serializedState = JSON.stringify({
+          root: {
+            children: [
+              {
+                type: 'bookmark',
+                url: 42,
+                metadata: { icon: 7, title: 'Kept', bogus: 'dropped' },
+                caption: null,
+              },
+            ],
+            direction: null,
+            format: '',
+            indent: 0,
+            type: 'root',
+            version: 1,
+          },
+        })
+
+        const editorState = editor.parseEditorState(serializedState)
+        editor.setEditorState(editorState)
+
+        editor.getEditorState().read(() => {
+          try {
+            const [bookmarkNode] = $getRoot().getChildren() as BookmarkNode[]
+
+            // non-string url/caption coerce to ''; metadata keeps only the
+            // declared string fields
+            expect(bookmarkNode.url).toBe('')
+            expect(bookmarkNode.title).toBe('Kept')
+            expect(bookmarkNode.icon).toBe('')
+            expect(bookmarkNode.caption).toBe('')
+
+            resolve()
+          } catch (e) {
+            reject(e)
+          }
+        })
+      }))
   })
 
   describe('static properties', function () {

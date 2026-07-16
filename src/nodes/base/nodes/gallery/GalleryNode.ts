@@ -15,8 +15,8 @@ const galleryProperties = [
     name: 'images',
     // getter default (the visibility idiom): every construction/property-default
     // read gets a fresh array, so default nodes never share one instance
-    get default() {
-      return [] as GalleryImage[]
+    get default(): GalleryImage[] {
+      return []
     },
   },
   { name: 'caption', default: '', wordCount: true },

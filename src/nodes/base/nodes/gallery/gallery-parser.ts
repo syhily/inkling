@@ -3,6 +3,9 @@
 // SQS branch's DOM mutation are structural, not flat per-property reads.
 import type { LexicalNode } from 'lexical'
 
+// MAX_PER_ROW is only read inside function bodies, so the GalleryNode ↔
+// parser cycle stays TDZ-safe (same pattern as gallery-renderer.ts)
+import { MAX_PER_ROW } from '@/nodes/base/nodes/gallery/GalleryNode'
 import { readCaptionFromElement } from '@/nodes/base/utils/read-caption-from-element'
 import { readImageAttributesFromElement } from '@/nodes/base/utils/read-image-attributes-from-element'
 
@@ -10,7 +13,7 @@ function readGalleryImageAttributesFromElement(element: HTMLImageElement, imgNum
   const image = readImageAttributesFromElement(element)
 
   image.fileName = element.src.match(/[^/]*$/)![0]
-  image.row = Math.floor(imgNum / 3)
+  image.row = Math.floor(imgNum / MAX_PER_ROW)
 
   return image
 }
