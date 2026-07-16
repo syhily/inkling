@@ -3,14 +3,18 @@ import { $getSelection, $isParagraphNode, $isRangeSelection, COMMAND_PRIORITY_ED
 import { useEffect } from 'react'
 
 import { $insertHorizontalRuleForUpdateScanTrigger, DIVIDER_REGEXP } from '@/markdown/card-shortcuts'
-import { $createHorizontalRuleNode, INSERT_HORIZONTAL_RULE_COMMAND } from '@/nodes/HorizontalRuleNode'
+import {
+  $createHorizontalRuleNode,
+  HorizontalRuleNode,
+  INSERT_HORIZONTAL_RULE_COMMAND,
+} from '@/nodes/HorizontalRuleNode'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
 export const HorizontalRulePlugin = () => {
   const [editor] = useLexicalComposerContext()
 
   useEffect(() => {
-    if (!editor.hasNodes([])) {
+    if (!editor.hasNodes([HorizontalRuleNode])) {
       return
     }
     return editor.registerCommand(
@@ -47,6 +51,9 @@ export const HorizontalRulePlugin = () => {
   // divider card shortcut — per-update scan trigger only; the regex and
   // replace-and-select live in the card-shortcut seam (@/markdown/card-shortcuts)
   useEffect(() => {
+    if (!editor.hasNodes([HorizontalRuleNode])) {
+      return
+    }
     return editor.registerUpdateListener(() => {
       editor.update(() => {
         // don't do anything when using IME input
