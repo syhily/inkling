@@ -5,8 +5,8 @@
 // **Paste dialect** — `PASTE_MARKDOWN_COMMAND` (`@/plugins/behaviour/clipboard-protocol`)
 // handled by `@/plugins/MarkdownPastePlugin`: markdown-it with the footnote,
 // lazy-headers, mark, image-lazy-loading, named-headers, sub, and sup plugins
-// (`@/markdown/markdown-html-renderer`) → `<br>` strip → `sanitizeHtml` →
-// Lexical HTML import. It speaks footnotes (`[^1]`), `==mark==`, `~sub~`,
+// (`@/markdown/markdown-html-renderer`) → `<br>` strip (unless `allowBr`) →
+// `sanitizeHtml` → Lexical HTML import. It speaks footnotes (`[^1]`), `==mark==`, `~sub~`,
 // `^sup^` — and has no card-fence grammar. The same markdown-it engine has a
 // second consumer: the markdown card's HTML export
 // (`@/nodes/base/nodes/markdown/markdown-renderer`), so "paste" names the
@@ -15,8 +15,9 @@
 // **Card-aware round-trip dialect** — `markdownToLexicalState` /
 // `lexicalStateToMarkdown` (`@/markdown/round-trip`): `@lexical/markdown`'s
 // `$convertFromMarkdownString` / `$convertToMarkdownString` with the Inkling
-// card transformers (`@/nodes/cards/card-markdown-transformers`) plus
-// `DEFAULT_TRANSFORMERS` (`@/markdown/transformers`). It speaks
+// card transformers (`@/nodes/cards/card-markdown-transformers`; the
+// `inkling:markdown` fence lives separately in `@/markdown/card-transformers`)
+// plus `DEFAULT_TRANSFORMERS` (`@/markdown/transformers`). It speaks
 // ```inkling:<card>``` fences (html, file, button, audio, video, gallery,
 // bookmark, toggle, callout, markdown), standard `![alt](src)` image syntax,
 // and `~`/`^` sub/sup — but not footnotes. `==mark==` converts in both

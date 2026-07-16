@@ -14,6 +14,7 @@ import React, { useMemo } from 'react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
+import { $isHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { PASTE_MARKDOWN_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
 import { MarkdownPastePlugin } from '@/plugins/MarkdownPastePlugin'
 
@@ -38,8 +39,10 @@ function createTestEditor() {
   return createEditor({
     namespace: 'test',
     // CodeBlockNode is registered so the paste-dialect card-fence pin below
-    // exercises the real import path (pre/code → code block card).
-    nodes: [HeadingNode, CodeBlockNode],
+    // exercises the real import path (pre/code → code block card);
+    // HorizontalRuleNode so the footnote <hr> imports the way it does in the
+    // real editor (DEFAULT_NODES registers both).
+    nodes: [HeadingNode, CodeBlockNode, HorizontalRuleNode],
     onError: () => {},
     theme: {},
   })
@@ -227,10 +230,9 @@ describe('MarkdownPastePlugin', () => {
           expect($isTextNode(ref) && ref.hasFormat('superscript')).toBe(true)
         }
 
-        // The <hr class="footnotes-sep"> separator (HorizontalRuleNode is not
-        // registered here) leaves an empty paragraph.
-        const separator = children[1]
-        expect($isParagraphNode(separator) && separator.getChildren()).toHaveLength(0)
+        // The <hr class="footnotes-sep"> separator imports as a horizontal
+        // rule card, same as in the real editor.
+        expect($isHorizontalRuleNode(children[1])).toBe(true)
 
         // The footnote body unwraps out of <section>/<ol>/<li> (unregistered
         // here) into plain text; the ↩︎ backlink loses its href the same way.
