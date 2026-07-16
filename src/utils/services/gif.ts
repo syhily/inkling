@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
 
+import type { GifSettings } from '@/context/InklingHostIntegrationContext'
+
 import { debounce } from '@/utils'
 
 const API_VERSION = 'v2'
@@ -22,18 +24,7 @@ export interface GifProviderConfig {
   contentFilter: string
 }
 
-interface GifConfig {
-  apiKey?: string
-  googleApiKey?: string
-  contentFilter?: string
-}
-
-interface CardConfigLike {
-  klipy?: GifConfig
-  tenor?: GifConfig
-}
-
-export function getGifProviderConfig(cardConfig: CardConfigLike | null | undefined): GifProviderConfig | null {
+export function getGifProviderConfig(cardConfig: GifSettings | null | undefined): GifProviderConfig | null {
   if (cardConfig?.klipy?.apiKey) {
     return {
       provider: 'klipy',

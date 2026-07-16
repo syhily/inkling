@@ -47,3 +47,7 @@ _Avoid_: upload handler, upload helper
 **Preview lease**:
 The owned lifetime of a blob object URL used as an in-editor preview: created by `createPreviewLease`, released exactly once by `release()` (idempotent), bridged to React state by `usePreviewLease`. Replacing or clearing a preview releases the previous lease; unmounting releases whatever is still held.
 _Avoid_: preview URL ref, object-URL ref
+
+**Host config**:
+The closed, per-area-sliced config a host hands `<InklingComposer cardConfig={...}>` — the exported `CardConfig` composed from `GifSettings`, `SnippetSettings`, `LinkingSettings`, `VisibilitySettings`, `UploadSettings` (src/context/InklingHostIntegrationContext.tsx): gif provider keys, snippet storage callbacks, link search/embed/autocomplete hooks, visibility gating, image upload constraints, and the content-type name for card-menu gating. Every key the editor reads is declared; unknown keys are compile errors. The exported name stays `CardConfig` — the host-facing name the demo, docs, and internal readers already use — even though the glossary forbids "card config" as a term for card spec: this bag configures the host environment the cards run in, never an individual card's definition.
+_Avoid_: options bag, card settings

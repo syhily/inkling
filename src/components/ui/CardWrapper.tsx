@@ -20,7 +20,6 @@ const DEFAULT_INDICATOR_POSITION = {
 interface CardWrapperProps {
   cardType?: string
   cardWidth?: CardWidth
-  feature?: boolean | object
   // oxlint-disable-next-line typescript/no-explicit-any
   IndicatorIcon?: React.ComponentType<any>
   indicatorPosition?: { top?: string; left?: string }
@@ -40,7 +39,6 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
     {
       cardType,
       cardWidth = 'regular',
-      feature,
       IndicatorIcon,
       indicatorPosition = DEFAULT_INDICATOR_POSITION,
       isDragging,

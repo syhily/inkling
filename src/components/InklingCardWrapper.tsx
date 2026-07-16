@@ -211,7 +211,6 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
         ref={containerRef}
         cardType={cardType}
         cardWidth={normalizedWidth}
-        feature={cardConfig?.feature}
         IndicatorIcon={IndicatorIcon}
         isDragging={isDragging}
         isEditing={isEditing}

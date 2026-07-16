@@ -26,25 +26,45 @@ export interface FileUploader {
 // `useFileUpload` hook (a fallback is installed), or any legacy object
 export type FileUploaderInput = Partial<FileUploader> | Record<string, unknown>
 
-export interface CardConfig {
-  visibilitySettings?: string
-  stripeEnabled?: boolean
-  feature?: boolean | object
-  createSnippet?: (args: { name: string; value: string }) => void | Promise<void>
-  deleteSnippet?: (args: { name: string; value: string }) => void | Promise<void>
-  snippets?: Array<{ name: string; value: string }>
-  fetchEmbed?: (href: string, opts: object) => Promise<unknown>
+export interface GifSettings {
+  klipy?: { apiKey?: string; contentFilter?: string }
+  tenor?: { googleApiKey?: string; contentFilter?: string }
+}
+
+export interface SnippetItem {
+  name: string
+  value: string
+}
+
+export interface SnippetSettings {
+  snippets?: SnippetItem[]
+  createSnippet?: (args: SnippetItem) => void | Promise<void>
+  deleteSnippet?: (args: SnippetItem) => void | Promise<void>
+}
+
+export interface LinkingSettings {
   searchLinks?: (term?: string) => Promise<SearchResult[] | undefined>
   fetchAutocompleteLinks?: () => Promise<ListOptionItem[] | undefined>
   siteUrl?: string
-  pinturaConfig?: object
-  renderLabels?: boolean
-  fetchLabels?: () => Promise<unknown[]>
+  fetchEmbed?: (href: string, opts: object) => Promise<unknown>
+}
+
+export interface VisibilitySettings {
+  visibilitySettings?: string
+  stripeEnabled?: boolean
+}
+
+export interface UploadSettings {
   image?: { allowedWidths?: string[] }
-  klipy?: { apiKey?: string; contentFilter?: string }
-  tenor?: { googleApiKey?: string; contentFilter?: string }
+  pinturaConfig?: object
+}
+
+// The host's card-behaviour contract, closed (plan 048): every key the editor
+// reads is declared on a per-area slice and nothing else is accepted, so
+// renaming or tightening a key breaks host code loudly at compile time.
+export interface CardConfig extends GifSettings, LinkingSettings, SnippetSettings, UploadSettings, VisibilitySettings {
+  // gates card-menu items by the host's content-type name (buildCardMenu.ts)
   post?: { displayName?: string }
-  [key: string]: unknown
 }
 
 // Host-integration lifecycle (plan 047): the values the host application

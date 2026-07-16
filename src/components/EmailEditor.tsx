@@ -6,6 +6,7 @@ import React from 'react'
 
 import type { InklingComposableEditorProps } from '@/components/InklingComposableEditor'
 import type { InklingComposerProps } from '@/components/InklingComposer'
+import type { CardConfig } from '@/context/InklingHostIntegrationContext'
 
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingComposer from '@/components/InklingComposer'
@@ -33,7 +34,13 @@ export const EMAIL_EDITOR_CARD_CONFIG = {
 
 const ALLOWED_EMAIL_EDITOR_VISIBILITY = new Set([VISIBILITY_SETTINGS.EMAIL_ONLY, VISIBILITY_SETTINGS.NONE])
 
-export function getEmailEditorCardConfig(cardConfig: Record<string, unknown> = {}) {
+// Sanitizes a legacy card-config bag for the email editor: clamps
+// `visibilitySettings` to the email-safe set and force-sets `image.allowedWidths`
+// and the write-only `editorType` merge output (pinned by
+// test/unit/EmailEditor.test.ts; read nowhere — kept for runtime tolerance).
+export function getEmailEditorCardConfig(cardConfig: Record<string, unknown> = {}): CardConfig & {
+  editorType: string
+} {
   const visibilitySettings = ALLOWED_EMAIL_EDITOR_VISIBILITY.has(cardConfig.visibilitySettings as string)
     ? (cardConfig.visibilitySettings as string)
     : EMAIL_EDITOR_CARD_CONFIG.visibilitySettings
@@ -53,7 +60,7 @@ export interface EmailEditorProps
   extends
     Omit<InklingComposerProps, 'cardConfig' | 'children' | 'nodes'>,
     Omit<InklingComposableEditorProps, 'onChange'> {
-  cardConfig?: Record<string, unknown>
+  cardConfig?: CardConfig
   onChange?: (editorState: SerializedEditorState) => void
 }
 
@@ -75,7 +82,7 @@ const EmailEditor = ({
   placeholderText = 'Begin writing your email...',
   ...editorProps
 }: EmailEditorProps) => {
-  const mergedCardConfig = getEmailEditorCardConfig(cardConfig)
+  const mergedCardConfig = getEmailEditorCardConfig({ ...cardConfig })
 
   return (
     <InklingComposer
