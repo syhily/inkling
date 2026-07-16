@@ -1,5 +1,6 @@
 import React from 'react'
 
+import type { PinturaConfig } from '@/hooks/usePinturaEditor'
 import type { ListOptionItem, SearchResult } from '@/hooks/useSearchLinks'
 
 export interface FileUploader {
@@ -56,7 +57,7 @@ export interface VisibilitySettings {
 
 export interface UploadSettings {
   image?: { allowedWidths?: string[] }
-  pinturaConfig?: object
+  pinturaConfig?: PinturaConfig
 }
 
 // The host's card-behaviour contract, closed (plan 048): every key the editor

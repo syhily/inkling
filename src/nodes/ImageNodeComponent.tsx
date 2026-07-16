@@ -15,7 +15,7 @@ import InklingHostIntegrationContext from '@/context/InklingHostIntegrationConte
 import useCardDragAndDrop from '@/hooks/useCardDragAndDrop'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
-import usePinturaEditor, { type PinturaConfig } from '@/hooks/usePinturaEditor'
+import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
 import { isCardWidth } from '@/nodes/base/utils/card-widths'
 import { $createGalleryNode } from '@/nodes/GalleryNode'
@@ -147,12 +147,12 @@ export function ImageNodeComponent({
   })
 
   const { isEnabled: isPinturaEnabled, openEditor: openImageEditor } = usePinturaEditor({
-    config: cardConfig.pinturaConfig as PinturaConfig | undefined,
+    config: cardConfig.pinturaConfig,
   })
 
   const allowedImageCardWidths = React.useMemo(() => {
-    return getAllowedImageCardWidths(cardConfig?.image?.allowedWidths)
-  }, [cardConfig?.image?.allowedWidths])
+    return getAllowedImageCardWidths(cardConfig.image?.allowedWidths)
+  }, [cardConfig.image?.allowedWidths])
   const defaultImageCardWidth = React.useMemo(() => {
     return getDefaultImageCardWidth(allowedImageCardWidths)
   }, [allowedImageCardWidths])
