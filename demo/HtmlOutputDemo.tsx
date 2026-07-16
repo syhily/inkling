@@ -3,9 +3,7 @@ import type { MouseEvent as ReactMouseEvent } from 'react'
 import { $getRoot, $isDecoratorNode } from 'lexical'
 import React, { useState } from 'react'
 
-import type { CardConfig, FileUploader } from '@/context/InklingHostIntegrationContext'
-
-import { HtmlOutputPlugin, InklingComposableEditor, InklingComposer } from '@/'
+import { type CardConfig, type FileUploader, HtmlOutputPlugin, InklingComposableEditor, InklingComposer } from '@/'
 
 import FloatingButton from './components/FloatingButton'
 import Sidebar from './components/Sidebar'
@@ -25,9 +23,9 @@ interface EditorAPI {
   insertParagraphAtBottom: () => void
 }
 
-const cardConfig = {
-  tenor: tenorConfig,
-  klipy: klipyConfig,
+const cardConfig: CardConfig = {
+  tenor: tenorConfig ?? undefined,
+  klipy: klipyConfig ?? undefined,
 }
 
 function HtmlOutputDemo() {
@@ -111,7 +109,7 @@ function HtmlOutputDemo() {
       </div>
       <div className="inkling-lexical top">
         <InklingComposer
-          cardConfig={{ ...cardConfig, snippets, createSnippet, deleteSnippet } as CardConfig}
+          cardConfig={{ ...cardConfig, snippets, createSnippet, deleteSnippet }}
           fileUploader={{ useFileUpload: useFileUpload(), fileTypes } as FileUploader}
           initialEditorState={defaultContent}
         >

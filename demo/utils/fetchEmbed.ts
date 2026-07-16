@@ -33,10 +33,10 @@ interface VideoEmbedReturnData {
 const BOOKMARK_ICON = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
 const BOOKMARK_THUMBNAIL = BOOKMARK_ICON
 
-export async function fetchEmbed(
-  url: string,
-  { type }: FetchEmbedOptions,
-): Promise<EmbedReturnData | VideoEmbedReturnData | null> {
+export async function fetchEmbed(url: string, opts: object): Promise<EmbedReturnData | VideoEmbedReturnData | null> {
+  // the editor's declared contract is `opts: object`; hosts narrow it to the
+  // shape the editor actually sends
+  const { type } = opts as FetchEmbedOptions
   void 0 // fetchEmbed({url, type})
   const urlObject = new URL(url)
   if (!urlObject) {

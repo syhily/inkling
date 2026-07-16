@@ -5,12 +5,12 @@ import { $getRoot, $isDecoratorNode } from 'lexical'
 import React, { useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 
-import type { CardConfig, FileUploader } from '@/context/InklingHostIntegrationContext'
-
 import {
   BASIC_NODES,
   BASIC_TRANSFORMERS,
+  type CardConfig,
   EmailEditor,
+  type FileUploader,
   InklingComposableEditor,
   InklingComposer,
   InklingEditor,
@@ -20,6 +20,7 @@ import {
   TKCountPlugin,
   WordCountPlugin,
 } from '@/'
+import EarthIcon from '@/assets/icons/inkling-earth.svg?react'
 
 import DollarIcon from './assets/icons/inkling-dollar.svg?react'
 import LockIcon from './assets/icons/inkling-lock.svg?react'
@@ -76,24 +77,25 @@ const params = new URLSearchParams(url.search)
 const WEBSOCKET_ENDPOINT = params.get('multiplayerEndpoint') || 'ws://localhost:1234'
 const WEBSOCKET_ID = params.get('multiplayerId') || '0'
 
-const defaultCardConfig: Record<string, unknown> = {
+const defaultCardConfig: CardConfig = {
   fetchEmbed: fetchEmbed,
-  tenor: tenorConfig,
-  klipy: klipyConfig,
+  tenor: tenorConfig ?? undefined,
+  klipy: klipyConfig ?? undefined,
   fetchAutocompleteLinks: () =>
     Promise.resolve([
-      { label: 'Homepage', value: window.location.origin + '/' },
-      { label: 'Free signup', value: window.location.origin + '/#/portal/signup/free' },
+      { label: 'Homepage', value: window.location.origin + '/', Icon: EarthIcon, highlight: false, type: 'url' },
+      {
+        label: 'Free signup',
+        value: window.location.origin + '/#/portal/signup/free',
+        Icon: EarthIcon,
+        highlight: false,
+        type: 'url',
+      },
     ]),
-  renderLabels: true,
-  fetchLabels: () => Promise.resolve(['Label 1', 'Label 2']),
-  siteTitle: 'Inkling Lexical',
-  siteDescription: `There's a whole lot to discover in this editor. Let us help you settle in.`,
   siteUrl: window.location.origin,
-  membersEnabled: true,
   stripeEnabled: true,
   // this enables the internal linking feature, can be disabled with `/#/?searchLinks=false`
-  searchLinks: async (term: string): Promise<SearchLinkGroup[]> => {
+  searchLinks: async (term?: string): Promise<SearchLinkGroup[]> => {
     // default to showing latest posts when search is empty
     // no delay to simulate posts being pre-loaded in editor
     if (!term) {
@@ -142,6 +144,7 @@ const defaultCardConfig: Record<string, unknown> = {
     }
 
     // actual search, simulate a network request delay
+    const query = term.toLowerCase()
     return new Promise((resolve) => {
       setTimeout(
         () => {
@@ -158,7 +161,7 @@ const defaultCardConfig: Record<string, unknown> = {
               title: '✨ Emoji autocomplete ✨',
               url: 'https://inkling.local/changelog/emoji-picker/',
             },
-          ].filter((item) => item.title.toLowerCase().includes(term.toLowerCase()))
+          ].filter((item) => item.title.toLowerCase().includes(query))
 
           const pages = [
             {
@@ -167,7 +170,7 @@ const defaultCardConfig: Record<string, unknown> = {
               title: 'How to update Inkling',
               url: 'https://inkling.local/docs/update/',
             },
-          ].filter((item) => item.title.toLowerCase().includes(term.toLowerCase()))
+          ].filter((item) => item.title.toLowerCase().includes(query))
 
           const tags = [
             {
@@ -176,7 +179,7 @@ const defaultCardConfig: Record<string, unknown> = {
               title: 'Improved',
               url: 'https://inkling.local/changelog/tag/improved/',
             },
-          ].filter((item) => item.title.toLowerCase().includes(term.toLowerCase()))
+          ].filter((item) => item.title.toLowerCase().includes(query))
 
           const groups: SearchLinkGroup[] = []
 
@@ -427,15 +430,14 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
   const showTitle = !isMultiplayer && !['basic', 'minimal', 'email'].includes(editorType || '')
   const isEmailEditor = editorType === 'email'
 
-  const cardConfig = {
+  const cardConfig: CardConfig = {
     ...defaultCardConfig,
-    editorType,
     snippets,
     createSnippet,
     deleteSnippet,
     searchLinks: searchParams.get('searchLinks') === 'false' ? undefined : defaultCardConfig.searchLinks,
     stripeEnabled: searchParams.get('stripe') === 'false' ? false : defaultCardConfig.stripeEnabled,
-  } as CardConfig
+  }
 
   const fileUploader = { useFileUpload: useFileUpload({ isMultiplayer }), fileTypes } as FileUploader
 
