@@ -10,7 +10,7 @@ import {
 } from 'lexical'
 import React from 'react'
 
-import InklingComposerContext from '@/context/InklingComposerContext'
+import { useWordCountHandle } from '@/context/WordCountHandleContext'
 import { countWords, throttle } from '@/utils'
 import { getTopLevelEditor, isNestedEditor } from '@/utils/lexical-internals'
 
@@ -64,17 +64,18 @@ export const WordCountPlugin = ({
   language = 'en',
 }: { onChange?: (count: number) => void; language?: string } = {}) => {
   const [editor] = useLexicalComposerContext()
-  const { onWordCountChangeRef } = React.useContext(InklingComposerContext)
+  const wordCountHandle = useWordCountHandle()
 
   React.useLayoutEffect(() => {
     if (!onChange) {
       return
     }
 
-    // store onChange in context so that we can use it in the InklingNestedComposer
-    // to render nested <WordCountPlugin /> without needing to pass onChange down
+    // publish onChange on the composer handle so that InklingNestedComposer
+    // can mount a nested <WordCountPlugin /> with it reactively, without
+    // needing to pass onChange down
     if (!isNestedEditor(editor)) {
-      onWordCountChangeRef.current = onChange
+      wordCountHandle.setState({ onChange })
     }
 
     let pendingDirtyKeys = new Set<string>()
@@ -203,10 +204,10 @@ export const WordCountPlugin = ({
       cleanupRegister()
 
       if (!isNestedEditor(editor)) {
-        onWordCountChangeRef.current = null
+        wordCountHandle.setState({ onChange: null })
       }
     }
-  }, [editor, onChange, onWordCountChangeRef])
+  }, [editor, onChange, wordCountHandle])
   return null
 }
 

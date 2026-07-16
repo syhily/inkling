@@ -44,7 +44,7 @@ function createCardContext(overrides: Partial<React.ContextType<typeof CardConte
 }
 
 function createComposerContext(
-  overrides: Partial<React.ContextType<typeof InklingComposerContext>['cardConfig']> = {},
+  overrides: Partial<React.ContextType<typeof InklingHostIntegrationContext>['cardConfig']> = {},
 ) {
   return {
     fileUploader: {

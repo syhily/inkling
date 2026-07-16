@@ -11,7 +11,8 @@ import {
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import InklingComposerContext from '@/context/InklingComposerContext'
+import { WordCountHandleContext } from '@/context/WordCountHandleContext'
+import { createWordCountHandle } from '@/plugins/behaviour/wordCountHandle'
 import { WordCountPlugin } from '@/plugins/WordCountPlugin'
 import { getTopLevelEditor } from '@/utils/lexical-internals'
 
@@ -42,11 +43,6 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
   return new Promise<void>((resolve) => {
     editor.update(updateFn, { discrete: true, onUpdate: () => resolve() })
   })
-}
-
-const contextValue = {
-  editorContainerRef: { current: null },
-  onWordCountChangeRef: { current: null },
 }
 
 class TestDecoratorNode extends DecoratorNode {
@@ -106,11 +102,13 @@ describe('WordCountPlugin', () => {
     const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
     useLexicalComposerContext.mockReturnValue([pluginEditor])
 
-    return renderHook(() => WordCountPlugin({ onChange }), {
+    const wordCountHandle = createWordCountHandle()
+    const result = renderHook(() => WordCountPlugin({ onChange }), {
       wrapper: ({ children }) => (
-        <InklingComposerContext.Provider value={contextValue}>{children}</InklingComposerContext.Provider>
+        <WordCountHandleContext.Provider value={wordCountHandle}>{children}</WordCountHandleContext.Provider>
       ),
     })
+    return { wordCountHandle, ...result }
   }
 
   async function flushThrottle() {
@@ -127,17 +125,17 @@ describe('WordCountPlugin', () => {
     expect(onChange).toHaveBeenCalledWith(0)
   })
 
-  it('writes the shared callback into onWordCountChangeRef and clears it on unmount', async () => {
+  it('publishes the shared callback on the word-count handle and clears it on unmount', async () => {
     const onChange = vi.fn()
-    const { unmount } = await renderPlugin(onChange)
+    const { unmount, wordCountHandle } = await renderPlugin(onChange)
 
     // a top-level plugin owns the shared callback so that nested composers can
     // mount their own WordCountPlugin with it
-    expect(contextValue.onWordCountChangeRef.current).toBe(onChange)
+    expect(wordCountHandle.getState().onChange).toBe(onChange)
 
     unmount()
 
-    expect(contextValue.onWordCountChangeRef.current).toBeNull()
+    expect(wordCountHandle.getState().onChange).toBeNull()
   })
 
   it('counts words after typing', async () => {
@@ -249,10 +247,10 @@ describe('WordCountPlugin', () => {
     })
 
     const onChange = vi.fn()
-    await renderPlugin(onChange, grandchildEditor)
+    const { wordCountHandle } = await renderPlugin(onChange, grandchildEditor)
 
     // Nested plugins do not own the shared root callback.
-    expect(contextValue.onWordCountChangeRef.current).toBeNull()
+    expect(wordCountHandle.getState().onChange).toBeNull()
 
     // Initial count is computed from the top-level editor.
     expect(onChange).toHaveBeenCalledWith(3)

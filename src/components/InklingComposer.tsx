@@ -10,14 +10,15 @@ import type { CardConfig, FileUploader, FileUploaderInput } from '@/context/Inkl
 
 import { DragDropHandleContext } from '@/context/DragDropHandleContext'
 import InklingCollaborationContext from '@/context/InklingCollaborationContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { TKContext } from '@/context/TKContext'
+import { WordCountHandleContext } from '@/context/WordCountHandleContext'
 import { DEFAULT_CONFIG } from '@/nodes/base'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import { createDragDropHandle } from '@/plugins/behaviour/dragDropHandle'
+import { createWordCountHandle } from '@/plugins/behaviour/wordCountHandle'
 import defaultTheme from '@/themes/default'
 import { type InklingInitialEditorState, normalizeInitialEditorState } from '@/utils/normalizeInitialEditorState'
 
@@ -94,11 +95,10 @@ const InklingComposer = ({
     [enableMultiplayer, normalizedInitialEditorState, nodes, onError],
   )
 
-  const onWordCountChangeRef = React.useRef(null)
-
-  // one drag-drop handle per top-level composer (plan 047); the useState
-  // initializer keeps the instance stable for the provider's lifetime
+  // one handle per channel per top-level composer (plan 047); the useState
+  // initializer keeps each instance stable for the provider's lifetime
   const [dragDropHandle] = React.useState(createDragDropHandle)
+  const [wordCountHandle] = React.useState(createWordCountHandle)
 
   const normalizedFileUploader = React.useMemo<FileUploader>(() => {
     if (hasFileUploadHook(fileUploader)) {
@@ -174,21 +174,13 @@ const InklingComposer = ({
     [darkMode, isTKEnabled],
   )
 
-  // legacy per-composer channel — plan 047 step 5 replaces it with a handle
-  const composerContextValue = React.useMemo(
-    () => ({
-      onWordCountChangeRef,
-    }),
-    [onWordCountChangeRef],
-  )
-
   return (
     <LexicalComposer initialConfig={initialConfig}>
       <DragDropHandleContext.Provider value={dragDropHandle}>
-        <InklingHostIntegrationContext.Provider value={hostIntegrationValue}>
-          <InklingCollaborationContext.Provider value={collaborationValue}>
-            <InklingUiPrefsContext.Provider value={uiPrefsValue}>
-              <InklingComposerContext.Provider value={composerContextValue}>
+        <WordCountHandleContext.Provider value={wordCountHandle}>
+          <InklingHostIntegrationContext.Provider value={hostIntegrationValue}>
+            <InklingCollaborationContext.Provider value={collaborationValue}>
+              <InklingUiPrefsContext.Provider value={uiPrefsValue}>
                 <InklingSelectedCardContext>
                   <TKContext>
                     <LexicalCollaboration>
@@ -205,10 +197,10 @@ const InklingComposer = ({
                     </LexicalCollaboration>
                   </TKContext>
                 </InklingSelectedCardContext>
-              </InklingComposerContext.Provider>
-            </InklingUiPrefsContext.Provider>
-          </InklingCollaborationContext.Provider>
-        </InklingHostIntegrationContext.Provider>
+              </InklingUiPrefsContext.Provider>
+            </InklingCollaborationContext.Provider>
+          </InklingHostIntegrationContext.Provider>
+        </WordCountHandleContext.Provider>
       </DragDropHandleContext.Provider>
     </LexicalComposer>
   )

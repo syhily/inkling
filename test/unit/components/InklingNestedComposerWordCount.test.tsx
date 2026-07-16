@@ -1,12 +1,13 @@
 import type { LexicalEditor } from 'lexical'
 
-import { render } from '@testing-library/react'
+import { act, render } from '@testing-library/react'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import InklingNestedComposer from '@/components/InklingNestedComposer'
 import InklingCollaborationContext from '@/context/InklingCollaborationContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import { WordCountHandleContext } from '@/context/WordCountHandleContext'
+import { createWordCountHandle, type WordCountHandle } from '@/plugins/behaviour/wordCountHandle'
 import WordCountPlugin from '@/plugins/WordCountPlugin'
 
 // The pin is the conditional mount of the nested WordCountPlugin, not
@@ -39,21 +40,16 @@ function createCollaborationValue() {
   }
 }
 
-function createLegacyValue(onWordCountChangeRef: { current: ((count: number) => void) | null }) {
-  return { onWordCountChangeRef }
-}
-
-function renderNestedComposer(onWordCountChangeRef: { current: ((count: number) => void) | null }) {
+function renderNestedComposer(wordCountHandle: WordCountHandle) {
   const collaborationValue = createCollaborationValue()
-  const legacyValue = createLegacyValue(onWordCountChangeRef)
 
   return render(
     <InklingCollaborationContext.Provider value={collaborationValue}>
-      <InklingComposerContext.Provider value={legacyValue}>
+      <WordCountHandleContext.Provider value={wordCountHandle}>
         <InklingNestedComposer initialEditor={{} as LexicalEditor}>
           <div />
         </InklingNestedComposer>
-      </InklingComposerContext.Provider>
+      </WordCountHandleContext.Provider>
     </InklingCollaborationContext.Provider>,
   )
 }
@@ -63,17 +59,38 @@ describe('InklingNestedComposer word-count channel', () => {
     vi.clearAllMocks()
   })
 
-  it('mounts a nested WordCountPlugin when the shared callback ref is set at render time', () => {
+  it('mounts a nested WordCountPlugin when the callback is published before render', () => {
     const onChange = vi.fn()
-    renderNestedComposer({ current: onChange })
+    const wordCountHandle = createWordCountHandle()
+    wordCountHandle.setState({ onChange })
+
+    renderNestedComposer(wordCountHandle)
 
     expect(vi.mocked(WordCountPlugin)).toHaveBeenCalledTimes(1)
     expect(vi.mocked(WordCountPlugin).mock.calls[0][0]).toEqual({ onChange })
   })
 
-  it('does not mount a nested WordCountPlugin when the shared callback ref is empty', () => {
-    renderNestedComposer({ current: null })
+  it('does not mount a nested WordCountPlugin while no callback is published', () => {
+    renderNestedComposer(createWordCountHandle())
 
     expect(vi.mocked(WordCountPlugin)).not.toHaveBeenCalled()
+  })
+
+  it('mounts the nested WordCountPlugin reactively when the callback lands after render', () => {
+    // the top-level plugin publishes in a layout effect, which can land after
+    // a nested composer's first render — the handle subscription must re-render
+    // the nested composer and mount the plugin without any unrelated re-render
+    const wordCountHandle = createWordCountHandle()
+    renderNestedComposer(wordCountHandle)
+
+    expect(vi.mocked(WordCountPlugin)).not.toHaveBeenCalled()
+
+    const onChange = vi.fn()
+    act(() => {
+      wordCountHandle.setState({ onChange })
+    })
+
+    expect(vi.mocked(WordCountPlugin)).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(WordCountPlugin).mock.calls[0][0]).toEqual({ onChange })
   })
 })

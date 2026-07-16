@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest'
 
 import CardContext from '@/context/CardContext'
 import InklingCollaborationContext from '@/context/InklingCollaborationContext'
-import InklingComposerContext from '@/context/InklingComposerContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { InklingSelectedCardContext, useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
@@ -55,22 +54,6 @@ describe('InklingUiPrefsContext', () => {
     render(<Consumer />)
 
     expect(captured!.darkMode).toBe(false)
-  })
-})
-
-// legacy module — plan 047 deletes it once step 5 lands the word-count handle
-describe('InklingComposerContext', () => {
-  it('provides the default context value', () => {
-    let captured: typeof InklingComposerContext extends React.Context<infer V> ? V : never
-
-    function Consumer() {
-      captured = React.useContext(InklingComposerContext)
-      return null
-    }
-
-    render(<Consumer />)
-
-    expect(captured!.onWordCountChangeRef.current).toBeNull()
   })
 })
 
