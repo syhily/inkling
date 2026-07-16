@@ -424,3 +424,57 @@ and keep the `is-safe-url` export-side pins, which stand alone). The
 existing suites are the evidence for any re-attempt: they required no
 expectation edits to land this plan, so they remain valid against the
 un-refactored code after a revert.
+
+## Execution notes
+
+Plan 049 landed in four commits on main (`37ed494..1ed291e`) plus a
+post-review comment fix (`3bd8b06`). Step 1 (`37ed494`) created the
+headless `src/plugins/behaviour/clipboard-protocol.ts` (imports `lexical`
+only): MIME constants, `PASTE_MARKDOWN_COMMAND`, `INSERT_MEDIA_COMMAND`,
+and the per-editor `ModifierState` WeakMap; both Shift trackers converged
+onto it and `MarkdownPastePlugin`'s listener-churn (React state +
+`isShiftDown` dep) is gone — pinned non-vacuously (state flips on Shift
+keydown/keyup while `registerCommand` call count stays constant). Step 2
+(`f6d70ed`) moved all ten transformers verbatim from
+`MarkdownShortcutPlugin.tsx` to `src/markdown/transformers.ts` (`isImport`
+TODO carried; barrel names unchanged; no import cycle). Step 3
+(`1882c4d`) pinned the url scheme tables on both sides of the export seam
+— document-and-pin per the ruling: no table contents changed anywhere,
+input pin + export pin + one divergence test asserting both deliberate
+policies together. Step 4 (`1ed291e`) renamed `isValidUrl` to
+`isPasteableLinkUrl` (byte-identical body) and cross-referenced all five
+url-table sites plus the `isInternalUrl`↔`isLocalContentImage` pair.
+
+One orchestration-ruling tension, adjudicated in review as correctly
+resolved (STOP beats ruling; plan text was wrong): the ruling said
+modifier-state writes should be idempotent `event.shiftKey` writes, but
+`MarkdownPastePlugin`'s pre-refactor listeners gated on `e.key ===
+'Shift'` and its pinned test dispatches a synthetic
+`KeyboardEvent('keydown', { key: 'Shift' })` whose `shiftKey` is false —
+switching that writer to `event.shiftKey` would have changed behavior and
+tripped the plan's no-expectation-edit STOP. Both plugins kept their
+verbatim listener semantics writing into the one shared object. Review
+walked the real event sequences: the two formulations agree on every
+real browser stream except releasing one of two held Shift keys (stale
+value self-corrects on the next key event; only a menu-paste inside that
+window observes it — pre-existing, and an improvement over the old split
+trackers). `3bd8b06` reworded the overstated "idempotent ⇒ cannot
+diverge" comment at all three sites (module, plugin, CONTEXT.md) to state
+that real invariant. An optional two-plugin convergence test was noted by
+review and left out (mechanism is pinned via identity tests + the churn
+pin + shift-paste e2e).
+
+Plan defects recorded: Step 1's prescription of `event.shiftKey` writes
+for `MarkdownPastePlugin` (misreading of the pre-refactor code); the
+INSERT_MEDIA_COMMAND importer list was stale after plan 043 collapsed the
+media plugins into `CardInsertPlugin` (real importers updated; the
+module header names `CardInsertPlugin` as the file-leg claimer); the
+protocol test is `.tsx` not `.ts` (JSX wrapper). The CONTEXT.md
+"Clipboard protocol" entry landed two commits ahead of reality; final
+text matches final state.
+
+Gates at HEAD: full unit 222 files / 1928 passed / 21 todo;
+nodes-base+html-renderer 46 files / 736 passed / 21 todo (+1 export-side
+pin); `paste-behaviour` e2e 28 passed, DragDropPastePlugin e2e 4 passed;
+`verify:package` PASS (64 exports — barrel names intact after the
+transformer move); `verify:types` PASS; typecheck/lint/format clean.
