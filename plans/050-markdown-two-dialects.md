@@ -165,12 +165,12 @@ Verified fresh against commit `d998080`:
 
 ## Commands you will need
 
-| Purpose                    | Command                                                        | Expected on success                              |
-| -------------------------- | -------------------------------------------------------------- | ------------------------------------------------ |
-| Baseline (before Step 1)   | `pnpm test:unit`                                               | 1707 passed / 21 todo at `d998080` + 049's adds |
-| Dialect fixtures           | `pnpm vitest run test/unit/plugins/MarkdownPastePlugin.test.tsx test/markdown` | green, new pins included            |
-| Static + full gates        | `pnpm typecheck && pnpm lint && pnpm test:unit`                | all pass (unit builds via `pretest:unit`)        |
-| Format                     | `pnpm format && pnpm format:check`                             | exits 0                                          |
+| Purpose                  | Command                                                                        | Expected on success                             |
+| ------------------------ | ------------------------------------------------------------------------------ | ----------------------------------------------- |
+| Baseline (before Step 1) | `pnpm test:unit`                                                               | 1707 passed / 21 todo at `d998080` + 049's adds |
+| Dialect fixtures         | `pnpm vitest run test/unit/plugins/MarkdownPastePlugin.test.tsx test/markdown` | green, new pins included                        |
+| Static + full gates      | `pnpm typecheck && pnpm lint && pnpm test:unit`                                | all pass (unit builds via `pretest:unit`)       |
+| Format                   | `pnpm format && pnpm format:check`                                             | exits 0                                         |
 
 No e2e: nothing demo-visible changes (the paste e2e spec asserts no
 card-fence behavior today). No `pnpm verify:package` / `pnpm verify:types`:
@@ -260,13 +260,13 @@ One commit, behavior-preserving.
 
 ## Test plan
 
-| Scenario                  | Command                                                         | Required invariant                          |
-| ------------------------- | --------------------------------------------------------------- | ------------------------------------------- |
-| Baseline                  | `pnpm test:unit` (before Step 1)                                | green at the drift-check counts             |
-| Paste dialect pins        | `pnpm vitest run test/unit/plugins/MarkdownPastePlugin.test.tsx` | card fence pinned as code block (or actual) |
-| Round-trip dialect pins   | `pnpm vitest run test/markdown`                                  | mark/footnote literal; card pins untouched |
-| Name-only move            | `pnpm test:unit` (after Step 2)                                  | zero changed expectations vs Step 1         |
-| Static gates              | `pnpm typecheck && pnpm lint && pnpm format:check`               | all clean                                   |
+| Scenario                | Command                                                          | Required invariant                          |
+| ----------------------- | ---------------------------------------------------------------- | ------------------------------------------- |
+| Baseline                | `pnpm test:unit` (before Step 1)                                 | green at the drift-check counts             |
+| Paste dialect pins      | `pnpm vitest run test/unit/plugins/MarkdownPastePlugin.test.tsx` | card fence pinned as code block (or actual) |
+| Round-trip dialect pins | `pnpm vitest run test/markdown`                                  | mark/footnote literal; card pins untouched  |
+| Name-only move          | `pnpm test:unit` (after Step 2)                                  | zero changed expectations vs Step 1         |
+| Static gates            | `pnpm typecheck && pnpm lint && pnpm format:check`               | all clean                                   |
 
 ## Acceptance criteria
 

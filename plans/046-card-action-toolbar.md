@@ -120,11 +120,11 @@ Verified fresh against commit `d998080`:
   semantically correct. KEEP, do not flatten (see Step 6).
 - **Gallery's toolbar is drag-aware and edit-free.** Visibility is
   `!hideToolbar` where `hideToolbar = !isSelected ||
-  imageFilesDropper.isDraggedOver || galleryReorder.isDraggedOver ||
-  images.length <= 0` (`GalleryNodeComponent.tsx:202-203`); items are
+imageFilesDropper.isDraggedOver || galleryReorder.isDraggedOver ||
+images.length <= 0` (`GalleryNodeComponent.tsx:202-203`); items are
   [Add images, separator, snippet] — no Edit item, no `isEditing` factor.
 - **Image's toolbar is a different menu.** Visibility is `!!src &&
-  isSelected && !showLink && !showSnippetToolbar`
+isSelected && !showLink && !showSnippetToolbar`
   (`ImageNodeComponent.tsx:338-341`) — `!showLink` stands where `!isEditing`
   stands elsewhere, and image never destructures `isEditing` (`:56`). Items
   are [Regular, Wide, Full, separator, Link, separator, snippet], an
@@ -164,7 +164,7 @@ Verified fresh against commit `d998080`:
 - **E2e pins exact toolbar DOM for callout.** `assertHTML` strips classes,
   `data-testid`, SVG bodies, and dnd attrs (`test/utils/e2e.ts:184-241`) but
   pins structure: `<div data-inkling-card-toolbar="callout"><ul><li>Edit…</li><li></li><li>Save
-  as snippet…</li></ul></div>` — item order, `aria-label`s, tooltip text,
+as snippet…</li></ul></div>` — item order, `aria-label`s, tooltip text,
   and the separator `<li>` — at `test/e2e/plugins/EmojiPickerPlugin.test.ts:204-226`
   and `test/e2e/paste-behaviour.test.ts:219-235`. The code-block snapshot in
   the same file (`:282-308`) passes `ignoreCardToolbarContents`, which
@@ -246,15 +246,15 @@ module on it, and do not invent a new declaration seam here.
 
 ## Commands you will need
 
-| Purpose                        | Command                                                                  | Expected on success                        |
-| ------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------ |
-| Characterization baseline      | `pnpm test:unit`                                                         | 1707 passed + 21 todo before any change    |
-| Renderer drift check           | `pnpm vitest run test/nodes-base test/html-renderer`                     | 730 passed + 21 todo (untouched territory) |
-| Per-card unit pins             | `pnpm vitest run test/unit/nodes/<Card>NodeComponent.test.tsx`           | green                                      |
-| Module unit tests              | `pnpm vitest run test/unit/components/ui/CardActionToolbar.test.tsx`     | green                                      |
-| Toolbar e2e subset             | `pnpm test:e2e:quiet <specs listed in Step 7>`                           | green, no snapshot edits                   |
-| Static + full gates            | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit`     | all pass                                   |
-| Residual-duplication check     | `rg -l showSnippetToolbar src/`                                          | only `CardActionToolbar.tsx`               |
+| Purpose                    | Command                                                              | Expected on success                        |
+| -------------------------- | -------------------------------------------------------------------- | ------------------------------------------ |
+| Characterization baseline  | `pnpm test:unit`                                                     | 1707 passed + 21 todo before any change    |
+| Renderer drift check       | `pnpm vitest run test/nodes-base test/html-renderer`                 | 730 passed + 21 todo (untouched territory) |
+| Per-card unit pins         | `pnpm vitest run test/unit/nodes/<Card>NodeComponent.test.tsx`       | green                                      |
+| Module unit tests          | `pnpm vitest run test/unit/components/ui/CardActionToolbar.test.tsx` | green                                      |
+| Toolbar e2e subset         | `pnpm test:e2e:quiet <specs listed in Step 7>`                       | green, no snapshot edits                   |
+| Static + full gates        | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit` | all pass                                   |
+| Residual-duplication check | `rg -l showSnippetToolbar src/`                                      | only `CardActionToolbar.tsx`               |
 
 ## Git workflow
 
@@ -294,7 +294,7 @@ DOM, using the existing harness pattern (mock
     deliberate changes.
   - edit dispatch: Button/Callout/CodeBlock/Audio/Video → `setEditing(true)`;
     Html/Toggle/Header → `EDIT_CARD_COMMAND` with `{ cardKey, focusEditor:
-    false }` (assert on `editor.dispatchCommand`); File → no dispatch
+false }` (assert on `editor.dispatchCommand`); File → no dispatch
     (inert). Include one pin proving the equivalence this plan relies on:
     `InklingCardWrapper`'s context `setEditing(true)` dispatches
     `EDIT_CARD_COMMAND` (`InklingCardWrapper.tsx:138-145`).
@@ -411,7 +411,7 @@ gate; menu visibility is `isSelected && !(hideWhileEditing && isEditing) &&
 
 - Gallery: `hideWhileEditing={false}`,
   `visibleWhen={!imageFilesDropper.isDraggedOver &&
-  !galleryReorder.isDraggedOver && images.length > 0}`,
+!galleryReorder.isDraggedOver && images.length > 0}`,
   `items` = [custom Add images (`add-gallery-image`), separator, snippet].
   `hideToolbar` (`GalleryNodeComponent.tsx:202-203`) is absorbed.
 - Bookmark: `hideWhileEditing={false}`,
@@ -438,16 +438,16 @@ gate; menu visibility is `isSelected && !(hideWhileEditing && isEditing) &&
 
 ## Test plan
 
-| Scenario                    | Command                                                              | Required invariant                                       |
-| --------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------- |
-| Characterization baseline   | `pnpm test:unit`                                                     | 1707 passed + 21 todo; e2e subset green                  |
-| Per-card visibility/items   | `pnpm vitest run test/unit/nodes`                                    | Step-1 pins green; only Steps 3–4's three pins change    |
-| Edit dispatch equivalence   | `pnpm vitest run test/unit/components/InklingCardWrapper.test.tsx`   | `setEditing(true)` → `EDIT_CARD_COMMAND` pin green       |
-| Module behavior             | `pnpm vitest run test/unit/components/ui/CardActionToolbar.test.tsx` | green                                                    |
-| Header attribute contract   | `pnpm vitest run test/unit/nodes/headerToolbarLabel.test.tsx`        | rendered-DOM assertion green after repoint               |
-| Exact toolbar DOM (callout) | `pnpm test:e2e:quiet test/e2e/plugins/EmojiPickerPlugin.test.ts`     | snapshot passes UNEDITED                                 |
-| Snippet flow ×9 cards       | `pnpm test:e2e:quiet test/e2e/cards`                                 | `createSnippet` helper specs green                       |
-| Full gates                  | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit` | all pass                                                 |
+| Scenario                    | Command                                                              | Required invariant                                    |
+| --------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------- |
+| Characterization baseline   | `pnpm test:unit`                                                     | 1707 passed + 21 todo; e2e subset green               |
+| Per-card visibility/items   | `pnpm vitest run test/unit/nodes`                                    | Step-1 pins green; only Steps 3–4's three pins change |
+| Edit dispatch equivalence   | `pnpm vitest run test/unit/components/InklingCardWrapper.test.tsx`   | `setEditing(true)` → `EDIT_CARD_COMMAND` pin green    |
+| Module behavior             | `pnpm vitest run test/unit/components/ui/CardActionToolbar.test.tsx` | green                                                 |
+| Header attribute contract   | `pnpm vitest run test/unit/nodes/headerToolbarLabel.test.tsx`        | rendered-DOM assertion green after repoint            |
+| Exact toolbar DOM (callout) | `pnpm test:e2e:quiet test/e2e/plugins/EmojiPickerPlugin.test.ts`     | snapshot passes UNEDITED                              |
+| Snippet flow ×9 cards       | `pnpm test:e2e:quiet test/e2e/cards`                                 | `createSnippet` helper specs green                    |
+| Full gates                  | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit` | all pass                                              |
 
 ## Acceptance criteria
 

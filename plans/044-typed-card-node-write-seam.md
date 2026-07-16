@@ -107,9 +107,9 @@ Verified fresh against commit `d998080`:
   scope.
 - **The typed alternative already exists in-repo**: ImageNodeComponent and
   HtmlNodeComponent write via `$getNodeByKey` + `$isImageNode`/`$isHtmlNode`
-  + direct typed assignment (e.g. ImageNodeComponent.tsx:172-177, 205-210;
-  HtmlNodeComponent.tsx:30-34). The seam formalizes this idiom; it does not
-  invent one.
+  - direct typed assignment (e.g. ImageNodeComponent.tsx:172-177, 205-210;
+    HtmlNodeComponent.tsx:30-34). The seam formalizes this idiom; it does not
+    invent one.
 - **Every write in the census is a typed dataset field or a declared typed
   accessor** — verified per card: header's `swapped`/`accentColor` and 13
   more are all in `headerProperties` (src/nodes/base/nodes/header/HeaderNode.ts:11-30);
@@ -120,7 +120,7 @@ Verified fresh against commit `d998080`:
   (src/nodes/base/nodes/audio/AudioNode.ts:39-42, exported as `BaseAudioNode`/
   `$isAudioNode`); file's fields + `set triggerFileDialog`
   (src/nodes/base/nodes/file/FileNode.ts:53-56); gallery's `setImages(images:
-  GalleryImage[])` method (src/nodes/base/nodes/gallery/GalleryNode.ts:63);
+GalleryImage[])` method (src/nodes/base/nodes/gallery/GalleryNode.ts:63);
   html's `visibility: Visibility` via `DecoratorNodeValueMap<..., true>`
   (src/nodes/base/nodes/html/HtmlNode.ts:16).
 - **Some casts are reads, not writes**: thumbnailUploadHandler.ts:25
@@ -153,8 +153,8 @@ Verified fresh against commit `d998080`:
   `n.thumbnailHeight = n.height`) — natural in a mutator, unexpressible or
   awkward in a patch.
 - **Known limitation, recorded honestly**: generated classes inherit
-  `[key: string]: unknown`, so an unknown field *name* still compiles through
-  the seam. The seam buys: every *known* field's value type is checked, the
+  `[key: string]: unknown`, so an unknown field _name_ still compiles through
+  the seam. The seam buys: every _known_ field's value type is checked, the
   narrowing guard is explicit per call site, and the idiom shrinks to one
   call. A `test/typecheck` fixture pins the value-type guarantee.
 - **Header bridge**: the `as any` spread (HeaderNodeComponent.tsx:315-363)
@@ -163,7 +163,7 @@ Verified fresh against commit `d998080`:
   stale, not real: `setupNestedEditor`
   (src/utils/nested-editors.ts:39-54) **always** assigns a `LexicalEditor`
   instance, so `HeaderNode`'s `declare __headerTextEditor: LexicalEditor |
-  null` (src/nodes/HeaderNode.tsx:22-25) overstates nullability, and the
+null` (src/nodes/HeaderNode.tsx:22-25) overstates nullability, and the
   honest chain is non-null end to end (`InklingNestedEditor.initialEditor`
   already requires non-null, src/components/InklingNestedEditor.tsx:25).
 - **The `*Like` types and their drift**: canonical-looking declarations in
@@ -185,7 +185,7 @@ Verified fresh against commit `d998080`:
 - **Holder intermediaries**: `VideoHolderProps` (VideoCard.tsx:190-210, 19
   fields) duplicates `VideoCardProps` (237-260) minus the caption props;
   `VideoHolder` (212-235) does one fork — `customThumbnail || thumbnail ||
-  videoUploader.isLoading` → Populated/Empty. `ImageHolderProps`
+videoUploader.isLoading` → Populated/Empty. `ImageHolderProps`
   (ImageCard.tsx:35-46, 11 fields) and `ImageHolder` (186-222) are the same
   shape with the fork `previewSrc || src`. Both pass the deletion test:
   folding the fork into the parent concentrates nothing.
@@ -227,14 +227,14 @@ Verified fresh against commit `d998080`:
 
 ## Commands you will need
 
-| Purpose                     | Command                                                  | Expected on success                                |
-| --------------------------- | -------------------------------------------------------- | -------------------------------------------------- |
-| Drift check                 | see header block                                         | empty diff vs `d998080`                            |
-| Cast census                 | `rg -c 'as GeneratedDecoratorNodeBase' src`              | matches the census above before Step 1; zero after |
-| Stray erased writes         | `rg -n 'as CardNode' src/nodes src/hooks src/utils`      | only out-of-scope plugin/wrapper files remain      |
-| Typecheck (includes `test/typecheck/`) | `pnpm typecheck`                              | exit 0                                             |
-| Node-component tests        | `pnpm vitest run test/unit/nodes`                        | all pass, unchanged expectations                   |
-| Full gates                  | `pnpm lint && pnpm format:check && pnpm test:unit`       | 1707 passed + 21 todo (identical to baseline)      |
+| Purpose                                | Command                                             | Expected on success                                |
+| -------------------------------------- | --------------------------------------------------- | -------------------------------------------------- |
+| Drift check                            | see header block                                    | empty diff vs `d998080`                            |
+| Cast census                            | `rg -c 'as GeneratedDecoratorNodeBase' src`         | matches the census above before Step 1; zero after |
+| Stray erased writes                    | `rg -n 'as CardNode' src/nodes src/hooks src/utils` | only out-of-scope plugin/wrapper files remain      |
+| Typecheck (includes `test/typecheck/`) | `pnpm typecheck`                                    | exit 0                                             |
+| Node-component tests                   | `pnpm vitest run test/unit/nodes`                   | all pass, unchanged expectations                   |
+| Full gates                             | `pnpm lint && pnpm format:check && pnpm test:unit`  | 1707 passed + 21 todo (identical to baseline)      |
 
 ## Git workflow
 
@@ -282,7 +282,7 @@ export function $updateCardNode<T extends LexicalNode>(
 - Add a fixture to `test/typecheck/` (extend `card-node-payloads.ts` or add
   `card-node-write-seam.ts`, matching that file's comment conventions):
   a positive case (`$updateCardNode(key, $isVideoNode, node => { node.src =
-  'x'; node.width = 3 })` compiles) and `@ts-expect-error` cases (wrong
+'x'; node.width = 3 })` compiles) and `@ts-expect-error` cases (wrong
   value type, e.g. `node.src = 5`; a method-only member assigned, e.g.
   `node.setImages = ...` on gallery if it type-errors — keep only cases the
   compiler genuinely rejects). No runtime assertions.
@@ -297,7 +297,7 @@ export function $updateCardNode<T extends LexicalNode>(
     `$isButtonNode`, `$isCalloutNode`, `$isBookmarkNode` from `@/nodes/base`.
   - `src/nodes/GalleryNodeComponent.tsx`: the `setImages` write (:72-80)
     becomes `$updateCardNode(nodeKey, $isGalleryNode, node =>
-    node.setImages(newImages))` — delete the `typeof ... === 'function'`
+node.setImages(newImages))` — delete the `typeof ... === 'function'`
     dance; the `images` read (:49-52) becomes the plain guard idiom (the
     dataset field is typed `unknown[]`; keep the existing local narrowing to
     `GalleryImage[]` there).
@@ -361,11 +361,11 @@ tests + the NodeComponent smoke tests). Zero expectation changes.
   - `DragHandlerLike`: alias of `UseFileDragAndDropResult` — export that
     interface from `src/hooks/useFileDragAndDrop.ts:8-11` and alias it here
     (`setRef: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
-    isDraggedOver: boolean`).
+isDraggedOver: boolean`).
   - `ReorderHandlerLike`: alias of `UseGalleryReorderResult` — export that
     interface from `src/hooks/useGalleryReorder.ts:20-23` and alias it here.
   - `FileUploaderLike`: `ReturnType<FileUploader['useFileUpload']> &
-    { progress?: number }` (`FileUploader` from
+{ progress?: number }` (`FileUploader` from
     `@/context/InklingComposerContext`:12-27), with `errors` widened to
     `Array<{ message?: string }>` only if typecheck proves a call site needs
     it (VideoNodeComponent.tsx:293-297 mixes `Error[]` with
@@ -383,7 +383,7 @@ tests + the NodeComponent smoke tests). Zero expectation changes.
 - Delete now-redundant casts: `as DragHandlerLike` at
   GalleryNodeComponent.tsx:64 and FileNodeComponent.tsx:60 (the hook's real
   result type satisfies the alias directly), and the `setRef as (node:
-  HTMLElement | null) => void` cast at VideoCard.tsx:173 if the canonical
+HTMLElement | null) => void` cast at VideoCard.tsx:173 if the canonical
   type makes it unnecessary.
 - Fold the Holders (deletion test — folding concentrates nothing):
   - VideoCard.tsx: move the `showPopulatedCard` fork (:221) into `VideoCard`,
@@ -404,14 +404,14 @@ passed + 21 todo, identical to baseline.
 
 ## Test plan
 
-| Scenario                    | Command                                            | Required invariant                                   |
-| --------------------------- | -------------------------------------------------- | ---------------------------------------------------- |
-| Seam typing is real         | `pnpm typecheck`                                   | fixture's `@ts-expect-error` cases error as pinned   |
-| Cast census empty           | `rg -n 'as GeneratedDecoratorNodeBase' src`        | no matches after Step 2                              |
-| Node-component behavior     | `pnpm vitest run test/unit/nodes`                  | 8 `*NodeComponent.test.tsx` suites pass, unedited    |
-| Card UI behavior            | `pnpm vitest run test/unit` (after Step 3)         | card/story-adjacent suites pass, unedited            |
-| No renderer drift           | `pnpm vitest run test/nodes-base test/html-renderer` | 730 passed + 21 todo, unedited                     |
-| Full gates                  | `pnpm format:check && pnpm lint && pnpm test:unit` | 1707 passed + 21 todo; lint 0 warnings; format clean |
+| Scenario                | Command                                              | Required invariant                                   |
+| ----------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
+| Seam typing is real     | `pnpm typecheck`                                     | fixture's `@ts-expect-error` cases error as pinned   |
+| Cast census empty       | `rg -n 'as GeneratedDecoratorNodeBase' src`          | no matches after Step 2                              |
+| Node-component behavior | `pnpm vitest run test/unit/nodes`                    | 8 `*NodeComponent.test.tsx` suites pass, unedited    |
+| Card UI behavior        | `pnpm vitest run test/unit` (after Step 3)           | card/story-adjacent suites pass, unedited            |
+| No renderer drift       | `pnpm vitest run test/nodes-base test/html-renderer` | 730 passed + 21 todo, unedited                       |
+| Full gates              | `pnpm format:check && pnpm lint && pnpm test:unit`   | 1707 passed + 21 todo; lint 0 warnings; format clean |
 
 No e2e run: the change is type-level with one deliberate, unreachable-path
 guard narrowing, and no e2e asserts on these internals. Run

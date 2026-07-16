@@ -99,18 +99,18 @@ Verified fresh against commit `d998080`:
   out of this seam's scope except the guard fix.
 - **HR transformer**: `MarkdownShortcutPlugin.tsx:18-37`. Same regex (:23).
   `replace` (:24-35): `if (isImport || parentNode.getNextSibling() !== null)
-  parentNode.replace(line)` else `parentNode.insertBefore(line)` — the
+parentNode.replace(line)` else `parentNode.insertBefore(line)` — the
   last-block branch KEEPS the emptied paragraph (no fresh paragraph), and
   there is an `isImport` branch the hand-rolled path lacks. Then
   `line.selectNext()`. Carries `// TODO: Get rid of isImport flag` (:27).
 - **Fence enter path**: `enter.ts:104-129` inside `registerEnterCommand`
   (registered at `COMMAND_PRIORITY_LOW`, :134). Guarded on `!isNested &&
-  event`; reads `selection?.getNodes()[0]`, requires `$isTextNode`; regex
+event`; reads `selection?.getNodes()[0]`, requires `$isTextNode`; regex
   `/^```(\w{1,10})?/` (:110); language = `textContent.replace(/^```/, '')`
   (:112) — the entire rest of the line, not the `\w{1,10}` capture; bail to
   `false` when `getTopLevelElement()` is null (:114-116); body
   `topLevelElement.insertAfter($createCodeBlockNode({ language,
-  _openInEditMode: true }))` then `topLevelElement.remove()` (:117-120);
+_openInEditMode: true }))` then `topLevelElement.remove()` (:117-120);
   NodeSelection on the replacement (:122-125); `return true`.
 - **Fence tab path**: `tab.ts:63-87` inside `registerTabCommand`. Byte-for-byte
   the same block as enter's (regex :69, extraction :71, bail :73-75, body
@@ -121,7 +121,7 @@ Verified fresh against commit `d998080`:
   keystroke after the fence, not on the fence alone.
   `test/unit/plugins/MarkdownShortcutPlugin.test.ts:123-136` pins this:
   `'does not import code fences as code blocks (fence regexp requires trailing
-  whitespace)'`. Language = `match[1]` (:50); body
+whitespace)'`. Language = `match[1]` (:50); body
   `parentNode.replace(codeBlockNode)` (:52) + the same NodeSelection dance
   (:54-57).
 - **Both HR mechanisms are live at once**: `InklingComposableEditor.tsx:152`
@@ -141,14 +141,14 @@ Verified fresh against commit `d998080`:
   consumer mounts `HorizontalRulePlugin` with custom transformers that exclude
   `HR`. Do not delete the listener in this plan.
 - **Test coverage today**: `test/unit/plugins/behaviour/
-  registerKeyboardNavigation.test.ts` has exactly 50 `it(...)` cases and NONE
+registerKeyboardNavigation.test.ts` has exactly 50 `it(...)` cases and NONE
   cover the fence shortcut (its only `$createCodeBlockNode` use, :258, is an
   unrelated meta+enter fixture). The enter/tab fence paths have no unit
   coverage and no e2e coverage. `test/unit/plugins/MarkdownShortcutPlugin.test.ts`
   covers the transformer sets (12 cases) including the fence-whitespace pin.
   No `HorizontalRulePlugin` unit test exists. E2E: `test/e2e/text-transforms/
-  horizontal-line-rule.test.ts` (typing `---` → HR), `test/e2e/text-transforms/
-  code-block.test.ts` (typing ```` ```javascript ```` with trailing space →
+horizontal-line-rule.test.ts` (typing `---` → HR), `test/e2e/text-transforms/
+code-block.test.ts` (typing ` ```javascript ` with trailing space →
   code block in edit mode), `test/e2e/text-transforms/markdown.test.ts:133-138`
   (paste `---` → HR), and `test/e2e/text-transforms/emdash-endash.test.ts`
   (the EmEnDash interaction below).
@@ -216,17 +216,17 @@ Verified fresh against commit `d998080`:
 
 ## Commands you will need
 
-| Purpose                      | Command                                                            | Expected on success                                  |
-| ---------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------- |
-| Drift check                  | see blockquote above                                               | empty diff vs `d998080` for in-scope files           |
-| Characterization baseline    | `pnpm test:unit`                                                   | 1707 passed + 21 todo before Step 1                  |
-| Keyboard-navigation commands | `pnpm vitest run test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts` | 50 cases green; grows with Step 1 pins  |
-| Transformer sets             | `pnpm vitest run test/unit/plugins/MarkdownShortcutPlugin.test.ts` | green, including the :123 whitespace pin             |
-| EmEnDash                     | `pnpm vitest run test/unit/plugins/EmEnDashPlugin.test.tsx`        | green unchanged                                      |
-| Shortcut e2e                 | `pnpm test:e2e:quiet test/e2e/text-transforms/`                    | HR, fence, emdash, markdown suites pass              |
-| Static + full gates          | `pnpm typecheck && pnpm lint && pnpm test:unit`                    | all pass (unit builds via `pretest:unit`)            |
-| Format                       | `pnpm format && pnpm format:check`                                 | exits 0                                              |
-| Public-surface gates         | `pnpm verify:package && pnpm verify:types`                         | pass — public transformer objects are touched        |
+| Purpose                      | Command                                                                          | Expected on success                           |
+| ---------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------- |
+| Drift check                  | see blockquote above                                                             | empty diff vs `d998080` for in-scope files    |
+| Characterization baseline    | `pnpm test:unit`                                                                 | 1707 passed + 21 todo before Step 1           |
+| Keyboard-navigation commands | `pnpm vitest run test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts` | 50 cases green; grows with Step 1 pins        |
+| Transformer sets             | `pnpm vitest run test/unit/plugins/MarkdownShortcutPlugin.test.ts`               | green, including the :123 whitespace pin      |
+| EmEnDash                     | `pnpm vitest run test/unit/plugins/EmEnDashPlugin.test.tsx`                      | green unchanged                               |
+| Shortcut e2e                 | `pnpm test:e2e:quiet test/e2e/text-transforms/`                                  | HR, fence, emdash, markdown suites pass       |
+| Static + full gates          | `pnpm typecheck && pnpm lint && pnpm test:unit`                                  | all pass (unit builds via `pretest:unit`)     |
+| Format                       | `pnpm format && pnpm format:check`                                               | exits 0                                       |
+| Public-surface gates         | `pnpm verify:package && pnpm verify:types`                                       | pass — public transformer objects are touched |
 
 ## Git workflow
 
@@ -251,12 +251,12 @@ cases, and record the new count in the commit message.
   `test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts` using its
   existing `dispatchAndCommit` harness — or a sibling file if the harness
   doesn't mount cleanly; check how it builds editors first. Pin:
-  (a) ` ```js ` + Enter on a paragraph whose text is exactly ```` ```js ````
+  (a) ` ```js ` + Enter on a paragraph whose text is exactly ` ```js `
   → code block with language `js`, selected, in edit mode, paragraph gone;
-  (b) same via Tab; (c) bare ```` ``` ```` + Enter → code block with empty
+  (b) same via Tab; (c) bare ` ``` ` + Enter → code block with empty
   language; (d) fence with a language longer than 10 word chars → no
   transform (regex doesn't match, command returns false); (e) language
-  extraction: text ```` ```js extra ```` + Enter → language is the FULL rest
+  extraction: text ` ```js extra ` + Enter → language is the FULL rest
   of the line (`js extra`), documenting the divergence from the
   transformer's `match[1]` capture; (f) `isNested` guard — no transform when
   nested (mirror an existing nested-guard case in the file).
@@ -390,16 +390,16 @@ Apply plan 006's pattern, in the idiom already used by
 
 ## Test plan
 
-| Scenario                        | Command                                                            | Required invariant                                      |
-| ------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
-| Baseline                        | `pnpm test:unit`                                                   | 1707 passed + 21 todo at `d998080` before Step 1        |
-| Fence pins (enter/tab)          | `pnpm vitest run test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts` | new pins green; pre-existing 50 cases unchanged |
-| Transformer sets                | `pnpm vitest run test/unit/plugins/MarkdownShortcutPlugin.test.ts` | green; the :123 trailing-whitespace pin untouched        |
-| HR listener pins                | new unit file from Step 1                                          | green; only the recorded undo pin may change, in Step 5 |
-| EmEnDash                        | `pnpm vitest run test/unit/plugins/EmEnDashPlugin.test.tsx`        | green unchanged                                          |
-| Shortcut e2e                    | `pnpm test:e2e:quiet test/e2e/text-transforms/`                    | HR, code-block, emdash, markdown suites pass             |
-| Static + full gates             | `pnpm typecheck && pnpm lint && pnpm test:unit && pnpm format:check` | all pass                                             |
-| Public surface                  | `pnpm verify:package && pnpm verify:types`                         | pass                                                     |
+| Scenario               | Command                                                                          | Required invariant                                      |
+| ---------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Baseline               | `pnpm test:unit`                                                                 | 1707 passed + 21 todo at `d998080` before Step 1        |
+| Fence pins (enter/tab) | `pnpm vitest run test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts` | new pins green; pre-existing 50 cases unchanged         |
+| Transformer sets       | `pnpm vitest run test/unit/plugins/MarkdownShortcutPlugin.test.ts`               | green; the :123 trailing-whitespace pin untouched       |
+| HR listener pins       | new unit file from Step 1                                                        | green; only the recorded undo pin may change, in Step 5 |
+| EmEnDash               | `pnpm vitest run test/unit/plugins/EmEnDashPlugin.test.tsx`                      | green unchanged                                         |
+| Shortcut e2e           | `pnpm test:e2e:quiet test/e2e/text-transforms/`                                  | HR, code-block, emdash, markdown suites pass            |
+| Static + full gates    | `pnpm typecheck && pnpm lint && pnpm test:unit && pnpm format:check`             | all pass                                                |
+| Public surface         | `pnpm verify:package && pnpm verify:types`                                       | pass                                                    |
 
 ## Acceptance criteria
 

@@ -42,8 +42,8 @@
 
 ## Why this matters
 
-One intent — *the user picked file(s); preview locally, upload, extract
-metadata, write the result onto the card node* — is implemented six times
+One intent — _the user picked file(s); preview locally, upload, extract
+metadata, write the result onto the card node_ — is implemented six times
 with three different object-URL ownership patterns, and the two effects that
 kick the flow off are copy-pasted into four card components each. The
 skeleton is small but has no single interface, so every card re-carries it
@@ -61,7 +61,7 @@ and the copies drift in exactly the places where leak and race bugs live:
   double-revoke can hide, and each one auditable only by reading the whole
   component.
 - Every node write is an untyped `(node as GeneratedDecoratorNodeBase).foo =
-  bar` cast (e.g. imageUploadHandler.ts:26,41-46,
+bar` cast (e.g. imageUploadHandler.ts:26,41-46,
   VideoNodeComponent.tsx:129-161, FileNodeComponent.tsx:81,105,116,132).
   Plan 044 puts those writes behind a typed seam; the upload flows are its
   largest single cluster of callers, so they should flow through the seam
@@ -110,7 +110,7 @@ from the code, the code wins — corrections are marked **(correction)**:
     `upload()` — **no object URL at all (correction**: the brief's "guard →
     object-URL preview" skeleton is literally true only for image; file and
     thumbnail have no preview stage**)** → bails on `!result ||
-    !result[0]` (:27-29, with an explanatory comment about the empty-state
+!result[0]` (:27-29, with an explanatory comment about the empty-state
     fallback) → patch `{ fileTitle, fileName, fileSize, src: src ?? '' }`.
   - `thumbnailUploadHandler` (thumbnailUploadHandler.ts:10-39): null-guard →
     **reads `node.src` first** (`getEditorState().read`, :22-27) and passes
@@ -122,20 +122,19 @@ from the code, the code wins — corrections are marked **(correction)**:
   - `VideoNodeComponent.handleVideoUpload` (:94-164): `extractVideoMetadata`
     failure is **caught** and surfaced via `setMetadataExtractionErrors`
     with the exact message `The file type you uploaded is not supported.
-    Please use .${videoMimeTypes.join(', .').toUpperCase()}` (:106-113),
+Please use .${videoMimeTypes.join(', .').toUpperCase()}` (:106-113),
     then returns; on success sets a preview thumbnail object URL (:116-118);
     empty `videoUrl` clears the preview and returns with the node untouched
     (:123-126); patches `{ src, duration, fileName, width, height,
-    mimeType }` plus `thumbnailWidth/Height` only when
+mimeType }` plus `thumbnailWidth/Height` only when
     `customThumbnailSrc` is unset (:128-144); then a **thumbnail
     sub-flow** (:146-161): builds `new File([thumbnailBlob],
-    \`${file.name}.jpg\`, { type: 'image/jpeg' })`, uploads via the
-    `mediaThumbnail` uploader with `formData: { url: videoUrl }`, writes
-    `thumbnailSrc`, and finally clears the preview (:163).
-    **(correction**: the brief lists two inline flows, but the same file
-    has a third one — `handleCustomThumbnailChange` (:174-192): `image`
-    uploader → `getImageDimensions(imageUrl)` on the **result** URL →
-    patch `{ customThumbnailSrc, thumbnailWidth, thumbnailHeight }`. It is
+\`${file.name}.jpg\`, { type: 'image/jpeg' })`, uploads via the
+`mediaThumbnail`uploader with`formData: { url: videoUrl }`, writes
+`thumbnailSrc`, and finally clears the preview (:163).
+**(correction**: the brief lists two inline flows, but the same file
+has a third one — `handleCustomThumbnailChange`(:174-192):`image`uploader →`getImageDimensions(imageUrl)`on the **result** URL →
+patch`{ customThumbnailSrc, thumbnailWidth, thumbnailHeight }`. It is
     the same intent and is in scope for migration.**)**
   - `GalleryNodeComponent.handleImageUploads` (:103-176): multi-file; caps
     at `MAX_IMAGES` (= 9, re-exported via the `src/nodes/GalleryNode.ts`
@@ -146,7 +145,7 @@ from the code, the code wins — corrections are marked **(correction)**:
     included); one batched `upload(strippedFiles)` (:138); on falsy result,
     strips the new images' previews, revokes them, and sets
     `'Something went wrong while uploading images. Please refresh the page
-    and try again'` (:140-151); on success matches results to previews by
+and try again'` (:140-151); on success matches results to previews by
     `fileName` (:158), revokes each preview, and only then writes the node
     via `setImages` (:72-80 → `galleryNode.setImages`). Reorder interplay:
     `useGalleryReorder` matches dragged images by `src` **or `previewSrc`**
@@ -156,7 +155,7 @@ from the code, the code wins — corrections are marked **(correction)**:
 - The `triggerFileDialog` effect, four copies — near-verbatim body but
   **not** identical **(correction**: the brief says verbatim**)**:
   Image (:233-256, comment at :233-234, deps `[triggerFileDialog, nodeKey,
-  editor, fileInputRef]`), Audio (:107-130, comment at :107-108, **no deps
+editor, fileInputRef]`), Audio (:107-130, comment at :107-108, **no deps
   array** — re-checked every render), Video (:247-270, comment at
   :247-248, **no deps array**), File (:121-141, **no comment**, deps
   `[openFileSelection]` — a stable module import, so effectively mount-only
@@ -183,7 +182,7 @@ from the code, the code wins — corrections are marked **(correction)**:
   HeaderNodeComponent.tsx:146) **(correction**: the brief does not mention
   it**)**: upload → dimensions from the **result** URL → returns metadata;
   it performs **no node write** (header patches `backgroundImageSrc/Width/
-  Height` itself at :151-159). Not a seam migration target; keep its
+Height` itself at :151-159). Not a seam migration target; keep its
   behavior identical (re-home with the module or leave in place — executor
   detail).
 - Call-site inventory for deletion-time safety: `imageUploadHandler` —
@@ -262,15 +261,15 @@ from the code, the code wins — corrections are marked **(correction)**:
 
 ## Commands you will need
 
-| Purpose                     | Command                                                             | Expected on success                              |
-| --------------------------- | ------------------------------------------------------------------- | ------------------------------------------------ |
-| Drift baseline              | `pnpm test:unit`                                                    | 206 files / 1707 passed / 21 todo before Step 1  |
-| Render-side invariant       | `pnpm vitest run test/nodes-base test/html-renderer`                | 46 files / 730 passed / 21 todo — never moves    |
-| Handler pins                | `pnpm vitest run test/unit/utils`                                   | green; re-pointed files keep expectations        |
-| Per-card component pins     | `pnpm vitest run test/unit/nodes/<Card>NodeComponent.test.tsx`      | green, expectations unchanged from Step 1        |
-| Static + full gates         | `pnpm typecheck && pnpm lint && pnpm test:unit`                     | all pass (unit builds via `pretest:unit`)        |
-| Format                      | `pnpm format && pnpm format:check`                                  | exits 0                                          |
-| Card e2e (final gate)       | `pnpm test:e2e:quiet test/e2e/cards/image-card.test.ts test/e2e/cards/video-card.firefox.test.ts test/e2e/cards/gallery-card.test.ts test/e2e/cards/audio-card.test.ts test/e2e/cards/file-card.test.ts` | green — these flows are demo-visible |
+| Purpose                 | Command                                                                                                                                                                                                  | Expected on success                             |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Drift baseline          | `pnpm test:unit`                                                                                                                                                                                         | 206 files / 1707 passed / 21 todo before Step 1 |
+| Render-side invariant   | `pnpm vitest run test/nodes-base test/html-renderer`                                                                                                                                                     | 46 files / 730 passed / 21 todo — never moves   |
+| Handler pins            | `pnpm vitest run test/unit/utils`                                                                                                                                                                        | green; re-pointed files keep expectations       |
+| Per-card component pins | `pnpm vitest run test/unit/nodes/<Card>NodeComponent.test.tsx`                                                                                                                                           | green, expectations unchanged from Step 1       |
+| Static + full gates     | `pnpm typecheck && pnpm lint && pnpm test:unit`                                                                                                                                                          | all pass (unit builds via `pretest:unit`)       |
+| Format                  | `pnpm format && pnpm format:check`                                                                                                                                                                       | exits 0                                         |
+| Card e2e (final gate)   | `pnpm test:e2e:quiet test/e2e/cards/image-card.test.ts test/e2e/cards/video-card.firefox.test.ts test/e2e/cards/gallery-card.test.ts test/e2e/cards/audio-card.test.ts test/e2e/cards/file-card.test.ts` | green — these flows are demo-visible            |
 
 ## Git workflow
 
@@ -335,7 +334,7 @@ Create the headless module (path illustrative, e.g.
   `revokePreviewUrl`'s `blob:` guard) — the one place
   `URL.createObjectURL` is called for upload previews.
 - The intent runner (illustrative: `runUploadIntent({ files, uploader,
-  extractMetadata, patch, onEmptyResult, prePatch })`): guard → optional
+extractMetadata, patch, onEmptyResult, prePatch })`): guard → optional
   pre-upload node patch (the src reset) → optional preview lease →
   per-card `extractMetadata` → `upload()` → typed node patch **through
   plan 044's write seam** (use 044's landed export; do not cast to
@@ -366,7 +365,7 @@ Create the headless module (path illustrative, e.g.
 - `backgroundImageUploadHandler` keeps its exact behavior (re-home next to
   the module or leave; executor detail).
 - Run `pnpm vitest run test/unit/utils test/unit/nodes
-  test/unit/plugins/ImagePlugin.test.tsx` — green, zero expectation drift.
+test/unit/plugins/ImagePlugin.test.tsx` — green, zero expectation drift.
 
 ### Step 4: Migrate video's inline flows
 
@@ -377,7 +376,7 @@ Create the headless module (path illustrative, e.g.
   untouched, the `customThumbnailSrc`-unset conditional in the patch.
 - The thumbnail sub-flow becomes a second, sequentially-composed runner
   call (synthesized `File`, `mediaThumbnail` uploader, `formData: { url:
-  videoUrl }`) — do not invent a declarative chain; imperative composition
+videoUrl }`) — do not invent a declarative chain; imperative composition
   in the component is the honest shape.
 - `handleCustomThumbnailChange` becomes a third runner configuration
   (dimensions from the result URL, no preview lease).
@@ -407,8 +406,8 @@ Create the headless module (path illustrative, e.g.
 ### Step 6: Own the trigger-on-insert and initial-file effects once
 
 - Add the effect hooks (illustrative: `useTriggerFileDialog({ editor,
-  nodeKey, fileInputRef, triggerFileDialog })` and `useInitialFileUpload({
-  initialFile, isReady, run })` under `src/hooks/`).
+nodeKey, fileInputRef, triggerFileDialog })` and `useInitialFileUpload({
+initialFile, isReady, run })` under `src/hooks/`).
 - `useTriggerFileDialog` fires when the prop is true (the audio/video
   every-render semantics, which subsume image's deps-pinned and file's
   mount-only cases for the insert flow), keeps the `setTimeout` + cleanup
@@ -441,24 +440,24 @@ Create the headless module (path illustrative, e.g.
   passed / 21 todo — this plan touches nothing under `src/nodes/base/`).
 - Final gate — the demo-visible card e2e specs:
   `pnpm test:e2e:quiet test/e2e/cards/image-card.test.ts
-  test/e2e/cards/video-card.firefox.test.ts
-  test/e2e/cards/gallery-card.test.ts test/e2e/cards/audio-card.test.ts
-  test/e2e/cards/file-card.test.ts`.
+test/e2e/cards/video-card.firefox.test.ts
+test/e2e/cards/gallery-card.test.ts test/e2e/cards/audio-card.test.ts
+test/e2e/cards/file-card.test.ts`.
 
 ## Test plan
 
-| Scenario                    | Command                                                              | Required invariant                                   |
-| --------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------- |
-| Baseline                    | `pnpm test:unit`                                                     | 1707 passed / 21 todo before Step 1                  |
-| Handler characterization    | `pnpm vitest run test/unit/utils`                                    | new pins green; matrix recorded                      |
-| Video/gallery flow pins     | `pnpm vitest run test/unit/nodes/VideoNodeComponent.test.tsx test/unit/nodes/GalleryNodeComponent.test.tsx` | exact messages, ordering, revoke lifecycle pinned |
-| Handler migration           | `pnpm vitest run test/unit/utils test/unit/plugins`                  | expectations unchanged (imports may move)            |
-| Video migration             | `pnpm vitest run test/unit/nodes/VideoNodeComponent.test.tsx`        | Step-1 pins green unchanged                          |
-| Gallery migration           | `pnpm vitest run test/unit/nodes/GalleryNodeComponent.test.tsx`      | Step-1 pins green unchanged; reorder intact          |
-| Effect unification          | `pnpm vitest run test/unit/nodes`                                    | once-only pins green for all four cards              |
-| Render-side invariant       | `pnpm vitest run test/nodes-base test/html-renderer`                 | 730 passed / 21 todo — untouched                     |
-| Full gates                  | `pnpm typecheck && pnpm lint && pnpm test:unit`                      | all pass                                             |
-| Demo-visible e2e            | five card specs (Step 7)                                             | green                                                |
+| Scenario                 | Command                                                                                                     | Required invariant                                |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Baseline                 | `pnpm test:unit`                                                                                            | 1707 passed / 21 todo before Step 1               |
+| Handler characterization | `pnpm vitest run test/unit/utils`                                                                           | new pins green; matrix recorded                   |
+| Video/gallery flow pins  | `pnpm vitest run test/unit/nodes/VideoNodeComponent.test.tsx test/unit/nodes/GalleryNodeComponent.test.tsx` | exact messages, ordering, revoke lifecycle pinned |
+| Handler migration        | `pnpm vitest run test/unit/utils test/unit/plugins`                                                         | expectations unchanged (imports may move)         |
+| Video migration          | `pnpm vitest run test/unit/nodes/VideoNodeComponent.test.tsx`                                               | Step-1 pins green unchanged                       |
+| Gallery migration        | `pnpm vitest run test/unit/nodes/GalleryNodeComponent.test.tsx`                                             | Step-1 pins green unchanged; reorder intact       |
+| Effect unification       | `pnpm vitest run test/unit/nodes`                                                                           | once-only pins green for all four cards           |
+| Render-side invariant    | `pnpm vitest run test/nodes-base test/html-renderer`                                                        | 730 passed / 21 todo — untouched                  |
+| Full gates               | `pnpm typecheck && pnpm lint && pnpm test:unit`                                                             | all pass                                          |
+| Demo-visible e2e         | five card specs (Step 7)                                                                                    | green                                             |
 
 ## Acceptance criteria
 

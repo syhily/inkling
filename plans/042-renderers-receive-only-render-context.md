@@ -96,7 +96,7 @@ Verified fresh against commit `d998080`:
     TypeError (:~21-23, pinned with an exact message at
     test/nodes-base/nodes/markdown.test.ts:~176-185) and the whole bag passed
     to markdown-it as `render(node.markdown || '', options as Record<string,
-    unknown>)` (:~27). Downstream, `src/markdown/markdown-html-renderer.ts`
+unknown>)` (:~27). Downstream, `src/markdown/markdown-html-renderer.ts`
     reads exactly one key off that bag: `inklingVersion`
     (`RenderOptions`/:~25-29, `selectRenderer`/:~75-76) — narrowing the pass
     to `{ inklingVersion }` is byte-identical.
@@ -106,7 +106,7 @@ Verified fresh against commit `d998080`:
     (:~41-42) for direct callers, pinned by
     test/nodes-base/utils/srcset-attribute.test.ts.
 - The string layer: `ElementTransformer.export(node, options, exportChildren,
-  context)` and `ExportChildren = (node, options?) => string`
+context)` and `ExportChildren = (node, options?) => string`
   (transformers/index.ts:~14-22). `options` is dead weight in every
   transformer: aside.ts:~10, blockquote.ts:~12, heading.ts:~14 declare and
   ignore it; paragraph.ts:~11 the same; list.ts:~11-13 forwards it through
@@ -121,7 +121,7 @@ Verified fresh against commit `d998080`:
   `$convertToHtmlString`) always resolves a `dom`
   (LexicalHTMLRenderer.ts:~38-41), so the throw is unreachable in-repo.
 - `renderWithVisibility(originalRenderOutput, visibility, options: { target?:
-  string })` (visibility.ts:~129-133) reads `options.target` (:~152). Its
+string })` (visibility.ts:~129-133) reads `options.target` (:~152). Its
   only renderer caller passes the context (html-renderer.ts:~44); it is
   publicly re-exported as `utils.visibility.renderWithVisibility`
   (inkling-default-nodes.ts:~56,~70); its tests call it with plain
@@ -135,7 +135,7 @@ Verified fresh against commit `d998080`:
   (render-context.ts:~125), `siteUrl`, `imageBaseUrl`, `createDocument`,
   and the `isLocalContentImage` folding.
 - The empty/holdover interfaces to delete: `RendererOptions extends
-  ExportDOMOptions {}` (types.ts:~6), `MarkdownRenderOptions`
+ExportDOMOptions {}` (types.ts:~6), `MarkdownRenderOptions`
   (markdown-renderer.ts:~11), `HeaderV2RenderOptions` (header-renderer.ts:~50),
   and the three non-empty bag-slices the context absorbs: `ImageRenderOptions`
   (image-renderer.ts:~31-37), `GalleryRenderOptions` (gallery-renderer.ts:~25-31),
@@ -155,10 +155,10 @@ Verified fresh against commit `d998080`:
      "exportDOM dispatch threading" test declares
      `defaultRenderFn: (_node, _options, context) => ...` and asserts the
      context arrives "as the third render-fn argument".
-  There are NO direct renderer unit tests — every card test invokes the
-  public `node.exportDOM(editor, options)` (grep-verified across
-  test/nodes-base/nodes). The brief's expectation of "direct renderer unit
-  tests that construct options bags" reduces to the two files above.
+     There are NO direct renderer unit tests — every card test invokes the
+     public `node.exportDOM(editor, options)` (grep-verified across
+     test/nodes-base/nodes). The brief's expectation of "direct renderer unit
+     tests that construct options bags" reduces to the two files above.
 - Comment/doc debt that must move with the fold: render-context.ts module
   header ("alongside the legacy options bag", :~13), generate-decorator-node.ts
   comments (:~20-24, :~562-564), convert-to-html-string.ts comment (:~18-28),
@@ -201,16 +201,16 @@ Verified fresh against commit `d998080`:
 
 ## Commands you will need
 
-| Purpose                       | Command                                              | Expected on success                          |
-| ----------------------------- | ---------------------------------------------------- | -------------------------------------------- |
-| Drift check                   | `git diff --stat d998080..HEAD -- <paths above>`     | empty, or re-base line refs first            |
-| Characterization baseline     | `pnpm vitest run test/nodes-base test/html-renderer` | 46 files / 730 passed / 21 todo              |
-| Single card group             | `pnpm vitest run test/nodes-base/nodes/<card>.test.ts` | green, byte-identical expectations         |
-| Seam + helper tests           | `pnpm vitest run test/nodes-base/utils`              | green; Step-2 additions green                |
-| String layer                  | `pnpm vitest run test/html-renderer`                 | green                                        |
-| Static + full gates           | `pnpm typecheck && pnpm lint && pnpm test:unit`      | all pass (unit builds via `pretest:unit`)    |
-| Packed surface (Step 2 + end) | `pnpm verify:package && pnpm verify:types`           | pass with the `inklingVersion` addition      |
-| Format                        | `pnpm format && pnpm format:check`                   | exits 0                                      |
+| Purpose                       | Command                                                | Expected on success                       |
+| ----------------------------- | ------------------------------------------------------ | ----------------------------------------- |
+| Drift check                   | `git diff --stat d998080..HEAD -- <paths above>`       | empty, or re-base line refs first         |
+| Characterization baseline     | `pnpm vitest run test/nodes-base test/html-renderer`   | 46 files / 730 passed / 21 todo           |
+| Single card group             | `pnpm vitest run test/nodes-base/nodes/<card>.test.ts` | green, byte-identical expectations        |
+| Seam + helper tests           | `pnpm vitest run test/nodes-base/utils`                | green; Step-2 additions green             |
+| String layer                  | `pnpm vitest run test/html-renderer`                   | green                                     |
+| Static + full gates           | `pnpm typecheck && pnpm lint && pnpm test:unit`        | all pass (unit builds via `pretest:unit`) |
+| Packed surface (Step 2 + end) | `pnpm verify:package && pnpm verify:types`             | pass with the `inklingVersion` addition   |
+| Format                        | `pnpm format && pnpm format:check`                     | exits 0                                   |
 
 ## Git workflow
 
@@ -266,7 +266,7 @@ Purely additive; no renderer changes; output unchanged by construction.
     comment recording that the message names the historical caller. Record
     in the commit message: for non-markdown cards this caller-bug input
     previously surfaced later as a raw `context.createDocument is not a
-    function` TypeError at first document use; it now throws at context
+function` TypeError at first document use; it now throws at context
     construction inside the same `exportDOM` call. No test pins the old
     behavior (grep-verified); both are TypeErrors on an invalid input.
 - `src/nodes/base/export-dom.ts`: add `inklingVersion?: string` to
@@ -363,7 +363,7 @@ here is a fold mistake, not drift to accommodate.
   (:~42, :~52), and the unreachable `'TextContent requires a dom property'`
   throw. Record the throw's removal in the commit message.
 - `convert-to-html-string.ts`: `$convertToHtmlString(editor, options:
-  ExportDOMOptions = {})` (retyped from `RendererOptions`; the entry point
+ExportDOMOptions = {})` (retyped from `RendererOptions`; the entry point
   keeps its options). `exportTopLevelElementOrDecorator` keeps `options`
   ONLY for the public `node.exportDOM(editor, options)` call (:~56);
   `exportChildren(node, context)`, the transformer call (:~76), and the
@@ -375,7 +375,7 @@ here is a fold mistake, not drift to accommodate.
 - Delete `src/html/renderer/types.ts` and every `RendererOptions` import
   (the nine importers enumerated in evidence).
 - `visibility.ts`: `renderWithVisibility(output, visibility, context:
-  Pick<RenderContext, 'target'>)` — rename and retype only; the body reads
+Pick<RenderContext, 'target'>)` — rename and retype only; the body reads
   `context.target` (:~152). `Pick<RenderContext, 'target'>` keeps the plain
   `{ target }` test calls (visibility.test.ts:~276,~378,~392,~406,~428) and
   the public `utils.visibility.renderWithVisibility` re-export compiling
@@ -410,16 +410,16 @@ here is a fold mistake, not drift to accommodate.
 
 ## Test plan
 
-| Scenario                       | Command                                                | Required invariant                                    |
-| ------------------------------ | ------------------------------------------------------ | ----------------------------------------------------- |
-| Baseline                       | `pnpm vitest run test/nodes-base test/html-renderer`   | 46 files / 730 passed / 21 todo before any commit     |
-| Context extension              | `pnpm vitest run test/nodes-base/utils`                | green incl. new field/factory-throw seam tests        |
-| Straggler migration            | `pnpm vitest run test/nodes-base`                      | byte-identical; only srcset-attribute.test.ts edited  |
-| Markdown pin                   | `pnpm vitest run test/nodes-base/nodes/markdown.test.ts` | exact TypeError message preserved (:~181-183)       |
-| The fold                       | `pnpm vitest run test/nodes-base test/html-renderer`   | green; only the itemized dispatch test edited         |
-| Visibility plain-`{target}`    | `pnpm vitest run test/nodes-base/utils/visibility.test.ts` | unchanged, still compiles against `Pick<..., 'target'>` |
-| Full gates                     | `pnpm typecheck && pnpm lint && pnpm test:unit`        | all pass; count delta = Step-2 additions only         |
-| Packed surface                 | `pnpm verify:package && pnpm verify:types`             | pass; one additive field, nothing else                |
+| Scenario                    | Command                                                    | Required invariant                                      |
+| --------------------------- | ---------------------------------------------------------- | ------------------------------------------------------- |
+| Baseline                    | `pnpm vitest run test/nodes-base test/html-renderer`       | 46 files / 730 passed / 21 todo before any commit       |
+| Context extension           | `pnpm vitest run test/nodes-base/utils`                    | green incl. new field/factory-throw seam tests          |
+| Straggler migration         | `pnpm vitest run test/nodes-base`                          | byte-identical; only srcset-attribute.test.ts edited    |
+| Markdown pin                | `pnpm vitest run test/nodes-base/nodes/markdown.test.ts`   | exact TypeError message preserved (:~181-183)           |
+| The fold                    | `pnpm vitest run test/nodes-base test/html-renderer`       | green; only the itemized dispatch test edited           |
+| Visibility plain-`{target}` | `pnpm vitest run test/nodes-base/utils/visibility.test.ts` | unchanged, still compiles against `Pick<..., 'target'>` |
+| Full gates                  | `pnpm typecheck && pnpm lint && pnpm test:unit`            | all pass; count delta = Step-2 additions only           |
+| Packed surface              | `pnpm verify:package && pnpm verify:types`                 | pass; one additive field, nothing else                  |
 
 ## Acceptance criteria
 

@@ -219,13 +219,13 @@ Verified fresh against commit `d998080`:
 
 ## Commands you will need
 
-| Purpose                    | Command                                                                                  | Expected on success                          |
-| -------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Pin file only              | `pnpm vitest run test/unit/plugins/behaviour/at-link.test.ts`                            | green                                        |
-| Existing plugin tests      | `pnpm vitest run test/unit/plugins/AtLinkPlugin.test.tsx`                                | green, untouched expectations                |
+| Purpose                    | Command                                                                                         | Expected on success                       |
+| -------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| Pin file only              | `pnpm vitest run test/unit/plugins/behaviour/at-link.test.ts`                                   | green                                     |
+| Existing plugin tests      | `pnpm vitest run test/unit/plugins/AtLinkPlugin.test.tsx`                                       | green, untouched expectations             |
 | At-link e2e net            | `pnpm test:e2e:quiet test/e2e/linking.test.ts test/e2e/cards/bookmark-card-with-search.test.ts` | pass (dev server on 5174 is auto-started) |
-| Static + full gates        | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit`                     | all pass (unit builds via `pretest:unit`)    |
-| Render-layer drift (cheap) | `pnpm vitest run test/nodes-base test/html-renderer`                                     | 730 passed + 21 todo, unchanged              |
+| Static + full gates        | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit`                            | all pass (unit builds via `pretest:unit`) |
+| Render-layer drift (cheap) | `pnpm vitest run test/nodes-base test/html-renderer`                                            | 730 passed + 21 todo, unchanged           |
 
 ## Git workflow
 
@@ -367,17 +367,17 @@ One commit, pure move plus the dependency-array fix:
 
 ## Test plan
 
-| Scenario                        | Command                                                                                   | Required invariant                                   |
-| ------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Characterization pins           | `pnpm vitest run test/unit/plugins/behaviour/at-link.test.ts`                             | green against the un-split plugin                    |
-| Convergence matrix              | same file                                                                                 | native vs controlled state JSON identical per case   |
-| Existing plugin tests           | `pnpm vitest run test/unit/plugins/AtLinkPlugin.test.tsx`                                 | green, zero expectation edits                        |
-| Shape transform pins            | same new file                                                                             | ZWNJ/search-node normalization identical post-move   |
-| Removal/guard pins              | same new file                                                                             | escape/backspace revert, format swallowed            |
-| Plan-006 gate behavior          | e2e `linking.test.ts` (removal on backspace/blur)                                         | pass; gate stays first in the listener               |
-| Paste guard regression          | e2e `bookmark-card-with-search.test.ts` ("can paste into URL input")                      | pass                                                 |
-| Render-layer drift              | `pnpm vitest run test/nodes-base test/html-renderer`                                      | 730 passed + 21 todo, unchanged                      |
-| Full gates                      | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit`                      | pass; unit = 1707 + new pins passed, 21 todo         |
+| Scenario               | Command                                                              | Required invariant                                 |
+| ---------------------- | -------------------------------------------------------------------- | -------------------------------------------------- |
+| Characterization pins  | `pnpm vitest run test/unit/plugins/behaviour/at-link.test.ts`        | green against the un-split plugin                  |
+| Convergence matrix     | same file                                                            | native vs controlled state JSON identical per case |
+| Existing plugin tests  | `pnpm vitest run test/unit/plugins/AtLinkPlugin.test.tsx`            | green, zero expectation edits                      |
+| Shape transform pins   | same new file                                                        | ZWNJ/search-node normalization identical post-move |
+| Removal/guard pins     | same new file                                                        | escape/backspace revert, format swallowed          |
+| Plan-006 gate behavior | e2e `linking.test.ts` (removal on backspace/blur)                    | pass; gate stays first in the listener             |
+| Paste guard regression | e2e `bookmark-card-with-search.test.ts` ("can paste into URL input") | pass                                               |
+| Render-layer drift     | `pnpm vitest run test/nodes-base test/html-renderer`                 | 730 passed + 21 todo, unchanged                    |
+| Full gates             | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit` | pass; unit = 1707 + new pins passed, 21 todo       |
 
 ## Acceptance criteria
 

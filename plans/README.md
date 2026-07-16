@@ -76,20 +76,20 @@ Repo quick reference (verification gates used by every plan):
 | 039  | One declaration per card — deepen generator, derive registries    | P1       | L      | 037, 038                         | DONE (`4512bef`) |
 | 040  | Put renderer policy behind a render-context seam                  | P1       | M      | 037                              | DONE (`c6add85`) |
 
-| 041  | Shrink the escape-html allowlist onto context.escapeText          | P2       | S      | —                              | TODO             |
-| 042  | Renderers receive only the render context                         | P1       | M      | 041                            | TODO             |
-| 043  | Derive the card insert plugins from the declaration               | P1       | M      | —                              | TODO             |
-| 044  | Put card-node writes behind a typed seam                          | P1       | L      | —                              | TODO             |
-| 045  | One media-upload intent module                                    | P2       | M      | 044                            | TODO             |
-| 046  | Collapse the card action toolbar into one module                  | P2       | M      | 043                            | TODO             |
-| 047  | Split the composer context by lifecycle                           | P1       | L      | —                              | TODO             |
-| 048  | Make the host interface honest (2.0.0)                            | P1       | M      | 047                            | TODO             |
-| 049  | Name the clipboard-protocol module                                | P2       | M      | —                              | TODO             |
-| 050  | One markdown module, two named dialects                           | P2       | S      | 049                            | TODO             |
-| 051  | Card import spec joins the declaration                            | P2       | L      | 043                            | TODO             |
-| 052  | Collapse the card shortcuts into one seam                         | P2       | S      | —                              | TODO             |
-| 053  | Split the at-link module at its node/session seam                 | P3       | M      | —                              | TODO             |
-| 054  | Latent-fix batch from the 2026-07-16 review                       | P1       | S      | —                              | TODO             |
+| 041 | Shrink the escape-html allowlist onto context.escapeText | P2 | S | — | DONE (`b7c181d`) |
+| 042 | Renderers receive only the render context | P1 | M | 041 | TODO |
+| 043 | Derive the card insert plugins from the declaration | P1 | M | — | TODO |
+| 044 | Put card-node writes behind a typed seam | P1 | L | — | TODO |
+| 045 | One media-upload intent module | P2 | M | 044 | TODO |
+| 046 | Collapse the card action toolbar into one module | P2 | M | 043 | TODO |
+| 047 | Split the composer context by lifecycle | P1 | L | — | TODO |
+| 048 | Make the host interface honest (2.0.0) | P1 | M | 047 | TODO |
+| 049 | Name the clipboard-protocol module | P2 | M | — | TODO |
+| 050 | One markdown module, two named dialects | P2 | S | 049 | TODO |
+| 051 | Card import spec joins the declaration | P2 | L | 043 | TODO |
+| 052 | Collapse the card shortcuts into one seam | P2 | S | — | TODO |
+| 053 | Split the at-link module at its node/session seam | P3 | M | — | TODO |
+| 054 | Latent-fix batch from the 2026-07-16 review | P1 | S | — | TODO |
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) |
 REJECTED (with one-line rationale — finding fixed independently or approach
 abandoned)

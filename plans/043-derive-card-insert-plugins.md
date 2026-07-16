@@ -52,7 +52,7 @@ where drift grows, and it already has:
   is churn only a reader of all eleven files can see.
 - `BookmarkPlugin.tsx:30-48` — registers at `COMMAND_PRIORITY_HIGH` (every
   sibling is `LOW`) and adds a range-selection check plus a `focusNode !==
-  null` guard. The check is redundant with `INSERT_CARD_COMMAND`'s own
+null` guard. The check is redundant with `INSERT_CARD_COMMAND`'s own
   handler (`registerCardCommands.ts:41-67` returns `false` without a range or
   node selection), and `selection.focus.getNode()` never returns null (it
   throws instead) — yet the copy is observably different: with no range
@@ -67,7 +67,7 @@ where drift grows, and it already has:
 - Only the media trio (Image, Audio, Video) registers a second command,
   `INSERT_MEDIA_COMMAND`, re-dispatching its own insert command with
   `{ initialFile: dataset.file }`. `FileNode` declares `static uploadType =
-  'file'` (`src/nodes/base/nodes/file/FileNode.ts:51`) yet **no** plugin
+'file'` (`src/nodes/base/nodes/file/FileNode.ts:51`) yet **no** plugin
   claims `type === 'file'` — a dropped generic file dispatches
   `INSERT_MEDIA_COMMAND` into silence. That fact is invisible unless you diff
   all eleven copies side by side.
@@ -90,28 +90,28 @@ Verified fresh against commit `d998080`:
 
 - The shared body, per copy (example: `AudioPlugin.tsx:15-51`):
   `useLexicalComposerContext` → `useEffect` → `if
-  (!editor.hasNodes([AudioNode])) return` → `mergeRegister` →
+(!editor.hasNodes([AudioNode])) return` → `mergeRegister` →
   `editor.registerCommand(INSERT_AUDIO_COMMAND, handler,
-  COMMAND_PRIORITY_LOW)`; the handler runs the dataset guard (every copy
+COMMAND_PRIORITY_LOW)`; the handler runs the dataset guard (every copy
   defines an identical `typeof value === 'object' && value !== null`
   type-guard, commented "command payloads cross an untyped runtime
   boundary"), constructs `$createAudioNode(dataset)`, dispatches
   `INSERT_CARD_COMMAND`, returns `true`.
 - The full per-card matrix (commands defined at `card-menus.ts:43-56`):
 
-  | Card | Command | Priority | `openInEditMode: true` | Claims `INSERT_MEDIA_COMMAND` | Copy-local quirks |
-  | ---- | ------- | -------- | ---------------------- | ----------------------------- | ----------------- |
-  | audio | `INSERT_AUDIO_COMMAND` (:43) | LOW | — | type `'audio'` (`AudioPlugin.tsx:36-46`) | — |
-  | bookmark | `INSERT_BOOKMARK_COMMAND` (:44) | **HIGH** (:48) | — | — | range-selection + `focusNode` checks (:30-44) |
-  | button | `INSERT_BUTTON_COMMAND` (:45) | LOW | yes (:29) | — | — |
-  | callout | `INSERT_CALLOUT_COMMAND` (:46) | LOW | yes (:29) | — | — |
-  | file | `INSERT_FILE_COMMAND` (:48) | LOW | — | — | — |
-  | gallery | `INSERT_GALLERY_COMMAND` (:49) | LOW | — | — | — |
-  | header | `INSERT_HEADER_COMMAND` (:50) | LOW | yes (:29) | — | `useEffect` with no dep array (:36) |
-  | html | `INSERT_HTML_COMMAND` (:52) | LOW | yes (:29) | — | — |
-  | image | `INSERT_IMAGE_COMMAND` (:53) | LOW | — | type `'image'` (:48-58) | dead upload code (:17-28,60) |
-  | toggle | `INSERT_TOGGLE_COMMAND` (:54) | LOW | yes (:29) | — | — |
-  | video | `INSERT_VIDEO_COMMAND` (:55) | LOW | — | type `'video'` (:36-46) | — |
+  | Card     | Command                         | Priority       | `openInEditMode: true` | Claims `INSERT_MEDIA_COMMAND`            | Copy-local quirks                             |
+  | -------- | ------------------------------- | -------------- | ---------------------- | ---------------------------------------- | --------------------------------------------- |
+  | audio    | `INSERT_AUDIO_COMMAND` (:43)    | LOW            | —                      | type `'audio'` (`AudioPlugin.tsx:36-46`) | —                                             |
+  | bookmark | `INSERT_BOOKMARK_COMMAND` (:44) | **HIGH** (:48) | —                      | —                                        | range-selection + `focusNode` checks (:30-44) |
+  | button   | `INSERT_BUTTON_COMMAND` (:45)   | LOW            | yes (:29)              | —                                        | —                                             |
+  | callout  | `INSERT_CALLOUT_COMMAND` (:46)  | LOW            | yes (:29)              | —                                        | —                                             |
+  | file     | `INSERT_FILE_COMMAND` (:48)     | LOW            | —                      | —                                        | —                                             |
+  | gallery  | `INSERT_GALLERY_COMMAND` (:49)  | LOW            | —                      | —                                        | —                                             |
+  | header   | `INSERT_HEADER_COMMAND` (:50)   | LOW            | yes (:29)              | —                                        | `useEffect` with no dep array (:36)           |
+  | html     | `INSERT_HTML_COMMAND` (:52)     | LOW            | yes (:29)              | —                                        | —                                             |
+  | image    | `INSERT_IMAGE_COMMAND` (:53)    | LOW            | —                      | type `'image'` (:48-58)                  | dead upload code (:17-28,60)                  |
+  | toggle   | `INSERT_TOGGLE_COMMAND` (:54)   | LOW            | yes (:29)              | —                                        | —                                             |
+  | video    | `INSERT_VIDEO_COMMAND` (:55)    | LOW            | —                      | type `'video'` (:36-46)                  | —                                             |
 
 - Non-edit-mode cards dispatch `INSERT_CARD_COMMAND` with the payload
   `{ cardNode }` (no `openInEditMode` key present); the five edit-mode cards
@@ -153,7 +153,7 @@ Verified fresh against commit `d998080`:
   - Effective registration = mounted ∩ `hasNodes`. Because the email-editor
     node set contains exactly the `emailEditor`-surface cards
     (`EmailEditorNodes.ts:21` derives it via `deriveCardNodes(...,
-    'emailEditor')`), one registrar that derives all insert-bearing cards
+'emailEditor')`), one registrar that derives all insert-bearing cards
     and guards each registration with `hasNodes` reproduces both mount
     sites exactly: in the email editor the six non-email cards no-op
     precisely where today their plugins are simply absent.
@@ -229,16 +229,16 @@ Verified fresh against commit `d998080`:
 
 ## Commands you will need
 
-| Purpose | Command | Expected on success |
-| ------- | ------- | ------------------- |
-| Drift check (run first) | `git diff --stat d998080..HEAD -- src/plugins src/nodes/cards src/components/EmailEditor.tsx src/index.ts test/unit/plugins CONTEXT.md` | empty or explainable before starting |
-| Characterization baseline | `pnpm test:unit` | 1707 passed + 21 todo at HEAD |
-| Plugin unit tests | `pnpm vitest run test/unit/plugins` | green at every step |
-| Registrar tests | `pnpm vitest run test/unit/plugins/<registrar test file>` | green from Step 2 on |
-| Static + full gates | `pnpm typecheck && pnpm lint && pnpm test:unit` | all pass |
-| Format | `pnpm format && pnpm format:check` | exits 0 |
-| Public-surface gates (Step 3) | `pnpm verify:package && pnpm verify:types` | packed consumer + type consumer pass with the renamed barrel |
-| Scoped e2e (Step 4) | `pnpm test:e2e:quiet test/e2e/slash-menu.test.ts test/e2e/plus-button.test.ts test/e2e/cards test/e2e/plugins/DragDropPastePlugin.test.ts` | green — menu insertion and media drops are demo-visible |
+| Purpose                       | Command                                                                                                                                    | Expected on success                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| Drift check (run first)       | `git diff --stat d998080..HEAD -- src/plugins src/nodes/cards src/components/EmailEditor.tsx src/index.ts test/unit/plugins CONTEXT.md`    | empty or explainable before starting                         |
+| Characterization baseline     | `pnpm test:unit`                                                                                                                           | 1707 passed + 21 todo at HEAD                                |
+| Plugin unit tests             | `pnpm vitest run test/unit/plugins`                                                                                                        | green at every step                                          |
+| Registrar tests               | `pnpm vitest run test/unit/plugins/<registrar test file>`                                                                                  | green from Step 2 on                                         |
+| Static + full gates           | `pnpm typecheck && pnpm lint && pnpm test:unit`                                                                                            | all pass                                                     |
+| Format                        | `pnpm format && pnpm format:check`                                                                                                         | exits 0                                                      |
+| Public-surface gates (Step 3) | `pnpm verify:package && pnpm verify:types`                                                                                                 | packed consumer + type consumer pass with the renamed barrel |
+| Scoped e2e (Step 4)           | `pnpm test:e2e:quiet test/e2e/slash-menu.test.ts test/e2e/plus-button.test.ts test/e2e/cards test/e2e/plugins/DragDropPastePlugin.test.ts` | green — menu insertion and media drops are demo-visible      |
 
 ## Git workflow
 
@@ -319,10 +319,11 @@ Additive only — the eleven plugins stay mounted; nothing they do changes.
   and `insert?: CardInsertSpec` on `CardDeclaration`, documented as the
   card's membership in the insert-command surface — the presence of `insert`
   is the opt-in; an empty spec (`file`, `gallery`) is the common case.
+
 - The eleven declarations gain their entries per the matrix: audio/image/
   video `{ claimsMediaInsert: true }`; button/callout/header/html/toggle
   `{ openInEditMode: true }`; bookmark `{ requiresRangeSelection: true,
-  insertCommandPriority: 'high' }`; file/gallery `{}`.
+insertCommandPriority: 'high' }`; file/gallery `{}`.
 - The wrapper-layer projection (illustrative:
   `src/nodes/cards/card-insert-commands.ts`): map the insert-bearing
   declarations to `{ nodeType, node, command, insert }` — `node` from the
@@ -338,7 +339,7 @@ Additive only — the eleven plugins stay mounted; nothing they do changes.
   the derived handler shape is fixed:
 
   ```ts
-  (dataset) => {
+  ;(dataset) => {
     if (insert.requiresRangeSelection) {
       // bookmark parity: the selection check precedes the dataset guard,
       // and construction happens inside the focusNode check
@@ -369,6 +370,7 @@ Additive only — the eleven plugins stay mounted; nothing they do changes.
   Registration order follows declaration order (order is behaviorally
   inert here: distinct commands, and the three media handlers are
   type-disjoint).
+
 - New registrar test file replicating every Step-1 pin against the
   registrar — same scenarios, same expectations, different mount. Both the
   pins (against the old plugins) and the registrar tests (against the new
@@ -419,17 +421,17 @@ One commit:
 
 ## Test plan
 
-| Scenario | Command | Required invariant |
-| -------- | ------- | ------------------ |
-| Baseline | `pnpm test:unit` | 1707 + 21 todo at HEAD |
-| Step-1 pins | `pnpm vitest run test/unit/plugins` | new pins green against today's plugins |
-| Registrar parity (Step 2) | `pnpm vitest run test/unit/plugins` | pins (old mount) AND registrar tests (new mount) green simultaneously |
-| Deletion (Step 3) | `pnpm vitest run test/unit/plugins` | identical expectations against the registrar; only the header-churn assertion flipped |
-| Email matrix | the `hasNodes` pin | `INSERT_HEADER_COMMAND` (and the five other non-email cards) unhandled under `EMAIL_EDITOR_NODES` before and after |
-| Media gap | the `type: 'file'` pin | unclaimed before and after |
-| Public surface | `pnpm verify:package && pnpm verify:types` | pass with the renamed barrel |
-| Mounting e2e | `pnpm test:e2e:quiet test/e2e/slash-menu.test.ts test/e2e/plus-button.test.ts test/e2e/cards test/e2e/plugins/DragDropPastePlugin.test.ts` | green |
-| Full gates | `pnpm typecheck && pnpm lint && pnpm test:unit` + `pnpm vitest run test/nodes-base test/html-renderer` | unit = post-Step-1 count; nodes-base/html-renderer = 730 + 21 todo |
+| Scenario                  | Command                                                                                                                                    | Required invariant                                                                                                 |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Baseline                  | `pnpm test:unit`                                                                                                                           | 1707 + 21 todo at HEAD                                                                                             |
+| Step-1 pins               | `pnpm vitest run test/unit/plugins`                                                                                                        | new pins green against today's plugins                                                                             |
+| Registrar parity (Step 2) | `pnpm vitest run test/unit/plugins`                                                                                                        | pins (old mount) AND registrar tests (new mount) green simultaneously                                              |
+| Deletion (Step 3)         | `pnpm vitest run test/unit/plugins`                                                                                                        | identical expectations against the registrar; only the header-churn assertion flipped                              |
+| Email matrix              | the `hasNodes` pin                                                                                                                         | `INSERT_HEADER_COMMAND` (and the five other non-email cards) unhandled under `EMAIL_EDITOR_NODES` before and after |
+| Media gap                 | the `type: 'file'` pin                                                                                                                     | unclaimed before and after                                                                                         |
+| Public surface            | `pnpm verify:package && pnpm verify:types`                                                                                                 | pass with the renamed barrel                                                                                       |
+| Mounting e2e              | `pnpm test:e2e:quiet test/e2e/slash-menu.test.ts test/e2e/plus-button.test.ts test/e2e/cards test/e2e/plugins/DragDropPastePlugin.test.ts` | green                                                                                                              |
+| Full gates                | `pnpm typecheck && pnpm lint && pnpm test:unit` + `pnpm vitest run test/nodes-base test/html-renderer`                                     | unit = post-Step-1 count; nodes-base/html-renderer = 730 + 21 todo                                                 |
 
 ## Acceptance criteria
 
@@ -468,7 +470,7 @@ One commit:
   consumer-visible editor where a plugin was mounted but its node absent,
   and the registrar's guard class (base vs wrapper) no longer matches.
   Verify the guard uses the exact wrapper classes from `card-wrappers`; if
-  an editor registers a *different* class under the same node type, STOP
+  an editor registers a _different_ class under the same node type, STOP
   and report rather than broadening the guard.
 - `pnpm verify:package` / `pnpm verify:types` fail on the barrel change in a
   way that suggests real downstream breakage the repo's own fixtures can't

@@ -127,15 +127,15 @@ and `InklingBehaviourPlugin`'s props are unchanged — so
 
 ## Commands you will need
 
-| Purpose                    | Command                                                                    | Expected on success                                  |
-| -------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Baseline (run first)       | `pnpm test:unit`                                                           | 206 files / 1707 passed / 21 todo                    |
-| Renderer drift check       | `pnpm vitest run test/nodes-base test/html-renderer`                       | 46 files / 730 passed / 21 todo (unchanged)          |
-| Step 1 pin                 | `pnpm vitest run test/unit/components/InklingCardWrapper.test.tsx`         | new sync tests fail pre-fix, pass post-fix           |
-| Step 2 pin                 | `pnpm vitest run test/unit/plugins/behaviour/registerMouseEvents.test.ts test/unit/plugins/InklingBehaviourPlugin.test.ts` | green post-fix      |
-| Step 3 pin                 | `pnpm vitest run test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts` | green post-fix                                  |
-| Behaviour suites (2, 3, 5) | `pnpm vitest run test/unit/plugins`                                        | green                                                |
-| Static + full gates        | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit`       | all pass; totals per step bookkeeping                |
+| Purpose                    | Command                                                                                                                    | Expected on success                         |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Baseline (run first)       | `pnpm test:unit`                                                                                                           | 206 files / 1707 passed / 21 todo           |
+| Renderer drift check       | `pnpm vitest run test/nodes-base test/html-renderer`                                                                       | 46 files / 730 passed / 21 todo (unchanged) |
+| Step 1 pin                 | `pnpm vitest run test/unit/components/InklingCardWrapper.test.tsx`                                                         | new sync tests fail pre-fix, pass post-fix  |
+| Step 2 pin                 | `pnpm vitest run test/unit/plugins/behaviour/registerMouseEvents.test.ts test/unit/plugins/InklingBehaviourPlugin.test.ts` | green post-fix                              |
+| Step 3 pin                 | `pnpm vitest run test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts`                                           | green post-fix                              |
+| Behaviour suites (2, 3, 5) | `pnpm vitest run test/unit/plugins`                                                                                        | green                                       |
+| Static + full gates        | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit`                                                       | all pass; totals per step bookkeeping       |
 
 ## Git workflow
 
@@ -173,7 +173,7 @@ item 1) — it does — so the fix is **repair the sync**, not delete the state.
     `:34`, `normalizeCardWidth(width) ?? 'regular'`) instead of the stale
     state: delete the attribute when `normalizedWidth === 'regular'`, else set
     it to `normalizedWidth`. Deps collapse from `[cardWidth, containerRef,
-    width]` to `[normalizedWidth]`. All three width-declaring cards feed a
+width]` to `[normalizedWidth]`. All three width-declaring cards feed a
     normalized value through the adapter, so this is output-identical for
     every node-driven render.
   - Add the sync as its own effect
@@ -277,16 +277,16 @@ an indicator icon.
 
 ## Test plan
 
-| Scenario                     | Command                                                                     | Required invariant                                     |
-| ---------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------ |
-| Baseline                     | `pnpm test:unit`                                                            | 206 files / 1707 passed / 21 todo at `d998080`         |
-| Renderer drift               | `pnpm vitest run test/nodes-base test/html-renderer`                        | 730 passed / 21 todo, unchanged after every step       |
-| cardWidth sync pin           | `pnpm vitest run test/unit/components/InklingCardWrapper.test.tsx`          | fails pre-fix, passes post-fix                         |
-| Mouse events pin             | `pnpm vitest run test/unit/plugins/behaviour/registerMouseEvents.test.ts`   | new file, 5 cases green                                |
-| Fallback scoping pin         | `pnpm vitest run test/unit/plugins/InklingBehaviourPlugin.test.ts`          | deselect scoped to own root; no `querySelector` call   |
-| Escape pins                  | `pnpm vitest run test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts` | editing case unchanged; 3 new cases green          |
-| ctrlOrCmd deletion           | `pnpm typecheck && pnpm test:unit`                                          | no hidden importer; 1705 passed / 21 todo pre-1–3 nets |
-| Full gates (after each step) | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit`        | all pass                                               |
+| Scenario                     | Command                                                                          | Required invariant                                     |
+| ---------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Baseline                     | `pnpm test:unit`                                                                 | 206 files / 1707 passed / 21 todo at `d998080`         |
+| Renderer drift               | `pnpm vitest run test/nodes-base test/html-renderer`                             | 730 passed / 21 todo, unchanged after every step       |
+| cardWidth sync pin           | `pnpm vitest run test/unit/components/InklingCardWrapper.test.tsx`               | fails pre-fix, passes post-fix                         |
+| Mouse events pin             | `pnpm vitest run test/unit/plugins/behaviour/registerMouseEvents.test.ts`        | new file, 5 cases green                                |
+| Fallback scoping pin         | `pnpm vitest run test/unit/plugins/InklingBehaviourPlugin.test.ts`               | deselect scoped to own root; no `querySelector` call   |
+| Escape pins                  | `pnpm vitest run test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts` | editing case unchanged; 3 new cases green              |
+| ctrlOrCmd deletion           | `pnpm typecheck && pnpm test:unit`                                               | no hidden importer; 1705 passed / 21 todo pre-1–3 nets |
+| Full gates (after each step) | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit`             | all pass                                               |
 
 ## Acceptance criteria
 

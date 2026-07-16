@@ -147,13 +147,13 @@ Verified fresh against commit `d998080`:
 
 ## Commands you will need
 
-| Purpose                   | Command                                                                                       | Expected on success                     |
-| ------------------------- | --------------------------------------------------------------------------------------------- | --------------------------------------- |
-| Characterization baseline | `pnpm vitest run test/nodes-base test/html-renderer`                                          | 46 files / 730 passed / 21 todo, before any edit |
-| Migrated cards            | `pnpm vitest run test/nodes-base/nodes/audio.test.ts test/nodes-base/nodes/bookmark.test.ts test/nodes-base/nodes/button.test.ts test/nodes-base/nodes/file.test.ts test/nodes-base/nodes/header.test.ts test/nodes-base/nodes/video.test.ts` | green, byte-identical expectations      |
-| Import guard              | `pnpm vitest run test/nodes-base/nodes/render-policy-imports.test.ts`                         | green against the shrunk allowlist      |
-| Static + full gates       | `pnpm typecheck && pnpm lint && pnpm test:unit`                                               | all pass; 1707 passed / 21 todo         |
-| Format                    | `pnpm format && pnpm format:check`                                                            | exits 0 (imports changed, so format runs) |
+| Purpose                   | Command                                                                                                                                                                                                                                       | Expected on success                              |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Characterization baseline | `pnpm vitest run test/nodes-base test/html-renderer`                                                                                                                                                                                          | 46 files / 730 passed / 21 todo, before any edit |
+| Migrated cards            | `pnpm vitest run test/nodes-base/nodes/audio.test.ts test/nodes-base/nodes/bookmark.test.ts test/nodes-base/nodes/button.test.ts test/nodes-base/nodes/file.test.ts test/nodes-base/nodes/header.test.ts test/nodes-base/nodes/video.test.ts` | green, byte-identical expectations               |
+| Import guard              | `pnpm vitest run test/nodes-base/nodes/render-policy-imports.test.ts`                                                                                                                                                                         | green against the shrunk allowlist               |
+| Static + full gates       | `pnpm typecheck && pnpm lint && pnpm test:unit`                                                                                                                                                                                               | all pass; 1707 passed / 21 todo                  |
+| Format                    | `pnpm format && pnpm format:check`                                                                                                                                                                                                            | exits 0 (imports changed, so format runs)        |
 
 No e2e: no demo-visible path changes, and plan 040 verified no e2e asserts
 exported markup. No `verify:package`/`verify:types`: the render context is not
@@ -218,12 +218,12 @@ templates changes.
 
 ## Test plan
 
-| Scenario              | Command                                                                                       | Required invariant                              |
-| --------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| Baseline              | `pnpm vitest run test/nodes-base test/html-renderer`                                          | 730 passed / 21 todo before any edit            |
-| Per-card escaping     | `pnpm vitest run test/nodes-base/nodes/{audio,bookmark,button,file,header,video}.test.ts`     | byte-identical output; no expectation edits     |
-| Guard shrink          | `pnpm vitest run test/nodes-base/nodes/render-policy-imports.test.ts`                         | offenders equal the one-entry markdown allowlist |
-| Full gates            | `pnpm typecheck && pnpm lint && pnpm test:unit`                                               | all pass; 1707 passed / 21 todo                 |
+| Scenario          | Command                                                                                   | Required invariant                               |
+| ----------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Baseline          | `pnpm vitest run test/nodes-base test/html-renderer`                                      | 730 passed / 21 todo before any edit             |
+| Per-card escaping | `pnpm vitest run test/nodes-base/nodes/{audio,bookmark,button,file,header,video}.test.ts` | byte-identical output; no expectation edits      |
+| Guard shrink      | `pnpm vitest run test/nodes-base/nodes/render-policy-imports.test.ts`                     | offenders equal the one-entry markdown allowlist |
+| Full gates        | `pnpm typecheck && pnpm lint && pnpm test:unit`                                           | all pass; 1707 passed / 21 todo                  |
 
 ## Acceptance criteria
 

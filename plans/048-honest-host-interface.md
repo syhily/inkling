@@ -108,7 +108,7 @@ fixed. Verified experimentally with the repo's `tsc` (6.0.3): **`as` casts
 suppress excess-property checks even on fresh literals, and pre-declared
 variables never get excess-property checks** — only annotation or
 direct-assignment positions on fresh literals raise TS2353. So the drift
-detector requires *removing* the casts and *annotating* the demo config
+detector requires _removing_ the casts and _annotating_ the demo config
 declarations; merely closing the type would let the demo's dead keys slip
 through the casts unnoticed.
 
@@ -143,7 +143,7 @@ Verified fresh against commit `d998080`:
     and the demo's assignments at `demo/DemoApp.tsx:88-89`).
   - **write-only**: `editorType` — set by `getEmailEditorCardConfig`
     (`EmailEditor.tsx:47`) and merged by the demo (`DemoApp.tsx:432`), read
-    nowhere in src or demo. Pinned as merge *output* by
+    nowhere in src or demo. Pinned as merge _output_ by
     `test/unit/EmailEditor.test.ts:53-60`.
   - **undeclared demo-only** (index-signature passengers): `siteTitle`,
     `siteDescription`, `membersEnabled` (`demo/DemoApp.tsx:90-93`).
@@ -253,9 +253,9 @@ Verified fresh against commit `d998080`:
   acceptance posture; the one test that brushes the change
   (`test/unit/EmailEditor.test.ts`) must pass unmodified.
 - Closing `FileUploaderInput`'s legacy tolerance (`Partial<FileUploader> |
-  Record<string, unknown>`) — a documented plan-026 tradeoff; do not
+Record<string, unknown>`) — a documented plan-026 tradeoff; do not
   re-litigate.
-- Renaming `CardConfig` or reshaping key *value* types (e.g. narrowing
+- Renaming `CardConfig` or reshaping key _value_ types (e.g. narrowing
   `visibilitySettings?: string` to a union) — closing the keys is the
   decided change; value tightening is a follow-up.
 - The `editorType` write-only merge output: kept for runtime tolerance
@@ -469,16 +469,16 @@ In whatever module plan 047 leaves declaring `CardConfig` (pre-047:
 
 ## Test plan
 
-| Scenario                        | Command                                              | Required invariant                                    |
-| ------------------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
-| After every commit              | `pnpm typecheck`                                     | clean (demo included via root tsconfig)               |
-| Unit suite                      | `pnpm test:unit`                                     | 1707 passed + 21 todo; zero expectation edits         |
-| Renderer subset (untouched)     | `pnpm vitest run test/nodes-base test/html-renderer` | 730 passed + 21 todo                                  |
-| Demo drift detector (Step 3)    | `pnpm typecheck`                                     | dead keys in demo configs are compile errors          |
-| Demo build (Step 4)             | `pnpm build:demo`                                    | builds; `/designsandbox` route intact                 |
-| Packed runtime (Step 7)         | `pnpm verify:package`                                | PASS; DesignSandbox/InklingCardWrapper absent         |
-| Packed types (Step 7)           | `pnpm verify:types`                                  | PASS Bundler + NodeNext; closed type enforced         |
-| EmailEditor merge (Steps 1, 7)  | `pnpm vitest run test/unit/EmailEditor.test.ts`      | green unedited (spread-through + editorType output)   |
+| Scenario                       | Command                                              | Required invariant                                  |
+| ------------------------------ | ---------------------------------------------------- | --------------------------------------------------- |
+| After every commit             | `pnpm typecheck`                                     | clean (demo included via root tsconfig)             |
+| Unit suite                     | `pnpm test:unit`                                     | 1707 passed + 21 todo; zero expectation edits       |
+| Renderer subset (untouched)    | `pnpm vitest run test/nodes-base test/html-renderer` | 730 passed + 21 todo                                |
+| Demo drift detector (Step 3)   | `pnpm typecheck`                                     | dead keys in demo configs are compile errors        |
+| Demo build (Step 4)            | `pnpm build:demo`                                    | builds; `/designsandbox` route intact               |
+| Packed runtime (Step 7)        | `pnpm verify:package`                                | PASS; DesignSandbox/InklingCardWrapper absent       |
+| Packed types (Step 7)          | `pnpm verify:types`                                  | PASS Bundler + NodeNext; closed type enforced       |
+| EmailEditor merge (Steps 1, 7) | `pnpm vitest run test/unit/EmailEditor.test.ts`      | green unedited (spread-through + editorType output) |
 
 ## Acceptance criteria
 

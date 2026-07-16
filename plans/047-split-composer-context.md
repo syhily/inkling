@@ -232,16 +232,16 @@ Verified fresh against commit `d998080`:
 
 ## Commands you will need
 
-| Purpose                        | Command                                                                                                                        | Expected on success                       |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
-| Drift baseline                 | `pnpm test:unit`                                                                                                                | 1707 passed + 21 todo before any change   |
-| Nodes-base baseline (sanity)   | `pnpm vitest run test/nodes-base test/html-renderer`                                                                            | 730 passed + 21 todo (untouched by plan)  |
-| Characterization / hook tests  | `pnpm vitest run test/unit/hooks test/unit/context test/unit/plugins/WordCountPlugin.test.tsx test/unit/InklingComposer.test.tsx` | green                                     |
-| Drag-drop unit tests           | `pnpm vitest run test/unit/utils/draggable test/unit/hooks`                                                                     | green                                     |
-| Targeted e2e (Steps 3-5)       | `pnpm test:e2e:quiet test/e2e/plugins/DragDropReorderPlugin.test.ts test/e2e/plugins/WordCountPlugin.test.ts test/e2e/cards/gallery-card.test.ts test/e2e/cards/image-card.test.ts` | green                                     |
-| Static + full gates            | `pnpm typecheck && pnpm lint && pnpm test:unit`                                                                                  | all pass                                  |
-| Public type surface (Steps 2,5) | `pnpm verify:types`                                                                                                             | emitted declarations keep the same shapes |
-| Format                         | `pnpm format && pnpm format:check`                                                                                               | exits 0                                   |
+| Purpose                         | Command                                                                                                                                                                             | Expected on success                       |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| Drift baseline                  | `pnpm test:unit`                                                                                                                                                                    | 1707 passed + 21 todo before any change   |
+| Nodes-base baseline (sanity)    | `pnpm vitest run test/nodes-base test/html-renderer`                                                                                                                                | 730 passed + 21 todo (untouched by plan)  |
+| Characterization / hook tests   | `pnpm vitest run test/unit/hooks test/unit/context test/unit/plugins/WordCountPlugin.test.tsx test/unit/InklingComposer.test.tsx`                                                   | green                                     |
+| Drag-drop unit tests            | `pnpm vitest run test/unit/utils/draggable test/unit/hooks`                                                                                                                         | green                                     |
+| Targeted e2e (Steps 3-5)        | `pnpm test:e2e:quiet test/e2e/plugins/DragDropReorderPlugin.test.ts test/e2e/plugins/WordCountPlugin.test.ts test/e2e/cards/gallery-card.test.ts test/e2e/cards/image-card.test.ts` | green                                     |
+| Static + full gates             | `pnpm typecheck && pnpm lint && pnpm test:unit`                                                                                                                                     | all pass                                  |
+| Public type surface (Steps 2,5) | `pnpm verify:types`                                                                                                                                                                 | emitted declarations keep the same shapes |
+| Format                          | `pnpm format && pnpm format:check`                                                                                                                                                  | exits 0                                   |
 
 ## Git workflow
 
@@ -322,7 +322,7 @@ One mechanical commit; no behavior change, no expectation updates.
 
 - New store module (illustrative: `src/plugins/behaviour/dragDropHandle.ts`)
   in the exact plan-038 shape: state `{ containerElement: HTMLElement | null;
-  handler: DragDropHandler | null }`, `getState` / `setState(partial)` /
+handler: DragDropHandler | null }`, `getState` / `setState(partial)` /
   `subscribe`, with the same reference-equality change guard as
   `cardSelectionStore.ts:29-33`. New binding modules mirroring
   `CardSelectionStoreContext.tsx` (context default = a fallback instance for
@@ -414,20 +414,20 @@ One mechanical commit; no behavior change, no expectation updates.
   mount reacts to the callback landing without an unrelated re-render.
 - Gates: `pnpm vitest run test/unit/plugins/WordCountPlugin.test.tsx`, the
   WordCountPlugin e2e spec, then `pnpm typecheck && pnpm lint &&
-  pnpm test:unit && pnpm verify:types && pnpm format:check`. CONTEXT.md
+pnpm test:unit && pnpm verify:types && pnpm format:check`. CONTEXT.md
   entry if Step 3's did not cover both handles.
 
 ## Test plan
 
-| Scenario                     | Command                                                                                                          | Required invariant                                            |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Baseline                     | `pnpm test:unit`                                                                                                  | 1707 passed + 21 todo at `d998080` before changes             |
-| Channel pins (Step 1)        | `pnpm vitest run test/unit/hooks test/unit/plugins/WordCountPlugin.test.tsx`                                      | new pins green against unmodified production code             |
-| Lifecycle split (Step 2)     | `pnpm typecheck && pnpm test:unit && pnpm verify:types`                                                            | green; no assertion changes; declaration shapes identical     |
-| Drag-drop handle (Step 3)    | `pnpm test:e2e:quiet test/e2e/plugins/DragDropReorderPlugin.test.ts test/e2e/cards/gallery-card.test.ts test/e2e/cards/image-card.test.ts` | green — real drag timing unchanged                            |
-| Option-bag split (Step 4)    | `pnpm vitest run test/unit/utils/draggable test/unit/hooks` + same e2e line                                        | behavioral expectations unchanged; only factory shapes migrate |
-| Word-count handle (Step 5)   | `pnpm test:e2e:quiet test/e2e/plugins/WordCountPlugin.test.ts` + unit file                                         | nested counting green; one nested plugin per nested editor    |
-| Full gates (every commit)    | `pnpm typecheck && pnpm lint && pnpm test:unit`                                                                    | all pass                                                      |
+| Scenario                   | Command                                                                                                                                    | Required invariant                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| Baseline                   | `pnpm test:unit`                                                                                                                           | 1707 passed + 21 todo at `d998080` before changes              |
+| Channel pins (Step 1)      | `pnpm vitest run test/unit/hooks test/unit/plugins/WordCountPlugin.test.tsx`                                                               | new pins green against unmodified production code              |
+| Lifecycle split (Step 2)   | `pnpm typecheck && pnpm test:unit && pnpm verify:types`                                                                                    | green; no assertion changes; declaration shapes identical      |
+| Drag-drop handle (Step 3)  | `pnpm test:e2e:quiet test/e2e/plugins/DragDropReorderPlugin.test.ts test/e2e/cards/gallery-card.test.ts test/e2e/cards/image-card.test.ts` | green — real drag timing unchanged                             |
+| Option-bag split (Step 4)  | `pnpm vitest run test/unit/utils/draggable test/unit/hooks` + same e2e line                                                                | behavioral expectations unchanged; only factory shapes migrate |
+| Word-count handle (Step 5) | `pnpm test:e2e:quiet test/e2e/plugins/WordCountPlugin.test.ts` + unit file                                                                 | nested counting green; one nested plugin per nested editor     |
+| Full gates (every commit)  | `pnpm typecheck && pnpm lint && pnpm test:unit`                                                                                            | all pass                                                       |
 
 ## Acceptance criteria
 

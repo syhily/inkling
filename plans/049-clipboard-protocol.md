@@ -37,8 +37,7 @@
 
 The paste pipeline is one protocol spread across five modules, but its
 vocabulary has no home. The pipeline: `registerPasteHandler.ts` (entry,
-`PASTE_COMMAND`) → `plainTextPaste.ts` (shared plain-text classifier, plan
-010) → `PASTE_LINK_COMMAND` (`registerLinkMatching.ts`) and
+`PASTE_COMMAND`) → `plainTextPaste.ts` (shared plain-text classifier, plan 010) → `PASTE_LINK_COMMAND` (`registerLinkMatching.ts`) and
 `PASTE_MARKDOWN_COMMAND` (`MarkdownPastePlugin.tsx`), with
 `DragDropPastePlugin.tsx` owning the file/drop leg. The protocol is shallow —
 a handful of constants, two commands, one piece of modifier state — but
@@ -71,8 +70,7 @@ the wiring inverts the architecture's direction:
   `src/utils/isInternalUrl.ts:1-14` (`isValidUrl`: allows
   http/https/mailto/tel/ftp, rejects relative) decides which pasted text
   becomes a link; the export side (`src/nodes/base/utils/is-safe-url.ts`,
-  now private implementation behind the render context's `safeUrl`, plan
-  040) keeps http/https/relative only. Pasting `ftp://…` (or
+  now private implementation behind the render context's `safeUrl`, plan 040) keeps http/https/relative only. Pasting `ftp://…` (or
   `mailto:`/`tel:`) creates a live editor link that export blanks. Neither
   table names the other. The same shape repeats for "is this our own URL":
   `isInternalUrl` (input, at-link labeling) vs `isLocalContentImage`
@@ -106,7 +104,7 @@ Verified fresh against commit `d998080`:
   `InklingBehaviourPlugin.tsx:61-79`, passed to `registerLinkMatching` at
   `:104`; React state + two listener effects at
   `MarkdownPastePlugin.tsx:14-38`; re-registration deps `[editor,
-  isShiftDown]` at `MarkdownPastePlugin.tsx:66`. Shift behavior is pinned by
+isShiftDown]` at `MarkdownPastePlugin.tsx:66`. Shift behavior is pinned by
   `test/unit/plugins/MarkdownPastePlugin.test.tsx:103-119` (raw insert while
   Shift held) and `test/e2e/paste-behaviour.test.ts:250` (Shift-paste creates
   a link).
@@ -192,15 +190,15 @@ Verified fresh against commit `d998080`:
 
 ## Commands you will need
 
-| Purpose                    | Command                                                                | Expected on success                       |
-| -------------------------- | ---------------------------------------------------------------------- | ----------------------------------------- |
-| Unit baseline + full gate  | `pnpm test:unit`                                                       | 206 files / 1707 passed / 21 todo (+new)  |
-| Renderer suites (untouched)| `pnpm vitest run test/nodes-base test/html-renderer`                   | 46 files / 730 passed / 21 todo           |
-| Focused paste tests        | `pnpm vitest run test/unit/plugins`                                    | green, no expectation edits               |
-| Paste e2e                  | `pnpm test:e2e:quiet test/e2e/paste-behaviour.test.ts`                 | green (baseline recorded first)           |
-| File-leg e2e               | `pnpm test:e2e:quiet test/e2e/plugins/DragDropPastePlugin.test.ts`     | green                                     |
-| Static gates               | `pnpm typecheck && pnpm lint && pnpm format:check`                     | all pass                                  |
-| Packed surface (Step 2)    | `pnpm verify:package && pnpm verify:types`                             | PASS — public names byte-identical        |
+| Purpose                     | Command                                                            | Expected on success                      |
+| --------------------------- | ------------------------------------------------------------------ | ---------------------------------------- |
+| Unit baseline + full gate   | `pnpm test:unit`                                                   | 206 files / 1707 passed / 21 todo (+new) |
+| Renderer suites (untouched) | `pnpm vitest run test/nodes-base test/html-renderer`               | 46 files / 730 passed / 21 todo          |
+| Focused paste tests         | `pnpm vitest run test/unit/plugins`                                | green, no expectation edits              |
+| Paste e2e                   | `pnpm test:e2e:quiet test/e2e/paste-behaviour.test.ts`             | green (baseline recorded first)          |
+| File-leg e2e                | `pnpm test:e2e:quiet test/e2e/plugins/DragDropPastePlugin.test.ts` | green                                    |
+| Static gates                | `pnpm typecheck && pnpm lint && pnpm format:check`                 | all pass                                 |
+| Packed surface (Step 2)     | `pnpm verify:package && pnpm verify:types`                         | PASS — public names byte-identical       |
 
 ## Git workflow
 
@@ -227,8 +225,8 @@ One commit. Behavior-preserving.
     commands. If the move produces an import cycle or lint complaint, leave
     the command in `DragDropPastePlugin.tsx` and record it; do not force it.
   - Add the shared modifier state (illustrative): `interface ModifierState {
-    current: boolean }` and `getModifierState(editor: LexicalEditor):
-    ModifierState`, backed by a `WeakMap<LexicalEditor, ModifierState>` — one
+current: boolean }` and `getModifierState(editor: LexicalEditor):
+ModifierState`, backed by a `WeakMap<LexicalEditor, ModifierState>` — one
     state object per editor, created lazily. The `{ current: boolean }`
     shape matches `LinkMatchingDeps.isShiftPressed`
     (`registerLinkMatching.ts:11`), so the behaviour layer's deps interface
@@ -349,22 +347,22 @@ conditions for the decision point and the recommendation).
     (export side, behind the render context) and vice versa in
     `src/nodes/base/utils/is-local-content-image.ts`.
 - Proof of zero drift: `pnpm vitest run test/unit/utils/isInternalUrl.test.ts
-  test/unit/plugins/behaviour` and the renderer suites pass; the only
+test/unit/plugins/behaviour` and the renderer suites pass; the only
   expectation edits are the moved `describe` block.
 
 ## Test plan
 
-| Scenario                       | Command                                                                | Required invariant                                |
-| ------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------- |
-| Baselines at `d998080`         | `pnpm test:unit`; `pnpm vitest run test/nodes-base test/html-renderer` | 1707+21 todo; 730+21 todo before any change       |
-| Modifier-state convergence     | `pnpm vitest run test/unit/plugins/MarkdownPastePlugin.test.tsx`       | shift-paste behavior unchanged (:103-119)         |
-| Re-registration churn pin      | `pnpm vitest run test/unit/plugins/behaviour`                          | no re-registration on Shift press/release         |
-| Paste behavior end to end      | `pnpm test:e2e:quiet test/e2e/paste-behaviour.test.ts`                 | green, incl. shift case at :250                   |
-| File leg                       | `pnpm test:e2e:quiet test/e2e/plugins/DragDropPastePlugin.test.ts`     | green                                             |
-| Transformer move               | `pnpm vitest run test/markdown test/unit/plugins`                      | unchanged expectations                            |
-| Packed surface (Step 2)        | `pnpm verify:package && pnpm verify:types`                             | PASS, public names byte-identical                 |
-| URL scheme pins                | `pnpm vitest run test/nodes-base/utils test/unit/utils`                | both tables pinned, divergence documented         |
-| Full gates                     | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit`   | all pass                                          |
+| Scenario                   | Command                                                                | Required invariant                          |
+| -------------------------- | ---------------------------------------------------------------------- | ------------------------------------------- |
+| Baselines at `d998080`     | `pnpm test:unit`; `pnpm vitest run test/nodes-base test/html-renderer` | 1707+21 todo; 730+21 todo before any change |
+| Modifier-state convergence | `pnpm vitest run test/unit/plugins/MarkdownPastePlugin.test.tsx`       | shift-paste behavior unchanged (:103-119)   |
+| Re-registration churn pin  | `pnpm vitest run test/unit/plugins/behaviour`                          | no re-registration on Shift press/release   |
+| Paste behavior end to end  | `pnpm test:e2e:quiet test/e2e/paste-behaviour.test.ts`                 | green, incl. shift case at :250             |
+| File leg                   | `pnpm test:e2e:quiet test/e2e/plugins/DragDropPastePlugin.test.ts`     | green                                       |
+| Transformer move           | `pnpm vitest run test/markdown test/unit/plugins`                      | unchanged expectations                      |
+| Packed surface (Step 2)    | `pnpm verify:package && pnpm verify:types`                             | PASS, public names byte-identical           |
+| URL scheme pins            | `pnpm vitest run test/nodes-base/utils test/unit/utils`                | both tables pinned, divergence documented   |
+| Full gates                 | `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit`   | all pass                                    |
 
 ## Acceptance criteria
 
