@@ -136,12 +136,42 @@ export function isEmailButtonColorValue(value: string): boolean {
  * The image-optimization keys the image/gallery renderers and the srcset
  * helper consume, single-sourced here (plan 042) from the three renderer-local
  * declarations it replaces. The options bag types `imageOptimization` as
- * `Record<string, unknown>`; the factory casts to this shape inside the seam.
+ * `Record<string, unknown>`; the factory validates the three known keys into
+ * this shape while snapshotting (mistyped keys are dropped, never frozen in).
  */
 export interface ImageOptimizationOptions {
   defaultMaxWidth?: number
   contentImageSizes?: Record<string, { width: number }>
   srcsets?: boolean
+}
+
+function isContentImageSizes(value: unknown): value is Record<string, { width: number }> {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+  return Object.values(value).every(
+    (entry) => typeof entry === 'object' && entry !== null && typeof entry.width === 'number',
+  )
+}
+
+/**
+ * Validates the host-supplied imageOptimization bag into the typed snapshot:
+ * each documented key is copied only when its runtime type matches, so a
+ * mistyped host option degrades to "absent" (the consumers' documented
+ * fallback path) instead of being frozen into the context as a lie.
+ */
+function readImageOptimization(bag: Record<string, unknown>): ImageOptimizationOptions {
+  const validated: ImageOptimizationOptions = {}
+  if (typeof bag.defaultMaxWidth === 'number') {
+    validated.defaultMaxWidth = bag.defaultMaxWidth
+  }
+  if (isContentImageSizes(bag.contentImageSizes)) {
+    validated.contentImageSizes = bag.contentImageSizes
+  }
+  if (typeof bag.srcsets === 'boolean') {
+    validated.srcsets = bag.srcsets
+  }
+  return validated
 }
 
 export interface RenderContext {
@@ -262,7 +292,7 @@ export function createRenderContext(options: ExportDOMOptionsBase): RenderContex
   const feature = options.feature ? Object.freeze({ ...options.feature }) : undefined
   const design = options.design ? Object.freeze({ ...options.design }) : undefined
   const imageOptimization = options.imageOptimization
-    ? Object.freeze({ ...options.imageOptimization } as ImageOptimizationOptions)
+    ? Object.freeze(readImageOptimization(options.imageOptimization))
     : undefined
 
   const context: RenderContext = {
