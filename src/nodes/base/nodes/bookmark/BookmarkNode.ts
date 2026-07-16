@@ -30,7 +30,7 @@ export interface BookmarkNode {
   thumbnail: string
 }
 
-const BOOKMARK_METADATA_KEYS: readonly string[] = new Set([
+const BOOKMARK_METADATA_KEYS: ReadonlySet<string> = new Set([
   'icon',
   'title',
   'description',
@@ -97,6 +97,9 @@ export class BookmarkNode extends generateDecoratorNode({
     // Forward the caption and a passed-in caption editor so the generated
     // constructor can run the nested-editor setup/populate for wrapper
     // subclasses that adopt a `nestedEditors` spec (a no-op on this class).
+    // __caption is set by super from the same value (?? '' matches || '' for
+    // the string-typed dataset); the metadata remap below covers the keys
+    // super never received.
     super({ caption, captionEditor } as Partial<BookmarkData>, key)
     this.__url = url || ''
     this.__icon = metadata?.icon || ''
@@ -105,7 +108,6 @@ export class BookmarkNode extends generateDecoratorNode({
     this.__author = metadata?.author || ''
     this.__publisher = metadata?.publisher || ''
     this.__thumbnail = metadata?.thumbnail || ''
-    this.__caption = caption || ''
   }
 
   /* @override */

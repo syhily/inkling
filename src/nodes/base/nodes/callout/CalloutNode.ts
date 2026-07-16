@@ -60,8 +60,10 @@ export class CalloutNode extends generateDecoratorNode({
     // Forward the callout text and a passed-in editor so the generated
     // constructor can run the nested-editor setup/populate for wrapper
     // subclasses that adopt a `nestedEditors` spec (a no-op on this class).
+    // __calloutText is set by super from the same value (?? '' matches || ''
+    // for the string-typed dataset); only the keys super never received are
+    // assigned here.
     super({ calloutText, calloutTextEditor } as Partial<CalloutData>, key)
-    this.__calloutText = calloutText || ''
     this.__calloutEmoji = calloutEmoji ?? '💡'
     this.__backgroundColor = backgroundColor || 'blue'
   }
