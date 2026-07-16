@@ -126,7 +126,18 @@ export default function InklingBehaviourPlugin({
   isNested,
 }: InklingBehaviourPluginProps) {
   const [editor] = useLexicalComposerContext()
-  const fallbackRef = React.useRef<HTMLElement | null>(document.querySelector('.inkling-editor'))
+  // Fallback container for the outside-click deselect: this editor's own root
+  // element, read lazily because it is null at first render and set on mount.
+  // Scoping per editor keeps multi-editor pages from cross-scoping the
+  // deselect, and no document access happens during render.
+  const fallbackRef = React.useMemo<React.RefObject<HTMLElement | null>>(
+    () => ({
+      get current() {
+        return editor.getRootElement()
+      },
+    }),
+    [editor],
+  )
   return useInklingBehaviour({
     editor,
     containerElem: containerElem ?? fallbackRef,

@@ -1,11 +1,22 @@
 import { renderHook } from '@testing-library/react'
-import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
+import {
+  $createParagraphNode,
+  $createTextNode,
+  $getRoot,
+  COMMAND_PRIORITY_HIGH,
+  createEditor,
+  type LexicalEditor,
+} from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
-import InklingBehaviourPlugin, { INSERT_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
+import InklingBehaviourPlugin, {
+  DESELECT_CARD_COMMAND,
+  INSERT_CARD_COMMAND,
+  SELECT_CARD_COMMAND,
+} from '@/plugins/InklingBehaviourPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -92,5 +103,63 @@ describe('InklingBehaviourPlugin', () => {
     expect(registerCommandSpy.mock.calls.length).toBe(registrationsAfterMount)
 
     unmount()
+  })
+
+  it('scopes outside-click deselect to the editor root when no containerElem is passed', async () => {
+    const root = document.createElement('div')
+    root.contentEditable = 'true'
+    document.body.appendChild(root)
+    editor.setRootElement(root)
+    const querySelectorSpy = vi.spyOn(document, 'querySelector')
+
+    renderPlugin()
+
+    let cardKey = ''
+    await new Promise<void>((resolve) => {
+      editor.update(
+        () => {
+          const image = $createImageNode({ src: '/image.png' })
+          $getRoot().append(image)
+          cardKey = image.getKey()
+        },
+        { onUpdate: () => resolve() },
+      )
+    })
+    // select through the plugin's store-backed command, dispatched inside an
+    // update so the node selection commits deterministically (the
+    // dispatchAndCommit convention from registerKeyboardNavigation.test.ts)
+    await new Promise<void>((resolve) => {
+      editor.update(
+        () => {
+          editor.dispatchCommand(SELECT_CARD_COMMAND, { cardKey })
+        },
+        { onUpdate: () => resolve() },
+      )
+    })
+
+    // higher-priority observer so the deselect dispatch is recorded without
+    // swallowing it before the plugin's own handler
+    const deselected: string[] = []
+    const unregister = editor.registerCommand(
+      DESELECT_CARD_COMMAND,
+      ({ cardKey: deselectedKey }) => {
+        deselected.push(deselectedKey)
+        return false
+      },
+      COMMAND_PRIORITY_HIGH,
+    )
+
+    const outsideElement = document.createElement('div')
+    document.body.appendChild(outsideElement)
+    outsideElement.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+
+    expect(deselected).toEqual([cardKey])
+    // the fallback must not resurrect the legacy .inkling-editor lookup
+    expect(querySelectorSpy).not.toHaveBeenCalledWith('.inkling-editor')
+
+    unregister()
+    querySelectorSpy.mockRestore()
+    root.remove()
+    outsideElement.remove()
   })
 })
