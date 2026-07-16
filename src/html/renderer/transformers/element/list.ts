@@ -4,13 +4,8 @@ import type { ElementNode } from 'lexical'
 import { $isListNode, $isListItemNode } from '@lexical/list'
 
 import type { ExportChildren } from '@/html/renderer/transformers/index'
-import type { RendererOptions } from '@/html/renderer/types'
 
-const exportList = function (
-  node: ElementNode,
-  options: RendererOptions,
-  exportChildren: ExportChildren,
-): string | null {
+const exportList = function (node: ElementNode, exportChildren: ExportChildren): string | null {
   if (!$isListNode(node)) {
     return null
   }
@@ -39,7 +34,7 @@ const exportList = function (
       const listChildren = child.getChildren()
 
       if ($isListNode(listChildren[0])) {
-        output.push(exportList(listChildren[0], options, exportChildren) ?? '')
+        output.push(exportList(listChildren[0], exportChildren) ?? '')
         if (liOpen) {
           output.push('</li>')
           liOpen = false
@@ -49,7 +44,7 @@ const exportList = function (
           output.push('</li>')
           liOpen = false
         }
-        output.push(`<li>${exportChildren(child, options) ?? ''}`)
+        output.push(`<li>${exportChildren(child) ?? ''}`)
         liOpen = true
       }
     }
@@ -75,7 +70,7 @@ const exportList = function (
 }
 
 export default {
-  export(node: ElementNode, options: RendererOptions, exportChildren: ExportChildren) {
-    return exportList(node, options, exportChildren)
+  export(node: ElementNode, exportChildren: ExportChildren) {
+    return exportList(node, exportChildren)
   },
 }

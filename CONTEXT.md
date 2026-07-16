@@ -25,7 +25,7 @@ Where a card's exported markup is going: **web** (the editor's own frontend) or 
 _Avoid_: environment, platform
 
 **Render context**:
-The read-only, per-render-pass view of export-time policy every card renderer receives alongside the export options: URL safety, sanitization, render-target branching, feature/design flags, color checks, document resolution, heading-id tracking. Card sources must not import the policy modules directly — an import guard enforces the seam.
+The read-only, per-render-pass view of export-time policy and data that is the sole export-time view a card renderer receives besides the node: URL safety, sanitization, render-target branching, feature/design flags, color checks, document resolution, heading-id tracking, image/markdown data options. The public entry points (`exportDOM(editor, options)`, `$convertToHtmlString`, `LexicalHTMLRenderer.render`) still accept the export options and build the context from them. Card sources must not import the policy modules directly — an import guard enforces the seam.
 _Avoid_: options bag, policy object
 
 **Card selection store**:

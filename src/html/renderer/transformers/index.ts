@@ -1,7 +1,6 @@
 /* c8 ignore start */
 import type { ElementNode } from 'lexical'
 
-import type { RendererOptions } from '@/html/renderer/types'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import asideTransformer from '@/html/renderer/transformers/element/aside'
@@ -11,14 +10,9 @@ import listTransformer from '@/html/renderer/transformers/element/list'
 import paragraphTransformer from '@/html/renderer/transformers/element/paragraph'
 /* c8 ignore stop */
 
-export type ExportChildren = (node: ElementNode, options?: RendererOptions) => string
+export type ExportChildren = (node: ElementNode) => string
 export type ElementTransformer = {
-  export: (
-    node: ElementNode,
-    options: RendererOptions,
-    exportChildren: ExportChildren,
-    context: RenderContext,
-  ) => string | null
+  export: (node: ElementNode, exportChildren: ExportChildren, context: RenderContext) => string | null
 }
 
 const elementTransformers: ElementTransformer[] = [

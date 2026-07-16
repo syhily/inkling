@@ -1,4 +1,4 @@
-import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
+import type { ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { render } from '@/markdown/markdown-html-renderer'
@@ -8,11 +8,7 @@ interface MarkdownNodeData {
   markdown: string
 }
 
-export function renderMarkdownNode(
-  node: MarkdownNodeData,
-  options: ExportDOMOptions = {},
-  context: RenderContext,
-): ExportDOMOutput<'inner'> {
+export function renderMarkdownNode(node: MarkdownNodeData, context: RenderContext): ExportDOMOutput<'inner'> {
   const document = context.createDocument()
 
   // markdown-html-renderer reads exactly one key off the options bag —

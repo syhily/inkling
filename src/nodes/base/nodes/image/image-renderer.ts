@@ -1,4 +1,3 @@
-import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
@@ -28,7 +27,7 @@ interface ImageNodeData {
   href: string
 }
 
-export function renderImageNode(node: ImageNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
+export function renderImageNode(node: ImageNodeData, context: RenderContext) {
   const document = context.createDocument()
 
   if (!node.src || node.src.trim() === '' || context.safeUrl('media', node.src) === '') {

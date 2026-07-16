@@ -3,7 +3,7 @@ import type { ElementNode, LexicalEditor, LexicalNode } from 'lexical'
 import { $isLinkNode } from '@lexical/link'
 import { $getRoot, $isElementNode, $isLineBreakNode, $isParagraphNode, $isTextNode } from 'lexical'
 
-import type { RendererOptions } from '@/html/renderer/types'
+import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import elementTransformers from '@/html/renderer/transformers/index'
@@ -11,12 +11,12 @@ import TextContent from '@/html/renderer/utils/TextContent'
 import { $isInklingCard } from '@/nodes/base'
 import { createRenderContext } from '@/nodes/base/render-context'
 
-export default function $convertToHtmlString(editor: LexicalEditor, options: RendererOptions = {}): string {
+export default function $convertToHtmlString(editor: LexicalEditor, options: ExportDOMOptions = {}): string {
   const output: string[] = []
   const children: LexicalNode[] = $getRoot().getChildren()
 
-  // One read-only render context per string render, threaded to the element
-  // transformers and TextContent so they can migrate onto it (plan 040). Card
+  // One read-only render context per string render — the only export-time
+  // view the element transformers and TextContent receive (plan 042). Card
   // exportDOM builds its own context per call.
   //
   // The string layer itself stays verbatim — that is a deliberate design
@@ -49,7 +49,7 @@ export default function $convertToHtmlString(editor: LexicalEditor, options: Ren
 function exportTopLevelElementOrDecorator(
   node: LexicalNode,
   editor: LexicalEditor,
-  options: RendererOptions,
+  options: ExportDOMOptions,
   context: RenderContext,
 ): string | null {
   if ($isInklingCard(node)) {
@@ -73,7 +73,7 @@ function exportTopLevelElementOrDecorator(
     // note: unsure why this type isn't being picked up from the import
     for (const transformer of elementTransformers) {
       if (transformer.export !== null) {
-        const result = transformer.export(node, options, (_node) => exportChildren(_node, options, context), context)
+        const result = transformer.export(node, (_node) => exportChildren(_node, context), context)
 
         if (result !== null) {
           return result
@@ -82,14 +82,14 @@ function exportTopLevelElementOrDecorator(
     }
   }
 
-  return $isElementNode(node) ? exportChildren(node, options, context) : null
+  return $isElementNode(node) ? exportChildren(node, context) : null
 }
 
-function exportChildren(node: ElementNode, options: RendererOptions, context: RenderContext): string {
+function exportChildren(node: ElementNode, context: RenderContext): string {
   const output: string[] = []
   const children = node.getChildren()
 
-  const textContent = new TextContent((_node) => exportChildren(_node, options, context), options, context)
+  const textContent = new TextContent((_node) => exportChildren(_node, context), context)
 
   for (const child of children) {
     if (!textContent.isEmpty() && !$isLineBreakNode(child) && !$isTextNode(child) && !$isLinkNode(child)) {
@@ -100,7 +100,7 @@ function exportChildren(node: ElementNode, options: RendererOptions, context: Re
     if ($isLineBreakNode(child) || $isTextNode(child) || $isLinkNode(child)) {
       textContent.addNode(child)
     } else if ($isElementNode(child)) {
-      output.push(exportChildren(child, options, context) ?? '')
+      output.push(exportChildren(child, context) ?? '')
     }
   }
 

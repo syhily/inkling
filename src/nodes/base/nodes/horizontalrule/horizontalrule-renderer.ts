@@ -1,4 +1,3 @@
-import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { html } from '@/nodes/base/utils/tagged-template-fns'
@@ -38,7 +37,7 @@ function horizontalRuleEmailTemplate() {
   `
 }
 
-export function renderHorizontalRuleNode(_: unknown, options: ExportDOMOptions = {}, context: RenderContext) {
+export function renderHorizontalRuleNode(_: unknown, context: RenderContext) {
   const document = context.createDocument()
 
   if (context.variant({ web: false, email: true })) {

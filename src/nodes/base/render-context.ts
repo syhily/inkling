@@ -9,11 +9,12 @@ import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 
 /**
- * The render-context seam (plan 040): the single read-only view of export-time
- * policy that every card renderer receives alongside the legacy options bag.
- * Renderers currently re-implement URL allow-lists, sanitization, and
- * render-target branching ad hoc; this context is the one interface those
- * policies converge behind. Migration is incremental, one step per commit:
+ * The render-context seam (plan 040; the fold completed in plan 042): the
+ * single read-only view of export-time policy and data, and the ONLY thing
+ * card renderers receive besides the node. Before the seam, renderers
+ * re-implemented URL allow-lists, sanitization, and render-target branching
+ * ad hoc; this context is the one interface those policies converge behind.
+ * The migration was incremental, one step per commit:
  *
  * - `safeUrl` is the URL policy (Step 3 migrates the hand-rolled
  *   `isSafeUrl`/`isSafeMediaUrl` call sites; `is-safe-url.ts` stays as the

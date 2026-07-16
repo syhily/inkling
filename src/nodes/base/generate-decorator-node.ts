@@ -19,11 +19,13 @@ import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 // Bivariant method syntax so that a render function declared with a concrete
 // node type can be assigned to `RenderFn<TRenderNode, TOutput>`. The render
-// context is passed alongside the legacy options bag; renderers read render
-// policy (target, URL, sanitization, feature/design flags) through it
-// (plan 040), and Step 6 folds the remaining options-bag state in.
+// context is the ONLY export-time view a render fn receives besides the node:
+// render policy (target, URL, sanitization, feature/design flags) and the
+// image/markdown data options all live behind it (plans 040/042). The public
+// `exportDOM(editor, options)` entry point builds the context from the
+// options bag; the bag itself never reaches the render fn.
 type RenderFn<TNode = unknown, TOutput extends ExportDOMOutput = ExportDOMOutput> = {
-  bivarianceHack(node: TNode, options: ExportDOMOptions, context: RenderContext): TOutput
+  bivarianceHack(node: TNode, context: RenderContext): TOutput
 }['bivarianceHack']
 type WidenLiteral<T> = T extends string
   ? string
@@ -559,10 +561,10 @@ export function generateDecoratorNode<
         throw new Error(`[generateDecoratorNode] ${nodeType}: "defaultRenderFn" is required`)
       }
 
-      // One read-only render context per export, passed alongside the options
-      // bag until renderers migrate onto it (plan 040).
+      // One read-only render context per export — the only export-time view
+      // the render fn receives besides the node (plan 042).
       const context = createRenderContext(options)
-      return defaultRenderFn(this as unknown as TRenderNode, options, context)
+      return defaultRenderFn(this as unknown as TRenderNode, context)
     }
 
     /* c8 ignore start */

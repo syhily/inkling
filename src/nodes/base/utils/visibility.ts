@@ -1,4 +1,5 @@
 import type { ExportDOMOutput } from '@/nodes/base/export-dom'
+import type { RenderContext } from '@/nodes/base/render-context'
 
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
@@ -129,7 +130,7 @@ export function migrateOldVisibilityFormat(visibility: Visibility) {
 export function renderWithVisibility(
   originalRenderOutput: ExportDOMOutput,
   visibility: Visibility | undefined,
-  options: { target?: string },
+  context: Pick<RenderContext, 'target'>,
 ) {
   if (!visibility) {
     return originalRenderOutput
@@ -149,7 +150,7 @@ export function renderWithVisibility(
   const email = migrated.email ?? { memberSegment: ALL_MEMBERS_SEGMENT }
   const web = migrated.web ?? { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT }
 
-  if (options.target === 'email') {
+  if (context.target === 'email') {
     if (email.memberSegment === NO_MEMBERS_SEGMENT) {
       return renderEmptyContainer(document)
     }

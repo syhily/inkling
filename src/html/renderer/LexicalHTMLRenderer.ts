@@ -2,8 +2,7 @@ import type { SerializedEditorState, LexicalEditor, LexicalNodeConfig } from 'le
 
 import { createHeadlessEditor } from '@lexical/headless'
 
-import type { RendererOptions } from '@/html/renderer/types'
-import type { ExportDOMDom } from '@/nodes/base'
+import type { ExportDOMDom, ExportDOMOptions } from '@/nodes/base'
 
 import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
@@ -35,11 +34,11 @@ export default class LexicalHTMLRenderer {
   }
 
   async render(lexicalState: SerializedEditorState | string, userOptions: RenderOptions = {}) {
-    const defaultOptions: RendererOptions = {
+    const defaultOptions: ExportDOMOptions = {
       target: 'html',
       dom: await this._getDefaultDom(userOptions.dom),
     }
-    const options: RendererOptions = Object.assign({}, defaultOptions, userOptions)
+    const options: ExportDOMOptions = Object.assign({}, defaultOptions, userOptions)
 
     // Custom nodes are additive: they are registered AFTER the complete
     // Inkling HTML defaults, so a custom entry with the same node type as a

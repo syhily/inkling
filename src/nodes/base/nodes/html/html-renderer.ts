@@ -1,4 +1,4 @@
-import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
+import type { ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
@@ -12,11 +12,7 @@ interface HtmlNodeData {
 
 export type HtmlExportDOMOutput = ExportDOMOutput<'inner' | 'value' | 'outer'>
 
-export function renderHtmlNode(
-  node: HtmlNodeData,
-  options: ExportDOMOptions = {},
-  context: RenderContext,
-): HtmlExportDOMOutput {
+export function renderHtmlNode(node: HtmlNodeData, context: RenderContext): HtmlExportDOMOutput {
   const document = context.createDocument()
 
   const html = node.html
@@ -39,8 +35,8 @@ export function renderHtmlNode(
 
   if (node.visibility) {
     const renderOutput: ExportDOMOutput<'value'> = { element: textarea, type: 'value' }
-    // The context satisfies renderWithVisibility's `{ target?: string }`
-    // shape, so the visibility target check reads the frozen context.
+    // renderWithVisibility takes Pick<RenderContext, 'target'> — the frozen
+    // context is passed straight through.
     return renderWithVisibility(renderOutput, node.visibility, context) as HtmlExportDOMOutput
   }
 

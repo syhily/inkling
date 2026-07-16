@@ -1,4 +1,3 @@
-import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { CALLOUT_HTML_CONFIG } from '@/nodes/base/render-context'
@@ -9,7 +8,7 @@ interface CalloutNodeData {
   calloutText: string
 }
 
-export function renderCalloutNode(node: CalloutNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
+export function renderCalloutNode(node: CalloutNodeData, context: RenderContext) {
   const document = context.createDocument()
   const element = document.createElement('div')
 

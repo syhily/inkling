@@ -5,7 +5,6 @@ import { $isLinkNode } from '@lexical/link'
 import { $isTextNode, $isLineBreakNode, TextNode } from 'lexical'
 
 import type { ExportChildren } from '@/html/renderer/transformers/index'
-import type { RendererOptions } from '@/html/renderer/types'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 type TextFormatAbbreviation = 'STRONG' | 'EM' | 'S' | 'U' | 'CODE' | 'SUB' | 'SUP' | 'MARK' | 'SPAN'
@@ -28,28 +27,17 @@ type Entries<T> = {
   [K in keyof T]: [K, T[K]]
 }[keyof T][]
 
-type RequiredKeys<T, K extends keyof T> = Exclude<T, K> & Required<Pick<T, K>>
-
-const ensureDomProperty = (options: RendererOptions): options is RequiredKeys<RendererOptions, 'dom'> => {
-  return !!options.dom
-}
-
 // Builds and renders text content, useful to ensure proper format tag opening/closing
 // and html escaping
 export default class TextContent {
   nodes: LexicalNode[]
   exportChildren: ExportChildren
-  options: RequiredKeys<RendererOptions, 'dom'>
   // The render-context seam (plan 040): link-href URL policy goes through
   // `context.safeUrl`.
   context: RenderContext
 
-  constructor(exportChildren: ExportChildren, options: RendererOptions, context: RenderContext) {
-    if (ensureDomProperty(options) === false) {
-      throw new Error('TextContent requires a dom property in the options argument')
-    }
+  constructor(exportChildren: ExportChildren, context: RenderContext) {
     this.exportChildren = exportChildren
-    this.options = options as RequiredKeys<RendererOptions, 'dom'>
     this.context = context
 
     this.nodes = []
@@ -60,7 +48,7 @@ export default class TextContent {
   }
 
   render(): string {
-    const document: Document = this.options.dom.window.document
+    const document: Document = this.context.createDocument()
     const root: HTMLElement = document.createElement('div')
 
     let currentNode = root

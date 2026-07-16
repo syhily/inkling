@@ -1,5 +1,3 @@
-import type { ExportDOMOptions } from '@/nodes/base/export-dom'
-
 import { isSafeColorValue, type RenderContext } from '@/nodes/base/render-context'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { renderEmailButton } from '@/nodes/base/utils/render-helpers/email-button'
@@ -45,8 +43,6 @@ interface HeaderV2DatasetNode {
   __swapped: boolean
   __accentColor: string
 }
-
-interface HeaderV2RenderOptions extends ExportDOMOptions {}
 
 // Colors come from document JSON, not just the color picker — constrain to
 // values the picker can produce before interpolating into style/attributes.
@@ -341,11 +337,7 @@ function emailTemplate(nodeData: HeaderV2NodeData, context: RenderContext) {
         `
 }
 
-export function renderHeaderNodeV2(
-  dataset: HeaderV2DatasetNode,
-  options: HeaderV2RenderOptions = {},
-  context: RenderContext,
-) {
+export function renderHeaderNodeV2(dataset: HeaderV2DatasetNode, context: RenderContext) {
   const document = context.createDocument()
 
   const node = {

@@ -1,4 +1,4 @@
-import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
+import type { ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
@@ -10,11 +10,7 @@ interface AudioNodeData {
   duration: number
 }
 
-export function renderAudioNode(
-  node: AudioNodeData,
-  options: ExportDOMOptions = {},
-  context: RenderContext,
-): ExportDOMOutput {
+export function renderAudioNode(node: AudioNodeData, context: RenderContext): ExportDOMOutput {
   const document = context.createDocument()
 
   if (!node.src || node.src.trim() === '' || context.safeUrl('media', node.src) === '') {

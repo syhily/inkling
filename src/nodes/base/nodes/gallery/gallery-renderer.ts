@@ -1,4 +1,3 @@
-import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
@@ -71,7 +70,7 @@ function buildStructure(images: GalleryImage[]) {
   return rows
 }
 
-export function renderGalleryNode(node: GalleryNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
+export function renderGalleryNode(node: GalleryNodeData, context: RenderContext) {
   const document = context.createDocument()
 
   const validImages = node.images.filter((image) => isValidImage(image, context))

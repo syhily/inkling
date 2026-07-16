@@ -1,4 +1,3 @@
-import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
@@ -22,7 +21,7 @@ function getSafeMediaUrls(node: BookmarkNodeData, context: RenderContext) {
   }
 }
 
-export function renderBookmarkNode(node: BookmarkNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
+export function renderBookmarkNode(node: BookmarkNodeData, context: RenderContext) {
   const document = context.createDocument()
 
   if (!node.url || node.url.trim() === '' || context.safeUrl('navigation', node.url) === '') {

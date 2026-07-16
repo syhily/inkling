@@ -1,4 +1,3 @@
-import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
@@ -9,7 +8,7 @@ interface CodeBlockNodeData {
   caption: string
 }
 
-export function renderCodeBlockNode(node: CodeBlockNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
+export function renderCodeBlockNode(node: CodeBlockNodeData, context: RenderContext) {
   const document = context.createDocument()
 
   if (!node.code || node.code.trim() === '') {

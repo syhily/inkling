@@ -1,4 +1,3 @@
-import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
@@ -14,7 +13,7 @@ interface FileNodeData {
   formattedFileSize: string
 }
 
-export function renderFileNode(node: FileNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
+export function renderFileNode(node: FileNodeData, context: RenderContext) {
   const document = context.createDocument()
 
   if (!node.src || node.src.trim() === '') {

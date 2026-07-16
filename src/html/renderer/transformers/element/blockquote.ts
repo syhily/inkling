@@ -4,12 +4,11 @@ import type { ElementNode } from 'lexical'
 import { $isQuoteNode } from '@lexical/rich-text'
 
 import type { ExportChildren } from '@/html/renderer/transformers/index'
-import type { RendererOptions } from '@/html/renderer/types'
 import type { RenderContext } from '@/nodes/base/render-context'
 /* c8 ignore stop */
 
 export default {
-  export(node: ElementNode, options: RendererOptions, exportChildren: ExportChildren, context: RenderContext) {
+  export(node: ElementNode, exportChildren: ExportChildren, context: RenderContext) {
     if (!$isQuoteNode(node)) {
       return null
     }

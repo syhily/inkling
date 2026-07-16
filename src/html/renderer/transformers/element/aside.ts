@@ -1,13 +1,12 @@
 import type { ElementNode } from 'lexical'
 
 import type { ExportChildren } from '@/html/renderer/transformers/index'
-import type { RendererOptions } from '@/html/renderer/types'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { $isAsideNode } from '@/nodes/base'
 
 export default {
-  export(node: ElementNode, options: RendererOptions, exportChildren: ExportChildren, context: RenderContext) {
+  export(node: ElementNode, exportChildren: ExportChildren, context: RenderContext) {
     if (!$isAsideNode(node)) {
       return null
     }

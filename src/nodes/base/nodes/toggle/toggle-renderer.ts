@@ -1,4 +1,3 @@
-import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
@@ -65,7 +64,7 @@ function emailCardTemplate({ node, context }: { node: ToggleNodeData; context: R
         `
 }
 
-export function renderToggleNode(node: ToggleNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
+export function renderToggleNode(node: ToggleNodeData, context: RenderContext) {
   const document = context.createDocument()
 
   const htmlString = context.variant({ web: false, email: true })

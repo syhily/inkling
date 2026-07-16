@@ -292,12 +292,12 @@ describe('createRenderContext', () => {
 })
 
 describe('exportDOM dispatch threading', () => {
-  it('passes a frozen render context as the third render-fn argument', () => {
+  it("passes a frozen render context as the render fn's only argument besides the node", () => {
     let received: RenderContext | undefined
 
     const TestNode = generateDecoratorNode({
       nodeType: 'render-context-dispatch-test',
-      defaultRenderFn: (_node, _options, context) => {
+      defaultRenderFn: (_node, context) => {
         received = context
         return { element: null, type: 'inner' as const }
       },

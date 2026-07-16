@@ -1,4 +1,3 @@
-import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
@@ -11,7 +10,7 @@ interface ButtonNodeData {
   alignment: string
 }
 
-export function renderButtonNode(node: ButtonNodeData, options: ExportDOMOptions = {}, context: RenderContext) {
+export function renderButtonNode(node: ButtonNodeData, context: RenderContext) {
   const document = context.createDocument()
 
   if (!node.buttonUrl || node.buttonUrl.trim() === '' || context.safeUrl('navigation', node.buttonUrl) === '') {
