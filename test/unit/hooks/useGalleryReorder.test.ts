@@ -72,10 +72,16 @@ describe('useGalleryReorder', () => {
     expect(mockDragDropHandler.registerContainer).toHaveBeenCalledWith(
       container,
       expect.objectContaining({
-        onDrop: expect.any(Function),
-        onDropEnd: expect.any(Function),
-        getDraggableInfo: expect.any(Function),
-        getIndicatorPosition: expect.any(Function),
+        draggable: expect.objectContaining({
+          getDraggableInfo: expect.any(Function),
+        }),
+        droppable: expect.objectContaining({
+          onDrop: expect.any(Function),
+          getIndicatorPosition: expect.any(Function),
+        }),
+        lifecycle: expect.objectContaining({
+          onDropEnd: expect.any(Function),
+        }),
       }),
     )
     expect(updateImages).not.toHaveBeenCalled()
@@ -98,7 +104,7 @@ describe('useGalleryReorder', () => {
       },
     }
 
-    const success = options.onDrop(draggableInfo)
+    const success = options.droppable.onDrop(draggableInfo)
 
     expect(success).toBe(true)
     expect(updateImages).toHaveBeenCalledWith([
@@ -129,7 +135,7 @@ describe('useGalleryReorder', () => {
       dataset: { src },
     }
 
-    const success = options.onDrop(draggableInfo)
+    const success = options.droppable.onDrop(draggableInfo)
 
     expect(success).toBe(true)
     expect(updateImages).toHaveBeenCalledWith([expect.objectContaining({ src })])
@@ -156,7 +162,7 @@ describe('useGalleryReorder', () => {
       dataset: { src: 'https://example.com/one.jpg' },
     }
 
-    const success = options.onDrop(draggableInfo, droppableElement as HTMLElement, 'top-right')
+    const success = options.droppable.onDrop(draggableInfo, droppableElement as HTMLElement, 'top-right')
 
     expect(success).toBe(true)
     expect(updateImages).toHaveBeenCalledWith([
@@ -183,8 +189,8 @@ describe('useGalleryReorder', () => {
       dataset: { src: 'https://example.com/one.jpg' },
     }
 
-    options.onDrop(draggableInfo, droppableElement as HTMLElement, 'top-right')
-    options.onDropEnd(draggableInfo, true)
+    options.droppable.onDrop(draggableInfo, droppableElement as HTMLElement, 'top-right')
+    options.lifecycle.onDropEnd(draggableInfo, true)
 
     expect(updateImages).toHaveBeenCalledTimes(1)
   })
@@ -202,7 +208,7 @@ describe('useGalleryReorder', () => {
       dataset: { src: 'https://example.com/one.jpg' },
     }
 
-    options.onDropEnd(draggableInfo, true)
+    options.lifecycle.onDropEnd(draggableInfo, true)
 
     expect(updateImages).toHaveBeenCalledWith([{ src: 'https://example.com/two.jpg' }])
   })
@@ -219,7 +225,7 @@ describe('useGalleryReorder', () => {
       dataset: {},
     }
 
-    const success = options.onDrop(draggableInfo)
+    const success = options.droppable.onDrop(draggableInfo)
 
     expect(success).toBe(false)
     expect(updateImages).not.toHaveBeenCalled()
@@ -230,7 +236,7 @@ describe('useGalleryReorder', () => {
     const { options, container } = await getRegisteredOptions(images)
 
     const imgContainer = container.children[0]
-    const draggableInfo = options.getDraggableInfo(imgContainer as HTMLElement)
+    const draggableInfo = options.draggable.getDraggableInfo(imgContainer as HTMLElement)
 
     expect(draggableInfo).toEqual(
       expect.objectContaining({
@@ -243,7 +249,7 @@ describe('useGalleryReorder', () => {
   it('returns false from getDraggableInfo when the element is not a gallery image', async () => {
     const { options } = await getRegisteredOptions([])
 
-    const draggableInfo = options.getDraggableInfo(null)
+    const draggableInfo = options.draggable.getDraggableInfo(null)
 
     expect(draggableInfo).toBe(false)
   })

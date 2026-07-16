@@ -255,20 +255,23 @@ export default function useGalleryReorder({
     }
 
     const container = handler.registerContainer(galleryElem, {
-      draggableSelector: '[data-image]',
-      droppableSelector: '[data-image]',
-      isDragEnabled: !disabled && images.length > 0,
-      onDragStart,
-      onDragEnd,
-      onDragEnterContainer,
-      onDragLeaveContainer,
-      onDragEnterDroppable: () => {},
-      onDragOverDroppable: () => {},
-      onDragLeaveDroppable: () => {},
-      getDraggableInfo,
-      getIndicatorPosition,
-      onDrop,
-      onDropEnd,
+      draggable: {
+        draggableSelector: '[data-image]',
+        isDragEnabled: !disabled && images.length > 0,
+        getDraggableInfo,
+      },
+      droppable: {
+        droppableSelector: '[data-image]',
+        getIndicatorPosition,
+        onDrop,
+        onDragEnterContainer,
+        onDragLeaveContainer,
+      },
+      lifecycle: {
+        onDragStart,
+        onDragEnd,
+        onDropEnd,
+      },
     })
     dragDropContainer.current = container
 

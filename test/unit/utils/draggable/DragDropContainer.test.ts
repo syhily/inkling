@@ -5,31 +5,37 @@ import '@/utils/draggable/draggable-constants'
 
 function createHandlers() {
   return {
-    onDragStart: vi.fn(),
-    onDragEnterContainer: vi.fn(),
-    onDragEnterDroppable: vi.fn(),
-    onDragOverDroppable: vi.fn(),
-    onDragLeaveDroppable: vi.fn(),
-    onDragLeaveContainer: vi.fn(),
-    onDragEnd: vi.fn(),
-    onDrop: vi.fn().mockReturnValue(true),
-    onDropEnd: vi.fn(),
-    getDraggableInfo: vi.fn((element: HTMLElement | null): DraggableInfo | false => {
-      if (!element) {
-        return false
-      }
-      return {
-        type: element.dataset.type || 'unknown',
-        element,
-        target: null,
-        source: null,
-        mousePosition: { x: 0, y: 0 },
-        dataset: {},
-      }
-    }),
-    getIndicatorPosition: vi.fn().mockReturnValue(false),
-    draggableSelector: '.draggable',
-    droppableSelector: '.droppable',
+    draggable: {
+      getDraggableInfo: vi.fn((element: HTMLElement | null): DraggableInfo | false => {
+        if (!element) {
+          return false
+        }
+        return {
+          type: element.dataset.type || 'unknown',
+          element,
+          target: null,
+          source: null,
+          mousePosition: { x: 0, y: 0 },
+          dataset: {},
+        }
+      }),
+      draggableSelector: '.draggable',
+    },
+    droppable: {
+      onDrop: vi.fn().mockReturnValue(true),
+      getIndicatorPosition: vi.fn().mockReturnValue(false),
+      droppableSelector: '.droppable',
+      onDragEnterContainer: vi.fn(),
+      onDragEnterDroppable: vi.fn(),
+      onDragOverDroppable: vi.fn(),
+      onDragLeaveDroppable: vi.fn(),
+      onDragLeaveContainer: vi.fn(),
+    },
+    lifecycle: {
+      onDragStart: vi.fn(),
+      onDragEnd: vi.fn(),
+      onDropEnd: vi.fn(),
+    },
   }
 }
 
@@ -97,7 +103,7 @@ describe('DragDropContainer', () => {
     customDragPreviewElement.id = 'custom-drag-preview'
 
     const handlers = createHandlers()
-    handlers.createDragPreviewElement = vi.fn().mockReturnValue(customDragPreviewElement)
+    handlers.draggable.createDragPreviewElement = vi.fn().mockReturnValue(customDragPreviewElement)
 
     const container = new DragDropContainer(containerElement, handlers)
     const draggable = containerElement.querySelector('.draggable') as HTMLElement

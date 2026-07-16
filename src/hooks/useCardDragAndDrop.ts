@@ -1,6 +1,6 @@
 import React from 'react'
 
-import type { DraggableInfo, DroppablePosition } from '@/utils/draggable/DragDropContainer'
+import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { useDragDropState } from '@/hooks/useDragDropState'
 
@@ -114,20 +114,23 @@ export default function useCardDragAndDrop({
     }
 
     const container = handler.registerContainer(containerRef, {
-      draggableSelector,
-      droppableSelector,
-      isDragEnabled: enabled,
-      onDragStart,
-      onDragEnd,
-      onDragEnterContainer,
-      onDragLeaveContainer,
-      onDragEnterDroppable: (_droppable: HTMLElement, _position: DroppablePosition) => {},
-      onDragOverDroppable: (_droppable: HTMLElement, _position: DroppablePosition) => {},
-      onDragLeaveDroppable: (_droppable: HTMLElement) => {},
-      getDraggableInfo: _getDraggableInfo,
-      getIndicatorPosition: _getIndicatorPosition,
-      onDrop: _onDrop,
-      onDropEnd: _onDropEnd,
+      draggable: {
+        draggableSelector,
+        isDragEnabled: enabled,
+        getDraggableInfo: _getDraggableInfo,
+      },
+      droppable: {
+        droppableSelector,
+        getIndicatorPosition: _getIndicatorPosition,
+        onDrop: _onDrop,
+        onDragEnterContainer,
+        onDragLeaveContainer,
+      },
+      lifecycle: {
+        onDragStart,
+        onDragEnd,
+        onDropEnd: _onDropEnd,
+      },
     })
     // oxlint-disable-next-line typescript/no-explicit-any
     dragDropContainer.current = container as any

@@ -74,20 +74,23 @@ describe('useCardDragAndDrop', () => {
     expect(mockDragDropHandler.registerContainer).toHaveBeenCalledWith(
       element,
       expect.objectContaining({
-        draggableSelector: '[data-draggable]',
-        droppableSelector: '[data-droppable]',
-        isDragEnabled: true,
-        onDragStart: expect.any(Function),
-        onDragEnd: expect.any(Function),
-        onDragEnterContainer: expect.any(Function),
-        onDragLeaveContainer: expect.any(Function),
-        onDragEnterDroppable: expect.any(Function),
-        onDragOverDroppable: expect.any(Function),
-        onDragLeaveDroppable: expect.any(Function),
-        getDraggableInfo: expect.any(Function),
-        getIndicatorPosition: expect.any(Function),
-        onDrop: expect.any(Function),
-        onDropEnd: expect.any(Function),
+        draggable: expect.objectContaining({
+          draggableSelector: '[data-draggable]',
+          isDragEnabled: true,
+          getDraggableInfo: expect.any(Function),
+        }),
+        droppable: expect.objectContaining({
+          droppableSelector: '[data-droppable]',
+          getIndicatorPosition: expect.any(Function),
+          onDrop: expect.any(Function),
+          onDragEnterContainer: expect.any(Function),
+          onDragLeaveContainer: expect.any(Function),
+        }),
+        lifecycle: expect.objectContaining({
+          onDragStart: expect.any(Function),
+          onDragEnd: expect.any(Function),
+          onDropEnd: expect.any(Function),
+        }),
       }),
     )
   })

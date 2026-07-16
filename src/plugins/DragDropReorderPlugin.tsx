@@ -149,14 +149,6 @@ function useDragDropReorder(editor: LexicalEditor): void {
           insertIndex += 1
         }
 
-        if (position.match(/bottom/)) {
-          droppables.slice(0, droppableIndex + 1)
-          droppables.slice(droppableIndex + 1)
-        } else {
-          droppables.slice(0, droppableIndex)
-          droppables.slice(droppableIndex)
-        }
-
         return {
           insertIndex,
           element: (droppables[insertIndex] ?? droppableElem) as HTMLElement,
@@ -269,20 +261,21 @@ function useDragDropReorder(editor: LexicalEditor): void {
     dragDropHandle.setState({ handler: dndHandler })
 
     cardContainer.current = dndHandler.registerContainer(editor.getRootElement() as HTMLElement, {
-      draggableSelector: ':scope > div', // cards
-      droppableSelector: ':scope > *', // all block elements
-      onDragStart: onDragStart.current,
-      onDragEnterContainer: () => {},
-      onDragEnterDroppable: () => {},
-      onDragOverDroppable: () => {},
-      onDragLeaveDroppable: () => {},
-      onDragLeaveContainer: () => {},
-      onDragEnd: onDragEnd.current,
-      getDraggableInfo: getDraggableInfo.current,
-      createDragPreviewElement: createCardDragElement.current,
-      getIndicatorPosition: getDropIndicatorPosition.current,
-      onDrop: onCardDrop.current,
-      onDropEnd: onDropEnd.current,
+      draggable: {
+        draggableSelector: ':scope > div', // cards
+        getDraggableInfo: getDraggableInfo.current,
+        createDragPreviewElement: createCardDragElement.current,
+      },
+      droppable: {
+        droppableSelector: ':scope > *', // all block elements
+        getIndicatorPosition: getDropIndicatorPosition.current,
+        onDrop: onCardDrop.current,
+      },
+      lifecycle: {
+        onDragStart: onDragStart.current,
+        onDragEnd: onDragEnd.current,
+        onDropEnd: onDropEnd.current,
+      },
     })
 
     return () => {
