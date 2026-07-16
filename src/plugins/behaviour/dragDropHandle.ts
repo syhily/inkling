@@ -1,0 +1,51 @@
+import type { DragDropHandler } from '@/utils/draggable/DragDropHandler'
+
+// Editor-side handle for the per-top-level-composer drag-drop channel
+// (plan 047). Owns the DragDropHandler instance and the editor container
+// element so card drag hooks can read them synchronously instead of relying
+// on a context value mutated by DragDropReorderPlugin and on mount order.
+// Fed at mount by InklingComposableEditor (containerElement) and
+// DragDropReorderPlugin (handler); React subscribes render-only via
+// useDragDropState. One instance per top-level composer (created in
+// InklingComposer) — nested composers share the top-level handle, exactly as
+// the shared context value worked before.
+
+export interface DragDropHandleState {
+  containerElement: HTMLElement | null
+  handler: DragDropHandler | null
+}
+
+export type DragDropHandleListener = (state: DragDropHandleState) => void
+
+export interface DragDropHandle {
+  getState: () => DragDropHandleState
+  setState: (partial: Partial<DragDropHandleState>) => void
+  subscribe: (listener: DragDropHandleListener) => () => void
+}
+
+export function createDragDropHandle(): DragDropHandle {
+  let state: DragDropHandleState = { containerElement: null, handler: null }
+  const listeners = new Set<DragDropHandleListener>()
+
+  return {
+    getState: () => state,
+
+    setState: (partial) => {
+      const next = { ...state, ...partial }
+      if (next.containerElement === state.containerElement && next.handler === state.handler) {
+        return
+      }
+      state = next
+      for (const listener of listeners) {
+        listener(state)
+      }
+    },
+
+    subscribe: (listener) => {
+      listeners.add(listener)
+      return () => {
+        listeners.delete(listener)
+      }
+    },
+  }
+}

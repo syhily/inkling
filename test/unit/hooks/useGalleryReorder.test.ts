@@ -4,8 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
-import InklingComposerContext from '@/context/InklingComposerContext'
+import { DragDropHandleContext } from '@/context/DragDropHandleContext'
 import useGalleryReorder, { type GalleryImage } from '@/hooks/useGalleryReorder'
+import { createDragDropHandle } from '@/plugins/behaviour/dragDropHandle'
 
 const mockContainer = {
   enableDrag: vi.fn(),
@@ -18,14 +19,13 @@ const mockDragDropHandler = {
   registerContainer: vi.fn(() => mockContainer),
 }
 
-const contextValue = { dragDropHandler: mockDragDropHandler }
+// a real handle instance carrying the mock DragDropHandler — the hook
+// subscribes to the handle, so the handler is set before render
+const dragDropHandle = createDragDropHandle()
+dragDropHandle.setState({ handler: mockDragDropHandler as never })
 
 const wrapper = ({ children }: { children: React.ReactNode }) =>
-  React.createElement(
-    InklingComposerContext.Provider,
-    { value: contextValue as React.ContextType<typeof InklingComposerContext> },
-    children,
-  )
+  React.createElement(DragDropHandleContext.Provider, { value: dragDropHandle }, children)
 
 function createImageContainer(images: GalleryImage[]) {
   const container = document.createElement('div')

@@ -8,6 +8,7 @@ import { Doc } from 'yjs'
 import type { LexicalProviderFactory } from '@/context/InklingCollaborationContext'
 import type { CardConfig, FileUploader, FileUploaderInput } from '@/context/InklingHostIntegrationContext'
 
+import { DragDropHandleContext } from '@/context/DragDropHandleContext'
 import InklingCollaborationContext from '@/context/InklingCollaborationContext'
 import InklingComposerContext from '@/context/InklingComposerContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
@@ -16,6 +17,7 @@ import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { TKContext } from '@/context/TKContext'
 import { DEFAULT_CONFIG } from '@/nodes/base'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
+import { createDragDropHandle } from '@/plugins/behaviour/dragDropHandle'
 import defaultTheme from '@/themes/default'
 import { type InklingInitialEditorState, normalizeInitialEditorState } from '@/utils/normalizeInitialEditorState'
 
@@ -92,8 +94,11 @@ const InklingComposer = ({
     [enableMultiplayer, normalizedInitialEditorState, nodes, onError],
   )
 
-  const editorContainerRef = React.useRef(null)
   const onWordCountChangeRef = React.useRef(null)
+
+  // one drag-drop handle per top-level composer (plan 047); the useState
+  // initializer keeps the instance stable for the provider's lifetime
+  const [dragDropHandle] = React.useState(createDragDropHandle)
 
   const normalizedFileUploader = React.useMemo<FileUploader>(() => {
     if (hasFileUploadHook(fileUploader)) {
@@ -169,42 +174,42 @@ const InklingComposer = ({
     [darkMode, isTKEnabled],
   )
 
-  // legacy per-composer channels — plan 047 steps 3/5 replace these with
-  // editor-side handles
+  // legacy per-composer channel — plan 047 step 5 replaces it with a handle
   const composerContextValue = React.useMemo(
     () => ({
-      editorContainerRef,
       onWordCountChangeRef,
     }),
-    [editorContainerRef, onWordCountChangeRef],
+    [onWordCountChangeRef],
   )
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <InklingHostIntegrationContext.Provider value={hostIntegrationValue}>
-        <InklingCollaborationContext.Provider value={collaborationValue}>
-          <InklingUiPrefsContext.Provider value={uiPrefsValue}>
-            <InklingComposerContext.Provider value={composerContextValue}>
-              <InklingSelectedCardContext>
-                <TKContext>
-                  <LexicalCollaboration>
-                    {enableMultiplayer ? (
-                      <CollaborationPlugin
-                        id="main"
-                        initialEditorState={normalizedInitialEditorState}
-                        providerFactory={createWebsocketProvider}
-                        shouldBootstrap={true}
-                        username={multiplayerUsername}
-                      />
-                    ) : null}
-                    {children}
-                  </LexicalCollaboration>
-                </TKContext>
-              </InklingSelectedCardContext>
-            </InklingComposerContext.Provider>
-          </InklingUiPrefsContext.Provider>
-        </InklingCollaborationContext.Provider>
-      </InklingHostIntegrationContext.Provider>
+      <DragDropHandleContext.Provider value={dragDropHandle}>
+        <InklingHostIntegrationContext.Provider value={hostIntegrationValue}>
+          <InklingCollaborationContext.Provider value={collaborationValue}>
+            <InklingUiPrefsContext.Provider value={uiPrefsValue}>
+              <InklingComposerContext.Provider value={composerContextValue}>
+                <InklingSelectedCardContext>
+                  <TKContext>
+                    <LexicalCollaboration>
+                      {enableMultiplayer ? (
+                        <CollaborationPlugin
+                          id="main"
+                          initialEditorState={normalizedInitialEditorState}
+                          providerFactory={createWebsocketProvider}
+                          shouldBootstrap={true}
+                          username={multiplayerUsername}
+                        />
+                      ) : null}
+                      {children}
+                    </LexicalCollaboration>
+                  </TKContext>
+                </InklingSelectedCardContext>
+              </InklingComposerContext.Provider>
+            </InklingUiPrefsContext.Provider>
+          </InklingCollaborationContext.Provider>
+        </InklingHostIntegrationContext.Provider>
+      </DragDropHandleContext.Provider>
     </LexicalComposer>
   )
 }

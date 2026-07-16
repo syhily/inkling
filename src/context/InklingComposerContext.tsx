@@ -1,21 +1,15 @@
 import React from 'react'
 
-import type { DragDropHandler } from '@/utils/draggable/DragDropHandler'
-
-// Temporary home (plan 047) for the two per-composer channels that are not
-// context reads at all: the drag-drop handler/container element (installed by
-// mutating this value from DragDropReorderPlugin) and the word-count callback
-// ref (hand-rolled pub/sub between WordCountPlugin and InklingNestedComposer).
-// Steps 3 and 5 replace them with editor-side handles in the plan-038 store
-// shape; this module is deleted once both land.
+// Temporary home (plan 047) for the word-count callback channel: hand-rolled
+// pub/sub where the top-level WordCountPlugin writes .current in a layout
+// effect and InklingNestedComposer reads it during render. Step 5 replaces it
+// with an editor-side handle in the plan-038 store shape and deletes this
+// module.
 export interface InklingComposerContextValue {
-  editorContainerRef: React.RefObject<HTMLElement | null>
   onWordCountChangeRef: React.MutableRefObject<((count: number) => void) | null>
-  dragDropHandler?: DragDropHandler
 }
 
 const InklingComposerContext = React.createContext<InklingComposerContextValue>({
-  editorContainerRef: { current: null },
   onWordCountChangeRef: { current: null },
 })
 

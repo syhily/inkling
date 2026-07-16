@@ -36,6 +36,10 @@ _Avoid_: `$getNodeByKey` + `as GeneratedDecoratorNodeBase`
 The per-top-level-composer, editor-side store owning card-selection truth for non-React code: the selected card key and the edit-mode flag. Fed once by registerCardSelection, read synchronously by command handlers, subscribed to render-only by React via useCardSelection.
 _Avoid_: selection context, selection mirror, selected-card state
 
+**Composer handle**:
+A per-top-level-composer, editor-side channel in the card-selection-store shape (getState / setState(partial) / subscribe, reference-equality change guard, render-only useSyncExternalStore binding, one provider-created instance with a module-default fallback) for values non-React code must read synchronously. The drag-drop handle (src/plugins/behaviour/dragDropHandle.ts) owns the editor container element and the DragDropHandler: fed at mount by InklingComposableEditor and DragDropReorderPlugin, read synchronously by useCardDragAndDrop and useGalleryReorder — hooks register when the handler appears instead of relying on plugin-before-children mount order.
+_Avoid_: context mutation channel, shared ref
+
 **Upload intent**:
 The one media-upload flow module (src/utils/upload-intent.ts): file(s) plus per-card metadata extraction in, a typed node patch out through the card write seam, and the object-URL preview lifecycle created and revoked in one place. Each media card's upload is a configuration of these primitives — per-card variance (metadata extraction, empty-result policy, pre-upload src reset) stays per-card data, never a copied skeleton.
 _Avoid_: upload handler, upload helper

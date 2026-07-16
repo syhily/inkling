@@ -40,10 +40,7 @@ function createCollaborationValue() {
 }
 
 function createLegacyValue(onWordCountChangeRef: { current: ((count: number) => void) | null }) {
-  return {
-    editorContainerRef: { current: null },
-    onWordCountChangeRef,
-  }
+  return { onWordCountChangeRef }
 }
 
 function renderNestedComposer(onWordCountChangeRef: { current: ((count: number) => void) | null }) {

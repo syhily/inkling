@@ -3,7 +3,7 @@ import React from 'react'
 import type { GalleryImage } from '@/types/gallery'
 import type { DraggableInfo, DroppablePosition } from '@/utils/draggable/DragDropContainer'
 
-import InklingComposerContext from '@/context/InklingComposerContext'
+import { useDragDropState } from '@/hooks/useDragDropState'
 import { pick } from '@/utils'
 import { getImageFilenameFromSrc } from '@/utils/getImageFilenameFromSrc'
 
@@ -29,7 +29,7 @@ export default function useGalleryReorder({
   maxImages = 9,
   disabled = false,
 }: UseGalleryReorderOptions): UseGalleryReorderResult {
-  const inkling = React.useContext(InklingComposerContext)
+  const handler = useDragDropState((state) => state.handler)
 
   const [containerRef, setContainerRef] = React.useState<HTMLElement | null>(null)
   const [isDraggedOver, setIsDraggedOver] = React.useState<boolean>(false)
@@ -250,11 +250,11 @@ export default function useGalleryReorder({
   React.useEffect(() => {
     const galleryElem = containerRef
 
-    if (!galleryElem || !inkling?.dragDropHandler) {
+    if (!galleryElem || !handler) {
       return
     }
 
-    const container = inkling.dragDropHandler.registerContainer(galleryElem, {
+    const container = handler.registerContainer(galleryElem, {
       draggableSelector: '[data-image]',
       droppableSelector: '[data-image]',
       isDragEnabled: !disabled && images.length > 0,
@@ -282,7 +282,7 @@ export default function useGalleryReorder({
     // we want to be specific about when we want the drag/drop handler to
     // be set up or refreshed so we disable the exhaustive-deps rule here
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerRef, images, inkling.dragDropHandler])
+  }, [containerRef, images, handler])
 
   return { setContainerRef, isDraggedOver }
 }

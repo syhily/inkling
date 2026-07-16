@@ -2,8 +2,9 @@ import { act, renderHook } from '@testing-library/react'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import InklingComposerContext from '@/context/InklingComposerContext'
+import { DragDropHandleContext } from '@/context/DragDropHandleContext'
 import useCardDragAndDrop from '@/hooks/useCardDragAndDrop'
+import { createDragDropHandle } from '@/plugins/behaviour/dragDropHandle'
 
 const mockContainer = {
   enableDrag: vi.fn(),
@@ -17,21 +18,26 @@ const mockDragDropHandler = {
 }
 
 function makeWrapper(withHandler: boolean) {
-  const contextValue = withHandler ? { dragDropHandler: mockDragDropHandler } : {}
+  // a real handle instance; withHandler=false pins the silent no-op when the
+  // reorder plugin never publishes a handler
+  const dragDropHandle = createDragDropHandle()
+  if (withHandler) {
+    dragDropHandle.setState({ handler: mockDragDropHandler as never })
+  }
   return ({ children }: { children: React.ReactNode }) =>
-    React.createElement(
-      InklingComposerContext.Provider,
-      { value: contextValue as React.ContextType<typeof InklingComposerContext> },
-      children,
-    )
+    React.createElement(DragDropHandleContext.Provider, { value: dragDropHandle }, children)
 }
+
+// stable so the registration effect does not churn between rerenders — the
+// enable/disable pair can then be observed on the live container
+const stableCanDrop = () => true
 
 function renderDragAndDropHook({ withHandler = true }: { withHandler?: boolean } = {}) {
   return renderHook(
     ({ enabled }) =>
       useCardDragAndDrop({
         enabled,
-        canDrop: () => true,
+        canDrop: stableCanDrop,
         draggableSelector: '[data-draggable]',
         droppableSelector: '[data-droppable]',
       }),
@@ -44,7 +50,7 @@ describe('useCardDragAndDrop', () => {
     vi.clearAllMocks()
   })
 
-  it('never calls registerContainer when the context has no dragDropHandler', async () => {
+  it('never calls registerContainer when the handle has no handler', async () => {
     // the silent no-op when drag reorder is disabled: the plugin that installs
     // the handler never mounts, so the hook does nothing for the editor's
     // lifetime

@@ -14,9 +14,10 @@ import { createRoot, type Root } from 'react-dom/client'
 
 import type { CardNode } from '@/types/lexical-internals'
 
-import InklingComposerContext from '@/context/InklingComposerContext'
+import { useDragDropHandle } from '@/context/DragDropHandleContext'
 import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
+import { useDragDropState } from '@/hooks/useDragDropState'
 import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { $createImageNode } from '@/nodes/ImageNode'
 import { type DraggableInfo, type DroppablePosition } from '@/utils/draggable/DragDropContainer'
@@ -32,7 +33,8 @@ interface DragPreviewElement extends HTMLDivElement {
 }
 
 function useDragDropReorder(editor: LexicalEditor): void {
-  const inkling = React.useContext(InklingComposerContext)
+  const dragDropHandle = useDragDropHandle()
+  const containerElement = useDragDropState((state) => state.containerElement)
   const { setIsDragging } = useInklingSelectedCardContext()
   const isEditingCard = useCardSelection((state) => state.isEditingCard)
 
@@ -254,16 +256,19 @@ function useDragDropReorder(editor: LexicalEditor): void {
   })
 
   React.useEffect(() => {
-    const container = inkling.editorContainerRef?.current
-    if (!container) {
+    if (!containerElement) {
       return
     }
     const dndHandler = new DragDropHandler({
-      editorContainerElement: container,
+      editorContainerElement: containerElement,
     })
-    inkling.dragDropHandler = dndHandler
+    // publish the handler so the card drag hooks register against it — they
+    // subscribe to the handle, so a hook whose registration effect ran before
+    // this one registers as soon as the handler appears (no mount-order
+    // dependency)
+    dragDropHandle.setState({ handler: dndHandler })
 
-    cardContainer.current = inkling.dragDropHandler.registerContainer(editor.getRootElement() as HTMLElement, {
+    cardContainer.current = dndHandler.registerContainer(editor.getRootElement() as HTMLElement, {
       draggableSelector: ':scope > div', // cards
       droppableSelector: ':scope > *', // all block elements
       onDragStart: onDragStart.current,
@@ -282,10 +287,10 @@ function useDragDropReorder(editor: LexicalEditor): void {
 
     return () => {
       cardContainer.current = null
-      inkling.dragDropHandler?.destroy()
-      delete inkling.dragDropHandler
+      dragDropHandle.setState({ handler: null })
+      dndHandler.destroy()
     }
-  }, [editor, inkling])
+  }, [editor, containerElement, dragDropHandle])
 
   React.useEffect(() => {
     return editor.registerUpdateListener(({ dirtyElements, editorState }) => {

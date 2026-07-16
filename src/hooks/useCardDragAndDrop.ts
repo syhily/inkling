@@ -2,7 +2,7 @@ import React from 'react'
 
 import type { DraggableInfo, DroppablePosition } from '@/utils/draggable/DragDropContainer'
 
-import InklingComposerContext from '@/context/InklingComposerContext'
+import { useDragDropState } from '@/hooks/useDragDropState'
 
 export interface UseCardDragAndDropOptions {
   enabled?: boolean
@@ -32,7 +32,7 @@ export default function useCardDragAndDrop({
   draggableSelector,
   droppableSelector,
 }: UseCardDragAndDropOptions): UseCardDragAndDropResult {
-  const inkling = React.useContext(InklingComposerContext)
+  const handler = useDragDropState((state) => state.handler)
 
   const [containerRef, setContainerRef] = React.useState<HTMLElement | null>(null)
   const [isDraggedOver, setIsDraggedOver] = React.useState<boolean>(false)
@@ -109,11 +109,11 @@ export default function useCardDragAndDrop({
   }, [enabled, containerRef])
 
   React.useEffect(() => {
-    if (!containerRef || !inkling?.dragDropHandler) {
+    if (!containerRef || !handler) {
       return
     }
 
-    const container = inkling.dragDropHandler.registerContainer(containerRef, {
+    const container = handler.registerContainer(containerRef, {
       draggableSelector,
       droppableSelector,
       isDragEnabled: enabled,
@@ -131,6 +131,18 @@ export default function useCardDragAndDrop({
     })
     // oxlint-disable-next-line typescript/no-explicit-any
     dragDropContainer.current = container as any
+
+    // unregister on handler swap/unmount; calling destroy() after the handler
+    // itself was destroyed is harmless (DragDropHandler disables and filters)
+    return () => {
+      container.destroy()
+      dragDropContainer.current = null
+    }
+    // `enabled` is intentionally excluded from the deps: toggles flow through
+    // the enable/disable effect pair above (mirroring useGalleryReorder), and
+    // a re-registration always reads the latest enabled from the render
+    // closure
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [
     _getDraggableInfo,
     _getIndicatorPosition,
@@ -139,8 +151,7 @@ export default function useCardDragAndDrop({
     containerRef,
     draggableSelector,
     droppableSelector,
-    enabled,
-    inkling?.dragDropHandler,
+    handler,
     onDragEnd,
     onDragEnterContainer,
     onDragLeaveContainer,

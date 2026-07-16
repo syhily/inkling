@@ -15,7 +15,7 @@ import type { ExternalControlAPI } from '@/plugins/ExternalControlPlugin'
 
 import InklingErrorBoundary from '@/components/InklingErrorBoundary'
 import { EditorPlaceholder } from '@/components/ui/EditorPlaceholder'
-import InklingComposerContext from '@/context/InklingComposerContext'
+import { useDragDropHandle } from '@/context/DragDropHandleContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useSharedHistoryContext } from '@/context/SharedHistoryContext'
 import { useSharedOnChangeContext } from '@/context/SharedOnChangeContext'
@@ -78,8 +78,8 @@ const InklingComposableEditor = ({
   const { historyState } = useSharedHistoryContext()
   const [editor] = useLexicalComposerContext()
   const { isCollabActive } = useCollaborationContext()
-  const { editorContainerRef } = React.useContext(InklingComposerContext)
   const { darkMode, isTKEnabled } = React.useContext(InklingUiPrefsContext)
+  const dragDropHandle = useDragDropHandle()
 
   const parentEditor = getParentEditor(editor)
   const isNested = parentEditor !== null
@@ -107,11 +107,20 @@ const InklingComposableEditor = ({
     [onChange, sharedOnChange, editor, parentEditor],
   )
 
-  const onWrapperRef = (wrapperElem: HTMLElement | null) => {
-    if (!isNested) {
-      ;(editorContainerRef as React.MutableRefObject<HTMLElement | null>).current = wrapperElem
-    }
-  }
+  // local ref for InklingBehaviourPlugin; the same wrapper element feeds the
+  // drag-drop handle so the reorder plugin and the card drag hooks can reach
+  // it without a shared mutable context ref. useCallback keeps the ref
+  // identity stable so React attaches it once instead of on every render.
+  const editorContainerRef = React.useRef<HTMLElement | null>(null)
+  const onWrapperRef = React.useCallback(
+    (wrapperElem: HTMLElement | null) => {
+      if (!isNested) {
+        editorContainerRef.current = wrapperElem
+        dragDropHandle.setState({ containerElement: wrapperElem })
+      }
+    },
+    [isNested, dragDropHandle],
+  )
 
   // we need an element reference for the container element that
   // any floating elements in plugins will be rendered inside

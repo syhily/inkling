@@ -58,7 +58,7 @@ describe('InklingUiPrefsContext', () => {
   })
 })
 
-// legacy module — plan 047 deletes it once steps 3/5 land the handles
+// legacy module — plan 047 deletes it once step 5 lands the word-count handle
 describe('InklingComposerContext', () => {
   it('provides the default context value', () => {
     let captured: typeof InklingComposerContext extends React.Context<infer V> ? V : never
@@ -70,7 +70,7 @@ describe('InklingComposerContext', () => {
 
     render(<Consumer />)
 
-    expect(captured!.dragDropHandler).toBeUndefined()
+    expect(captured!.onWordCountChangeRef.current).toBeNull()
   })
 })
 
