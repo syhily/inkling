@@ -124,5 +124,3 @@ export function CardActionToolbar({
     </>
   )
 }
-
-export default CardActionToolbar

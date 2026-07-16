@@ -340,10 +340,11 @@ describe('GalleryNodeComponent', () => {
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 
-      // gallery is the one card whose menu toolbar does not gate on the
-      // snippet state, so assert only that the snippet input opened
+      // the menu toolbar unmounts while the snippet input is open (plan 046)
       const toolbars = getToolbars(container)
-      expect(Array.from(toolbars).some((toolbar) => toolbar.querySelector('[data-testid="snippet-name"]'))).toBe(true)
+      expect(toolbars).toHaveLength(1)
+      expect(toolbars[0].querySelector('ul')).toBeNull()
+      expect(toolbars[0].querySelector('[data-testid="snippet-name"]')).toBeTruthy()
     })
   })
 })
