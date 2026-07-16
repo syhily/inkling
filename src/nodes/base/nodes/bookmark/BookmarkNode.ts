@@ -30,6 +30,35 @@ export interface BookmarkNode {
   thumbnail: string
 }
 
+const BOOKMARK_METADATA_KEYS: readonly string[] = new Set([
+  'icon',
+  'title',
+  'description',
+  'author',
+  'publisher',
+  'thumbnail',
+])
+
+function isBookmarkMetadataKey(key: string): key is keyof BookmarkMetadata {
+  return BOOKMARK_METADATA_KEYS.has(key)
+}
+
+// importJSON receives untrusted JSON: keep only the string fields the
+// BookmarkMetadata shape declares instead of asserting the whole payload
+function asBookmarkMetadata(value: unknown): BookmarkMetadata | undefined {
+  if (typeof value !== 'object' || value === null) {
+    return undefined
+  }
+
+  const metadata: BookmarkMetadata = {}
+  for (const [key, field] of Object.entries(value)) {
+    if (isBookmarkMetadataKey(key) && typeof field === 'string') {
+      metadata[key] = field
+    }
+  }
+  return metadata
+}
+
 const bookmarkProperties = [
   { name: 'title', default: '', wordCount: true },
   { name: 'description', default: '', wordCount: true },
@@ -46,6 +75,19 @@ export class BookmarkNode extends generateDecoratorNode({
   properties: bookmarkProperties,
   defaultRenderFn: renderBookmarkNode,
 }) {
+  // the generated class exposes the backing fields through its index
+  // signature as unknown; the constructor below initializes all of them to
+  // strings, so declare them (the ImageNode.__previewSrc idiom) and the
+  // getDataset reads need no casts
+  declare __title: string
+  declare __description: string
+  declare __url: string
+  declare __caption: string
+  declare __author: string
+  declare __publisher: string
+  declare __icon: string
+  declare __thumbnail: string
+
   static importDOM() {
     return parseBookmarkNode(this)
   }
@@ -72,26 +114,26 @@ export class BookmarkNode extends generateDecoratorNode({
     // appendNestedEditorDataset adds the caption editor keys for wrapper
     // subclasses that adopt a `nestedEditors` spec; a no-op on this class
     return this.appendNestedEditorDataset({
-      url: self.__url as string,
+      url: self.__url,
       metadata: {
-        icon: self.__icon as string,
-        title: self.__title as string,
-        description: self.__description as string,
-        author: self.__author as string,
-        publisher: self.__publisher as string,
-        thumbnail: self.__thumbnail as string,
+        icon: self.__icon,
+        title: self.__title,
+        description: self.__description,
+        author: self.__author,
+        publisher: self.__publisher,
+        thumbnail: self.__thumbnail,
       },
-      caption: self.__caption as string,
+      caption: self.__caption,
     })
   }
 
   /* @override */
   static importJSON(serializedNode: Record<string, unknown>) {
-    const { url, metadata, caption } = serializedNode as BookmarkData
+    const { url, metadata, caption } = serializedNode
     const node = new this({
-      url,
-      metadata,
-      caption,
+      url: typeof url === 'string' ? url : '',
+      metadata: asBookmarkMetadata(metadata),
+      caption: typeof caption === 'string' ? caption : '',
     })
     return node
   }
