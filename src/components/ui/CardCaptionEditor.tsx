@@ -7,7 +7,7 @@ import { TextInput } from '@/components/ui/TextInput'
 import { isEditorEmpty } from '@/utils/isEditorEmpty'
 
 interface CaptionInputProps {
-  captionEditor: LexicalEditor | null
+  captionEditor: LexicalEditor
   captionEditorInitialState?: EditorState
   placeholder?: string
   dataTestId?: string
@@ -17,7 +17,7 @@ function CaptionInput({ captionEditor, captionEditorInitialState, placeholder, d
   return (
     <div className={`m-0 w-full px-9 text-center`} data-testid={dataTestId} data-inkling-allow-clickthrough>
       <InklingCaptionEditor
-        captionEditor={captionEditor!}
+        captionEditor={captionEditor}
         captionEditorInitialState={captionEditorInitialState}
         placeholderText={placeholder}
       />
@@ -109,7 +109,13 @@ export function CardCaptionEditor({
     }
   }, [isSelected, setIsEditingAlt])
 
-  const isCaptionEmpty = isEditorEmpty(captionEditor!)
+  // callers pass `captionEditor ?? null` when the node hasn't created its
+  // nested editor yet — there is nothing to render without one
+  if (!captionEditor) {
+    return null
+  }
+
+  const isCaptionEmpty = isEditorEmpty(captionEditor)
   const showAltToggle = setAltText && isSelected
 
   return (
