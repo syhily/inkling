@@ -17,14 +17,14 @@ The work was performed directly on local `main`; nothing was pushed and no branc
 4. **Fixed.** `URLSearchParams` is supplied directly to router setters.
 5. **Fixed.** Deleted unreachable file-extension compatibility branches and their double assertion.
 6. **Fixed.** `isFileTypeKey` proves a runtime file-type key before indexing the config.
-7. **Fixed.** Declared the three demo Vite environment values explicitly.
-8. **Fixed.** Stored snippets are JSON-parsed as `unknown`, array-checked, item-validated, and malformed input falls back to `[]`.
+7. **Fixed.** Declared the three demo Vite environment values globally with Vite's strict env-key option.
+8. **Fixed.** Stored snippets are JSON-parsed as `unknown`, array-checked, validated as exported `SnippetItem` values, and malformed input falls back to `[]`.
 9. **Fixed.** Local search-link result copies were replaced with exported `SearchResult`.
 10. **Fixed.** The toggle consumes react-router's exported `SetURLSearchParams`.
 11. **Fixed.** Demo upload results honestly include optional `fileName`.
 12. **Fixed.** The collapsed `keyof FileTypes | string` input is simply `string` and guarded at runtime.
 13. **Fixed.** Removed all three redundant `FileUploader` assertions; the main host declares a `FileUploader` value.
-14. **Fixed.** Removed dead embed no-op/falsy-URL scaffolding while retaining URL validation.
+14. **Fixed.** Removed dead embed no-op/falsy-URL scaffolding while retaining URL validation and consuming exported Bookmark contracts.
 15. **Fixed.** All editor click handlers narrow `event.target` with `instanceof Element`.
 16. **Fixed.** Title keyboard handling uses React's typed `currentTarget`.
 17. **Fixed.** Removed unwired title refs and no-op focus callbacks from the HTML/restricted demos.
@@ -72,8 +72,22 @@ Known non-scope gate evidence:
 - `demo/components/{DesignSandbox,InitialContentToggle,Navigator,Sidebar,TitleTextBox,TreeView,Watermark}.tsx`
 - `demo/types/vite-env.d.ts`
 - `demo/utils/{fetchEmbed,useFileUpload,useSnippets}.ts`
+- `test/typecheck/{demo-env-contract,demo-host-contracts}.ts`
 - `test/unit/demo/useSnippets.test.tsx`
 
 ## Self-review and concerns
 
 `rg` confirms no remaining demo-local `EditorAPI`/`EditorInstance`, public-contract casts, dead `introContent`, TreeView prop, or conversion double assertion. The code uses only exported host contracts and runtime narrowing for browser inputs. The only concerns are the reproducible non-scope RestrictContent e2e assertion mismatch and the full-unit Vitest worker OOM described above.
+
+## Review remediation
+
+Remediation commit: `7034d8a` — `fix(demo): globalize host contract declarations`.
+
+- **ImportMeta globals:** `demo/types/vite-env.d.ts` remains a module for the React augmentation, but `ViteTypeOptions`, `ImportMetaEnv`, and `ImportMeta` now live inside `declare global`. `strictImportMetaEnv: unknown` removes Vite's unknown-key fallback.
+- **Env RED:** the focused `test/typecheck/demo-env-contract.ts` probe initially failed `pnpm typecheck` because `VITE_TENOR_API_KEY` was not exactly `string | undefined` and `VITE_TENOR_API_KEY_TYPO` remained in `keyof ImportMetaEnv`.
+- **Env GREEN:** after the global/strict declaration fix, both assertions compile and `pnpm typecheck` passes. Consequently `gifConfig.ts` reads `VITE_TENOR_API_KEY` and `VITE_KLIPY_API_KEY` as `string | undefined`, not `any`.
+- **Public host contracts:** `useSnippets.ts` imports exported `SnippetItem`; `fetchEmbed.ts` imports exported `BookmarkEmbedOptions` and `BookmarkEmbedResponse`. There is no layering cycle: demo code already consumes the public `@/` barrel, and `src/index.ts` has no dependency on `demo/**`.
+- **Host-contract fixture:** `test/typecheck/demo-host-contracts.ts` checks the hook's exposed snippets are exactly `SnippetItem[]`, the embed helper accepts `BookmarkEmbedOptions`, and its awaited non-null response union includes `BookmarkEmbedResponse`.
+- **Focused GREEN:** snippets 1/1; Bookmark e2e 14/14.
+- **Remediation gates:** `pnpm typecheck`, `pnpm lint` (zero warnings), `pnpm lint:css`, `pnpm format:check`, `pnpm build:demo` (751 modules), `pnpm build`, `pnpm verify:package` (64 ESM/CJS exports), and `pnpm verify:types` all pass.
+- **Full unit status:** not rerun during remediation. The previously recorded 4 GiB and 8 GiB worker OOM evidence remains the honest final status.
