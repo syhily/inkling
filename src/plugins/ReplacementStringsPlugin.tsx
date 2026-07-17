@@ -1,16 +1,15 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { TextNode } from 'lexical'
+import { type LexicalEditor, TextNode } from 'lexical'
 import { useEffect } from 'react'
 
 import { ExtendedTextNode } from '@/nodes/base'
 
-function replacementStringTransform(node: import('lexical').TextNode) {
+function replacementStringTransform(node: TextNode) {
   if (node.hasFormat('code')) {
     // prevent infinite loop
     return
   }
   const textContent = node.getTextContent()
-  // const replacementString = textContent.match(/{.*?}/)?.[0];
   const replacementString = textContent.match(/\{(\w*?)(?:,? *"(.*?)")?\}/)?.[0]
 
   if (!replacementString) {
@@ -31,7 +30,7 @@ function replacementStringTransform(node: import('lexical').TextNode) {
   node.remove()
 }
 
-function useReplacementStrings(editor: import('lexical').LexicalEditor) {
+function useReplacementStrings(editor: LexicalEditor) {
   useEffect(() => {
     const removeTextTransform = editor.registerNodeTransform(TextNode, replacementStringTransform)
 
