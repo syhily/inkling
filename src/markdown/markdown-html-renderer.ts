@@ -26,6 +26,11 @@ interface RenderOptions {
   inklingVersion?: string
 }
 
+// The named-headers dedup map carried on the per-render env: slug → count.
+function isUsedHeaders(value: unknown): value is Record<string, number> {
+  return typeof value === 'object' && value !== null && Object.values(value).every((count) => typeof count === 'number')
+}
+
 const namedHeaders = function ({ inklingVersion }: RenderOptions = {}) {
   const generateSlug = function (inputString: string, usedHeaders: Record<string, number>) {
     let slug = slugify(inputString, { inklingVersion, type: 'markdown' })
@@ -47,15 +52,22 @@ const namedHeaders = function ({ inklingVersion }: RenderOptions = {}) {
       tokens: Token[],
       idx: number,
       options: Options,
-      env: unknown,
+      env: Record<string, unknown>,
       self: Renderer,
     ) {
       // Dedup state must live on the per-render `env` (markdown-it creates a
       // fresh env object for every render() call) — keeping it in a closure
       // would leak heading ids across renders of the cached MarkdownIt
-      // instance, while a fresh object per heading would never dedupe.
-      const renderEnv = (env ?? {}) as { usedHeaders?: Record<string, number> }
-      const usedHeaders = (renderEnv.usedHeaders ??= {})
+      // instance, while a fresh object per heading would never dedupe. The
+      // slot is validated rather than asserted: env is caller-controlled, so
+      // a foreign value must reset the map instead of corrupting it.
+      let usedHeaders: Record<string, number>
+      if (isUsedHeaders(env.usedHeaders)) {
+        usedHeaders = env.usedHeaders
+      } else {
+        usedHeaders = {}
+        env.usedHeaders = usedHeaders
+      }
 
       tokens[idx].attrs = tokens[idx].attrs || []
       const title = tokens[idx + 1].children!.reduce(function (acc: string, t: Token) {
