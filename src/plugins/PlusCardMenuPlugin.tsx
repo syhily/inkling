@@ -1,5 +1,12 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getSelection, $isParagraphNode, $isRangeSelection, $setSelection, type LexicalEditor } from 'lexical'
+import {
+  $getSelection,
+  $isParagraphNode,
+  $isRangeSelection,
+  $setSelection,
+  type LexicalCommand,
+  type LexicalEditor,
+} from 'lexical'
 import React from 'react'
 
 import { CardMenu } from '@/components/ui/CardMenu'
@@ -124,9 +131,14 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
   }, [editor, showButton, hideButton])
 
   const insert = React.useCallback(
-    (insertCommand: unknown, { insertParams = {} } = {}): void => {
+    (insertCommand: unknown, { insertParams = {} }: { insertParams?: Record<string, unknown> } = {}): void => {
       const commandParams = { ...insertParams }
-      editor.dispatchCommand(insertCommand as Parameters<typeof editor.dispatchCommand>[0], commandParams)
+      // deliberate boundary: the card menu is a heterogeneous registry of
+      // command/payload pairs built from each node's static `cardMenu`, so
+      // the specific payload type is erased here (same boundary as
+      // SlashCardMenuPlugin). Each plugin handler re-narrows the payload
+      // with its own dataset type guard.
+      editor.dispatchCommand(insertCommand as LexicalCommand<unknown>, commandParams)
       closeMenu()
     },
     [editor, closeMenu],
@@ -142,7 +154,7 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
     if (isShowingButton) {
       const nativeSelection = window.getSelection()
 
-      if (isShowingMenu && containerRef.current?.contains(nativeSelection?.anchorNode as Node)) {
+      if (isShowingMenu && containerRef.current?.contains(nativeSelection?.anchorNode ?? null)) {
         return
       }
 
@@ -251,14 +263,14 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
     top: `${topPosition}px`,
   }
 
-  if (cardMenu.menu?.size === 0) {
+  if (cardMenu.menu.size === 0) {
     return null
   }
 
   if (isShowingButton) {
     return (
       <div ref={containerRef} className="absolute z-50" style={style} data-inkling-plus-container>
-        {isShowingButton && <PlusButton onClick={openMenu} />}
+        <PlusButton onClick={openMenu} />
         {isShowingMenu && (
           <PlusMenu>
             <CardMenu closeMenu={closeMenu} insert={insert} menu={cardMenu.menu} />
