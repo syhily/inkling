@@ -111,7 +111,11 @@ const snippetSettings: SnippetSettings = {
 }
 const linkingSettings: LinkingSettings = {
   fetchAutocompleteLinks: () => Promise.resolve(undefined),
-  fetchEmbed: (href, opts) => Promise.resolve({ href, opts }),
+  fetchEmbed: (href) =>
+    Promise.resolve({
+      url: href,
+      metadata: { author: '', icon: '', title: '', description: '', publisher: '', thumbnail: '' },
+    }),
   searchLinks: (term) => Promise.resolve(term ? [] : undefined),
   siteUrl: 'https://example.com',
 }

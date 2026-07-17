@@ -48,7 +48,7 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const [editor] = useLexicalComposerContext()
   const [cardType, setCardType] = React.useState<string | null>(null)
-  const [captionHasFocus, setCaptionHasFocus] = React.useState<boolean | null>(null)
+  const [captionHasFocus, setCaptionHasFocus] = React.useState(false)
   const normalizedWidth = width ?? 'regular'
   const [cardWidth, setCardWidth] = React.useState<CardWidth>(normalizedWidth)
   const containerRef = React.useRef<HTMLDivElement | null>(null)
@@ -212,11 +212,10 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
       setCaptionHasFocus,
       setEditing,
       nodeKey,
-      cardContainerRef: containerRef,
     }),
     // setState dispatchers are stable and do not need to be listed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isSelected, captionHasFocus, isEditing, cardWidth, nodeKey, containerRef],
+    [isSelected, captionHasFocus, isEditing, cardWidth, nodeKey],
   )
 
   return (

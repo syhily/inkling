@@ -26,10 +26,9 @@ function createCardContext(overrides: Partial<React.ContextType<typeof CardConte
   return {
     isSelected: true,
     isEditing: false,
-    captionHasFocus: null,
+    captionHasFocus: false,
     cardWidth: 'regular',
     nodeKey: 'header-1',
-    cardContainerRef: { current: null } as React.RefObject<HTMLElement | null>,
     setCardWidth: vi.fn(),
     setCaptionHasFocus: vi.fn(),
     setEditing: vi.fn(),

@@ -11,6 +11,8 @@ import {
 } from 'lexical'
 import React, { useCallback } from 'react'
 
+import type { BookmarkEmbedResponse } from '@/context/InklingHostIntegrationContext'
+
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
 import CardContext from '@/context/CardContext'
@@ -33,22 +35,9 @@ interface BookmarkNodeComponentProps {
   createdWithUrl?: boolean
 }
 
-interface EmbedResponse {
-  url: string
-  metadata: {
-    author: string
-    icon: string
-    title: string
-    description: string
-    publisher: string
-    thumbnail: string
-  }
-}
-
-// The host's fetchEmbed contract returns `unknown` — validate the shape before
-// writing its fields into the node; a malformed response takes the urlError
-// path instead of throwing inside editor.update
-function isEmbedResponse(value: unknown): value is EmbedResponse {
+// Keep the runtime boundary defensive for untyped JavaScript hosts even though
+// TypeScript hosts now receive the closed bookmark response contract.
+function isEmbedResponse(value: unknown): value is BookmarkEmbedResponse {
   if (typeof value !== 'object' || value === null) {
     return false
   }
@@ -175,7 +164,7 @@ export function BookmarkNodeComponent({
   const fetchMetadata = async (href: string): Promise<void> => {
     editor.getRootElement()?.focus({ preventScroll: true }) // focus editor before causing the input element to dismount
     setLoading(true)
-    let response: unknown
+    let response: BookmarkEmbedResponse | undefined
     try {
       // set the test data return values in fetchEmbed.js
       response = await cardConfig.fetchEmbed?.(href, { type: 'bookmark' })
@@ -205,7 +194,7 @@ export function BookmarkNodeComponent({
 
   const fetchMetadataEffect = useCallback(async () => {
     setLoading(true)
-    let response: unknown
+    let response: BookmarkEmbedResponse | undefined
     try {
       // set the test data return values in fetchEmbed.js
       response = await cardConfig.fetchEmbed?.(url, { type: 'bookmark' })

@@ -62,6 +62,8 @@ export type { ExternalControlAPI } from '@/plugins/ExternalControlPlugin'
 /* Host-facing config types: the shapes a host names when wiring
  * <InklingComposer cardConfig={...} fileUploader={...}> and its callbacks. */
 export type {
+  BookmarkEmbedOptions,
+  BookmarkEmbedResponse,
   CardConfig,
   FileUploader,
   FileUploaderInput,
@@ -73,6 +75,7 @@ export type {
   VisibilitySettings,
 } from '@/context/InklingHostIntegrationContext'
 export type { ListOptionItem, SearchResult } from '@/hooks/useSearchLinks'
+export type { PinturaConfig } from '@/hooks/usePinturaEditor'
 
 export type { AudioNodeDataset } from '@/nodes/AudioNode'
 export { INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'

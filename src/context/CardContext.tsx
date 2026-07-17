@@ -7,10 +7,9 @@ import type { CardWidth } from '@/nodes/base/utils/card-widths'
 export interface CardContextValue {
   isSelected: boolean
   isEditing: boolean
-  captionHasFocus: boolean | null
+  captionHasFocus: boolean
   cardWidth: CardWidth
   nodeKey: NodeKey | undefined
-  cardContainerRef: React.RefObject<HTMLElement | null>
   setCardWidth: (width: CardWidth) => void
   setCaptionHasFocus: (focused: boolean) => void
   setEditing: (shouldEdit: boolean) => void
@@ -19,10 +18,9 @@ export interface CardContextValue {
 const CardContext = React.createContext<CardContextValue>({
   isSelected: false,
   isEditing: false,
-  captionHasFocus: null,
+  captionHasFocus: false,
   cardWidth: 'regular',
   nodeKey: undefined,
-  cardContainerRef: { current: null },
   setCardWidth: () => {},
   setCaptionHasFocus: () => {},
   setEditing: () => {},

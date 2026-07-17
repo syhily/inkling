@@ -45,10 +45,9 @@ function createCardContextValue(overrides: Record<string, unknown> = {}) {
   return {
     isSelected: false,
     isEditing: false,
-    captionHasFocus: null,
+    captionHasFocus: false,
     cardWidth: 'regular',
     nodeKey: undefined,
-    cardContainerRef: { current: null },
     setCardWidth: vi.fn(),
     setCaptionHasFocus: vi.fn(),
     setEditing: vi.fn(),

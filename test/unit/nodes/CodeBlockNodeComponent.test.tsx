@@ -25,10 +25,9 @@ function createCardContext(setEditing: () => void, overrides: Record<string, unk
   return {
     isSelected: true,
     isEditing: false,
-    captionHasFocus: null,
+    captionHasFocus: false,
     cardWidth: 'regular',
     nodeKey: 'code-1',
-    cardContainerRef: { current: null } as React.RefObject<HTMLElement | null>,
     setCardWidth: vi.fn(),
     setCaptionHasFocus: vi.fn(),
     setEditing,

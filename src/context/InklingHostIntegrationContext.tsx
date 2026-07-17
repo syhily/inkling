@@ -43,11 +43,27 @@ export interface SnippetSettings {
   deleteSnippet?: (args: SnippetItem) => void | Promise<void>
 }
 
+export interface BookmarkEmbedOptions {
+  type: 'bookmark'
+}
+
+export interface BookmarkEmbedResponse {
+  url: string
+  metadata: {
+    author: string
+    icon: string
+    title: string
+    description: string
+    publisher: string
+    thumbnail: string
+  }
+}
+
 export interface LinkingSettings {
   searchLinks?: (term?: string) => Promise<SearchResult[] | undefined>
   fetchAutocompleteLinks?: () => Promise<ListOptionItem[] | undefined>
   siteUrl?: string
-  fetchEmbed?: (href: string, opts: object) => Promise<unknown>
+  fetchEmbed?: (href: string, options: BookmarkEmbedOptions) => Promise<BookmarkEmbedResponse | undefined>
 }
 
 export interface VisibilitySettings {

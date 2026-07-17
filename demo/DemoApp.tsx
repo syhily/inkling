@@ -78,7 +78,10 @@ const WEBSOCKET_ENDPOINT = params.get('multiplayerEndpoint') || 'ws://localhost:
 const WEBSOCKET_ID = params.get('multiplayerId') || '0'
 
 const defaultCardConfig: CardConfig = {
-  fetchEmbed: fetchEmbed,
+  fetchEmbed: async (href, options) => {
+    const response = await fetchEmbed(href, options)
+    return response && 'metadata' in response ? response : undefined
+  },
   tenor: tenorConfig ?? undefined,
   klipy: klipyConfig ?? undefined,
   fetchAutocompleteLinks: () =>

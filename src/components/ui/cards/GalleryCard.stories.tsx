@@ -57,10 +57,9 @@ function GalleryCardStory({
     () => ({
       isSelected,
       isEditing,
-      captionHasFocus: null,
+      captionHasFocus: false,
       cardWidth: 'regular' as const,
       nodeKey: undefined,
-      cardContainerRef: { current: null },
       setCardWidth: () => {},
       setCaptionHasFocus: () => {},
       setEditing: () => {},

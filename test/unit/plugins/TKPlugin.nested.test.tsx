@@ -15,10 +15,9 @@ const NESTED_NODES = [ExtendedTextNode, extendedTextNodeReplacement, TKNode]
 const cardContextValue = {
   isSelected: false,
   isEditing: false,
-  captionHasFocus: null,
+  captionHasFocus: false,
   cardWidth: 'regular',
   nodeKey: 'card-1',
-  cardContainerRef: { current: null },
   setCardWidth: () => {},
   setCaptionHasFocus: () => {},
   setEditing: () => {},
