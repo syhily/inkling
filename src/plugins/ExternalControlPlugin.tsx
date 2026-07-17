@@ -9,7 +9,7 @@ import { $selectDecoratorNode } from '@/utils/$selectDecoratorNode'
 export interface ExternalControlAPI {
   editorInstance: ReturnType<typeof useLexicalComposerContext>[0]
   serialize: () => string
-  editorIsEmpty: () => boolean | undefined
+  editorIsEmpty: () => boolean
   focusEditor: (options?: { position?: 'top' | 'bottom' }) => void
   blurEditor: () => void
   insertParagraphAtTop: (options?: { focus?: boolean }) => void
