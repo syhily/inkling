@@ -39,7 +39,7 @@ export interface InklingComposableEditorProps {
   registerAPI?: (api: ExternalControlAPI | null) => void
   cursorDidExitAtTop?: () => void
   children?: React.ReactNode
-  placeholder?: React.ReactNode
+  placeholder?: React.ReactElement
   singleParagraph?: boolean
   placeholderText?: string
   placeholderClassName?: string
@@ -143,11 +143,7 @@ const InklingComposableEditor = ({
           </div>
         }
         ErrorBoundary={InklingErrorBoundary}
-        placeholder={
-          (placeholder || (
-            <EditorPlaceholder className={placeholderClassName} text={placeholderText} />
-          )) as React.ReactElement
-        }
+        placeholder={placeholder || <EditorPlaceholder className={placeholderClassName} text={placeholderText} />}
       />
       <LinkPlugin />
       <OnChangePlugin ignoreHistoryMergeTagChange={false} ignoreSelectionChange={true} onChange={_onChange} />

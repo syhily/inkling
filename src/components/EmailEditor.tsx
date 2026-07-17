@@ -35,18 +35,22 @@ const ALLOWED_EMAIL_EDITOR_VISIBILITY = new Set([VISIBILITY_SETTINGS.EMAIL_ONLY,
 // `visibilitySettings` to the email-safe set and force-sets `image.allowedWidths`
 // and the write-only `editorType` merge output (pinned by
 // test/unit/EmailEditor.test.ts; read nowhere — kept for runtime tolerance).
+// Plan 048 deliberately keeps the `...cardConfig` spread-through for legacy
+// bags, so the return type admits the arbitrary keys the runtime carries.
 export function getEmailEditorCardConfig(cardConfig: Record<string, unknown> = {}): CardConfig & {
   editorType: string
-} {
-  const visibilitySettings = ALLOWED_EMAIL_EDITOR_VISIBILITY.has(cardConfig.visibilitySettings as string)
-    ? (cardConfig.visibilitySettings as string)
-    : EMAIL_EDITOR_CARD_CONFIG.visibilitySettings
+} & Record<string, unknown> {
+  const visibilitySettings =
+    typeof cardConfig.visibilitySettings === 'string' &&
+    ALLOWED_EMAIL_EDITOR_VISIBILITY.has(cardConfig.visibilitySettings)
+      ? cardConfig.visibilitySettings
+      : EMAIL_EDITOR_CARD_CONFIG.visibilitySettings
 
   return {
     ...cardConfig,
     editorType: EMAIL_EDITOR_CARD_CONFIG.editorType,
     image: {
-      ...(cardConfig.image as Record<string, unknown>),
+      ...(typeof cardConfig.image === 'object' && cardConfig.image !== null ? cardConfig.image : {}),
       ...EMAIL_EDITOR_CARD_CONFIG.image,
     },
     visibilitySettings,
