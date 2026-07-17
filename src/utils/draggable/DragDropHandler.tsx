@@ -28,7 +28,14 @@ export class DragDropHandler {
   editorContainerElement: HTMLElement | null = null
   containers: DragDropContainer[] = []
   draggableInfo: DraggableInfo | null = null
-  dragPreviewInfo: { element: HTMLElement; positionX: number; positionY: number } | null = null
+  // the card drag producer (DragDropReorderPlugin) renders the preview icon
+  // with a React root and stashes it on the element — an honest optional
+  // expando, unmounted here on reset
+  dragPreviewInfo: {
+    element: HTMLElement & { __reactRoot?: { unmount: () => void } }
+    positionX: number
+    positionY: number
+  } | null = null
   grabbedElement: HTMLElement | null = null
   scrollHandler: ScrollHandler | null = null
   sourceContainer: DragDropContainer | null = null
@@ -578,10 +585,7 @@ export class DragDropHandler {
     this.sourceContainer = null
 
     if (this.dragPreviewInfo) {
-      // oxlint-disable-next-line typescript/no-explicit-any
-      const reactRoot = (this.dragPreviewInfo.element as unknown as { __reactRoot?: { unmount: () => void } })
-        .__reactRoot
-      reactRoot?.unmount()
+      this.dragPreviewInfo.element.__reactRoot?.unmount()
       this.dragPreviewInfo.element.remove()
       this.dragPreviewInfo = null
     }
