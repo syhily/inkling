@@ -32,7 +32,7 @@ export interface GifSettings {
   tenor?: { googleApiKey?: string; contentFilter?: string }
 }
 
-export interface SnippetItem {
+export type SnippetItem = {
   name: string
   value: string
 }

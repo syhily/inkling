@@ -1,30 +1,11 @@
 import React from 'react'
 
+import type { ResolvedMenuItem } from '@/utils/buildCardMenu'
+
 import TrashCardIcon from '@/assets/icons/inkling-trash.svg?react'
 import trackEvent from '@/utils/analytics'
 
-export interface CardMenuItemData {
-  label?: string
-  name?: string
-  type?: string
-  icon?: string
-  insertCommand?: unknown
-  insertParams?: Record<string, unknown>
-  // STOPPED in the conversion sweep (batch 7): producers actually write
-  // `queryParams: string[]` (card-menus.ts) and the runtime survives via
-  // Object.values; closing this type requires the producer-seam contract
-  // decision, not a cast. Kept open deliberately.
-  queryParams?: Record<string, unknown>
-  Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
-  dataTestId?: string
-  customContent?: React.ReactNode
-  hidden?: boolean
-  disabled?: boolean
-  shortcut?: string
-  desc?: string
-  onRemove?: () => void
-  [key: string]: unknown
-}
+export type CardMenuItemData = ResolvedMenuItem
 
 export interface CardMenuItemProps {
   label?: string
@@ -238,7 +219,7 @@ export interface CardMenuProps {
   menu?: Map<string, CardMenuItemData[]>
   insert?: (
     insertCommand?: unknown,
-    params?: { insertParams?: Record<string, unknown>; queryParams?: Record<string, unknown> },
+    params?: { insertParams?: Record<string, unknown>; queryParams?: string[] },
   ) => void
   selectedItemIndex?: number
   scrollToSelectedItem?: boolean

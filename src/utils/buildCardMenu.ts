@@ -1,4 +1,4 @@
-import type { CardConfig } from '@/context/InklingHostIntegrationContext'
+import type { CardConfig, SnippetItem } from '@/context/InklingHostIntegrationContext'
 import type { CardMenuNodeClass } from '@/utils/inkling-node-class'
 
 import SnippetCardIcon from '@/assets/icons/inkling-card-type-snippet.svg?react'
@@ -18,11 +18,17 @@ interface MenuItemBase {
   section?: string
   type?: string
   onRemove?: () => void
-  [key: string]: unknown
+  queryParams?: string[]
+  dataTestId?: string
+  name?: string
+  icon?: string
+  customContent?: React.ReactNode
+  hidden?: boolean
+  disabled?: boolean
 }
 
 export interface MenuItem extends MenuItemBase {
-  insertParams?: Record<string, unknown> | ((args: { config: CardConfig | undefined }) => Record<string, unknown>)
+  insertParams?: Record<string, unknown> | (() => Record<string, unknown>)
 }
 
 /** A `MenuItem` after `buildCardMenu` has resolved function-valued `insertParams`
@@ -52,7 +58,7 @@ export function buildCardMenu(
 
   function addMenuItem(item: MenuItem): void {
     // items hidden based on missing config (e.g. GIF provider API key)
-    if (!!item.isHidden && item.isHidden?.({ config })) {
+    if (item.isHidden?.({ config })) {
       return
     }
 
@@ -63,9 +69,9 @@ export function buildCardMenu(
     }
 
     const matches =
-      typeof item?.matches === 'function'
-        ? item?.matches?.(lowerQuery ?? '', item.label)
-        : item?.matches?.find?.((m) => m.startsWith(lowerQuery ?? ''))
+      typeof item.matches === 'function'
+        ? item.matches(lowerQuery ?? '', item.label)
+        : item.matches?.find((match) => match.startsWith(lowerQuery ?? ''))
 
     if (lowerQuery && !matches) {
       return
@@ -75,7 +81,7 @@ export function buildCardMenu(
     // Header's version stamp) so the menu always carries plain data
     const resolvedItem: ResolvedMenuItem = {
       ...item,
-      insertParams: typeof item.insertParams === 'function' ? item.insertParams({ config }) : item.insertParams,
+      insertParams: typeof item.insertParams === 'function' ? item.insertParams() : item.insertParams,
     }
     if (resolvedItem.insertParams === undefined) {
       // the spread above always writes the key; the pre-resolution shape only
@@ -121,7 +127,7 @@ export function buildCardMenu(
           } else if (b.priority === undefined) {
             return -1
           } else {
-            return (a.priority ?? 0) - (b.priority ?? 0)
+            return a.priority - b.priority
           }
         }),
       ]
@@ -142,14 +148,7 @@ export function buildCardMenu(
   return { menu, maxItemIndex }
 }
 
-// a type alias (not interface) so the object-literal shape gets an implicit
-// index signature and can flow into MenuItem.insertParams: Record<string, unknown>
-type SnippetData = {
-  name: string
-  value?: string
-}
-
-function buildSnippetMenuItem(data: SnippetData, config: CardConfig | undefined): MenuItem {
+function buildSnippetMenuItem(data: SnippetItem, config: CardConfig | undefined): MenuItem {
   const name = data.name.toLowerCase()
   const snippet: MenuItem = {
     type: 'snippet',
@@ -159,7 +158,7 @@ function buildSnippetMenuItem(data: SnippetData, config: CardConfig | undefined)
     matches: (query: string) => name.indexOf(query) > -1 || 'snippets'.indexOf(query) > -1,
     insertCommand: INSERT_SNIPPET_COMMAND,
     insertParams: data,
-    ...(config?.deleteSnippet && { onRemove: () => config.deleteSnippet?.(data as { name: string; value: string }) }),
+    ...(config?.deleteSnippet && { onRemove: () => config.deleteSnippet?.(data) }),
   }
 
   return snippet

@@ -110,17 +110,13 @@ function useSlashCardMenu(editor: LexicalEditor) {
   const insert = React.useCallback(
     (
       insertCommand: unknown,
-      {
-        insertParams = {},
-        queryParams = {},
-      }: { insertParams?: Record<string, unknown>; queryParams?: Record<string, unknown> } = {},
+      { insertParams = {}, queryParams = [] }: { insertParams?: Record<string, unknown>; queryParams?: string[] } = {},
     ) => {
       const dataset = { ...insertParams }
-      const queryParamsArray = Object.values(queryParams).filter((v): v is string => typeof v === 'string')
 
-      for (let i = 0; i < queryParamsArray.length; i++) {
+      for (let i = 0; i < queryParams.length; i++) {
         if (commandParams[i]) {
-          const key = queryParamsArray[i]
+          const key = queryParams[i]
           const value = commandParams[i]
           dataset[key] = value
         }
