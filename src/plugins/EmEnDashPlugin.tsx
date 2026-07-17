@@ -1,6 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { $getNodeByKey, $getSelection, $isRangeSelection, $isTextNode } from 'lexical'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
@@ -84,14 +84,6 @@ function $replaceDashes(dirtyLeaves: Set<string>, supportsHrShortcut: boolean) {
 
 export const EmEnDashPlugin = () => {
   const [editor] = useLexicalComposerContext()
-  const mountedRef = useRef(true)
-
-  useEffect(() => {
-    mountedRef.current = true
-    return () => {
-      mountedRef.current = false
-    }
-  }, [])
 
   useEffect(() => {
     // '---' as the sole content of a paragraph is the horizontal-rule card
@@ -103,7 +95,7 @@ export const EmEnDashPlugin = () => {
     )
 
     return editor.registerUpdateListener(({ dirtyLeaves, tags }) => {
-      if (!mountedRef.current || editor.isComposing()) {
+      if (editor.isComposing()) {
         return
       }
 
@@ -113,7 +105,7 @@ export const EmEnDashPlugin = () => {
         return
       }
 
-      if (!dirtyLeaves || dirtyLeaves.size === 0) {
+      if (dirtyLeaves.size === 0) {
         return
       }
 
