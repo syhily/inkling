@@ -608,8 +608,10 @@ describe('Denest transform', function () {
     })
 
     const registerTransforms = (editor: LexicalEditor) => {
-      registerDenestTransform(editor, ExtendedHeadingNode, (node: ExtendedHeadingNode) =>
-        $createHeadingNode(node.getTag()),
+      registerDenestTransform(
+        editor,
+        ExtendedHeadingNode,
+        (node: ExtendedHeadingNode) => new ExtendedHeadingNode(node.getTag()),
       )
     }
     registerTransforms(editor)
