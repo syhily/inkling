@@ -157,7 +157,7 @@ function buildSnippetMenuItem(data: SnippetItem, config: CardConfig | undefined)
     section: 'Snippets',
     matches: (query: string) => name.indexOf(query) > -1 || 'snippets'.indexOf(query) > -1,
     insertCommand: INSERT_SNIPPET_COMMAND,
-    insertParams: data,
+    insertParams: { name: data.name, value: data.value },
     ...(config?.deleteSnippet && { onRemove: () => config.deleteSnippet?.(data) }),
   }
 
