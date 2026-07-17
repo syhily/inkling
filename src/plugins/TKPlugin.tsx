@@ -4,6 +4,7 @@ import {
   $getSelection,
   $isDecoratorNode,
   $isRangeSelection,
+  $isTextNode,
   type LexicalEditor,
   TextNode,
 } from 'lexical'
@@ -17,8 +18,8 @@ import { $createTKNode, $isTKNode, ExtendedTextNode, TKNode } from '@/nodes/base
 import { SELECT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 import { getEditorTheme } from '@/utils/lexical-internals'
 
-const REGEX = new RegExp(/(^|.)([^\p{L}\p{N}\s]*(TK|Tk|tk)+[^\p{L}\p{N}\s]*)(.)?/u)
-const WORD_CHAR_REGEX = new RegExp(/\p{L}|\p{N}/u)
+const REGEX = /(^|.)([^\p{L}\p{N}\s]*(TK|Tk|tk)+[^\p{L}\p{N}\s]*)(.)?/u
+const WORD_CHAR_REGEX = /\p{L}|\p{N}/u
 
 function TKIndicator({
   editor,
@@ -32,10 +33,14 @@ function TKIndicator({
   nodeKeys: string[]
 }) {
   const theme = getEditorTheme(editor)
-  const tkClasses = theme.tk?.split(' ') || []
-  const tkHighlightClasses = theme.tkHighlighted?.split(' ') || []
+  // EditorThemeClasses ends in an upstream [key: string]: any index signature,
+  // so annotate the custom keys at the boundary before consuming them
+  const tk: string | undefined = theme.tk
+  const tkHighlighted: string | undefined = theme.tkHighlighted
+  const tkClasses = tk?.split(' ') || []
+  const tkHighlightClasses = tkHighlighted?.split(' ') || []
 
-  const containingElement = editor.getElementByKey(parentKey) as HTMLElement | null
+  const containingElement = editor.getElementByKey(parentKey)
 
   // position element relative to the TK Node containing element
   const calculatePosition = useCallback(() => {
@@ -108,14 +113,14 @@ function TKIndicator({
       }
 
       const node = $getNodeByKey(nodeKeyToSelect)
-      if (node && 'select' in node) {
-        ;(node as import('lexical').TextNode).select(0, node.getTextContentSize())
+      if ($isTextNode(node)) {
+        node.select(0, node.getTextContentSize())
       }
     })
   }
 
   const toggleHighlightClasses = (isHighlighted: boolean) => {
-    let isCard
+    let isCard = false
 
     editor.getEditorState().read(() => {
       if ($isDecoratorNode($getNodeByKey(parentKey))) {
@@ -138,11 +143,11 @@ function TKIndicator({
     })
   }
 
-  const onMouseEnter = (e: React.MouseEvent) => {
+  const onMouseEnter = () => {
     toggleHighlightClasses(true)
   }
 
-  const onMouseLeave = (e: React.MouseEvent) => {
+  const onMouseLeave = () => {
     toggleHighlightClasses(false)
   }
 
@@ -201,8 +206,8 @@ export default function TKPlugin() {
     })
   }, [editor, addEditorTkNode, removeEditorTkNode, parentEditorNodeKey])
 
-  const createTKNode = useCallback((textNode: import('lexical').TextNode): import('lexical').TextNode => {
-    return $createTKNode(textNode.getTextContent()) as import('lexical').TextNode
+  const createTKNode = useCallback((textNode: TextNode): TKNode => {
+    return $createTKNode(textNode.getTextContent())
   }, [])
 
   const getTKMatch = useCallback((initialText: string) => {
