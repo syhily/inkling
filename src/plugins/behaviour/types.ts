@@ -21,5 +21,7 @@ export interface DeleteCardPayload {
 }
 
 export interface LinkMatchPayload {
-  linkMatch: RegExpMatchArray
+  // the pasted URL as a [full-match, group] pair (both are the pasted text);
+  // registerLinkMatching reads [1]
+  linkMatch: readonly [string, string]
 }
