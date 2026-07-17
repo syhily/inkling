@@ -45,7 +45,8 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
           return false
         }
         // focus.getNode() is non-null (it throws on a missing node); a node
-        // selection always holds at least one node
+        // selection's first node is defined once the selection is non-empty
+        // (the same exposure the old dead null check had, kept consciously)
         const focusNode: LexicalNode = $isRangeSelection(selection)
           ? selection.focus.getNode()
           : selection.getNodes()[0]
