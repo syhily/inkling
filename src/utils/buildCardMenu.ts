@@ -77,6 +77,12 @@ export function buildCardMenu(
       ...item,
       insertParams: typeof item.insertParams === 'function' ? item.insertParams({ config }) : item.insertParams,
     }
+    if (resolvedItem.insertParams === undefined) {
+      // the spread above always writes the key; the pre-resolution shape only
+      // carries insertParams when the declaration set it (menu deep-equality
+      // in test/unit/buildCardMenu.test.ts pins key absence)
+      delete resolvedItem.insertParams
+    }
 
     const section = resolvedItem.section || 'Primary'
 
