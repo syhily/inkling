@@ -23,7 +23,6 @@ export interface GifSelectorProps {
   loadNextPage: () => void
   gifs: GifData[]
   provider?: string
-  [key: string]: unknown
 }
 
 const GifSelector = ({
@@ -77,7 +76,7 @@ const GifSelector = ({
     resizeObserver.observe(selectorRef.current)
 
     return () => {
-      resizeObserver?.disconnect()
+      resizeObserver.disconnect()
     }
 
     // We only do this for init
@@ -100,7 +99,8 @@ const GifSelector = ({
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
+      const target = event.target
+      if (selectorRef.current && target instanceof Node && !selectorRef.current.contains(target)) {
         onClickOutside()
       }
     }
@@ -161,7 +161,7 @@ const GifSelector = ({
   }
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const container = e.target as HTMLDivElement
+    const container = e.currentTarget
     if (container.scrollTop + container.clientHeight >= container.scrollHeight - 1000) {
       loadNextPage()
     }
@@ -252,22 +252,19 @@ const GifSelector = ({
 
     let y = highlightedElemRect.top + highlightedElemRect.height / 3
 
-    let foundGifElem: Element | null = null
+    let foundGifElem: HTMLElement | null = null
     let jumps = 0
 
     const doc = selectorRef.current.ownerDocument
 
     // we might hit spacing between gifs, keep moving up 5 px until we get a match
     while (!foundGifElem) {
-      if (!doc.elementFromPoint) {
-        break
-      }
       const possibleMatch = doc.elementFromPoint(x, y)?.closest('[data-gif-index]')
 
       if (
-        possibleMatch &&
+        possibleMatch instanceof HTMLElement &&
         selectorRef.current.contains(possibleMatch) &&
-        (possibleMatch as HTMLElement).dataset.gifIndex !== undefined
+        possibleMatch.dataset.gifIndex !== undefined
       ) {
         foundGifElem = possibleMatch
         break
@@ -283,7 +280,7 @@ const GifSelector = ({
     }
 
     if (foundGifElem) {
-      const nextGif = gifs[Number((foundGifElem as HTMLElement).dataset.gifIndex)]
+      const nextGif = gifs[Number(foundGifElem.dataset.gifIndex)]
       if (nextGif && hasUsableMedia(nextGif)) {
         requestHighlight(nextGif)
       }

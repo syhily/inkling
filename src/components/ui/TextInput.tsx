@@ -1,6 +1,9 @@
 import React from 'react'
 
-export interface TextInputProps {
+export interface TextInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'onChange' | 'placeholder' | 'readOnly' | 'disabled' | 'maxLength' | 'name' | 'className'
+> {
   value?: string
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   placeholder?: string
@@ -10,7 +13,8 @@ export interface TextInputProps {
   name?: string
   className?: string
   'data-testid'?: string
-  [key: string]: unknown
+  'data-inkling-dnd-disabled'?: boolean | string
+  'data-inkling-file-card'?: boolean | string
 }
 
 export function TextInput({

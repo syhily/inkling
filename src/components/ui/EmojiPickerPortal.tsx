@@ -6,7 +6,9 @@ import Portal from '@/components/ui/Portal'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 
 interface EmojiPickerPortalProps {
-  onEmojiClick: (emoji: unknown) => void
+  // emoji-mart's onEmojiSelect delivers its (untyped upstream) emoji object;
+  // consumers read the `native` character off it
+  onEmojiClick: (emoji: { native?: string }) => void
   positionRef: React.RefObject<HTMLElement | null>
   data?: unknown
   autoFocus?: boolean

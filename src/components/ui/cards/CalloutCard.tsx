@@ -94,7 +94,7 @@ interface CalloutCardProps {
   toggleEmoji?: (checked: boolean) => void
   hasEmoji?: boolean
   handleColorChange?: (name?: string) => void
-  changeEmoji?: (emoji: unknown) => void
+  changeEmoji?: (emoji: { native?: string }) => void
   calloutEmoji?: string
   textEditor?: LexicalEditor
   textEditorInitialState?: InitialEditorStateType

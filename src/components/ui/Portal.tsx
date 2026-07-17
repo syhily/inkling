@@ -7,19 +7,16 @@ function Portal({
   children,
   to,
   className,
-  ...props
+  'data-testid': dataTestId,
 }: {
   children?: React.ReactNode
   to?: HTMLElement
   className?: string
-  [key: string]: unknown
+  'data-testid'?: string
 }) {
   const { darkMode } = React.useContext(InklingUiPrefsContext)
 
   const container = to || document.body
-  if (!container) {
-    return children
-  }
 
   function cancelEvents(event: React.MouseEvent) {
     // prevent card from losing selection when interacting with element in portal
@@ -31,8 +28,8 @@ function Portal({
       className="inkling-lexical"
       style={{ width: 'fit-content' }}
       data-inkling-portal
+      data-testid={dataTestId}
       onMouseDown={cancelEvents}
-      {...props}
     >
       <div className={`${darkMode ? 'dark' : ''} ${className || ''}`}>{children}</div>
     </div>,

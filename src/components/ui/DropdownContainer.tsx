@@ -16,7 +16,6 @@ interface DropdownContainerProps {
   placementTopClass?: string
   placementBottomClass?: string
   children?: React.ReactNode
-  [key: string]: unknown
 }
 
 export function DropdownContainer({
@@ -25,23 +24,24 @@ export function DropdownContainer({
   placementTopClass = '-top-0.5 -translate-y-full',
   placementBottomClass = 'mt-0.5',
   children,
-  ...props
 }: DropdownContainerProps) {
   const divRef = React.useRef<HTMLUListElement | null>(null)
 
   const [placement, setPlacement] = React.useState<'top' | 'bottom'>('bottom')
 
   const updatePlacement = () => {
-    if (!divRef || !divRef.current) {
+    const list = divRef.current
+    const parent = list?.parentNode
+    if (!list || !(parent instanceof HTMLElement)) {
       return
     }
 
-    // Get the position of divRef on the screen
-    const box = (divRef.current.parentNode as HTMLElement).getBoundingClientRect()
+    // Get the position of the list's parent on the screen
+    const box = parent.getBoundingClientRect()
     const bottom = box.bottom
     const spaceBelow = window.innerHeight - bottom
 
-    if (spaceBelow < divRef.current.offsetHeight) {
+    if (spaceBelow < list.offsetHeight) {
       setPlacement('top')
     } else {
       setPlacement('bottom')
@@ -78,8 +78,7 @@ export function DropdownContainer({
         placement === 'bottom' && placementBottomClass,
         className,
       )}
-      data-testid={`${dataTestId}-dropdown`}
-      {...props}
+      data-testid={dataTestId ? `${dataTestId}-dropdown` : undefined}
     >
       {children}
     </ul>

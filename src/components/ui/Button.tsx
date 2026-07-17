@@ -3,7 +3,7 @@ import React from 'react'
 export interface ButtonProps {
   children?: React.ReactNode
   className?: string
-  color?: 'white' | 'grey' | 'black' | 'accent' | (string & {})
+  color?: 'white' | 'grey' | 'black' | 'accent'
   dataTestId?: string
   disabled?: boolean
   href?: string
@@ -20,7 +20,6 @@ export interface ButtonProps {
   value?: string
   width?: 'auto' | 'full'
   onClick?: (event: React.MouseEvent) => void
-  [key: string]: unknown
 }
 
 export function Button({
@@ -43,7 +42,6 @@ export function Button({
   value,
   width,
   onClick,
-  ...props
 }: ButtonProps) {
   const sizeClasses = {
     small: 'px-2 py-1 text-xs',
@@ -76,7 +74,6 @@ export function Button({
         style={style}
         target={target ?? '_blank'}
         onClick={onClick}
-        {...props}
       >
         {children || value || label || placeholder}
       </a>
@@ -92,7 +89,6 @@ export function Button({
       // oxlint-disable-next-line react/button-has-type
       type={type}
       onClick={onClick}
-      {...props}
     >
       {children || value || label || placeholder}
     </button>

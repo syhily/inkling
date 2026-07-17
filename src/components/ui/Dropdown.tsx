@@ -8,7 +8,6 @@ export interface DropdownMenuItem {
   label: string
   name: string
   icon?: string
-  [key: string]: unknown
 }
 
 export interface DropdownProps {
@@ -87,7 +86,7 @@ export function Dropdown({ menu = [], value, onChange, placeholder, dataTestId }
         <ArrowIcon className={`size-2 text-grey-900 ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <DropdownContainer dataTestId={''}>
+        <DropdownContainer>
           <KeyboardSelection {...{ defaultSelected: selectedItem, getItem, items: menu, onSelect: handleSelect }} />
         </DropdownContainer>
       )}

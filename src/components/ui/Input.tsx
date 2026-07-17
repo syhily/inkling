@@ -16,11 +16,13 @@ export function Input({
   dataTestId?: string
   value?: string
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
-  [key: string]: unknown
-}) {
+  'data-inkling-link-input'?: boolean
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'>) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const shouldFocusOnUpdate = React.useRef(autoFocus)
-  const [localValue, setLocalValue] = React.useState(value)
+  // keep the local state always a string so the input never switches between
+  // uncontrolled (undefined) and controlled on first edit
+  const [localValue, setLocalValue] = React.useState(value ?? '')
 
   const onChangeWrapper = React.useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,7 +36,7 @@ export function Input({
   )
 
   React.useEffect(() => {
-    setLocalValue(value)
+    setLocalValue(value ?? '')
 
     // setting a value via state immediately after mounting results in React's
     // autoFocus not working, so we need to manually focus the input

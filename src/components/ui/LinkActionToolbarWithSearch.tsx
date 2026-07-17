@@ -15,10 +15,9 @@ interface LinkActionToolbarWithSearchProps {
   anchorElem: HTMLElement
   href?: string
   onClose: () => void
-  [key: string]: unknown
 }
 
-export function LinkActionToolbarWithSearch({ anchorElem, href, onClose, ...props }: LinkActionToolbarWithSearchProps) {
+export function LinkActionToolbarWithSearch({ anchorElem, href, onClose }: LinkActionToolbarWithSearchProps) {
   const [editor] = useLexicalComposerContext()
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
 
@@ -144,7 +143,7 @@ export function LinkActionToolbarWithSearch({ anchorElem, href, onClose, ...prop
   return (
     <Portal>
       <div ref={linkToolbarRef} className="not-inkling-prose fixed z-[10000]">
-        <LinkInputWithSearch cancel={onClose} href={href} update={onLinkUpdate} {...props} />
+        <LinkInputWithSearch cancel={onClose} href={href} update={onLinkUpdate} />
       </div>
     </Portal>
   )

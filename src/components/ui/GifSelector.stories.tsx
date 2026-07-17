@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 
 import GifSelector, { type GifSelectorProps } from '@/components/ui/GifSelector'
-import { getGifProviderConfig, useGif, type UseGifResult } from '@/utils/services/gif'
+import { getGifProviderConfig, useGif, type GifProviderConfig } from '@/utils/services/gif'
 
 import { tenorConfig } from '../../../demo/utils/gifConfig'
 
@@ -25,7 +25,6 @@ const meta = {
     loadNextPage: () => {},
     gifs: [],
     provider: 'tenor',
-    config: tenorConfig,
   },
 } satisfies Meta<typeof GifSelector>
 export default meta
@@ -34,21 +33,24 @@ type Story = StoryObj<typeof meta>
 
 function GifSelectorStory(args: GifSelectorProps) {
   const config = getGifProviderConfig({ tenor: tenorConfig ?? undefined })
-  const gifHook = useGif({ config: config! })
+  if (!config) {
+    return null
+  }
+  return <GifSelectorWithConfig args={args} config={config} />
+}
 
-  return <GifSelector {...(gifHook as UseGifResult)} {...args} />
+function GifSelectorWithConfig({ args, config }: { args: GifSelectorProps; config: GifProviderConfig }) {
+  const gifHook = useGif({ config })
+
+  return <GifSelector {...gifHook} {...args} />
 }
 
 export const Base: Story = {
-  args: {
-    config: tenorConfig,
-  },
   render: (args) => <GifSelectorStory {...args} />,
 }
 
 export const Loading: Story = {
   args: {
-    config: tenorConfig,
     isLoading: true,
     isLazyLoading: false,
   },
@@ -57,7 +59,6 @@ export const Loading: Story = {
 
 export const LazyLoading: Story = {
   args: {
-    config: tenorConfig,
     isLoading: true,
     isLazyLoading: true,
     loadNextPage: () => {},
@@ -67,7 +68,6 @@ export const LazyLoading: Story = {
 
 export const ErrorCommon: Story = {
   args: {
-    config: tenorConfig,
     error: 'common',
   },
   render: (args) => <GifSelectorStory {...args} />,
@@ -75,7 +75,6 @@ export const ErrorCommon: Story = {
 
 export const ErrorInvalidKey: Story = {
   args: {
-    config: tenorConfig,
     error: 'invalid_key',
   },
   render: (args) => <GifSelectorStory {...args} />,
@@ -83,7 +82,6 @@ export const ErrorInvalidKey: Story = {
 
 export const ErrorSpecific: Story = {
   args: {
-    config: tenorConfig,
     error: 'Something went wrong',
   },
   render: (args) => <GifSelectorStory {...args} />,

@@ -2,15 +2,13 @@ import PlayIcon from '@/assets/icons/inkling-play.svg?react'
 import UnmuteIcon from '@/assets/icons/inkling-unmute.svg?react'
 
 interface MediaPlayerProps {
-  type?: string
   duration?: string
   theme?: 'light' | 'dark'
-  [key: string]: unknown
 }
 
-export function MediaPlayer({ type, duration, theme, ...args }: MediaPlayerProps) {
+export function MediaPlayer({ duration, theme }: MediaPlayerProps) {
   return (
-    <div className="mt-auto flex w-full items-center py-2" {...args}>
+    <div className="mt-auto flex w-full items-center py-2">
       <PlayIcon className={`mr-2 size-[1.4rem] ${theme === 'light' ? 'fill-white' : 'fill-black dark:fill-white'}`} />
       <div
         className={`mb-[1px] font-sans text-sm font-medium ${theme === 'light' ? 'text-white/60' : 'text-black/50 dark:text-white/50'} `}

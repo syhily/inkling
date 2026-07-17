@@ -5,17 +5,20 @@ import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardCont
 export function ActionToolbar({
   isVisible,
   children,
-  ...props
+  'data-inkling-card-toolbar': dataInklingCardToolbar,
 }: {
   isVisible?: boolean
   children?: React.ReactNode
-  [key: string]: unknown
+  'data-inkling-card-toolbar'?: string
 }) {
   const { isDragging } = useInklingSelectedCardContext()
 
   if (isVisible && !isDragging) {
     return (
-      <div className="not-inkling-prose absolute top-[-46px] left-1/2 z-[1000] -translate-x-1/2" {...props}>
+      <div
+        className="not-inkling-prose absolute top-[-46px] left-1/2 z-[1000] -translate-x-1/2"
+        data-inkling-card-toolbar={dataInklingCardToolbar}
+      >
         {children}
       </div>
     )
