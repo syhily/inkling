@@ -3,19 +3,9 @@ import type { LexicalEditor, LexicalNodeConfig } from 'lexical'
 import { createHeadlessEditor } from '@lexical/headless'
 
 import { dom } from '#/nodes-base/test-utils/index'
-import { utils, type ExportDOMOptions, type ExportDOMOutput } from '@/nodes/base/index'
+import { utils, type ExportDOMOutput, type GeneratedDecoratorNodeClass, type Visibility } from '@/nodes/base/index'
 
 const defaultVisibility = utils.visibility.buildDefaultVisibility()
-
-type GeneratedNodeClass = ReturnType<typeof utils.generateDecoratorNode>
-
-interface GeneratedNodeInstance {
-  exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): ExportDOMOutput
-  exportJSON(): Record<string, unknown>
-  getDataset(): Record<string, unknown>
-  visibility: Record<string, unknown>
-  [key: string]: unknown
-}
 
 function createRenderResult(tagName: 'div' | 'span', content: string) {
   const element = dom.window.document.createElement(tagName)
@@ -55,10 +45,14 @@ describe('Utils: generateDecoratorNode', function () {
     })
 
   const editorTestWithNodes =
-    (getNodes: () => unknown[], testFn: (testEditor: LexicalEditor, nodes: unknown[]) => void) => () =>
+    <TNodes extends readonly LexicalNodeConfig[]>(
+      getNodes: () => TNodes,
+      testFn: (testEditor: LexicalEditor, nodes: TNodes) => void,
+    ) =>
+    () =>
       new Promise<void>((resolve, reject) => {
         const nodes = getNodes()
-        const testEditor = createHeadlessEditor({ nodes: nodes as LexicalNodeConfig[] })
+        const testEditor = createHeadlessEditor({ nodes })
         testEditor.update(() => {
           try {
             testFn(testEditor, nodes)
@@ -70,8 +64,8 @@ describe('Utils: generateDecoratorNode', function () {
       })
 
   describe('exportDOM', function () {
-    let NodeWithRender: GeneratedNodeClass
-    let $createNodeWithRender: (dataset?: Record<string, unknown>) => GeneratedNodeInstance
+    let NodeWithRender: GeneratedDecoratorNodeClass<Record<string, never>>
+    let $createNodeWithRender: (dataset?: Record<string, unknown>) => InstanceType<typeof NodeWithRender>
 
     beforeAll(function () {
       NodeWithRender = utils.generateDecoratorNode({
@@ -81,7 +75,7 @@ describe('Utils: generateDecoratorNode', function () {
       })
 
       $createNodeWithRender = (dataset?: Record<string, unknown>) => {
-        return new NodeWithRender(dataset) as unknown as GeneratedNodeInstance
+        return new NodeWithRender(dataset)
       }
 
       editor = createHeadlessEditor({ nodes: [NodeWithRender] })
@@ -101,15 +95,15 @@ describe('Utils: generateDecoratorNode', function () {
     it(
       'throws error when defaultRenderFn is not provided',
       editorTestWithNodes(
-        () => [
-          utils.generateDecoratorNode({
-            nodeType: 'no-render-test',
-            properties: [],
-          }),
-        ],
+        () =>
+          [
+            utils.generateDecoratorNode({
+              nodeType: 'no-render-test',
+              properties: [],
+            }),
+          ] as const,
         function (testEditor, [NodeWithoutRender]) {
-          const NodeClass = NodeWithoutRender as GeneratedNodeClass
-          const node = new NodeClass() as unknown as GeneratedNodeInstance
+          const node = new NodeWithoutRender()
           expect(() => node.exportDOM(testEditor)).toThrow(
             /^\[generateDecoratorNode\] no-render-test: "defaultRenderFn" is required$/,
           )
@@ -119,8 +113,8 @@ describe('Utils: generateDecoratorNode', function () {
   })
 
   describe('constructor', function () {
-    let FalsyAwareNode: GeneratedNodeClass
-    let $createFalsyAwareNode: (dataset?: Record<string, unknown>) => GeneratedNodeInstance
+    let FalsyAwareNode: GeneratedDecoratorNodeClass<{ count: number; label: string }>
+    let $createFalsyAwareNode: (dataset?: Record<string, unknown>) => InstanceType<typeof FalsyAwareNode>
 
     beforeAll(function () {
       FalsyAwareNode = utils.generateDecoratorNode({
@@ -129,10 +123,10 @@ describe('Utils: generateDecoratorNode', function () {
           { name: 'count', default: 10 },
           { name: 'label', default: 'default' },
         ],
-      }) as GeneratedNodeClass
+      })
 
       $createFalsyAwareNode = (dataset?: Record<string, unknown>) => {
-        return new FalsyAwareNode(dataset) as unknown as GeneratedNodeInstance
+        return new FalsyAwareNode(dataset)
       }
 
       editor = createHeadlessEditor({ nodes: [FalsyAwareNode] })
@@ -152,8 +146,8 @@ describe('Utils: generateDecoratorNode', function () {
   })
 
   describe('hasVisibility', function () {
-    let NodeWithVisibility: GeneratedNodeClass
-    let $createNodeWithVisibility: (dataset?: Record<string, unknown>) => GeneratedNodeInstance
+    let NodeWithVisibility: GeneratedDecoratorNodeClass<{ visibility: Visibility }>
+    let $createNodeWithVisibility: (dataset?: Record<string, unknown>) => InstanceType<typeof NodeWithVisibility>
 
     beforeAll(function () {
       NodeWithVisibility = utils.generateDecoratorNode({
@@ -163,7 +157,7 @@ describe('Utils: generateDecoratorNode', function () {
       })
 
       $createNodeWithVisibility = (dataset?: Record<string, unknown>) => {
-        return new NodeWithVisibility(dataset) as unknown as GeneratedNodeInstance
+        return new NodeWithVisibility(dataset)
       }
 
       editor = createHeadlessEditor({ nodes: [NodeWithVisibility] })
@@ -185,7 +179,7 @@ describe('Utils: generateDecoratorNode', function () {
       editorTest(function () {
         const node = $createNodeWithVisibility()
 
-        const newVisibility = {
+        const newVisibility: Visibility = {
           web: {
             nonMember: false,
             memberSegment: 'status:free',
@@ -227,7 +221,7 @@ describe('Utils: generateDecoratorNode', function () {
             showOnEmail: true,
             segment: 'status:free',
           },
-        }) as unknown as GeneratedNodeInstance
+        })
 
         // old values are kept, new values are added
         expect(node.visibility).toEqual({
