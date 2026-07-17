@@ -23,43 +23,21 @@ function isMimeType(file: File, acceptableMimeTypes: Record<string, string[]>): 
   return key
 }
 
-function mediaFileReader(
-  files: File[],
-  acceptableMimeTypes: Record<string, string[]>,
-): Promise<{ processed: ProcessedFile[] }> {
-  const filesIterator = files[Symbol.iterator]()
-  return new Promise((resolve, reject) => {
-    const processed: ProcessedFile[] = []
-    const handleNextFile = () => {
-      const { done, value: file } = filesIterator.next()
-      if (done) {
-        return resolve({ processed })
-      }
-      const fileReader = new FileReader()
-      fileReader.addEventListener('error', reject)
-      fileReader.addEventListener('load', () => {
-        const result = fileReader.result
-        const nodeType = isMimeType(file, acceptableMimeTypes)
-        if (typeof result === 'string') {
-          processed.push({ type: nodeType, file: file })
-        }
-        handleNextFile()
-      })
-      const nodeType = isMimeType(file, acceptableMimeTypes)
-      if (nodeType) {
-        fileReader.readAsDataURL(file)
-      } else {
-        handleNextFile()
-      }
+function processMediaFiles(files: File[], acceptableMimeTypes: Record<string, string[]>): ProcessedFile[] {
+  const processed: ProcessedFile[] = []
+  for (const file of files) {
+    const type = isMimeType(file, acceptableMimeTypes)
+    if (type) {
+      processed.push({ type, file })
     }
-    handleNextFile()
-  })
+  }
+  return processed
 }
 
-async function getListOfAcceptableMimeTypes(
+function getListOfAcceptableMimeTypes(
   editor: LexicalEditor,
   uploadFileTypes: FileUploader['fileTypes'],
-): Promise<{ acceptableMimeTypes: Record<string, string[]> }> {
+): { acceptableMimeTypes: Record<string, string[]> } {
   const nodes = getEditorCardNodes(editor)
   const acceptableMimeTypes: Record<string, string[]> = {}
   const uploadTypes = uploadFileTypes as Record<string, { mimeTypes: string[] } | undefined> | undefined
@@ -78,13 +56,13 @@ function DragDropPastePlugin() {
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
 
   const handleFileUpload = React.useCallback(
-    async (files: File[]): Promise<void> => {
+    (files: File[]): void => {
       if (!fileUploader) {
         return
       }
 
-      const { acceptableMimeTypes } = await getListOfAcceptableMimeTypes(editor, fileUploader.fileTypes)
-      const { processed } = await mediaFileReader(files, acceptableMimeTypes)
+      const { acceptableMimeTypes } = getListOfAcceptableMimeTypes(editor, fileUploader.fileTypes)
+      const processed = processMediaFiles(files, acceptableMimeTypes)
       processed.forEach((item) => {
         editor.dispatchCommand(INSERT_MEDIA_COMMAND, item)
       })
@@ -176,9 +154,7 @@ function DragDropPastePlugin() {
       DRAG_DROP_PASTE,
       (files) => {
         editor.focus()
-        handleFileUpload(files).catch(() => {
-          // upload errors are surfaced by the file uploader
-        })
+        handleFileUpload(files)
         return false
       },
       COMMAND_PRIORITY_LOW,
