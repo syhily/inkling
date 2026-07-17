@@ -1,4 +1,4 @@
-import type { LexicalEditor, LexicalNode } from 'lexical'
+import type { DecoratorNode, LexicalEditor, LexicalNode } from 'lexical'
 
 import {
   $createNodeSelection,
@@ -88,7 +88,7 @@ const defaultCardAdjacencyGeometry: CardAdjacencyGeometry = {
 export function $getVisuallyAdjacentCard(
   direction: 'up' | 'down',
   geometry: CardAdjacencyGeometry = defaultCardAdjacencyGeometry,
-): LexicalNode | null {
+): DecoratorNode<unknown> | null {
   const selection = $getSelection()
   if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
     return null
@@ -146,7 +146,10 @@ export function $getVisuallyAdjacentCard(
  * sibling lookup is ungated — for callers that resolve their own reference (a
  * selected node, a command payload node, the caret's top-level element).
  */
-export function $getLogicallyAdjacentCard(direction: 'previous' | 'next', from?: LexicalNode): LexicalNode | null {
+export function $getLogicallyAdjacentCard(
+  direction: 'previous' | 'next',
+  from?: LexicalNode,
+): DecoratorNode<unknown> | null {
   if (from) {
     return getCardSibling(from, direction)
   }
@@ -174,7 +177,7 @@ export function $getLogicallyAdjacentCard(direction: 'previous' | 'next', from?:
   return getCardSibling(topLevelElement, direction)
 }
 
-function getCardSibling(node: LexicalNode, direction: 'previous' | 'next'): LexicalNode | null {
+function getCardSibling(node: LexicalNode, direction: 'previous' | 'next'): DecoratorNode<unknown> | null {
   const sibling = direction === 'previous' ? node.getPreviousSibling() : node.getNextSibling()
   return $isDecoratorNode(sibling) ? sibling : null
 }
