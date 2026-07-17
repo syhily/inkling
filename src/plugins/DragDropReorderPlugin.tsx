@@ -123,11 +123,11 @@ function useDragDropReorder(editor: LexicalEditor): void {
   const getDropIndicatorPosition = React.useRef(
     (
       draggableInfo: DraggableInfo,
-      droppableElem: HTMLElement | null,
+      droppableElem: HTMLElement,
       position: DroppablePosition,
     ): IndicatorPosition | false => {
       const rootElement = editor.getRootElement()
-      if (!rootElement || !droppableElem || !draggableInfo.element) {
+      if (!rootElement || !draggableInfo.element) {
         return false
       }
       const droppables = Array.from(rootElement.querySelectorAll<HTMLElement>(':scope > *'))
@@ -145,10 +145,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
           insertIndex += 1
         }
 
-        return {
-          insertIndex,
-          element: droppables[insertIndex] ?? droppableElem,
-        }
+        return { insertIndex }
       }
 
       return false

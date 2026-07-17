@@ -213,8 +213,8 @@ describe('DragDropHandler', () => {
     draggable.appendChild(image)
 
     const handlers = createHandlers()
-    handlers.droppable.getIndicatorPosition.mockReturnValueOnce({ insertIndex: 1, element: droppable })
-    handlers.droppable.getIndicatorPosition.mockReturnValueOnce({ insertIndex: 2, element: droppable })
+    handlers.droppable.getIndicatorPosition.mockReturnValueOnce({ insertIndex: 1 })
+    handlers.droppable.getIndicatorPosition.mockReturnValueOnce({ insertIndex: 2 })
     handler.registerContainer(containerElement, handlers)
     document.elementFromPoint = vi.fn(() => droppable)
 

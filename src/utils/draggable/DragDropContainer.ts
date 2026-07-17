@@ -69,7 +69,6 @@ export type DroppablePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bott
 
 export interface IndicatorPosition {
   insertIndex: number
-  element: HTMLElement
 }
 
 const noop = () => {}

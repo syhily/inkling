@@ -1,6 +1,6 @@
 import React from 'react'
 
-import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
+import type { DraggableInfo, IndicatorPosition } from '@/utils/draggable/DragDropContainer'
 
 import { useDragDropState } from '@/hooks/useDragDropState'
 
@@ -10,9 +10,7 @@ export interface UseCardDragAndDropOptions {
   onDrop?: (draggableInfo: DraggableInfo) => boolean | undefined
   onDropEnd?: (draggableInfo: DraggableInfo, success: boolean) => void
   getDraggableInfo?: (draggableElement: HTMLElement | null) => DraggableInfo | Record<string, never>
-  getIndicatorPosition?: (
-    draggableInfo: DraggableInfo,
-  ) => { insertIndex: number; element: HTMLElement } | false | undefined
+  getIndicatorPosition?: (draggableInfo: DraggableInfo) => IndicatorPosition | false | undefined
   draggableSelector: string
   droppableSelector: string
 }

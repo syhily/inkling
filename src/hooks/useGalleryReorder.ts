@@ -1,7 +1,7 @@
 import React from 'react'
 
 import type { GalleryImage } from '@/types/gallery'
-import type { DraggableInfo, DroppablePosition } from '@/utils/draggable/DragDropContainer'
+import type { DraggableInfo, DroppablePosition, IndicatorPosition } from '@/utils/draggable/DragDropContainer'
 
 import { useDragDropState } from '@/hooks/useDragDropState'
 import { pick } from '@/utils'
@@ -160,7 +160,7 @@ export default function useGalleryReorder({
     draggableInfo: DraggableInfo,
     droppableElem: HTMLElement | null,
     position: DroppablePosition,
-  ): { insertIndex: number; element: HTMLElement } | false => {
+  ): IndicatorPosition | false => {
     // do not allow dropping of non-images
     if (draggableInfo.type !== 'image' && draggableInfo.cardName !== 'image') {
       return false
@@ -204,10 +204,7 @@ export default function useGalleryReorder({
         insertIndex += 1
       }
 
-      return {
-        insertIndex,
-        element: droppableElem,
-      }
+      return { insertIndex }
     } else {
       return false
     }
