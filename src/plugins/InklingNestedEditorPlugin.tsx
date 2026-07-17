@@ -93,8 +93,9 @@ function InklingNestedEditorPlugin({
             if (!parentEditor) {
               return true
             }
-            ;(event as NestedKeyboardEvent)._fromNested = true
-            parentEditor.dispatchCommand(KEY_ENTER_COMMAND, event)
+            const nestedEvent: NestedKeyboardEvent = event
+            nestedEvent._fromNested = true
+            parentEditor.dispatchCommand(KEY_ENTER_COMMAND, nestedEvent)
             return true
           }
 
@@ -120,7 +121,8 @@ function InklingNestedEditorPlugin({
               return false
             }
             if (event) {
-              ;(event as NestedKeyboardEvent)._fromNested = true
+              const nestedEvent: NestedKeyboardEvent = event
+              nestedEvent._fromNested = true
             }
             parentEditor.dispatchCommand(KEY_ENTER_COMMAND, event)
 
