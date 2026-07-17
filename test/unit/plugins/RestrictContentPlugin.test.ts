@@ -7,7 +7,7 @@ import {
   PASTE_COMMAND,
   type LexicalEditor,
 } from 'lexical'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MIME_TEXT_HTML, MIME_TEXT_PLAIN } from '@/plugins/behaviour/clipboard-protocol'
 import { RestrictContentPlugin } from '@/plugins/RestrictContentPlugin'
@@ -15,6 +15,10 @@ import { RestrictContentPlugin } from '@/plugins/RestrictContentPlugin'
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 function createTestEditor() {
   return createEditor({
@@ -82,7 +86,5 @@ describe('RestrictContentPlugin', () => {
 
     expect(handled).toBe(true)
     expect(preventDefault).toHaveBeenCalled()
-
-    vi.unstubAllGlobals()
   })
 })
