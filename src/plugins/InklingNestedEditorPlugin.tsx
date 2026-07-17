@@ -15,6 +15,10 @@ import type { NestedKeyboardEvent } from '@/types/events'
 import CardContext from '@/context/CardContext'
 import { getParentEditor } from '@/utils/lexical-internals'
 
+// the nested editor the Enter key hands focus to (Header subheader, Toggle
+// content) — structurally the part of LexicalEditor the hand-off needs
+export type FocusNextTarget = { focus: (fn: () => void) => void; getRootElement: () => HTMLElement | null }
+
 function InklingNestedEditorPlugin({
   autoFocus,
   focusNext,
@@ -23,7 +27,7 @@ function InklingNestedEditorPlugin({
   defaultInklingEnterBehaviour = false,
 }: {
   autoFocus?: boolean
-  focusNext?: { focus: (fn: () => void) => void; getRootElement: () => HTMLElement | null } | null
+  focusNext?: FocusNextTarget | null
   hasSettingsPanel?: boolean
   defaultInklingEnterBehaviour?: boolean
 }) {

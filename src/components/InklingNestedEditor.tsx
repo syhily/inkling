@@ -4,7 +4,7 @@ import { BASIC_TRANSFORMERS, MINIMAL_TRANSFORMERS } from '@/markdown/transformer
 import BASIC_NODES from '@/nodes/BasicNodes'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { EmojiPickerPlugin } from '@/plugins/EmojiPickerPlugin'
-import InklingNestedEditorPlugin from '@/plugins/InklingNestedEditorPlugin'
+import InklingNestedEditorPlugin, { type FocusNextTarget } from '@/plugins/InklingNestedEditorPlugin'
 import RestrictContentPlugin from '@/plugins/RestrictContentPlugin'
 
 const Placeholder = ({ text = 'Type here', className = '' }) => {
@@ -30,7 +30,7 @@ interface InklingNestedEditorProps {
   textClassName?: string
   placeholderClassName?: string
   autoFocus?: boolean
-  focusNext?: { focus: (fn: () => void) => void; getRootElement: () => HTMLElement | null } | null
+  focusNext?: FocusNextTarget | null
   singleParagraph?: boolean
   hasSettingsPanel?: boolean
   defaultInklingEnterBehaviour?: boolean
