@@ -27,8 +27,7 @@ function registerCardInsert(editor: LexicalEditor, { nodeType, node, command, in
       command,
       (dataset) => {
         if (insert.requiresRangeSelection) {
-          // bookmark parity: the selection check precedes the dataset guard,
-          // and construction happens inside the focusNode check
+          // bookmark parity: the selection check precedes the dataset guard
           const selection = $getSelection()
           if (!$isRangeSelection(selection)) {
             return false
@@ -36,9 +35,7 @@ function registerCardInsert(editor: LexicalEditor, { nodeType, node, command, in
           if (!isCardDataset(dataset)) {
             return false
           }
-          if (selection.focus.getNode() !== null) {
-            editor.dispatchCommand(INSERT_CARD_COMMAND, cardPayload(dataset))
-          }
+          editor.dispatchCommand(INSERT_CARD_COMMAND, cardPayload(dataset))
           return true
         }
         if (!isCardDataset(dataset)) {
