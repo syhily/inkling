@@ -1,4 +1,4 @@
-import type { LexicalEditor } from 'lexical'
+import type { LexicalEditor, LexicalNode } from 'lexical'
 
 import { mergeRegister } from '@lexical/utils'
 import {
@@ -40,25 +40,22 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
     editor.registerCommand(
       INSERT_CARD_COMMAND,
       ({ cardNode, openInEditMode }) => {
-        let focusNode
-
         const selection = $getSelection()
-        if ($isRangeSelection(selection)) {
-          focusNode = selection.focus.getNode()
-        } else if ($isNodeSelection(selection)) {
-          focusNode = selection.getNodes()[0]
-        } else {
+        if (!$isRangeSelection(selection) && !$isNodeSelection(selection)) {
           return false
         }
+        // focus.getNode() is non-null (it throws on a missing node); a node
+        // selection always holds at least one node
+        const focusNode: LexicalNode = $isRangeSelection(selection)
+          ? selection.focus.getNode()
+          : selection.getNodes()[0]
 
-        if (focusNode !== null) {
-          $insertAndSelectNode({ selectedNode: focusNode, newNode: cardNode })
+        $insertAndSelectNode({ selectedNode: focusNode, newNode: cardNode })
 
-          store.setState({ selectedCardKey: cardNode.getKey() })
+        store.setState({ selectedCardKey: cardNode.getKey() })
 
-          if (openInEditMode) {
-            store.setState({ isEditingCard: true })
-          }
+        if (openInEditMode) {
+          store.setState({ isEditingCard: true })
         }
 
         return true
