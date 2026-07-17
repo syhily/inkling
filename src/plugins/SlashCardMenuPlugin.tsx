@@ -1,4 +1,4 @@
-import type { LexicalCommand, LexicalEditor, RangeSelection } from 'lexical'
+import type { LexicalCommand, LexicalEditor } from 'lexical'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
@@ -25,30 +25,28 @@ import { buildCardMenu } from '@/utils/buildCardMenu'
 import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
-interface MenuPosition {
-  top?: number | null
-  left?: number
-  bottom?: number | null
-}
-
 function useSlashCardMenu(editor: LexicalEditor) {
   const [isShowingMenu, setIsShowingMenu] = React.useState(false)
-  const [position, setPosition] = React.useState<MenuPosition>({})
+  const [position, setPosition] = React.useState<React.CSSProperties>({})
   const [query, setQuery] = React.useState('')
   const [commandParams, setCommandParams] = React.useState<string[]>([])
-  const [cardMenu, setCardMenu] = React.useState<BuildCardMenuResult>({} as BuildCardMenuResult)
+  const [cardMenu, setCardMenu] = React.useState<BuildCardMenuResult>({ menu: new Map(), maxItemIndex: -1 })
   const [selectedItemIndex, setSelectedItemIndex] = React.useState(0)
   const [scrollToSelectedItem, setScrollToSelectedItem] = React.useState(false)
   const cachedRange = React.useRef<Range | null>(null)
   const containerRef = React.useRef<HTMLDivElement | null>(null)
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
 
-  function setMenuPosition(elem: HTMLElement) {
+  function setMenuPosition(elem: HTMLElement | null) {
+    if (!elem) {
+      return
+    }
+
     const elemRect = elem.getBoundingClientRect()
-    const containerRect = (elem.parentNode as HTMLElement).getBoundingClientRect()
+    const containerRect = elem.parentElement?.getBoundingClientRect()
     const menuRect = containerRef.current?.getBoundingClientRect()
 
-    if (!menuRect) {
+    if (!containerRect || !menuRect) {
       return
     }
 
@@ -57,23 +55,25 @@ function useSlashCardMenu(editor: LexicalEditor) {
 
     if (wouldBeOffscreenBottom && !wouldBeOffscreenTop) {
       const bottom = containerRect.height - elem.offsetTop
-      setPosition({ top: null, left: 0, bottom })
+      setPosition({ left: 0, bottom })
     } else {
       const top = elem.offsetTop + elemRect.height
-      setPosition({ top, left: 0, bottom: null })
+      setPosition({ top, left: 0 })
     }
   }
 
   function getSelectionElement(): HTMLElement | null {
-    const nativeSelection = window.getSelection()
-    let selectionElem: HTMLElement | null = null
+    const anchorNode = window.getSelection()?.anchorNode
 
-    if (nativeSelection && nativeSelection.anchorNode && nativeSelection.anchorNode.nodeType === Node.TEXT_NODE) {
-      selectionElem = (nativeSelection.anchorNode.parentNode as HTMLElement | null)?.closest('p') ?? null
-    } else if (nativeSelection) {
-      selectionElem = nativeSelection.anchorNode as HTMLElement | null
+    if (!anchorNode) {
+      return null
     }
-    return selectionElem
+
+    if (anchorNode.nodeType === Node.TEXT_NODE) {
+      return anchorNode.parentElement?.closest('p') ?? null
+    }
+
+    return anchorNode instanceof HTMLElement ? anchorNode : null
   }
 
   function moveCursorToCachedRange() {
@@ -127,7 +127,10 @@ function useSlashCardMenu(editor: LexicalEditor) {
       }
 
       editor.update(() => {
-        const selection = $getSelection() as RangeSelection
+        const selection = $getSelection()
+        if (!$isRangeSelection(selection)) {
+          return
+        }
 
         const focusPNode = selection.focus.getNode().getTopLevelElement()
 
@@ -170,8 +173,8 @@ function useSlashCardMenu(editor: LexicalEditor) {
 
         if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
           const nativeSelection = window.getSelection()
-          const anchorNode = nativeSelection?.anchorNode
-          const isMenuSection = (anchorNode?.parentNode as HTMLElement | null)?.dataset?.cardMenuSection
+          const anchorParent = nativeSelection?.anchorNode?.parentNode
+          const isMenuSection = anchorParent instanceof HTMLElement ? anchorParent.dataset.cardMenuSection : undefined
 
           // don't close the menu if the selection inside the card section
           if (isMenuSection) {
@@ -368,7 +371,7 @@ function useSlashCardMenu(editor: LexicalEditor) {
     }
 
     const resizeObserver = new ResizeObserver(() => {
-      setMenuPosition(getSelectionElement() as HTMLElement)
+      setMenuPosition(getSelectionElement())
     })
     resizeObserver.observe(window.document.body)
 
@@ -387,21 +390,16 @@ function useSlashCardMenu(editor: LexicalEditor) {
       return
     }
 
-    setMenuPosition(getSelectionElement() as HTMLElement)
+    setMenuPosition(getSelectionElement())
   }, [isShowingMenu])
 
-  if (cardMenu.menu?.size === 0) {
+  if (cardMenu.menu.size === 0) {
     return null
   }
 
   if (isShowingMenu) {
     return (
-      <div
-        ref={containerRef}
-        className="absolute -left-2 z-50 mt-2"
-        style={position as React.CSSProperties}
-        data-inkling-slash-container
-      >
+      <div ref={containerRef} className="absolute -left-2 z-50 mt-2" style={position} data-inkling-slash-container>
         <SlashMenu>
           <CardMenu
             closeMenu={closeMenu}
