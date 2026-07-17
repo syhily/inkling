@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   applyUserSelect,
@@ -162,13 +162,17 @@ describe('draggable-utils', () => {
   describe('applyUserSelect', () => {
     it('sets standard and vendor-prefixed user-select styles', () => {
       const el = document.createElement('div')
+      // jsdom's CSSStyleDeclaration drops unknown vendor-prefixed properties,
+      // so the -moz/-ms/-o writes are pinned through the setProperty mechanism
+      const setPropertySpy = vi.spyOn(el.style, 'setProperty')
+
       applyUserSelect(el, 'none')
 
       expect(el.style.userSelect).toBe('none')
       expect(el.style.webkitUserSelect).toBe('none')
-      expect(el.style.mozUserSelect).toBe('none')
-      expect(el.style.msUserSelect).toBe('none')
-      expect(el.style.oUserSelect).toBe('none')
+      expect(setPropertySpy).toHaveBeenCalledWith('-moz-user-select', 'none')
+      expect(setPropertySpy).toHaveBeenCalledWith('-ms-user-select', 'none')
+      expect(setPropertySpy).toHaveBeenCalledWith('-o-user-select', 'none')
     })
 
     it('can clear user-select styles', () => {

@@ -1,8 +1,3 @@
-// Helper to set vendor-prefixed CSS properties not in the standard CSSStyleDeclaration type
-function setVendorStyle(style: CSSStyleDeclaration, prop: string, value: string): void {
-  ;(style as unknown as Record<string, string>)[prop] = value
-}
-
 // NOTE: the DnD geometry helpers in this file (isCardDropAllowed, getParent,
 // sibling lookups, scrollable-element lookups) are vendor-synced with the
 // inkling-card-gallery repo, which keeps its own copy (differing mainly in
@@ -85,10 +80,12 @@ export function getDocumentScrollingElement(): Element {
 }
 
 export function applyUserSelect(element: HTMLElement, value: string): void {
-  setVendorStyle(element.style, 'webkitUserSelect', value)
-  setVendorStyle(element.style, 'mozUserSelect', value)
-  setVendorStyle(element.style, 'msUserSelect', value)
-  setVendorStyle(element.style, 'oUserSelect', value)
+  element.style.webkitUserSelect = value
+  // the moz/ms/o prefixes have no IDL attribute in the DOM lib — setProperty
+  // is the typed mechanism for vendor-prefixed properties
+  element.style.setProperty('-moz-user-select', value)
+  element.style.setProperty('-ms-user-select', value)
+  element.style.setProperty('-o-user-select', value)
   element.style.userSelect = value
 }
 
