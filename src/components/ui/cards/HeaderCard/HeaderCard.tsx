@@ -6,7 +6,6 @@ import { FastAverageColor } from 'fast-average-color'
 import React, { useEffect, useState } from 'react'
 
 import type { DragHandlerLike, FileChangeEvent, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
-import type { ColorSwatchData } from '@/components/ui/ColorPicker'
 
 import CenterAlignIcon from '@/assets/icons/inkling-align-center.svg?react'
 import LeftAlignIcon from '@/assets/icons/inkling-align-left.svg?react'
@@ -497,35 +496,37 @@ export function HeaderCard({
             hasTransparentOption={true}
             isExpanded={backgroundColorPickerExpanded}
             label="Background"
-            swatches={
-              [
-                layout !== 'split' && {
-                  title: 'Image',
-                  customContent: (
-                    <button
-                      className={clsx(
-                        `group relative flex size-6 shrink-0 items-center justify-center rounded-full border border-grey-300 bg-grey-100 text-black`,
-                        showBackgroundImage && 'outline outline-2 outline-green',
-                      )}
-                      data-testid="header-background-image-toggle"
-                      title="Image"
-                      type="button"
-                      onClick={() => {
-                        handleShowBackgroundImage()
-                        setBackgroundColorPickerExpanded(false)
-                        setButtonColorPickerExpanded(false)
-                      }}
-                    >
-                      <ImgBgIcon className="size-[1.4rem]" />
-                      <Tooltip label="Image" />
-                    </button>
-                  ),
-                },
-                { title: 'Black', hex: '#000000' },
-                { title: 'Grey', hex: '#F0F0F0' },
-                { title: 'Brand color', accent: true },
-              ].filter(Boolean) as ColorSwatchData[]
-            }
+            swatches={[
+              ...(layout !== 'split'
+                ? [
+                    {
+                      title: 'Image',
+                      customContent: (
+                        <button
+                          className={clsx(
+                            `group relative flex size-6 shrink-0 items-center justify-center rounded-full border border-grey-300 bg-grey-100 text-black`,
+                            showBackgroundImage && 'outline outline-2 outline-green',
+                          )}
+                          data-testid="header-background-image-toggle"
+                          title="Image"
+                          type="button"
+                          onClick={() => {
+                            handleShowBackgroundImage()
+                            setBackgroundColorPickerExpanded(false)
+                            setButtonColorPickerExpanded(false)
+                          }}
+                        >
+                          <ImgBgIcon className="size-[1.4rem]" />
+                          <Tooltip label="Image" />
+                        </button>
+                      ),
+                    },
+                  ]
+                : []),
+              { title: 'Black', hex: '#000000' },
+              { title: 'Grey', hex: '#F0F0F0' },
+              { title: 'Brand color', accent: true },
+            ]}
             value={showBackgroundImage && layout !== 'split' ? 'image' : backgroundColor || ''}
             onPickerChange={(color) => handleBackgroundColor(color, matchingTextColor(color))}
             onSwatchChange={(color) => {

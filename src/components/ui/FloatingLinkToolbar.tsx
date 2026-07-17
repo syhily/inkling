@@ -35,19 +35,22 @@ export function FloatingLinkToolbar({ anchorElem, onEditLink, disabled }: Floati
       }
 
       editor.update(() => {
-        const target = event.target as HTMLElement
+        const target = event.target
+        if (!(target instanceof HTMLElement)) {
+          return
+        }
         const node = $getNearestNodeFromDOMNode(target)
         setTargetElem(target)
-        const isLink = $isLinkNode(node) || $isLinkNode(node?.getParent())
+        const parentNode = node?.getParent()
+        const link = $isLinkNode(node) ? node : $isLinkNode(parentNode) ? parentNode : null
 
-        if (!isLink) {
+        if (!link) {
           if (linkNode) {
             setLinkNode(null)
           }
 
           return
         }
-        const link = ($isLinkNode(node) ? node : node!.getParent()) as LinkNode
 
         setLinkNode(link)
         setHref(link.getURL())

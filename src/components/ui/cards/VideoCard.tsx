@@ -69,7 +69,6 @@ function PopulatedVideoCard({
     },
   ]
 
-  // oxlint-disable-next-line typescript/no-explicit-any
   return (
     <>
       <div className="not-inkling-prose relative" data-testid="video-card-populated">
@@ -164,7 +163,6 @@ function EmptyVideoCard({
     <>
       <MediaPlaceholder
         desc="Click to select a video"
-        // oxlint-disable-next-line typescript/no-explicit-any
         errors={errors}
         filePicker={() => openFileSelection({ fileInputRef })}
         icon="video"
@@ -174,7 +172,6 @@ function EmptyVideoCard({
       />
       <form>
         <input
-          // oxlint-disable-next-line typescript/no-explicit-any
           ref={fileInputRef}
           accept={videoMimeTypes.join(',')}
           hidden={true}
