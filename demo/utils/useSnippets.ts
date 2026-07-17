@@ -1,11 +1,8 @@
 import { useState } from 'react'
 
-interface Snippet {
-  name: string
-  value: string
-}
+import type { SnippetItem } from '@/'
 
-function getSnippetsFromStorage(): Snippet[] {
+function getSnippetsFromStorage(): SnippetItem[] {
   const snippetsStr = localStorage.getItem('snippets')
   if (!snippetsStr) {
     return []
@@ -18,7 +15,7 @@ function getSnippetsFromStorage(): Snippet[] {
     }
 
     return parsedSnippets.filter(
-      (snippet): snippet is Snippet =>
+      (snippet): snippet is SnippetItem =>
         typeof snippet === 'object' &&
         snippet !== null &&
         'name' in snippet &&
@@ -31,14 +28,14 @@ function getSnippetsFromStorage(): Snippet[] {
   }
 }
 
-function updateSnippetsInStorage(snippetsArr: Snippet[] = []) {
+function updateSnippetsInStorage(snippetsArr: SnippetItem[] = []) {
   localStorage.setItem('snippets', JSON.stringify(snippetsArr))
 }
 
 export const useSnippets = () => {
-  const [snippets, setSnippets] = useState<Snippet[]>(getSnippetsFromStorage())
+  const [snippets, setSnippets] = useState<SnippetItem[]>(getSnippetsFromStorage())
 
-  function createSnippet({ name, value }: Snippet) {
+  function createSnippet({ name, value }: SnippetItem) {
     const updatedSnippets = [...snippets]
     const snippetIndexForReplace = snippets.findIndex((item) => item.name === name)
     if (snippetIndexForReplace === -1) {
@@ -51,7 +48,7 @@ export const useSnippets = () => {
     updateSnippetsInStorage(updatedSnippets)
   }
 
-  function deleteSnippet(snippet: Snippet) {
+  function deleteSnippet(snippet: SnippetItem) {
     const updatedSnippets = snippets.filter((item) => item.name !== snippet.name)
     setSnippets(updatedSnippets)
     updateSnippetsInStorage(updatedSnippets)

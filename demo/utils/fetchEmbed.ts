@@ -1,20 +1,10 @@
-interface FetchEmbedOptions {
-  type: string
+import type { BookmarkEmbedOptions, BookmarkEmbedResponse } from '@/'
+
+interface VideoEmbedOptions {
+  type: 'video'
 }
 
-interface EmbedMetadata {
-  icon: string
-  title: string
-  description: string
-  publisher: string
-  author: string
-  thumbnail: string
-}
-
-interface EmbedReturnData {
-  url: string
-  metadata: EmbedMetadata
-}
+type FetchEmbedOptions = BookmarkEmbedOptions | VideoEmbedOptions
 
 interface VideoEmbedReturnData {
   html: string
@@ -33,16 +23,16 @@ interface VideoEmbedReturnData {
 const BOOKMARK_ICON = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
 const BOOKMARK_THUMBNAIL = BOOKMARK_ICON
 
-export async function fetchEmbed(url: string, opts: object): Promise<EmbedReturnData | VideoEmbedReturnData | null> {
-  // the editor's declared contract is `opts: object`; hosts narrow it to the
-  // shape the editor actually sends
-  const { type } = opts as FetchEmbedOptions
+export async function fetchEmbed(
+  url: string,
+  { type }: FetchEmbedOptions,
+): Promise<BookmarkEmbedResponse | VideoEmbedReturnData | null> {
   new URL(url)
   await delay(process.env.NODE_ENV === 'test' ? 50 : 1500)
 
   try {
     if (type === 'bookmark') {
-      const returnData: EmbedReturnData = {
+      const returnData: BookmarkEmbedResponse = {
         url: 'https://inkling.local/',
         metadata: {
           icon: BOOKMARK_ICON,

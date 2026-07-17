@@ -1,13 +1,19 @@
 import 'react'
 
-interface ImportMetaEnv {
-  readonly VITE_KLIPY_API_KEY?: string
-  readonly VITE_TENOR_API_KEY?: string
-  readonly VITE_TEST?: string
-}
+declare global {
+  interface ViteTypeOptions {
+    strictImportMetaEnv: unknown
+  }
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv
+  interface ImportMetaEnv {
+    readonly VITE_KLIPY_API_KEY?: string
+    readonly VITE_TENOR_API_KEY?: string
+    readonly VITE_TEST?: string
+  }
+
+  interface ImportMeta {
+    readonly env: ImportMetaEnv
+  }
 }
 
 declare module 'react' {
