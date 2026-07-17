@@ -143,6 +143,61 @@ describe('useSearchLinks', () => {
     expect(result.current.isSearching).toBe(false)
   })
 
+  it('prefetches defaults behind an initial text query and shows the cache immediately when cleared', async () => {
+    const defaultSearch = deferred<SearchResult[]>()
+    const textSearch = deferred<SearchResult[]>()
+    const searchLinks = vi.fn((term?: string): Promise<SearchResult[] | undefined> => {
+      if (term === undefined) {
+        return defaultSearch.promise
+      }
+      return term === 'cats' ? textSearch.promise : Promise.resolve([])
+    })
+    const { result, rerender } = renderHook(({ query }) => useSearchLinks(query, searchLinks), {
+      initialProps: { query: 'cats' },
+    })
+
+    await waitFor(() => expect(searchLinks).toHaveBeenCalledWith())
+    await waitForDebounce()
+    await waitFor(() => expect(searchLinks).toHaveBeenCalledWith('cats'))
+    expect(result.current.isSearching).toBe(true)
+
+    await act(async () => {
+      defaultSearch.resolve(resultsFor('cached-default'))
+    })
+    expect(result.current.listOptions).toEqual([])
+    expect(result.current.isSearching).toBe(true)
+
+    await act(async () => {
+      textSearch.resolve(resultsFor('cats'))
+    })
+    expect(result.current.listOptions[0]?.label).toBe('cats')
+    expect(result.current.isSearching).toBe(false)
+
+    rerender({ query: '' })
+    expect(result.current.listOptions[0]?.label).toBe('cached-default')
+    expect(result.current.isSearching).toBe(false)
+    expect(searchLinks.mock.calls.filter(([term]) => term === undefined)).toHaveLength(1)
+  })
+
+  it('does not let a rejecting background default prefetch disturb an initial URL query', async () => {
+    const defaultSearch = deferred<SearchResult[]>()
+    const searchLinks = vi.fn((term?: string): Promise<SearchResult[] | undefined> => {
+      return term === undefined ? defaultSearch.promise : Promise.resolve([])
+    })
+    const { result } = renderHook(() => useSearchLinks('https://example.com/immediate', searchLinks))
+
+    await waitFor(() => expect(searchLinks).toHaveBeenCalledWith())
+    expect(result.current.listOptions[0]?.items[0]?.value).toBe('https://example.com/immediate')
+    expect(result.current.isSearching).toBe(false)
+
+    await act(async () => {
+      defaultSearch.reject(new Error('default search unavailable'))
+    })
+
+    expect(result.current.listOptions[0]?.items[0]?.value).toBe('https://example.com/immediate')
+    expect(result.current.isSearching).toBe(false)
+  })
+
   it('does not let a pending text search overwrite a URL result', async () => {
     const textSearch = deferred<SearchResult[]>()
     const searchLinks = vi.fn((term?: string): Promise<SearchResult[] | undefined> => {

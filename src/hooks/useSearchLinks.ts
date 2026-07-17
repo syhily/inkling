@@ -116,6 +116,11 @@ interface SearchRequest {
   term: string
 }
 
+interface DefaultSearchRequest {
+  id: number
+  promise: Promise<void>
+}
+
 export const useSearchLinks = (
   query: string,
   searchLinks?: SearchLinksFn,
@@ -126,6 +131,8 @@ export const useSearchLinks = (
   const [isSearching, setIsSearching] = React.useState<boolean>(false)
 
   const latestRequestIdRef = React.useRef(0)
+  const latestDefaultRequestIdRef = React.useRef(0)
+  const defaultRequestRef = React.useRef<DefaultSearchRequest | null>(null)
   const defaultOptionsLoadedRef = React.useRef(false)
 
   const search = React.useMemo(() => {
@@ -168,25 +175,48 @@ export const useSearchLinks = (
     return debounce(search, DEBOUNCE_MS)
   }, [search])
 
-  const fetchDefaultOptions = React.useCallback(
-    async (requestId: number): Promise<void> => {
+  const startDefaultOptionsFetch = React.useCallback((): Promise<void> => {
+    const id = latestDefaultRequestIdRef.current + 1
+    latestDefaultRequestIdRef.current = id
+    const promise = (async () => {
       try {
         const results = searchLinks ? await searchLinks() : undefined
-        if (latestRequestIdRef.current !== requestId) {
-          return
+        if (latestDefaultRequestIdRef.current === id) {
+          setDefaultListOptions(convertSearchResultsToListOptions(results, '', { type: 'default' }))
+          defaultOptionsLoadedRef.current = true
         }
-        setDefaultListOptions(convertSearchResultsToListOptions(results, '', { type: 'default' }))
-        defaultOptionsLoadedRef.current = true
       } catch {
         // Default suggestions are best-effort.
-      } finally {
-        if (latestRequestIdRef.current === requestId) {
-          setIsSearching(false)
-        }
       }
-    },
-    [searchLinks],
-  )
+    })()
+
+    defaultRequestRef.current = { id, promise }
+    void promise.then(() => {
+      if (defaultRequestRef.current?.id === id) {
+        defaultRequestRef.current = null
+      }
+    })
+    return promise
+  }, [searchLinks])
+
+  const waitForDefaultOptions = React.useCallback((): Promise<void> => {
+    if (defaultOptionsLoadedRef.current) {
+      return Promise.resolve()
+    }
+    return defaultRequestRef.current?.promise ?? startDefaultOptionsFetch()
+  }, [startDefaultOptionsFetch])
+
+  React.useEffect(() => {
+    defaultOptionsLoadedRef.current = false
+    const promise = startDefaultOptionsFetch()
+
+    return () => {
+      latestDefaultRequestIdRef.current += 1
+      if (defaultRequestRef.current?.promise === promise) {
+        defaultRequestRef.current = null
+      }
+    }
+  }, [startDefaultOptionsFetch])
 
   React.useEffect(
     () => () => {
@@ -215,13 +245,17 @@ export const useSearchLinks = (
         setIsSearching(false)
       } else {
         setIsSearching(true)
-        void fetchDefaultOptions(requestId)
+        void waitForDefaultOptions().then(() => {
+          if (latestRequestIdRef.current === requestId) {
+            setIsSearching(false)
+          }
+        })
       }
       return
     }
 
     debouncedSearch({ id: requestId, term: query })
-  }, [query, debouncedSearch, fetchDefaultOptions])
+  }, [query, debouncedSearch, waitForDefaultOptions])
 
   const displayedListOptions = query ? listOptions : defaultListOptions
 
