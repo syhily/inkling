@@ -154,7 +154,7 @@ export function UrlInput({
         data-testid={dataTestId}
         placeholder={placeholder ?? 'Paste URL...'}
         type="text"
-        value={value}
+        value={value ?? ''}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
       />

@@ -32,7 +32,13 @@ function CalloutCardStory({ display = 'Default', value = '', placeholder, ...arg
     <div className="inkling-prose">
       <div className="mx-auto my-8 max-w-[740px] min-w-[initial]">
         <CardWrapper {...displayState} {...args}>
-          <CalloutCard {...displayState} {...args} textEditor={textEditor} />
+          <CalloutCard
+            {...displayState}
+            {...args}
+            changeEmoji={() => {}}
+            textEditor={textEditor}
+            toggleEmoji={() => {}}
+          />
         </CardWrapper>
       </div>
     </div>

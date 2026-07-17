@@ -128,7 +128,7 @@ export function UrlSearchInput({
   const getItem = (item: ListOptionItem, selected: boolean, onMouseOver: () => void, scrollIntoView: boolean) => {
     return (
       <LinkInputSearchItem
-        key={item.value}
+        key={item.value ?? 'no-results'}
         dataTestId={dataTestId}
         highlightString={value}
         item={item}

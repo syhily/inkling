@@ -68,7 +68,7 @@ export function LinkInputWithSearch({ href, update, cancel }: LinkInputWithSearc
   const getItem = (item: ListOptionItem, selected: boolean, onMouseOver: () => void, scrollIntoView: boolean) => {
     return (
       <LinkInputSearchItem
-        key={item.value}
+        key={item.value ?? 'no-results'}
         dataTestId={testId}
         highlightString={_href}
         item={item}

@@ -43,7 +43,7 @@ interface HeaderCardProps {
   buttonUrl?: string
   showBackgroundImage?: boolean
   backgroundImageSrc?: string
-  backgroundSize?: string
+  backgroundSize?: 'cover' | 'contain'
   backgroundColor?: string
   buttonColor?: string
   buttonTextColor?: string
@@ -61,7 +61,7 @@ interface HeaderCardProps {
   handleLayout: (layout: string) => void
   handleTextColor: (color: string) => void
   isPinturaEnabled?: boolean
-  layout?: string
+  layout?: 'regular' | 'wide' | 'full' | 'split'
   onFileChange: (event: FileChangeEvent) => void
   openImageEditor: (options: { image: string; handleSave: (blob: Blob) => void }) => void
   imageDragHandler: DragHandlerLike
@@ -332,7 +332,7 @@ export function HeaderCard({
                 </>
               }
               alt="Background image"
-              backgroundSize={backgroundSize as 'cover' | 'contain'}
+              backgroundSize={backgroundSize}
               className={clsx(
                 'sm:w-1/2',
                 correctedBackgroundSize === 'contain' && 'sm:my-10 md:my-14',
@@ -471,7 +471,7 @@ export function HeaderCard({
       </div>
 
       {isEditing && (
-        <SettingsPanel cardWidth={layout as 'regular' | 'wide' | 'full' | 'split'} className="mt-0">
+        <SettingsPanel cardWidth={layout} className="mt-0">
           <ButtonGroupSetting buttons={layoutChildren} label="Layout" selectedName={layout} onClick={handleLayout} />
 
           {layout === 'split' && (

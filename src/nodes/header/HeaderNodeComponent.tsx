@@ -288,7 +288,10 @@ function HeaderNodeComponent({
           alignment,
           backgroundColor,
           backgroundImageSrc,
-          backgroundSize,
+          // the dataset admits arbitrary strings from older documents; the
+          // card UI speaks fixed vocabularies, so narrow at the render
+          // boundary with the node's own defaults (the callout color idiom)
+          backgroundSize: backgroundSize === 'contain' ? 'contain' : 'cover',
           buttonColor,
           buttonEnabled,
           buttonText,
@@ -316,7 +319,7 @@ function HeaderNodeComponent({
           isEditing,
           isPinturaEnabled,
           isSwapped,
-          layout,
+          layout: layout === 'regular' || layout === 'wide' || layout === 'split' ? layout : 'full',
           openImageEditor,
           setFileInputRef: (ref: { current?: HTMLInputElement | null }) => {
             fileInputRef.current = ref?.current ?? null

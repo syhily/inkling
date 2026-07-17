@@ -25,6 +25,28 @@ async function waitForDebounce() {
 }
 
 describe('useSearchLinks', () => {
+  it('resolves like a cancelled search when no search function is provided', async () => {
+    const { result, rerender } = renderHook(({ query }) => useSearchLinks(query), {
+      initialProps: { query: '' },
+    })
+
+    // mount settles out of the searching state with the URL-entry default
+    await waitFor(() => expect(result.current.isSearching).toBe(false))
+    expect(result.current.listOptions[0]?.label).toBe('Link to web page')
+
+    // a query resolves undefined — nothing is written, searching clears,
+    // and the displayed list (the search results, never written) is empty
+    rerender({ query: 'anything' })
+    await waitForDebounce()
+    expect(result.current.isSearching).toBe(false)
+    expect(result.current.listOptions).toEqual([])
+
+    // clearing the query brings the untouched defaults back
+    rerender({ query: '' })
+    await waitForDebounce()
+    expect(result.current.listOptions[0]?.label).toBe('Link to web page')
+  })
+
   it('ignores stale responses that resolve out of order', async () => {
     const first = deferred<SearchResult[]>()
     const second = deferred<SearchResult[]>()

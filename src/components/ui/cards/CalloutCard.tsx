@@ -91,10 +91,10 @@ interface CalloutCardProps {
   color?: CalloutColorName
   isEditing?: boolean
   setShowEmojiPicker?: (show: boolean) => void
-  toggleEmoji?: (checked: boolean) => void
+  toggleEmoji: (checked: boolean) => void
   hasEmoji?: boolean
   handleColorChange?: (name?: string) => void
-  changeEmoji?: (emoji: { native?: string }) => void
+  changeEmoji: (emoji: { native?: string }) => void
   calloutEmoji?: string
   textEditor?: LexicalEditor
   textEditorInitialState?: InitialEditorStateType
@@ -147,7 +147,7 @@ export function CalloutCard({
                 <EmojiPickerPortal
                   positionRef={emojiButtonRef}
                   togglePortal={toggleEmojiPicker}
-                  onEmojiClick={changeEmoji!}
+                  onEmojiClick={changeEmoji}
                 />
               )}
             </>
@@ -167,7 +167,7 @@ export function CalloutCard({
       </div>
       {isEditing ? (
         <SettingsPanel darkMode={darkMode}>
-          <ToggleSetting dataTestId="emoji-toggle" isChecked={!!calloutEmoji} label="Emoji" onChange={toggleEmoji!} />
+          <ToggleSetting dataTestId="emoji-toggle" isChecked={!!calloutEmoji} label="Emoji" onChange={toggleEmoji} />
           <ColorOptionSetting
             buttons={calloutColorPicker}
             dataTestId="callout-color-picker"

@@ -10,6 +10,10 @@ export interface CardMenuItemData {
   icon?: string
   insertCommand?: unknown
   insertParams?: Record<string, unknown>
+  // STOPPED in the conversion sweep (batch 7): producers actually write
+  // `queryParams: string[]` (card-menus.ts) and the runtime survives via
+  // Object.values; closing this type requires the producer-seam contract
+  // decision, not a cast. Kept open deliberately.
   queryParams?: Record<string, unknown>
   Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
   dataTestId?: string

@@ -116,7 +116,7 @@ export function AtLinkResultsPopup({ atLinkNode, isSearching, listOptions, query
   const getItem = (item: ListOptionItem, selected: boolean, onMouseOver: () => void, scrollIntoView: boolean) => {
     return (
       <LinkInputSearchItem
-        key={item.value}
+        key={item.value ?? 'no-results'}
         dataTestId={testId}
         highlightString={query}
         item={item}

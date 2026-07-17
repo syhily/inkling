@@ -18,8 +18,6 @@ export interface InputListGroupData<T extends InputListItemData = InputListItemD
   items: T[]
 }
 
-export type InputListOption<T extends InputListItemData = InputListItemData> = InputListItemData | InputListGroupData<T>
-
 // Flat option lists and grouped option lists are told apart by the presence of
 // an `items` array on the first entry (groups always carry one, items never do).
 function isGroupList<T extends InputListItemData>(
