@@ -63,17 +63,26 @@ describe('RestrictContentPlugin', () => {
 
     renderHook(() => RestrictContentPlugin({ paragraphs: 2 }))
 
+    // jsdom has no ClipboardEvent implementation and the plugin's PASTE
+    // listener narrows PasteCommandType with an instanceof guard, so stub
+    // the global to let the dispatched payload through (same documented
+    // limitation as test/unit/plugins/behaviour/at-link.test.ts)
+    vi.stubGlobal('ClipboardEvent', class extends Event {})
+
     const preventDefault = vi.fn()
     const clipboardData = {
       getData: (mime: string) => (mime === MIME_TEXT_PLAIN ? 'hello world' : mime === MIME_TEXT_HTML ? '' : ''),
     } as DataTransfer
 
-    const handled = editor.dispatchCommand(PASTE_COMMAND, {
-      clipboardData,
-      preventDefault,
-    } as unknown as ClipboardEvent)
+    const event = new ClipboardEvent('paste')
+    Object.defineProperty(event, 'clipboardData', { value: clipboardData })
+    Object.defineProperty(event, 'preventDefault', { value: preventDefault })
+
+    const handled = editor.dispatchCommand(PASTE_COMMAND, event)
 
     expect(handled).toBe(true)
     expect(preventDefault).toHaveBeenCalled()
+
+    vi.unstubAllGlobals()
   })
 })
