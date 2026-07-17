@@ -60,12 +60,12 @@ export const MARKDOWN_NODES = [
   MarkdownNode,
 ]
 
-export const CARD_TRANSFORMERS = [
+export const CARD_TRANSFORMERS: Transformer[] = [
   ...MARKDOWN_CARDS.flatMap((card) => (card.markdownTransformer ? [card.markdownTransformer] : [])),
   MARKDOWN_CARD_TRANSFORMER,
-] as Transformer[]
+]
 
-const TRANSFORMERS = [...CARD_TRANSFORMERS, ...DEFAULT_TRANSFORMERS] as Transformer[]
+const TRANSFORMERS: Transformer[] = [...CARD_TRANSFORMERS, ...DEFAULT_TRANSFORMERS]
 
 function createMarkdownEditor() {
   return createHeadlessEditor({
