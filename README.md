@@ -178,7 +178,8 @@ We use [Vitest](https://vitest.dev) for unit tests and [Playwright](https://play
 - `pnpm test` runs unit tests and exits
 - `pnpm test:e2e` runs end-to-end tests and exits
 - `pnpm test:unit` runs unit tests
-- `pnpm typecheck` runs TypeScript type checking
+- `pnpm typecheck` runs strict TypeScript checks for production/demo/scripts and the Vitest unit/utils suites
+- `pnpm typecheck:unit` runs the dedicated strict check for `test/unit/**` and `test/utils/**`
 - `pnpm test:unit:watch` runs unit tests and starts a test watcher that re-runs tests on file changes
 - `pnpm test:unit:watch --ui` runs unit tests and opens a browser UI for exploring and re-running tests
 - `pnpm test:e2e` runs e2e tests
@@ -186,6 +187,11 @@ We use [Vitest](https://vitest.dev) for unit tests and [Playwright](https://play
 - `pnpm test:slowmo` same as `pnpm test:e2e --headed` but adds 100ms delay between instructions to make it easier to see what's happening (note that some tests may fail or timeout due to the added delays)
 - `pnpm test:e2e --ui` opens a [browser UI](https://playwright.dev/docs/test-ui-mode) in watch mode for exploring and re-running tests
 - `pnpm test:e2e --ui --headed` same as `pnpm test:e2e --ui` but also runs tests in browser so you can watch the tests execute
+
+Playwright specs under `test/e2e/**` and their Playwright-only `test/utils/e2e.ts` helper stay on the `pnpm test:e2e` path:
+Playwright compiles them with its browser-specific runner and fixtures. Keeping that path separate prevents Playwright
+globals and browser test scaffolding from leaking into the production or Vitest TypeScript programs, while the CI e2e job
+remains the explicit compile-and-execute gate.
 
 Before tests are started we build a version of the demo app that is used for the unit tests.
 
