@@ -18,7 +18,7 @@ import { getSelectedNode } from '@/utils/getSelectedNode'
 export default function FloatingToolbarPlugin({
   anchorElem = document.body,
   isSnippetsEnabled,
-  hiddenFormats = [] as string[],
+  hiddenFormats = [],
 }: {
   anchorElem?: HTMLElement
   isSnippetsEnabled?: boolean
@@ -132,12 +132,11 @@ function useFloatingFormatToolbar(
     }
   })
 
-  const handleLinkEdit = (data: { href?: string }) => {
+  const handleLinkEdit = (data: { href: string }) => {
     setToolbarItemType(toolbarItemTypes.link)
-    setHref(data?.href ?? '')
+    setHref(data.href)
   }
 
-  // oxlint-disable-next-line typescript/no-explicit-any
   return (
     <>
       <FloatingFormatToolbar
