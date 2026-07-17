@@ -116,7 +116,7 @@ async function setupSlashPlugin() {
 
   const contextValue = createComposerContext()
 
-  vi.mocked(useLexicalComposerContext).mockReturnValue([editor] as never)
+  vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => null }])
   const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
 
   render(

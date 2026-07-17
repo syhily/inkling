@@ -1,5 +1,5 @@
 import { createHeadlessEditor } from '@lexical/headless'
-import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
+import { $getNodeByKey, $getRoot, type LexicalEditor, type LexicalNode } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AudioNode, $createAudioNode, type AudioNode as AudioNodeType } from '@/nodes/AudioNode'
@@ -112,12 +112,12 @@ describe('runUploadIntent', () => {
     vi.restoreAllMocks()
   })
 
-  async function createNodeInEditor(create: () => { getKey: () => string }): Promise<string> {
+  async function createNodeInEditor(create: () => LexicalNode): Promise<string> {
     let nodeKey = ''
     await updateEditor(editor, () => {
-      const node = create() as never
+      const node = create()
       $getRoot().append(node)
-      nodeKey = (node as { getKey: () => string }).getKey()
+      nodeKey = node.getKey()
     })
     return nodeKey
   }

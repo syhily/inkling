@@ -16,7 +16,7 @@ describe('InklingNestedComposer', () => {
   it('renders a nested editable surface inside a parent composer', async () => {
     const nestedEditor = createEditor({
       namespace: 'nested',
-      nodes: NESTED_NODES as never,
+      nodes: NESTED_NODES,
       onError: () => {},
     })
 

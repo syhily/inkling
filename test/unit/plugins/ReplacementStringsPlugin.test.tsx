@@ -28,7 +28,7 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
     <LexicalComposer
       initialConfig={{
         namespace: 'test',
-        nodes: NESTED_NODES as never,
+        nodes: NESTED_NODES,
         onError: () => {},
         theme: {},
       }}
@@ -48,13 +48,13 @@ describe('ReplacementStringsPlugin in nested editors', () => {
   it('formats {first_name} as code in a nested editor', async () => {
     const parentEditor = createEditor({
       namespace: 'parent',
-      nodes: NESTED_NODES as never,
+      nodes: NESTED_NODES,
       onError: () => {},
     })
 
     const nestedEditor = createEditor({
       namespace: 'nested',
-      nodes: NESTED_NODES as never,
+      nodes: NESTED_NODES,
       parentEditor,
       onError: () => {},
     })

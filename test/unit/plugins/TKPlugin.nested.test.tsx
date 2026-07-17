@@ -28,7 +28,7 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
     <LexicalComposer
       initialConfig={{
         namespace: 'test',
-        nodes: NESTED_NODES as never,
+        nodes: NESTED_NODES,
         onError: () => {},
         theme: {},
       }}
@@ -48,13 +48,13 @@ describe('TKPlugin in nested editors', () => {
   it('creates a TKNode when typing TK in a nested editor', async () => {
     const parentEditor = createEditor({
       namespace: 'parent',
-      nodes: NESTED_NODES as never,
+      nodes: NESTED_NODES,
       onError: () => {},
     })
 
     const nestedEditor = createEditor({
       namespace: 'nested',
-      nodes: NESTED_NODES as never,
+      nodes: NESTED_NODES,
       parentEditor,
       onError: () => {},
     })

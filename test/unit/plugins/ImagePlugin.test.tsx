@@ -26,7 +26,7 @@ describe('Image insert commands (CardInsertPlugin)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     editor = createTestEditor()
-    ;(useLexicalComposerContext as unknown as { mockReturnValue: (value: unknown) => void }).mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => null }])
   })
 
   it('returns null', () => {

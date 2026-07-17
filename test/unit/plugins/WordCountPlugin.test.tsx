@@ -6,6 +6,7 @@ import {
   createEditor,
   DecoratorNode,
   type LexicalEditor,
+  type LexicalNodeConfig,
   type NodeKey,
 } from 'lexical'
 import React from 'react'
@@ -20,7 +21,7 @@ vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
 
-function createTestEditor(overrides: { nodes?: Array<typeof DecoratorNode>; parentEditor?: LexicalEditor } = {}) {
+function createTestEditor(overrides: { nodes?: LexicalNodeConfig[]; parentEditor?: LexicalEditor } = {}) {
   const editor = createEditor({
     namespace: 'test',
     nodes: overrides.nodes,
@@ -45,7 +46,7 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
   })
 }
 
-class TestDecoratorNode extends DecoratorNode {
+class TestDecoratorNode extends DecoratorNode<null> {
   __nestedEditor: LexicalEditor
 
   constructor(nestedEditor: LexicalEditor = createTestEditor(), key?: NodeKey) {
@@ -100,7 +101,7 @@ describe('WordCountPlugin', () => {
 
   async function renderPlugin(onChange: (count: number) => void, pluginEditor = editor) {
     const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([pluginEditor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([pluginEditor, { getTheme: () => null }])
 
     const wordCountHandle = createWordCountHandle()
     const result = renderHook(() => WordCountPlugin({ onChange }), {
@@ -203,7 +204,7 @@ describe('WordCountPlugin', () => {
 
   it('counts words from nested editors', async () => {
     const topLevelEditor = createTestEditor({
-      nodes: [TestDecoratorNode as unknown as typeof DecoratorNode],
+      nodes: [TestDecoratorNode],
     })
     const nestedEditor = createTestEditor({ parentEditor: topLevelEditor })
 
