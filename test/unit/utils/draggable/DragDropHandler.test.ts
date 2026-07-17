@@ -194,6 +194,48 @@ describe('DragDropHandler', () => {
     expect(handler.draggableInfo).toBeNull()
   })
 
+  it('recomputes the indicator when consecutive drags cross the same droppable quadrant', async () => {
+    const editorContainer = document.createElement('div')
+    document.body.appendChild(editorContainer)
+    handler.destroy()
+    handler = new DragDropHandler({ editorContainerElement: editorContainer })
+
+    const containerElement = createContainer('consecutive')
+    const draggable = containerElement.querySelector<HTMLElement>('.draggable')
+    const droppable = containerElement.querySelector<HTMLElement>('.droppable')
+    if (!draggable || !droppable) {
+      throw new Error('Expected draggable test elements')
+    }
+
+    const image = document.createElement('img')
+    image.width = 100
+    image.height = 100
+    draggable.appendChild(image)
+
+    const handlers = createHandlers()
+    handlers.droppable.getIndicatorPosition.mockReturnValueOnce({ insertIndex: 1, element: droppable })
+    handlers.droppable.getIndicatorPosition.mockReturnValueOnce({ insertIndex: 2, element: droppable })
+    handler.registerContainer(containerElement, handlers)
+    document.elementFromPoint = vi.fn(() => droppable)
+
+    const drag = async () => {
+      draggable.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0, clientX: 10, clientY: 10 }))
+      document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, button: 0, clientX: 15, clientY: 15 }))
+      await new Promise((resolve) => {
+        setTimeout(resolve, 50)
+      })
+    }
+
+    await drag()
+    expect(handler.draggableInfo?.insertIndex).toBe(1)
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+
+    await drag()
+
+    expect(handlers.droppable.getIndicatorPosition).toHaveBeenCalledTimes(2)
+    expect(handler.draggableInfo?.insertIndex).toBe(2)
+  })
+
   it('cancels drag on escape key', async () => {
     await initiateDrag('escape')
 

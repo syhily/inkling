@@ -561,6 +561,10 @@ export class DragDropHandler {
     this.draggableInfo = null
     this.grabbedElement = null
     this.sourceContainer = null
+    this._currentOverContainer = null
+    this._currentOverContainerElem = null
+    this._currentOverDroppableElem = null
+    this._currentOverDroppablePosition = null
 
     if (this.dragPreviewInfo) {
       this.dragPreviewInfo.element.__reactRoot?.unmount()
