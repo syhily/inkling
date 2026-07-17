@@ -11,7 +11,8 @@ export function useClickOutside(
     }
 
     const handleClickOutside = (event: MouseEvent): void => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      const target = event.target
+      if (ref.current && (!(target instanceof Node) || !ref.current.contains(target))) {
         handler(event)
       }
     }

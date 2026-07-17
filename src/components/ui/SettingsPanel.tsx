@@ -27,7 +27,7 @@ export type SettingsPanelProps = {
 )
 
 export function SettingsPanel({ children, darkMode, cardWidth, tabs, defaultTab, className = '' }: SettingsPanelProps) {
-  const { ref } = useSettingsPanelReposition<HTMLDivElement>({}, cardWidth ?? 'regular')
+  const { ref } = useSettingsPanelReposition<HTMLDivElement>({ cardWidth: cardWidth ?? 'regular' })
 
   const tabContent = React.useMemo<Record<string, React.ReactNode>>(() => {
     if (!tabs) {

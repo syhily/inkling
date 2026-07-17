@@ -1,6 +1,7 @@
 import React from 'react'
 
 import type { DraggableInfo, IndicatorPosition } from '@/utils/draggable/DragDropContainer'
+import type { DraggableContainerHandle } from '@/utils/draggable/DragDropHandler'
 
 import { useDragDropState } from '@/hooks/useDragDropState'
 
@@ -9,8 +10,8 @@ export interface UseCardDragAndDropOptions {
   canDrop: (draggableInfo: DraggableInfo) => boolean
   onDrop?: (draggableInfo: DraggableInfo) => boolean | undefined
   onDropEnd?: (draggableInfo: DraggableInfo, success: boolean) => void
-  getDraggableInfo?: (draggableElement: HTMLElement | null) => DraggableInfo | Record<string, never>
-  getIndicatorPosition?: (draggableInfo: DraggableInfo) => IndicatorPosition | false | undefined
+  getDraggableInfo?: (draggableElement: HTMLElement | null) => DraggableInfo | false | undefined
+  getIndicatorPosition?: (draggableInfo: DraggableInfo) => IndicatorPosition | false
   draggableSelector: string
   droppableSelector: string
 }
@@ -34,11 +35,7 @@ export default function useCardDragAndDrop({
 
   const [containerRef, setContainerRef] = React.useState<HTMLElement | null>(null)
   const [isDraggedOver, setIsDraggedOver] = React.useState<boolean>(false)
-  const dragDropContainer = React.useRef<{
-    enableDrag: () => void
-    disableDrag: () => void
-    destroy: () => void
-  } | null>(null)
+  const dragDropContainer = React.useRef<DraggableContainerHandle | null>(null)
 
   const onDragStart = React.useCallback(
     (draggableInfo: DraggableInfo) => {
@@ -81,19 +78,15 @@ export default function useCardDragAndDrop({
   )
 
   const _getIndicatorPosition = React.useCallback(
-    (draggableInfo: DraggableInfo) => {
-      return getIndicatorPosition?.(draggableInfo) || false
+    (draggableInfo: DraggableInfo): IndicatorPosition | false => {
+      return getIndicatorPosition?.(draggableInfo) ?? false
     },
     [getIndicatorPosition],
   )
 
   const _getDraggableInfo = React.useCallback(
     (draggableElement: HTMLElement | null): DraggableInfo | false => {
-      const result = getDraggableInfo?.(draggableElement)
-      if (!result || Object.keys(result).length === 0) {
-        return false
-      }
-      return result as DraggableInfo
+      return getDraggableInfo?.(draggableElement) ?? false
     },
     [getDraggableInfo],
   )

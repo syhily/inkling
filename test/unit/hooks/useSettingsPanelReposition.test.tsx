@@ -112,7 +112,7 @@ interface HarnessProps {
 }
 
 function Harness({ positionToRef, cardWidth = 'regular' }: HarnessProps) {
-  const { ref } = useSettingsPanelReposition({ positionToRef }, cardWidth)
+  const { ref } = useSettingsPanelReposition({ positionToRef, cardWidth })
   return (
     <div data-testid="scroll-container" style={{ overflowY: 'auto', width: 800, height: 600 }}>
       <div data-inkling-card-editing="true" style={{ width: 200, height: 100 }} />

@@ -36,7 +36,7 @@ function registerExtendedTextEntity<T extends TextNode = TextNode>(
   }
 
   const getMode = (node: TextNode) => {
-    return (node.getLatest() as TextNode & { __mode: number }).__mode
+    return node.getLatest().getMode()
   }
 
   const textNodeTransform = (node: TextNode) => {
@@ -55,7 +55,7 @@ function registerExtendedTextEntity<T extends TextNode = TextNode>(
       const prevMatch = getMatch(combinedText)
 
       if (isTargetNode(prevSibling)) {
-        if (prevMatch === null || getMode(prevSibling) !== 0) {
+        if (prevMatch === null || getMode(prevSibling) !== 'normal') {
           replaceWithSimpleText(prevSibling)
 
           return

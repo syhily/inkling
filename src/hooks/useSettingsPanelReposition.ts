@@ -184,12 +184,13 @@ function keepWithinSpacingOnResize(
 
 interface UseSettingsPanelRepositionOptions {
   positionToRef?: React.RefObject<HTMLElement | null>
+  cardWidth: string
 }
 
-export default function useSettingsPanelReposition<T extends HTMLElement = HTMLDivElement>(
-  { positionToRef }: UseSettingsPanelRepositionOptions = {},
-  cardWidth: string,
-): { ref: React.RefObject<T | null> } {
+export default function useSettingsPanelReposition<T extends HTMLElement = HTMLDivElement>({
+  positionToRef,
+  cardWidth,
+}: UseSettingsPanelRepositionOptions): { ref: React.RefObject<T | null> } {
   const { ref, getPosition, setPosition } = useMovable<T>({
     adjustOnResize: keepWithinSpacingOnResize,
     adjustOnDrag: keepWithinSpacingOnDrag,
@@ -323,7 +324,7 @@ export default function useSettingsPanelReposition<T extends HTMLElement = HTMLD
 
   // position on first render
   useLayoutEffect(() => {
-    if (!ref || !ref.current) {
+    if (!ref.current) {
       return
     }
     try {
@@ -337,7 +338,7 @@ export default function useSettingsPanelReposition<T extends HTMLElement = HTMLD
   }, [getInitialPosition, setPosition, ref])
 
   // account for wide cards using a transform so we need to adjust the origin position
-  //  NOTE: we want to make sure this doesn't happen on the first render so previousCardWidth must start as undefined
+  // previousCardWidth starts at cardWidth so the first render never shifts the origin
   useLayoutEffect(() => {
     if (cardWidth === 'wide' && previousCardWidth.current !== 'wide') {
       // offset origin to account for wide card (origin = card origin)

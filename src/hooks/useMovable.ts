@@ -88,14 +88,14 @@ export default function useMovable<T extends HTMLElement = HTMLElement>({
   // React event handlers get added to the root element, so if we add listeners to the ref directly
   // and call stopPropagation they stop any React events on child nodes from firing.
   // Instead we add the listeners to the body and check if the event target is the ref.
-  const addRefEventListener = <K extends keyof DocumentEventMap>(
+  const addRefEventListener = <K extends keyof HTMLElementEventMap>(
     event: K,
-    handler: (e: DocumentEventMap[K]) => void,
+    handler: (e: HTMLElementEventMap[K]) => void,
   ) => {
-    const listener = (e: Event) => {
-      const targetEvent = e as DocumentEventMap[K]
-      if (ref.current?.contains(targetEvent.target as Node)) {
-        handler(targetEvent)
+    const listener = (e: HTMLElementEventMap[K]) => {
+      const target = e.target
+      if (target instanceof Node && ref.current?.contains(target)) {
+        handler(e)
       }
     }
 
@@ -188,7 +188,7 @@ export default function useMovable<T extends HTMLElement = HTMLElement>({
     if (ref.current) {
       ref.current.style.pointerEvents = 'none'
     }
-    window.addEventListener('click', cancelClick, { capture: true, passive: false } as AddEventListenerOptions)
+    window.addEventListener('click', cancelClick, { capture: true, passive: false })
   }, [ref, cancelClick])
 
   const enablePointerEvents = useCallback(() => {
@@ -199,16 +199,18 @@ export default function useMovable<T extends HTMLElement = HTMLElement>({
   }, [ref, cancelClick])
 
   const drag = useCallback(
-    (e: TouchEvent | MouseEvent) => {
+    (e: Event) => {
       let eventX: number
       let eventY: number
 
       if (e instanceof TouchEvent) {
         eventX = e.touches[0].clientX
         eventY = e.touches[0].clientY
-      } else {
+      } else if (e instanceof MouseEvent) {
         eventX = e.clientX
         eventY = e.clientY
+      } else {
+        return
       }
 
       if (!active.current) {
@@ -243,10 +245,10 @@ export default function useMovable<T extends HTMLElement = HTMLElement>({
     (_e?: Event) => {
       active.current = false
 
-      window.removeEventListener('touchend', dragEnd as EventListener, { capture: true })
-      window.removeEventListener('touchmove', drag as EventListener, { capture: true })
-      window.removeEventListener('mouseup', dragEnd as EventListener, { capture: true })
-      window.removeEventListener('mousemove', drag as EventListener, { capture: true })
+      window.removeEventListener('touchend', dragEnd, { capture: true })
+      window.removeEventListener('touchmove', drag, { capture: true })
+      window.removeEventListener('mouseup', dragEnd, { capture: true })
+      window.removeEventListener('mousemove', drag, { capture: true })
 
       // Removing this immediately results in the click event behind re-enabled in the same
       // event loop meaning that it doesn't have the desired effect when dragging out of the canvas.
@@ -267,10 +269,10 @@ export default function useMovable<T extends HTMLElement = HTMLElement>({
   )
 
   const addActiveEventListeners = useCallback(() => {
-    window.addEventListener('touchend', dragEnd as EventListener, { capture: true, passive: true })
-    window.addEventListener('touchmove', drag as EventListener, { capture: true, passive: true })
-    window.addEventListener('mouseup', dragEnd as EventListener, { capture: true, passive: true })
-    window.addEventListener('mousemove', drag as EventListener, { capture: true, passive: true })
+    window.addEventListener('touchend', dragEnd, { capture: true, passive: true })
+    window.addEventListener('touchmove', drag, { capture: true, passive: true })
+    window.addEventListener('mouseup', dragEnd, { capture: true, passive: true })
+    window.addEventListener('mousemove', drag, { capture: true, passive: true })
   }, [dragEnd, drag])
 
   const dragStart = useCallback(
@@ -289,12 +291,14 @@ export default function useMovable<T extends HTMLElement = HTMLElement>({
 
         const path = e.composedPath?.() ?? []
         for (const element of path) {
-          const el = element as Element
-          if (el?.matches?.('input, .ember-basic-dropdown-trigger')) {
+          if (!(element instanceof Element)) {
+            continue
+          }
+          if (element.matches('input, .ember-basic-dropdown-trigger')) {
             break
           }
 
-          if (el === ref.current) {
+          if (element === ref.current) {
             addActiveEventListeners()
             break
           }
@@ -315,10 +319,10 @@ export default function useMovable<T extends HTMLElement = HTMLElement>({
   }, [dragStart])
 
   const removeActiveEventListeners = useCallback(() => {
-    window.removeEventListener('touchend', dragEnd as EventListener, { capture: true })
-    window.removeEventListener('touchmove', drag as EventListener, { capture: true })
-    window.removeEventListener('mouseup', dragEnd as EventListener, { capture: true })
-    window.removeEventListener('mousemove', drag as EventListener, { capture: true })
+    window.removeEventListener('touchend', dragEnd, { capture: true })
+    window.removeEventListener('touchmove', drag, { capture: true })
+    window.removeEventListener('mouseup', dragEnd, { capture: true })
+    window.removeEventListener('mousemove', drag, { capture: true })
 
     // Removing this immediately results in the click event behind re-enabled in the same
     // event loop meaning that it doesn't have the desired effect when dragging out of the canvas.

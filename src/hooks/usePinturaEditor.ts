@@ -5,7 +5,6 @@ import trackEvent from '@/utils/analytics'
 export interface PinturaConfig {
   jsUrl?: string
   cssUrl?: string
-  [key: string]: unknown
 }
 
 interface UsePinturaEditorOptions {
@@ -32,7 +31,8 @@ declare global {
 }
 
 interface PinturaEditor {
-  on: (event: string, handler: (result: PinturaHandleSaveResult) => void) => void
+  on(event: 'loaderror', handler: (error: unknown) => void): void
+  on(event: 'process', handler: (result: PinturaHandleSaveResult) => void): void
 }
 
 export default function usePinturaEditor({
@@ -182,8 +182,8 @@ export default function usePinturaEditor({
 
   useEffect(() => {
     const handleCloseClick = (event: MouseEvent) => {
-      const target = event.target as Element
-      if (target?.closest?.('.PinturaModal button[title="Close"]')) {
+      const target = event.target
+      if (target instanceof Element && target.closest('.PinturaModal button[title="Close"]')) {
         allowClose.current = true
       }
     }
