@@ -7,13 +7,21 @@ import ImgPlaceholderIcon from '@/assets/icons/inkling-img-placeholder.svg?react
 import ProductPlaceholderIcon from '@/assets/icons/inkling-product-placeholder.svg?react'
 import VideoPlaceholderIcon from '@/assets/icons/inkling-video-placeholder.svg?react'
 
-export const PLACEHOLDER_ICONS: Record<string, typeof ImgPlaceholderIcon> = {
+export const PLACEHOLDER_ICONS = {
   image: ImgPlaceholderIcon,
   gallery: GalleryPlaceholderIcon,
   video: VideoPlaceholderIcon,
   audio: AudioPlaceholderIcon,
   file: FilePlaceholderIcon,
   product: ProductPlaceholderIcon,
+} satisfies Record<string, typeof ImgPlaceholderIcon>
+
+export type PlaceholderIconName = keyof typeof PLACEHOLDER_ICONS
+
+// `icon` arrives as a free string from host-driven props upstream — only the
+// declared keys have an icon to render
+export function isPlaceholderIconName(icon: unknown): icon is PlaceholderIconName {
+  return typeof icon === 'string' && icon in PLACEHOLDER_ICONS
 }
 
 export const CardText = ({ text, type }: { text?: string; type?: string }) => (
@@ -43,8 +51,8 @@ const StandardContents = ({
 }: {
   desc?: string
   hasErrors?: boolean
-  icon: keyof typeof PLACEHOLDER_ICONS
-  size?: string
+  icon: PlaceholderIconName
+  size: string
 }) => {
   if (size === 'xsmall' && hasErrors) {
     return null
@@ -57,7 +65,7 @@ const StandardContents = ({
     size === 'large' && 'size-20 text-grey',
     size === 'small' && 'size-14 text-grey',
     size === 'xsmall' && 'size-5 text-grey-700',
-    !['large', 'small', 'xsmall'].includes(size!) && 'size-16 text-grey',
+    !['large', 'small', 'xsmall'].includes(size) && 'size-16 text-grey',
     size === 'xsmall' && desc && 'mr-3',
   )
 
@@ -91,7 +99,7 @@ export function MediaPlaceholder({
   ...props
 }: {
   desc: string
-  icon: keyof typeof PLACEHOLDER_ICONS
+  icon: PlaceholderIconName
   filePicker: () => void
   size: string
   type?: string
@@ -124,7 +132,7 @@ export function MediaPlaceholder({
 
   const errorClasses = clsx('font-sans text-sm font-semibold text-red', size !== 'xsmall' && 'mt-3 max-w-[65%]')
 
-  const errorMessages = errors?.map((error) => (
+  const errorMessages = errors.map((error) => (
     <span key={error.message} className={errorClasses} data-testid={errorDataTestId}>
       {error.message}
     </span>

@@ -18,7 +18,7 @@ import {
 } from 'lexical'
 import React from 'react'
 
-import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
+import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator, type ToolbarIconName } from '@/components/ui/ToolbarMenu'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { $createAsideNode } from '@/nodes/AsideNode'
 import { getSelectedNode } from '@/utils/getSelectedNode'
@@ -42,10 +42,10 @@ const blockTypeToBlockName: Record<string, string> = {
   aside: 'Aside',
 }
 
-function quoteIcon(blockType = '') {
-  if (blockType.endsWith?.('quote')) {
+function quoteIcon(blockType = ''): ToolbarIconName {
+  if (blockType.endsWith('quote')) {
     return 'quoteOne'
-  } else if (blockType.endsWith?.('aside')) {
+  } else if (blockType.endsWith('aside')) {
     return 'quoteTwo'
   } else {
     return 'quote'

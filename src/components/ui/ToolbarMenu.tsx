@@ -18,7 +18,7 @@ import TrashIcon from '@/assets/icons/inkling-trash.svg?react'
 import WandIcon from '@/assets/icons/inkling-wand.svg?react'
 import { Tooltip } from '@/components/ui/Tooltip'
 
-export const TOOLBAR_ICONS: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
+export const TOOLBAR_ICONS = {
   bold: BoldIcon,
   italic: ItalicIcon,
   headingTwo: HeadingTwoIcon,
@@ -37,7 +37,9 @@ export const TOOLBAR_ICONS: Record<string, React.ComponentType<React.SVGProps<SV
   visibility: EyeIcon,
   snippet: SnippetIcon,
   remove: TrashIcon,
-}
+} satisfies Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>>
+
+export type ToolbarIconName = keyof typeof TOOLBAR_ICONS
 
 export interface ToolbarMenuProps extends React.HTMLAttributes<HTMLUListElement> {
   children?: React.ReactNode
@@ -63,7 +65,7 @@ export interface ToolbarMenuItemProps extends React.HTMLAttributes<HTMLLIElement
   label: string
   isActive: boolean
   onClick?: (event: React.MouseEvent) => void
-  icon: string
+  icon: ToolbarIconName
   shortcutKeys?: string | string[]
   secondary?: boolean
   dataTestId?: string

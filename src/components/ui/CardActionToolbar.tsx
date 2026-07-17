@@ -4,7 +4,7 @@ import React from 'react'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
-import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator } from '@/components/ui/ToolbarMenu'
+import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator, type ToolbarIconName } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 
@@ -14,7 +14,7 @@ export type CardToolbarItem =
   | { kind: 'separator'; hide?: boolean }
   | {
       kind: 'custom'
-      icon: string
+      icon: ToolbarIconName
       label: string
       onClick: (event: React.MouseEvent) => void
       isActive?: boolean

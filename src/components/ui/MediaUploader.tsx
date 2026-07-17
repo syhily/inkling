@@ -9,7 +9,7 @@ import DeleteIcon from '@/assets/icons/inkling-trash.svg?react'
 import WandIcon from '@/assets/icons/inkling-wand.svg?react'
 import { IconButton } from '@/components/ui/IconButton'
 import ImageUploadForm from '@/components/ui/ImageUploadForm'
-import { MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
+import { MediaPlaceholder, isPlaceholderIconName } from '@/components/ui/MediaPlaceholder'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { openFileSelection } from '@/utils/openFileSelection'
 
@@ -106,7 +106,7 @@ export function MediaUploader({
           errorDataTestId="media-upload-errors"
           errors={errors}
           filePicker={() => openFileSelection({ fileInputRef })}
-          icon={icon ?? 'image'}
+          icon={isPlaceholderIconName(icon) ? icon : 'image'}
           isDraggedOver={dragHandler?.isDraggedOver}
           placeholderRef={dragHandler?.setRef}
           size={size ?? 'small'}
