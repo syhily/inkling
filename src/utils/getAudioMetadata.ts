@@ -1,4 +1,4 @@
-// gets image dimensions from a given Url
+// gets audio duration from a given URL
 
 export interface AudioMetadata {
   duration: number

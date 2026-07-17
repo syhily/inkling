@@ -40,8 +40,4 @@ describe('countWords', function () {
     expect(countWords(null)).toBe(0)
     expect(countWords(undefined)).toBe(0)
   })
-
-  it('unwraps Handlebars SafeString via .string', function () {
-    expect(countWords({ string: 'one two three' })).toBe(3)
-  })
 })

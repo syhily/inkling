@@ -44,5 +44,5 @@ export function sanitizeHtml(html = '', options: SanitizeHtmlOptions = {}): stri
     ALLOWED_URI_REGEXP: /^(?:https?:|\/|blob:)/,
     ADD_ATTR: ['id'],
     FORBID_TAGS: ['style'],
-  }) as string
+  })
 }

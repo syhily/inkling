@@ -2,7 +2,7 @@ export function getTopLevelNativeElement(node: Node | null): Element | null {
   if (!node) {
     return null
   }
-  let target: Element | null = node.nodeType === Node.TEXT_NODE ? node.parentElement : (node as Element)
+  const target = node instanceof Element ? node : node.parentElement
 
   if (!target) {
     return null

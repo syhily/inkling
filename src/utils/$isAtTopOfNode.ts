@@ -2,9 +2,9 @@ import { getTopLevelNativeElement } from '@/utils/getTopLevelNativeElement'
 
 /**
  *
- * @param {Selection} nativeSelection – Window selection (window.getSelection())
- * @param {number} [threshold=10] – Estimated height of one line, in pixels
- * @returns {boolean | undefined}
+ * @param nativeSelection – Window selection (window.getSelection())
+ * @param threshold – Estimated height of one line, in pixels
+ * @returns whether the selection is at the top of its node
  */
 export function $isAtTopOfNode(nativeSelection: Selection, threshold = 10): boolean | undefined {
   const range = nativeSelection.getRangeAt(0).cloneRange()

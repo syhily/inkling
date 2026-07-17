@@ -20,6 +20,15 @@ const EMPTY_PARAGRAPH = {
   version: 1,
 }
 
+function hasRootChildren(value: unknown): value is { root: { children: unknown[] } } {
+  if (typeof value !== 'object' || value === null || !('root' in value)) {
+    return false
+  }
+
+  const { root } = value
+  return typeof root === 'object' && root !== null && 'children' in root && Array.isArray(root.children)
+}
+
 /**
  * Normalize the public `initialEditorState` prop into the `InitialEditorStateType`
  * Lexical accepts, so the single-editor and collaboration paths share one value:
@@ -41,9 +50,9 @@ export function normalizeInitialEditorState(
   }
 
   if (typeof initialEditorState === 'string') {
-    const parsed = JSON.parse(initialEditorState) as SerializedEditorState
+    const parsed: unknown = JSON.parse(initialEditorState)
 
-    if (parsed.root?.children?.length === 0) {
+    if (hasRootChildren(parsed) && parsed.root.children.length === 0) {
       parsed.root.children.push({ ...EMPTY_PARAGRAPH })
       return JSON.stringify(parsed)
     }
@@ -57,9 +66,9 @@ export function normalizeInitialEditorState(
   }
 
   // clone so the caller's serialized object is never mutated
-  const cloned = JSON.parse(JSON.stringify(initialEditorState)) as SerializedEditorState
+  const cloned: unknown = JSON.parse(JSON.stringify(initialEditorState))
 
-  if (cloned.root?.children?.length === 0) {
+  if (hasRootChildren(cloned) && cloned.root.children.length === 0) {
     cloned.root.children.push({ ...EMPTY_PARAGRAPH })
   }
 

@@ -1,5 +1,5 @@
 export default function prettifyFileName(filename: string | null | undefined): string {
-  if (!filename || typeof filename !== 'string') {
+  if (!filename) {
     return ''
   }
   const updatedName = filename

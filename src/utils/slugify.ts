@@ -15,7 +15,7 @@ export default function slugify(
   inputString: unknown = '',
   { inklingVersion = '4.0', type = 'mobiledoc' }: SlugifyOptions = {},
 ): string {
-  if (typeof inputString !== 'string' || (inputString || '').trim() === '') {
+  if (typeof inputString !== 'string' || inputString.trim() === '') {
     return ''
   }
 

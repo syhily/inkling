@@ -2,24 +2,16 @@
  * Word count Utility
  * @param text - text to count words in
  * @returns word count
- // oxlint-disable-next-line typescript/no-explicit-any
  * @description Takes a string and returns the number of words after sanitizing any html.
  * This code is taken from https://github.com/sparksuite/simplemde-markdown-editor/blob/6abda7ab68cc20f4aca870eb243747951b90ab04/src/js/simplemde.js#L1054-L1067
  * with extra diacritics character matching.
  **/
-export default function countWords(text: string | { string: string } | null | undefined): number {
+export default function countWords(text: string | null | undefined): number {
   if (!text) {
     return 0
   }
 
-  let normalizedText: string
-
-  // protect against Handlebars.SafeString
-  if (typeof text !== 'string' && Object.prototype.hasOwnProperty.call(text, 'string')) {
-    normalizedText = text.string
-  } else {
-    normalizedText = text as string
-  }
+  let normalizedText = text
 
   normalizedText = normalizedText.replace(/<("[^"]*"|'[^']*'|[^'">])+\/?>/g, ' ') // strip any HTML tags
 

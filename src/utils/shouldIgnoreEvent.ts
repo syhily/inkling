@@ -22,11 +22,12 @@ export const shouldIgnoreEvent = (
   // target element from the DOM before the event bubbles to Lexical, so
   // target.closest('.cm-editor') would return null. Fall back to checking
   // document.activeElement when the target is disconnected.
-  const targetEl = target as Element | null
+  const targetEl = target instanceof Element ? target : null
+  const targetIsDisconnected = target instanceof Node ? !target.isConnected : true
   const isFromCardEditor =
-    !!targetEl?.matches?.('input, textarea') ||
-    !!targetEl?.closest?.('.cm-editor') ||
-    (!targetEl?.isConnected && !!document.activeElement?.closest?.('.cm-editor'))
+    !!targetEl?.matches('input, textarea') ||
+    !!targetEl?.closest('.cm-editor') ||
+    (targetIsDisconnected && !!document.activeElement?.closest('.cm-editor'))
 
   return isFromCardEditor
 }

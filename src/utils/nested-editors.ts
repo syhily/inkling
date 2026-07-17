@@ -36,37 +36,32 @@ export interface SetupNestedEditorOptions {
   nodes?: ReadonlyArray<Klass<LexicalNode> | LexicalNodeReplacement>
 }
 
-export function setupNestedEditor(
-  node: Record<string, unknown>,
-  editorProperty: string,
-  { editor, initialEditorState = BLANK_EDITOR_STATE, nodes = MINIMAL_NODES }: SetupNestedEditorOptions = {},
-): void {
+export function setupNestedEditor({
+  editor,
+  initialEditorState = BLANK_EDITOR_STATE,
+  nodes = MINIMAL_NODES,
+}: SetupNestedEditorOptions = {}): LexicalEditor {
   if (editor) {
-    node[editorProperty] = editor
-  } else {
-    node[editorProperty] = createEditor({ nodes })
-
-    const createdEditor = node[editorProperty] as LexicalEditor
-    // set up a blank document with a paragraph otherwise the editor won't receive focus
-    const editorState = createdEditor.parseEditorState(initialEditorState)
-    createdEditor.setEditorState(editorState, { tag: 'history-merge' }) // use history merge to prevent undo clearing the initial state
+    return editor
   }
+
+  const createdEditor = createEditor({ nodes })
+  // set up a blank document with a paragraph otherwise the editor won't receive focus
+  const editorState = createdEditor.parseEditorState(initialEditorState)
+  createdEditor.setEditorState(editorState, { tag: 'history-merge' }) // use history merge to prevent undo clearing the initial state
+  return createdEditor
 }
 
-export function populateNestedEditor(node: Record<string, unknown>, editorProperty: string, html: string): void {
+export function populateNestedEditor(nestedEditor: LexicalEditor, html: string): EditorState | undefined {
   if (!html) {
-    return
+    return undefined
   }
 
-  const nestedEditor = node[editorProperty] as LexicalEditor
   const editorState: EditorState = generateEditorState({
     editor: nestedEditor,
     initialHtml: html,
   })
 
   nestedEditor.setEditorState(editorState, { tag: 'history-merge' }) // use history merge to prevent undo clearing the initial state
-
-  // store the initial state separately as it's passed in to `<CollaborationPlugin />`
-  // for use when there is no YJS document already stored
-  node[`${editorProperty}InitialState`] = editorState
+  return editorState
 }

@@ -2,10 +2,10 @@ import { $isListItemNode } from '@lexical/list'
 import { $isRangeSelection, $isTextNode, type BaseSelection, type LexicalNode } from 'lexical'
 
 export function $isAtStartOfDocument(selection: BaseSelection): boolean {
-  let [selectedNode] = selection.getNodes() as LexicalNode[]
+  let selectedNode: LexicalNode | null | undefined = selection.getNodes()[0]
 
   if ($isTextNode(selectedNode)) {
-    selectedNode = selectedNode.getParent() as LexicalNode
+    selectedNode = selectedNode.getParent()
   }
 
   if (!selectedNode) {

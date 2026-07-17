@@ -10,5 +10,5 @@ export function getScrollParent(node: HTMLElement | null): HTMLElement {
   }
 
   const parent = node.parentNode instanceof HTMLElement ? node.parentNode : null
-  return getScrollParent(parent) || document.body
+  return getScrollParent(parent)
 }

@@ -11,10 +11,9 @@ describe('prettifyFileName', () => {
     expect(prettifyFileName('document.pdf')).toBe('Document')
   })
 
-  it('returns empty string for null, undefined, or non-string', () => {
+  it('returns empty string for null or undefined', () => {
     expect(prettifyFileName(null)).toBe('')
     expect(prettifyFileName(undefined)).toBe('')
-    expect(prettifyFileName(123 as unknown as string)).toBe('')
   })
 
   it('returns empty string for empty input', () => {

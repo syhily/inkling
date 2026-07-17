@@ -414,14 +414,17 @@ export function generateDecoratorNode<
       // instance was passed in
       getNestedEditorSpecs(this).forEach((spec) => {
         const editorProperty = `__${spec.name}`
-        setupNestedEditor(this, editorProperty, {
+        const nestedEditor = setupNestedEditor({
           editor: dataset[spec.name] as LexicalEditor | undefined,
           nodes: spec.nodes,
         })
+        this[editorProperty] = nestedEditor
 
         const serialized = dataset[spec.serializedKey]
         if (!dataset[spec.name] && serialized) {
-          populateNestedEditor(this, editorProperty, `${serialized}`) // we serialize with no wrapper
+          // store the initial state separately as it's passed in to
+          // `<CollaborationPlugin />` when no YJS document exists
+          this[`${editorProperty}InitialState`] = populateNestedEditor(nestedEditor, `${serialized}`)
         }
       })
 

@@ -30,4 +30,8 @@ describe('getTopLevelNativeElement', () => {
 
     expect(getTopLevelNativeElement(div.firstChild)).toBeNull()
   })
+
+  it('returns null for a non-Element node', () => {
+    expect(getTopLevelNativeElement(document.createComment('comment'))).toBeNull()
+  })
 })
