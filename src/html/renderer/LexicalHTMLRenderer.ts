@@ -8,10 +8,10 @@ import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
 import { registerRemoveAtLinkNodesTransform } from '@/transforms'
 
-interface RenderOptions {
-  target?: 'html' | 'email'
-  dom?: ExportDOMDom
-}
+// Every key of the bag is forwarded through Object.assign into
+// ExportDOMOptions, so the options are the public export-options shape with
+// the target narrowed to the two supported render targets.
+type RenderOptions = ExportDOMOptions & { target?: 'html' | 'email' }
 
 function defaultOnError(error: Error) {
   void error
