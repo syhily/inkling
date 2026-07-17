@@ -33,7 +33,7 @@ export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNaviga
       if (selectedCardKey && event && (event.metaKey || event.ctrlKey)) {
         const cardNode = $getNodeByKey(selectedCardKey)
 
-        if ($isInklingCard(cardNode) && cardNode.hasEditMode?.()) {
+        if ($isInklingCard(cardNode) && cardNode.hasEditMode()) {
           event.preventDefault()
 
           // when leaving edit mode, ensure focus moves back to the editor

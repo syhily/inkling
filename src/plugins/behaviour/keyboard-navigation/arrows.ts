@@ -35,7 +35,7 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
       // if a selection is being made, we need to handle it ourselves (lexical does not handle decorator nodes at this time)
       if (event?.shiftKey) {
         if ($isRangeSelection(selection)) {
-          let anchorNode = selection?.anchor.getNode()
+          let anchorNode = selection.anchor.getNode()
 
           if (!$isRootNode(anchorNode)) {
             const topLevelAnchor = anchorNode.getTopLevelElement()
@@ -58,12 +58,12 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
               ($isDecoratorNode(anchorNode) || $isDecoratorNode(previousSibling))
             ) {
               // if at the start of the line, treat that line/node as not selected
-              if (selection?.anchor.offset === 0) {
+              if (selection.anchor.offset === 0) {
                 selection.focus.set('root', focusNode.getIndexWithinParent() - 1, 'element')
-                selection?.anchor.set('root', anchorNode.getIndexWithinParent(), 'element')
+                selection.anchor.set('root', anchorNode.getIndexWithinParent(), 'element')
               } else {
                 selection.focus.set('root', focusNode.getIndexWithinParent(), 'element')
-                selection?.anchor.set('root', anchorNode.getIndexWithinParent() + 1, 'element')
+                selection.anchor.set('root', anchorNode.getIndexWithinParent() + 1, 'element')
               }
               event.preventDefault()
               return true
@@ -150,7 +150,7 @@ export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNa
       // if a selection is being made, we need to handle it ourselves (lexical does not handle decorator nodes at this time)
       if (event?.shiftKey) {
         if ($isRangeSelection(selection)) {
-          let anchorNode = selection?.anchor.getNode()
+          let anchorNode = selection.anchor.getNode()
 
           if (!$isRootNode(anchorNode)) {
             const topLevelAnchor = anchorNode.getTopLevelElement()
@@ -173,11 +173,11 @@ export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNa
               ($isDecoratorNode(anchorNode) || $isDecoratorNode(nextSibling))
             ) {
               // if at end of a line, treat it as if that line/node is not selected
-              if (selection?.anchor.offset === anchorNode.getTextContentSize()) {
-                selection?.anchor.set('root', anchorNode.getIndexWithinParent() + 1, 'element')
+              if (selection.anchor.offset === anchorNode.getTextContentSize()) {
+                selection.anchor.set('root', anchorNode.getIndexWithinParent() + 1, 'element')
                 selection.focus.set('root', focusNode.getIndexWithinParent() + 2, 'element')
               } else {
-                selection?.anchor.set('root', anchorNode.getIndexWithinParent(), 'element')
+                selection.anchor.set('root', anchorNode.getIndexWithinParent(), 'element')
                 selection.focus.set('root', focusNode.getIndexWithinParent() + 1, 'element')
               }
               event.preventDefault()

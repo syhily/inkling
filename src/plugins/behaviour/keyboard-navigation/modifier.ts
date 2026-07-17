@@ -76,7 +76,7 @@ export function registerModifierCommand(editor: LexicalEditor, _deps: KeyboardNa
 
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
-          const firstNode = selection?.anchor.getNode().getTopLevelElement()
+          const firstNode = selection.anchor.getNode().getTopLevelElement()
 
           if ($isParagraphNode(firstNode)) {
             $setBlocksType(selection, () => $createQuoteNode())
@@ -124,7 +124,7 @@ export function registerModifierCommand(editor: LexicalEditor, _deps: KeyboardNa
 
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
-          const firstNode = selection?.anchor.getNode().getTopLevelElement()
+          const firstNode = selection.anchor.getNode().getTopLevelElement()
 
           if ($isListNode(firstNode)) {
             editor.update(() => {

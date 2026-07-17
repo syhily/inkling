@@ -51,8 +51,7 @@ const defaultCardAdjacencyGeometry: CardAdjacencyGeometry = {
     if (!nativeSelection || nativeSelection.rangeCount === 0) {
       return []
     }
-    const range = nativeSelection.getRangeAt(0)?.cloneRange()
-    return range ? range.getClientRects() : []
+    return nativeSelection.getRangeAt(0).cloneRange().getClientRects()
   },
   getTopLevelBlockRect() {
     const nativeTopLevelElement = getTopLevelNativeElement(window.getSelection()?.anchorNode ?? null)

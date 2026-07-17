@@ -414,7 +414,7 @@ export function registerAtLinkNodeTransform(editor: LexicalEditor) {
     // we only want one search node, remove or replace any non-search nodes
     atLinkNode.getChildren().forEach((child, index) => {
       if (index > 0 && !$isAtLinkSearchNode(child)) {
-        const text = child.getTextContent?.()
+        const text = child.getTextContent()
 
         if (!text) {
           child.remove()

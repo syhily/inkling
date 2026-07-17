@@ -52,11 +52,11 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
 
       if ($isRangeSelection(selection)) {
         if (selection.isCollapsed()) {
-          const anchor = selection?.anchor
+          const anchor = selection.anchor
           const anchorNode = anchor.getNode()
           const topLevelElement = anchorNode.getTopLevelElement()
 
-          const atStartOfElement = selection?.anchor.offset === 0 && selection.focus.offset === 0
+          const atStartOfElement = selection.anchor.offset === 0 && selection.focus.offset === 0
 
           // convert empty top level list items to paragraphs
           if (atStartOfElement && $isListItemNode(anchorNode) && anchorNode.getIndent() === 0 && anchorNode.isEmpty()) {
@@ -131,7 +131,7 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
 
           const anchorNodeLength = anchorNode.getTextContentSize()
           const atEndOfElement =
-            selection?.anchor.offset === anchorNodeLength && selection.focus.offset === anchorNodeLength
+            selection.anchor.offset === anchorNodeLength && selection.focus.offset === anchorNodeLength
 
           // undo any markdown special formats when deleting at the end of a formatted text node
           if (atEndOfElement && $isTextNode(anchorNode)) {

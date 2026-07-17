@@ -35,7 +35,7 @@ export function registerDeleteLineCommand(editor: LexicalEditor, deps: KeyboardN
       const selection = $getSelection()
       if ($isRangeSelection(selection)) {
         if (selection.isCollapsed()) {
-          const anchor = selection?.anchor
+          const anchor = selection.anchor
           const anchorNode = anchor.getNode()
           const topLevelElement = anchorNode.getTopLevelElement()
           // from-mode lookup: ungated on caret offsets — the first-line

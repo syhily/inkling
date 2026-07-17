@@ -32,11 +32,11 @@ export function registerDeleteCommand(editor: LexicalEditor, deps: KeyboardNavig
       const selection = $getSelection()
       if ($isRangeSelection(selection)) {
         if (selection.isCollapsed()) {
-          const anchor = selection?.anchor
+          const anchor = selection.anchor
           const anchorNode = anchor.getNode()
           const topLevelElement = anchorNode.getTopLevelElement()
 
-          const onEmptyNode = topLevelElement?.getTextContent().trim() === '' && selection?.anchor.offset === 0
+          const onEmptyNode = topLevelElement?.getTextContent().trim() === '' && selection.anchor.offset === 0
 
           // from-mode, not selection-mode: selection-mode's 'next' boundary requires an
           // element anchor at offset === getChildrenSize(), which a whitespace-only block
