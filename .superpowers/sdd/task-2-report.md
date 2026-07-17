@@ -8,6 +8,7 @@ Status: **DONE**
 - `5a8d98f` — `refactor(hooks): remove conversion type hatches`
 - `ca58891` — `fix(context): isolate history and validate collaboration`
 - `bb7604a` — `refactor(context): close card and host value contracts`
+- `44d78f8` — `fix(link-search): coordinate overlapping requests` (review remediation)
 
 The work was performed directly on local `main`; nothing was pushed and no branch or PR was created.
 
@@ -27,7 +28,7 @@ The work was performed directly on local `main`; nothing was pushed and no branc
 12. **Fixed.** Pintura's close-click target is guarded with `instanceof Element`.
 13. **Fixed.** `PinturaConfig` contains only `jsUrl`/`cssUrl`, is exported publicly, and has a compile-time excess-key fixture. `UploadSettings.pinturaConfig` was already typed at baseline and its consumers already used it without casts.
 14. **Fixed (behavior, RED/GREEN).** The active search term is threaded to `noResultOptions`; the regression test proves `nothing-matches` is received instead of `''`.
-15. **Fixed (behavior, RED/GREEN).** Rejected host searches are caught without an unhandled rejection and clear `isSearching` in `finally` for the current term.
+15. **Fixed (behavior, RED/GREEN), then strengthened in review.** Rejected host searches are caught without an unhandled rejection. A monotonically increasing request generation now coordinates default, debounced text, repeated-term, and immediate URL paths; only the latest request may update options or clear loading.
 16. **Fixed.** The settings-panel comment now accurately says initializing `previousCardWidth` to `cardWidth` suppresses the first-render origin shift.
 17. **Fixed.** `cardWidth` is a required member of the settings hook's single options object; direct hook/component callers were updated.
 18. **Fixed.** The dead `!ref` check was removed; only `ref.current` is nullable.
@@ -77,9 +78,35 @@ Task-1 transitions were completed: `DraggableInfo.source` and the sole gallery w
 
 After closing the contracts and centralizing multiplayer validation, `pnpm typecheck` passes. The committed fixture now proves the positive bookmark contract and the negative Pintura/draggable/indicator cases.
 
-### Self-review probe disposition
+### Initial self-review probe disposition
 
-The spec reviewer suspected default-search rejection could leave the spinner active. A focused test using a host function that always rejected asserted `true` initially and then `false`; it passed **12/12 on unchanged production code** because the ordinary empty-query search runs through the guarded `finally`. The non-RED duplicate test was removed and no production change was made.
+The first spec review suspected default-search rejection alone could leave the spinner active. A focused test using a host function that always rejected asserted `true` initially and then `false`; it passed **12/12 on unchanged production code** because the ordinary empty-query search ran through the guarded `finally`. Review follow-up identified the missing interleaving: an immediate URL query can cancel that debounced empty-query search before the delayed default rejects. The remediation below supersedes this incomplete probe.
+
+## Review remediation — coordinated link-search requests
+
+Commit `44d78f8` replaces term-string freshness and the separate default request lifecycle with one monotonically increasing request generation issued at query-change time. URL queries synchronously invalidate pending default/text work, publish their immediate option, and settle loading. Default and text requests may update options or clear loading only when their generation remains current. Repeated terms therefore remain distinct (`A₁ → B → A₂`), and every async path catches host rejection.
+
+### Review RED
+
+`pnpm vitest run test/unit/hooks/useSearchLinks.test.ts` — **3 failed / 11 passed (14 total)**:
+
+- delayed default rejection followed by an immediate URL left `isSearching` as `true`;
+- a late `cats` result replaced `https://example.com/immediate`;
+- the first `A` result replaced the newest `A` request and cleared its spinner.
+
+No unhandled rejection was reported.
+
+### Review GREEN and covering gates
+
+- `pnpm vitest run test/unit/hooks/useSearchLinks.test.ts` — **14/14 passed**.
+- `pnpm vitest run test/unit/InklingComposer.test.tsx` — **17/17 passed**; both render-boundary validation and direct provider-factory validation are pinned.
+- `pnpm typecheck` — passed.
+- `pnpm lint` — passed.
+- `pnpm lint:css` — passed.
+- `pnpm format:check` — passed; **854 files** checked.
+- `pnpm test:e2e:quiet test/e2e/linking.test.ts test/e2e/cards/bookmark-card-with-search.test.ts` — **35 passed, 6 skipped (41 total)**.
+
+No public contract or package artifact changed in the remediation, so the full unit/build/package/type gates were not repeated, per the review instructions.
 
 ## Final gates at `HEAD`
 
@@ -104,6 +131,6 @@ The spec reviewer suspected default-search rejection could leave the spinner act
 
 ## Self-review and concerns
 
-Two-axis review against `d75e15e...HEAD` found no Critical/Important standards or maintainability issues. Spec review confirmed all 20 hook and 7 context findings; it withdrew its initial default-search concern after the unchanged-code focused proof described above. `git diff --check` is clean; the production diff adds none of the prohibited assertions, suppressions, or non-null hatches. Scope outside hooks/context is limited to the Task-1 draggable field, direct context/host consumers, public exports, and their fixtures.
+Two-axis review against `d75e15e...HEAD` found no Critical/Important standards or maintainability issues. The initial spec concern was withdrawn against its first reproduction, then the narrower URL-cancellation interleaving above was identified and fixed in follow-up review. `git diff --check` is clean; the production diff adds none of the prohibited assertions, suppressions, or non-null hatches. Scope outside hooks/context is limited to the Task-1 draggable field, direct context/host consumers, public exports, and their fixtures.
 
 Concerns: none. Existing documented build warnings for browser-externalized Node modules remain unchanged and non-failing.
