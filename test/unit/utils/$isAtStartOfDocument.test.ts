@@ -34,6 +34,9 @@ describe('$isAtStartOfDocument', () => {
 
       paragraph.select(0, 0)
       const selection = $getSelection()
+      if (!selection) {
+        throw new Error('Expected paragraph.select to create a selection')
+      }
       expect($isAtStartOfDocument(selection)).toBe(true)
     })
   })
@@ -48,6 +51,9 @@ describe('$isAtStartOfDocument', () => {
 
       paragraph.select(2, 2)
       const selection = $getSelection()
+      if (!selection) {
+        throw new Error('Expected paragraph.select to create a selection')
+      }
       expect($isAtStartOfDocument(selection)).toBe(false)
     })
   })

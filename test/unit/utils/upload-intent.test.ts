@@ -2,11 +2,23 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $getNodeByKey, $getRoot, type LexicalEditor, type LexicalNode } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { AudioNode, $createAudioNode, type AudioNode as AudioNodeType } from '@/nodes/AudioNode'
-import { $isAudioNode, $isFileNode, $isImageNode } from '@/nodes/base'
-import { FileNode, $createFileNode, type FileNode as FileNodeType } from '@/nodes/FileNode'
-import { ImageNode, $createImageNode, type ImageNode as ImageNodeType } from '@/nodes/ImageNode'
-import { createPreviewLease, createPreviewLeasePool, runUploadIntent } from '@/utils/upload-intent'
+import { AudioNode, $createAudioNode } from '@/nodes/AudioNode'
+import {
+  $isAudioNode,
+  $isFileNode,
+  $isImageNode,
+  type BaseAudioNode as AudioNodeType,
+  type FileNode as FileNodeType,
+  type ImageNode as ImageNodeType,
+} from '@/nodes/base'
+import { FileNode, $createFileNode } from '@/nodes/FileNode'
+import { ImageNode, $createImageNode } from '@/nodes/ImageNode'
+import {
+  createPreviewLease,
+  createPreviewLeasePool,
+  runUploadIntent,
+  type RunUploadIntentOptions,
+} from '@/utils/upload-intent'
 
 function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
   return new Promise<void>((resolve) => {
@@ -169,7 +181,10 @@ describe('runUploadIntent', () => {
   })
 
   describe('image matrix: preview lease, before-upload extraction, patch-always', () => {
-    function imageIntent(overrides = {}) {
+    type ImageMeta = { width: number; height: number }
+    type ImageIntent = Omit<RunUploadIntentOptions<ImageNodeType, ImageMeta>, 'nodeKey' | 'files' | 'upload'>
+
+    function imageIntent(overrides: Partial<ImageIntent> = {}): ImageIntent {
       return {
         editor,
         guard: $isImageNode,
@@ -182,10 +197,10 @@ describe('runUploadIntent', () => {
           height: 200,
         }),
         onEmptyResult: 'patch' as const,
-        patch: (
-          node: ImageNodeType,
-          { meta, resultUrl }: { meta: { width: number; height: number }; resultUrl: string | undefined },
-        ) => {
+        patch: (node, { meta, resultUrl }) => {
+          if (!meta) {
+            throw new Error('Expected extracted image metadata')
+          }
           node.width = meta.width
           node.height = meta.height
           node.src = resultUrl ?? ''
@@ -265,7 +280,10 @@ describe('runUploadIntent', () => {
   })
 
   describe('audio matrix: metadata-only lease, after-upload extraction, bail', () => {
-    function audioIntent(extractMetadata: ReturnType<typeof vi.fn>) {
+    type AudioMeta = { duration: number }
+    type AudioIntent = Omit<RunUploadIntentOptions<AudioNodeType, AudioMeta>, 'nodeKey' | 'files' | 'upload'>
+
+    function audioIntent(extractMetadata: NonNullable<AudioIntent['extractMetadata']>): AudioIntent {
       return {
         editor,
         guard: $isAudioNode,
@@ -273,10 +291,10 @@ describe('runUploadIntent', () => {
         metadataTiming: 'afterUpload' as const,
         extractMetadata,
         onEmptyResult: 'bail' as const,
-        patch: (
-          node: AudioNodeType,
-          { meta, resultUrl }: { meta: { duration: number }; resultUrl: string | undefined },
-        ) => {
+        patch: (node, { meta, resultUrl }) => {
+          if (!meta) {
+            throw new Error('Expected extracted audio metadata')
+          }
           node.duration = meta.duration
           node.src = resultUrl ?? ''
         },
@@ -328,7 +346,9 @@ describe('runUploadIntent', () => {
   })
 
   describe('file matrix: no lease, prePatch src reset, custom empty predicate', () => {
-    function fileIntent() {
+    type FileIntent = Omit<RunUploadIntentOptions<FileNodeType>, 'nodeKey' | 'files' | 'upload'>
+
+    function fileIntent(): FileIntent {
       return {
         editor,
         guard: $isFileNode,

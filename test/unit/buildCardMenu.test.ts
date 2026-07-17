@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
+import type { SnippetItem } from '@/context/InklingHostIntegrationContext'
+import type { CardMenuNodeClass } from '@/utils/inkling-node-class'
+
 import { buildCardMenu } from '@/utils/buildCardMenu'
 
-const Icon = () => {}
+const Icon = () => null
+type NodeEntries = Array<[string, CardMenuNodeClass]>
 
 describe('buildCardMenu', function () {
   it('adds to Primary section by default', async function () {
-    const nodes = [
+    const nodes: NodeEntries = [
       [
         'one',
         {
@@ -61,7 +65,7 @@ describe('buildCardMenu', function () {
   })
 
   it('can add cards to other headers', async function () {
-    const nodes = [
+    const nodes: NodeEntries = [
       [
         'one',
         {
@@ -123,7 +127,7 @@ describe('buildCardMenu', function () {
   })
 
   it('can add multiple items for a single card', async function () {
-    const nodes = [
+    const nodes: NodeEntries = [
       [
         'one',
         {
@@ -174,7 +178,7 @@ describe('buildCardMenu', function () {
 
   describe('filtering', function () {
     it('adds all items for blank query', async function () {
-      const nodes = [
+      const nodes: NodeEntries = [
         [
           'one',
           {
@@ -231,7 +235,7 @@ describe('buildCardMenu', function () {
     })
 
     it('matches start of strings', async function () {
-      const nodes = [
+      const nodes: NodeEntries = [
         [
           'one',
           {
@@ -282,7 +286,7 @@ describe('buildCardMenu', function () {
     })
 
     it('can match against multiple strings', async function () {
-      const nodes = [
+      const nodes: NodeEntries = [
         [
           'one',
           {
@@ -333,7 +337,7 @@ describe('buildCardMenu', function () {
     })
 
     it('filters all sections', async function () {
-      const nodes = [
+      const nodes: NodeEntries = [
         [
           'one',
           {
@@ -384,7 +388,7 @@ describe('buildCardMenu', function () {
     })
 
     it('returns empty menu with no matches', async function () {
-      const nodes = [
+      const nodes: NodeEntries = [
         [
           'one',
           {
@@ -419,7 +423,7 @@ describe('buildCardMenu', function () {
     })
 
     it('is case-insensitive', async function () {
-      const nodes = [
+      const nodes: NodeEntries = [
         [
           'one',
           {
@@ -468,8 +472,8 @@ describe('buildCardMenu', function () {
     })
 
     it('can pass function to matches', async function () {
-      const matchFn = (query, label) => label.includes(query)
-      const nodes = [
+      const matchFn = (query: string, label: string) => label.includes(query)
+      const nodes: NodeEntries = [
         [
           'one',
           {
@@ -518,7 +522,10 @@ describe('buildCardMenu', function () {
     })
 
     it('can filter snippets', async function () {
-      const snippets = [{ name: 'One snippet' }, { name: 'Two snippet' }]
+      const snippets: SnippetItem[] = [
+        { name: 'One snippet', value: '<p>One</p>' },
+        { name: 'Two snippet', value: '<p>Two</p>' },
+      ]
       const cardMenu = buildCardMenu([], { query: 'snip', config: { snippets, deleteSnippet: () => {} } })
 
       expect(cardMenu.menu).toEqual(
@@ -533,6 +540,7 @@ describe('buildCardMenu', function () {
                 },
                 insertParams: {
                   name: 'One snippet',
+                  value: '<p>One</p>',
                 },
                 label: 'One snippet',
                 matches: expect.any(Function),
@@ -547,6 +555,7 @@ describe('buildCardMenu', function () {
                 },
                 insertParams: {
                   name: 'Two snippet',
+                  value: '<p>Two</p>',
                 },
                 label: 'Two snippet',
                 matches: expect.any(Function),
@@ -561,7 +570,10 @@ describe('buildCardMenu', function () {
     })
 
     it(`doesn't show delete option if createSnippet is not defined`, async function () {
-      const snippets = [{ name: 'One snippet' }, { name: 'Two snippet' }]
+      const snippets: SnippetItem[] = [
+        { name: 'One snippet', value: '<p>One</p>' },
+        { name: 'Two snippet', value: '<p>Two</p>' },
+      ]
       const cardMenu = buildCardMenu([], { query: 'snippets', config: { snippets } })
       expect(cardMenu.menu).toEqual(
         new Map([
@@ -575,6 +587,7 @@ describe('buildCardMenu', function () {
                 },
                 insertParams: {
                   name: 'One snippet',
+                  value: '<p>One</p>',
                 },
                 label: 'One snippet',
                 matches: expect.any(Function),
@@ -588,6 +601,7 @@ describe('buildCardMenu', function () {
                 },
                 insertParams: {
                   name: 'Two snippet',
+                  value: '<p>Two</p>',
                 },
                 label: 'Two snippet',
                 matches: expect.any(Function),
@@ -601,13 +615,19 @@ describe('buildCardMenu', function () {
     })
 
     it('returns empty value if no snippet matches ', async function () {
-      const snippets = [{ name: 'One snippet' }, { name: 'Two snippet' }]
+      const snippets: SnippetItem[] = [
+        { name: 'One snippet', value: '<p>One</p>' },
+        { name: 'Two snippet', value: '<p>Two</p>' },
+      ]
       const cardMenu = buildCardMenu([], { query: 'sniptr', config: { snippets } })
       expect(cardMenu.menu).deep.equal(new Map())
     })
 
     it('shows all snippets when typing /snippets', async function () {
-      const snippets = [{ name: 'Test1' }, { name: 'Test2' }]
+      const snippets: SnippetItem[] = [
+        { name: 'Test1', value: '<p>Test 1</p>' },
+        { name: 'Test2', value: '<p>Test 2</p>' },
+      ]
       const cardMenu = buildCardMenu([], { query: 'snippets', config: { snippets, deleteSnippet: () => {} } })
 
       expect(cardMenu.menu).toEqual(
@@ -622,6 +642,7 @@ describe('buildCardMenu', function () {
                 },
                 insertParams: {
                   name: 'Test1',
+                  value: '<p>Test 1</p>',
                 },
                 label: 'Test1',
                 matches: expect.any(Function),
@@ -636,6 +657,7 @@ describe('buildCardMenu', function () {
                 },
                 insertParams: {
                   name: 'Test2',
+                  value: '<p>Test 2</p>',
                 },
                 label: 'Test2',
                 matches: expect.any(Function),
@@ -651,7 +673,7 @@ describe('buildCardMenu', function () {
 
     it('can filter based on the post type', async function () {
       const config = { post: { displayName: 'post' } }
-      const nodes = [
+      const nodes: NodeEntries = [
         [
           'one',
           {
@@ -696,7 +718,7 @@ describe('buildCardMenu', function () {
     })
 
     it('does not filter on post type if missing in config', async function () {
-      const nodes = [
+      const nodes: NodeEntries = [
         [
           'one',
           {

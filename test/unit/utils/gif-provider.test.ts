@@ -2,11 +2,19 @@ import { describe, expect, test } from 'vitest'
 
 import { extractErrorMessage, getGifProviderConfig, isInvalidKeyError } from '@/utils/services/gif'
 
+function requireGifProvider(settings: Parameters<typeof getGifProviderConfig>[0]) {
+  const config = getGifProviderConfig(settings)
+  if (!config) {
+    throw new Error('Expected a configured GIF provider')
+  }
+  return config
+}
+
 describe('Utils: getGifProviderConfig', () => {
   test('returns null when neither provider is configured', () => {
     expect(getGifProviderConfig(undefined)).toBeNull()
     expect(getGifProviderConfig({})).toBeNull()
-    expect(getGifProviderConfig({ tenor: null, klipy: null })).toBeNull()
+    expect(Reflect.apply(getGifProviderConfig, undefined, [{ tenor: null, klipy: null }])).toBeNull()
   })
 
   test('resolves Tenor when only Tenor is configured', () => {
@@ -32,7 +40,7 @@ describe('Utils: getGifProviderConfig', () => {
   })
 
   test('prefers Klipy when both providers are configured', () => {
-    const config = getGifProviderConfig({
+    const config = requireGifProvider({
       tenor: { googleApiKey: 'tenor-key' },
       klipy: { apiKey: 'klipy-key' },
     })
@@ -42,13 +50,13 @@ describe('Utils: getGifProviderConfig', () => {
   })
 
   test('passes through a configured content filter', () => {
-    expect(getGifProviderConfig({ tenor: { googleApiKey: 'k', contentFilter: 'high' } }).contentFilter).toEqual('high')
-    expect(getGifProviderConfig({ klipy: { apiKey: 'k', contentFilter: 'low' } }).contentFilter).toEqual('low')
+    expect(requireGifProvider({ tenor: { googleApiKey: 'k', contentFilter: 'high' } }).contentFilter).toEqual('high')
+    expect(requireGifProvider({ klipy: { apiKey: 'k', contentFilter: 'low' } }).contentFilter).toEqual('low')
   })
 
   test('falls back to Tenor when the Klipy config is present but has no key', () => {
-    expect(getGifProviderConfig({ klipy: {}, tenor: { googleApiKey: 'tenor-key' } }).provider).toEqual('tenor')
-    expect(getGifProviderConfig({ klipy: { apiKey: '' }, tenor: { googleApiKey: 'tenor-key' } }).provider).toEqual(
+    expect(requireGifProvider({ klipy: {}, tenor: { googleApiKey: 'tenor-key' } }).provider).toEqual('tenor')
+    expect(requireGifProvider({ klipy: { apiKey: '' }, tenor: { googleApiKey: 'tenor-key' } }).provider).toEqual(
       'tenor',
     )
   })
@@ -64,15 +72,13 @@ describe('Utils: extractErrorMessage', () => {
   })
 
   test('reads the Klipy error shape', () => {
-    expect(extractErrorMessage({ result: false, errors: { message: ['The provided API key is invalid'] } })).toEqual(
-      'The provided API key is invalid',
-    )
+    const response = { result: false, errors: { message: ['The provided API key is invalid'] } }
+    expect(extractErrorMessage(response)).toEqual('The provided API key is invalid')
   })
 
   test('reads a Klipy error message that is not wrapped in an array', () => {
-    expect(extractErrorMessage({ result: false, errors: { message: 'Rate limit exceeded' } })).toEqual(
-      'Rate limit exceeded',
-    )
+    const response = { result: false, errors: { message: 'Rate limit exceeded' } }
+    expect(extractErrorMessage(response)).toEqual('Rate limit exceeded')
   })
 
   test('falls back to a generic message when the shape is unknown', () => {

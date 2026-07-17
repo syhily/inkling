@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { DragDropContainer, type DraggableInfo } from '@/utils/draggable/DragDropContainer'
+import { DragDropContainer, type ContainerDragHandlers, type DraggableInfo } from '@/utils/draggable/DragDropContainer'
 import '@/utils/draggable/draggable-constants'
 
-function createHandlers() {
+function createHandlers(): ContainerDragHandlers {
   return {
     draggable: {
       getDraggableInfo: vi.fn((element: HTMLElement | null): DraggableInfo | false => {

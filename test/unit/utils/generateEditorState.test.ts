@@ -1,11 +1,14 @@
-import { createEditor } from 'lexical'
+import { $isElementNode, createEditor, type CreateEditorArgs, type LexicalNode } from 'lexical'
 import { describe, expect, test } from 'vitest'
 
 import { DEFAULT_NODES } from '@/'
 import generateEditorState, { _$generateNodesFromHTML } from '@/utils/generateEditorState'
 
 describe('Utils: generateEditorState', () => {
-  function runGenerateEditorState(html, { nodes = DEFAULT_NODES } = {}) {
+  function runGenerateEditorState(
+    html: string,
+    { nodes = DEFAULT_NODES }: { nodes?: NonNullable<CreateEditorArgs['nodes']> } = {},
+  ) {
     const editor = createEditor({
       // lexical swallows errors inside updates by default,
       // so we need to throw them to fail the test
@@ -98,7 +101,11 @@ describe('Utils: generateEditorState', () => {
     const editorState = runGenerateEditorState(html)
 
     expect(editorState.root.children).toHaveLength(1)
-    expect(editorState.root.children[0].children).toHaveLength(2)
+    const list = editorState.root.children[0]
+    if (!list || !('children' in list) || !Array.isArray(list.children)) {
+      throw new Error('Expected a serialized list with children')
+    }
+    expect(list.children).toHaveLength(2)
     expect(editorState.root.children[0]).toMatchObject({
       type: 'list',
       children: [
@@ -109,7 +116,14 @@ describe('Utils: generateEditorState', () => {
   })
 
   describe('_$generateNodesFromHTML', () => {
-    function testGenerateNodesFromHTML(html, callback) {
+    function requireElementNode(node: LexicalNode | undefined) {
+      if (!$isElementNode(node)) {
+        throw new Error('Expected generated element node')
+      }
+      return node
+    }
+
+    function testGenerateNodesFromHTML(html: string, callback: (nodes: LexicalNode[]) => void) {
       const editor = createEditor({
         // lexical swallows errors inside updates by default,
         // so we need to throw them to fail the test
@@ -138,18 +152,20 @@ describe('Utils: generateEditorState', () => {
     test('handles single span inside paragraph', function () {
       const html = '<p><span>Test</span></p>'
       testGenerateNodesFromHTML(html, (nodes) => {
-        expect(nodes[0].getChildren().length).toEqual(1)
-        expect(nodes[0].getChildren()[0].getType()).toEqual('text')
+        const paragraph = requireElementNode(nodes[0])
+        expect(paragraph.getChildren().length).toEqual(1)
+        expect(paragraph.getChildren()[0].getType()).toEqual('text')
       })
     })
 
     test('handles multiple spans inside paragraph', function () {
       const html = '<p><span>Test</span> <span>Test2</span></p>'
       testGenerateNodesFromHTML(html, (nodes) => {
-        expect(nodes[0].getChildren().length).toEqual(3)
-        expect(nodes[0].getChildren()[0].getTextContent()).toEqual('Test')
-        expect(nodes[0].getChildren()[1].getTextContent()).toEqual(' ')
-        expect(nodes[0].getChildren()[2].getTextContent()).toEqual('Test2')
+        const paragraph = requireElementNode(nodes[0])
+        expect(paragraph.getChildren().length).toEqual(3)
+        expect(paragraph.getChildren()[0].getTextContent()).toEqual('Test')
+        expect(paragraph.getChildren()[1].getTextContent()).toEqual(' ')
+        expect(paragraph.getChildren()[2].getTextContent()).toEqual('Test2')
       })
     })
 

@@ -4,11 +4,11 @@ import { getAllowedImageCardWidths, getDefaultImageCardWidth } from '@/utils/ima
 
 describe('image-card-widths utils', () => {
   it('returns all widths when config is missing', () => {
-    expect(getAllowedImageCardWidths()).toEqual(['regular', 'wide', 'full'])
+    expect(getAllowedImageCardWidths(undefined)).toEqual(['regular', 'wide', 'full'])
   })
 
   it('returns all widths when config is invalid or empty', () => {
-    expect(getAllowedImageCardWidths('regular')).toEqual(['regular', 'wide', 'full'])
+    expect(Reflect.apply(getAllowedImageCardWidths, undefined, ['regular'])).toEqual(['regular', 'wide', 'full'])
     expect(getAllowedImageCardWidths([])).toEqual(['regular', 'wide', 'full'])
     expect(getAllowedImageCardWidths(['invalid'])).toEqual(['regular', 'wide', 'full'])
   })

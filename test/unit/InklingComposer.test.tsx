@@ -196,7 +196,8 @@ describe('InklingComposer', function () {
     if (!factory) {
       throw new Error('Expected InklingComposer to provide a websocket factory')
     }
-    expect(() => factory('card-1', new Map())).toThrow(
+    const createProvider = factory
+    expect(() => createProvider('card-1', new Map())).toThrow(
       '<InklingComposer> enableMultiplayer requires both multiplayerEndpoint and multiplayerDocId',
     )
   })

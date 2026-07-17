@@ -1,23 +1,40 @@
+import { createEditor, DecoratorNode } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
 import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
 
+class CardNode extends DecoratorNode<null> {
+  static getType() {
+    return 'test-card'
+  }
+
+  static clone() {
+    return new CardNode()
+  }
+
+  static cardMenu = [{ label: 'Card' }]
+
+  createDOM() {
+    return document.createElement('div')
+  }
+
+  updateDOM() {
+    return false
+  }
+
+  decorate() {
+    return null
+  }
+}
+
 describe('getEditorCardNodes', () => {
   it('returns an empty array when there are no nodes', () => {
-    expect(getEditorCardNodes({ _nodes: new Map() })).toEqual([])
+    expect(getEditorCardNodes(createEditor({ onError: () => {} }))).toEqual([])
   })
 
   it('only returns nodes with a cardMenu static property', () => {
-    const cardClass = { cardMenu: [{ label: 'Card' }] }
-    const plainClass = {}
+    const editor = createEditor({ nodes: [CardNode], onError: () => {} })
 
-    const editor = {
-      _nodes: new Map([
-        ['card', { klass: cardClass }],
-        ['plain', { klass: plainClass }],
-      ]),
-    }
-
-    expect(getEditorCardNodes(editor)).toEqual([['card', cardClass]])
+    expect(getEditorCardNodes(editor)).toEqual([['test-card', CardNode]])
   })
 })
