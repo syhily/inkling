@@ -314,8 +314,12 @@ export function registerAtLinkGuards(editor: LexicalEditor) {
             $removeAtLink(anchorNode, { focus: true })
             return true
           }
-          if ($isAtLinkSearchNode(anchorNode) || ($isZWNJNode(anchorNode) && $isAtLinkNode(anchorNode.getParent()))) {
-            $removeAtLink(anchorNode.getParent() as AtLinkNode, { focus: true })
+          if ($isAtLinkSearchNode(anchorNode) || $isZWNJNode(anchorNode)) {
+            const parent = anchorNode.getParent()
+            if (!$isAtLinkNode(parent)) {
+              return false
+            }
+            $removeAtLink(parent, { focus: true })
             return true
           }
         }
@@ -330,14 +334,18 @@ export function registerAtLinkGuards(editor: LexicalEditor) {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
           const anchorNode = selection.anchor.getNode()
-          if ($isAtLinkSearchNode(anchorNode) || ($isZWNJNode(anchorNode) && $isAtLinkNode(anchorNode.getParent()))) {
+          if ($isAtLinkSearchNode(anchorNode) || $isZWNJNode(anchorNode)) {
+            const parent = anchorNode.getParent()
+            if (!$isAtLinkNode(parent)) {
+              return false
+            }
             const anchorOffset = selection.anchor.offset
             if (isBackward && anchorOffset === 0) {
-              $removeAtLink(anchorNode.getParent() as AtLinkNode, { focus: true })
+              $removeAtLink(parent, { focus: true })
               return true
             }
             if (!isBackward && anchorOffset === anchorNode.getTextContentSize()) {
-              $removeAtLink(anchorNode.getParent() as AtLinkNode, { focus: true })
+              $removeAtLink(parent, { focus: true })
               return true
             }
           }
