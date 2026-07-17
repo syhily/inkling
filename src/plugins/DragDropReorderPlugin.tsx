@@ -57,10 +57,14 @@ function useDragDropReorder(editor: LexicalEditor): void {
   })
 
   const getDraggableInfo = React.useRef((draggableElement: HTMLElement | null): DraggableInfo | false => {
+    if (!draggableElement) {
+      return false
+    }
+
     let draggableInfo: DraggableInfo | undefined
 
     editor.update(() => {
-      const cardNode = $getNearestNodeFromDOMNode(draggableElement as Node)
+      const cardNode = $getNearestNodeFromDOMNode(draggableElement)
 
       if (cardNode) {
         draggableInfo = {
@@ -71,8 +75,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
           target: null,
           source: null,
           mousePosition: { x: 0, y: 0 },
-          dataset: (((cardNode as CardNode).getDataset() as Record<string, string | number | undefined>) ??
-            {}) as Record<string, string | number | undefined>,
+          dataset: (cardNode as CardNode).getDataset(),
           // what the per-card getIcon() copies returned: the first cardMenu
           // entry's icon (menu-less cards fall back inside getCardDragIcon)
           Icon: getCardDragIcon(cardNode.getType()),
@@ -131,12 +134,12 @@ function useDragDropReorder(editor: LexicalEditor): void {
       position: DroppablePosition,
     ): { insertIndex: number; element: HTMLElement } | false => {
       const rootElement = editor.getRootElement()
-      if (!rootElement) {
+      if (!rootElement || !droppableElem || !draggableInfo.element) {
         return false
       }
       const droppables = Array.from(rootElement.querySelectorAll<HTMLElement>(':scope > *'))
-      const droppableIndex = droppables.indexOf(droppableElem as HTMLElement)
-      const draggableIndex = droppables.indexOf(draggableInfo.element as HTMLElement)
+      const droppableIndex = droppables.indexOf(droppableElem)
+      const draggableIndex = droppables.indexOf(draggableInfo.element)
 
       // only allow card and image drops (images can be dragged out of a gallery)
       if (draggableInfo.type !== 'card' && draggableInfo.type !== 'image') {
@@ -151,7 +154,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
 
         return {
           insertIndex,
-          element: (droppables[insertIndex] ?? droppableElem) as HTMLElement,
+          element: droppables[insertIndex] ?? droppableElem,
         }
       }
 
@@ -166,11 +169,11 @@ function useDragDropReorder(editor: LexicalEditor): void {
       }
 
       const rootElement = editor.getRootElement()
-      if (!rootElement) {
+      if (!rootElement || !draggableInfo.element) {
         return false
       }
       const droppables = Array.from(rootElement.querySelectorAll<HTMLElement>(':scope > *'))
-      const draggableIndex = droppables.indexOf(draggableInfo.element as HTMLElement)
+      const draggableIndex = droppables.indexOf(draggableInfo.element)
       const insertIndex = draggableInfo.insertIndex ?? 0
 
       if (isCardDropAllowed(draggableIndex, insertIndex)) {
@@ -248,7 +251,8 @@ function useDragDropReorder(editor: LexicalEditor): void {
   })
 
   React.useEffect(() => {
-    if (!containerElement) {
+    const rootElement = editor.getRootElement()
+    if (!containerElement || !rootElement) {
       return
     }
     const dndHandler = new DragDropHandler({
@@ -260,7 +264,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
     // dependency)
     dragDropHandle.setState({ handler: dndHandler })
 
-    cardContainer.current = dndHandler.registerContainer(editor.getRootElement() as HTMLElement, {
+    cardContainer.current = dndHandler.registerContainer(rootElement, {
       draggable: {
         draggableSelector: ':scope > div', // cards
         getDraggableInfo: getDraggableInfo.current,

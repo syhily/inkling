@@ -54,7 +54,10 @@ export interface DraggableInfo {
   source: HTMLElement | null
   mousePosition: { x: number; y: number }
   insertIndex?: number
-  dataset: Record<string, string | number | undefined>
+  // card datasets carry more than scalars — a dragged gallery's dataset
+  // contains GalleryImage[] plus the live caption LexicalEditor/EditorState
+  // (generate-decorator-node.getDataset copies all internal props verbatim)
+  dataset: Record<string, unknown>
   [key: string]: unknown
 }
 
