@@ -1,4 +1,4 @@
-import type { LexicalEditor } from 'lexical'
+import type { LexicalEditor, LexicalNode } from 'lexical'
 
 import { $isListItemNode } from '@lexical/list'
 import {
@@ -39,9 +39,9 @@ export function registerTabCommand(editor: LexicalEditor, deps: KeyboardNavigati
           return true
         }
 
-        let nodes
+        let nodes: Array<LexicalNode | null>
         if ($isRangeSelection(selection) && selection.isCollapsed()) {
-          const anchorNode = selection?.anchor.getNode()
+          const anchorNode = selection.anchor.getNode()
           nodes = $isTextNode(anchorNode) ? [anchorNode.getParent()] : [anchorNode]
         } else if ($isRangeSelection(selection)) {
           nodes = selection.getNodes()
