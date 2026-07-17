@@ -104,6 +104,22 @@ describe('useSearchLinks', () => {
     await waitFor(() => expect(result.current.isSearching).toBe(false))
   })
 
+  it('clears the searching state when the search rejects', async () => {
+    const searchLinks = vi.fn((term?: string): Promise<SearchResult[] | undefined> => {
+      return term === 'broken' ? Promise.reject(new Error('search unavailable')) : Promise.resolve([])
+    })
+
+    const { result, rerender } = renderHook(({ query }) => useSearchLinks(query, searchLinks), {
+      initialProps: { query: '' },
+    })
+
+    await waitFor(() => expect(result.current.isSearching).toBe(false))
+    rerender({ query: 'broken' })
+
+    await waitFor(() => expect(searchLinks).toHaveBeenCalledWith('broken'))
+    await waitFor(() => expect(result.current.isSearching).toBe(false))
+  })
+
   it('shows the URL option for URL queries without searching', async () => {
     const searchLinks = vi.fn((): Promise<SearchResult[] | undefined> => Promise.resolve([]))
 
@@ -223,7 +239,7 @@ describe('useSearchLinks', () => {
 
     await waitFor(() => expect(result.current.listOptions[0]?.label).toBe('Custom'))
     expect(result.current.listOptions[0]?.items[0]?.type).toBe('custom-empty')
-    expect(noResultOptions).toHaveBeenCalled()
+    expect(noResultOptions).toHaveBeenCalledWith('nothing-matches')
   })
 
   it('shows the default options again when the query is cleared', async () => {

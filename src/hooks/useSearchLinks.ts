@@ -75,10 +75,11 @@ function defaultNoResultOptions(query: string): ListOptionSection[] {
 
 function convertSearchResultsToListOptions(
   results: SearchResult[] | undefined,
+  query: string,
   { noResultOptions, type }: { noResultOptions?: (query: string) => ListOptionSection[]; type?: string } = {},
 ): ListOptionSection[] {
   if (!results || !results.length) {
-    return (noResultOptions || defaultNoResultOptions)('')
+    return (noResultOptions || defaultNoResultOptions)(query)
   }
 
   return results.map((result) => {
@@ -130,27 +131,32 @@ export const useSearchLinks = (
 
       latestTermRef.current = term
       setIsSearching(true)
-      // a missing search function resolves like a cancelled search: keep the
-      // current options and leave the searching state
-      const results = searchLinks ? await searchLinks(term) : undefined
+      try {
+        // a missing search function resolves like a cancelled search: keep the
+        // current options and leave the searching state
+        const results = searchLinks ? await searchLinks(term) : undefined
 
-      // a newer query superseded this one while we were awaiting — don't
-      // let a slow older response overwrite the newer results
-      if (latestTermRef.current !== term) {
-        return
+        // a newer query superseded this one while we were awaiting — don't
+        // let a slow older response overwrite the newer results
+        if (latestTermRef.current !== term) {
+          return
+        }
+
+        // can return undefined if the search was cancelled, avoid updating
+        // in that scenario because we can end up in a race condition where
+        // we overwrite the results with an empty array whilst still waiting
+        // for a later search to complete. Avoids flashing of "no results".
+        if (results !== undefined) {
+          setListOptions(convertSearchResultsToListOptions(results, term, { noResultOptions }))
+        }
+      } catch {
+        // Search is best-effort. Preserve the last options when the host
+        // rejects, and always leave the searching state below.
+      } finally {
+        if (latestTermRef.current === term) {
+          setIsSearching(false)
+        }
       }
-
-      // can return undefined if the search was cancelled, avoid updating
-      // in that scenario because we can end up in a race condition where
-      // we overwrite the results with an empty array whilst still waiting
-      // for a later search to complete. Avoids flashing of "no results".
-      if (results === undefined) {
-        setIsSearching(false)
-        return
-      }
-
-      setListOptions(convertSearchResultsToListOptions(results, { noResultOptions }))
-      setIsSearching(false)
     }
   }, [searchLinks, noResultOptions])
 
@@ -170,7 +176,7 @@ export const useSearchLinks = (
         setIsSearching(true)
       }
       const results = searchLinks ? await searchLinks() : undefined
-      setDefaultListOptions(convertSearchResultsToListOptions(results, { type: 'default' }))
+      setDefaultListOptions(convertSearchResultsToListOptions(results, '', { type: 'default' }))
       if (!query) {
         setIsSearching(false)
       }

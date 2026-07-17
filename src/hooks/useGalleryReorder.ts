@@ -2,6 +2,7 @@ import React from 'react'
 
 import type { GalleryImage } from '@/types/gallery'
 import type { DraggableInfo, DroppablePosition, IndicatorPosition } from '@/utils/draggable/DragDropContainer'
+import type { DraggableContainerHandle } from '@/utils/draggable/DragDropHandler'
 
 import { useDragDropState } from '@/hooks/useDragDropState'
 import { pick } from '@/utils'
@@ -33,12 +34,7 @@ export default function useGalleryReorder({
 
   const [containerRef, setContainerRef] = React.useState<HTMLElement | null>(null)
   const [isDraggedOver, setIsDraggedOver] = React.useState<boolean>(false)
-  const dragDropContainer = React.useRef<{
-    enableDrag: () => void
-    disableDrag: () => void
-    refresh: () => void
-    destroy: () => void
-  } | null>(null)
+  const dragDropContainer = React.useRef<DraggableContainerHandle | null>(null)
   const skipOnDragEndRef = React.useRef<boolean>(false)
 
   const onDragStart = (draggableInfo: DraggableInfo) => {
@@ -69,7 +65,7 @@ export default function useGalleryReorder({
 
     const updatedImages: GalleryImage[] = [...images]
     let insertIndex: number = draggableInfo.insertIndex ?? 0
-    const droppables = Array.from(containerRef?.querySelectorAll('[data-image]') ?? []) as HTMLElement[]
+    const droppables = Array.from(containerRef?.querySelectorAll<HTMLElement>('[data-image]') ?? [])
     const draggableIndex = draggableInfo.element ? droppables.indexOf(draggableInfo.element) : -1
 
     if (!updatedImages.length) {
@@ -80,29 +76,38 @@ export default function useGalleryReorder({
       if (draggableIndex === -1) {
         // external image being added
         const { dataset } = draggableInfo
-        const img = draggableInfo.element?.querySelector(`img[src="${CSS.escape(String(dataset.src))}"]`)
+        const src = dataset.src
+        if (typeof src !== 'string') {
+          return false
+        }
+
+        const img = draggableInfo.element?.querySelector<HTMLImageElement>('img')
 
         // image card datasets may not have all of the details we need but we can fill them in
-        dataset.width = dataset.width || (img as HTMLImageElement)?.naturalWidth
-        dataset.height = dataset.height || (img as HTMLImageElement)?.naturalHeight
-        dataset.fileName = (dataset?.fileName as string) || getImageFilenameFromSrc(dataset.src as string)
+        const width = typeof dataset.width === 'number' ? dataset.width : img?.naturalWidth
+        const height = typeof dataset.height === 'number' ? dataset.height : img?.naturalHeight
+        const fileName =
+          typeof dataset.fileName === 'string' && dataset.fileName ? dataset.fileName : getImageFilenameFromSrc(src)
 
         const newImage: GalleryImage = {
-          src: String(dataset.src),
-          fileName: dataset.fileName as string | undefined,
-          row: dataset.row as number | undefined,
-          width: dataset.width as number | undefined,
-          height: dataset.height as number | undefined,
-          caption: dataset.caption as string | undefined,
+          src,
+          fileName,
+          row: typeof dataset.row === 'number' ? dataset.row : undefined,
+          width,
+          height,
+          caption: typeof dataset.caption === 'string' ? dataset.caption : undefined,
         }
 
         updatedImages.splice(insertIndex, 0, newImage)
       } else {
         // internal image being re-ordered
         const draggedImage = updatedImages.find((i) => i.src === draggableInfo.dataset.src)
+        if (!draggedImage) {
+          return false
+        }
         const accountForRemoval = draggableIndex < insertIndex && insertIndex ? -1 : 0
         const filtered = updatedImages.filter((i) => i !== draggedImage)
-        filtered.splice(insertIndex + accountForRemoval, 0, draggedImage as GalleryImage)
+        filtered.splice(insertIndex + accountForRemoval, 0, draggedImage)
         updateImages(filtered)
         dragDropContainer.current?.refresh()
 
@@ -136,20 +141,16 @@ export default function useGalleryReorder({
   }
 
   const getDraggableInfo = (draggableElement: HTMLElement | null): DraggableInfo | false => {
-    let src = draggableElement?.querySelector('img')?.getAttribute('src')
-    let image = images.find((i) => i.src === src) || images.find((i) => i.previewSrc === src)
-    const dataset = (
-      image ? pick(image, ['fileName', 'src', 'row', 'width', 'height', 'caption']) : {}
-    ) as DraggableInfo['dataset']
+    const src = draggableElement?.querySelector('img')?.getAttribute('src')
+    const image = images.find((i) => i.src === src) || images.find((i) => i.previewSrc === src)
 
     if (image) {
       return {
         type: 'image',
         element: draggableElement,
         target: null,
-        source: null,
         mousePosition: { x: 0, y: 0 },
-        dataset,
+        dataset: pick(image, ['fileName', 'src', 'row', 'width', 'height', 'caption']),
       }
     }
 
@@ -158,7 +159,7 @@ export default function useGalleryReorder({
 
   const getIndicatorPosition = (
     draggableInfo: DraggableInfo,
-    droppableElem: HTMLElement | null,
+    droppableElem: HTMLElement,
     position: DroppablePosition,
   ): IndicatorPosition | false => {
     // do not allow dropping of non-images
@@ -166,17 +167,13 @@ export default function useGalleryReorder({
       return false
     }
 
-    if (!droppableElem) {
-      return false
-    }
-
     const row = droppableElem.closest('[data-row]')
-    const droppables = Array.from(containerRef?.querySelectorAll('[data-image]') ?? []) as HTMLElement[]
+    const droppables = Array.from(containerRef?.querySelectorAll<HTMLElement>('[data-image]') ?? [])
     const draggableIndex = draggableInfo.element ? droppables.indexOf(draggableInfo.element) : -1
     const droppableIndex = droppables.indexOf(droppableElem)
 
     if (row && isDropAllowed(draggableIndex, droppableIndex, position)) {
-      const rowImages = Array.from(row.querySelectorAll('[data-image]')) as HTMLElement[]
+      const rowImages = Array.from(row.querySelectorAll<HTMLElement>('[data-image]'))
       const rowDroppableIndex = rowImages.indexOf(droppableElem)
       let insertIndex = droppableIndex
       const beforeElems: HTMLElement[] = []
@@ -219,7 +216,7 @@ export default function useGalleryReorder({
     }
 
     // can't drop on itself or when droppableIndex doesn't exist
-    if (draggableIndex === droppableIndex || typeof droppableIndex === 'undefined') {
+    if (draggableIndex === droppableIndex) {
       return false
     }
 

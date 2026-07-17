@@ -54,9 +54,6 @@ export interface DraggableInfo {
   Icon?: ComponentType<SVGProps<SVGSVGElement>>
   element: HTMLElement | null
   target: HTMLElement | null
-  // Retained as optional until the gallery hook migrates in Batch 10; it is
-  // write-only and should not be required by new producers.
-  source?: HTMLElement | null
   mousePosition: { x: number; y: number }
   insertIndex?: number
   // card datasets carry more than scalars — a dragged gallery's dataset

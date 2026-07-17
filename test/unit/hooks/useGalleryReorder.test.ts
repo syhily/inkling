@@ -94,7 +94,6 @@ describe('useGalleryReorder', () => {
       type: 'image',
       element: null,
       target: null,
-      source: null,
       mousePosition: { x: 0, y: 0 },
       insertIndex: 0,
       dataset: {
@@ -129,7 +128,6 @@ describe('useGalleryReorder', () => {
       type: 'image',
       element,
       target: null,
-      source: null,
       mousePosition: { x: 0, y: 0 },
       insertIndex: 0,
       dataset: { src },
@@ -156,7 +154,6 @@ describe('useGalleryReorder', () => {
       type: 'image',
       element: draggableElement as HTMLElement,
       target: null,
-      source: null,
       mousePosition: { x: 0, y: 0 },
       insertIndex: 3,
       dataset: { src: 'https://example.com/one.jpg' },
@@ -172,6 +169,26 @@ describe('useGalleryReorder', () => {
     ])
   })
 
+  it('rejects an internal drop when the dragged image no longer exists', async () => {
+    const images: GalleryImage[] = [{ src: 'https://example.com/one.jpg' }, { src: 'https://example.com/two.jpg' }]
+    const { options, container, updateImages } = await getRegisteredOptions(images)
+
+    const draggableElement = container.children[0] as HTMLElement
+    const draggableInfo: DraggableInfo = {
+      type: 'image',
+      element: draggableElement,
+      target: null,
+      mousePosition: { x: 0, y: 0 },
+      insertIndex: 1,
+      dataset: { src: 'https://example.com/removed-remotely.jpg' },
+    }
+
+    const success = options.droppable.onDrop(draggableInfo)
+
+    expect(success).toBe(false)
+    expect(updateImages).not.toHaveBeenCalled()
+  })
+
   it('skips onDropEnd after a successful internal reorder', async () => {
     const images: GalleryImage[] = [{ src: 'https://example.com/one.jpg' }, { src: 'https://example.com/two.jpg' }]
     const { options, container, updateImages } = await getRegisteredOptions(images)
@@ -183,7 +200,6 @@ describe('useGalleryReorder', () => {
       type: 'image',
       element: draggableElement as HTMLElement,
       target: null,
-      source: null,
       mousePosition: { x: 0, y: 0 },
       insertIndex: 1,
       dataset: { src: 'https://example.com/one.jpg' },
@@ -203,7 +219,6 @@ describe('useGalleryReorder', () => {
       type: 'image',
       element: null,
       target: null,
-      source: null,
       mousePosition: { x: 0, y: 0 },
       dataset: { src: 'https://example.com/one.jpg' },
     }
@@ -220,7 +235,6 @@ describe('useGalleryReorder', () => {
       type: 'file',
       element: null,
       target: null,
-      source: null,
       mousePosition: { x: 0, y: 0 },
       dataset: {},
     }
