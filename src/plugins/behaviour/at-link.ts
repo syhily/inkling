@@ -229,7 +229,11 @@ function registerNativeAtLinkInsertion(editor: LexicalEditor) {
     return () => {}
   }
 
-  const handleAtInsert = (event: InputEvent) => {
+  const handleAtInsert = (event: Event) => {
+    if (!(event instanceof InputEvent)) {
+      return
+    }
+
     if (event.isComposing) {
       return
     }
@@ -257,10 +261,10 @@ function registerNativeAtLinkInsertion(editor: LexicalEditor) {
     }
   }
 
-  rootElement.addEventListener('input', handleAtInsert as EventListener)
+  rootElement.addEventListener('input', handleAtInsert)
 
   return () => {
-    rootElement.removeEventListener('input', handleAtInsert as EventListener)
+    rootElement.removeEventListener('input', handleAtInsert)
   }
 }
 
