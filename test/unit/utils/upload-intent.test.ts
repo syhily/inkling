@@ -145,6 +145,29 @@ describe('runUploadIntent', () => {
     expect(createObjectURLSpy).not.toHaveBeenCalled()
   })
 
+  it('does nothing when files is empty — no upload, no prePatch, no lease', async () => {
+    const upload = vi.fn()
+    const prePatch = vi.fn()
+    const nodeKey = await createNodeInEditor(() => $createImageNode({ src: '/image.png' }))
+
+    const result = await runUploadIntent({
+      editor,
+      nodeKey,
+      guard: $isImageNode,
+      files: [],
+      upload,
+      prePatch,
+      leasePreview: true,
+      onEmptyResult: 'patch',
+      patch: vi.fn(),
+    })
+
+    expect(result).toBeUndefined()
+    expect(upload).not.toHaveBeenCalled()
+    expect(prePatch).not.toHaveBeenCalled()
+    expect(createObjectURLSpy).not.toHaveBeenCalled()
+  })
+
   describe('image matrix: preview lease, before-upload extraction, patch-always', () => {
     function imageIntent(overrides = {}) {
       return {

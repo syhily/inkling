@@ -121,7 +121,7 @@ export interface ExtractMetadataContext {
 }
 
 export interface PatchContext<TMeta> {
-  meta: TMeta
+  meta: TMeta | undefined
   resultUrl: string | undefined
   result: UploadResultItem[] | undefined
   file: File
@@ -198,13 +198,17 @@ export async function runUploadIntent<TNode extends LexicalNode, TMeta = undefin
     return undefined
   }
 
+  const file = files[0]
+  if (!file) {
+    return undefined
+  }
+
   if (prePatch) {
     await editor.update(() => {
       $updateCardNode(nodeKey, guard, prePatch)
     })
   }
 
-  const file = files[0]
   const lease = leasePreview ? createPreviewLease(file) : null
 
   try {
@@ -216,7 +220,7 @@ export async function runUploadIntent<TNode extends LexicalNode, TMeta = undefin
       })
     }
 
-    let extracted = meta as TMeta
+    let extracted = meta
     if (extractMetadata && metadataTiming === 'beforeUpload') {
       extracted = await extractMetadata({ file, previewUrl: lease?.url ?? null, resultUrl: undefined })
     }
@@ -253,6 +257,13 @@ export async function runUploadIntent<TNode extends LexicalNode, TMeta = undefin
   } finally {
     lease?.release()
   }
+}
+
+function requireUploadValue<T>(value: T | undefined, description: string): T {
+  if (value === undefined) {
+    throw new Error(`Upload intent did not produce ${description}`)
+  }
+  return value
 }
 
 /* ------------------------------------------------------------------------ */
@@ -293,11 +304,13 @@ export function imageUploadIntent({
     previewPatch: (node, url) => {
       node.previewSrc = url
     },
-    extractMetadata: ({ previewUrl }) => getImageDimensions(previewUrl!),
+    extractMetadata: ({ previewUrl }) =>
+      getImageDimensions(requireUploadValue(previewUrl ?? undefined, 'a preview URL')),
     onEmptyResult: 'patch',
     patch: (node, { meta, resultUrl }) => {
-      node.width = meta.width
-      node.height = meta.height
+      const dimensions = requireUploadValue(meta, 'image metadata')
+      node.width = dimensions.width
+      node.height = dimensions.height
       node.src = resultUrl ?? ''
       node.previewSrc = null
     },
@@ -325,7 +338,7 @@ export function audioUploadIntent({
     leasePreview: true,
     metadataTiming: 'afterUpload',
     extractMetadata: async ({ file, previewUrl }) => {
-      const { duration } = await getAudioMetadata(previewUrl!)
+      const { duration } = await getAudioMetadata(requireUploadValue(previewUrl ?? undefined, 'a preview URL'))
       return {
         duration,
         mimeType: file.type,
@@ -334,10 +347,11 @@ export function audioUploadIntent({
     },
     onEmptyResult: 'bail',
     patch: (node, { meta, resultUrl }) => {
-      node.duration = meta.duration
+      const metadata = requireUploadValue(meta, 'audio metadata')
+      node.duration = metadata.duration
       node.src = resultUrl ?? ''
-      node.mimeType = meta.mimeType
-      node.title = meta.title
+      node.mimeType = metadata.mimeType
+      node.title = metadata.title
     },
   })
 }
@@ -370,10 +384,10 @@ export function fileUploadIntent({
     isEmptyResult: (result) => !result || !result[0],
     onEmptyResult: 'bail',
     patch: (node, { resultUrl, file }) => {
-      const fileName = file?.name ?? ''
+      const fileName = file.name
       node.fileTitle = stripFileExtension(fileName)
       node.fileName = fileName
-      node.fileSize = file?.size ?? 0
+      node.fileSize = file.size
       node.src = resultUrl ?? ''
     },
   })
@@ -435,16 +449,16 @@ export function videoUploadIntent({
     meta,
     onEmptyResult: 'bail',
     onBail: onEmptyPreview,
-    patch: (node, { meta: metadata, resultUrl, file }) => {
+    patch: (node, { resultUrl, file }) => {
       node.src = resultUrl ?? ''
-      node.duration = metadata.duration
+      node.duration = meta.duration
       node.fileName = file.name
-      node.width = metadata.width
-      node.height = metadata.height
-      node.mimeType = metadata.mimeType
+      node.width = meta.width
+      node.height = meta.height
+      node.mimeType = meta.mimeType
       if (!node.customThumbnailSrc) {
-        node.thumbnailWidth = metadata.width
-        node.thumbnailHeight = metadata.height
+        node.thumbnailWidth = meta.width
+        node.thumbnailHeight = meta.height
       }
     },
   })
@@ -494,12 +508,13 @@ export function customThumbnailUploadIntent({
     files,
     upload,
     metadataTiming: 'afterUpload',
-    extractMetadata: ({ resultUrl }) => getImageDimensions(resultUrl!),
+    extractMetadata: ({ resultUrl }) => getImageDimensions(requireUploadValue(resultUrl, 'a result URL')),
     onEmptyResult: 'bail',
     patch: (node, { meta, resultUrl }) => {
+      const dimensions = requireUploadValue(meta, 'thumbnail metadata')
       node.customThumbnailSrc = resultUrl ?? ''
-      node.thumbnailWidth = meta.width
-      node.thumbnailHeight = meta.height
+      node.thumbnailWidth = dimensions.width
+      node.thumbnailHeight = dimensions.height
     },
   })
 }
@@ -588,7 +603,7 @@ export async function galleryUploadIntent({
   const currentCount = images.length
   const allowedCount = MAX_IMAGES - currentCount
 
-  const strippedFiles = Array.prototype.slice.call(files, 0, allowedCount) as File[]
+  const strippedFiles = Array.from(files).slice(0, allowedCount)
   if (strippedFiles.length < files.length) {
     setErrorMessage('Galleries are limited to 9 images')
   }
