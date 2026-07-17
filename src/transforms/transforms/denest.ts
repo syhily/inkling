@@ -48,13 +48,13 @@ function $isInvalidListItemNode(node: LexicalNode) {
 // ignore list and list item nodes because they aren't inline but can be nested inside each other
 function $isInvalidChildNode(node: LexicalNode) {
   if ($isLineBreakNode(node) || $isTextNode(node)) {
-    // line break and text nodes don't have an isInline method
+    // text and line break nodes are always inline, so always valid children
     return false
   }
   return (
     $isInvalidListNode(node) ||
     $isInvalidListItemNode(node) ||
-    (node.isInline && !node.isInline() && !$isListNode(node) && !$isListItemNode(node))
+    (!node.isInline() && !$isListNode(node) && !$isListItemNode(node))
   )
 }
 

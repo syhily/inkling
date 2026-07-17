@@ -8,7 +8,7 @@ import { $isListNode, ListNode } from '@lexical/list'
 export function mergeListNodesTransform(node: ListNode) {
   const nextSibling = node.getNextSibling()
 
-  if ($isListNode(nextSibling) && $isListNode(node) && nextSibling.getListType() === node.getListType()) {
+  if ($isListNode(nextSibling) && nextSibling.getListType() === node.getListType()) {
     node.append(...nextSibling.getChildren())
     nextSibling.remove()
   }
