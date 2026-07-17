@@ -182,6 +182,30 @@ describe('DragDropHandler', () => {
     expect(handler.isDragging).toBe(false)
   })
 
+  it('removes the temporary keydown listener when a drag resets', async () => {
+    const removeSpy = vi.spyOn(document, 'removeEventListener')
+
+    await initiateDrag('keydown-reset')
+    expect(handler.isDragging).toBe(true)
+
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+
+    expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function))
+    removeSpy.mockRestore()
+  })
+
+  it('removes the keydown listener when destroyed mid-drag', async () => {
+    const removeSpy = vi.spyOn(document, 'removeEventListener')
+
+    await initiateDrag('keydown-destroy')
+    expect(handler.isDragging).toBe(true)
+
+    handler.destroy()
+
+    expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function))
+    removeSpy.mockRestore()
+  })
+
   it('does not initiate drag on right click', async () => {
     const containerElement = createContainer('rightclick')
     handler.registerContainer(containerElement, createHandlers())

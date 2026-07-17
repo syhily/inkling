@@ -565,6 +565,7 @@ export class DragDropHandler {
     this._hideDropIndicator()
     this._removeMoveListeners()
     this._removeReleaseListeners()
+    this._removeKeyDownListeners()
 
     this.scrollHandler?.dragStop()
 
