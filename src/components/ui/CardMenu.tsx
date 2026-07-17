@@ -1,6 +1,7 @@
 import React from 'react'
 
 import TrashCardIcon from '@/assets/icons/inkling-trash.svg?react'
+import trackEvent from '@/utils/analytics'
 
 export interface CardMenuItemData {
   label?: string
@@ -241,7 +242,7 @@ export interface CardMenuProps {
 }
 
 export const CardMenu = ({
-  menu = new Map() as Map<string, CardMenuItemData[]>,
+  menu = new Map<string, CardMenuItemData[]>(),
   insert = () => {},
   selectedItemIndex = 0,
   scrollToSelectedItem = false,
@@ -259,7 +260,7 @@ export const CardMenu = ({
         event.preventDefault()
         event.stopPropagation()
         insert?.(item.insertCommand, {
-          insertParams: item.insertParams as Record<string, unknown>,
+          insertParams: item.insertParams,
           queryParams: item.queryParams,
         })
         trackEvent('Card Added', { card: item.label ?? 'unknown' })
@@ -293,7 +294,7 @@ export const CardMenu = ({
             label={item.label}
             scrollToItem={isSelected && scrollToSelectedItem}
             onClick={onClick}
-            onRemove={item.onRemove as () => void}
+            onRemove={item.onRemove}
           />,
         )
       }
@@ -317,8 +318,4 @@ export const CardMenu = ({
       {CardMenuSections}
     </ul>
   )
-}
-
-function trackEvent(_card: string, _props: Record<string, unknown>): void {
-  // TODO: integrate with analytics provider
 }

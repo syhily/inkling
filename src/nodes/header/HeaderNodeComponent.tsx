@@ -77,7 +77,7 @@ function HeaderNodeComponent({
   const [imageRemoved, setImageRemoved] = useState<boolean>(false)
 
   const { isEnabled: isPinturaEnabled, openEditor: openImageEditor } = usePinturaEditor({
-    config: cardConfig.pinturaConfig as Parameters<typeof usePinturaEditor>[0] extends { config?: infer C } ? C : never,
+    config: cardConfig.pinturaConfig,
   })
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
