@@ -2,10 +2,7 @@ import React from 'react'
 
 export interface ToggleProps {
   isChecked?: boolean
-  // oxlint-disable-next-line typescript/no-explicit-any
-  onChange?: (...args: any[]) => void
-  label?: string
-  description?: string
+  onChange?: (checked: boolean) => void
   dataTestId?: string
 }
 

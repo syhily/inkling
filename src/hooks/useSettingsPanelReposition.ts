@@ -186,11 +186,11 @@ interface UseSettingsPanelRepositionOptions {
   positionToRef?: React.RefObject<HTMLElement | null>
 }
 
-export default function useSettingsPanelReposition(
+export default function useSettingsPanelReposition<T extends HTMLElement = HTMLDivElement>(
   { positionToRef }: UseSettingsPanelRepositionOptions = {},
   cardWidth: string,
-): { ref: React.RefObject<HTMLElement | null> } {
-  const { ref, getPosition, setPosition } = useMovable({
+): { ref: React.RefObject<T | null> } {
+  const { ref, getPosition, setPosition } = useMovable<T>({
     adjustOnResize: keepWithinSpacingOnResize,
     adjustOnDrag: keepWithinSpacingOnDrag,
   })

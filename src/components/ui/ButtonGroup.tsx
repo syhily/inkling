@@ -6,7 +6,7 @@ import { usePreviousFocus } from '@/hooks/usePreviousFocus'
 export interface ButtonGroupButton {
   label?: string
   name: string
-  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
   dataTestId?: string
   ariaLabel?: string
 }
@@ -48,7 +48,7 @@ interface ButtonGroupIconButtonProps {
   name: string
   selectedName?: string
   onClick?: (name: string) => void
-  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
   hasTooltip?: boolean
   dataTestId?: string
   ariaLabel?: string

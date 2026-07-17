@@ -11,7 +11,7 @@ const TabView = ({
   defaultTab?: string
   tabContent: Record<string, React.ReactNode>
 }) => {
-  const [activeTab, setActiveTab] = useState(defaultTab || tabs[0].id)
+  const [activeTab, setActiveTab] = useState(defaultTab ?? tabs[0]?.id ?? '')
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId)

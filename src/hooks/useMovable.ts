@@ -39,8 +39,8 @@ interface UseMovableOptions {
   adjustOnDrag?: AdjustOnDrag
 }
 
-interface UseMovableResult {
-  ref: RefObject<HTMLElement | null>
+interface UseMovableResult<T extends HTMLElement> {
+  ref: RefObject<T | null>
   setPosition: (position: MovablePosition) => void
   getPosition: () => MovablePositionWithSpacing
 }
@@ -57,8 +57,11 @@ interface UseMovableResult {
  * @example
  * const {ref} = useMovable();
  */
-export default function useMovable({ adjustOnResize, adjustOnDrag }: UseMovableOptions = {}): UseMovableResult {
-  const ref = useRef<HTMLElement | null>(null)
+export default function useMovable<T extends HTMLElement = HTMLElement>({
+  adjustOnResize,
+  adjustOnDrag,
+}: UseMovableOptions = {}): UseMovableResult<T> {
+  const ref = useRef<T | null>(null)
 
   const moveThreshold = 3
 

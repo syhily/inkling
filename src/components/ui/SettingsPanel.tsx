@@ -17,25 +17,23 @@ import { Toggle } from '@/components/ui/Toggle'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import useSettingsPanelReposition from '@/hooks/useSettingsPanelReposition'
 
-export interface SettingsPanelProps {
-  children: React.ReactNode | Record<string, React.ReactNode>
+export type SettingsPanelProps = {
   darkMode?: boolean
   cardWidth?: 'regular' | 'wide' | 'full' | 'split'
-  tabs?: boolean
-  defaultTab?: string
   className?: string
-}
+} & (
+  | { tabs?: false; defaultTab?: never; children: React.ReactNode }
+  | { tabs: true; defaultTab?: string; children: Record<string, React.ReactNode> }
+)
 
 export function SettingsPanel({ children, darkMode, cardWidth, tabs, defaultTab, className = '' }: SettingsPanelProps) {
-  const { ref } = useSettingsPanelReposition({}, cardWidth ?? 'regular')
+  const { ref } = useSettingsPanelReposition<HTMLDivElement>({}, cardWidth ?? 'regular')
 
-  const tabContent = React.useMemo(() => {
+  const tabContent = React.useMemo<Record<string, React.ReactNode>>(() => {
     if (!tabs) {
       return { default: children }
     }
-    return typeof children === 'object' && children !== null
-      ? (children as Record<string, React.ReactNode>)
-      : { default: children }
+    return children
   }, [tabs, children])
 
   const tabItems = React.useMemo(() => {
@@ -51,21 +49,21 @@ export function SettingsPanel({ children, darkMode, cardWidth, tabs, defaultTab,
     <div className={`!mt-0 touch-none ${darkMode ? 'dark' : ''} ${className ?? ''}`}>
       {tabs ? (
         <div
-          ref={ref as React.RefObject<HTMLDivElement>}
+          ref={ref}
           className="not-inkling-prose fixed top-0 left-0 z-[9999999] m-0 flex w-[320px] flex-col rounded-lg bg-white bg-clip-padding font-sans shadow-lg will-change-transform dark:bg-grey-950 dark:shadow-xl"
           data-testid="settings-panel"
           data-inkling-settings-panel
         >
-          <TabView defaultTab={defaultTab} tabContent={tabContent as Record<string, React.ReactNode>} tabs={tabItems} />
+          <TabView defaultTab={defaultTab} tabContent={tabContent} tabs={tabItems} />
         </div>
       ) : (
         <div
-          ref={ref as React.RefObject<HTMLDivElement>}
+          ref={ref}
           className="not-inkling-prose fixed top-0 left-0 z-[9999999] m-0 flex w-[320px] flex-col gap-3 rounded-lg bg-white bg-clip-padding p-6 font-sans shadow-lg will-change-transform dark:bg-grey-950 dark:shadow-xl"
           data-testid="settings-panel"
           data-inkling-settings-panel
         >
-          {children as React.ReactNode}
+          {children}
         </div>
       )}
     </div>
@@ -76,7 +74,7 @@ interface ToggleSettingProps {
   label?: string
   description?: string
   isChecked: boolean
-  onChange: ((checked: boolean) => void) | ((event: React.ChangeEvent<HTMLInputElement>) => void)
+  onChange: (checked: boolean) => void
   dataTestId?: string
 }
 
@@ -132,7 +130,7 @@ export function SliderSetting({
         defaultValue={defaultValue}
         max={max}
         min={min}
-        value={value ?? ''}
+        value={value}
         onChange={onChange}
       />
       {description && (
@@ -172,13 +170,7 @@ export function InputSetting({
       >
         {label}
       </div>
-      <Input
-        dataTestId={dataTestId}
-        placeholder={placeholder}
-        value={value ?? ''}
-        onBlur={onBlur}
-        onChange={onChange}
-      />
+      <Input dataTestId={dataTestId} placeholder={placeholder} value={value} onBlur={onBlur} onChange={onChange} />
       {description && (
         <p className="text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">{description}</p>
       )}
@@ -244,7 +236,7 @@ export function InputUrlSetting({ dataTestId, label, value, onChange }: InputUrl
       label={label}
       listOptions={filteredSuggestedUrls}
       placeholder="https://yoursite.com/#/portal/signup/"
-      value={value ?? ''}
+      value={value}
       onChange={onChange}
     />
   )
@@ -319,7 +311,7 @@ export function InputListSetting({
         getItem={getItem}
         listOptions={listOptions}
         placeholder={placeholder ?? ''}
-        value={value ?? ''}
+        value={value}
         onChange={onChange}
       />
       {description && (
@@ -347,7 +339,7 @@ export function DropdownSetting({ label, description, value, menu, onChange, dat
       >
         {label}
       </div>
-      <Dropdown dataTestId={dataTestId} menu={menu} value={value ?? ''} onChange={onChange} />
+      <Dropdown dataTestId={dataTestId} menu={menu} value={value} onChange={onChange} />
       {description && (
         <p className="text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">{description}</p>
       )}
@@ -355,13 +347,13 @@ export function DropdownSetting({ label, description, value, menu, onChange, dat
   )
 }
 
-interface MultiSelectDropdownSettingProps<T = string> {
+interface MultiSelectDropdownSettingProps {
   label?: string
   description?: string
   placeholder?: string
-  items: T[]
-  availableItems: T[]
-  onChange: (items: T[]) => void
+  items: string[]
+  availableItems: string[]
+  onChange: (items: string[]) => void
   dataTestId?: string
   allowAdd?: boolean
 }
@@ -369,8 +361,8 @@ interface MultiSelectDropdownSettingProps<T = string> {
 /**
  *
  * @param {object} options
- * @param {T[]} options.items The currently selected items
- * @param {T[]} options.availableItems The items available for selection
+ * @param {string[]} options.items The currently selected items
+ * @param {string[]} options.availableItems The items available for selection
  * @param {boolean} options.allowAdd Whether to allow adding new items
  * @returns
  */
@@ -406,12 +398,7 @@ interface ButtonGroupSettingProps {
   label?: string
   onClick: (name: string) => void
   selectedName?: string
-  buttons: Array<{
-    label?: string
-    name: string
-    Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
-    dataTestId?: string
-  }>
+  buttons: ButtonGroupButton[]
   hasTooltip?: boolean
 }
 
@@ -421,12 +408,7 @@ export function ButtonGroupSetting({ label, onClick, selectedName, buttons, hasT
       <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
 
       <div className="shrink-0 pl-2">
-        <ButtonGroup
-          buttons={buttons as ButtonGroupButton[]}
-          hasTooltip={hasTooltip}
-          selectedName={selectedName}
-          onClick={onClick}
-        />
+        <ButtonGroup buttons={buttons} hasTooltip={hasTooltip} selectedName={selectedName} onClick={onClick} />
       </div>
     </div>
   )
@@ -508,7 +490,7 @@ export function ColorPickerSetting({
             isExpanded={isExpanded}
             showChildren={showChildren}
             swatches={swatches ?? []}
-            value={value ?? ''}
+            value={value}
             onChange={onPickerChange ?? (() => {})}
             onSwatchChange={onSwatchChange ?? (() => {})}
             onTogglePicker={onTogglePicker ?? (() => {})}
@@ -537,7 +519,7 @@ interface MediaUploadSettingProps {
   onRemoveMedia: () => void
   icon?: string
   desc?: string
-  size?: 'small' | 'large' | string
+  size?: string
   type?: string
   stacked?: boolean
   borderStyle?: 'simple' | 'heavy' | 'squared' | 'rounded'
