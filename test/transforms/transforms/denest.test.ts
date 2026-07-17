@@ -1,4 +1,4 @@
-import type { Klass, LexicalEditor, LexicalNode } from 'lexical'
+import type { LexicalEditor } from 'lexical'
 
 import { $createListItemNode, $createListNode, ListItemNode, ListNode } from '@lexical/list'
 import { $createHeadingNode, HeadingNode } from '@lexical/rich-text'
@@ -158,7 +158,7 @@ describe('Denest transform', function () {
       },
     }
 
-    const editor = createEditor({ nodes: [ListNode, ListItemNode, ImageNode as unknown as Klass<LexicalNode>] })
+    const editor = createEditor({ nodes: [ListNode, ListItemNode, ImageNode] })
 
     assertTransform(editor, registerTransforms, before, after)
   })

@@ -21,8 +21,7 @@ function generateWithSpec(
 ) {
   return generateDecoratorNode({
     nodeType: `spec-test-${Math.random().toString(36).slice(2)}`,
-    // oxlint-disable-next-line typescript/no-explicit-any
-    properties: properties as any,
+    properties,
     importSpec,
   })
 }
@@ -38,9 +37,9 @@ function firstElement(document: Document, selector: string) {
 // Node construction requires an active editor that has the constructed class
 // registered, so each constructing test runs inside an editor created with
 // the classes under test
-function withEditor(nodes: unknown[], testFn: () => void) {
+function withEditor(nodes: LexicalNodeConfig[], testFn: () => void) {
   return new Promise<void>((resolve, reject) => {
-    const testEditor = createHeadlessEditor({ nodes: nodes as LexicalNodeConfig[] })
+    const testEditor = createHeadlessEditor({ nodes })
     testEditor.update(() => {
       try {
         testFn()

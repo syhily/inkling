@@ -1,4 +1,4 @@
-import type { CreateEditorArgs, Klass, LexicalEditor, LexicalNode } from 'lexical'
+import type { CreateEditorArgs, LexicalEditor, LexicalNodeConfig } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
 import { LinkNode } from '@lexical/link'
@@ -8,7 +8,7 @@ import assert from 'node:assert/strict'
 
 import { DEFAULT_NODES } from '@/nodes/base'
 
-export const defaultNodes: Array<Klass<LexicalNode>> = [
+export const defaultNodes: LexicalNodeConfig[] = [
   // basic HTML nodes
   HeadingNode,
   LinkNode,
@@ -17,8 +17,7 @@ export const defaultNodes: Array<Klass<LexicalNode>> = [
   QuoteNode,
 
   // Inkling nodes
-  // oxlint-disable-next-line typescript/no-explicit-any
-  ...(DEFAULT_NODES as any),
+  ...DEFAULT_NODES,
 ]
 
 export const defaultEditorConfig: CreateEditorArgs = {
