@@ -20,7 +20,7 @@ function isLegacyVersion(inklingVersion: string): boolean {
   return !Number.isNaN(major) && major < 4
 }
 
-const renderers: Record<string, MarkdownIt> = {}
+const renderers: Partial<Record<'<4.x' | 'latest', MarkdownIt>> = {}
 
 interface RenderOptions {
   inklingVersion?: string
