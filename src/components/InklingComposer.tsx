@@ -75,6 +75,13 @@ function readFileTypes(fileUploader: FileUploaderInput): FileUploader['fileTypes
   return fileTypes
 }
 
+function requireMultiplayerConfig(multiplayerEndpoint?: string, multiplayerDocId?: string) {
+  if (!multiplayerEndpoint || !multiplayerDocId) {
+    throw new Error('<InklingComposer> enableMultiplayer requires both multiplayerEndpoint and multiplayerDocId')
+  }
+  return { multiplayerEndpoint, multiplayerDocId }
+}
+
 // The events Lexical's Provider interface registers handlers for. Of these,
 // y-websocket's WebsocketProvider only ever emits 'sync' and 'status' — its
 // typed event map doesn't even admit 'update' or 'reload' — so adapt by
@@ -154,6 +161,10 @@ const InklingComposer = ({
   multiplayerUsername,
   children,
 }: InklingComposerProps) => {
+  if (enableMultiplayer) {
+    requireMultiplayerConfig(multiplayerEndpoint, multiplayerDocId)
+  }
+
   const normalizedInitialEditorState = React.useMemo(
     () => normalizeInitialEditorState(initialEditorState),
     [initialEditorState],
@@ -194,10 +205,7 @@ const InklingComposer = ({
 
   const createWebsocketProvider = React.useCallback<LexicalProviderFactory>(
     (id, yjsDocMap) => {
-      if (!multiplayerEndpoint || !multiplayerDocId) {
-        throw new Error('<InklingComposer> enableMultiplayer requires both multiplayerEndpoint and multiplayerDocId')
-      }
-
+      const config = requireMultiplayerConfig(multiplayerEndpoint, multiplayerDocId)
       let doc = yjsDocMap.get(id)
 
       if (doc === undefined) {
@@ -207,13 +215,13 @@ const InklingComposer = ({
         doc.load()
       }
 
-      const provider = new WebsocketProvider(multiplayerEndpoint, multiplayerDocId + '/' + id, doc, {
+      const provider = new WebsocketProvider(config.multiplayerEndpoint, config.multiplayerDocId + '/' + id, doc, {
         connect: false,
       })
 
       if (multiplayerDebug) {
         provider.on('status', (event) => {
-          console.warn(event.status, `id: ${multiplayerDocId}/${id}`)
+          console.warn(event.status, `id: ${config.multiplayerDocId}/${id}`)
         })
       }
 

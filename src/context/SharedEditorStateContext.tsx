@@ -15,7 +15,7 @@ import React from 'react'
  *   HistoryPlugin with this externalHistoryState, so nested card edits join
  *   the top-level undo stack (skipped while collab is active; yjs owns
  *   undo/redo there). An instance with no provider above it falls back to the
- *   module-default context value.
+ *   per-consumer history state created by the hook.
  * - InklingComposableEditor's change handler routes this shared onChange
  *   through `(parentEditor || editor).getEditorState()`, so a nested editor's
  *   change serializes the full top-level document, while a per-instance
@@ -26,7 +26,7 @@ export interface SharedEditorStateContextValue {
   onChange?: (editorStateJSON: SerializedEditorState) => void
 }
 
-const Context = React.createContext<SharedEditorStateContextValue>({ historyState: createEmptyHistoryState() })
+const Context = React.createContext<SharedEditorStateContextValue | null>(null)
 
 export const SharedEditorStateContext = ({
   onChange,
@@ -46,4 +46,13 @@ export const SharedEditorStateContext = ({
   return <Context.Provider value={value}>{children}</Context.Provider>
 }
 
-export const useSharedEditorStateContext = () => React.useContext(Context)
+export const useSharedEditorStateContext = (): SharedEditorStateContextValue => {
+  const providedValue = React.useContext(Context)
+  const [fallbackHistoryState] = React.useState(createEmptyHistoryState)
+  const fallbackValue = React.useMemo<SharedEditorStateContextValue>(
+    () => ({ historyState: fallbackHistoryState }),
+    [fallbackHistoryState],
+  )
+
+  return providedValue ?? fallbackValue
+}

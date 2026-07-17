@@ -165,25 +165,18 @@ describe('InklingComposer', function () {
     ;(provider.disconnect as () => void)()
   })
 
-  it('throws from the provider factory when multiplayer lacks an endpoint or doc id', () => {
-    let factory: LexicalProviderFactory | undefined
-
-    function FactoryConsumer() {
-      const { createWebsocketProvider } = React.useContext(InklingCollaborationContext)
-      factory = createWebsocketProvider
-      return null
-    }
-
-    render(
-      <InklingComposer enableMultiplayer>
-        <FactoryConsumer />
-      </InklingComposer>,
-    )
-
-    expect(() => factory!('card-1', new Map())).toThrow(
-      '<InklingComposer> enableMultiplayer requires both multiplayerEndpoint and multiplayerDocId',
-    )
-  })
+  it.each([{ multiplayerEndpoint: 'ws://localhost:1234' }, { multiplayerDocId: 'doc' }])(
+    'rejects invalid multiplayer configuration at the composer boundary',
+    (props) => {
+      expect(() =>
+        render(
+          <InklingComposer enableMultiplayer {...props}>
+            content
+          </InklingComposer>,
+        ),
+      ).toThrow('<InklingComposer> enableMultiplayer requires both multiplayerEndpoint and multiplayerDocId')
+    },
+  )
 
   it('drops fileTypes entries whose shape consumers cannot read', () => {
     let captured: FileUploader | undefined

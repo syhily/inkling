@@ -124,18 +124,25 @@ describe('TKContext', () => {
 })
 
 describe('SharedEditorStateContext', () => {
-  it('provides a module-default history state without a provider', () => {
-    let captured: SharedEditorStateContextValue | undefined
+  it('isolates fallback history state between provider-less consumers', () => {
+    const captured: SharedEditorStateContextValue[] = []
 
     function Consumer() {
-      captured = useSharedEditorStateContext()
+      captured.push(useSharedEditorStateContext())
       return null
     }
 
-    render(<Consumer />)
+    render(
+      <>
+        <Consumer />
+        <Consumer />
+      </>,
+    )
 
-    expect(captured!.historyState).toBeDefined()
-    expect(captured!.onChange).toBeUndefined()
+    expect(captured).toHaveLength(2)
+    expect(captured[0].historyState).not.toBe(captured[1].historyState)
+    expect(captured[0].onChange).toBeUndefined()
+    expect(captured[1].onChange).toBeUndefined()
   })
 
   it('keeps the history state stable when the onChange identity changes', () => {
