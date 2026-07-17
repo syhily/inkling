@@ -1,10 +1,11 @@
-import { $isListNode, ListItemNode } from '@lexical/list'
+import { $isListItemNode, $isListNode } from '@lexical/list'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
   mergeRegister,
   $createParagraphNode,
   $getSelection,
   $isDecoratorNode,
+  $isElementNode,
   $isParagraphNode,
   $isRangeSelection,
   COMMAND_PRIORITY_LOW,
@@ -51,10 +52,19 @@ export const RestrictContentPlugin = ({ paragraphs, allowBr }: { paragraphs: num
           // for other non-paragraph nodes, convert them to a paragraph
           cleanedNodes = cleanedNodes.map((node) => {
             if ($isListNode(node)) {
-              const firstListItem = node.getChildren()[0]
-              return $createParagraphNode().append(...(firstListItem as ListItemNode).getChildren())
+              const firstListItem = node.getFirstChild()
+              if (!$isListItemNode(firstListItem)) {
+                return $createParagraphNode()
+              }
+              return $createParagraphNode().append(...firstListItem.getChildren())
             } else if (!$isParagraphNode(node)) {
-              return $createParagraphNode().append(...(node as import('lexical').ElementNode).getChildren())
+              // after the decorator filter the remaining root children are
+              // element nodes (Lexical's root invariant) — narrow honestly
+              // instead of casting on the strength of the invariant
+              if (!$isElementNode(node)) {
+                return $createParagraphNode()
+              }
+              return $createParagraphNode().append(...node.getChildren())
             } else {
               return node
             }
@@ -70,13 +80,19 @@ export const RestrictContentPlugin = ({ paragraphs, allowBr }: { paragraphs: num
       }),
       editor.registerCommand(
         PASTE_COMMAND,
-        (clipboard: ClipboardEvent) => {
-          const clipboardData = clipboard?.clipboardData
+        (clipboardEvent) => {
+          // PASTE_COMMAND's payload is ClipboardEvent | InputEvent |
+          // KeyboardEvent (Lexical dispatches InputEvent from its beforeinput
+          // paste path); only ClipboardEvent carries clipboardData
+          if (!(clipboardEvent instanceof ClipboardEvent)) {
+            return false
+          }
+          const clipboardData = clipboardEvent.clipboardData
           if (!clipboardData) {
             return false
           }
 
-          return handlePlainTextPaste(editor, clipboardData, clipboard, {
+          return handlePlainTextPaste(editor, clipboardData, clipboardEvent, {
             allowBr: allowBr ?? false,
             skipCardShortcutGuard: true,
           })
