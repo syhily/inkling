@@ -2,13 +2,24 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
+import type { FileUploaderLike } from '@/components/ui/cards/card-ui-types'
+import type { UseFileDragAndDropResult } from '@/hooks/useFileDragAndDrop'
+
 import { FileCard } from '@/components/ui/cards/FileCard'
+
+function createUploader(overrides: Partial<FileUploaderLike> = {}): FileUploaderLike {
+  return { isLoading: false, upload: async () => undefined, ...overrides }
+}
+
+function createDragHandler(overrides: Partial<UseFileDragAndDropResult> = {}): UseFileDragAndDropResult {
+  return { isDraggedOver: false, setRef: vi.fn(), ...overrides }
+}
 
 describe('FileCard', function () {
   const file = new File(['pdf'], 'doc.pdf', { type: 'application/pdf' })
 
   const baseProps = {
-    fileDragHandler: {},
+    fileDragHandler: createDragHandler(),
     handleFileTitle: () => {},
     handleFileDesc: () => {},
     onFileChange: () => {},
@@ -68,7 +79,7 @@ describe('FileCard', function () {
   })
 
   it('shows the uploading state', function () {
-    render(<FileCard {...baseProps} fileUploader={{ isLoading: true, progress: 50 }} />)
+    render(<FileCard {...baseProps} fileUploader={createUploader({ isLoading: true, progress: 50 })} />)
 
     expect(screen.queryByText('Click to upload a file')).not.toBeInTheDocument()
     expect(document.querySelector('[class*="bg-grey-50"]')).toBeInTheDocument()

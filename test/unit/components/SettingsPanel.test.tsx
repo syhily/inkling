@@ -2,6 +2,8 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
+import type { ListOptionItem } from '@/hooks/useSearchLinks'
+
 import {
   ButtonGroupSetting,
   ColorOptionSetting,
@@ -22,6 +24,20 @@ import type { CardConfig } from '../../../src/context/InklingHostIntegrationCont
 const mocks = vi.hoisted(() => ({
   contextValue: { cardConfig: {} as CardConfig },
 }))
+
+function EmptyIcon() {
+  return <svg />
+}
+
+function createListOptionItem(): ListOptionItem {
+  return {
+    Icon: EmptyIcon,
+    highlight: false,
+    label: 'Example',
+    type: 'url',
+    value: 'https://example.com',
+  }
+}
 
 // Mock the host-integration context used by InputUrlSetting
 vi.mock('../../../src/context/InklingHostIntegrationContext', async () => {
@@ -130,7 +146,7 @@ describe('SettingsPanel', function () {
 
   describe('InputUrlSetting', function () {
     it('shows autocomplete suggestions once links resolve', async function () {
-      const fetchAutocompleteLinks = vi.fn(async () => [{ value: 'https://example.com', label: 'Example' }])
+      const fetchAutocompleteLinks = vi.fn(async (): Promise<ListOptionItem[]> => [createListOptionItem()])
       mocks.contextValue.cardConfig = { fetchAutocompleteLinks }
 
       render(<InputUrlSetting dataTestId="url" label="URL" value="" onChange={() => {}} />)
@@ -141,10 +157,10 @@ describe('SettingsPanel', function () {
     })
 
     it('ignores autocomplete results that resolve after unmount', async function () {
-      let resolveLinks!: (links: { value: string; label: string }[]) => void
+      let resolveLinks: ((links: ListOptionItem[]) => void) | undefined
       const fetchAutocompleteLinks = vi.fn(
         () =>
-          new Promise<{ value: string; label: string }[]>((resolve) => {
+          new Promise<ListOptionItem[]>((resolve) => {
             resolveLinks = resolve
           }),
       )
@@ -155,7 +171,10 @@ describe('SettingsPanel', function () {
       expect(fetchAutocompleteLinks).toHaveBeenCalled()
 
       unmount()
-      resolveLinks([{ value: 'https://example.com', label: 'Example' }])
+      if (!resolveLinks) {
+        throw new Error('Expected autocomplete request to create a resolver')
+      }
+      resolveLinks([createListOptionItem()])
       // the late resolution must not trigger a state update on the unmounted
       // component — act() flushes the microtask without errors or warnings
       await act(async () => {})

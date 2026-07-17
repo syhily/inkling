@@ -14,7 +14,7 @@ describe('Gif', () => {
   }
 
   it('returns null when no gif media format is available', () => {
-    const { container } = render(<Gif data={{ id: 'empty' }} />)
+    const { container } = render(<Gif data={{ id: 'empty', media_formats: {} }} />)
     expect(container.firstChild).toBeNull()
   })
 

@@ -2,14 +2,20 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
+import type { FileUploaderLike } from '@/components/ui/cards/card-ui-types'
+
 import { AudioCard } from '@/components/ui/cards/AudioCard'
+
+function createUploader(overrides: Partial<FileUploaderLike> = {}): FileUploaderLike {
+  return { isLoading: false, upload: async () => undefined, ...overrides }
+}
 
 describe('AudioCard', function () {
   const file = new File(['audio'], 'track.mp3', { type: 'audio/mpeg' })
 
   const emptyProps = {
-    audioUploader: {},
-    thumbnailUploader: {},
+    audioUploader: createUploader(),
+    thumbnailUploader: createUploader(),
     updateTitle: () => {},
     onAudioFileChange: () => {},
     onThumbnailFileChange: () => {},

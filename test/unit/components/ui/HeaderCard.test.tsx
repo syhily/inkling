@@ -3,7 +3,18 @@ import { createEditor } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { FileUploaderLike } from '@/components/ui/cards/card-ui-types'
+import type { UseFileDragAndDropResult } from '@/hooks/useFileDragAndDrop'
+
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
+
+function createUploader(overrides: Partial<FileUploaderLike> = {}): FileUploaderLike {
+  return { isLoading: false, upload: async () => undefined, errors: [], ...overrides }
+}
+
+function createDragHandler(overrides: Partial<UseFileDragAndDropResult> = {}): UseFileDragAndDropResult {
+  return { isDraggedOver: false, setRef: vi.fn(), ...overrides }
+}
 
 vi.mock('../../../../src/components/ui/MediaUploader', () => ({
   MediaUploader: ({ additionalActions, ...props }: Record<string, unknown>) => (
@@ -102,7 +113,7 @@ function createEditorInstance() {
 }
 
 describe('HeaderCard', () => {
-  const defaultProps = {
+  const defaultProps: React.ComponentProps<typeof HeaderCard> = {
     alignment: 'center',
     buttonEnabled: false,
     buttonText: '',
@@ -115,7 +126,7 @@ describe('HeaderCard', () => {
     buttonTextColor: '',
     textColor: '#ffffff',
     isEditing: false,
-    fileUploader: { isLoading: false, progress: 0, errors: [] },
+    fileUploader: createUploader({ progress: 0 }),
     handleAlignment: vi.fn(),
     handleButtonText: vi.fn(),
     handleButtonEnabled: vi.fn(),
@@ -130,7 +141,7 @@ describe('HeaderCard', () => {
     layout: 'regular',
     onFileChange: vi.fn(),
     openImageEditor: vi.fn(),
-    imageDragHandler: { isDraggedOver: false, setRef: vi.fn() },
+    imageDragHandler: createDragHandler(),
     headerTextEditor: createEditorInstance(),
     subheaderTextEditor: createEditorInstance(),
     isSwapped: false,

@@ -1,38 +1,33 @@
+import type { LexicalEditor } from 'lexical'
+
 import { createHeadlessEditor } from '@lexical/headless'
 
-import { $createHeaderNode, HeaderNode } from '@/nodes/HeaderNode'
+import { $createHeaderNode, HeaderNode, type HeaderNodeDataset } from '@/nodes/HeaderNode'
 
 const editorNodes = [HeaderNode]
 
 describe('HeaderNode v2', function () {
-  let editor
-  let dataset
+  let editor: LexicalEditor
+  let dataset: HeaderNodeDataset
 
-  const editorTest = (testFn) =>
-    function () {
-      let resolve, reject
-      const promise = new Promise((resolve_, reject_) => {
-        resolve = resolve_
-        reject = reject_
+  const editorTest = (testFn: () => void) =>
+    function (): Promise<void> {
+      return new Promise((resolve, reject) => {
+        editor.update(() => {
+          try {
+            testFn()
+            resolve()
+          } catch (error) {
+            reject(error)
+          }
+        })
       })
-
-      editor.update(() => {
-        try {
-          testFn()
-          resolve()
-        } catch (error) {
-          reject(error)
-        }
-      })
-
-      return promise
     }
 
   beforeEach(function () {
     editor = createHeadlessEditor({ nodes: editorNodes })
 
     dataset = {
-      type: 'header',
       version: 2,
       size: 'small',
       style: 'dark',
@@ -128,7 +123,6 @@ describe('HeaderNode v2', function () {
       'uses the default property values when fields are omitted',
       editorTest(function () {
         const minimalDataset = {
-          type: 'header',
           version: 2,
           header: '<span>Hello</span>',
           subheader: '',

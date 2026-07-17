@@ -1,3 +1,4 @@
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
 import React from 'react'
@@ -66,8 +67,7 @@ describe('SnippetActionToolbar', () => {
 
   beforeEach(async () => {
     editor = createTestEditor()
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
   })
 
   it('saves the current selection as a snippet', async () => {

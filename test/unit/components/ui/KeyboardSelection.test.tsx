@@ -6,6 +6,14 @@ import type { ListOptionItem } from '@/hooks/useSearchLinks'
 import { KeyboardSelection } from '@/components/ui/KeyboardSelection'
 import { KeyboardSelectionWithGroups } from '@/components/ui/KeyboardSelectionWithGroups'
 
+function EmptyIcon() {
+  return <svg />
+}
+
+function createListOptionItem(label: string, value: string | null): ListOptionItem {
+  return { Icon: EmptyIcon, highlight: false, label, type: 'url', value }
+}
+
 describe('KeyboardSelection', () => {
   it('lets Enter fall through when there is no selectable item', () => {
     const onKeyDown = vi.fn()
@@ -14,7 +22,7 @@ describe('KeyboardSelection', () => {
     render(
       <div onKeyDown={onKeyDown}>
         <input aria-label="URL" />
-        <KeyboardSelection getItem={() => null} items={[]} onSelect={onSelect} />
+        <KeyboardSelection getItem={() => <></>} items={[]} onSelect={onSelect} />
       </div>,
     )
 
@@ -32,7 +40,7 @@ describe('KeyboardSelection', () => {
     render(
       <div>
         <input aria-label="URL" />
-        <KeyboardSelection getItem={() => null} items={[item]} onSelect={onSelect} />
+        <KeyboardSelection getItem={() => <></>} items={[item]} onSelect={onSelect} />
       </div>,
     )
 
@@ -51,8 +59,8 @@ describe('KeyboardSelectionWithGroups', () => {
       <div onKeyDown={onKeyDown}>
         <input aria-label="URL" />
         <KeyboardSelectionWithGroups
-          getGroup={() => null}
-          getItem={() => null}
+          getGroup={() => <></>}
+          getItem={() => <></>}
           groups={[{ label: 'Results', items: [] }]}
           onSelect={onSelect}
         />
@@ -75,8 +83,8 @@ describe('KeyboardSelectionWithGroups', () => {
       <div onKeyDown={onKeyDown}>
         <input aria-label="At-link" />
         <KeyboardSelectionWithGroups
-          getGroup={() => null}
-          getItem={() => null}
+          getGroup={() => <></>}
+          getItem={() => <></>}
           groups={[{ label: 'No results found', items: [] }]}
           onEnterWithoutSelection={onEnterWithoutSelection}
           onSelect={onSelect}
@@ -93,14 +101,14 @@ describe('KeyboardSelectionWithGroups', () => {
 
   it('consumes Enter and selects the item when one exists', () => {
     const onSelect = vi.fn()
-    const item = { label: 'Enter URL to create link', value: null } as ListOptionItem
+    const item = createListOptionItem('Enter URL to create link', null)
 
     render(
       <div>
         <input aria-label="URL" />
         <KeyboardSelectionWithGroups
-          getGroup={() => null}
-          getItem={() => null}
+          getGroup={() => <></>}
+          getItem={() => <></>}
           groups={[{ label: 'Results', items: [item] }]}
           onSelect={onSelect}
         />
@@ -115,14 +123,14 @@ describe('KeyboardSelectionWithGroups', () => {
   it('still lets Enter fall through a flagged link input before any navigation (inkling behavior)', () => {
     const onKeyDown = vi.fn()
     const onSelect = vi.fn()
-    const item = { label: 'Example', value: 'https://example.com' } as ListOptionItem
+    const item = createListOptionItem('Example', 'https://example.com')
 
     render(
       <div onKeyDown={onKeyDown}>
         <input aria-label="URL" data-inkling-link-input="" />
         <KeyboardSelectionWithGroups
-          getGroup={() => null}
-          getItem={() => null}
+          getGroup={() => <></>}
+          getItem={() => <></>}
           groups={[{ label: 'Results', items: [item] }]}
           onSelect={onSelect}
         />

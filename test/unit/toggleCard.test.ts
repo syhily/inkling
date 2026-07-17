@@ -1,38 +1,32 @@
+import type { LexicalEditor } from 'lexical'
+
 import { createHeadlessEditor } from '@lexical/headless'
 
-import { $createToggleNode, ToggleNode } from '@/nodes/ToggleNode'
+import { $createToggleNode, ToggleNode, type ToggleNodeDataset } from '@/nodes/ToggleNode'
 
 const editorNodes = [ToggleNode]
 
 describe('ToggleNode', function () {
-  let editor
-  let dataset
+  let editor: LexicalEditor
+  let dataset: ToggleNodeDataset
 
-  const editorTest = (testFn) =>
-    function () {
-      let resolve, reject
-      const promise = new Promise((resolve_, reject_) => {
-        resolve = resolve_
-        reject = reject_
+  const editorTest = (testFn: () => void) =>
+    function (): Promise<void> {
+      return new Promise((resolve, reject) => {
+        editor.update(() => {
+          try {
+            testFn()
+            resolve()
+          } catch (error) {
+            reject(error)
+          }
+        })
       })
-
-      editor.update(() => {
-        try {
-          testFn()
-          resolve()
-        } catch (error) {
-          reject(error)
-        }
-      })
-
-      return promise
     }
 
   beforeEach(function () {
     editor = createHeadlessEditor({ nodes: editorNodes })
     dataset = {
-      type: 'toggle',
-      version: 1,
       heading:
         '<span style="white-space: pre-wrap;">Hello</span><br><span style="white-space: pre-wrap;">I am a two-line toggle</span>',
       content:

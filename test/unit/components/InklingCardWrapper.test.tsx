@@ -1,3 +1,4 @@
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { render, screen, act } from '@testing-library/react'
 import { $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
@@ -85,9 +86,9 @@ function CardWidthProbe({ widths }: { widths: CardWidth[] }) {
   return null
 }
 
-function renderWrapperWithWidth(nodeKey: NodeKey, width: string, widths: CardWidth[]) {
+function renderWrapperWithWidth(nodeKey: NodeKey, width: CardWidth, widths: CardWidth[]) {
   const composerValue = createComposerContext()
-  const tree = (nextWidth: string) => (
+  const tree = (nextWidth: CardWidth) => (
     <InklingHostIntegrationContext.Provider value={composerValue}>
       <InklingSelectedCardContext>
         <InklingCardWrapper nodeKey={nodeKey} width={nextWidth}>
@@ -97,7 +98,7 @@ function renderWrapperWithWidth(nodeKey: NodeKey, width: string, widths: CardWid
     </InklingHostIntegrationContext.Provider>
   )
   const result = render(tree(width))
-  return { ...result, rerenderWidth: (nextWidth: string) => result.rerender(tree(nextWidth)) }
+  return { ...result, rerenderWidth: (nextWidth: CardWidth) => result.rerender(tree(nextWidth)) }
 }
 
 describe('InklingCardWrapper', () => {
@@ -105,8 +106,7 @@ describe('InklingCardWrapper', () => {
 
   beforeEach(async () => {
     editor = createTestEditor()
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
   })
 
   it('renders children with the card type derived from the node', async () => {

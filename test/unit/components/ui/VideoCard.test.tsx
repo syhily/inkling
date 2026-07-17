@@ -3,7 +3,18 @@ import { createEditor } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { FileUploaderLike } from '@/components/ui/cards/card-ui-types'
+import type { UseFileDragAndDropResult } from '@/hooks/useFileDragAndDrop'
+
 import { VideoCard } from '@/components/ui/cards/VideoCard'
+
+function createUploader(overrides: Partial<FileUploaderLike> = {}): FileUploaderLike {
+  return { isLoading: false, upload: async () => undefined, errors: [], ...overrides }
+}
+
+function createDragHandler(overrides: Partial<UseFileDragAndDropResult> = {}): UseFileDragAndDropResult {
+  return { isDraggedOver: false, setRef: vi.fn(), ...overrides }
+}
 
 vi.mock('../../../../src/components/ui/CardCaptionEditor', () => ({
   CardCaptionEditor: () => <div data-testid="card-caption-editor" />,
@@ -16,19 +27,19 @@ function createCaptionEditor() {
 describe('VideoCard', () => {
   const fileInputRef = React.createRef<HTMLInputElement>()
 
-  const defaultProps = {
+  const defaultProps: React.ComponentProps<typeof VideoCard> = {
     captionEditor: createCaptionEditor(),
     captionEditorInitialState: undefined,
     fileInputRef: fileInputRef as React.RefObject<HTMLInputElement>,
     onVideoFileChange: vi.fn(),
-    videoDragHandler: { isDraggedOver: false, setRef: vi.fn() },
-    videoUploader: { isLoading: false, progress: 0, errors: [] },
+    videoDragHandler: createDragHandler(),
+    videoUploader: createUploader({ progress: 0 }),
     videoUploadErrors: [],
     videoMimeTypes: ['video/mp4'],
     customThumbnail: '',
     thumbnail: '',
     onCustomThumbnailChange: vi.fn(),
-    customThumbnailUploader: { isLoading: false, progress: 0, errors: [] },
+    customThumbnailUploader: createUploader({ progress: 0 }),
     onRemoveCustomThumbnail: vi.fn(),
     totalDuration: '1:23',
     cardWidth: 'regular',
@@ -36,7 +47,7 @@ describe('VideoCard', () => {
     onLoopChange: vi.fn(),
     onCardWidthChange: vi.fn(),
     thumbnailMimeTypes: ['image/png'],
-    thumbnailDragHandler: { isDraggedOver: false, setRef: vi.fn() },
+    thumbnailDragHandler: createDragHandler(),
   }
 
   beforeEach(() => {
@@ -73,7 +84,7 @@ describe('VideoCard', () => {
   })
 
   it('renders progress bar when video is loading', () => {
-    render(<VideoCard {...defaultProps} videoUploader={{ isLoading: true, progress: 42, errors: [] }} />)
+    render(<VideoCard {...defaultProps} videoUploader={createUploader({ isLoading: true, progress: 42 })} />)
 
     expect(screen.getByTestId('video-progress')).toBeInTheDocument()
   })

@@ -1,3 +1,4 @@
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { createEditor, type LexicalEditor } from 'lexical'
 import React from 'react'
@@ -11,7 +12,9 @@ vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
 
-function createCardContext(overrides: Partial<React.ContextType<typeof CardContext>> = {}) {
+function createCardContext(
+  overrides: Partial<React.ContextType<typeof CardContext>> = {},
+): React.ContextType<typeof CardContext> {
   return {
     isSelected: true,
     isEditing: false,
@@ -52,8 +55,7 @@ describe('CardActionToolbar', () => {
 
   beforeEach(async () => {
     editor = createEditor({ namespace: 'test', onError: () => {} })
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
   })
 
   function renderToolbar({
@@ -211,7 +213,7 @@ describe('CardActionToolbar', () => {
 
     it('honors an explicit separator hide over the createSnippet gate', () => {
       const { container } = renderToolbar({
-        props: { items: [{ kind: 'custom', ...addItem }, { kind: 'separator', hide: false }, { kind: 'snippet' }] },
+        props: { items: [{ ...addItem }, { kind: 'separator', hide: false }, { kind: 'snippet' }] },
       })
 
       // no createSnippet configured, but the explicit separator stays

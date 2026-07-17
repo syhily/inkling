@@ -3,10 +3,10 @@ import userEvent from '@testing-library/user-event'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import GifSelector from '@/components/ui/GifSelector'
-import { ERROR_TYPE } from '@/utils/services/gif'
+import GifSelector, { type GifSelectorProps } from '@/components/ui/GifSelector'
+import { ERROR_TYPE, type GifData } from '@/utils/services/gif'
 
-function createGif(index: number, overrides: Record<string, unknown> = {}) {
+function createGif(index: number, overrides: Partial<GifData> = {}): GifData {
   return {
     id: `gif-${index}`,
     index,
@@ -24,17 +24,17 @@ function createGif(index: number, overrides: Record<string, unknown> = {}) {
 }
 
 describe('GifSelector', () => {
-  const defaultProps = {
+  const defaultProps: GifSelectorProps = {
     onGifInsert: vi.fn(),
     onClickOutside: vi.fn(),
     updateSearch: vi.fn(),
-    columns: [] as unknown[],
+    columns: [],
     isLoading: false,
     isLazyLoading: false,
-    error: null as string | null,
+    error: null,
     changeColumnCount: vi.fn(),
     loadNextPage: vi.fn(),
-    gifs: [] as unknown[],
+    gifs: [],
     provider: 'tenor',
   }
 

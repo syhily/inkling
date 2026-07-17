@@ -2,7 +2,18 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
+import type { FileUploaderLike } from '@/components/ui/cards/card-ui-types'
+import type { UseFileDragAndDropResult } from '@/hooks/useFileDragAndDrop'
+
 import { ImageCard } from '@/components/ui/cards/ImageCard'
+
+function createUploader(overrides: Partial<FileUploaderLike> = {}): FileUploaderLike {
+  return { isLoading: false, upload: async () => undefined, ...overrides }
+}
+
+function createDragHandler(overrides: Partial<UseFileDragAndDropResult> = {}): UseFileDragAndDropResult {
+  return { isDraggedOver: false, setRef: vi.fn(), ...overrides }
+}
 
 vi.mock('../../../src/components/ui/CardCaptionEditor', () => ({
   CardCaptionEditor: () => <div data-testid="card-caption-editor" />,
@@ -13,7 +24,7 @@ describe('ImageCard', function () {
 
   const baseProps = {
     captionEditor: null,
-    imageUploader: {},
+    imageUploader: createUploader(),
     setAltText: () => {},
     onFileChange: () => {},
   }
@@ -33,7 +44,11 @@ describe('ImageCard', function () {
 
   it('shows the loading overlay while uploading', function () {
     render(
-      <ImageCard {...baseProps} imageUploader={{ isLoading: true, progress: 33 }} src="https://example.com/cat.png" />,
+      <ImageCard
+        {...baseProps}
+        imageUploader={createUploader({ isLoading: true, progress: 33 })}
+        src="https://example.com/cat.png"
+      />,
     )
 
     expect(screen.getByTestId('image-card-loading')).toBeInTheDocument()
@@ -42,7 +57,11 @@ describe('ImageCard', function () {
 
   it('announces upload progress in the alt text while uploading', function () {
     render(
-      <ImageCard {...baseProps} imageUploader={{ isLoading: true, progress: 50 }} src="https://example.com/cat.png" />,
+      <ImageCard
+        {...baseProps}
+        imageUploader={createUploader({ isLoading: true, progress: 50 })}
+        src="https://example.com/cat.png"
+      />,
     )
 
     expect(screen.getByTestId('image-card-loading')).toHaveAttribute('alt', 'upload in progress, 50')
@@ -52,7 +71,7 @@ describe('ImageCard', function () {
     render(
       <ImageCard
         {...baseProps}
-        imageUploader={{ isLoading: false, progress: 100 }}
+        imageUploader={createUploader({ isLoading: false, progress: 100 })}
         src="https://example.com/cat.png"
       />,
     )
@@ -62,7 +81,11 @@ describe('ImageCard', function () {
 
   it('shows the drag-to-replace overlay when the file drag handler is active', function () {
     render(
-      <ImageCard {...baseProps} imageFileDragHandler={{ isDraggedOver: true }} src="https://example.com/cat.png" />,
+      <ImageCard
+        {...baseProps}
+        imageFileDragHandler={createDragHandler({ isDraggedOver: true })}
+        src="https://example.com/cat.png"
+      />,
     )
 
     expect(screen.getByTestId('drag-overlay')).toHaveTextContent('Drop to replace image')
@@ -82,9 +105,11 @@ describe('ImageCard', function () {
   it('calls onFileChange via the Pintura image editor save handler', function () {
     const onFileChange = vi.fn()
     const editedBlob = new Blob(['edited'], { type: 'image/png' })
-    const openImageEditor = vi.fn(({ handleSave }) => {
-      handleSave(editedBlob)
-    })
+    const openImageEditor = vi.fn(
+      ({ handleSave }: Parameters<NonNullable<React.ComponentProps<typeof ImageCard>['openImageEditor']>>[0]) => {
+        handleSave(editedBlob)
+      },
+    )
 
     render(
       <ImageCard
