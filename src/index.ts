@@ -129,4 +129,4 @@ export {
   getEmailEditorCardConfig,
 }
 
-export const version = __APP_VERSION__ ? __APP_VERSION__ : 'development'
+export const version = __APP_VERSION__
