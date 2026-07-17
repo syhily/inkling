@@ -111,6 +111,11 @@ interface UseSearchLinksResult {
   listOptions: ListOptionSection[]
 }
 
+interface SearchRequest {
+  id: number
+  term: string
+}
+
 export const useSearchLinks = (
   query: string,
   searchLinks?: SearchLinksFn,
@@ -120,16 +125,15 @@ export const useSearchLinks = (
   const [listOptions, setListOptions] = React.useState<ListOptionSection[]>([])
   const [isSearching, setIsSearching] = React.useState<boolean>(false)
 
-  const latestTermRef = React.useRef<string | null>(null)
+  const latestRequestIdRef = React.useRef(0)
+  const defaultOptionsLoadedRef = React.useRef(false)
 
   const search = React.useMemo(() => {
-    return async function _search(term: string): Promise<void> {
-      if (URL_QUERY_REGEX.test(term)) {
-        setListOptions(urlQueryOptions(term))
+    return async function _search({ id, term }: SearchRequest): Promise<void> {
+      if (latestRequestIdRef.current !== id) {
         return
       }
 
-      latestTermRef.current = term
       setIsSearching(true)
       try {
         // a missing search function resolves like a cancelled search: keep the
@@ -138,7 +142,7 @@ export const useSearchLinks = (
 
         // a newer query superseded this one while we were awaiting — don't
         // let a slow older response overwrite the newer results
-        if (latestTermRef.current !== term) {
+        if (latestRequestIdRef.current !== id) {
           return
         }
 
@@ -153,7 +157,7 @@ export const useSearchLinks = (
         // Search is best-effort. Preserve the last options when the host
         // rejects, and always leave the searching state below.
       } finally {
-        if (latestTermRef.current === term) {
+        if (latestRequestIdRef.current === id) {
           setIsSearching(false)
         }
       }
@@ -164,40 +168,60 @@ export const useSearchLinks = (
     return debounce(search, DEBOUNCE_MS)
   }, [search])
 
-  React.useEffect(() => () => debouncedSearch.cancel(), [debouncedSearch])
-
-  // Fetch default search results when first rendering
-  React.useEffect(() => {
-    const fetchDefaultOptions = async () => {
-      // if we have a query we don't want to show the searching state but
-      // we still want to load the default options in the background so
-      // they're available when the query is cleared
-      if (!query) {
-        setIsSearching(true)
+  const fetchDefaultOptions = React.useCallback(
+    async (requestId: number): Promise<void> => {
+      try {
+        const results = searchLinks ? await searchLinks() : undefined
+        if (latestRequestIdRef.current !== requestId) {
+          return
+        }
+        setDefaultListOptions(convertSearchResultsToListOptions(results, '', { type: 'default' }))
+        defaultOptionsLoadedRef.current = true
+      } catch {
+        // Default suggestions are best-effort.
+      } finally {
+        if (latestRequestIdRef.current === requestId) {
+          setIsSearching(false)
+        }
       }
-      const results = searchLinks ? await searchLinks() : undefined
-      setDefaultListOptions(convertSearchResultsToListOptions(results, '', { type: 'default' }))
-      if (!query) {
-        setIsSearching(false)
-      }
-    }
+    },
+    [searchLinks],
+  )
 
-    fetchDefaultOptions().catch(() => {
-      // best-effort; defaults already applied
-    })
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  React.useEffect(
+    () => () => {
+      debouncedSearch.cancel()
+      latestRequestIdRef.current += 1
+    },
+    [debouncedSearch],
+  )
 
   React.useEffect(() => {
+    const requestId = latestRequestIdRef.current + 1
+    latestRequestIdRef.current = requestId
+
     // perform a non-debounced search if the query is a URL so the
     // "Link to web page" option updates more responsively
     if (URL_QUERY_REGEX.test(query)) {
       debouncedSearch.cancel()
-      search(query)
-    } else {
-      debouncedSearch(query)
+      setListOptions(urlQueryOptions(query))
+      setIsSearching(false)
+      return
     }
-  }, [query, search, debouncedSearch])
+
+    if (!query) {
+      debouncedSearch.cancel()
+      if (defaultOptionsLoadedRef.current) {
+        setIsSearching(false)
+      } else {
+        setIsSearching(true)
+        void fetchDefaultOptions(requestId)
+      }
+      return
+    }
+
+    debouncedSearch({ id: requestId, term: query })
+  }, [query, debouncedSearch, fetchDefaultOptions])
 
   const displayedListOptions = query ? listOptions : defaultListOptions
 

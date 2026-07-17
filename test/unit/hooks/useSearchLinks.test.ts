@@ -5,10 +5,12 @@ import { type SearchResult, useSearchLinks } from '@/hooks/useSearchLinks'
 
 function deferred<T>() {
   let resolve!: (value: T) => void
-  const promise = new Promise<T>((r) => {
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((r, j) => {
     resolve = r
+    reject = j
   })
-  return { promise, resolve }
+  return { promise, resolve, reject }
 }
 
 function resultsFor(label: string): SearchResult[] {
@@ -118,6 +120,99 @@ describe('useSearchLinks', () => {
 
     await waitFor(() => expect(searchLinks).toHaveBeenCalledWith('broken'))
     await waitFor(() => expect(result.current.isSearching).toBe(false))
+  })
+
+  it('keeps a URL result settled when the delayed default search rejects', async () => {
+    const initialSearch = deferred<SearchResult[] | undefined>()
+    const searchLinks = vi.fn((term?: string): Promise<SearchResult[] | undefined> => {
+      return term === undefined ? initialSearch.promise : Promise.resolve([])
+    })
+
+    const { result, rerender } = renderHook(({ query }) => useSearchLinks(query, searchLinks), {
+      initialProps: { query: '' },
+    })
+
+    expect(result.current.isSearching).toBe(true)
+    rerender({ query: 'https://example.com/immediate' })
+
+    await act(async () => {
+      initialSearch.reject(new Error('default search unavailable'))
+    })
+
+    expect(result.current.listOptions[0]?.items[0]?.value).toBe('https://example.com/immediate')
+    expect(result.current.isSearching).toBe(false)
+  })
+
+  it('does not let a pending text search overwrite a URL result', async () => {
+    const textSearch = deferred<SearchResult[]>()
+    const searchLinks = vi.fn((term?: string): Promise<SearchResult[] | undefined> => {
+      return term === 'cats' ? textSearch.promise : Promise.resolve([])
+    })
+    const { result, rerender } = renderHook(({ query }) => useSearchLinks(query, searchLinks), {
+      initialProps: { query: '' },
+    })
+
+    await waitFor(() => expect(result.current.isSearching).toBe(false))
+    rerender({ query: 'cats' })
+    await waitForDebounce()
+    await waitFor(() => expect(searchLinks).toHaveBeenCalledWith('cats'))
+
+    rerender({ query: 'https://example.com/immediate' })
+    expect(result.current.listOptions[0]?.items[0]?.value).toBe('https://example.com/immediate')
+
+    await act(async () => {
+      textSearch.resolve(resultsFor('late-cats'))
+    })
+
+    expect(result.current.listOptions[0]?.items[0]?.value).toBe('https://example.com/immediate')
+    expect(result.current.isSearching).toBe(false)
+  })
+
+  it('distinguishes overlapping requests that repeat the same term', async () => {
+    const firstA = deferred<SearchResult[]>()
+    const searchB = deferred<SearchResult[]>()
+    const newestA = deferred<SearchResult[]>()
+    let aRequestCount = 0
+    const searchLinks = vi.fn((term?: string): Promise<SearchResult[] | undefined> => {
+      if (term === 'a') {
+        aRequestCount += 1
+        return aRequestCount === 1 ? firstA.promise : newestA.promise
+      }
+      if (term === 'b') {
+        return searchB.promise
+      }
+      return Promise.resolve([])
+    })
+    const { result, rerender } = renderHook(({ query }) => useSearchLinks(query, searchLinks), {
+      initialProps: { query: '' },
+    })
+
+    await waitFor(() => expect(result.current.isSearching).toBe(false))
+    rerender({ query: 'a' })
+    await waitForDebounce()
+    rerender({ query: 'b' })
+    await waitForDebounce()
+    rerender({ query: 'a' })
+    await waitForDebounce()
+    expect(result.current.isSearching).toBe(true)
+
+    await act(async () => {
+      firstA.resolve(resultsFor('first-a'))
+    })
+
+    expect(result.current.listOptions[0]?.label).not.toBe('first-a')
+    expect(result.current.isSearching).toBe(true)
+
+    await act(async () => {
+      newestA.resolve(resultsFor('newest-a'))
+    })
+    expect(result.current.listOptions[0]?.label).toBe('newest-a')
+    expect(result.current.isSearching).toBe(false)
+
+    await act(async () => {
+      searchB.resolve(resultsFor('late-b'))
+    })
+    expect(result.current.listOptions[0]?.label).toBe('newest-a')
   })
 
   it('shows the URL option for URL queries without searching', async () => {
