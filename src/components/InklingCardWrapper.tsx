@@ -1,5 +1,12 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister, $getNodeByKey, CLICK_COMMAND, COMMAND_PRIORITY_LOW, type NodeKey } from 'lexical'
+import {
+  mergeRegister,
+  $getNodeByKey,
+  CLICK_COMMAND,
+  COMMAND_PRIORITY_LOW,
+  type LexicalNode,
+  type NodeKey,
+} from 'lexical'
 import React from 'react'
 
 import type { CardNode } from '@/types/lexical-internals'
@@ -9,7 +16,7 @@ import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
-import { normalizeCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
+import { type CardWidth } from '@/nodes/base/utils/card-widths'
 import {
   EDIT_CARD_COMMAND,
   SELECT_CARD_COMMAND,
@@ -19,11 +26,22 @@ import { VISIBILITY_SETTINGS } from '@/utils/visibility'
 
 interface InklingCardWrapperProps {
   nodeKey: NodeKey
-  width?: string
+  width?: CardWidth
   wrapperStyle?: string
-  IndicatorIcon?: React.ComponentType<Record<string, unknown>>
+  IndicatorIcon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
   children?: React.ReactNode
-  [key: string]: unknown
+}
+
+// InklingCardWrapper is only rendered for generated card nodes (decorateCard
+// throws otherwise), but the type system can't see that — discriminate on the
+// base class's runtime marker instead of asserting.
+function $isCardNode(node: LexicalNode | null): node is CardNode {
+  return (
+    node !== null &&
+    'isInklingCard' in node &&
+    typeof node.isInklingCard === 'function' &&
+    node.isInklingCard() === true
+  )
 }
 
 const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, children }: InklingCardWrapperProps) => {
@@ -31,7 +49,7 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
   const [editor] = useLexicalComposerContext()
   const [cardType, setCardType] = React.useState<string | null>(null)
   const [captionHasFocus, setCaptionHasFocus] = React.useState<boolean | null>(null)
-  const normalizedWidth = normalizeCardWidth(width) ?? 'regular'
+  const normalizedWidth = width ?? 'regular'
   const [cardWidth, setCardWidth] = React.useState<CardWidth>(normalizedWidth)
   const containerRef = React.useRef<HTMLDivElement | null>(null)
   const skipClick = React.useRef(false)
@@ -70,22 +88,17 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
       editor.registerCommand(
         CLICK_COMMAND,
         (event: MouseEvent) => {
-          if (!skipClick.current && containerRef.current && containerRef.current.contains(event.target as Node)) {
-            const cardNode = $getNodeByKey(nodeKey) as CardNode | null
-            const clickedDifferentEditor = !cardNode
-            const target = event.target as HTMLElement
+          const target = event.target
+          if (!skipClick.current && target instanceof Element && containerRef.current?.contains(target)) {
+            const node = $getNodeByKey(nodeKey)
+            const cardNode = $isCardNode(node) ? node : null
+            const clickedDifferentEditor = cardNode === null
             // elements marked as click-through (captions, toolbars) handle their own
             // clicks and must not trigger the card's edit mode
             const clickedClickthrough = target.closest('[data-inkling-allow-clickthrough]')
             const clickedSettingsPanel = target.closest('[data-inkling-settings-panel]')
 
-            if (
-              isSelected &&
-              cardNode?.hasEditMode?.() &&
-              !isEditing &&
-              !clickedClickthrough &&
-              !clickedSettingsPanel
-            ) {
+            if (isSelected && cardNode?.hasEditMode() && !isEditing && !clickedClickthrough && !clickedSettingsPanel) {
               editor.dispatchCommand(EDIT_CARD_COMMAND, {
                 cardKey: nodeKey,
                 focusEditor: !clickedDifferentEditor,
@@ -140,7 +153,6 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
   }, [normalizedWidth])
 
   const setEditing = (shouldEdit: boolean) => {
-    // convert nodeKey to int
     if (shouldEdit) {
       editor.dispatchCommand(EDIT_CARD_COMMAND, { cardKey: nodeKey })
     } else if (!isSelected) {
@@ -162,13 +174,15 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
         // can cause an underlying cursor position change but inputs and
         // textareas are different and we want the focus to move to them
         // immediately when clicked
-        const target = event.target as HTMLElement
-        const targetTagName = target.tagName
-        const allowedTagNames = ['INPUT', 'TEXTAREA']
-        const allowClickthrough = !!target.closest('[data-inkling-allow-clickthrough]')
+        const target = event.target
+        if (target instanceof HTMLElement) {
+          const targetTagName = target.tagName
+          const allowedTagNames = ['INPUT', 'TEXTAREA']
+          const allowClickthrough = !!target.closest('[data-inkling-allow-clickthrough]')
 
-        if (!allowedTagNames.includes(targetTagName) && !allowClickthrough) {
-          event.preventDefault()
+          if (!allowedTagNames.includes(targetTagName) && !allowClickthrough) {
+            event.preventDefault()
+          }
         }
       }
     }
@@ -181,10 +195,10 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
   }, [editor, isSelected, isEditing, nodeKey, containerRef])
 
   let isVisibilityActive = false
-  if (cardConfig?.visibilitySettings !== VISIBILITY_SETTINGS.NONE) {
+  if (cardConfig.visibilitySettings !== VISIBILITY_SETTINGS.NONE) {
     editor.getEditorState().read(() => {
-      const cardNode = $getNodeByKey(nodeKey) as CardNode | null
-      isVisibilityActive = !!cardNode?.getIsVisibilityActive?.()
+      const node = $getNodeByKey(nodeKey)
+      isVisibilityActive = $isCardNode(node) ? node.getIsVisibilityActive() : false
     })
   }
 
@@ -209,7 +223,7 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
     <CardContext.Provider value={cardContextValue}>
       <CardWrapper
         ref={containerRef}
-        cardType={cardType}
+        cardType={cardType ?? undefined}
         cardWidth={normalizedWidth}
         IndicatorIcon={IndicatorIcon}
         isDragging={isDragging}

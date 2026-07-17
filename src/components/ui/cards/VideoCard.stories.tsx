@@ -6,6 +6,7 @@ import React from 'react'
 import { VideoCard, type VideoCardProps } from '@/components/ui/cards/VideoCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import { MINIMAL_NODES } from '@/index'
+import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
 
 const displayOptions = {
@@ -49,7 +50,7 @@ function VideoCardStory({ display = 'Default', caption = '', ...args }: VideoCar
   return (
     <div className="inkling-prose">
       <div className="not-inkling-prose mx-auto my-8 max-w-[740px] min-w-[initial]">
-        <CardWrapper {...displayState} {...componentProps}>
+        <CardWrapper {...displayState} {...componentProps} cardWidth={normalizeCardWidth(componentProps.cardWidth)}>
           <VideoCard {...displayState} {...componentProps} />
         </CardWrapper>
       </div>

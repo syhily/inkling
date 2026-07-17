@@ -6,6 +6,7 @@ import React from 'react'
 import { ImageCard, type ImageCardProps } from '@/components/ui/cards/ImageCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import { MINIMAL_NODES } from '@/index'
+import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
 
 const displayOptions = {
@@ -34,7 +35,7 @@ function ImageCardStory({ display = 'Default', caption = '', ...args }: ImageCar
   return (
     <div className="inkling-prose">
       <div className="mx-auto my-8 max-w-[740px] min-w-[initial]">
-        <CardWrapper {...displayState} {...componentProps}>
+        <CardWrapper {...displayState} {...componentProps} cardWidth={normalizeCardWidth(componentProps.cardWidth)}>
           <ImageCard {...displayState} {...componentProps} captionEditor={captionEditor} />
         </CardWrapper>
       </div>

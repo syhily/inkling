@@ -20,8 +20,7 @@ const DEFAULT_INDICATOR_POSITION = {
 interface CardWrapperProps {
   cardType?: string
   cardWidth?: CardWidth
-  // oxlint-disable-next-line typescript/no-explicit-any
-  IndicatorIcon?: React.ComponentType<any>
+  IndicatorIcon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
   indicatorPosition?: { top?: string; left?: string }
   isDragging?: boolean
   isEditing?: boolean
@@ -30,8 +29,6 @@ interface CardWrapperProps {
   onIndicatorClick?: (event: React.MouseEvent) => void
   wrapperStyle?: string
   children?: React.ReactNode
-  // oxlint-disable-next-line typescript/no-explicit-any
-  [key: string]: any
 }
 
 export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
@@ -48,7 +45,6 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
       onIndicatorClick,
       wrapperStyle,
       children,
-      ...props
     },
     ref,
   ) => {
@@ -69,11 +65,11 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
       isSelected ? 'z-20' : 'z-10', // ensure setting panels sit above other cards
       isSelected && !isDragging ? 'shadow-[0_0_0_2px] shadow-green' : '',
       !isSelected && !isDragging ? 'hover:shadow-[0_0_0_1px] hover:shadow-green' : '',
-      CARD_WIDTH_CLASSES[cardWidth as keyof typeof CARD_WIDTH_CLASSES] || '',
+      CARD_WIDTH_CLASSES[cardWidth] || '',
       wrapperClass(),
     ].join(' ')
 
-    const position = {
+    const position: { top?: string; left?: string } = {
       ...DEFAULT_INDICATOR_POSITION,
       ...indicatorPosition,
     }
@@ -118,7 +114,6 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
           data-inkling-card={cardType}
           data-inkling-card-editing={isEditing}
           data-inkling-card-selected={isSelected}
-          {...props}
         >
           {children}
         </div>

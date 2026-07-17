@@ -217,7 +217,7 @@ const DECORATE_RENDER = {
  * The indicator icon components, gated by the declaration's
  * `decorateTarget.hasIndicatorIcon` flag (Html is the only card with one).
  */
-const DECORATE_INDICATOR_ICONS: Partial<Record<CardNodeType, React.ComponentType<Record<string, unknown>>>> = {
+const DECORATE_INDICATOR_ICONS: Partial<Record<CardNodeType, React.ComponentType<React.SVGProps<SVGSVGElement>>>> = {
   html: HtmlIndicatorIcon,
 }
 
