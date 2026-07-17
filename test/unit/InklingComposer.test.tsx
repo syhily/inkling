@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import InklingComposer from '@/components/InklingComposer'
 import InklingErrorBoundary from '@/components/InklingErrorBoundary'
 import InklingCollaborationContext, { type LexicalProviderFactory } from '@/context/InklingCollaborationContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, { type FileUploader } from '@/context/InklingHostIntegrationContext'
 import { normalizeInitialEditorState } from '@/utils/normalizeInitialEditorState'
 
 vi.mock('@lexical/react/LexicalCollaborationPlugin', () => ({
@@ -163,6 +163,52 @@ describe('InklingComposer', function () {
       expect(provider[method]).toBeDefined()
     }
     ;(provider.disconnect as () => void)()
+  })
+
+  it('throws from the provider factory when multiplayer lacks an endpoint or doc id', () => {
+    let factory: LexicalProviderFactory | undefined
+
+    function FactoryConsumer() {
+      const { createWebsocketProvider } = React.useContext(InklingCollaborationContext)
+      factory = createWebsocketProvider
+      return null
+    }
+
+    render(
+      <InklingComposer enableMultiplayer>
+        <FactoryConsumer />
+      </InklingComposer>,
+    )
+
+    expect(() => factory!('card-1', new Map())).toThrow(
+      '<InklingComposer> enableMultiplayer requires both multiplayerEndpoint and multiplayerDocId',
+    )
+  })
+
+  it('drops fileTypes entries whose shape consumers cannot read', () => {
+    let captured: FileUploader | undefined
+
+    function FileUploaderConsumer() {
+      captured = React.useContext(InklingHostIntegrationContext).fileUploader
+      return null
+    }
+
+    render(
+      <InklingComposer
+        fileUploader={{
+          useFileUpload: () => ({ upload: () => Promise.resolve(undefined) }),
+          fileTypes: {
+            audio: 'junk',
+            image: { mimeTypes: ['image/png'] },
+            video: { mimeTypes: [42] },
+          },
+        }}
+      >
+        <FileUploaderConsumer />
+      </InklingComposer>,
+    )
+
+    expect(captured!.fileTypes).toEqual({ image: { mimeTypes: ['image/png'] } })
   })
 })
 

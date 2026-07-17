@@ -29,7 +29,6 @@ export type { InklingInitialEditorState }
 // try to recover gracefully without losing user data.
 function defaultOnError(error: unknown, _info?: React.ErrorInfo) {
   if (import.meta.env.DEV) {
-    // eslint-disable-next-line no-console
     console.error(error)
   }
 }
@@ -40,8 +39,88 @@ const defaultConfig = {
   html: DEFAULT_CONFIG.html,
 }
 
-function hasFileUploadHook(fileUploader: FileUploaderInput): fileUploader is FileUploader {
+function hasFileUploadHook(
+  fileUploader: FileUploaderInput,
+): fileUploader is FileUploaderInput & Pick<FileUploader, 'useFileUpload'> {
   return 'useFileUpload' in fileUploader && typeof fileUploader.useFileUpload === 'function'
+}
+
+// The public prop accepts legacy bags, so only forward `fileTypes` entries
+// whose shape the consumers actually read (`{ mimeTypes: string[] }` per
+// media type) — anything else degrades to "no restriction", which is what the
+// optional-chaining reads in the node components already fall back to.
+function readFileTypes(fileUploader: FileUploaderInput): FileUploader['fileTypes'] {
+  if (!('fileTypes' in fileUploader)) {
+    return undefined
+  }
+  const value: unknown = fileUploader.fileTypes
+  if (typeof value !== 'object' || value === null) {
+    return undefined
+  }
+  const fileTypes: NonNullable<FileUploader['fileTypes']> = {}
+  for (const [media, entry] of Object.entries(value)) {
+    if (media !== 'image' && media !== 'video' && media !== 'audio' && media !== 'file') {
+      continue
+    }
+    if (
+      typeof entry === 'object' &&
+      entry !== null &&
+      'mimeTypes' in entry &&
+      Array.isArray(entry.mimeTypes) &&
+      entry.mimeTypes.every((mimeType: unknown) => typeof mimeType === 'string')
+    ) {
+      fileTypes[media] = { mimeTypes: entry.mimeTypes }
+    }
+  }
+  return fileTypes
+}
+
+// The events Lexical's Provider interface registers handlers for. Of these,
+// y-websocket's WebsocketProvider only ever emits 'sync' and 'status' — its
+// typed event map doesn't even admit 'update' or 'reload' — so adapt by
+// multiplexing: handlers register in a local map and the two events the
+// provider really emits are forwarded into it. 'update'/'reload' handlers
+// never fire, exactly as when they were registered on the provider directly.
+type ProviderEventCallbacks = {
+  sync: (isSynced: boolean) => void
+  update: (arg0: unknown) => void
+  status: (arg0: { status: string }) => void
+  reload: (doc: Doc) => void
+}
+
+function adaptWebsocketProvider(provider: WebsocketProvider): ReturnType<LexicalProviderFactory> {
+  const listeners: { [K in keyof ProviderEventCallbacks]: Set<ProviderEventCallbacks[K]> } = {
+    sync: new Set(),
+    update: new Set(),
+    status: new Set(),
+    reload: new Set(),
+  }
+  provider.on('sync', (isSynced) => listeners.sync.forEach((callback) => callback(isSynced)))
+  provider.on('status', (event) => listeners.status.forEach((callback) => callback(event)))
+
+  function on<K extends keyof ProviderEventCallbacks>(type: K, callback: ProviderEventCallbacks[K]): void {
+    listeners[type].add(callback)
+  }
+
+  function off<K extends keyof ProviderEventCallbacks>(type: K, callback: ProviderEventCallbacks[K]): void {
+    listeners[type].delete(callback)
+  }
+
+  return {
+    // y-protocols' Awareness and Lexical's ProviderAwareness describe the same
+    // runtime object, but TS 6 won't reconcile them: Awareness declares its
+    // state maps with `any`-valued index signatures while UserState has
+    // required named fields (anchorPos/color/...), and index signatures no
+    // longer satisfy required properties, so not even a single-step assertion
+    // is accepted. The plugin populates and reads the state itself through
+    // setLocalState/setLocalStateField; the assertion is confined to this one
+    // member — every other member of the adapter is structural.
+    awareness: provider.awareness as unknown as ReturnType<LexicalProviderFactory>['awareness'],
+    connect: () => provider.connect(),
+    disconnect: () => provider.disconnect(),
+    on,
+    off,
+  }
 }
 
 export interface InklingComposerProps {
@@ -101,23 +180,24 @@ const InklingComposer = ({
   const [wordCountHandle] = React.useState(createWordCountHandle)
 
   const normalizedFileUploader = React.useMemo<FileUploader>(() => {
-    if (hasFileUploadHook(fileUploader)) {
-      return fileUploader
-    }
-
-    return {
-      ...fileUploader,
-      useFileUpload(): ReturnType<FileUploader['useFileUpload']> {
-        console.error(
-          '<InklingComposer> requires a `fileUploader` prop object to be passed containing a `useFileUpload` custom hook',
-        )
-        return { upload: () => Promise.resolve(undefined) }
-      },
-    }
+    const fileTypes = readFileTypes(fileUploader)
+    const useFileUpload = hasFileUploadHook(fileUploader)
+      ? fileUploader.useFileUpload
+      : (): ReturnType<FileUploader['useFileUpload']> => {
+          console.error(
+            '<InklingComposer> requires a `fileUploader` prop object to be passed containing a `useFileUpload` custom hook',
+          )
+          return { upload: () => Promise.resolve(undefined) }
+        }
+    return fileTypes === undefined ? { useFileUpload } : { useFileUpload, fileTypes }
   }, [fileUploader])
 
   const createWebsocketProvider = React.useCallback<LexicalProviderFactory>(
     (id, yjsDocMap) => {
+      if (!multiplayerEndpoint || !multiplayerDocId) {
+        throw new Error('<InklingComposer> enableMultiplayer requires both multiplayerEndpoint and multiplayerDocId')
+      }
+
       let doc = yjsDocMap.get(id)
 
       if (doc === undefined) {
@@ -127,7 +207,7 @@ const InklingComposer = ({
         doc.load()
       }
 
-      const provider = new WebsocketProvider(multiplayerEndpoint!, multiplayerDocId + '/' + id, doc, {
+      const provider = new WebsocketProvider(multiplayerEndpoint, multiplayerDocId + '/' + id, doc, {
         connect: false,
       })
 
@@ -137,11 +217,7 @@ const InklingComposer = ({
         })
       }
 
-      // WebsocketProvider implements every Provider method Lexical calls at runtime
-      // (awareness, connect, disconnect, on, off), but its `on`/`off` overloads only
-      // accept the event names y-websocket itself emits, so it is not structurally
-      // assignable to Lexical's Provider and needs a single assertion at this boundary
-      return provider as unknown as ReturnType<LexicalProviderFactory>
+      return adaptWebsocketProvider(provider)
     },
     [multiplayerEndpoint, multiplayerDocId, multiplayerDebug],
   )
