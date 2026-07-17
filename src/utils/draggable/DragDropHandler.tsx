@@ -8,19 +8,22 @@ import {
   DROPPABLE_SELECTOR,
   DROP_INDICATOR_ID,
   DROP_INDICATOR_ZINDEX,
+  INKLING_ZINDEX,
   INKLING_CONTAINER_ID,
 } from '@/utils/draggable/draggable-constants'
 import { applyUserSelect, getParent } from '@/utils/draggable/draggable-utils'
 import { ScrollHandler } from '@/utils/draggable/ScrollHandler'
 
-type DropIndicatorInfo = {
-  insertIndex: number
-  element: HTMLElement
-}
-
 interface EventHandlerEntry {
   handler: (e: Event) => void
   options?: AddEventListenerOptions | boolean
+}
+
+export interface DraggableContainerHandle {
+  enableDrag: () => void
+  disableDrag: () => void
+  refresh: () => void
+  destroy: () => void
 }
 
 export class DragDropHandler {
@@ -48,22 +51,17 @@ export class DragDropHandler {
   _eventHandlers: Record<string, EventHandlerEntry> = {}
   _dragPreviewContainerElement: HTMLElement | null = null
   _rafUpdateDragPreviewElementPosition: () => void
-  _transformedDroppables: HTMLElement[] = []
   _waitForDragStartPromise: Promise<void> | null = null
   _dropIndicatorTimeout: ReturnType<typeof setTimeout> | null = null
 
   isDragging: boolean = false
-  transformedDroppables: HTMLElement[] = []
-
   // lifecycle ---------------------------------------------------------------
 
   constructor({ editorContainerElement }: { editorContainerElement?: HTMLElement } = {}) {
     this.editorContainerElement =
-      (editorContainerElement as HTMLElement | null) ||
-      document.querySelector('[data-inkling-editor] [data-lexical-editor]')
+      editorContainerElement ?? document.querySelector('[data-inkling="editor"] [data-lexical-editor]')
     this.containers = []
     this.scrollHandler = new ScrollHandler()
-    this._transformedDroppables = []
 
     // bind any raf handler functions
     this._rafUpdateDragPreviewElementPosition = this._updateDragPreviewElementPosition.bind(this)
@@ -91,7 +89,10 @@ export class DragDropHandler {
 
   // interface ---------------------------------------------------------------
 
-  registerContainer(element: HTMLElement, options: ConstructorParameters<typeof DragDropContainer>[1]) {
+  registerContainer(
+    element: HTMLElement,
+    options: ConstructorParameters<typeof DragDropContainer>[1],
+  ): DraggableContainerHandle {
     const container = new DragDropContainer(element, options)
     this.containers.push(container)
 
@@ -133,8 +134,8 @@ export class DragDropHandler {
   // allows better tracking across multiple containers and gives more flexibility
   // for handling touch events later if required
   _onMouseDown(event: MouseEvent) {
-    if (!this.isDragging && (event.button === undefined || event.button === 0)) {
-      const target = event.target as Element | null
+    if (!this.isDragging && event.button === 0) {
+      const target = event.target instanceof Element ? event.target : null
       const grabbedElement = getParent(target, DRAGGABLE_SELECTOR)
       this.grabbedElement = grabbedElement instanceof HTMLElement ? grabbedElement : null
 
@@ -180,21 +181,22 @@ export class DragDropHandler {
   }
 
   _onMouseUp() {
-    if (this.draggableInfo) {
+    const draggableInfo = this.draggableInfo
+    if (draggableInfo) {
       let success = false
 
       // TODO: accept object rather than positioned args? OR, should the
       // droppable data be stored on draggableInfo?
       if (this._currentOverContainer) {
         success = this._currentOverContainer.onDrop(
-          this.draggableInfo,
+          draggableInfo,
           this._currentOverDroppableElem,
           this._currentOverDroppablePosition,
         )
       }
 
       this.containers.forEach((container) => {
-        container.onDropEnd(this.draggableInfo!, success)
+        container.onDropEnd(draggableInfo, success)
       })
     }
 
@@ -225,10 +227,9 @@ export class DragDropHandler {
       this._waitForDragStartPromise = null
     }
 
-    const onMove = (event: Event) => {
-      const e = event as MouseEvent
-      const currentX = e.clientX
-      const currentY = e.clientY
+    const onMove = (event: MouseEvent) => {
+      const currentX = event.clientX
+      const currentY = event.clientY
 
       if (
         Math.abs(startEvent.clientX - currentX) > moveThreshold ||
@@ -285,6 +286,7 @@ export class DragDropHandler {
     applyUserSelect(document.body, 'none')
 
     if (!this.sourceContainer) {
+      this._resetDrag()
       return
     }
 
@@ -322,7 +324,7 @@ export class DragDropHandler {
     // create the drag preview element and cache its position to avoid costly
     // getBoundingClientRect calls in the mousemove handler
     const dragPreviewElement = this.sourceContainer.createDragPreviewElement(draggableInfo)
-    if (dragPreviewElement && dragPreviewElement instanceof HTMLElement) {
+    if (dragPreviewElement) {
       this._dragPreviewContainerElement?.appendChild(dragPreviewElement)
       const dragPreviewElementRect = dragPreviewElement.getBoundingClientRect()
       this.dragPreviewInfo = {
@@ -347,8 +349,8 @@ export class DragDropHandler {
     this.scrollHandler.dragStart(draggableInfo)
 
     // prevent the pointer showing the text caret over text content whilst dragging
-    document.querySelectorAll('[data-inkling="editor"] [data-lexical-editor]').forEach((el) => {
-      ;(el as HTMLElement).style.setProperty('cursor', 'default', 'important')
+    document.querySelectorAll<HTMLElement>('[data-inkling="editor"] [data-lexical-editor]').forEach((el) => {
+      el.style.setProperty('cursor', 'default', 'important')
     })
 
     // prevent hover effects showing whilst dragging
@@ -396,9 +398,10 @@ export class DragDropHandler {
     }
 
     const currentOverDroppableElem = this._currentOverDroppableElem
-    const isLeavingContainer = this._currentOverContainerElem && overContainerElem !== this._currentOverContainerElem
-    const isLeavingDroppable = currentOverDroppableElem && overDroppableElem !== currentOverDroppableElem
-    const isOverContainer = overContainerElem && overContainerElem !== this._currentOverContainerElem
+    const isLeavingContainer =
+      this._currentOverContainerElem !== null && overContainerElem !== this._currentOverContainerElem
+    const isLeavingDroppable = currentOverDroppableElem !== null && overDroppableElem !== currentOverDroppableElem
+    const isOverContainer = overContainerElem !== null && overContainerElem !== this._currentOverContainerElem
 
     if (isLeavingContainer && this._currentOverContainer) {
       this._currentOverContainer.onDragLeaveContainer(this.draggableInfo)
@@ -427,8 +430,7 @@ export class DragDropHandler {
       const rect = overDroppableElem.getBoundingClientRect()
       const inTop = this.draggableInfo.mousePosition.y < rect.y + rect.height / 2
       const inLeft = this.draggableInfo.mousePosition.x < rect.x + rect.width / 2
-      const position: DroppablePosition =
-        `${inTop ? 'top' : 'bottom'}-${inLeft ? 'left' : 'right'}` as DroppablePosition
+      const position: DroppablePosition = `${inTop ? 'top' : 'bottom'}-${inLeft ? 'left' : 'right'}`
 
       if (!this._currentOverDroppableElem && this._currentOverContainer) {
         this._currentOverContainer.onDragEnterDroppable(overDroppableElem, position)
@@ -449,7 +451,7 @@ export class DragDropHandler {
         )
         if (indicatorPosition) {
           this.draggableInfo.insertIndex = indicatorPosition.insertIndex
-          this._showDropIndicator(indicatorPosition)
+          this._showDropIndicator()
         } else {
           this._hideDropIndicator()
         }
@@ -471,10 +473,8 @@ export class DragDropHandler {
   }
 
   // position the drop indicator relative to the current droppable.
-  // `info` is supplied by the container's getIndicatorPosition callback and
-  // carries the insert index and target element; the actual visual position is
-  // derived from the current droppable and its quadrant position.
-  _showDropIndicator(info: DropIndicatorInfo) {
+  // The visual position is derived from the current droppable and its quadrant.
+  _showDropIndicator() {
     const dropIndicator = this._dropIndicator
     if (!dropIndicator) {
       return
@@ -489,7 +489,7 @@ export class DragDropHandler {
       return
     }
 
-    const parent = dropIndicator.parentNode as HTMLElement | null
+    const parent = dropIndicator.parentElement
     if (!parent) {
       return
     }
@@ -498,26 +498,10 @@ export class DragDropHandler {
     const lastLeft = parseInt(dropIndicator.style.left, 10) || 0
     const lastTop = parseInt(dropIndicator.style.top, 10) || 0
 
-    let newLeft: number
-    let newTop: number
-    let newWidth: number
-    let newHeight: number
-
-    if (position.startsWith('top') || position.startsWith('bottom')) {
-      // vertical indicator: 4px bar above/below the droppable
-      newWidth = droppable.offsetWidth
-      newHeight = 4
-      newLeft = droppable.offsetLeft
-      newTop = position.startsWith('top') ? droppable.offsetTop - 2 : droppable.offsetTop + droppable.offsetHeight - 2
-    } else {
-      // horizontal indicator: 4px bar to the left/right of the droppable
-      newWidth = 4
-      newHeight = droppable.offsetHeight
-      newTop = droppable.offsetTop
-      newLeft = position.startsWith('left')
-        ? droppable.offsetLeft - 2
-        : droppable.offsetLeft + droppable.offsetWidth - 2
-    }
+    const newWidth = droppable.offsetWidth
+    const newHeight = 4
+    let newLeft = droppable.offsetLeft
+    let newTop = position.startsWith('top') ? droppable.offsetTop - 2 : droppable.offsetTop + droppable.offsetHeight - 2
 
     newLeft -= parentRect.left
     newTop -= parentRect.top
@@ -545,6 +529,7 @@ export class DragDropHandler {
     // make sure the indicator isn't shown due to a running timeout
     if (this._dropIndicatorTimeout) {
       clearTimeout(this._dropIndicatorTimeout)
+      this._dropIndicatorTimeout = null
     }
 
     // clear droppable insert index unless instructed not to (eg, when
@@ -552,12 +537,6 @@ export class DragDropHandler {
     if (clearInsertIndex && this.draggableInfo) {
       delete this.draggableInfo.insertIndex
     }
-
-    // reset all transforms
-    this._transformedDroppables.forEach((elem) => {
-      elem.style.transform = ''
-    })
-    this.transformedDroppables = []
 
     // hide drop indicator
     if (this._dropIndicator) {
@@ -579,6 +558,7 @@ export class DragDropHandler {
     }
 
     this.isDragging = false
+    this.draggableInfo = null
     this.grabbedElement = null
     this.sourceContainer = null
 
@@ -595,8 +575,8 @@ export class DragDropHandler {
     this._setHoverSuppression(false)
 
     applyUserSelect(document.body, '')
-    document.querySelectorAll('[data-inkling="editor"] [data-lexical-editor]').forEach((el) => {
-      ;(el as HTMLElement).style.cursor = ''
+    document.querySelectorAll<HTMLElement>('[data-inkling="editor"] [data-lexical-editor]').forEach((el) => {
+      el.style.cursor = ''
     })
   }
 
@@ -607,14 +587,12 @@ export class DragDropHandler {
       dropIndicator.id = DROP_INDICATOR_ID
       // "rounded-full bg-green" kept as classes so Tailwind picks up usage
       dropIndicator.className = 'rounded-full bg-green'
-      Object.assign(dropIndicator.style, {
-        position: 'absolute',
-        opacity: 0,
-        width: '4px',
-        height: '0',
-        zIndex: DROP_INDICATOR_ZINDEX,
-        pointerEvents: 'none',
-      })
+      dropIndicator.style.position = 'absolute'
+      dropIndicator.style.opacity = '0'
+      dropIndicator.style.width = '4px'
+      dropIndicator.style.height = '0'
+      dropIndicator.style.zIndex = String(DROP_INDICATOR_ZINDEX)
+      dropIndicator.style.pointerEvents = 'none'
 
       if (this.editorContainerElement) {
         this.editorContainerElement.appendChild(dropIndicator)
@@ -634,7 +612,7 @@ export class DragDropHandler {
       dragPreviewContainerElement.id = INKLING_CONTAINER_ID
       dragPreviewContainerElement.style.position = 'fixed'
       dragPreviewContainerElement.style.width = '100%'
-      dragPreviewContainerElement.style.zIndex = String(DROP_INDICATOR_ZINDEX + 1)
+      dragPreviewContainerElement.style.zIndex = String(INKLING_ZINDEX)
 
       this.editorContainerElement.appendChild(dragPreviewContainerElement)
 

@@ -25,7 +25,6 @@ function createHandlers() {
           type: 'image',
           element,
           target: null,
-          source: null,
           mousePosition: { x: 0, y: 0 },
           dataset: {},
         }
@@ -69,6 +68,20 @@ describe('DragDropHandler', () => {
   it('constructs with default editor container selector', () => {
     const h = new DragDropHandler()
     expect(h.editorContainerElement).toBeNull()
+    h.destroy()
+  })
+
+  it('finds the default editor container through the real Inkling root attribute', () => {
+    const inklingRoot = document.createElement('div')
+    inklingRoot.dataset.inkling = 'editor'
+    const lexicalRoot = document.createElement('div')
+    lexicalRoot.setAttribute('data-lexical-editor', 'true')
+    inklingRoot.appendChild(lexicalRoot)
+    document.body.appendChild(inklingRoot)
+
+    const h = new DragDropHandler()
+
+    expect(h.editorContainerElement).toBe(lexicalRoot)
     h.destroy()
   })
 
@@ -171,6 +184,16 @@ describe('DragDropHandler', () => {
     expect(handler.isDragging).toBe(false)
   })
 
+  it('clears drag information when a drag resets', async () => {
+    await initiateDrag('reset-info')
+
+    expect(handler.draggableInfo).not.toBeNull()
+
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+
+    expect(handler.draggableInfo).toBeNull()
+  })
+
   it('cancels drag on escape key', async () => {
     await initiateDrag('escape')
 
@@ -232,6 +255,14 @@ describe('DragDropHandler', () => {
     })
 
     expect(handler.isDragging).toBe(false)
+  })
+
+  it('ignores non-Element mouse targets', () => {
+    const event = new MouseEvent('mousedown', { button: 0 })
+    Object.defineProperty(event, 'target', { value: document.createTextNode('text') })
+
+    expect(() => handler._onMouseDown(event)).not.toThrow()
+    expect(handler.grabbedElement).toBeNull()
   })
 
   it('does not initiate drag when drag disabled element is target', async () => {
