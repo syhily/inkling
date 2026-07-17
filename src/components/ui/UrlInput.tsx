@@ -9,7 +9,7 @@ export interface UrlInputProps {
   handleClose?: () => void
   handlePasteAsLink?: (href: string) => void
   handleRetry?: () => void
-  handleUrlChange?: (eventOrUrl: React.ChangeEvent<HTMLInputElement> | string) => void
+  handleUrlChange?: (value: string) => void
   handleUrlSubmit?: (event: React.KeyboardEvent<HTMLInputElement> | KeyboardEvent | null) => void
   hasError?: boolean
   isLoading?: boolean
@@ -154,7 +154,7 @@ export function UrlInput({
         data-testid={dataTestId}
         placeholder={placeholder ?? 'Paste URL...'}
         type="text"
-        value={value ?? ''}
+        value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
       />

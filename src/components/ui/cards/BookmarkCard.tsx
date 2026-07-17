@@ -2,6 +2,8 @@ import type { EditorState, LexicalEditor } from 'lexical'
 
 import React from 'react'
 
+import type { SearchLinksFn } from '@/hooks/useSearchLinks'
+
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
 import { UrlInput } from '@/components/ui/UrlInput'
 import { UrlSearchInput } from '@/components/ui/UrlSearchInput'
@@ -11,7 +13,7 @@ interface BookmarkCardProps {
   handleClose: () => void
   handlePasteAsLink: (href: string) => void
   handleRetry: () => void
-  handleUrlChange: (eventOrUrl: React.ChangeEvent<HTMLInputElement> | string) => void
+  handleUrlChange: (value: string) => void
   handleUrlSubmit: (
     eventOrUrl: React.KeyboardEvent<HTMLInputElement> | KeyboardEvent | string | null,
     type?: string,
@@ -29,7 +31,7 @@ interface BookmarkCardProps {
   isSelected?: boolean
   isLoading?: boolean
   urlError?: boolean
-  searchLinks?: (term?: string) => Promise<unknown>
+  searchLinks?: SearchLinksFn
 }
 
 export function BookmarkCard({

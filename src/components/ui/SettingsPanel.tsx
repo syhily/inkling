@@ -8,7 +8,6 @@ import { ColorOptionButtons } from '@/components/ui/ColorOptionButtons'
 import { ColorIndicator, type ColorSwatchData } from '@/components/ui/ColorPicker'
 import { Dropdown } from '@/components/ui/Dropdown'
 import { Input } from '@/components/ui/Input'
-import { type InputListItemData } from '@/components/ui/InputList'
 import { InputList, InputListItem } from '@/components/ui/InputList'
 import { MediaUploader } from '@/components/ui/MediaUploader'
 import { MultiSelectDropdown } from '@/components/ui/MultiSelectDropdown'
@@ -290,7 +289,7 @@ export function InputListSetting({
           'm-0 cursor-pointer px-3 py-[7px] text-left hover:bg-grey-100 dark:hover:bg-grey-925',
         )}
         dataTestId={dataTestId ?? ''}
-        item={item as InputListItemData}
+        item={item}
         scrollIntoView={scrollIntoView}
         selected={selected}
         onClick={onClick}

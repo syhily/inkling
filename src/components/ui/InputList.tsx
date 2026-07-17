@@ -1,7 +1,5 @@
 import React from 'react'
 
-import type { KeyboardSelectionWithGroupsProps } from '@/components/ui/KeyboardSelectionWithGroups'
-
 import { Delayed } from '@/components/ui/Delayed'
 import { DropdownContainer } from '@/components/ui/DropdownContainer'
 import { Input } from '@/components/ui/Input'
@@ -10,17 +8,25 @@ import { KeyboardSelectionWithGroups } from '@/components/ui/KeyboardSelectionWi
 import { Spinner } from '@/components/ui/Spinner'
 
 export interface InputListItemData {
-  value: string
+  value: string | null
   label: string
   type?: string
 }
 
-export interface InputListGroupData {
+export interface InputListGroupData<T extends InputListItemData = InputListItemData> {
   label: string
-  items: InputListItemData[]
+  items: T[]
 }
 
-export type InputListOption = InputListItemData | InputListGroupData
+export type InputListOption<T extends InputListItemData = InputListItemData> = InputListItemData | InputListGroupData<T>
+
+// Flat option lists and grouped option lists are told apart by the presence of
+// an `items` array on the first entry (groups always carry one, items never do).
+function isGroupList<T extends InputListItemData>(
+  listOptions: T[] | InputListGroupData<T>[] | undefined,
+): listOptions is InputListGroupData<T>[] {
+  return !!listOptions && listOptions.length > 0 && 'items' in listOptions[0]
+}
 
 export function InputListLoadingItem({ dataTestId }: { dataTestId: string }) {
   return (
@@ -32,7 +38,7 @@ export function InputListLoadingItem({ dataTestId }: { dataTestId: string }) {
   )
 }
 
-export function InputListItem({
+export function InputListItem<T extends InputListItemData = InputListItemData>({
   dataTestId,
   item,
   selected,
@@ -44,9 +50,9 @@ export function InputListItem({
   children,
 }: {
   dataTestId: string
-  item: InputListItemData
+  item: T
   selected: boolean
-  onClick: (item: InputListItemData) => void
+  onClick: (item: T) => void
   onMouseOver: () => void
   scrollIntoView: boolean
   className: string
@@ -112,15 +118,6 @@ export function InputListGroup({
   )
 }
 
-function defaultGetItem(
-  _item: InputListItemData,
-  _selected: boolean,
-  _onMouseOver: () => void,
-  _scrollIntoView: boolean,
-): React.ReactElement {
-  throw new Error('<InputList> getItem function prop must be provided')
-}
-
 /**
  * Little warning here: this has an onChange handler that doesn't have an event as parameter, but just the value.
  *
@@ -129,7 +126,7 @@ function defaultGetItem(
  * @param {string} [options.list]
  * @returns
  */
-export function InputList({
+export function InputList<T extends InputListItemData = InputListItemData>({
   autoFocus,
   className,
   inputClassName,
@@ -143,7 +140,7 @@ export function InputList({
   placeholder,
   onChange,
   onSelect,
-  getItem = defaultGetItem,
+  getItem,
 }: {
   autoFocus?: boolean
   className?: string
@@ -152,18 +149,13 @@ export function InputList({
   dropdownPlacementBottomClass?: string
   dropdownPlacementTopClass?: string
   dataTestId: string
-  listOptions?: InputListItemData[] | InputListGroupData[]
+  listOptions?: T[] | InputListGroupData<T>[]
   isLoading?: boolean
   value: string
   placeholder?: string
   onChange: (value: string) => void
   onSelect?: (value: string, type?: string) => void
-  getItem?: (
-    item: InputListItemData,
-    selected: boolean,
-    onMouseOver: () => void,
-    scrollIntoView: boolean,
-  ) => React.ReactElement
+  getItem: (item: T, selected: boolean, onMouseOver: () => void, scrollIntoView: boolean) => React.ReactElement
 }) {
   const [inputFocused, setInputFocused] = React.useState(false)
 
@@ -183,40 +175,15 @@ export function InputList({
     onChange(event.target.value)
   }
 
-  const onSelectEvent = (item: InputListItemData) => {
+  const onSelectEvent = (item: T) => {
+    // null-valued options are non-interactive placeholders ("no results")
+    if (item.value === null) {
+      return
+    }
     ;(onSelect || onChange)(item.value, item.type)
   }
 
-  const hasGroups = listOptions && (listOptions[0] as { items?: unknown })?.items
   const showSuggestions = (isLoading || (listOptions && !!listOptions.length)) && inputFocused
-
-  const Suggestions = () => {
-    return (
-      <DropdownContainer
-        className={dropdownClassName}
-        dataTestId={dataTestId}
-        placementBottomClass={dropdownPlacementBottomClass}
-        placementTopClass={dropdownPlacementTopClass}
-      >
-        {isLoading && !listOptions?.length && <InputListLoadingItem dataTestId={dataTestId} />}
-        {hasGroups ? (
-          <KeyboardSelectionWithGroups
-            getGroup={getGroup as KeyboardSelectionWithGroupsProps['getGroup']}
-            getItem={getItem as KeyboardSelectionWithGroupsProps['getItem']}
-            groups={listOptions as unknown as KeyboardSelectionWithGroupsProps['groups']}
-            isLoading={isLoading}
-            onSelect={onSelectEvent as KeyboardSelectionWithGroupsProps['onSelect']}
-          />
-        ) : (
-          <KeyboardSelection
-            getItem={(item, selected) => getItem(item, selected, () => {}, false)}
-            items={listOptions as InputListItemData[]}
-            onSelect={onSelectEvent}
-          />
-        )}
-      </DropdownContainer>
-    )
-  }
 
   return (
     <>
@@ -231,7 +198,31 @@ export function InputList({
           onChange={onChangeEvent}
           onFocus={onFocus}
         />
-        {showSuggestions && <Suggestions />}
+        {showSuggestions && (
+          <DropdownContainer
+            className={dropdownClassName}
+            dataTestId={dataTestId}
+            placementBottomClass={dropdownPlacementBottomClass}
+            placementTopClass={dropdownPlacementTopClass}
+          >
+            {isLoading && !listOptions?.length && <InputListLoadingItem dataTestId={dataTestId} />}
+            {isGroupList(listOptions) ? (
+              <KeyboardSelectionWithGroups
+                getGroup={getGroup}
+                getItem={getItem}
+                groups={listOptions}
+                isLoading={isLoading}
+                onSelect={onSelectEvent}
+              />
+            ) : (
+              <KeyboardSelection
+                getItem={(item, selected) => getItem(item, selected, () => {}, false)}
+                items={listOptions ?? []}
+                onSelect={onSelectEvent}
+              />
+            )}
+          </DropdownContainer>
+        )}
       </div>
     </>
   )

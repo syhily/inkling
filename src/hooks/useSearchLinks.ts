@@ -99,7 +99,7 @@ function convertSearchResultsToListOptions(
   })
 }
 
-type SearchLinksFn = (term?: string) => Promise<SearchResult[] | undefined>
+export type SearchLinksFn = (term?: string) => Promise<SearchResult[] | undefined>
 
 interface UseSearchLinksOptions {
   noResultOptions?: (query: string) => ListOptionSection[]
@@ -112,7 +112,7 @@ interface UseSearchLinksResult {
 
 export const useSearchLinks = (
   query: string,
-  searchLinks: SearchLinksFn,
+  searchLinks?: SearchLinksFn,
   { noResultOptions }: UseSearchLinksOptions = {},
 ): UseSearchLinksResult => {
   const [defaultListOptions, setDefaultListOptions] = React.useState<ListOptionSection[]>([])
@@ -130,7 +130,9 @@ export const useSearchLinks = (
 
       latestTermRef.current = term
       setIsSearching(true)
-      const results = await searchLinks(term)
+      // a missing search function resolves like a cancelled search: keep the
+      // current options and leave the searching state
+      const results = searchLinks ? await searchLinks(term) : undefined
 
       // a newer query superseded this one while we were awaiting — don't
       // let a slow older response overwrite the newer results
@@ -167,7 +169,7 @@ export const useSearchLinks = (
       if (!query) {
         setIsSearching(true)
       }
-      const results = await searchLinks()
+      const results = searchLinks ? await searchLinks() : undefined
       setDefaultListOptions(convertSearchResultsToListOptions(results, { type: 'default' }))
       if (!query) {
         setIsSearching(false)

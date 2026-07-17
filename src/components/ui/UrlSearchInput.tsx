@@ -3,7 +3,7 @@ import React from 'react'
 import CloseIcon from '@/assets/icons/inkling-close.svg?react'
 import { InputList } from '@/components/ui/InputList'
 import { LinkInputSearchItem } from '@/components/ui/LinkInputSearchItem'
-import { useSearchLinks, type ListOptionItem } from '@/hooks/useSearchLinks'
+import { useSearchLinks, type ListOptionItem, type SearchLinksFn } from '@/hooks/useSearchLinks'
 import trackEvent from '@/utils/analytics'
 
 interface UrlSearchInputProps {
@@ -17,7 +17,7 @@ interface UrlSearchInputProps {
   handleRetry: () => void
   handleClose: () => void
   isLoading?: boolean
-  searchLinks?: (term?: string) => Promise<unknown>
+  searchLinks: SearchLinksFn
 }
 
 export function UrlSearchInput({
@@ -33,7 +33,7 @@ export function UrlSearchInput({
   isLoading,
   searchLinks,
 }: UrlSearchInputProps) {
-  const { isSearching, listOptions } = useSearchLinks(value || '', searchLinks as never)
+  const { isSearching, listOptions } = useSearchLinks(value || '', searchLinks)
 
   React.useEffect(() => {
     if (!value) {
@@ -109,18 +109,19 @@ export function UrlSearchInput({
       return
     }
 
-    const url =
-      selectedItemOrValue && typeof selectedItemOrValue === 'string'
-        ? selectedItemOrValue
-        : (selectedItemOrValue as ListOptionItem).value
+    const url = typeof selectedItemOrValue === 'string' ? selectedItemOrValue : selectedItemOrValue.value
     handleUrlSubmit(url || '', type)
   }
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (!event.nativeEvent.isComposing && event.key === 'Enter') {
+      const target = event.target
+      if (!(target instanceof HTMLInputElement)) {
+        return
+      }
       event.preventDefault()
       event.stopPropagation()
-      handleUrlSubmit((event.target as HTMLInputElement).value)
+      handleUrlSubmit(target.value)
     }
   }
 
@@ -147,10 +148,10 @@ export function UrlSearchInput({
         dropdownClassName="z-[-1] max-h-[30vh] w-full overflow-y-auto bg-white px-2 py-1 shadow-md dark:bg-grey-950"
         dropdownPlacementBottomClass="mt-[.6rem] rounded-md"
         dropdownPlacementTopClass="top-[-.6rem] -translate-y-full rounded-md"
-        getItem={getItem as never}
+        getItem={getItem}
         inputClassName={`w-full rounded-md border border-grey-300 p-2 font-sans text-sm font-normal leading-snug text-grey-900 placeholder:text-sm placeholder:font-medium placeholder:leading-snug placeholder:text-grey-500 focus-visible:outline-none dark:border-grey-800 dark:bg-grey-950 dark:text-grey-100 dark:placeholder:text-grey-800`}
         isLoading={isSearching}
-        listOptions={listOptions as never}
+        listOptions={listOptions}
         placeholder={placeholder || ''}
         value={value || ''}
         onChange={onChangeEvent}

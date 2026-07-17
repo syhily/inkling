@@ -60,7 +60,7 @@ export function AtLinkResultsPopup({ atLinkNode, isSearching, listOptions, query
 
       const editorElem = editor.getRootElement()
 
-      if (!atLinkRect || !editorElem || !popupElement || !scrollContainer) {
+      if (!editorElem) {
         return
       }
 
@@ -96,9 +96,7 @@ export function AtLinkResultsPopup({ atLinkNode, isSearching, listOptions, query
     const onResize = () => updatePopupPosition()
     const onScroll = () => updatePopupPosition()
     window.addEventListener('resize', onResize)
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', onScroll)
-    }
+    scrollContainer.addEventListener('scroll', onScroll)
 
     const popupElement = popupRef.current
     const popupMutationObserver = new MutationObserver(() => updatePopupPosition())
@@ -108,9 +106,7 @@ export function AtLinkResultsPopup({ atLinkNode, isSearching, listOptions, query
 
     return () => {
       window.removeEventListener('resize', onResize)
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', onScroll)
-      }
+      scrollContainer.removeEventListener('scroll', onScroll)
       if (popupElement) {
         popupMutationObserver.disconnect()
       }
@@ -133,7 +129,7 @@ export function AtLinkResultsPopup({ atLinkNode, isSearching, listOptions, query
   }
 
   const getGroup = (group: ListOptionSection, { showSpinner }: { showSpinner?: boolean } = {}) => {
-    return <InputListGroup dataTestId={testId} group={group as never} showSpinner={showSpinner} />
+    return <InputListGroup dataTestId={testId} group={group} showSpinner={showSpinner} />
   }
 
   return (

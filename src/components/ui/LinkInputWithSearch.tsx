@@ -21,7 +21,7 @@ export function LinkInputWithSearch({ href, update, cancel }: LinkInputWithSearc
 
   // store the href/query in state so we can update it without affecting the saved editor value
   const [_href, setHref] = React.useState(href)
-  const { isSearching, listOptions } = useSearchLinks(_href || '', searchLinks as never)
+  const { isSearching, listOptions } = useSearchLinks(_href || '', searchLinks)
 
   // add refs for input and container
   const containerRef = React.useRef<HTMLDivElement | null>(null)
@@ -40,7 +40,8 @@ export function LinkInputWithSearch({ href, update, cancel }: LinkInputWithSearc
   // close link input when clicking outside or pressing escape
   React.useEffect(() => {
     const closeOnClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target
+      if (containerRef.current && target instanceof Node && !containerRef.current.contains(target)) {
         cancel()
       }
     }
@@ -80,7 +81,7 @@ export function LinkInputWithSearch({ href, update, cancel }: LinkInputWithSearc
   }
 
   const getGroup = (group: ListOptionSection, { showSpinner }: { showSpinner?: boolean } = {}) => {
-    return <InputListGroup dataTestId={testId} group={group as never} showSpinner={showSpinner} />
+    return <InputListGroup dataTestId={testId} group={group} showSpinner={showSpinner} />
   }
 
   const showSuggestions = isSearching || (listOptions && !!listOptions.length)
@@ -126,14 +127,14 @@ export function LinkInputWithSearch({ href, update, cancel }: LinkInputWithSearc
           // update local value to allow searching
           setHref(e.target.value)
         }}
-        onKeyDown={(e: React.KeyboardEvent) => {
+        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
           if (e.key === 'Enter') {
             // prevent Enter from triggering in the editor and removing text
             // update the link value in the editor. Read the live input value so
             // the last keystroke is always captured even if React state updates
             // are slightly behind the native input value.
             e.preventDefault()
-            update((e.target as HTMLInputElement).value || '')
+            update(e.currentTarget.value || '')
             return
           }
         }}

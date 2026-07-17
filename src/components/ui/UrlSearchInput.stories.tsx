@@ -21,6 +21,7 @@ const baseArgs = {
   handlePasteAsLink: () => {},
   handleRetry: () => {},
   handleClose: () => {},
+  searchLinks: () => Promise.resolve(undefined),
 }
 
 export const Empty: Story = {

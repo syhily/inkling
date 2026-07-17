@@ -99,13 +99,8 @@ export function BookmarkNodeComponent({
   const [loading, setLoading] = React.useState<boolean>(false)
   const [urlError, setUrlError] = React.useState<boolean>(false)
 
-  const handleUrlChange = (eventOrUrl: React.ChangeEvent<HTMLInputElement> | string): void => {
-    // TODO: change this so we only get given URL strings - child components should handle their own events
-    if (typeof eventOrUrl === 'string') {
-      setUrlInputValue(eventOrUrl)
-      return
-    }
-    setUrlInputValue(eventOrUrl.target.value)
+  const handleUrlChange = (value: string): void => {
+    setUrlInputValue(value)
   }
 
   const handleUrlSubmit = async (

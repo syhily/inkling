@@ -1,3 +1,5 @@
+import type { ListOptionItem } from '@/hooks/useSearchLinks'
+
 import { HighlightedString } from '@/components/ui/HighlightedString'
 import { InputListItem } from '@/components/ui/InputList'
 
@@ -11,14 +13,12 @@ export function LinkInputSearchItem({
   onClick,
 }: {
   dataTestId: string
-  // oxlint-disable-next-line typescript/no-explicit-any
-  item: any
+  item: ListOptionItem
   highlightString?: string
   selected: boolean
   onMouseOver: () => void
   scrollIntoView: boolean
-  // oxlint-disable-next-line typescript/no-explicit-any
-  onClick: (item: any) => void
+  onClick: (item: ListOptionItem) => void
 }) {
   return (
     <InputListItem

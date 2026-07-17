@@ -1,23 +1,14 @@
 import React from 'react'
 
-import type { ListOptionItem, ListOptionSection } from '@/hooks/useSearchLinks'
+import type { ListOptionItem } from '@/hooks/useSearchLinks'
 
-const Group = ({ children }: { children: React.ReactNode }) => {
-  return <>{children}</>
-}
-
-export interface KeyboardSelectionWithGroupsProps {
-  groups: ListOptionSection[]
-  getItem: (
-    item: ListOptionItem,
-    selected: boolean,
-    onMouseOver: () => void,
-    scrollIntoView: boolean,
-  ) => React.ReactElement
-  getGroup: (group: ListOptionSection, options?: { showSpinner?: boolean }) => React.ReactElement
-  onSelect: (item: ListOptionItem) => void
+export interface KeyboardSelectionWithGroupsProps<T extends { value: string | null } = ListOptionItem> {
+  groups: Array<{ label: string; items: T[] }>
+  getItem: (item: T, selected: boolean, onMouseOver: () => void, scrollIntoView: boolean) => React.ReactElement
+  getGroup: (group: { label: string; items: T[] }, options?: { showSpinner?: boolean }) => React.ReactElement
+  onSelect: (item: T) => void
   onEnterWithoutSelection?: () => void
-  defaultSelected?: ListOptionItem
+  defaultSelected?: T
   isLoading?: boolean
 }
 
@@ -25,7 +16,7 @@ export interface KeyboardSelectionWithGroupsProps {
  * Renders a list of options, which are selectable by using the up and down arrow keys.
  * You pass in the template for each option via the getItem function, which is called for each option and also passes in whether the item is selected or not.
  */
-export function KeyboardSelectionWithGroups({
+export function KeyboardSelectionWithGroups<T extends { value: string | null } = ListOptionItem>({
   groups,
   getItem,
   getGroup,
@@ -33,7 +24,7 @@ export function KeyboardSelectionWithGroups({
   onEnterWithoutSelection,
   defaultSelected,
   isLoading,
-}: KeyboardSelectionWithGroupsProps) {
+}: KeyboardSelectionWithGroupsProps<T>) {
   const items = groups.flatMap((group) => group.items)
   const defaultIndex = Math.max(
     0,
@@ -117,7 +108,7 @@ export function KeyboardSelectionWithGroups({
   return (
     <>
       {groups.map((group, groupIndex) => (
-        <Group key={group.label}>
+        <React.Fragment key={group.label}>
           {getGroup(group, { showSpinner: groupIndex === 0 && isLoading })}
           {(group.items || []).map((item, index) => {
             const itemsBefore = groups.slice(0, groupIndex).reduce((sum, prevGroup) => sum + prevGroup.items.length, 0)
@@ -131,7 +122,7 @@ export function KeyboardSelectionWithGroups({
             }
             return getItem(item, isSelected, onMouseOver, scrollSelectedIntoView)
           })}
-        </Group>
+        </React.Fragment>
       ))}
     </>
   )

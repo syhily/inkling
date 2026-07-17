@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
 
-import { InputList } from '@/components/ui/InputList'
+import { InputList, InputListItem } from '@/components/ui/InputList'
 
 const meta = {
   title: 'Generic/InputList',
@@ -35,6 +35,20 @@ export const Default: Story = {
     dataTestId: 'input-list',
     value: '',
     onChange: () => {},
+    getItem: (item, selected, onMouseOver, scrollIntoView) => (
+      <InputListItem
+        key={item.value}
+        className="m-0 cursor-pointer px-3 py-[7px] text-left hover:bg-grey-100"
+        dataTestId="input-list"
+        item={item}
+        scrollIntoView={scrollIntoView}
+        selected={selected}
+        onClick={() => {}}
+        onMouseOver={onMouseOver}
+      >
+        <span className="block text-sm leading-tight font-normal text-black">{item.label}</span>
+      </InputListItem>
+    ),
   },
   render: (args) => (
     <div className="flex h-screen w-[240px] flex-col justify-between">
