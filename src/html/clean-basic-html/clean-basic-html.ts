@@ -10,8 +10,7 @@ function removeCodeWrappers(html: string): string {
 }
 
 export function cleanBasicHtml(html: string = '', _options: CleanBasicHtmlOptions = {}): string {
-  const defaults = {}
-  const options: CleanBasicHtmlOptions = Object.assign({}, defaults, _options)
+  const options: CleanBasicHtmlOptions = { ..._options }
 
   if (!options.createDocument) {
     const Parser =
