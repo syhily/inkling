@@ -6,12 +6,16 @@
  * This code is taken from https://github.com/sparksuite/simplemde-markdown-editor/blob/6abda7ab68cc20f4aca870eb243747951b90ab04/src/js/simplemde.js#L1054-L1067
  * with extra diacritics character matching.
  **/
-export default function countWords(text: string | null | undefined): number {
+export interface SafeStringLike {
+  string: string
+}
+
+export default function countWords(text: string | SafeStringLike | null | undefined): number {
   if (!text) {
     return 0
   }
 
-  let normalizedText = text
+  let normalizedText = typeof text === 'string' ? text : text.string
 
   normalizedText = normalizedText.replace(/<("[^"]*"|'[^']*'|[^'">])+\/?>/g, ' ') // strip any HTML tags
 

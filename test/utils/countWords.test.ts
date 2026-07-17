@@ -40,4 +40,8 @@ describe('countWords', function () {
     expect(countWords(null)).toBe(0)
     expect(countWords(undefined)).toBe(0)
   })
+
+  it('unwraps SafeString-like values via their string property', function () {
+    expect(countWords({ string: 'one two three' })).toBe(3)
+  })
 })
