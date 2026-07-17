@@ -7,7 +7,28 @@ interface Snippet {
 
 function getSnippetsFromStorage(): Snippet[] {
   const snippetsStr = localStorage.getItem('snippets')
-  return snippetsStr ? (JSON.parse(snippetsStr) as Snippet[]) : []
+  if (!snippetsStr) {
+    return []
+  }
+
+  try {
+    const parsedSnippets: unknown = JSON.parse(snippetsStr)
+    if (!Array.isArray(parsedSnippets)) {
+      return []
+    }
+
+    return parsedSnippets.filter(
+      (snippet): snippet is Snippet =>
+        typeof snippet === 'object' &&
+        snippet !== null &&
+        'name' in snippet &&
+        typeof snippet.name === 'string' &&
+        'value' in snippet &&
+        typeof snippet.value === 'string',
+    )
+  } catch {
+    return []
+  }
 }
 
 function updateSnippetsInStorage(snippetsArr: Snippet[] = []) {

@@ -37,11 +37,7 @@ export async function fetchEmbed(url: string, opts: object): Promise<EmbedReturn
   // the editor's declared contract is `opts: object`; hosts narrow it to the
   // shape the editor actually sends
   const { type } = opts as FetchEmbedOptions
-  void 0 // fetchEmbed({url, type})
-  const urlObject = new URL(url)
-  if (!urlObject) {
-    throw new Error('No URL specified.')
-  }
+  new URL(url)
   await delay(process.env.NODE_ENV === 'test' ? 50 : 1500)
 
   try {

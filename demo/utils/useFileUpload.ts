@@ -25,7 +25,7 @@ export interface FileUploadState {
   upload: (
     files: FileList | File[],
     options?: { formData?: Record<string, string> },
-  ) => Promise<Array<{ url?: string }> | undefined>
+  ) => Promise<Array<{ url?: string; fileName?: string }> | undefined>
   errors: Error[]
   filesNumber: number
 }
@@ -72,8 +72,12 @@ export const fileTypes: FileTypes = {
   },
 }
 
+function isFileTypeKey(type: string): type is keyof FileTypes {
+  return Object.hasOwn(fileTypes, type)
+}
+
 export function useFileUpload({ isMultiplayer = false }: UseFileUploadOptions = {}) {
-  return function useFileUploadFn(type: keyof FileTypes | string = ''): FileUploadState {
+  return function useFileUploadFn(type: string = ''): FileUploadState {
     const [progress, setProgress] = useState(100)
     const [isLoading, setLoading] = useState(false)
     const [errors, setErrors] = useState<Error[]>([])
@@ -83,21 +87,12 @@ export function useFileUpload({ isMultiplayer = false }: UseFileUploadOptions = 
       if (type === 'file') {
         return true
       }
-      const fileTypeConfig = fileTypes[type as keyof FileTypes]
+      const fileTypeConfig = isFileTypeKey(type) ? fileTypes[type] : undefined
       if (!fileTypeConfig) {
         return true
       }
-      let extensions = fileTypeConfig.extensions
+      const { extensions } = fileTypeConfig
       const [, extension] = /(?:\.([^.]+))?$/.exec(file.name) ?? []
-
-      // if extensions is falsy exit early and accept all files
-      if (!extensions) {
-        return true
-      }
-
-      if (!Array.isArray(extensions)) {
-        extensions = (extensions as unknown as string).split(',')
-      }
 
       if (!extension || extensions.indexOf(extension.toLowerCase()) === -1) {
         const validExtensions = `.${extensions.join(', .').toUpperCase()}`
@@ -153,7 +148,7 @@ export function useFileUpload({ isMultiplayer = false }: UseFileUploadOptions = 
 
       // simulate upload errors for the sake of testing
       // Any file that has "fail" in the filename will return errors
-      const fileErrors = Array.from(files).filter((file) => file.name?.includes('fail'))
+      const fileErrors = Array.from(files).filter((file) => file.name.includes('fail'))
       if (fileErrors.length) {
         setErrors(fileErrors.map((file) => new FileUploadError(file.name, 'Upload failed')))
         setLoading(false)
