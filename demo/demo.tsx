@@ -22,11 +22,11 @@ ReactDOM.createRoot(rootElement).render(
         <Route element={<DesignSandbox />} path="/designsandbox" />
         <Route element={<RestrictedContentDemo />} path="/contentrestricted" />
         <Route element={<HtmlOutputDemo />} path="/html-output" />
-        <Route element={<DemoApp introContent={true} />} path="/" />
-        <Route element={<DemoApp editorType="basic" introContent={true} />} path="/basic" />
-        <Route element={<DemoApp editorType="minimal" introContent={true} />} path="/minimal" />
-        <Route element={<DemoApp editorType="email" introContent={true} />} path="/email" />
-        <Route element={<DemoApp introContent={true} isMultiplayer={true} />} path="/multiplayer" />
+        <Route element={<DemoApp />} path="/" />
+        <Route element={<DemoApp editorType="basic" />} path="/basic" />
+        <Route element={<DemoApp editorType="minimal" />} path="/minimal" />
+        <Route element={<DemoApp editorType="email" />} path="/email" />
+        <Route element={<DemoApp isMultiplayer={true} />} path="/multiplayer" />
       </Routes>
     </Router>
   </React.StrictMode>,

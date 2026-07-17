@@ -13,8 +13,8 @@ interface EditorLinkProps {
 
 function EditorLink({ editorType }: EditorLinkProps) {
   return (
-    <Link rel="nofollow ugc noopener noreferrer" to={editorType?.url}>
-      <span className="ml-[.7rem] hidden font-normal group-hover:inline hover:font-bold">/ {editorType?.name}</span>
+    <Link rel="nofollow ugc noopener noreferrer" to={editorType.url}>
+      <span className="ml-[.7rem] hidden font-normal group-hover:inline hover:font-bold">/ {editorType.name}</span>
     </Link>
   )
 }
@@ -47,7 +47,7 @@ const Watermark = ({ editorType }: WatermarkProps) => {
   ]
 
   const remainingEditorTypes = editorTypes.filter((type) => type.name !== editorType)
-  const editorLinks = remainingEditorTypes.map((type) => <EditorLink key={type?.name} editorType={type} />)
+  const editorLinks = remainingEditorTypes.map((type) => <EditorLink key={type.name} editorType={type} />)
 
   return (
     <>

@@ -130,17 +130,9 @@ const DesignSandbox = () => {
     )
   }
 
-  function ToolbarItem({
-    label,
-    Icon,
-    ...props
-  }: {
-    label: string
-    Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
-    [key: string]: unknown
-  }) {
+  function ToolbarItem({ label, Icon }: { label: string; Icon: React.ComponentType<React.SVGProps<SVGSVGElement>> }) {
     return (
-      <li className="m-0 flex p-0 first:m-0" {...props}>
+      <li aria-label={label} className="m-0 flex p-0 first:m-0">
         <div className="flex size-9 items-center justify-center">
           <Icon className="fill-white" />
         </div>
@@ -196,12 +188,11 @@ const DesignSandbox = () => {
     )
   }
 
-  function CardMenuSection({ label, ...props }: { label: string; [key: string]: unknown }) {
+  function CardMenuSection({ label }: { label: string }) {
     return (
       <div
         className="mb-2 flex shrink-0 flex-col justify-center px-4 pt-3 text-2xs font-medium tracking-[.06rem] text-grey uppercase"
         style={{ minWidth: 'calc(100% - 3.2rem)' }}
-        {...props}
       >
         {label}
       </div>
@@ -212,18 +203,13 @@ const DesignSandbox = () => {
     label,
     desc,
     Icon,
-    ...props
   }: {
     label: string
     desc: string
     Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
-    [key: string]: unknown
   }) {
     return (
-      <div
-        className="flex cursor-pointer flex-row items-center border border-transparent px-4 py-2 text-grey-800 hover:bg-grey-100"
-        {...props}
-      >
+      <div className="flex cursor-pointer flex-row items-center border border-transparent px-4 py-2 text-grey-800 hover:bg-grey-100">
         <div className="flex items-center">
           <Icon className="size-7" />
         </div>
@@ -242,17 +228,12 @@ const DesignSandbox = () => {
   function CardSnippetItem({
     label,
     Icon,
-    ...props
   }: {
     label: string
     Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
-    [key: string]: unknown
   }) {
     return (
-      <div
-        className="flex cursor-pointer flex-row items-center border border-transparent px-4 py-2 text-grey-800 hover:bg-grey-100"
-        {...props}
-      >
+      <div className="flex cursor-pointer flex-row items-center border border-transparent px-4 py-2 text-grey-800 hover:bg-grey-100">
         <div className="flex items-center">
           <Icon className="size-7" />
         </div>
@@ -337,15 +318,13 @@ const DesignSandbox = () => {
   function MediaPlaceholder({
     desc,
     Icon,
-    ...props
   }: {
     desc: string
     Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
-    [key: string]: unknown
   }) {
     return (
       <div className="relative">
-        <figure className="cursor-pointer border border-transparent" {...props}>
+        <figure className="cursor-pointer border border-transparent">
           <div className="relative flex h-100 items-center justify-center border border-grey-100 bg-grey-50 before:pb-[62.5%]">
             <button className="group flex flex-col items-center justify-center p-20" type="button">
               <Icon className="size-32 opacity-80 transition-all ease-linear group-hover:scale-105 group-hover:opacity-100" />

@@ -1,5 +1,4 @@
 import type { MouseEvent as ReactMouseEvent } from 'react'
-import type { URLSearchParamsInit } from 'react-router-dom'
 
 import { $getRoot, $isDecoratorNode } from 'lexical'
 import React, { useState } from 'react'
@@ -10,6 +9,7 @@ import {
   BASIC_TRANSFORMERS,
   type CardConfig,
   EmailEditor,
+  type ExternalControlAPI,
   type FileUploader,
   InklingComposableEditor,
   InklingComposer,
@@ -17,6 +17,7 @@ import {
   MINIMAL_NODES,
   MINIMAL_TRANSFORMERS,
   RestrictContentPlugin,
+  type SearchResult,
   TKCountPlugin,
   WordCountPlugin,
 } from '@/'
@@ -40,37 +41,6 @@ import { fetchEmbed } from './utils/fetchEmbed'
 import { klipyConfig, tenorConfig } from './utils/gifConfig'
 import { fileTypes, useFileUpload } from './utils/useFileUpload'
 import { useSnippets } from './utils/useSnippets'
-
-interface EditorInstance {
-  _rootElement: HTMLElement
-  getEditorState: () => { read: (callback: () => void) => void }
-}
-
-interface EditorAPI {
-  editorInstance: EditorInstance
-  editorIsEmpty: () => boolean
-  focusEditor: (options: { position: string }) => void
-  insertFiles: (files: File[]) => void
-  insertParagraphAtBottom: () => void
-  insertParagraphAtTop: (options: { focus: boolean }) => void
-  serialize: () => string
-}
-
-interface SearchLinkItem {
-  id: string
-  groupName?: string
-  title: string
-  url: string
-  metaText?: string
-  MetaIcon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
-  metaIconTitle?: string
-}
-
-interface SearchLinkGroup {
-  label: string
-  key: string
-  items: SearchLinkItem[]
-}
 
 const url = new URL(window.location.href)
 const params = new URLSearchParams(url.search)
@@ -98,18 +68,15 @@ const defaultCardConfig: CardConfig = {
   siteUrl: window.location.origin,
   stripeEnabled: true,
   // this enables the internal linking feature, can be disabled with `/#/?searchLinks=false`
-  searchLinks: async (term?: string): Promise<SearchLinkGroup[]> => {
+  searchLinks: async (term?: string): Promise<SearchResult[]> => {
     // default to showing latest posts when search is empty
     // no delay to simulate posts being pre-loaded in editor
     if (!term) {
       return [
         {
           label: 'Latest posts',
-          key: 'latest-posts',
           items: [
             {
-              id: '1',
-              groupName: 'Latest posts',
               title: "Remote Work's Impact on Job Markets and Employment",
               url: 'https://source.inkling.local/remote-works-impact-on-job-markets/',
               metaText: '8 May 2024',
@@ -117,8 +84,6 @@ const defaultCardConfig: CardConfig = {
               metaIconTitle: 'Members only',
             },
             {
-              id: '2',
-              groupName: 'Latest posts',
               title: 'Robotics Renaissance: How Automation is Transforming Industries',
               url: 'https://source-newsletter.inkling.local/mental-health-awareness-in-the-workplace/',
               metaText: '2 May 2024',
@@ -126,8 +91,6 @@ const defaultCardConfig: CardConfig = {
               metaIconTitle: 'Specific tiers only',
             },
             {
-              id: '3',
-              groupName: 'Latest posts',
               title: 'Biodiversity Conservation in Fragile Ecosystems',
               url: 'https://source.inkling.local/biodiversity-conservation-in-fragile-ecosystems/',
               metaText: '26 June 2024',
@@ -135,8 +98,6 @@ const defaultCardConfig: CardConfig = {
               metaIconTitle: 'Paid-members only',
             },
             {
-              id: '4',
-              groupName: 'Latest posts',
               title: 'Unveiling the Crisis of Plastic Pollution: Analyzing Its Profound Impact on the Environment',
               url: 'https://source.inkling.local/plastic-pollution-crisis-deepens/',
               metaText: '16 Aug 2023',
@@ -153,14 +114,10 @@ const defaultCardConfig: CardConfig = {
         () => {
           const posts = [
             {
-              id: '1',
-              groupName: 'Posts',
               title: 'TK Reminders',
               url: 'https://inkling.local/changelog/tk-reminders/',
             },
             {
-              id: '2',
-              groupName: 'Posts',
               title: '✨ Emoji autocomplete ✨',
               url: 'https://inkling.local/changelog/emoji-picker/',
             },
@@ -168,8 +125,6 @@ const defaultCardConfig: CardConfig = {
 
           const pages = [
             {
-              id: '3',
-              groupName: 'Pages',
               title: 'How to update Inkling',
               url: 'https://inkling.local/docs/update/',
             },
@@ -177,23 +132,21 @@ const defaultCardConfig: CardConfig = {
 
           const tags = [
             {
-              id: '4',
-              groupName: 'Tags',
               title: 'Improved',
               url: 'https://inkling.local/changelog/tag/improved/',
             },
           ].filter((item) => item.title.toLowerCase().includes(query))
 
-          const groups: SearchLinkGroup[] = []
+          const groups: SearchResult[] = []
 
           if (posts.length) {
-            groups.push({ label: 'Posts', key: 'posts', items: posts })
+            groups.push({ label: 'Posts', items: posts })
           }
           if (pages.length) {
-            groups.push({ label: 'Pages', key: 'pages', items: pages })
+            groups.push({ label: 'Pages', items: pages })
           }
           if (tags.length) {
-            groups.push({ label: 'Tags', key: 'tags', items: tags })
+            groups.push({ label: 'Tags', items: tags })
           }
 
           resolve(groups)
@@ -226,7 +179,7 @@ function getAllowedNodes({ editorType }: { editorType?: string }) {
 
 interface DemoEditorProps {
   editorType?: string
-  registerAPI: (api: object | null) => void
+  registerAPI: (api: ExternalControlAPI | null) => void
   cursorDidExitAtTop: () => void
   setWordCount: (count: number) => void
   setTKCount: (count: number) => void
@@ -300,12 +253,12 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
   }, [isMultiplayer, contentParam, defaultContent])
 
   const [title, setTitle] = useState(initialContent ? 'Meet the Inkling editor.' : '')
-  const [editorAPI, setEditorAPI] = useState<Record<string, unknown> | null>(null)
+  const [editorAPI, setEditorAPI] = useState<ExternalControlAPI | null>(null)
   const titleRef = React.useRef<{ focus: () => void } | null>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
 
-  const handleRegisterAPI = React.useCallback((api: object | null) => {
-    setEditorAPI(api as Record<string, unknown> | null)
+  const handleRegisterAPI = React.useCallback((api: ExternalControlAPI | null) => {
+    setEditorAPI(api)
   }, [])
 
   function openSidebar(view: 'json' | 'tree' = 'json') {
@@ -325,7 +278,10 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
   // which case we don't want to then "re-focus" the editor and cause unexpected
   // selection changes
   function maybeSkipFocusEditor(event: ReactMouseEvent<HTMLDivElement>) {
-    const target = event.target as HTMLElement
+    if (!(event.target instanceof Element)) {
+      return
+    }
+    const target = event.target
     const clickedOnDecorator =
       target.closest('[data-lexical-decorator]') !== null || target.hasAttribute('data-lexical-decorator')
     const clickedOnSlashMenu =
@@ -339,7 +295,11 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
   }
 
   function focusEditor(event: ReactMouseEvent<HTMLDivElement>) {
-    const target = event.target as HTMLElement
+    if (!(event.target instanceof Element)) {
+      skipFocusEditor.current = false
+      return
+    }
+    const target = event.target
     const clickedOnDecorator =
       target.closest('[data-lexical-decorator]') !== null || target.hasAttribute('data-lexical-decorator')
     const clickedOnSlashMenu =
@@ -348,13 +308,15 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
       target.closest('[data-inkling-portal]') !== null || target.hasAttribute('data-inkling-portal')
 
     if (!skipFocusEditor.current && editorAPI && !clickedOnDecorator && !clickedOnSlashMenu && !clickedOnPortal) {
-      const api = editorAPI as unknown as EditorAPI
-      const editor = api.editorInstance
+      const rootElement = editorAPI.editorInstance.getRootElement()
 
       // if a mousedown and subsequent mouseup occurs below the editor
       // canvas, focus the editor and put the cursor at the end of the document
-      const { bottom } = editor._rootElement.getBoundingClientRect()
-      if (event.pageY > bottom && event.clientY > bottom) {
+      if (
+        rootElement &&
+        event.pageY > rootElement.getBoundingClientRect().bottom &&
+        event.clientY > rootElement.getBoundingClientRect().bottom
+      ) {
         event.preventDefault()
 
         // we should always have a visible cursor when focusing
@@ -362,7 +324,7 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
         // section is a card
         let addLastParagraph = false
 
-        api.editorInstance.getEditorState().read(() => {
+        editorAPI.editorInstance.getEditorState().read(() => {
           const nodes = $getRoot().getChildren()
           const lastNode = nodes[nodes.length - 1]
 
@@ -372,11 +334,11 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
         })
 
         if (addLastParagraph) {
-          api.insertParagraphAtBottom()
+          editorAPI.insertParagraphAtBottom()
         }
 
         // Focus the editor
-        api.focusEditor({ position: 'bottom' })
+        editorAPI.focusEditor({ position: 'bottom' })
 
         // scroll to the bottom of the container
         if (containerRef.current) {
@@ -394,18 +356,17 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
     } else {
       searchParams.set('darkMode', 'true')
     }
-    setSearchParams(searchParams as unknown as URLSearchParamsInit)
+    setSearchParams(searchParams)
   }
 
   function saveContent() {
     if (!editorAPI) {
       return
     }
-    const api = editorAPI as unknown as EditorAPI
-    const serializedState = api.serialize()
+    const serializedState = editorAPI.serialize()
     const encodedContent = encodeURIComponent(serializedState)
     searchParams.set('content', encodedContent)
-    setSearchParams(searchParams as unknown as URLSearchParamsInit)
+    setSearchParams(searchParams)
   }
 
   React.useEffect(() => {
@@ -416,8 +377,7 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
     const handleFileDrop = (event: DragEvent) => {
       if (event.dataTransfer?.files.length && event.dataTransfer.files.length > 0 && editorAPI) {
         event.preventDefault()
-        const api = editorAPI as unknown as EditorAPI
-        api.insertFiles(Array.from(event.dataTransfer.files))
+        editorAPI.insertFiles(Array.from(event.dataTransfer.files))
       }
     }
 
@@ -442,7 +402,7 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
     stripeEnabled: searchParams.get('stripe') === 'false' ? false : defaultCardConfig.stripeEnabled,
   }
 
-  const fileUploader = { useFileUpload: useFileUpload({ isMultiplayer }), fileTypes } as FileUploader
+  const fileUploader: FileUploader = { useFileUpload: useFileUpload({ isMultiplayer }), fileTypes }
 
   // Sidebar uses useLexicalComposerContext so it must be inside a InklingComposer.
   // The email editor manages its own composer, so the sidebar is only available
@@ -462,7 +422,7 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
   const demoLayout = (children: React.ReactNode) => (
     <div
       className={`inkling-demo relative h-full grow ${darkMode ? 'dark' : ''}`}
-      style={isSidebarOpen ? ({ '--inkling-breakout-adjustment': '440px' } as React.CSSProperties) : {}}
+      style={isSidebarOpen ? { '--inkling-breakout-adjustment': '440px' } : {}}
     >
       {!isMultiplayer && !isEmailEditor && contentParam !== 'false' ? (
         <InitialContentToggle
@@ -541,7 +501,6 @@ const MemoizedDemoComposer = React.memo(DemoComposer)
 interface DemoAppProps {
   editorType?: string
   isMultiplayer?: boolean
-  introContent?: boolean
 }
 
 function DemoApp({ editorType, isMultiplayer }: DemoAppProps) {

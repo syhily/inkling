@@ -1,4 +1,4 @@
-import type { URLSearchParamsInit } from 'react-router-dom'
+import type { SetURLSearchParams } from 'react-router-dom'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { $createParagraphNode, $getRoot } from 'lexical'
@@ -11,10 +11,7 @@ interface InitialContentToggleProps {
   defaultContent: string
   setTitle: (title: string) => void
   searchParams: URLSearchParams
-  setSearchParams: (
-    nextInit: URLSearchParamsInit | ((prev: URLSearchParams) => URLSearchParamsInit),
-    navigateOpts?: { replace?: boolean; state?: unknown },
-  ) => void
+  setSearchParams: SetURLSearchParams
 }
 
 const InitialContentToggle = ({

@@ -1,12 +1,7 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { TreeView } from '@lexical/react/LexicalTreeView'
 
-interface TreeViewPluginProps {
-  isOpen?: boolean
-}
-
-const TreeViewPlugin = ({ isOpen }: TreeViewPluginProps) => {
-  void isOpen
+const TreeViewPlugin = () => {
   const [editor] = useLexicalComposerContext()
 
   return (

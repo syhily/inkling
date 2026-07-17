@@ -2,10 +2,12 @@ import type { ChangeEvent, KeyboardEvent, Ref } from 'react'
 
 import React from 'react'
 
+import type { ExternalControlAPI } from '@/'
+
 interface TitleTextBoxProps {
   title: string
   setTitle: (title: string) => void
-  editorAPI: Record<string, unknown> | null
+  editorAPI: ExternalControlAPI | null
 }
 
 export interface TitleTextBoxRef {
@@ -43,7 +45,7 @@ export const TitleTextBox = React.forwardRef<TitleTextBoxRef, TitleTextBoxProps>
       }
 
       const { key } = event
-      const { value, selectionStart } = event.target as HTMLTextAreaElement
+      const { value, selectionStart } = event.currentTarget
 
       const couldLeaveTitle = !value || selectionStart === value.length
       const arrowLeavingTitle = ['ArrowDown', 'ArrowRight'].includes(key) && couldLeaveTitle
@@ -51,11 +53,11 @@ export const TitleTextBox = React.forwardRef<TitleTextBoxRef, TitleTextBoxProps>
       if (key === 'Enter' || key === 'Tab' || arrowLeavingTitle) {
         event.preventDefault()
 
-        const editorIsEmpty = (editorAPI.editorIsEmpty as () => boolean)()
+        const editorIsEmpty = editorAPI.editorIsEmpty() ?? false
         if (key === 'Enter' && !editorIsEmpty) {
-          ;(editorAPI.insertParagraphAtTop as (options: { focus: boolean }) => void)({ focus: true })
+          editorAPI.insertParagraphAtTop({ focus: true })
         } else {
-          ;(editorAPI.focusEditor as (options: { position: string }) => void)({ position: 'top' })
+          editorAPI.focusEditor({ position: 'top' })
         }
       }
     }
