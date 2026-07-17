@@ -48,7 +48,6 @@ export function SubscribeForm({
         defaultValue={value}
         placeholder={placeholder}
         tabIndex={disabled ? -1 : undefined}
-        readOnly
         onBlur={onBlur}
         onChange={onChangeWrapper}
         onFocus={onFocus}

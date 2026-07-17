@@ -45,7 +45,7 @@ export function LinkActionToolbarWithSearch({ anchorElem, href, onClose }: LinkA
 
       const editorElem = anchorElem.parentElement
 
-      if (!rangeRect || !editorElem || !toolbarElement || !scrollContainer) {
+      if (!rangeRect || !editorElem) {
         return
       }
 
@@ -83,9 +83,7 @@ export function LinkActionToolbarWithSearch({ anchorElem, href, onClose }: LinkA
     const onResize = () => updateLinkToolbarPosition()
     const onScroll = () => updateLinkToolbarPosition()
     window.addEventListener('resize', onResize)
-    if (scrollElement) {
-      scrollElement.addEventListener('scroll', onScroll)
-    }
+    scrollElement.addEventListener('scroll', onScroll)
 
     const toolbarElement = linkToolbarRef.current
     const toolbarMutationObserver = new MutationObserver(() => updateLinkToolbarPosition())
@@ -95,9 +93,7 @@ export function LinkActionToolbarWithSearch({ anchorElem, href, onClose }: LinkA
 
     return () => {
       window.removeEventListener('resize', onResize)
-      if (scrollElement) {
-        scrollElement.removeEventListener('scroll', onScroll)
-      }
+      scrollElement.removeEventListener('scroll', onScroll)
       if (toolbarElement) {
         toolbarMutationObserver.disconnect()
       }

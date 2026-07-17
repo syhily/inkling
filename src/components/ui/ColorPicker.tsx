@@ -205,7 +205,7 @@ interface ColorIndicatorProps {
   eyedropper?: boolean
   hasTransparentOption?: boolean
   children?: ReactNode
-  showChildren?: ReactNode
+  showChildren?: boolean
 }
 
 export function ColorIndicator({
@@ -305,7 +305,7 @@ export function ColorIndicator({
             <ColorPicker
               eyedropper={eyedropper}
               hasTransparentOption={hasTransparentOption}
-              value={value ?? ''}
+              value={value}
               onChange={handleColorPickerChange}
             />
           )}

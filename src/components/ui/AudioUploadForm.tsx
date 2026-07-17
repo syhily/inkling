@@ -1,26 +1,18 @@
-import type { RefObject } from 'react'
+import type React from 'react'
 
 export interface AudioUploadFormProps {
   onFileChange?: React.ChangeEventHandler<HTMLInputElement>
-  fileInputRef?: RefObject<HTMLInputElement | null> | ((element: HTMLInputElement | null) => void)
+  fileInputRef?: React.Ref<HTMLInputElement>
   mimeTypes?: string[]
   filePicker?: () => void
-  [key: string]: unknown
 }
 
 export function AudioUploadForm({ onFileChange, fileInputRef, mimeTypes = ['audio/*'] }: AudioUploadFormProps) {
-  const accept = mimeTypes?.join(',') ?? ''
+  const accept = mimeTypes.join(',')
 
   return (
     <form>
-      <input
-        ref={fileInputRef as RefObject<HTMLInputElement>}
-        accept={accept}
-        hidden={true}
-        name="audio-input"
-        type="file"
-        onChange={onFileChange}
-      />
+      <input ref={fileInputRef} accept={accept} hidden={true} name="audio-input" type="file" onChange={onFileChange} />
     </form>
   )
 }

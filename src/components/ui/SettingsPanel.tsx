@@ -457,7 +457,7 @@ interface ColorPickerSettingProps {
   hasTransparentOption?: boolean
   dataTestId?: string
   children?: React.ReactNode
-  showChildren?: React.ReactNode
+  showChildren?: boolean
 }
 
 export function ColorPickerSetting({

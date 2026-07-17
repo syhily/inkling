@@ -1,7 +1,9 @@
 import { Picker } from 'emoji-mart'
 import React, { useEffect, useRef } from 'react'
 
-interface EmojiMartInstance {
+// the runtime instance is the picker's custom element, which also exposes an
+// update() method (emoji-mart ships no usable types)
+interface EmojiMartInstance extends HTMLElement {
   update: (props: Record<string, unknown>) => void
 }
 
@@ -21,9 +23,9 @@ export default function EmojiPicker({
     setInstanceRef?.(newInstance)
   }
 
-  if (instance.current) {
-    instance.current.update(props)
-  }
+  useEffect(() => {
+    instance.current?.update(props)
+  })
 
   useEffect(() => {
     // Use the registered custom element class from the registry instead of

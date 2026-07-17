@@ -70,7 +70,7 @@ export function MediaUploader({
   }
 
   const progressStyle = {
-    width: `${progress?.toFixed(0)}%`,
+    width: `${progress?.toFixed(0) ?? '0'}%`,
   }
 
   const onRemove = (e: React.MouseEvent) => {

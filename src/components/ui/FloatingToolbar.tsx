@@ -79,15 +79,11 @@ export default function FloatingToolbar({
     const onResize = () => updateToolbarPosition()
     const onScroll = () => updateToolbarPosition()
     window.addEventListener('resize', onResize)
-    if (scrollElement) {
-      scrollElement.addEventListener('scroll', onScroll)
-    }
+    scrollElement.addEventListener('scroll', onScroll)
 
     return () => {
       window.removeEventListener('resize', onResize)
-      if (scrollElement) {
-        scrollElement.removeEventListener('scroll', onScroll)
-      }
+      scrollElement.removeEventListener('scroll', onScroll)
     }
   }, [anchorElem, updateToolbarPosition])
 
@@ -98,7 +94,7 @@ export default function FloatingToolbar({
   return (
     <Portal>
       <div
-        ref={toolbarRef as React.RefObject<HTMLDivElement>}
+        ref={toolbarRef}
         className="not-inkling-prose fixed z-[10000]"
         style={{ opacity: 0, transition: 'opacity 100ms ease' }}
         data-inkling-floating-toolbar

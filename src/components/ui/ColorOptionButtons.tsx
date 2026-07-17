@@ -107,7 +107,7 @@ interface ColorButtonProps {
 export function ColorButton({ onClick, label, name, color, selectedName }: ColorButtonProps) {
   const isActive = name === selectedName
 
-  const { handleMousedown, handleClick } = usePreviousFocus(onClick as (name?: string) => void, name)
+  const { handleMousedown, handleClick } = usePreviousFocus(() => onClick(name), name)
   return (
     <li className="mb-0">
       <button
@@ -118,7 +118,7 @@ export function ColorButton({ onClick, label, name, color, selectedName }: Color
         onClick={handleClick}
         onMouseDown={handleMousedown}
       >
-        <span className={`${color} size-[1.8rem] rounded-full border`}></span>
+        <span className={`${color ?? ''} size-[1.8rem] rounded-full border`}></span>
         <Tooltip label={label} />
       </button>
     </li>

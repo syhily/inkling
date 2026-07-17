@@ -18,7 +18,7 @@ export function Slider({
   return (
     // docs at https://zillow.github.io/react-slider/
     <ReactSlider
-      className="classname h-3 w-full rounded-full py-[5px]"
+      className="h-3 w-full rounded-full py-[5px]"
       data-testid={dataTestId}
       defaultValue={defaultValue}
       markClassName="mark-class-name"

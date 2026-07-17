@@ -2,11 +2,7 @@ import React, { useRef, useState } from 'react'
 
 import { Dropdown } from '@/components/ui/SnippetInput/Dropdown'
 import { Input } from '@/components/ui/SnippetInput/Input'
-
-interface Snippet {
-  name: string
-  value: string
-}
+import { type SnippetItem } from '@/context/InklingHostIntegrationContext'
 
 interface SnippetInputProps {
   value?: string
@@ -14,7 +10,7 @@ interface SnippetInputProps {
   onCreateSnippet?: () => void
   onUpdateSnippet?: (name: string) => void
   onClose?: () => void
-  snippets?: Snippet[]
+  snippets?: SnippetItem[]
 }
 
 export function SnippetInput({
@@ -28,7 +24,7 @@ export function SnippetInput({
   const snippetRef = useRef<HTMLDivElement | null>(null)
   const [isCreateButtonActive, setIsCreateButtonActive] = useState(true)
   const [activeMenuItem, setActiveMenuItem] = useState(-1)
-  const [suggestedList, setSuggestedList] = useState<Snippet[]>([])
+  const [suggestedList, setSuggestedList] = useState<SnippetItem[]>([])
 
   // default to first snippet or create new button
   React.useEffect(() => {
@@ -46,7 +42,8 @@ export function SnippetInput({
   // close snippets menu if clicked outside the input/dropdown
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (snippetRef.current && !snippetRef.current.contains(event.target as Node)) {
+      const target = event.target
+      if (snippetRef.current && target instanceof Node && !snippetRef.current.contains(target)) {
         onClose?.()
       }
     }

@@ -29,7 +29,8 @@ export function LinkInput({ href, update, cancel }: LinkInputProps) {
   // close it when we detect a click outside
   const closeOnClickOutside = React.useCallback(
     (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target
+      if (containerRef.current && target instanceof Node && !containerRef.current.contains(target)) {
         cancel()
       }
     },
@@ -76,14 +77,14 @@ export function LinkInput({ href, update, cancel }: LinkInputProps) {
         onInput={(e: React.InputEvent<HTMLInputElement>) => {
           setHref(e.currentTarget.value)
         }}
-        onKeyDown={(e: React.KeyboardEvent) => {
+        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
           if (e.key === 'Enter') {
             // prevent Enter from triggering in the editor and removing text
             // update the link value in the editor. Read the live input value so
             // the last keystroke is always captured even if React state updates
             // are slightly behind the native input value.
             e.preventDefault()
-            update((e.target as HTMLInputElement).value || '')
+            update(e.currentTarget.value || '')
             return
           }
         }}

@@ -64,12 +64,8 @@ export function MultiSelectDropdown({
   const [isFocused, setIsFocused] = React.useState<boolean>(false)
   const inputRef = React.useRef<HTMLInputElement | null>(null)
 
-  const handleOpen = (event?: React.MouseEvent): void => {
+  const handleOpen = (): void => {
     setOpen(!open)
-
-    if (!open && event) {
-      ;(event.target as HTMLElement).focus()
-    }
   }
 
   const handleBlur = (): void => {
@@ -84,7 +80,7 @@ export function MultiSelectDropdown({
   }
 
   const handleSelect = (item: MultiSelectItem): void => {
-    if (!item.name || items?.includes(item.name)) {
+    if (!item.name || items.includes(item.name)) {
       return
     }
 

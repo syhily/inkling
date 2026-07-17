@@ -25,22 +25,24 @@ import { getSelectedNode } from '@/utils/getSelectedNode'
 import { isNestedEditor } from '@/utils/lexical-internals'
 import { altOrOption, ctrlOrCmdSymbol, ctrlOrSymbol } from '@/utils/shortcutSymbols'
 
-const blockTypeToBlockName: Record<string, string> = {
-  bullet: 'Bulleted List',
-  check: 'Check List',
-  code: 'Code Block',
-  h1: 'Heading 1',
-  h2: 'Heading 2',
-  h3: 'Heading 3',
-  h4: 'Heading 4',
-  h5: 'Heading 5',
-  h6: 'Heading 6',
-  number: 'Numbered List',
-  paragraph: 'Normal',
-  quote: 'Quote',
-  'extended-quote': 'Quote',
-  aside: 'Aside',
-}
+// the block types the toolbar tracks — only membership is read, so this is a
+// Set, not a label map
+const blockTypeNames: ReadonlySet<string> = new Set([
+  'bullet',
+  'check',
+  'code',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'number',
+  'paragraph',
+  'quote',
+  'extended-quote',
+  'aside',
+])
 
 function quoteIcon(blockType = ''): ToolbarIconName {
   if (blockType.endsWith('quote')) {
@@ -124,7 +126,7 @@ export default function FormatToolbar({
         } else {
           const type = $isHeadingNode(element) ? element.getTag() : element.getType()
 
-          if (type in blockTypeToBlockName) {
+          if (blockTypeNames.has(type)) {
             setBlockType(type)
           }
         }
@@ -169,9 +171,9 @@ export default function FormatToolbar({
       const selection = $getSelection()
 
       if ($isRangeSelection(selection)) {
-        if (blockType?.endsWith('quote')) {
+        if (blockType.endsWith('quote')) {
           $setBlocksType(selection, () => $createAsideNode())
-        } else if (blockType?.endsWith?.('aside')) {
+        } else if (blockType.endsWith('aside')) {
           $setBlocksType(selection, () => $createParagraphNode())
         } else {
           $setBlocksType(selection, () => $createQuoteNode())
@@ -222,7 +224,7 @@ export default function FormatToolbar({
         data-inkling-toolbar-button="quote"
         hide={hideQuotes}
         icon={quoteIcon(blockType)}
-        isActive={blockType.endsWith?.('quote') || blockType.endsWith?.('aside')}
+        isActive={blockType.endsWith('quote') || blockType.endsWith('aside')}
         label="Quote"
         shortcutKeys={[ctrlOrSymbol(), 'Q']}
         onClick={formatQuote}
