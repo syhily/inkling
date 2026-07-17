@@ -28,8 +28,8 @@ describe('VideoNode', () => {
   })
 
   it('exposes a static cardMenu entry', () => {
-    expect(VideoNode.cardMenu[0].label).toBe('Video')
-    expect(VideoNode.cardMenu[0].insertCommand).toBe(INSERT_VIDEO_COMMAND)
+    expect(VideoNode.cardMenu?.[0]?.label).toBe('Video')
+    expect(VideoNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_VIDEO_COMMAND)
   })
 
   it('resolves the video drag icon from the card menu', () => {
@@ -73,6 +73,9 @@ describe('VideoNode', () => {
       )
 
       const json = node.exportJSON()
+      if (!('caption' in json)) {
+        throw new Error('Expected serialized video to include caption')
+      }
       expect(json.caption).toContain('Hello caption')
     })
   })

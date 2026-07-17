@@ -24,7 +24,9 @@ function createTestEditor(): LexicalEditor {
   return createEditor({ namespace: 'test', nodes: [ButtonNode], onError: () => {} })
 }
 
-function createCardContext(overrides: Partial<React.ContextType<typeof CardContext>> = {}) {
+function createCardContext(
+  overrides: Partial<React.ContextType<typeof CardContext>> = {},
+): React.ContextType<typeof CardContext> {
   return {
     isSelected: true,
     isEditing: true,
@@ -78,7 +80,7 @@ describe('ButtonNodeComponent', () => {
   beforeEach(async () => {
     editor = createTestEditor()
     const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
   })
 
   it('renders with aligned button card props', async () => {

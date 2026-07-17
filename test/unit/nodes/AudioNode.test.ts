@@ -28,8 +28,8 @@ describe('AudioNode', () => {
   })
 
   it('exposes a static cardMenu entry', () => {
-    expect(AudioNode.cardMenu[0].label).toBe('Audio')
-    expect(AudioNode.cardMenu[0].insertCommand).toBe(INSERT_AUDIO_COMMAND)
+    expect(AudioNode.cardMenu?.[0]?.label).toBe('Audio')
+    expect(AudioNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_AUDIO_COMMAND)
   })
 
   it('resolves the audio drag icon from the card menu', () => {

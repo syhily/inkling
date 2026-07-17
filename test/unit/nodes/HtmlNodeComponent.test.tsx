@@ -19,7 +19,9 @@ function createTestEditor(): LexicalEditor {
   return createEditor({ namespace: 'test', nodes: [HtmlNode], onError: () => {} })
 }
 
-function createCardContext(overrides: Partial<React.ContextType<typeof CardContext>> = {}) {
+function createCardContext(
+  overrides: Partial<React.ContextType<typeof CardContext>> = {},
+): React.ContextType<typeof CardContext> {
   return {
     isSelected: true,
     isEditing: false,
@@ -69,7 +71,7 @@ describe('HtmlNodeComponent', () => {
   beforeEach(async () => {
     editor = createTestEditor()
     const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
   })
 
   it('renders html and guards against a null node', async () => {

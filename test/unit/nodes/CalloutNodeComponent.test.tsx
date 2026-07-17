@@ -19,10 +19,12 @@ function createLexicalComposerContext(editor: LexicalEditor): [LexicalEditor, { 
 }
 
 function createCollaborationContext() {
-  return { isCollabActive: false, yjsDocMap: new Map() }
+  return { color: '#000000', isCollabActive: false, name: 'test', yjsDocMap: new Map() }
 }
 
-function createCardContext(overrides: Partial<React.ContextType<typeof CardContext>> = {}) {
+function createCardContext(
+  overrides: Partial<React.ContextType<typeof CardContext>> = {},
+): React.ContextType<typeof CardContext> {
   return {
     isSelected: true,
     isEditing: false,

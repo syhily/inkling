@@ -21,7 +21,10 @@ function createTestEditor(): LexicalEditor {
   return createEditor({ namespace: 'test', nodes: [CodeBlockNode], onError: () => {} })
 }
 
-function createCardContext(setEditing: () => void, overrides: Record<string, unknown> = {}) {
+function createCardContext(
+  setEditing: () => void,
+  overrides: Partial<React.ContextType<typeof CardContext>> = {},
+): React.ContextType<typeof CardContext> {
   return {
     isSelected: true,
     isEditing: false,
@@ -85,7 +88,7 @@ describe('CodeBlockNodeComponent', () => {
   beforeEach(async () => {
     editor = createTestEditor()
     const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
   })
 
   it('enters edit mode when the toolbar Edit button is clicked', async () => {

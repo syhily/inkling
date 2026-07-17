@@ -28,7 +28,9 @@ function createTestEditor(): LexicalEditor {
   return editor
 }
 
-function createCardContext(overrides: Partial<React.ContextType<typeof CardContext>> = {}) {
+function createCardContext(
+  overrides: Partial<React.ContextType<typeof CardContext>> = {},
+): React.ContextType<typeof CardContext> {
   return {
     isSelected: true,
     isEditing: false,
@@ -82,7 +84,7 @@ describe('BookmarkNodeComponent', () => {
   beforeEach(async () => {
     editor = createTestEditor()
     const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
   })
 
   it('pastes as link when async metadata fetch fails on init', async () => {
@@ -111,7 +113,7 @@ describe('BookmarkNodeComponent', () => {
         const root = $getRoot()
         const paragraph = root.getFirstChild()
         expect($isParagraphNode(paragraph)).toBe(true)
-        const link = paragraph?.getFirstChild()
+        const link = $isParagraphNode(paragraph) ? paragraph.getFirstChild() : null
         expect(link?.getType()).toBe('link')
         expect(link?.getTextContent()).toBe('https://example.com')
       })

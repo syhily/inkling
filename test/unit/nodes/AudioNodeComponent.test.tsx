@@ -4,7 +4,11 @@ import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, {
+  type CardConfig,
+  type FileUploader,
+  type InklingHostIntegrationContextValue,
+} from '@/context/InklingHostIntegrationContext'
 import { AudioNode, $createAudioNode } from '@/nodes/AudioNode'
 import { AudioNodeComponent } from '@/nodes/AudioNodeComponent'
 import { openFileSelection } from '@/utils/openFileSelection'
@@ -27,7 +31,9 @@ function flushMacrotask(): Promise<void> {
   })
 }
 
-function createCardContext(overrides: Partial<React.ContextType<typeof CardContext>> = {}) {
+function createCardContext(
+  overrides: Partial<React.ContextType<typeof CardContext>> = {},
+): React.ContextType<typeof CardContext> {
   return {
     isSelected: true,
     isEditing: false,
@@ -46,10 +52,10 @@ function createComposerContext({
   isLoading = false,
   cardConfig = {},
 }: {
-  upload?: ReturnType<typeof vi.fn>
+  upload?: ReturnType<FileUploader['useFileUpload']>['upload']
   isLoading?: boolean
-  cardConfig?: Record<string, unknown>
-} = {}) {
+  cardConfig?: CardConfig
+} = {}): InklingHostIntegrationContextValue {
   return {
     fileUploader: {
       useFileUpload: () => ({
@@ -60,9 +66,6 @@ function createComposerContext({
       fileTypes: { audio: { mimeTypes: ['audio/mpeg'] }, image: { mimeTypes: ['image/png'] } },
     },
     cardConfig,
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
     onError: vi.fn(),
   }
 }
@@ -107,7 +110,7 @@ describe('AudioNodeComponent', () => {
     vi.clearAllMocks()
     editor = createTestEditor()
     const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
     createObjectURLSpy = vi.spyOn(globalThis.URL, 'createObjectURL').mockReturnValue('blob:audio-preview')
     revokeObjectURLSpy = vi.spyOn(globalThis.URL, 'revokeObjectURL').mockImplementation(() => {})
   })
@@ -120,7 +123,7 @@ describe('AudioNodeComponent', () => {
     src?: string
     triggerFileDialog?: boolean
     initialFile?: File
-    upload?: ReturnType<typeof vi.fn>
+    upload?: ReturnType<FileUploader['useFileUpload']>['upload']
     isLoading?: boolean
   }
 

@@ -22,7 +22,7 @@ describe('BookmarkNode', () => {
 
   it('matches node with $isBookmarkNode', async () => {
     await updateEditor(editor, () => {
-      const bookmarkNode = $createBookmarkNode()
+      const bookmarkNode = $createBookmarkNode({})
       expect($isBookmarkNode(bookmarkNode)).toBe(true)
     })
   })

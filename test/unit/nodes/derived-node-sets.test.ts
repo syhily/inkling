@@ -14,24 +14,19 @@ import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import EMAIL_EDITOR_NODES from '@/nodes/EmailEditorNodes'
 import EMAIL_NODES from '@/nodes/EmailNodes'
 
-interface NodeClassLike {
-  getType: () => string
-}
-
-interface NodeReplacementLike {
-  replace: NodeClassLike
-}
-
 // Node-set entries are either node classes or Lexical replacement descriptors
 // ({ replace, with }). Pin both, marking replacements so the two forms can
 // never be confused for each other.
 function nodeSetSnapshot(nodes: readonly unknown[]): string[] {
   return nodes.map((entry) => {
-    if (typeof entry === 'function') {
-      return (entry as NodeClassLike).getType()
+    if (typeof entry === 'function' && 'getType' in entry && typeof entry.getType === 'function') {
+      return entry.getType()
     }
     if (entry && typeof entry === 'object' && 'replace' in entry) {
-      return `replace:${(entry as NodeReplacementLike).replace.getType()}`
+      const { replace } = entry
+      if (typeof replace === 'function' && 'getType' in replace && typeof replace.getType === 'function') {
+        return `replace:${replace.getType()}`
+      }
     }
     return 'undefined'
   })
@@ -40,7 +35,18 @@ function nodeSetSnapshot(nodes: readonly unknown[]): string[] {
 // A card transformer is pinned by the node types it depends on (exactly one
 // card node class per transformer today).
 function transformerSnapshot(transformers: readonly Transformer[]): string[] {
-  return transformers.map((transformer) => transformer.dependencies.map((nodeClass) => nodeClass.getType()).join(','))
+  return transformers.map((transformer) => {
+    if (!('dependencies' in transformer) || !Array.isArray(transformer.dependencies)) {
+      return ''
+    }
+    return transformer.dependencies
+      .map((nodeClass) =>
+        typeof nodeClass === 'function' && 'getType' in nodeClass && typeof nodeClass.getType === 'function'
+          ? nodeClass.getType()
+          : '',
+      )
+      .join(',')
+  })
 }
 
 // Plan 039 node-set diff guard. These literals capture the pre-refactor

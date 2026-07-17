@@ -2,6 +2,8 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import type { GalleryImage } from '@/types/gallery'
+
 import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import {
   GalleryNode,
@@ -35,8 +37,8 @@ describe('GalleryNode', () => {
   })
 
   it('exposes a static cardMenu entry', () => {
-    expect(GalleryNode.cardMenu[0].label).toBe('Gallery')
-    expect(GalleryNode.cardMenu[0].insertCommand).toBe(INSERT_GALLERY_COMMAND)
+    expect(GalleryNode.cardMenu?.[0]?.label).toBe('Gallery')
+    expect(GalleryNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_GALLERY_COMMAND)
   })
 
   it('resolves the gallery drag icon from the card menu', () => {
@@ -73,13 +75,16 @@ describe('GalleryNode', () => {
       )
 
       const json = node.exportJSON()
+      if (!('caption' in json)) {
+        throw new Error('Expected serialized gallery to include caption')
+      }
       expect(json.caption).toContain('Hello caption')
     })
   })
 
   it('recalculates image rows', () => {
-    const images = [{ src: '1' }, { src: '2' }, { src: '3' }, { src: '4' }]
-    recalculateImageRows(images as import('@/types/gallery').GalleryImage[])
+    const images: GalleryImage[] = [{ src: '1' }, { src: '2' }, { src: '3' }, { src: '4' }]
+    recalculateImageRows(images)
 
     expect(images[0].row).toBe(0)
     expect(images[1].row).toBe(0)

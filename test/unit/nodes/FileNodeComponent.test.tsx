@@ -4,7 +4,11 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, {
+  type CardConfig,
+  type FileUploader,
+  type InklingHostIntegrationContextValue,
+} from '@/context/InklingHostIntegrationContext'
 import { FileNode, $createFileNode } from '@/nodes/FileNode'
 import FileNodeComponent from '@/nodes/FileNodeComponent'
 import { openFileSelection } from '@/utils/openFileSelection'
@@ -27,7 +31,9 @@ function flushMacrotask(): Promise<void> {
   })
 }
 
-function createCardContext(overrides: Partial<React.ContextType<typeof CardContext>> = {}) {
+function createCardContext(
+  overrides: Partial<React.ContextType<typeof CardContext>> = {},
+): React.ContextType<typeof CardContext> {
   return {
     isSelected: true,
     isEditing: false,
@@ -42,9 +48,9 @@ function createCardContext(overrides: Partial<React.ContextType<typeof CardConte
 }
 
 function createComposerContext(
-  upload: ReturnType<typeof vi.fn> = vi.fn(() => Promise.resolve(undefined)),
-  cardConfig: Record<string, unknown> = {},
-) {
+  upload: ReturnType<FileUploader['useFileUpload']>['upload'] = vi.fn(() => Promise.resolve(undefined)),
+  cardConfig: CardConfig = {},
+): InklingHostIntegrationContextValue {
   return {
     fileUploader: {
       useFileUpload: () => ({
@@ -55,9 +61,6 @@ function createComposerContext(
       fileTypes: { file: { mimeTypes: ['application/pdf'] } },
     },
     cardConfig,
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
     onError: vi.fn(),
   }
 }
@@ -88,14 +91,14 @@ describe('FileNodeComponent', () => {
     vi.clearAllMocks()
     editor = createTestEditor()
     const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
   })
 
   interface RenderOptions {
     fileSrc?: string
     triggerFileDialog?: boolean
     initialFile?: File
-    upload?: ReturnType<typeof vi.fn>
+    upload?: ReturnType<FileUploader['useFileUpload']>['upload']
   }
 
   function renderComponent(nodeKey: NodeKey, options: RenderOptions = {}) {

@@ -53,6 +53,9 @@ describe('ImageNode', () => {
     await updateEditor(editor, () => {
       const imageNode = $createImageNode({ src: '/image.png', caption: 'A caption' })
       const json = imageNode.exportJSON()
+      if (!('caption' in json)) {
+        throw new Error('Expected serialized image to include caption')
+      }
       expect(json.caption).toBe('A caption')
     })
   })
@@ -76,24 +79,27 @@ describe('ImageNode', () => {
       )
 
       const json = imageNode.exportJSON()
+      if (!('caption' in json)) {
+        throw new Error('Expected serialized image to include caption')
+      }
       expect(json.caption).toContain('Hello caption')
     })
   })
 
   it('exposes a static cardMenu entry', () => {
-    expect(ImageNode.cardMenu[0].label).toBe('Image')
-    expect(ImageNode.cardMenu[0].insertCommand).toBe(INSERT_IMAGE_COMMAND)
+    expect(ImageNode.cardMenu?.[0]?.label).toBe('Image')
+    expect(ImageNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_IMAGE_COMMAND)
   })
 
   it('resolves the drag icon from the first cardMenu entry (Image, not GIF)', () => {
-    expect(getCardDragIcon('image')).toBe(ImageNode.cardMenu[0].Icon)
+    expect(getCardDragIcon('image')).toBe(ImageNode.cardMenu?.[0]?.Icon)
     expect(typeof getCardDragIcon('image')).toBe('function')
   })
 
   it('creates a div DOM element', async () => {
     await updateEditor(editor, () => {
       const imageNode = $createImageNode({ src: '/image.png' })
-      const element = imageNode.createDOM()
+      const element = imageNode.createDOM(editor._config, editor)
       expect(element.tagName).toBe('DIV')
     })
   })

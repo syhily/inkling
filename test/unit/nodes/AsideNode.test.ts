@@ -1,5 +1,5 @@
 import { createHeadlessEditor } from '@lexical/headless'
-import { $createParagraphNode, $getRoot, type LexicalEditor } from 'lexical'
+import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { AsideNode, $createAsideNode, $isAsideNode } from '@/nodes/AsideNode'
@@ -29,7 +29,7 @@ describe('AsideNode', () => {
   it('creates an aside DOM element with the theme class', async () => {
     await updateEditor(editor, () => {
       const asideNode = $createAsideNode()
-      const element = asideNode.createDOM({ theme: { aside: 'inkling-aside' } } as import('lexical').EditorConfig)
+      const element = asideNode.createDOM({ ...editor._config, theme: { aside: 'inkling-aside' } })
 
       expect(element.tagName).toBe('ASIDE')
       expect(element.className).toBe('inkling-aside')
@@ -51,7 +51,7 @@ describe('AsideNode', () => {
     await updateEditor(editor, () => {
       const asideNode = $createAsideNode()
       const paragraph = $createParagraphNode()
-      paragraph.append('Hello')
+      paragraph.append($createTextNode('Hello'))
       asideNode.append(paragraph)
       $getRoot().append(asideNode)
 

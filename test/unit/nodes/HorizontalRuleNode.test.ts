@@ -33,8 +33,8 @@ describe('HorizontalRuleNode', () => {
   })
 
   it('exposes a static cardMenu entry', () => {
-    expect(HorizontalRuleNode.cardMenu[0].label).toBe('Divider')
-    expect(HorizontalRuleNode.cardMenu[0].insertCommand).toBe(INSERT_HORIZONTAL_RULE_COMMAND)
+    expect(HorizontalRuleNode.cardMenu?.[0]?.label).toBe('Divider')
+    expect(HorizontalRuleNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_HORIZONTAL_RULE_COMMAND)
   })
 
   it('resolves the divider drag icon from the card menu', () => {

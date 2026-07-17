@@ -71,6 +71,9 @@ describe('CodeBlockNode', () => {
       )
 
       const json = node.exportJSON()
+      if (!('caption' in json)) {
+        throw new Error('Expected serialized code block to include caption')
+      }
       expect(json.caption).toContain('Hello caption')
     })
   })

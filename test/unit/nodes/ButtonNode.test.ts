@@ -29,8 +29,8 @@ describe('ButtonNode', () => {
   })
 
   it('exposes a static cardMenu entry', () => {
-    expect(ButtonNode.cardMenu[0].label).toBe('Button')
-    expect(ButtonNode.cardMenu[0].insertCommand).toBe(INSERT_BUTTON_COMMAND)
+    expect(ButtonNode.cardMenu?.[0]?.label).toBe('Button')
+    expect(ButtonNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_BUTTON_COMMAND)
   })
 
   it('resolves the button drag icon from the card menu', () => {
@@ -50,7 +50,7 @@ describe('ButtonNode', () => {
         text: '<p>Click me</p>',
       })
 
-      expect(node.buttonText).toBe('Click me')
+      expect($isButtonNode(node) && node.buttonText).toBe('Click me')
     })
   })
 

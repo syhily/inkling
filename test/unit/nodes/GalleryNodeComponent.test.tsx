@@ -6,7 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GalleryImage } from '@/types/gallery'
 
 import CardContext from '@/context/CardContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, {
+  type CardConfig,
+  type FileUploader,
+  type InklingHostIntegrationContextValue,
+} from '@/context/InklingHostIntegrationContext'
 import { GalleryNode } from '@/nodes/GalleryNode'
 import { GalleryNodeComponent } from '@/nodes/GalleryNodeComponent'
 import { getImageDimensions } from '@/utils/getImageDimensions'
@@ -27,7 +31,9 @@ function createTestEditor(): LexicalEditor {
   return createEditor({ namespace: 'test', nodes: [GalleryNode], onError: () => {} })
 }
 
-function createCardContext(overrides: Partial<React.ContextType<typeof CardContext>> = {}) {
+function createCardContext(
+  overrides: Partial<React.ContextType<typeof CardContext>> = {},
+): React.ContextType<typeof CardContext> {
   return {
     isSelected: true,
     isEditing: false,
@@ -42,9 +48,9 @@ function createCardContext(overrides: Partial<React.ContextType<typeof CardConte
 }
 
 function createComposerContext(
-  upload: ReturnType<typeof vi.fn> = vi.fn(() => Promise.resolve(undefined)),
-  cardConfig: Record<string, unknown> = {},
-) {
+  upload: ReturnType<FileUploader['useFileUpload']>['upload'] = vi.fn(() => Promise.resolve(undefined)),
+  cardConfig: CardConfig = {},
+): InklingHostIntegrationContextValue {
   return {
     fileUploader: {
       useFileUpload: () => ({
@@ -55,9 +61,6 @@ function createComposerContext(
       fileTypes: { image: { mimeTypes: ['image/png'] } },
     },
     cardConfig,
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
     onError: vi.fn(),
   }
 }
@@ -91,7 +94,7 @@ describe('GalleryNodeComponent', () => {
     vi.clearAllMocks()
     editor = createTestEditor()
     const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
     vi.mocked(getImageDimensions).mockResolvedValue({ width: 100, height: 100 })
     previewCount = 0
     vi.spyOn(globalThis.URL, 'createObjectURL').mockImplementation(() => {
@@ -105,7 +108,7 @@ describe('GalleryNodeComponent', () => {
     vi.restoreAllMocks()
   })
 
-  function renderComponent(nodeKey: NodeKey, upload?: ReturnType<typeof vi.fn>) {
+  function renderComponent(nodeKey: NodeKey, upload?: ReturnType<FileUploader['useFileUpload']>['upload']) {
     const composerValue = createComposerContext(upload)
     const cardValue = createCardContext()
     return render(

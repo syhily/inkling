@@ -22,14 +22,14 @@ describe('CalloutNode', () => {
 
   it('matches node with $isCalloutNode', async () => {
     await updateEditor(editor, () => {
-      const calloutNode = $createCalloutNode()
+      const calloutNode = $createCalloutNode({})
       expect($isCalloutNode(calloutNode)).toBe(true)
     })
   })
 
   it('exposes a static cardMenu entry', () => {
-    expect(CalloutNode.cardMenu[0].label).toBe('Callout')
-    expect(CalloutNode.cardMenu[0].insertCommand).toBe(INSERT_CALLOUT_COMMAND)
+    expect(CalloutNode.cardMenu?.[0]?.label).toBe('Callout')
+    expect(CalloutNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_CALLOUT_COMMAND)
   })
 
   it('resolves the callout drag icon from the card menu', () => {

@@ -28,8 +28,8 @@ describe('HtmlNode', () => {
   })
 
   it('exposes a static cardMenu entry', () => {
-    expect(HtmlNode.cardMenu[0].label).toBe('HTML')
-    expect(HtmlNode.cardMenu[0].insertCommand).toBe(INSERT_HTML_COMMAND)
+    expect(HtmlNode.cardMenu?.[0]?.label).toBe('HTML')
+    expect(HtmlNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_HTML_COMMAND)
   })
 
   it('resolves the html drag icon from the card menu', () => {

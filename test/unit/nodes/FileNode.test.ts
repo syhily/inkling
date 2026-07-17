@@ -28,8 +28,8 @@ describe('FileNode', () => {
   })
 
   it('exposes a static cardMenu entry', () => {
-    expect(FileNode.cardMenu[0].label).toBe('File')
-    expect(FileNode.cardMenu[0].insertCommand).toBe(INSERT_FILE_COMMAND)
+    expect(FileNode.cardMenu?.[0]?.label).toBe('File')
+    expect(FileNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_FILE_COMMAND)
   })
 
   it('resolves the file drag icon from the card menu', () => {

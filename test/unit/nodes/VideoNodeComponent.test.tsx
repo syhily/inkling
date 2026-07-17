@@ -3,10 +3,14 @@ import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi, type MockedFunction } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, {
+  type CardConfig,
+  type FileUploader,
+  type InklingHostIntegrationContextValue,
+} from '@/context/InklingHostIntegrationContext'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { VideoNode, $createVideoNode } from '@/nodes/VideoNode'
 import { VideoNodeComponent } from '@/nodes/VideoNodeComponent'
@@ -28,7 +32,9 @@ function createTestEditor(): LexicalEditor {
   return editor
 }
 
-function createCardContext(overrides: Partial<React.ContextType<typeof CardContext>> = {}) {
+function createCardContext(
+  overrides: Partial<React.ContextType<typeof CardContext>> = {},
+): React.ContextType<typeof CardContext> {
   return {
     isSelected: true,
     isEditing: true,
@@ -43,16 +49,17 @@ function createCardContext(overrides: Partial<React.ContextType<typeof CardConte
 }
 
 function createCollaborationContext() {
-  return { isCollabActive: false, yjsDocMap: new Map() }
+  return { color: '#000000', isCollabActive: false, name: 'test', yjsDocMap: new Map() }
 }
 
 function createLexicalComposerContext(editor: LexicalEditor): [LexicalEditor, { getTheme: () => undefined }] {
   return [editor, { getTheme: () => undefined }]
 }
 
-type UploadMock = {
+type UploadFunction = ReturnType<FileUploader['useFileUpload']>['upload']
+type UploadMock = Omit<ReturnType<FileUploader['useFileUpload']>, 'upload'> & {
   isLoading: boolean
-  upload: ReturnType<typeof vi.fn>
+  upload: MockedFunction<UploadFunction>
   errors: Error[]
 }
 
@@ -65,17 +72,17 @@ function createUploadMock(overrides: Partial<UploadMock> = {}): UploadMock {
   }
 }
 
-function createComposerContext(uploads: Record<string, UploadMock> = {}, cardConfig: Record<string, unknown> = {}) {
+function createComposerContext(
+  uploads: Partial<Record<Parameters<FileUploader['useFileUpload']>[0], UploadMock>> = {},
+  cardConfig: CardConfig = {},
+): InklingHostIntegrationContextValue {
   const defaultUpload = createUploadMock()
   return {
     fileUploader: {
-      useFileUpload: (type: string) => uploads[type] ?? defaultUpload,
+      useFileUpload: (type) => uploads[type] ?? defaultUpload,
       fileTypes: { image: { mimeTypes: ['image/png'] }, video: { mimeTypes: ['video/mp4'] } },
     },
     cardConfig,
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
     onError: vi.fn(),
   }
 }
