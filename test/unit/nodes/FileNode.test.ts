@@ -39,7 +39,7 @@ describe('FileNode', () => {
   it('sets __triggerFileDialog when no src is provided', async () => {
     await updateEditor(editor, () => {
       const node = $createFileNode({ triggerFileDialog: true })
-      expect((node as unknown as Record<string, boolean>).__triggerFileDialog).toBe(true)
+      expect(node.__triggerFileDialog).toBe(true)
     })
   })
 
@@ -47,7 +47,7 @@ describe('FileNode', () => {
     const file = new File(['content'], 'doc.pdf')
     await updateEditor(editor, () => {
       const node = $createFileNode({ initialFile: file })
-      expect((node as unknown as Record<string, File | null>).__initialFile).toBe(file)
+      expect(node.__initialFile).toBe(file)
     })
   })
 })

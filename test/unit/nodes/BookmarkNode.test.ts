@@ -39,7 +39,7 @@ describe('BookmarkNode', () => {
   it('flags __createdWithUrl when constructed with a url and no metadata', async () => {
     await updateEditor(editor, () => {
       const node = $createBookmarkNode({ url: 'https://example.com' })
-      expect((node as unknown as Record<string, boolean>).__createdWithUrl).toBe(true)
+      expect(node.__createdWithUrl).toBe(true)
     })
   })
 

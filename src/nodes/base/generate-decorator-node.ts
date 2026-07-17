@@ -192,10 +192,10 @@ export type DecoratorNodeData<
 type GeneratedDecoratorNodeInstance<
   TDataset extends Record<string, unknown>,
   TOutput extends ExportDOMOutput = ExportDOMOutput,
-> = GeneratedDecoratorNodeBase<TDataset> &
-  TDataset & {
-    exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): TOutput
-  }
+> = {
+  exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): TOutput
+} & GeneratedDecoratorNodeBase<TDataset> &
+  TDataset
 
 // An intersection rather than Lexical's `Spread` utility: `Spread` isn't provably
 // assignable to `SerializedLexicalNode` when TDataset is an unresolved generic, which

@@ -39,7 +39,7 @@ describe('VideoNode', () => {
   it('sets __triggerFileDialog when no src is provided', async () => {
     await updateEditor(editor, () => {
       const node = $createVideoNode({ triggerFileDialog: true })
-      expect((node as unknown as Record<string, boolean>).__triggerFileDialog).toBe(true)
+      expect(node.__triggerFileDialog).toBe(true)
     })
   })
 

@@ -1814,7 +1814,7 @@ describe('GalleryNode', function () {
           const output = (element as HTMLElement).outerHTML
           const sizes = output.match(/sizes="(.*?)"/g)
 
-          expect(sizes!.length).toBe(1)
+          expect(sizes).toHaveLength(1)
 
           expect(output).toMatch(/standard\.jpg 720w" sizes="\(min-width: 720px\) 720px"/)
         }),

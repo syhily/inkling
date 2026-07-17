@@ -34,10 +34,10 @@ describe('CodeBlockNode', () => {
   it('stores open in edit mode flag', async () => {
     await updateEditor(editor, () => {
       const node = $createCodeBlockNode({ _openInEditMode: true })
-      expect((node as unknown as Record<string, boolean>).__openInEditMode).toBe(true)
+      expect(node.__openInEditMode).toBe(true)
 
       node.clearOpenInEditMode()
-      expect((node as unknown as Record<string, boolean>).__openInEditMode).toBe(false)
+      expect(node.__openInEditMode).toBe(false)
     })
   })
 

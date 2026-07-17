@@ -39,14 +39,14 @@ describe('AudioNode', () => {
   it('sets __triggerFileDialog when no src is provided', async () => {
     await updateEditor(editor, () => {
       const node = $createAudioNode({ triggerFileDialog: true })
-      expect((node as unknown as Record<string, boolean>).__triggerFileDialog).toBe(true)
+      expect(node.__triggerFileDialog).toBe(true)
     })
   })
 
   it('does not trigger the file dialog when a src is present', async () => {
     await updateEditor(editor, () => {
       const node = $createAudioNode({ src: 'https://example.com/audio.mp3', triggerFileDialog: true })
-      expect((node as unknown as Record<string, boolean>).__triggerFileDialog).toBe(false)
+      expect(node.__triggerFileDialog).toBe(false)
     })
   })
 
@@ -54,7 +54,7 @@ describe('AudioNode', () => {
     await updateEditor(editor, () => {
       const node = $createAudioNode({})
       node.triggerFileDialog = true
-      expect((node as unknown as Record<string, boolean>).__triggerFileDialog).toBe(true)
+      expect(node.__triggerFileDialog).toBe(true)
     })
   })
 })

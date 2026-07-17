@@ -25,7 +25,7 @@ const mockMovable = vi.hoisted(() => {
     const ref: React.MutableRefObject<HTMLElement | null> = { current: null }
     const instance: Instance = { ref, getPosition, setPosition }
     instances.push(instance)
-    return instance as unknown as UseMovableResult
+    return instance
   })
   return { fn, instances, reset }
 })

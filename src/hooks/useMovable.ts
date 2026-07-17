@@ -10,12 +10,12 @@ function guidFor(): string {
   })
 }
 
-interface MovablePosition {
+export interface MovablePosition {
   x: number
   y: number
 }
 
-interface MovablePositionWithSpacing extends MovablePosition {
+export interface MovablePositionWithSpacing extends MovablePosition {
   lastSpacing?: MovableSpacing | null
 }
 
@@ -39,7 +39,7 @@ interface UseMovableOptions {
   adjustOnDrag?: AdjustOnDrag
 }
 
-interface UseMovableResult<T extends HTMLElement> {
+export interface UseMovableResult<T extends HTMLElement = HTMLElement> {
   ref: RefObject<T | null>
   setPosition: (position: MovablePosition) => void
   getPosition: () => MovablePositionWithSpacing

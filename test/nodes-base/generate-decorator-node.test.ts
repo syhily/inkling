@@ -2,8 +2,10 @@ import type { LexicalEditor, LexicalNodeConfig } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
 
+import type { GeneratedDecoratorNodeClass } from '@/nodes/base/generate-decorator-node'
+
 import { dom } from '#/nodes-base/test-utils/index'
-import { utils, type ExportDOMOutput, type GeneratedDecoratorNodeClass, type Visibility } from '@/nodes/base/index'
+import { utils, type ExportDOMOutput, type Visibility } from '@/nodes/base/index'
 
 const defaultVisibility = utils.visibility.buildDefaultVisibility()
 
@@ -64,7 +66,7 @@ describe('Utils: generateDecoratorNode', function () {
       })
 
   describe('exportDOM', function () {
-    let NodeWithRender: GeneratedDecoratorNodeClass<Record<string, never>>
+    let NodeWithRender: GeneratedDecoratorNodeClass<Record<string, never>, ReturnType<typeof createRenderResult>>
     let $createNodeWithRender: (dataset?: Record<string, unknown>) => InstanceType<typeof NodeWithRender>
 
     beforeAll(function () {
@@ -122,7 +124,7 @@ describe('Utils: generateDecoratorNode', function () {
         properties: [
           { name: 'count', default: 10 },
           { name: 'label', default: 'default' },
-        ],
+        ] as const,
       })
 
       $createFalsyAwareNode = (dataset?: Record<string, unknown>) => {
