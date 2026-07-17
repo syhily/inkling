@@ -6,7 +6,6 @@ import {
   $getRoot,
   $setSelection,
   type LexicalEditor,
-  type NodeKey,
 } from 'lexical'
 import React from 'react'
 import { flushSync } from 'react-dom'
@@ -20,8 +19,8 @@ import { useCardSelection } from '@/hooks/useCardSelection'
 import { useDragDropState } from '@/hooks/useDragDropState'
 import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { $createImageNode } from '@/nodes/ImageNode'
-import { type DraggableInfo, type DroppablePosition } from '@/utils/draggable/DragDropContainer'
-import { DragDropHandler } from '@/utils/draggable/DragDropHandler'
+import { type DraggableInfo, type DroppablePosition, type IndicatorPosition } from '@/utils/draggable/DragDropContainer'
+import { DragDropHandler, type DraggableContainerHandle } from '@/utils/draggable/DragDropHandler'
 import { isCardDropAllowed } from '@/utils/draggable/draggable-utils'
 
 function preventDefault(event: Event): void {
@@ -38,12 +37,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
   const { setIsDragging } = useInklingSelectedCardContext()
   const isEditingCard = useCardSelection((state) => state.isEditingCard)
 
-  const cardContainer = React.useRef<{
-    refresh: () => void
-    enableDrag: () => void
-    disableDrag: () => void
-    destroy?: () => void
-  } | null>(null)
+  const cardContainer = React.useRef<DraggableContainerHandle | null>(null)
   const skipOnDropEnd = React.useRef<boolean>(false)
 
   // useRef because we need stable function references to pass into the drag drop container instance
@@ -73,7 +67,6 @@ function useDragDropReorder(editor: LexicalEditor): void {
           cardName: cardNode.getType(),
           element: draggableElement,
           target: null,
-          source: null,
           mousePosition: { x: 0, y: 0 },
           dataset: (cardNode as CardNode).getDataset(),
           // what the per-card getIcon() copies returned: the first cardMenu
@@ -88,7 +81,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
 
   const createCardDragElement = React.useRef((draggableInfo: DraggableInfo): HTMLElement | undefined => {
     const { cardName } = draggableInfo
-    const Icon = draggableInfo.Icon as React.ComponentType<React.SVGProps<SVGSVGElement>> | undefined
+    const { Icon } = draggableInfo
 
     if (!cardName || cardName === 'image') {
       return
@@ -132,7 +125,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
       draggableInfo: DraggableInfo,
       droppableElem: HTMLElement | null,
       position: DroppablePosition,
-    ): { insertIndex: number; element: HTMLElement } | false => {
+    ): IndicatorPosition | false => {
       const rootElement = editor.getRootElement()
       if (!rootElement || !droppableElem || !draggableInfo.element) {
         return false
@@ -182,7 +175,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
         editor.update(() => {
           // change card order on card drops
           if (draggableInfo.type === 'card') {
-            const draggedNode = $getNodeByKey(draggableInfo.nodeKey as NodeKey)
+            const draggedNode = draggableInfo.nodeKey ? $getNodeByKey(draggableInfo.nodeKey) : null
             if (!draggedNode) {
               return
             }
@@ -243,7 +236,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
     }
 
     editor.update(() => {
-      const cardNode = $getNodeByKey(draggableInfo.nodeKey as NodeKey)
+      const cardNode = draggableInfo.nodeKey ? $getNodeByKey(draggableInfo.nodeKey) : null
       if (cardNode) {
         cardNode.remove(false)
       }

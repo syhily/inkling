@@ -14,15 +14,11 @@ describe('draggable-utils', () => {
   describe('isCardDropAllowed', () => {
     it('allows dropping an external draggable', () => {
       expect(isCardDropAllowed(-1, 2)).toBe(true)
-      expect(isCardDropAllowed(-1, 0, 'top')).toBe(true)
+      expect(isCardDropAllowed(-1, 0, 'top-left')).toBe(true)
     })
 
     it('blocks dropping on itself', () => {
       expect(isCardDropAllowed(3, 3)).toBe(false)
-    })
-
-    it('blocks dropping when droppableIndex is undefined', () => {
-      expect(isCardDropAllowed(2, undefined as unknown as number)).toBe(false)
     })
 
     it('adjusts index for top positions', () => {

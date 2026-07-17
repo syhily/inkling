@@ -1,3 +1,5 @@
+import type { ComponentType, SVGProps } from 'react'
+
 import {
   CONTAINER_DATA_ATTR,
   DRAGGABLE_DATA_ATTR,
@@ -20,9 +22,9 @@ export interface ContainerDroppableConfig {
   droppableSelector: string
   getIndicatorPosition: (
     draggableInfo: DraggableInfo,
-    droppableElem: HTMLElement | null,
+    droppableElem: HTMLElement,
     position: DroppablePosition,
-  ) => { insertIndex: number; element: HTMLElement } | false
+  ) => IndicatorPosition | false
   onDrop: (draggableInfo: DraggableInfo, droppable: HTMLElement | null, position: DroppablePosition | null) => boolean
   onDragEnterContainer?: (draggableInfo: DraggableInfo) => void
   onDragEnterDroppable?: (droppable: HTMLElement, position: DroppablePosition) => void
@@ -49,19 +51,26 @@ export interface DraggableInfo {
   // the card node's key, set by the card drag producer (DragDropReorderPlugin)
   // and read back on drop (image→gallery merge, reorder)
   nodeKey?: string
+  Icon?: ComponentType<SVGProps<SVGSVGElement>>
   element: HTMLElement | null
   target: HTMLElement | null
-  source: HTMLElement | null
+  // Retained as optional until the gallery hook migrates in Batch 10; it is
+  // write-only and should not be required by new producers.
+  source?: HTMLElement | null
   mousePosition: { x: number; y: number }
   insertIndex?: number
   // card datasets carry more than scalars — a dragged gallery's dataset
   // contains GalleryImage[] plus the live caption LexicalEditor/EditorState
   // (generate-decorator-node.getDataset copies all internal props verbatim)
   dataset: Record<string, unknown>
-  [key: string]: unknown
 }
 
 export type DroppablePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+
+export interface IndicatorPosition {
+  insertIndex: number
+  element: HTMLElement
+}
 
 const noop = () => {}
 
@@ -145,7 +154,7 @@ export class DragDropContainer {
     }
 
     if (!dragPreviewElement && (draggableInfo.type === 'image' || draggableInfo.cardName === 'image')) {
-      const image = draggableInfo.element?.querySelector('img') as HTMLImageElement | null
+      const image = draggableInfo.element?.querySelector('img')
       if (image) {
         const aspectRatio = image.width / image.height
         let width = 0

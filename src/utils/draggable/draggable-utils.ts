@@ -1,27 +1,33 @@
+import type { DroppablePosition } from '@/utils/draggable/DragDropContainer'
+
 // NOTE: the DnD geometry helpers in this file (isCardDropAllowed, getParent,
 // sibling lookups, scrollable-element lookups) are vendor-synced with the
 // inkling-card-gallery repo, which keeps its own copy (differing mainly in
 // drag direction). There is no shared package yet — any behavior change here
 // must be mirrored there, and vice versa. See docs/tech-debt-triage.md for
 // the duplication decision.
-export function isCardDropAllowed(draggableIndex: number, droppableIndex: number, position = ''): boolean {
+export function isCardDropAllowed(
+  draggableIndex: number,
+  droppableIndex: number,
+  position?: DroppablePosition,
+): boolean {
   // images can be dragged out of a gallery to any position
   if (draggableIndex === -1) {
     return true
   }
 
-  // can't drop on itself or when droppableIndex doesn't exist
-  if (draggableIndex === droppableIndex || typeof droppableIndex === 'undefined') {
+  // can't drop on itself
+  if (draggableIndex === droppableIndex) {
     return false
   }
 
   // account for dropping at beginning or end of a row
   let adjustedDroppable = droppableIndex
-  if (position.match(/top/)) {
+  if (position?.startsWith('top')) {
     adjustedDroppable -= 1
   }
 
-  if (position.match(/bottom/)) {
+  if (position?.startsWith('bottom')) {
     adjustedDroppable += 1
   }
 
@@ -53,7 +59,7 @@ export function getPreviousSibling(
   return getWithMatch(start, value, (current: Element) => current.previousElementSibling)
 }
 
-export function getParentScrollableElement(element: Element | null): Element {
+export function getParentScrollableElement(element: Element | null): HTMLElement {
   if (!element) {
     return getDocumentScrollingElement()
   }
@@ -68,15 +74,11 @@ export function getParentScrollableElement(element: Element | null): Element {
     return hasOverflow(parent)
   })
 
-  if (position === 'fixed' && !scrollableElement) {
-    return getDocumentScrollingElement()
-  } else {
-    return scrollableElement || getDocumentScrollingElement()
-  }
+  return scrollableElement instanceof HTMLElement ? scrollableElement : getDocumentScrollingElement()
 }
 
-export function getDocumentScrollingElement(): Element {
-  return document.scrollingElement || document.documentElement
+export function getDocumentScrollingElement(): HTMLElement {
+  return document.scrollingElement instanceof HTMLElement ? document.scrollingElement : document.documentElement
 }
 
 export function applyUserSelect(element: HTMLElement, value: string): void {
@@ -102,21 +104,7 @@ function getWithMatch(
     return null
   }
 
-  const selector = typeof value === 'string' ? value : null
-  const callback = typeof value === 'function' ? value : null
-  const isSelector = typeof value === 'string'
-  const isFunction = typeof value === 'function'
-
-  function matches(currentElement: Element | null): Element | boolean | null {
-    if (!currentElement) {
-      return null
-    } else if (isSelector && selector) {
-      return currentElement.matches(selector)
-    } else if (isFunction && callback) {
-      return callback(currentElement)
-    }
-    return null
-  }
+  const matches = typeof value === 'string' ? (current: Element) => current.matches(value) : value
 
   let current: Element | null = element
 
@@ -125,7 +113,7 @@ function getWithMatch(
       return current
     }
 
-    current = current ? next(current) : null
+    current = next(current)
   } while (current && current !== document.body && current !== document.documentElement)
 
   return null

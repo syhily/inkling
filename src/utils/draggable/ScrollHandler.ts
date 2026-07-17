@@ -4,7 +4,7 @@ import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { getDocumentScrollingElement, getParentScrollableElement } from '@/utils/draggable/draggable-utils'
 
-export const defaultOptions = {
+const defaultOptions = {
   speed: 8,
   sensitivity: 50,
 }
@@ -63,11 +63,9 @@ export class ScrollHandler {
       return
     }
 
-    if (draggableInfo.mousePosition) {
-      this.currentMousePosition = {
-        clientX: draggableInfo.mousePosition.x,
-        clientY: draggableInfo.mousePosition.y,
-      }
+    this.currentMousePosition = {
+      clientX: draggableInfo.mousePosition.x,
+      clientY: draggableInfo.mousePosition.y,
     }
 
     this.scrollAnimationFrame = requestAnimationFrame(this._scroll)
@@ -87,11 +85,8 @@ export class ScrollHandler {
     this.scrollAnimationFrame = null
   }
 
-  getScrollableElement(target: HTMLElement): HTMLElement | null {
+  getScrollableElement(target: HTMLElement): HTMLElement {
     const found = getParentScrollableElement(target)
-    if (!found) {
-      return null
-    }
 
     // workaround for layouts that scroll inside a container rather than the
     // document: when the document scrolling element is the only scrollable
@@ -100,10 +95,10 @@ export class ScrollHandler {
       const container = this._documentScrollContainerSelector
         ? document.querySelector<HTMLElement>(this._documentScrollContainerSelector)
         : null
-      return container ?? (found as HTMLElement)
+      return container ?? found
     }
 
-    return found as HTMLElement
+    return found
   }
 
   _scroll() {

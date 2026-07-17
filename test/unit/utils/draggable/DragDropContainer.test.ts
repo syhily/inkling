@@ -14,7 +14,6 @@ function createHandlers() {
           type: element.dataset.type || 'unknown',
           element,
           target: null,
-          source: null,
           mousePosition: { x: 0, y: 0 },
           dataset: {},
         }
@@ -110,7 +109,6 @@ describe('DragDropContainer', () => {
     const info: DraggableInfo = {
       element: draggable,
       target: null,
-      source: null,
       mousePosition: { x: 0, y: 0 },
       dataset: {},
     }
@@ -134,7 +132,6 @@ describe('DragDropContainer', () => {
       type: 'image',
       element: draggable,
       target: null,
-      source: null,
       mousePosition: { x: 0, y: 0 },
       dataset: {},
     }
@@ -160,7 +157,6 @@ describe('DragDropContainer', () => {
       cardName: 'image',
       element: draggable,
       target: null,
-      source: null,
       mousePosition: { x: 0, y: 0 },
       dataset: {},
     }
@@ -178,7 +174,6 @@ describe('DragDropContainer', () => {
       type: 'text',
       element: draggable,
       target: null,
-      source: null,
       mousePosition: { x: 0, y: 0 },
       dataset: {},
     }
