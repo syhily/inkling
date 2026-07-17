@@ -70,14 +70,11 @@ function exportTopLevelElementOrDecorator(
   }
 
   if ($isElementNode(node)) {
-    // note: unsure why this type isn't being picked up from the import
     for (const transformer of elementTransformers) {
-      if (transformer.export !== null) {
-        const result = transformer.export(node, (_node) => exportChildren(_node, context), context)
+      const result = transformer.export(node, (_node) => exportChildren(_node, context), context)
 
-        if (result !== null) {
-          return result
-        }
+      if (result !== null) {
+        return result
       }
     }
   }
@@ -93,19 +90,19 @@ function exportChildren(node: ElementNode, context: RenderContext): string {
 
   for (const child of children) {
     if (!textContent.isEmpty() && !$isLineBreakNode(child) && !$isTextNode(child) && !$isLinkNode(child)) {
-      output.push(textContent.render() ?? '')
+      output.push(textContent.render())
       textContent.clear()
     }
 
     if ($isLineBreakNode(child) || $isTextNode(child) || $isLinkNode(child)) {
       textContent.addNode(child)
     } else if ($isElementNode(child)) {
-      output.push(exportChildren(child, context) ?? '')
+      output.push(exportChildren(child, context))
     }
   }
 
   if (!textContent.isEmpty()) {
-    output.push(textContent.render() ?? '')
+    output.push(textContent.render())
   }
 
   return output.join('')

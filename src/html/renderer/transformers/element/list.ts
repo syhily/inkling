@@ -44,7 +44,7 @@ const exportList = function (node: ElementNode, exportChildren: ExportChildren):
           output.push('</li>')
           liOpen = false
         }
-        output.push(`<li>${exportChildren(child) ?? ''}`)
+        output.push(`<li>${exportChildren(child)}`)
         liOpen = true
       }
     }

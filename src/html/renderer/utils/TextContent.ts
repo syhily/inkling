@@ -95,7 +95,7 @@ export default class TextContent {
           nextLinkNodeIndex === -1 ? remainingNodes : remainingNodes.slice(0, nextLinkNodeIndex)
 
         // ensure we're only working with text nodes as they're the only ones that can open/close formats
-        const remainingSortedTextNodes = remainingSortNodes.filter((n) => $isTextNode(n)) as TextNode[]
+        const remainingSortedTextNodes = remainingSortNodes.filter((n) => $isTextNode(n))
 
         formatsToOpen.sort((a, b) => {
           const aIndex = remainingSortedTextNodes.findIndex((n) => n.hasFormat(a))
@@ -156,8 +156,9 @@ export default class TextContent {
     if (safeHref) {
       anchor.setAttribute('href', safeHref)
     }
-    if (node.getRel()) {
-      anchor.setAttribute('rel', node.getRel() || '')
+    const rel = node.getRel()
+    if (rel) {
+      anchor.setAttribute('rel', rel)
     }
     anchor.innerHTML = this.exportChildren(node)
   }
