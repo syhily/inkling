@@ -8,6 +8,12 @@ import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
 export const INSERT_SNIPPET_COMMAND = createCommand('INSERT_SNIPPET_COMMAND')
 
+// command payloads cross an untyped runtime boundary (menu dispatch, external
+// consumers), so narrow before parsing the snippet value
+function isSnippetDataset(dataset: unknown): dataset is { value: string } {
+  return typeof dataset === 'object' && dataset !== null && 'value' in dataset && typeof dataset.value === 'string'
+}
+
 export const InklingSnippetPlugin = () => {
   const [editor] = useLexicalComposerContext()
 
@@ -16,8 +22,11 @@ export const InklingSnippetPlugin = () => {
       editor.registerCommand(
         INSERT_SNIPPET_COMMAND,
         (dataset) => {
+          if (!isSnippetDataset(dataset)) {
+            return false
+          }
           editor.update(() => {
-            const snippetData = JSON.parse((dataset as { value: string }).value)
+            const snippetData = JSON.parse(dataset.value)
             const nodes = $generateNodesFromSerializedNodes(snippetData.nodes)
             const firstNode = nodes.length === 1 && nodes[0]
             const lastNode = !!nodes.length && nodes[nodes.length - 1]
@@ -29,7 +38,10 @@ export const InklingSnippetPlugin = () => {
             }
 
             const selection = $getSelection()
-            $insertGeneratedNodes(editor, nodes, selection!)
+            if (!selection) {
+              return
+            }
+            $insertGeneratedNodes(editor, nodes, selection)
 
             if (lastNode && $isInklingCard(lastNode) && !lastNode.getNextSibling()) {
               try {
