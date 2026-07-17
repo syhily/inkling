@@ -2,10 +2,10 @@ import type { Klass, LexicalEditor, LexicalNode } from 'lexical'
 
 import { $createListItemNode, $createListNode, ListItemNode, ListNode } from '@lexical/list'
 import { $createHeadingNode, HeadingNode } from '@lexical/rich-text'
-import { $createParagraphNode, ParagraphNode, TextNode } from 'lexical'
+import { $createParagraphNode, $createTextNode, $getRoot, ParagraphNode, TextNode } from 'lexical'
 
 import { assertTransform, createEditor } from '#/transforms/utils'
-import { ImageNode, ExtendedHeadingNode } from '@/nodes/base'
+import { ExtendedHeadingNode, ImageNode } from '@/nodes/base'
 import { registerDenestTransform } from '@/transforms/index'
 
 describe('Denest transform', function () {
@@ -465,8 +465,10 @@ describe('Denest transform', function () {
     const registerTransforms = (editor: LexicalEditor) => {
       registerDenestTransform(editor, ParagraphNode, () => $createParagraphNode())
       registerDenestTransform(editor, HeadingNode, (node) => $createHeadingNode(node.getTag()))
-      registerDenestTransform(editor, ExtendedHeadingNode, (node: ExtendedHeadingNode) =>
-        $createHeadingNode(node.getTag()),
+      registerDenestTransform(
+        editor,
+        ExtendedHeadingNode,
+        (node: ExtendedHeadingNode) => new ExtendedHeadingNode(node.getTag()),
       )
       registerDenestTransform(editor, ListNode, (node) => $createListNode(node.getListType(), node.getStart()))
       registerDenestTransform(editor, ListItemNode, () => $createListItemNode())
@@ -584,6 +586,41 @@ describe('Denest transform', function () {
     const editor = createEditor()
 
     assertTransform(editor, registerTransforms, before, after)
+  })
+
+  it('preserves the extended-heading type without the replacement patch', function () {
+    // the shipped node sets all carry extendedHeadingNodeReplacement, which
+    // masks which class the denest collector fn constructs; this editor omits
+    // it, so the pin fails if the fn ever downgrades back to plain HeadingNode
+    const editor = createEditor({
+      nodes: [ParagraphNode, TextNode, HeadingNode, ExtendedHeadingNode, ListNode, ListItemNode],
+    })
+
+    // a list nested inside a heading is invalid: the denest fires on the
+    // heading and re-creates its collector through the registered fn
+    editor.update(() => {
+      const heading = new ExtendedHeadingNode('h4')
+      heading.append($createTextNode('Heading'))
+      const item = $createListItemNode()
+      item.append($createTextNode('Item'))
+      heading.append($createListNode('bullet').append(item))
+      $getRoot().append(heading)
+    })
+
+    const registerTransforms = (editor: LexicalEditor) => {
+      registerDenestTransform(editor, ExtendedHeadingNode, (node: ExtendedHeadingNode) =>
+        $createHeadingNode(node.getTag()),
+      )
+    }
+    registerTransforms(editor)
+    editor.update(() => {}, { discrete: true })
+
+    editor.getEditorState().read(() => {
+      const types = $getRoot()
+        .getChildren()
+        .map((node) => node.getType())
+      expect(types).toEqual(['extended-heading', 'list'])
+    })
   })
 
   it('keeps original node when it also contains inline elements', function () {
@@ -905,8 +942,10 @@ describe('Denest transform', function () {
     const registerTransforms = (editor: LexicalEditor) => {
       registerDenestTransform(editor, ParagraphNode, () => $createParagraphNode())
       registerDenestTransform(editor, HeadingNode, (node) => $createHeadingNode(node.getTag()))
-      registerDenestTransform(editor, ExtendedHeadingNode, (node: ExtendedHeadingNode) =>
-        $createHeadingNode(node.getTag()),
+      registerDenestTransform(
+        editor,
+        ExtendedHeadingNode,
+        (node: ExtendedHeadingNode) => new ExtendedHeadingNode(node.getTag()),
       )
       registerDenestTransform(editor, ListNode, (node) => $createListNode(node.getListType(), node.getStart()))
       registerDenestTransform(editor, ListItemNode, () => $createListItemNode())
