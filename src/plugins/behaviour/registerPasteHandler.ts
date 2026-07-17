@@ -22,8 +22,8 @@ function normalizePastedHtml(html: string): string {
   const parser = new DOMParser()
   const doc = parser.parseFromString(html, 'text/html')
 
-  doc.querySelectorAll('[style*="white-space"]').forEach((element) => {
-    const style = (element as HTMLElement).style
+  doc.querySelectorAll<HTMLElement>('[style*="white-space"]').forEach((element) => {
+    const style = element.style
     if (style.whiteSpace === 'pre-wrap' || style.whiteSpace === 'pre') {
       style.whiteSpace = 'normal'
     }
