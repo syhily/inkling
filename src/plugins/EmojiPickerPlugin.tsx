@@ -1,9 +1,8 @@
-import type { MenuOption } from '@lexical/react/LexicalTypeaheadMenuPlugin'
 import type { TextNode } from 'lexical'
 
 import emojiData from '@emoji-mart/data'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { LexicalTypeaheadMenuPlugin } from '@lexical/react/LexicalTypeaheadMenuPlugin'
+import { LexicalTypeaheadMenuPlugin, MenuOption } from '@lexical/react/LexicalTypeaheadMenuPlugin'
 import { SearchIndex, init } from 'emoji-mart'
 import {
   $createTextNode,
@@ -26,10 +25,22 @@ interface EmojiSkin {
   native: string
 }
 
-interface EmojiOption extends MenuOption {
+/** The emoji-mart search-result shape this plugin consumes (SearchIndex.search
+ * returns `any`; this is the boundary annotation). */
+interface EmojiSearchResult {
   id: string
   skins: EmojiSkin[]
-  ref?: React.RefObject<HTMLElement | null>
+}
+
+class EmojiOption extends MenuOption {
+  id: string
+  skins: EmojiSkin[]
+
+  constructor(emoji: EmojiSearchResult) {
+    super(emoji.id)
+    this.id = emoji.id
+    this.skins = emoji.skins
+  }
 }
 
 interface EmojiMenuItemProps {
@@ -41,13 +52,14 @@ interface EmojiMenuItemProps {
 }
 
 const EmojiMenuItem = function ({ index, isSelected, onClick, onMouseEnter, emoji }: EmojiMenuItemProps) {
-  // we need to manually set this unless we import the MenuOption type and extend it (see LexicalTypeaheadMenuPlugin)
+  // the typeahead scrolls the selected option into view via option.ref; with a
+  // custom menuRenderFn we must attach each option's ref ourselves
   const ref = React.useRef<HTMLLIElement | null>(null)
   emoji.ref = ref
   return (
     <li
       key={emoji.id}
-      ref={emoji.ref as React.LegacyRef<HTMLLIElement>}
+      ref={ref}
       aria-selected={isSelected}
       className={`mb-0 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 font-sans text-sm leading-[1.65] tracking-wide whitespace-nowrap text-grey-800 dark:text-grey-200 ${isSelected ? 'bg-grey-100 text-grey-900 dark:bg-grey-900 dark:text-white' : ''}`}
       data-testid={'emoji-option-' + index}
@@ -99,11 +111,11 @@ export function EmojiPickerPlugin() {
               return false
             }
             void (async () => {
-              const emojis = await SearchIndex.search(queryString)
+              const emojis: EmojiSearchResult[] = await SearchIndex.search(queryString)
               if (emojis.length === 0) {
                 return
               }
-              const emojiMatch = emojis?.[0].id === queryString // only look for exact match
+              const emojiMatch = emojis[0].id === queryString // only look for exact match
               if (emojiMatch) {
                 handleCompletionInsertion(emojis[0])
                 event.preventDefault()
@@ -118,7 +130,7 @@ export function EmojiPickerPlugin() {
   })
 
   const handleCompletionInsertion = React.useCallback(
-    (emoji: EmojiOption | null) => {
+    (emoji: EmojiSearchResult | null) => {
       editor.update(() => {
         const selection = $getSelection()
 
@@ -154,7 +166,7 @@ export function EmojiPickerPlugin() {
     const query = queryString
 
     async function searchEmojis() {
-      let filteredEmojis: EmojiOption[] = []
+      let filteredEmojis: EmojiSearchResult[] = []
       if ([')', '-)'].includes(query)) {
         filteredEmojis = await SearchIndex.search('smile')
       } else if (['(', '-('].includes(query)) {
@@ -162,7 +174,7 @@ export function EmojiPickerPlugin() {
       } else {
         filteredEmojis = await SearchIndex.search(query)
       }
-      setSearchResults(filteredEmojis)
+      setSearchResults(filteredEmojis.map((emoji) => new EmojiOption(emoji)))
     }
 
     searchEmojis()
