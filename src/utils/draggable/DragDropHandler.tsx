@@ -24,7 +24,7 @@ interface EventHandlerEntry {
 }
 
 export class DragDropHandler {
-  EE: EventEmitter<symbol | string, unknown[]> | null = null
+  EE: EventEmitter
   editorContainerElement: HTMLElement | null = null
   containers: DragDropContainer[] = []
   draggableInfo: DraggableInfo | null = null
@@ -37,7 +37,7 @@ export class DragDropHandler {
     positionY: number
   } | null = null
   grabbedElement: HTMLElement | null = null
-  scrollHandler: ScrollHandler | null = null
+  scrollHandler: ScrollHandler
   sourceContainer: DragDropContainer | null = null
 
   _currentOverContainer: DragDropContainer | null = null
@@ -47,7 +47,7 @@ export class DragDropHandler {
   _dropIndicator: HTMLElement | null = null
   _eventHandlers: Record<string, EventHandlerEntry> = {}
   _dragPreviewContainerElement: HTMLElement | null = null
-  _rafUpdateDragPreviewElementPosition: (() => void) | null = null
+  _rafUpdateDragPreviewElementPosition: () => void
   _transformedDroppables: HTMLElement[] = []
   _waitForDragStartPromise: Promise<void> | null = null
   _dropIndicatorTimeout: ReturnType<typeof setTimeout> | null = null
@@ -221,7 +221,7 @@ export class DragDropHandler {
 
     // if we somehow already have a waiting promise, cancel it and keep the new one
     if (this._waitForDragStartPromise) {
-      this.EE?.emit('drag-start-canceled')
+      this.EE.emit('drag-start-canceled')
       this._waitForDragStartPromise = null
     }
 
@@ -234,16 +234,16 @@ export class DragDropHandler {
         Math.abs(startEvent.clientX - currentX) > moveThreshold ||
         Math.abs(startEvent.clientY - currentY) > moveThreshold
       ) {
-        this.EE?.emit('drag-start-conditions-met')
+        this.EE.emit('drag-start-conditions-met')
       }
     }
 
     const onUp = () => {
-      this.EE?.emit('drag-start-canceled')
+      this.EE.emit('drag-start-canceled')
     }
 
     const onHtmlDrag = () => {
-      this.EE?.emit('drag-start-canceled')
+      this.EE.emit('drag-start-canceled')
     }
 
     const waitForDragStart = () => {
@@ -253,17 +253,17 @@ export class DragDropHandler {
 
       return new Promise<void>((resolve, reject) => {
         const conditionsMet = () => {
-          this.EE?.removeListener('drag-start-canceled', canceled)
+          this.EE.removeListener('drag-start-canceled', canceled)
           resolve()
         }
 
         const canceled = () => {
-          this.EE?.removeListener('drag-start-conditions-met', conditionsMet)
+          this.EE.removeListener('drag-start-conditions-met', conditionsMet)
           reject({ isCanceled: true })
         }
 
-        this.EE?.once('drag-start-conditions-met', conditionsMet)
-        this.EE?.once('drag-start-canceled', canceled)
+        this.EE.once('drag-start-conditions-met', conditionsMet)
+        this.EE.once('drag-start-canceled', canceled)
       })
     }
 
@@ -341,12 +341,10 @@ export class DragDropHandler {
     this._addKeyDownListeners()
 
     // start drag preview element following the mouse
-    if (this._rafUpdateDragPreviewElementPosition) {
-      requestAnimationFrame(this._rafUpdateDragPreviewElementPosition)
-    }
+    requestAnimationFrame(this._rafUpdateDragPreviewElementPosition)
 
     // let the scroll handler select the scrollable element
-    this.scrollHandler?.dragStart(draggableInfo)
+    this.scrollHandler.dragStart(draggableInfo)
 
     // prevent the pointer showing the text caret over text content whilst dragging
     document.querySelectorAll('[data-inkling="editor"] [data-lexical-editor]').forEach((el) => {
@@ -385,7 +383,7 @@ export class DragDropHandler {
     this.draggableInfo.target = target instanceof HTMLElement ? target : null
     this._dragPreviewContainerElement.hidden = false
 
-    this.scrollHandler?.dragMove(this.draggableInfo)
+    this.scrollHandler.dragMove(this.draggableInfo)
 
     const overContainerElem = getParent(target, CONTAINER_SELECTOR)
     let overDroppableElem: Element | null = getParent(target, DROPPABLE_SELECTOR)
@@ -460,7 +458,7 @@ export class DragDropHandler {
   }
 
   _updateDragPreviewElementPosition() {
-    if (this.isDragging && this._rafUpdateDragPreviewElementPosition) {
+    if (this.isDragging) {
       requestAnimationFrame(this._rafUpdateDragPreviewElementPosition)
     }
 
@@ -568,13 +566,13 @@ export class DragDropHandler {
   }
 
   _resetDrag() {
-    this.EE?.emit('drag-start-canceled')
+    this.EE.emit('drag-start-canceled')
     this._hideDropIndicator()
     this._removeMoveListeners()
     this._removeReleaseListeners()
     this._removeKeyDownListeners()
 
-    this.scrollHandler?.dragStop()
+    this.scrollHandler.dragStop()
 
     if (this.grabbedElement) {
       this.grabbedElement.style.opacity = ''
