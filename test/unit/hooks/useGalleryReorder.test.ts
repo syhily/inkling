@@ -1,12 +1,13 @@
 import { act, renderHook } from '@testing-library/react'
 import React from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { DragDropHandleContext } from '@/context/DragDropHandleContext'
 import useGalleryReorder, { type GalleryImage } from '@/hooks/useGalleryReorder'
 import { createDragDropHandle } from '@/plugins/behaviour/dragDropHandle'
+import { DragDropHandler } from '@/utils/draggable/DragDropHandler'
 
 const mockContainer = {
   enableDrag: vi.fn(),
@@ -15,14 +16,13 @@ const mockContainer = {
   destroy: vi.fn(),
 }
 
-const mockDragDropHandler = {
-  registerContainer: vi.fn(() => mockContainer),
-}
+const dragDropHandler = new DragDropHandler()
+const registerContainer = vi.spyOn(dragDropHandler, 'registerContainer').mockReturnValue(mockContainer)
 
 // a real handle instance carrying the mock DragDropHandler — the hook
 // subscribes to the handle, so the handler is set before render
 const dragDropHandle = createDragDropHandle()
-dragDropHandle.setState({ handler: mockDragDropHandler as never })
+dragDropHandle.setState({ handler: dragDropHandler })
 
 const wrapper = ({ children }: { children: React.ReactNode }) =>
   React.createElement(DragDropHandleContext.Provider, { value: dragDropHandle }, children)
@@ -33,7 +33,7 @@ function createImageContainer(images: GalleryImage[]) {
     const imgContainer = document.createElement('div')
     imgContainer.dataset.image = String(index)
     const img = document.createElement('img')
-    img.src = image.src
+    img.src = image.src ?? ''
     imgContainer.append(img)
     container.append(imgContainer)
   })
@@ -52,11 +52,19 @@ async function getRegisteredOptions(images: GalleryImage[] = []) {
   await act(async () => {
     result.current.setContainerRef(container)
   })
-  const [, options] = mockDragDropHandler.registerContainer.mock.calls[0]
-  return { options, container, result, updateImages }
+  const [, options] = registerContainer.mock.calls[0]
+  const onDropEnd = options.lifecycle?.onDropEnd
+  if (!onDropEnd) {
+    throw new Error('gallery reorder must register an onDropEnd lifecycle handler')
+  }
+  return { options, onDropEnd, container, result, updateImages }
 }
 
 describe('useGalleryReorder', () => {
+  afterAll(() => {
+    dragDropHandler.destroy()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -69,7 +77,7 @@ describe('useGalleryReorder', () => {
       result.current.setContainerRef(container)
     })
 
-    expect(mockDragDropHandler.registerContainer).toHaveBeenCalledWith(
+    expect(registerContainer).toHaveBeenCalledWith(
       container,
       expect.objectContaining({
         draggable: expect.objectContaining({
@@ -103,7 +111,7 @@ describe('useGalleryReorder', () => {
       },
     }
 
-    const success = options.droppable.onDrop(draggableInfo)
+    const success = options.droppable.onDrop(draggableInfo, null, null)
 
     expect(success).toBe(true)
     expect(updateImages).toHaveBeenCalledWith([
@@ -133,7 +141,7 @@ describe('useGalleryReorder', () => {
       dataset: { src },
     }
 
-    const success = options.droppable.onDrop(draggableInfo)
+    const success = options.droppable.onDrop(draggableInfo, null, null)
 
     expect(success).toBe(true)
     expect(updateImages).toHaveBeenCalledWith([expect.objectContaining({ src })])
@@ -183,7 +191,7 @@ describe('useGalleryReorder', () => {
       dataset: { src: 'https://example.com/removed-remotely.jpg' },
     }
 
-    const success = options.droppable.onDrop(draggableInfo)
+    const success = options.droppable.onDrop(draggableInfo, null, null)
 
     expect(success).toBe(false)
     expect(updateImages).not.toHaveBeenCalled()
@@ -191,7 +199,7 @@ describe('useGalleryReorder', () => {
 
   it('skips onDropEnd after a successful internal reorder', async () => {
     const images: GalleryImage[] = [{ src: 'https://example.com/one.jpg' }, { src: 'https://example.com/two.jpg' }]
-    const { options, container, updateImages } = await getRegisteredOptions(images)
+    const { options, onDropEnd, container, updateImages } = await getRegisteredOptions(images)
 
     const draggableElement = container.children[0]
     const droppableElement = container.children[1]
@@ -206,14 +214,14 @@ describe('useGalleryReorder', () => {
     }
 
     options.droppable.onDrop(draggableInfo, droppableElement as HTMLElement, 'top-right')
-    options.lifecycle.onDropEnd(draggableInfo, true)
+    onDropEnd(draggableInfo, true)
 
     expect(updateImages).toHaveBeenCalledTimes(1)
   })
 
   it('removes an image when it is dropped outside the gallery', async () => {
     const images: GalleryImage[] = [{ src: 'https://example.com/one.jpg' }, { src: 'https://example.com/two.jpg' }]
-    const { options, updateImages } = await getRegisteredOptions(images)
+    const { onDropEnd, updateImages } = await getRegisteredOptions(images)
 
     const draggableInfo: DraggableInfo = {
       type: 'image',
@@ -223,7 +231,7 @@ describe('useGalleryReorder', () => {
       dataset: { src: 'https://example.com/one.jpg' },
     }
 
-    options.lifecycle.onDropEnd(draggableInfo, true)
+    onDropEnd(draggableInfo, true)
 
     expect(updateImages).toHaveBeenCalledWith([{ src: 'https://example.com/two.jpg' }])
   })
@@ -239,7 +247,7 @@ describe('useGalleryReorder', () => {
       dataset: {},
     }
 
-    const success = options.droppable.onDrop(draggableInfo)
+    const success = options.droppable.onDrop(draggableInfo, null, null)
 
     expect(success).toBe(false)
     expect(updateImages).not.toHaveBeenCalled()

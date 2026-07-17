@@ -9,17 +9,17 @@ import useSettingsPanelReposition from '@/hooks/useSettingsPanelReposition'
 const mockMovable = vi.hoisted(() => {
   type Instance = {
     ref: React.MutableRefObject<HTMLElement | null>
-    getPosition: ReturnType<typeof vi.fn<[], MovablePositionWithSpacing>>
-    setPosition: ReturnType<typeof vi.fn<[MovablePosition], void>>
+    getPosition: ReturnType<typeof vi.fn<() => MovablePositionWithSpacing>>
+    setPosition: ReturnType<typeof vi.fn<(position: MovablePosition) => void>>
   }
   const instances: Instance[] = []
   const reset = () => {
     instances.length = 0
   }
-  const fn = vi.fn<[], UseMovableResult>(() => {
+  const fn = vi.fn<() => UseMovableResult>(() => {
     let pos: MovablePosition = { x: 100, y: 100 }
-    const getPosition = vi.fn<[], MovablePositionWithSpacing>(() => ({ ...pos, lastSpacing: null }))
-    const setPosition = vi.fn<[MovablePosition], void>((next) => {
+    const getPosition = vi.fn<() => MovablePositionWithSpacing>(() => ({ ...pos, lastSpacing: null }))
+    const setPosition = vi.fn<(position: MovablePosition) => void>((next) => {
       pos = { ...next }
     })
     const ref: React.MutableRefObject<HTMLElement | null> = { current: null }

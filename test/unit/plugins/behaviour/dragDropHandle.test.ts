@@ -1,10 +1,24 @@
 import { act, renderHook } from '@testing-library/react'
 import React from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { DragDropHandleContext, useDragDropHandle } from '@/context/DragDropHandleContext'
 import { useDragDropState } from '@/hooks/useDragDropState'
 import { createDragDropHandle, type DragDropHandle } from '@/plugins/behaviour/dragDropHandle'
+import { DragDropHandler } from '@/utils/draggable/DragDropHandler'
+
+const handlers = new Set<DragDropHandler>()
+
+function createHandler() {
+  const handler = new DragDropHandler()
+  handlers.add(handler)
+  return handler
+}
+
+afterEach(() => {
+  handlers.forEach((handler) => handler.destroy())
+  handlers.clear()
+})
 
 function handleWrapper(handle: DragDropHandle) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
@@ -22,7 +36,7 @@ describe('createDragDropHandle', () => {
   it('merges partial updates into the state', () => {
     const handle = createDragDropHandle()
     const element = document.createElement('div')
-    const handler = {} as never
+    const handler = createHandler()
 
     handle.setState({ containerElement: element })
     expect(handle.getState()).toEqual({ containerElement: element, handler: null })
@@ -39,7 +53,7 @@ describe('createDragDropHandle', () => {
     const listener = vi.fn()
     handle.subscribe(listener)
 
-    const handler = {} as never
+    const handler = createHandler()
     handle.setState({ handler })
 
     expect(listener).toHaveBeenCalledTimes(1)
@@ -68,7 +82,7 @@ describe('createDragDropHandle', () => {
     const unsubscribeFirst = handle.subscribe(first)
     handle.subscribe(second)
 
-    const handler = {} as never
+    const handler = createHandler()
     handle.setState({ handler })
     expect(first).toHaveBeenCalledTimes(1)
     expect(second).toHaveBeenCalledTimes(1)
@@ -84,7 +98,7 @@ describe('useDragDropState', () => {
   it('returns the selected slice', () => {
     const handle = createDragDropHandle()
     const element = document.createElement('div')
-    const handler = {} as never
+    const handler = createHandler()
     handle.setState({ containerElement: element, handler })
 
     const containerElement = renderHook(() => useDragDropState((state) => state.containerElement), {
@@ -117,7 +131,7 @@ describe('useDragDropState', () => {
     expect(renderCount).toBe(1)
     expect(result.current).toBeNull()
 
-    const handler = {} as never
+    const handler = createHandler()
     act(() => handle.setState({ handler }))
     expect(renderCount).toBe(2)
     expect(result.current).toBe(handler)
@@ -135,7 +149,7 @@ describe('useDragDropState', () => {
     )
 
     unmount()
-    act(() => handle.setState({ handler: {} as never }))
+    act(() => handle.setState({ handler: createHandler() }))
 
     expect(renderCount).toBe(1)
   })

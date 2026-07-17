@@ -1,10 +1,11 @@
 import { act, renderHook } from '@testing-library/react'
 import React from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DragDropHandleContext } from '@/context/DragDropHandleContext'
 import useCardDragAndDrop from '@/hooks/useCardDragAndDrop'
 import { createDragDropHandle } from '@/plugins/behaviour/dragDropHandle'
+import { DragDropHandler } from '@/utils/draggable/DragDropHandler'
 
 const mockContainer = {
   enableDrag: vi.fn(),
@@ -13,16 +14,19 @@ const mockContainer = {
   destroy: vi.fn(),
 }
 
-const mockDragDropHandler = {
-  registerContainer: vi.fn(() => mockContainer),
-}
+const dragDropHandler = new DragDropHandler()
+const registerContainer = vi.spyOn(dragDropHandler, 'registerContainer').mockReturnValue(mockContainer)
+
+afterAll(() => {
+  dragDropHandler.destroy()
+})
 
 function makeWrapper(withHandler: boolean) {
   // a real handle instance; withHandler=false pins the silent no-op when the
   // reorder plugin never publishes a handler
   const dragDropHandle = createDragDropHandle()
   if (withHandler) {
-    dragDropHandle.setState({ handler: mockDragDropHandler as never })
+    dragDropHandle.setState({ handler: dragDropHandler })
   }
   return ({ children }: { children: React.ReactNode }) =>
     React.createElement(DragDropHandleContext.Provider, { value: dragDropHandle }, children)
@@ -60,7 +64,7 @@ describe('useCardDragAndDrop', () => {
       result.current.setRef(document.createElement('div'))
     })
 
-    expect(mockDragDropHandler.registerContainer).not.toHaveBeenCalled()
+    expect(registerContainer).not.toHaveBeenCalled()
   })
 
   it('registers a drag/drop container with the named callbacks when a handler is available', async () => {
@@ -71,7 +75,7 @@ describe('useCardDragAndDrop', () => {
       result.current.setRef(element)
     })
 
-    expect(mockDragDropHandler.registerContainer).toHaveBeenCalledWith(
+    expect(registerContainer).toHaveBeenCalledWith(
       element,
       expect.objectContaining({
         draggable: expect.objectContaining({
@@ -113,7 +117,7 @@ describe('useCardDragAndDrop', () => {
     // enabled toggles flow through the enable/disable pair only — the
     // container is never destroyed and re-registered (that was the orphaned-
     // container bug plan 047 removed)
-    expect(mockDragDropHandler.registerContainer).toHaveBeenCalledTimes(1)
+    expect(registerContainer).toHaveBeenCalledTimes(1)
     expect(mockContainer.destroy).not.toHaveBeenCalled()
   })
 
@@ -137,12 +141,12 @@ describe('useCardDragAndDrop', () => {
     await act(async () => {
       result.current.setRef(document.createElement('div'))
     })
-    expect(mockDragDropHandler.registerContainer).not.toHaveBeenCalled()
+    expect(registerContainer).not.toHaveBeenCalled()
 
     await act(async () => {
-      dragDropHandle.setState({ handler: mockDragDropHandler as never })
+      dragDropHandle.setState({ handler: dragDropHandler })
     })
 
-    expect(mockDragDropHandler.registerContainer).toHaveBeenCalledTimes(1)
+    expect(registerContainer).toHaveBeenCalledTimes(1)
   })
 })
