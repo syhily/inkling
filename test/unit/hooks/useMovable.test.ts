@@ -25,13 +25,21 @@ describe('useMovable', () => {
   it('removes start event listeners from document.body on unmount', () => {
     const { unmount } = render(React.createElement(MovableComponent))
 
-    const addedTouchstart = addEventListenerSpy.mock.calls.find(
-      ([event]) => event === 'touchstart',
-    )?.[1] as EventListener
-    const addedMousedown = addEventListenerSpy.mock.calls.find(([event]) => event === 'mousedown')?.[1] as EventListener
+    const touchstartCall = addEventListenerSpy.mock.calls.find(
+      (call: [string, EventListenerOrEventListenerObject | null, ...unknown[]]) => call[0] === 'touchstart',
+    )
+    const mousedownCall = addEventListenerSpy.mock.calls.find(
+      (call: [string, EventListenerOrEventListenerObject | null, ...unknown[]]) => call[0] === 'mousedown',
+    )
+    const addedTouchstart = touchstartCall?.[1]
+    const addedMousedown = mousedownCall?.[1]
 
     expect(addedTouchstart).toBeDefined()
     expect(addedMousedown).toBeDefined()
+
+    if (!addedTouchstart || !addedMousedown) {
+      throw new Error('Expected movable to register pointer listeners')
+    }
 
     unmount()
 

@@ -86,7 +86,7 @@ describe('MarkdownShortcutPlugin transformers', () => {
       const list = $getRoot().getFirstChild()
       expect($isListNode(list)).toBe(true)
       expect($isListNode(list) && list.getListType()).toBe('bullet')
-      expect(list?.getChildrenSize()).toBe(2)
+      expect($isListNode(list) && list.getChildrenSize()).toBe(2)
     })
     expect(exportMarkdown(editor)).toBe('- one\n- two')
   })
@@ -214,7 +214,7 @@ describe('MarkdownShortcutPlugin transformers', () => {
     editor.getEditorState().read(() => {
       const list = $getRoot().getFirstChild()
       expect($isListNode(list)).toBe(true)
-      expect($isListItemNode(list?.getFirstChild())).toBe(true)
+      expect($isListItemNode($isListNode(list) ? list.getFirstChild() : null)).toBe(true)
     })
   })
 })

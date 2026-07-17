@@ -59,17 +59,19 @@ describe('usePinturaEditor', () => {
   })
 
   it('sets error when the editor emits a loaderror', async () => {
-    const loaderrorHandlers: Array<(err: Error) => void> = []
-    const mockEditor = {
-      on: vi.fn((event: string, handler: (err: Error) => void) => {
+    const loaderrorHandlers: unknown[] = []
+    class MockPinturaEditor {
+      on(event: 'loaderror', handler: (error: unknown) => void): void
+      on(event: 'process', handler: (result: { dest: Blob }) => void): void
+      on(event: 'loaderror' | 'process', handler: ((error: unknown) => void) | ((result: { dest: Blob }) => void)) {
         if (event === 'loaderror') {
           loaderrorHandlers.push(handler)
         }
-      }),
+      }
     }
 
     window.pintura = {
-      openDefaultEditor: vi.fn(() => mockEditor),
+      openDefaultEditor: vi.fn(() => new MockPinturaEditor()),
     }
 
     const { result } = renderHook(() =>
@@ -99,7 +101,11 @@ describe('usePinturaEditor', () => {
     })
 
     act(() => {
-      loaderrorHandlers.forEach((handler) => handler(loadError))
+      loaderrorHandlers.forEach((handler) => {
+        if (typeof handler === 'function') {
+          handler(loadError)
+        }
+      })
     })
 
     await waitFor(() => {

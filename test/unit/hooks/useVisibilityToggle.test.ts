@@ -1,16 +1,24 @@
 import { act, renderHook } from '@testing-library/react'
-import { $getNodeByKey } from 'lexical'
-import { expect, vi } from 'vitest'
+import { createEditor, type LexicalEditor } from 'lexical'
+import { expect, vi, type Mock } from 'vitest'
+
+import type { CardConfig } from '@/context/InklingHostIntegrationContext'
+import type { Visibility } from '@/nodes/base/utils/visibility'
 
 import { useVisibilityToggle } from '@/hooks/useVisibilityToggle'
 import { getVisibilityOptions, VISIBILITY_SETTINGS } from '@/utils/visibility'
 
+interface VisibilityNodeMock {
+  visibility: Visibility
+  getIsVisibilityActive: Mock<() => boolean>
+}
+
 const lexicalMocks = vi.hoisted(() => ({
-  $getNodeByKey: vi.fn(),
+  $getNodeByKey: vi.fn<(key: string) => VisibilityNodeMock | null>(),
 }))
 
-vi.mock(import('lexical'), async (importOriginal) => {
-  const actual = await importOriginal()
+vi.mock('lexical', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('lexical')>()
 
   return {
     ...actual,
@@ -19,7 +27,7 @@ vi.mock(import('lexical'), async (importOriginal) => {
 })
 
 vi.mock('../../../src/utils/visibility', async (importOriginal) => {
-  const actual = await importOriginal()
+  const actual = await importOriginal<typeof import('../../../src/utils/visibility')>()
 
   return {
     ...actual,
@@ -28,9 +36,9 @@ vi.mock('../../../src/utils/visibility', async (importOriginal) => {
 })
 
 describe('useVisibilityToggle', () => {
-  let editor
-  let node
-  let cardConfig
+  let editor: LexicalEditor
+  let node: VisibilityNodeMock
+  let cardConfig: CardConfig
 
   const DEFAULT_VISIBILITY = {
     web: {
@@ -48,14 +56,9 @@ describe('useVisibilityToggle', () => {
       getIsVisibilityActive: vi.fn(() => true),
     }
 
-    editor = {
-      update: vi.fn((callback) => callback()),
-      getEditorState: vi.fn(() => ({
-        read: vi.fn((callback) => callback()),
-      })),
-    }
+    editor = createEditor({ namespace: 'visibility-toggle-test', onError: () => {} })
 
-    $getNodeByKey.mockReturnValue(node)
+    lexicalMocks.$getNodeByKey.mockReturnValue(node)
 
     cardConfig = {
       stripeEnabled: true,
@@ -67,11 +70,15 @@ describe('useVisibilityToggle', () => {
     lexicalMocks.$getNodeByKey.mockReset()
   })
 
-  function callHook(visibility = DEFAULT_VISIBILITY, { stripeEnabled = true } = {}) {
+  function callHook(visibility: Visibility = DEFAULT_VISIBILITY, { stripeEnabled = true } = {}) {
     node.visibility = visibility
     cardConfig.stripeEnabled = stripeEnabled
     cardConfig.visibilitySettings = VISIBILITY_SETTINGS.WEB_AND_EMAIL
 
+    return renderCurrentHook()
+  }
+
+  function renderCurrentHook() {
     return renderHook(() => useVisibilityToggle(editor, 'testKey', cardConfig))
   }
 
@@ -95,7 +102,7 @@ describe('useVisibilityToggle', () => {
       email: { memberSegment: 'status:free,status:-free' },
     }
     node.visibility = visibility
-    renderHook(() => useVisibilityToggle(editor, 'testKey', cardConfig))
+    renderCurrentHook()
     expect(getVisibilityOptions).toHaveBeenCalledWith(visibility, {
       isStripeEnabled: true,
       showWeb: true,
@@ -110,7 +117,7 @@ describe('useVisibilityToggle', () => {
       email: { memberSegment: 'status:free,status:-free' },
     }
     node.visibility = visibility
-    renderHook(() => useVisibilityToggle(editor, 'testKey', cardConfig))
+    renderCurrentHook()
     expect(getVisibilityOptions).toHaveBeenCalledWith(visibility, {
       isStripeEnabled: true,
       showWeb: false,
@@ -151,6 +158,9 @@ describe('useVisibilityToggle', () => {
     const { toggleVisibility } = result.current
 
     act(() => toggleVisibility('web', 'nonMembers', false))
+    if (!node.visibility.web) {
+      throw new Error('Expected web visibility after toggling')
+    }
     expect(node.visibility.web.nonMember).toBe(false)
 
     act(() => toggleVisibility('web', 'paidMembers', false))
@@ -159,7 +169,7 @@ describe('useVisibilityToggle', () => {
 
   it('returns only web options when email visibility is disabled in cardConfig', () => {
     cardConfig.visibilitySettings = VISIBILITY_SETTINGS.WEB_ONLY
-    const { result } = renderHook(() => useVisibilityToggle(editor, 'testKey', cardConfig))
+    const { result } = renderCurrentHook()
 
     expect(result.current.visibilityOptions).toEqual([
       {
@@ -176,7 +186,7 @@ describe('useVisibilityToggle', () => {
 
   it('returns only email options when web visibility is disabled in cardConfig', () => {
     cardConfig.visibilitySettings = VISIBILITY_SETTINGS.EMAIL_ONLY
-    const { result } = renderHook(() => useVisibilityToggle(editor, 'testKey', cardConfig))
+    const { result } = renderCurrentHook()
 
     expect(result.current.visibilityOptions).toEqual([
       {
@@ -192,7 +202,7 @@ describe('useVisibilityToggle', () => {
 
   it('returns isVisibilityEnabled as false when visibilitySettings is "none"', () => {
     cardConfig.visibilitySettings = VISIBILITY_SETTINGS.NONE
-    const { result } = renderHook(() => useVisibilityToggle(editor, 'testKey', cardConfig))
+    const { result } = renderCurrentHook()
 
     expect(result.current.isVisibilityEnabled).toBe(false)
     expect(result.current.visibilityOptions).toEqual([])
@@ -200,28 +210,28 @@ describe('useVisibilityToggle', () => {
 
   it('returns isVisibilityEnabled as true when visibilitySettings is "web and email"', () => {
     cardConfig.visibilitySettings = VISIBILITY_SETTINGS.WEB_AND_EMAIL
-    const { result } = renderHook(() => useVisibilityToggle(editor, 'testKey', cardConfig))
+    const { result } = renderCurrentHook()
 
     expect(result.current.isVisibilityEnabled).toBe(true)
   })
 
   it('returns isVisibilityEnabled as true when visibilitySettings is "web only"', () => {
     cardConfig.visibilitySettings = VISIBILITY_SETTINGS.WEB_ONLY
-    const { result } = renderHook(() => useVisibilityToggle(editor, 'testKey', cardConfig))
+    const { result } = renderCurrentHook()
 
     expect(result.current.isVisibilityEnabled).toBe(true)
   })
 
   it('returns isVisibilityEnabled as true when visibilitySettings is "email only"', () => {
     cardConfig.visibilitySettings = VISIBILITY_SETTINGS.EMAIL_ONLY
-    const { result } = renderHook(() => useVisibilityToggle(editor, 'testKey', cardConfig))
+    const { result } = renderCurrentHook()
 
     expect(result.current.isVisibilityEnabled).toBe(true)
   })
 
   it('safely no-ops when toggling a hidden email group with "web only" setting', () => {
     cardConfig.visibilitySettings = VISIBILITY_SETTINGS.WEB_ONLY
-    const { result } = renderHook(() => useVisibilityToggle(editor, 'testKey', cardConfig))
+    const { result } = renderCurrentHook()
     const beforeVisibility = structuredClone(node.visibility)
 
     act(() => result.current.toggleVisibility('email', 'freeMembers', false))
@@ -231,7 +241,7 @@ describe('useVisibilityToggle', () => {
 
   it('safely no-ops when toggling a hidden web group with "email only" setting', () => {
     cardConfig.visibilitySettings = VISIBILITY_SETTINGS.EMAIL_ONLY
-    const { result } = renderHook(() => useVisibilityToggle(editor, 'testKey', cardConfig))
+    const { result } = renderCurrentHook()
     const beforeVisibility = structuredClone(node.visibility)
 
     act(() => result.current.toggleVisibility('web', 'nonMembers', false))
@@ -241,7 +251,7 @@ describe('useVisibilityToggle', () => {
 
   it('safely no-ops when toggling any group with "none" setting', () => {
     cardConfig.visibilitySettings = VISIBILITY_SETTINGS.NONE
-    const { result } = renderHook(() => useVisibilityToggle(editor, 'testKey', cardConfig))
+    const { result } = renderCurrentHook()
     const beforeVisibility = structuredClone(node.visibility)
 
     act(() => result.current.toggleVisibility('web', 'nonMembers', false))

@@ -23,14 +23,14 @@ function fakeKeyEvent(target: EventTarget | null, key = 'x'): KeyboardEvent {
 
 describe('registerKeyDownPassthrough', () => {
   let editor: LexicalEditor
-  let fallthrough: ReturnType<typeof vi.fn>
+  let fallthrough: (event: KeyboardEvent) => boolean
 
   beforeEach(() => {
     editor = createTestEditor()
     registerKeyDownPassthrough(editor, deps)
     // same-priority listener registered afterwards only runs when the
     // passthrough lets the event through (returns false)
-    fallthrough = vi.fn(() => false)
+    fallthrough = vi.fn<(event: KeyboardEvent) => boolean>(() => false)
     editor.registerCommand(KEY_DOWN_COMMAND, fallthrough, COMMAND_PRIORITY_LOW)
   })
 

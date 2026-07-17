@@ -1,5 +1,14 @@
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { renderHook } from '@testing-library/react'
-import { $createParagraphNode, $createTextNode, $getRoot, createEditor, TextNode, type LexicalEditor } from 'lexical'
+import {
+  $createParagraphNode,
+  $createTextNode,
+  $getRoot,
+  $isElementNode,
+  createEditor,
+  TextNode,
+  type LexicalEditor,
+} from 'lexical'
 import { describe, expect, it, vi } from 'vitest'
 
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
@@ -39,8 +48,7 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
 describe('useInklingTextEntity', () => {
   it('creates an entity node when text matches', async () => {
     const editor = createTestEditor()
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
 
     const getMatch = (text: string) => {
       const match = /^@\w+/.exec(text)
@@ -59,7 +67,7 @@ describe('useInklingTextEntity', () => {
 
     editor.getEditorState().read(() => {
       const paragraph = $getRoot().getFirstChild()
-      const child = paragraph?.getFirstChild()
+      const child = $isElementNode(paragraph) ? paragraph.getFirstChild() : null
       expect(child).toBeInstanceOf(MentionNode)
       expect(child?.getTextContent()).toBe('@alice')
     })
@@ -67,8 +75,7 @@ describe('useInklingTextEntity', () => {
 
   it('does not replace text when there is no match', async () => {
     const editor = createTestEditor()
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
 
     const getMatch = (text: string) => {
       const match = /^@\w+/.exec(text)
@@ -87,7 +94,7 @@ describe('useInklingTextEntity', () => {
 
     editor.getEditorState().read(() => {
       const paragraph = $getRoot().getFirstChild()
-      const child = paragraph?.getFirstChild()
+      const child = $isElementNode(paragraph) ? paragraph.getFirstChild() : null
       expect(child).toBeInstanceOf(TextNode)
       expect(child).not.toBeInstanceOf(MentionNode)
       expect(child?.getTextContent()).toBe('hello world')
@@ -96,8 +103,7 @@ describe('useInklingTextEntity', () => {
 
   it('reverts an entity node when it no longer matches', async () => {
     const editor = createTestEditor()
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
 
     const getMatch = (text: string) => {
       const match = /^@\w+/.exec(text)
@@ -116,7 +122,7 @@ describe('useInklingTextEntity', () => {
 
     editor.getEditorState().read(() => {
       const paragraph = $getRoot().getFirstChild()
-      const child = paragraph?.getFirstChild()
+      const child = $isElementNode(paragraph) ? paragraph.getFirstChild() : null
       expect(child).toBeInstanceOf(TextNode)
       expect(child).not.toBeInstanceOf(MentionNode)
       expect(child?.getTextContent()).toBe('hello')
@@ -125,8 +131,7 @@ describe('useInklingTextEntity', () => {
 
   it('uses the default TextNode when nodeType is not provided', async () => {
     const editor = createTestEditor()
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
 
     const getMatch = (text: string) => {
       const match = /^@\w+/.exec(text)
@@ -145,7 +150,7 @@ describe('useInklingTextEntity', () => {
 
     editor.getEditorState().read(() => {
       const paragraph = $getRoot().getFirstChild()
-      const child = paragraph?.getFirstChild()
+      const child = $isElementNode(paragraph) ? paragraph.getFirstChild() : null
       expect(child).toBeInstanceOf(MentionNode)
     })
   })

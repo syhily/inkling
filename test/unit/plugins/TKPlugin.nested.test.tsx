@@ -1,7 +1,7 @@
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import { LexicalNestedComposer } from '@lexical/react/LexicalNestedComposer'
 import { render } from '@testing-library/react'
-import { $createParagraphNode, $createTextNode, $getRoot, createEditor } from 'lexical'
+import { $createParagraphNode, $createTextNode, $getRoot, $isElementNode, createEditor } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -12,7 +12,7 @@ import TKPlugin from '@/plugins/TKPlugin'
 
 const NESTED_NODES = [ExtendedTextNode, extendedTextNodeReplacement, TKNode]
 
-const cardContextValue = {
+const cardContextValue: React.ContextType<typeof CardContext> = {
   isSelected: false,
   isEditing: false,
   captionHasFocus: false,
@@ -88,8 +88,10 @@ describe('TKPlugin in nested editors', () => {
     nestedEditor.getEditorState().read(() => {
       const root = $getRoot()
       const paragraph = root.getFirstChild()
-      expect(paragraph).not.toBeNull()
-      const firstNode = paragraph!.getFirstChild()
+      if (!$isElementNode(paragraph)) {
+        throw new Error('Expected nested editor paragraph')
+      }
+      const firstNode = paragraph.getFirstChild()
       expect(firstNode).not.toBeNull()
       expect($isTKNode(firstNode)).toBe(true)
     })

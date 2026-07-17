@@ -69,7 +69,7 @@ describe('registerCardCommands', () => {
   it('DELETE_CARD_COMMAND removes a card and preserves a paragraph', async () => {
     register()
 
-    let cardKey: string
+    let cardKey = ''
     await updateEditor(editor, () => {
       const root = $getRoot()
       root.clear()
@@ -89,7 +89,7 @@ describe('registerCardCommands', () => {
   it('SELECT_CARD_COMMAND selects a card by key', async () => {
     register()
 
-    let cardKey: string
+    let cardKey = ''
     await updateEditor(editor, () => {
       const root = $getRoot()
       root.clear()

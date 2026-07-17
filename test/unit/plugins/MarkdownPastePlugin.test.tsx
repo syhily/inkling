@@ -51,7 +51,10 @@ function createTestEditor() {
 type TestEditor = ReturnType<typeof createTestEditor>
 
 function TestWrapper({ children, editor }: { children: React.ReactNode; editor: TestEditor }) {
-  const contextValue = useMemo(() => [editor, createLexicalComposerContext(null, {})] as const, [editor])
+  const contextValue = useMemo<React.ContextType<typeof LexicalComposerContext>>(
+    () => [editor, createLexicalComposerContext(null, {})],
+    [editor],
+  )
   return <LexicalComposerContext.Provider value={contextValue}>{children}</LexicalComposerContext.Provider>
 }
 

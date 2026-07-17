@@ -94,7 +94,7 @@ describe('Image insert commands (CardInsertPlugin)', () => {
     const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
 
     await act(async () => {
-      editor.dispatchCommand(INSERT_IMAGE_COMMAND, 'not-an-object')
+      Reflect.apply(editor.dispatchCommand, editor, [INSERT_IMAGE_COMMAND, 'not-an-object'])
     })
 
     // Only the original INSERT_IMAGE_COMMAND should have been dispatched

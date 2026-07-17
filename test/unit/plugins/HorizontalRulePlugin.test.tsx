@@ -38,7 +38,10 @@ function createTestEditor() {
 }
 
 function TestWrapper({ children, editor }: { children: React.ReactNode; editor: LexicalEditor }) {
-  const contextValue = useMemo(() => [editor, createLexicalComposerContext(null, {})] as const, [editor])
+  const contextValue = useMemo<React.ContextType<typeof LexicalComposerContext>>(
+    () => [editor, createLexicalComposerContext(null, {})],
+    [editor],
+  )
   return <LexicalComposerContext.Provider value={contextValue}>{children}</LexicalComposerContext.Provider>
 }
 
@@ -155,8 +158,11 @@ describe('HorizontalRulePlugin shortcut listener', () => {
       // line.selectNext(): the caret lands at the start of the surviving paragraph
       const selection = $getSelection()
       expect($isRangeSelection(selection)).toBe(true)
-      expect(selection?.anchor.offset).toBe(0)
-      expect(selection?.anchor.getNode().getTopLevelElement()?.getKey()).toBe(afterKey)
+      if (!$isRangeSelection(selection)) {
+        throw new Error('Expected a range selection')
+      }
+      expect(selection.anchor.offset).toBe(0)
+      expect(selection.anchor.getNode().getTopLevelElement()?.getKey()).toBe(afterKey)
     })
   })
 
@@ -180,7 +186,10 @@ describe('HorizontalRulePlugin shortcut listener', () => {
       // line.selectNext(): the caret lands on the fresh trailing paragraph
       const selection = $getSelection()
       expect($isRangeSelection(selection)).toBe(true)
-      expect(selection?.anchor.getNode().getTopLevelElement()?.getKey()).toBe(trailing?.getKey())
+      if (!$isRangeSelection(selection)) {
+        throw new Error('Expected a range selection')
+      }
+      expect(selection.anchor.getNode().getTopLevelElement()?.getKey()).toBe(trailing?.getKey())
     })
   })
 

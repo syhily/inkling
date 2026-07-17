@@ -229,7 +229,9 @@ describe('TKPlugin', () => {
 
     const [getTKMatch] = vi.mocked(useInklingTextEntity).mock.calls[0]
     const match = getTKMatch('hello TK')
-    expect(match).not.toBeNull()
+    if (!match) {
+      throw new Error('Expected TK entity match')
+    }
     expect(match.start).toBe(6)
     expect(match.end).toBe(8)
   })

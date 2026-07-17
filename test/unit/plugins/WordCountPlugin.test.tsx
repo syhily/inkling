@@ -3,6 +3,8 @@ import {
   $createParagraphNode,
   $createTextNode,
   $getRoot,
+  $isElementNode,
+  $isTextNode,
   createEditor,
   DecoratorNode,
   type LexicalEditor,
@@ -193,7 +195,7 @@ describe('WordCountPlugin', () => {
 
     await updateEditor(editor, () => {
       const textNode = $getRoot().getFirstDescendant()
-      if (textNode) {
+      if ($isTextNode(textNode)) {
         textNode.setFormat(1)
       }
     })
@@ -292,8 +294,11 @@ describe('WordCountPlugin', () => {
 
     await updateEditor(editor, () => {
       const firstParagraph = $getRoot().getFirstChild()
-      if (firstParagraph) {
-        firstParagraph.getFirstChild()?.setTextContent('Paragraph zero has several words to count')
+      if ($isElementNode(firstParagraph)) {
+        const firstText = firstParagraph.getFirstChild()
+        if ($isTextNode(firstText)) {
+          firstText.setTextContent('Paragraph zero has several words to count')
+        }
       }
     })
 

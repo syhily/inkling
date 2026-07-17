@@ -1,6 +1,7 @@
 import type { Klass, LexicalCommand, LexicalEditor, LexicalNode } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { renderHook } from '@testing-library/react'
 import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_CRITICAL } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -51,8 +52,7 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
 }
 
 async function mountRegistrar(editor: LexicalEditor) {
-  const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-  useLexicalComposerContext.mockReturnValue([editor])
+  vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
   renderHook(() => CardInsertPlugin())
   // allow React effects to register commands
   await new Promise((resolve) => {
@@ -264,8 +264,7 @@ describe('CardInsertPlugin', () => {
 
   it('header: registers its insert command once per mount, not once per render', async () => {
     editor = createTestEditor([HeaderNode])
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
     const registerSpy = vi.spyOn(editor, 'registerCommand')
 
     const headerRegistrations = () =>

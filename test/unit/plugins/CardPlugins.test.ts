@@ -1,4 +1,5 @@
 import { createHeadlessEditor } from '@lexical/headless'
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { renderHook } from '@testing-library/react'
 import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_CRITICAL, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -18,7 +19,7 @@ vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
 
-function createTestEditor(nodes: Array<unknown>) {
+function createTestEditor(nodes: NonNullable<Parameters<typeof createHeadlessEditor>[0]>['nodes']) {
   return createHeadlessEditor({
     namespace: 'test',
     nodes,
@@ -33,8 +34,7 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
 }
 
 async function setupPluginTest(editor: LexicalEditor) {
-  const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-  useLexicalComposerContext.mockReturnValue([editor])
+  vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
   renderHook(() => CardInsertPlugin())
   // allow React effects to register commands
   await new Promise((resolve) => {
@@ -107,7 +107,7 @@ describe('Card insert commands (CardInsertPlugin)', () => {
     editor = createTestEditor([ButtonNode])
     await setupPluginTest(editor)
 
-    const dispatched = editor.dispatchCommand(INSERT_BUTTON_COMMAND, null)
+    const dispatched = Reflect.apply(editor.dispatchCommand, editor, [INSERT_BUTTON_COMMAND, null])
     expect(dispatched).toBe(false)
   })
 

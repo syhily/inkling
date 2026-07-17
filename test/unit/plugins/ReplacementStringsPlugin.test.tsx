@@ -1,7 +1,7 @@
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import { LexicalNestedComposer } from '@lexical/react/LexicalNestedComposer'
 import { render } from '@testing-library/react'
-import { $createParagraphNode, $createTextNode, $getRoot, createEditor, $isTextNode } from 'lexical'
+import { $createParagraphNode, $createTextNode, $getRoot, $isElementNode, $isTextNode, createEditor } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -12,7 +12,7 @@ import ReplacementStringsPlugin from '@/plugins/ReplacementStringsPlugin'
 
 const NESTED_NODES = [ExtendedTextNode, extendedTextNodeReplacement, TKNode]
 
-const cardContextValue = {
+const cardContextValue: React.ContextType<typeof CardContext> = {
   isSelected: false,
   isEditing: false,
   captionHasFocus: false,
@@ -89,12 +89,18 @@ describe('ReplacementStringsPlugin in nested editors', () => {
       const root = $getRoot()
       const paragraph = root.getFirstChild()
       expect(paragraph).not.toBeNull()
-      const nodes = paragraph!.getChildren()
+      if (!$isElementNode(paragraph)) {
+        throw new Error('Expected a paragraph node')
+      }
+      const nodes = paragraph.getChildren()
       expect(nodes.length).toBeGreaterThanOrEqual(1)
 
       const codeNode = nodes.find((node) => $isTextNode(node) && node.hasFormat('code'))
-      expect(codeNode).toBeDefined()
-      expect(codeNode!.getTextContent()).toBe('{first_name}')
+      expect($isTextNode(codeNode)).toBe(true)
+      if (!$isTextNode(codeNode)) {
+        throw new Error('Expected a formatted text node')
+      }
+      expect(codeNode.getTextContent()).toBe('{first_name}')
     })
   })
 })

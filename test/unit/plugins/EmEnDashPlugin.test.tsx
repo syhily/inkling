@@ -58,7 +58,10 @@ async function undo(editor: ReturnType<typeof createTestEditor>): Promise<void> 
 }
 
 function TestWrapper({ children, editor }: { children: React.ReactNode; editor: ReturnType<typeof createTestEditor> }) {
-  const contextValue = useMemo(() => [editor, createLexicalComposerContext(null, {})] as const, [editor])
+  const contextValue = useMemo<React.ContextType<typeof LexicalComposerContext>>(
+    () => [editor, createLexicalComposerContext(null, {})],
+    [editor],
+  )
   return <LexicalComposerContext.Provider value={contextValue}>{children}</LexicalComposerContext.Provider>
 }
 

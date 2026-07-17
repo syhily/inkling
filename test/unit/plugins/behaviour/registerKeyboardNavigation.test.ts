@@ -25,6 +25,7 @@ import {
   KEY_TAB_COMMAND,
   type LexicalCommand,
   type LexicalEditor,
+  type LexicalNodeConfig,
 } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -37,10 +38,10 @@ import { registerKeyboardNavigation } from '@/plugins/behaviour/registerKeyboard
 // Minimal node set that lets the keyboard plugin's listeners run in jsdom.
 const KEYBOARD_TEST_NODES = [ImageNode, ListNode, ListItemNode, CodeBlockNode, LinkNode]
 
-function createTestEditor(nodes: unknown[] = KEYBOARD_TEST_NODES) {
+function createTestEditor(nodes: LexicalNodeConfig[] = KEYBOARD_TEST_NODES) {
   return createEditor({
     namespace: 'test',
-    nodes: nodes as [],
+    nodes,
     onError: () => {},
   })
 }
@@ -51,7 +52,7 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
   })
 }
 
-function dispatchAndCommit<T>(editor: LexicalEditor, command: LexicalCommand<T>, payload?: T): Promise<boolean> {
+function dispatchAndCommit<T>(editor: LexicalEditor, command: LexicalCommand<T>, payload: T): Promise<boolean> {
   return new Promise((resolve) => {
     let result = false
     editor.update(
@@ -153,7 +154,10 @@ async function setSelectionAt(
   rangeTop: number,
 ) {
   await updateEditor(editor, () => {
-    $getNodeByKey(textNodeKey)?.select(offset, offset)
+    const textNode = $getNodeByKey(textNodeKey)
+    if ($isTextNode(textNode)) {
+      textNode.select(offset, offset)
+    }
   })
 
   const paragraphElement = root.querySelector('p')
@@ -244,7 +248,7 @@ describe('registerKeyboardNavigation', () => {
       expect($isParagraphNode(inserted)).toBe(true)
       const selection = $getSelection()
       expect($isRangeSelection(selection)).toBe(true)
-      expect(selection?.anchor.getNode().is(inserted)).toBe(true)
+      expect($isRangeSelection(selection) && selection.anchor.getNode().is(inserted)).toBe(true)
     })
 
     cleanup()
@@ -651,8 +655,8 @@ describe('registerKeyboardNavigation', () => {
         expect(root.getChildrenSize()).toBe(2)
         const paragraph = root.getChildAtIndex(1)
         expect($isParagraphNode(paragraph)).toBe(true)
-        expect(paragraph?.getChildrenSize()).toBe(1)
-        const remainingText = paragraph?.getFirstChild()
+        expect($isParagraphNode(paragraph) && paragraph.getChildrenSize()).toBe(1)
+        const remainingText = $isParagraphNode(paragraph) ? paragraph.getFirstChild() : null
         expect($isTextNode(remainingText)).toBe(true)
         expect(remainingText?.getTextContent()).toBe('content')
         const selection = $getSelection()
@@ -691,9 +695,9 @@ describe('registerKeyboardNavigation', () => {
         expect(root.getChildrenSize()).toBe(2)
         const paragraph = root.getChildAtIndex(1)
         expect($isParagraphNode(paragraph)).toBe(true)
-        expect(paragraph?.getChildrenSize()).toBe(2)
-        expect($isLineBreakNode(paragraph?.getChildAtIndex(0))).toBe(true)
-        const remainingText = paragraph?.getChildAtIndex(1)
+        expect($isParagraphNode(paragraph) && paragraph.getChildrenSize()).toBe(2)
+        expect($isLineBreakNode($isParagraphNode(paragraph) ? paragraph.getChildAtIndex(0) : null)).toBe(true)
+        const remainingText = $isParagraphNode(paragraph) ? paragraph.getChildAtIndex(1) : null
         expect($isTextNode(remainingText)).toBe(true)
         expect(remainingText?.getTextContent()).toBe('later line')
         const selection = $getSelection()
@@ -730,12 +734,12 @@ describe('registerKeyboardNavigation', () => {
         expect(root.getChildrenSize()).toBe(2)
         const paragraph = root.getChildAtIndex(1)
         expect($isParagraphNode(paragraph)).toBe(true)
-        expect(paragraph?.getChildrenSize()).toBe(3)
-        const firstChild = paragraph?.getFirstChild()
+        expect($isParagraphNode(paragraph) && paragraph.getChildrenSize()).toBe(3)
+        const firstChild = $isParagraphNode(paragraph) ? paragraph.getFirstChild() : null
         expect($isTextNode(firstChild)).toBe(true)
         expect(firstChild?.getTextContent()).toBe(' line')
-        expect($isLineBreakNode(paragraph?.getChildAtIndex(1))).toBe(true)
-        const laterText = paragraph?.getChildAtIndex(2)
+        expect($isLineBreakNode($isParagraphNode(paragraph) ? paragraph.getChildAtIndex(1) : null)).toBe(true)
+        const laterText = $isParagraphNode(paragraph) ? paragraph.getChildAtIndex(2) : null
         expect($isTextNode(laterText)).toBe(true)
         expect(laterText?.getTextContent()).toBe('later line')
         const selection = $getSelection()
@@ -776,9 +780,9 @@ describe('registerKeyboardNavigation', () => {
         expect(root.getChildrenSize()).toBe(2)
         const paragraph = root.getChildAtIndex(1)
         expect($isParagraphNode(paragraph)).toBe(true)
-        const remaining = paragraph?.getChildren().map((child) => child.getType())
+        const remaining = $isParagraphNode(paragraph) ? paragraph.getChildren().map((child) => child.getType()) : []
         expect(remaining).toEqual(['linebreak', 'text'])
-        const laterText = paragraph?.getChildAtIndex(1)
+        const laterText = $isParagraphNode(paragraph) ? paragraph.getChildAtIndex(1) : null
         expect($isTextNode(laterText)).toBe(true)
         expect(laterText?.getTextContent()).toBe('later line')
       })
@@ -957,7 +961,7 @@ describe('registerKeyboardNavigation', () => {
         expect(paragraph?.getTextContent()).toBe('Some content')
         const selection = $getSelection()
         expect($isRangeSelection(selection)).toBe(true)
-        expect(selection?.anchor.offset).toBe(textNodeSize)
+        expect($isRangeSelection(selection) && selection.anchor.offset).toBe(textNodeSize)
       })
 
       cleanup()
@@ -993,7 +997,7 @@ describe('registerKeyboardNavigation', () => {
         expect(paragraph?.getTextContent()).toBe('Some content')
         const selection = $getSelection()
         expect($isRangeSelection(selection)).toBe(true)
-        expect(selection?.anchor.offset).toBe(0)
+        expect($isRangeSelection(selection) && selection.anchor.offset).toBe(0)
       })
 
       cleanup()

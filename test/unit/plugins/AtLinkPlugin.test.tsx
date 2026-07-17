@@ -1,3 +1,4 @@
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { act, renderHook } from '@testing-library/react'
 import { createEditor, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -42,8 +43,7 @@ describe('AtLinkPlugin', () => {
   })
 
   it('renders null when searchLinks is not provided', async () => {
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
 
     const { result } = renderHook(() => AtLinkPlugin(), {
       wrapper: ({ children }) => (
@@ -72,8 +72,7 @@ describe('AtLinkPlugin', () => {
   })
 
   it('InklingAtLinkPlugin accepts searchLinks and siteUrl props', async () => {
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
 
     const searchLinks = vi.fn().mockResolvedValue([])
     const { result } = renderHook(() => InklingAtLinkPlugin({ searchLinks, siteUrl: 'https://example.com' }))

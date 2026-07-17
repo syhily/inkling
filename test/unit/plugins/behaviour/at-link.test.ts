@@ -252,7 +252,7 @@ describe('at-link node lifecycle (through the mounted plugin)', () => {
 
   async function mountPlugin(target: LexicalEditor = editor) {
     const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([target])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([target, { getTheme: () => undefined }])
     const searchLinks = vi.fn().mockResolvedValue([])
     await act(async () => {
       renderHook(() => InklingAtLinkPlugin({ searchLinks }))

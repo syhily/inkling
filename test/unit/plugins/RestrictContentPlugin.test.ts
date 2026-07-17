@@ -1,3 +1,4 @@
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { renderHook } from '@testing-library/react'
 import {
   $createParagraphNode,
@@ -42,8 +43,7 @@ describe('RestrictContentPlugin', () => {
   })
 
   it('imports ListItemNode from @lexical/list and truncates to specified paragraphs', async () => {
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
 
     renderHook(() => RestrictContentPlugin({ paragraphs: 2 }))
 
@@ -62,8 +62,7 @@ describe('RestrictContentPlugin', () => {
   })
 
   it('calls preventDefault on the plain-text markdown paste path', async () => {
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    useLexicalComposerContext.mockReturnValue([editor])
+    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
 
     renderHook(() => RestrictContentPlugin({ paragraphs: 2 }))
 

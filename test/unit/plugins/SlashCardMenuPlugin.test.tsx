@@ -1,6 +1,13 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { act, render, screen, waitFor } from '@testing-library/react'
-import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
+import {
+  $createParagraphNode,
+  $createTextNode,
+  $getRoot,
+  $isElementNode,
+  createEditor,
+  type LexicalEditor,
+} from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -164,7 +171,7 @@ describe('SlashCardMenuPlugin', () => {
     await act(async () => {
       await updateEditor(editor, () => {
         const paragraph = $getRoot().getFirstChild()
-        if (paragraph) {
+        if ($isElementNode(paragraph)) {
           paragraph.clear()
           paragraph.append($createTextNode('/image'))
         }
@@ -188,7 +195,7 @@ describe('SlashCardMenuPlugin', () => {
     await act(async () => {
       await updateEditor(editor, () => {
         const paragraph = $getRoot().getFirstChild()
-        if (paragraph) {
+        if ($isElementNode(paragraph)) {
           paragraph.clear()
           paragraph.append($createTextNode('/html'))
         }
