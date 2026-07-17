@@ -9,6 +9,7 @@ Status: **DONE**
 - `ca58891` — `fix(context): isolate history and validate collaboration`
 - `bb7604a` — `refactor(context): close card and host value contracts`
 - `44d78f8` — `fix(link-search): coordinate overlapping requests` (review remediation)
+- `36d752a` — `fix(link-search): prefetch default options independently` (second-review remediation)
 
 The work was performed directly on local `main`; nothing was pushed and no branch or PR was created.
 
@@ -28,7 +29,7 @@ The work was performed directly on local `main`; nothing was pushed and no branc
 12. **Fixed.** Pintura's close-click target is guarded with `instanceof Element`.
 13. **Fixed.** `PinturaConfig` contains only `jsUrl`/`cssUrl`, is exported publicly, and has a compile-time excess-key fixture. `UploadSettings.pinturaConfig` was already typed at baseline and its consumers already used it without casts.
 14. **Fixed (behavior, RED/GREEN).** The active search term is threaded to `noResultOptions`; the regression test proves `nothing-matches` is received instead of `''`.
-15. **Fixed (behavior, RED/GREEN), then strengthened in review.** Rejected host searches are caught without an unhandled rejection. A monotonically increasing request generation now coordinates default, debounced text, repeated-term, and immediate URL paths; only the latest request may update options or clear loading.
+15. **Fixed (behavior, RED/GREEN), then strengthened in review.** Rejected host searches are caught without an unhandled rejection. A monotonically increasing query generation coordinates debounced text, repeated-term, and immediate URL paths; only the latest query may update visible options or clear query loading. A separately generated background default request warms the cache without owning an active non-empty query's options or spinner.
 16. **Fixed.** The settings-panel comment now accurately says initializing `previousCardWidth` to `cardWidth` suppresses the first-render origin shift.
 17. **Fixed.** `cardWidth` is a required member of the settings hook's single options object; direct hook/component callers were updated.
 18. **Fixed.** The dead `!ref` check was removed; only `ref.current` is nullable.
@@ -108,6 +109,30 @@ No unhandled rejection was reported.
 
 No public contract or package artifact changed in the remediation, so the full unit/build/package/type gates were not repeated, per the review instructions.
 
+## Second-review remediation — independent default prefetch
+
+Commit `36d752a` restores the original mount/dependency-change default prefetch without reopening the query races. Default requests now have their own generation and pending-promise cache. They may populate `defaultListOptions` when current, but never update `listOptions` or `isSearching` for a non-empty query. An empty query with no cached defaults may attach its loading state to that same pending promise. Query generations still invalidate stale text/URL work independently.
+
+### Second-review RED
+
+`pnpm vitest run test/unit/hooks/useSearchLinks.test.ts` — **2 failed / 14 passed (16 total)**:
+
+- mounting with initial query `cats` started only `searchLinks('cats')`, never the required background `searchLinks()` prefetch;
+- mounting with an initial URL made zero background default calls, so rejection isolation and cache warming could not occur.
+
+### Second-review GREEN and covering gates
+
+- `pnpm vitest run test/unit/hooks/useSearchLinks.test.ts` — **16/16 passed**, including all 14 earlier race/rejection/query tests.
+- The resolved-background/text test proves the default cache fills without clearing the pending text spinner, then appears immediately on clear with exactly one default fetch.
+- The rejected-background/URL test proves the URL option and settled loading survive rejection without an unhandled rejection.
+- `pnpm typecheck` — passed.
+- `pnpm lint` — passed.
+- `pnpm lint:css` — passed.
+- `pnpm format:check` — passed; **854 files** checked.
+- `pnpm test:e2e:quiet test/e2e/linking.test.ts test/e2e/cards/bookmark-card-with-search.test.ts` — **35 passed, 6 skipped (41 total)**.
+
+No public type or artifact changed, so broad build/package gates were not repeated, as directed.
+
 ## Final gates at `HEAD`
 
 - `pnpm typecheck` — passed.
@@ -131,6 +156,6 @@ No public contract or package artifact changed in the remediation, so the full u
 
 ## Self-review and concerns
 
-Two-axis review against `d75e15e...HEAD` found no Critical/Important standards or maintainability issues. The initial spec concern was withdrawn against its first reproduction, then the narrower URL-cancellation interleaving above was identified and fixed in follow-up review. `git diff --check` is clean; the production diff adds none of the prohibited assertions, suppressions, or non-null hatches. Scope outside hooks/context is limited to the Task-1 draggable field, direct context/host consumers, public exports, and their fixtures.
+Two-axis review against `d75e15e...HEAD` found no Critical/Important standards or maintainability issues. Follow-up reviews identified the URL-cancellation race and then the lost background-default prefetch; both now have explicit RED/GREEN coverage. `git diff --check` is clean; the production diff adds none of the prohibited assertions, suppressions, or non-null hatches. Scope outside hooks/context is limited to the Task-1 draggable field, direct context/host consumers, public exports, and their fixtures.
 
 Concerns: none. Existing documented build warnings for browser-externalized Node modules remain unchanged and non-failing.
