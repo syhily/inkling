@@ -15,6 +15,8 @@ import { $insertCodeBlockForShortcut, FENCE_KEYBOARD_REGEXP } from '@/markdown/c
 
 import type { KeyboardNavigationDeps } from './types'
 
+import { editorOwnsFocus } from '../card-adjacency'
+
 export function registerTabCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
   const { isNested, cursorDidExitAtTop } = deps
 
@@ -22,7 +24,7 @@ export function registerTabCommand(editor: LexicalEditor, deps: KeyboardNavigati
     KEY_TAB_COMMAND,
     (event) => {
       // avoid processing card behaviours when an inner element has focus
-      if (document.activeElement !== editor.getRootElement()) {
+      if (!editorOwnsFocus(editor)) {
         return true
       }
 
