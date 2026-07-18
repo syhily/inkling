@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -37,7 +37,9 @@ const smokeTestInsertions = [
   { shortcut: 'divider', menuItem: 'Divider', selector: '[data-inkling-card="horizontalrule"]' },
 ]
 
-async function insertCardFromMenu(page, { shortcut, menuItem, selector }) {
+type CardMenuInsertion = (typeof smokeTestInsertions)[number]
+
+async function insertCardFromMenu(page: Page, { shortcut, menuItem, selector }: CardMenuInsertion) {
   await focusEditor(page)
   await page.keyboard.type(`/${shortcut}`)
   await expect(page.locator(`[data-inkling-card-menu-item="${menuItem}" i]`)).toBeVisible()
@@ -46,8 +48,7 @@ async function insertCardFromMenu(page, { shortcut, menuItem, selector }) {
 }
 
 test.describe('Inkling Editor with email template nodes', async function () {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })

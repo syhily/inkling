@@ -158,11 +158,18 @@ describe('InklingComposer', function () {
       </InklingComposer>,
     )
 
-    const provider = factory!('card-1', new Map()) as unknown as Record<string, unknown>
-    for (const method of ['awareness', 'connect', 'disconnect', 'on', 'off']) {
-      expect(provider[method]).toBeDefined()
+    expect(factory).toBeDefined()
+    if (!factory) {
+      throw new Error('Expected InklingComposer to provide a websocket factory')
     }
-    ;(provider.disconnect as () => void)()
+
+    const provider = factory('card-1', new Map())
+    expect(provider.awareness).toBeDefined()
+    expect(provider.connect).toBeTypeOf('function')
+    expect(provider.disconnect).toBeTypeOf('function')
+    expect(provider.on).toBeTypeOf('function')
+    expect(provider.off).toBeTypeOf('function')
+    provider.disconnect()
   })
 
   it.each([{ multiplayerEndpoint: 'ws://localhost:1234' }, { multiplayerDocId: 'doc' }])(

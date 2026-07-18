@@ -1,12 +1,21 @@
+import type { EditorState, LexicalEditor } from 'lexical'
+import type { NavigateFunction } from 'react-router-dom'
+
 import { expect, type Page } from '@playwright/test'
 import prettier from '@prettier/sync'
 import jsdom from 'jsdom'
 import fs from 'node:fs'
 
-import { E2E_PORT } from '../../playwright.config'
+declare global {
+  interface Window {
+    lexicalEditor: LexicalEditor
+    navigate?: NavigateFunction
+    originalEditorState: EditorState
+  }
+}
 
 const { JSDOM } = jsdom
-const browserCtrlOrCmdMap = new WeakMap()
+const browserCtrlOrCmdMap = new WeakMap<Page, 'Control' | 'Meta'>()
 
 // start-case helper: 'call-to-action' -> 'Call To Action'
 function startCase(str: string): string {
@@ -16,45 +25,55 @@ function startCase(str: string): string {
     .join(' ')
 }
 
-export async function initialize({ page, uri = '/#/?content=false' }: { page: Page; uri?: string }) {
-  const url = `http://localhost:${E2E_PORT}${uri}`
-
+export async function initialize({
+  page,
+  uri = '/#/?content=false',
+  force = false,
+}: {
+  page: Page
+  uri?: string
+  force?: boolean
+}) {
   const currentViewportSize = page.viewportSize()
-  if (currentViewportSize.width !== 1000 || currentViewportSize.height !== 1000) {
+  if (currentViewportSize === null || currentViewportSize.width !== 1000 || currentViewportSize.height !== 1000) {
     await page.setViewportSize({ width: 1000, height: 1000 })
   }
 
   const currentUrl = page.url()
   if (currentUrl === 'about:blank') {
     // First page load
-    await page.goto(url)
+    await page.goto(uri)
 
     await page.waitForSelector('.inkling-lexical')
 
     await exposeLexicalEditor(page)
   } else {
     // Subsequent pages navigated to using react router
-    await page.evaluate(
-      async ([navigateTo, force]) => {
-        window.lexicalEditor.blur()
-        window.lexicalEditor.setEditorState(window.originalEditorState)
+    const targetUrl = new URL(uri, currentUrl).href
+    const navigationRequest: [string, boolean] = [uri.slice(2), force || currentUrl === targetUrl]
+    await page.evaluate(async ([navigateTo, shouldForce]: [string, boolean]) => {
+      const navigate = window.navigate
+      if (!navigate) {
+        throw new Error('Expected the demo Navigator to expose window.navigate')
+      }
 
-        if (force) {
-          // Purposefully navigate away from the current page to ensure component is reloaded
-          window.navigate('/404')
-          await new Promise((res) => {
-            setTimeout(() => {
-              // Navigate in a task to ensure React Router cannot optimise out our first navigation
-              window.navigate(navigateTo)
-              res()
-            }, 10)
-          })
-        } else {
-          await window.navigate(navigateTo)
-        }
-      },
-      [uri.slice(2), currentUrl === url],
-    )
+      window.lexicalEditor.blur()
+      window.lexicalEditor.setEditorState(window.originalEditorState)
+
+      if (shouldForce) {
+        // Purposefully navigate away from the current page to ensure component is reloaded
+        navigate('/404')
+        await new Promise<void>((resolve) => {
+          setTimeout(() => {
+            // Navigate in a task to ensure React Router cannot optimise out our first navigation
+            navigate(navigateTo)
+            resolve()
+          }, 10)
+        })
+      } else {
+        await navigate(navigateTo)
+      }
+    }, navigationRequest)
     await exposeLexicalEditor(page)
   }
 
@@ -69,8 +88,16 @@ export async function initialize({ page, uri = '/#/?content=false' }: { page: Pa
 async function exposeLexicalEditor(page: Page) {
   await page.waitForSelector('[data-lexical-editor]')
   await page.evaluate(() => {
-    window.lexicalEditor = document.querySelector('[data-lexical-editor]').__lexicalEditor
-    window.originalEditorState = window.lexicalEditor.getEditorState()
+    const rootElement = document.querySelector<HTMLElement & { __lexicalEditor?: LexicalEditor }>(
+      '[data-lexical-editor]',
+    )
+    const editor = rootElement?.__lexicalEditor
+    if (!editor) {
+      throw new Error('Expected the Lexical root element to expose its editor instance')
+    }
+
+    window.lexicalEditor = editor
+    window.originalEditorState = editor.getEditorState()
   })
 }
 
@@ -287,29 +314,41 @@ export function html(partials: TemplateStringsArray, ...params: unknown[]) {
   return output
 }
 
-export async function assertSelection(page: Page, expected: Record<string, unknown>) {
+interface ExpectedSelection {
+  anchorOffset: number | readonly [number, number]
+  anchorPath: number[]
+  focusOffset: number | readonly [number, number]
+  focusPath: number[]
+}
+
+export async function assertSelection(page: Page, expected: ExpectedSelection) {
   // Assert the selection of the editor matches the snapshot
   const selection = await page.evaluate(() => {
     const rootElement = document.querySelector('div[contenteditable="true"]')
 
-    const getPathFromNode = (startNode) => {
-      const path = []
+    const getPathFromNode = (startNode: Node | null) => {
+      const path: number[] = []
       if (startNode === rootElement) {
         return []
       }
-      let current = startNode
+      let current: Node | null = startNode
       while (current !== null) {
         const parent = current.parentNode
         if (parent === null || current === rootElement) {
           break
         }
-        path.push(Array.from(parent.childNodes).indexOf(current))
+        path.push(Array.from(parent.childNodes).findIndex((child) => child === current))
         current = parent
       }
       return path.reverse()
     }
 
-    const { anchorNode, anchorOffset, focusNode, focusOffset } = window.getSelection()
+    const browserSelection = window.getSelection()
+    if (!browserSelection) {
+      throw new Error('Expected the browser to expose an active selection')
+    }
+
+    const { anchorNode, anchorOffset, focusNode, focusOffset } = browserSelection
 
     return {
       anchorOffset,
@@ -343,24 +382,39 @@ export async function assertSelection(page: Page, expected: Record<string, unkno
 export async function assertPosition(
   page: Page,
   selector: string,
-  expectedBox: { x: number; y: number; width: number; height: number },
+  expectedBox: Partial<Pick<BoundingBox, 'x' | 'y'>>,
   { threshold = 0 }: { threshold?: number } = {},
 ) {
   const assertedElem = await page.$(selector)
-  const assertedBox = await assertedElem.boundingBox()
+  if (!assertedElem) {
+    throw new Error(`Expected an element matching ${selector}`)
+  }
 
-  ;['x', 'y'].forEach((boxProperty) => {
-    if (Object.prototype.hasOwnProperty.call(expectedBox, boxProperty)) {
-      expect(assertedBox[boxProperty], boxProperty).toBeGreaterThanOrEqual(expectedBox[boxProperty] - threshold)
-      expect(assertedBox[boxProperty], boxProperty).toBeLessThanOrEqual(expectedBox[boxProperty] + threshold)
+  const assertedBox = await assertedElem.boundingBox()
+  if (!assertedBox) {
+    throw new Error(`Expected an element matching ${selector} to have a bounding box`)
+  }
+
+  const boxProperties: Array<'x' | 'y'> = ['x', 'y']
+  boxProperties.forEach((boxProperty) => {
+    const expectedPosition = expectedBox[boxProperty]
+    if (expectedPosition !== undefined) {
+      expect(assertedBox[boxProperty], boxProperty).toBeGreaterThanOrEqual(expectedPosition - threshold)
+      expect(assertedBox[boxProperty], boxProperty).toBeLessThanOrEqual(expectedPosition + threshold)
     }
   })
 }
 
 export async function getEditorStateJSON(page: Page) {
   const json = await page.evaluate(() => {
-    const rootElement = document.querySelector('div[contenteditable="true"]')
-    const editor = rootElement.__lexicalEditor
+    const rootElement = document.querySelector<HTMLElement & { __lexicalEditor?: LexicalEditor }>(
+      'div[contenteditable="true"]',
+    )
+    const editor = rootElement?.__lexicalEditor
+    if (!editor) {
+      throw new Error('Expected the editable root to expose its Lexical editor instance')
+    }
+
     return JSON.stringify(editor.getEditorState().toJSON())
   })
 
@@ -413,11 +467,16 @@ export async function pasteLexical(page: Page, content: string) {
   await paste(page, { 'application/x-lexical-editor': content })
 }
 
-export async function pasteFiles(page: Page, files: { name: string; type: string; content: string }[]) {
+export async function pasteFiles(page: Page, files: readonly FilePathPayload[]) {
   const dataTransfer = await createDataTransfer(page, files)
 
   await page.evaluate(async (clipboardData) => {
-    document.activeElement.dispatchEvent(
+    const activeElement = document.activeElement
+    if (!activeElement) {
+      throw new Error('Expected an active element before pasting files')
+    }
+
+    activeElement.dispatchEvent(
       new ClipboardEvent('paste', {
         clipboardData: clipboardData,
         bubbles: true,
@@ -431,7 +490,7 @@ export async function pasteFiles(page: Page, files: { name: string; type: string
 
 export async function pasteFilesWithText(
   page: Page,
-  files: { name: string; type: string; content: string }[],
+  files: readonly FilePathPayload[],
   text: Record<string, string> = {},
 ) {
   const dataTransfer = await createDataTransfer(page, files)
@@ -442,7 +501,12 @@ export async function pasteFilesWithText(
         clipboardData.setData(mimeType, textData[mimeType])
       })
 
-      document.activeElement.dispatchEvent(
+      const activeElement = document.activeElement
+      if (!activeElement) {
+        throw new Error('Expected an active element before pasting files')
+      }
+
+      activeElement.dispatchEvent(
         new ClipboardEvent('paste', {
           clipboardData: clipboardData,
           bubbles: true,
@@ -458,10 +522,10 @@ export async function pasteFilesWithText(
 
 export async function dragMouse(
   page: Page,
-  fromBoundingBox,
-  toBoundingBox,
-  positionStart = 'middle',
-  positionEnd = 'middle',
+  fromBoundingBox: BoundingBox,
+  toBoundingBox: BoundingBox,
+  positionStart: BoundingBoxPosition = 'middle',
+  positionEnd: BoundingBoxPosition = 'middle',
   mouseUp = true,
   hover = 0,
   steps = 1,
@@ -548,7 +612,12 @@ export async function createSnippet(page: Page) {
 
 export async function getScrollPosition(page: Page) {
   return await page.evaluate(() => {
-    return document.querySelector('.h-full.overflow-auto').scrollTop
+    const scrollContainer = document.querySelector<HTMLElement>('.h-full.overflow-auto')
+    if (!scrollContainer) {
+      throw new Error('Expected the editor scroll container')
+    }
+
+    return scrollContainer.scrollTop
   })
 }
 
@@ -564,27 +633,46 @@ export async function enterUntilScrolled(page: Page) {
   }
 }
 
-export async function expectUnchangedScrollPosition(page: Page, wrapper: string) {
+export async function expectUnchangedScrollPosition(page: Page, wrapper: () => Promise<void>) {
   const start = await getScrollPosition(page)
   await wrapper()
   const end = await getScrollPosition(page)
   expect(start).toEqual(end)
 }
 
-export async function createDataTransfer(page: Page, data: { type: string; data: Record<string, string> }[] = []) {
-  const filesData = []
+interface BoundingBox {
+  height: number
+  width: number
+  x: number
+  y: number
+}
 
-  data.forEach((file) => {
+type BoundingBoxPosition = 'end' | 'middle' | 'start'
+
+interface FilePathPayload {
+  fileName: string
+  filePath: string
+  fileType: string
+}
+
+interface SerializedFilePayload {
+  buffer: number[]
+  name: string
+  type: string
+}
+
+export async function createDataTransfer(page: Page, data: readonly FilePathPayload[] = []) {
+  const filesData: SerializedFilePayload[] = data.map((file) => {
     const buffer = fs.readFileSync(file.filePath)
 
-    filesData.push({
+    return {
       buffer: buffer.toJSON().data,
       name: file.fileName,
       type: file.fileType,
-    })
+    }
   })
 
-  return await page.evaluateHandle((dataset = []) => {
+  return await page.evaluateHandle((dataset: SerializedFilePayload[]) => {
     const dt = new DataTransfer()
 
     dataset.forEach((fileData) => {

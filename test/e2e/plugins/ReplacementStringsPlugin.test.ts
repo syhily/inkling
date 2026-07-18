@@ -1,11 +1,10 @@
-import { test } from '@playwright/test'
+import { test, type Page } from '@playwright/test'
 
 import { assertHTML, focusEditor, html, initialize } from '#/utils/e2e'
 
 test.describe('ReplacementStringsPlugin', async function () {
   test.describe('In email editor (ExtendedTextNode)', function () {
-    let page
-
+    let page: Page
     test.beforeAll(async ({ browser }) => {
       page = await browser.newPage()
     })

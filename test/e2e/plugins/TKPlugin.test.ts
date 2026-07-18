@@ -1,10 +1,9 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import { assertHTML, assertSelection, focusEditor, html, initialize } from '#/utils/e2e'
 
 test.describe('TK Plugin', async function () {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })
@@ -124,7 +123,14 @@ test.describe('TK Plugin', async function () {
       await page.keyboard.type('TK and TK and TK')
 
       await page
-        .evaluate(() => window.getSelection().toString())
+        .evaluate(() => {
+          const selection = window.getSelection()
+          if (selection === null) {
+            throw new Error('Expected a browser selection')
+          }
+
+          return selection.toString()
+        })
         .then((selection) => {
           expect(selection).toEqual('')
         })
@@ -132,7 +138,14 @@ test.describe('TK Plugin', async function () {
       await page.getByTestId('tk-indicator').click()
 
       await page
-        .evaluate(() => window.getSelection().toString())
+        .evaluate(() => {
+          const selection = window.getSelection()
+          if (selection === null) {
+            throw new Error('Expected a browser selection')
+          }
+
+          return selection.toString()
+        })
         .then((selection) => {
           expect(selection).toEqual('TK')
         })

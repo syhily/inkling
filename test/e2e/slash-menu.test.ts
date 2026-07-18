@@ -1,10 +1,9 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import { assertHTML, assertSelection, focusEditor, html, initialize, insertCard } from '#/utils/e2e'
 
 test.describe('Slash menu', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })
@@ -346,7 +345,12 @@ test.describe('Slash menu', async () => {
 
       expect(
         await page.evaluate(() => {
-          return document.querySelector('[data-inkling-card="image"] img').src
+          const image = document.querySelector('[data-inkling-card="image"] img')
+          if (!(image instanceof HTMLImageElement)) {
+            throw new Error('Expected an image card image')
+          }
+
+          return image.src
         }),
       ).toEqual('https://example.com/image.jpg')
     })

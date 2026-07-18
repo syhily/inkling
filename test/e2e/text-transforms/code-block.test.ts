@@ -1,10 +1,9 @@
-import { test } from '@playwright/test'
+import { test, type Page } from '@playwright/test'
 
 import { assertHTML, focusEditor, html, initialize } from '#/utils/e2e'
 
 test.describe('Renders code block node', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })

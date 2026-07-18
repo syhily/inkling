@@ -1,9 +1,10 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import { focusEditor, initialize, insertCard } from '#/utils/e2e'
 
 test.describe('Content Visibility', async () => {
-  let page
+  let page: Page
+
   async function insertHtmlCard() {
     await focusEditor(page)
     await insertCard(page, { cardName: 'html' })

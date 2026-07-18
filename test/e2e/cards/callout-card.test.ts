@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import { selectNamedColor } from '#/utils/color-select-helper'
 import {
@@ -16,8 +16,7 @@ import {
 test.describe('Callout Card', async () => {
   const ctrlOrCmd = isMac() ? 'Meta' : 'Control'
 
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })

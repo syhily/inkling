@@ -1,10 +1,9 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
-import { assertHTML, focusEditor, html, initialize, isMac, pasteText } from '#/utils/e2e'
+import { assertHTML, focusEditor, html, initialize, isMac, pasteHtml } from '#/utils/e2e'
 
 test.describe('Html Output Plugin', async function () {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })
@@ -49,11 +48,7 @@ test.describe('Html Output Plugin', async function () {
     await assertHTML(page, html` <p><br /></p> `)
 
     // paste link
-    await pasteText(
-      page,
-      '<a href="https://inkling.local/changelog/markdown/">inkling.local/changelog/markdown/</a>',
-      'text/html',
-    )
+    await pasteHtml(page, '<a href="https://inkling.local/changelog/markdown/">inkling.local/changelog/markdown/</a>')
 
     // check that link pasted successfully
     await assertHTML(

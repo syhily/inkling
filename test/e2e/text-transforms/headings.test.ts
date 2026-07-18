@@ -1,10 +1,9 @@
-import { test } from '@playwright/test'
+import { test, type Locator, type Page } from '@playwright/test'
 
 import { assertHTML, focusEditor, html, initialize } from '#/utils/e2e'
 
 test.describe('Text transforms > Headings', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })
@@ -70,7 +69,7 @@ test.describe('Text transforms > Headings', async () => {
 
       // move caret to beginning of line via mouse
       const pHandle = await page.locator('div[contenteditable="true"] p')
-      const pBox = await pHandle.boundingBox()
+      const pBox = await getBoundingBox(pHandle)
       await page.mouse.click(pBox.x + 1, pBox.y + 5)
 
       // type `# ` at beginning to convert to heading
@@ -94,7 +93,7 @@ test.describe('Text transforms > Headings', async () => {
 
       // move caret to beginning of line
       const pHandle = await page.locator('div[contenteditable="true"] p')
-      const pBox = await pHandle.boundingBox()
+      const pBox = await getBoundingBox(pHandle)
       await page.mouse.click(pBox.x + 1, pBox.y + 5)
 
       // type `# ` at beginning to convert to heading
@@ -127,7 +126,7 @@ test.describe('Text transforms > Headings', async () => {
 
       // move caret to beginning of line
       const h1Handle = await page.locator('div[contenteditable="true"] h1')
-      const h1Box = await h1Handle.boundingBox()
+      const h1Box = await getBoundingBox(h1Handle)
       await page.mouse.click(h1Box.x + 1, h1Box.y + 5)
 
       // type `# ` at beginning to convert to heading
@@ -156,7 +155,7 @@ test.describe('Text transforms > Headings', async () => {
 
       // move caret to beginning of line
       const h2Handle = await page.locator('div[contenteditable="true"] h2')
-      const h2Box = await h2Handle.boundingBox()
+      const h2Box = await getBoundingBox(h2Handle)
       await page.mouse.click(h2Box.x + 1, h2Box.y + 5)
 
       // type `# ` at beginning to convert to heading
@@ -185,7 +184,7 @@ test.describe('Text transforms > Headings', async () => {
 
       // move caret to beginning of line
       const h1Handle = await page.locator('div[contenteditable="true"] h1')
-      const h1Box = await h1Handle.boundingBox()
+      const h1Box = await getBoundingBox(h1Handle)
       await page.mouse.click(h1Box.x + 1, h1Box.y + 5)
 
       // type `## ` at beginning to convert to heading
@@ -209,7 +208,7 @@ test.describe('Text transforms > Headings', async () => {
 
       // move caret to beginning of quote
       const bqHandle = await page.locator('div[contenteditable="true"] blockquote')
-      const bqBox = await bqHandle.boundingBox()
+      const bqBox = await getBoundingBox(bqHandle)
       await page.mouse.click(bqBox.x + 1, bqBox.y + 5)
 
       // type `# ` at beginning to convert to heading
@@ -221,3 +220,12 @@ test.describe('Text transforms > Headings', async () => {
     //test.fixme('aside #\\s -> h1');
   })
 })
+
+async function getBoundingBox(locator: Locator) {
+  const boundingBox = await locator.boundingBox()
+  if (boundingBox === null) {
+    throw new Error('Expected the locator to be visible')
+  }
+
+  return boundingBox
+}

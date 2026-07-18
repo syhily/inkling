@@ -1,10 +1,9 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import { assertHTML, createSnippet, focusEditor, html, initialize, insertCard } from '#/utils/e2e'
 
 test.describe('Button Card', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })

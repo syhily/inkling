@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import {
   assertHTML,
@@ -11,8 +11,7 @@ import {
 } from '#/utils/e2e'
 
 test.describe('Html card', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })

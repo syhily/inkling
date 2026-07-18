@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -17,8 +17,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 test.describe('Gallery card', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })
@@ -373,8 +372,8 @@ test.describe('Gallery card', async () => {
     await page.waitForFunction(
       () => {
         const state = window.lexicalEditor.getEditorState().toJSON()
-        const gallery = state.root.children.find((c) => c.type === 'gallery')
-        return gallery && gallery.images && gallery.images.length === 2
+        const gallery = state.root.children.find((c: { type?: string; images?: unknown[] }) => c.type === 'gallery')
+        return gallery && 'images' in gallery && Array.isArray(gallery.images) && gallery.images.length === 2
       },
       { timeout: 5000 },
     )
@@ -455,8 +454,8 @@ test.describe('Gallery card', async () => {
     await page.waitForFunction(
       () => {
         const state = window.lexicalEditor.getEditorState().toJSON()
-        const imageNode = state.root.children.find((c) => c.type === 'image')
-        return imageNode && imageNode.src
+        const imageNode = state.root.children.find((c: { type?: string; src?: string }) => c.type === 'image')
+        return imageNode && 'src' in imageNode && imageNode.src
       },
       { timeout: 5000 },
     )
@@ -467,6 +466,9 @@ test.describe('Gallery card', async () => {
 
     const imageBBox = await page.locator('[data-inkling-card="image"]').nth(0).boundingBox()
     const galleryBBox = await page.locator('[data-inkling-card="gallery"]').nth(0).boundingBox()
+    if (!imageBBox || !galleryBBox) {
+      throw new Error('Expected image and gallery bounding boxes')
+    }
 
     await dragMouse(page, imageBBox, galleryBBox, 'middle', 'middle', true, 100, 100)
 
@@ -539,15 +541,19 @@ test.describe('Gallery card', async () => {
     await page.waitForFunction(
       () => {
         const state = window.lexicalEditor.getEditorState().toJSON()
-        const gallery = state.root.children.find((c) => c.type === 'gallery')
-        return gallery && gallery.images && gallery.images.length === 9
+        const gallery = state.root.children.find((c: { type?: string; images?: unknown[] }) => c.type === 'gallery')
+        return gallery && 'images' in gallery && Array.isArray(gallery.images) && gallery.images.length === 9
       },
       { timeout: 5000 },
     )
 
     const editorState = await getEditorState(page)
+    const firstNode = editorState.root.children[0]
+    if (!firstNode || firstNode.type !== 'gallery' || !('images' in firstNode) || !Array.isArray(firstNode.images)) {
+      throw new Error('Expected a gallery node with images')
+    }
 
-    expect(editorState.root.children[0].type).toEqual('gallery')
-    expect(editorState.root.children[0].images).toHaveLength(9)
+    expect(firstNode.type).toEqual('gallery')
+    expect(firstNode.images).toHaveLength(9)
   })
 })

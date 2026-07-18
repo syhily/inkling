@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -10,8 +10,7 @@ const __dirname = path.dirname(__filename)
 // Need to get video thumbnail before uploading on the server; for this purpose, convert video to blob (see extractVideoMetadata.js)
 // The problem is that Chromium can't read video src as blob
 test.describe('Drag Drop Paste Plugin Firefox', async function () {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })

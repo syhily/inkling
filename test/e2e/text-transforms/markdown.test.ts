@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import { assertHTML, focusEditor, html, initialize, pasteText } from '#/utils/e2e'
 
@@ -86,8 +86,7 @@ const SPECIAL_MARKUP_TRANSFORMS = [
 ]
 
 test.describe('Markdown', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })

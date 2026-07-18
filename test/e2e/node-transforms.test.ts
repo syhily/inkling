@@ -1,11 +1,10 @@
 // import {calloutColorPicker} from '../../../src/components/ui/cards/CalloutCardx';
-import { test } from '@playwright/test'
+import { test, type Page } from '@playwright/test'
 
 import { assertHTML, html, initialize } from '#/utils/e2e'
 
 test.describe('Node transforms', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })
@@ -20,6 +19,20 @@ test.describe('Node transforms', async () => {
 
   test('nested elements in paragraph nodes 1', async function () {
     await page.evaluate(() => {
+      function isLexicalEditor(value: unknown): value is {
+        parseEditorState: (serializedState: string) => unknown
+        setEditorState: (editorState: unknown) => void
+      } {
+        return (
+          typeof value === 'object' &&
+          value !== null &&
+          'parseEditorState' in value &&
+          typeof value.parseEditorState === 'function' &&
+          'setEditorState' in value &&
+          typeof value.setEditorState === 'function'
+        )
+      }
+
       const serializedState = JSON.stringify({
         root: {
           children: [
@@ -62,7 +75,12 @@ test.describe('Node transforms', async () => {
           version: 1,
         },
       })
-      const editor = window.lexicalEditor
+      const candidate = 'lexicalEditor' in window ? window.lexicalEditor : undefined
+      if (!isLexicalEditor(candidate)) {
+        throw new Error('Expected the demo to expose a Lexical editor')
+      }
+
+      const editor = candidate
       const editorState = editor.parseEditorState(serializedState)
       editor.setEditorState(editorState)
     })
@@ -84,6 +102,20 @@ test.describe('Node transforms', async () => {
 
   test('nested elements in paragraph nodes 2', async function () {
     await page.evaluate(() => {
+      function isLexicalEditor(value: unknown): value is {
+        parseEditorState: (serializedState: string) => unknown
+        setEditorState: (editorState: unknown) => void
+      } {
+        return (
+          typeof value === 'object' &&
+          value !== null &&
+          'parseEditorState' in value &&
+          typeof value.parseEditorState === 'function' &&
+          'setEditorState' in value &&
+          typeof value.setEditorState === 'function'
+        )
+      }
+
       const serializedState = JSON.stringify({
         root: {
           children: [
@@ -134,7 +166,12 @@ test.describe('Node transforms', async () => {
           version: 1,
         },
       })
-      const editor = window.lexicalEditor
+      const candidate = 'lexicalEditor' in window ? window.lexicalEditor : undefined
+      if (!isLexicalEditor(candidate)) {
+        throw new Error('Expected the demo to expose a Lexical editor')
+      }
+
+      const editor = candidate
       const editorState = editor.parseEditorState(serializedState)
       editor.setEditorState(editorState)
     })

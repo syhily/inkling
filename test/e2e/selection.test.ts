@@ -1,10 +1,9 @@
-import { test } from '@playwright/test'
+import { test, type Locator, type Page } from '@playwright/test'
 
 import { assertHTML, assertSelection, ctrlOrCmd, dragMouse, focusEditor, html, initialize } from '#/utils/e2e'
 
 test.describe('Selection behaviour', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })
@@ -24,8 +23,8 @@ test.describe('Selection behaviour', async () => {
     await page.keyboard.type('---')
     await page.keyboard.type('Second paragraph')
 
-    const firstPBoundingBox = await page.locator('p').nth(0).boundingBox()
-    const secondPBoundingBox = await page.locator('p').nth(1).boundingBox()
+    const firstPBoundingBox = await getBoundingBox(page.locator('p').nth(0))
+    const secondPBoundingBox = await getBoundingBox(page.locator('p').nth(1))
 
     await dragMouse(page, firstPBoundingBox, secondPBoundingBox, 'start', 'end')
 
@@ -47,8 +46,8 @@ test.describe('Selection behaviour', async () => {
     await page.keyboard.type('---')
     await page.keyboard.type('Second paragraph')
 
-    const firstPBoundingBox = await page.locator('p').nth(0).boundingBox()
-    const secondPBoundingBox = await page.locator('p').nth(1).boundingBox()
+    const firstPBoundingBox = await getBoundingBox(page.locator('p').nth(0))
+    const secondPBoundingBox = await getBoundingBox(page.locator('p').nth(1))
 
     await dragMouse(page, firstPBoundingBox, secondPBoundingBox, 'start', 'end')
 
@@ -134,3 +133,12 @@ test.describe('Selection behaviour', async () => {
     // });
   })
 })
+
+async function getBoundingBox(locator: Locator) {
+  const boundingBox = await locator.boundingBox()
+  if (boundingBox === null) {
+    throw new Error('Expected the locator to be visible')
+  }
+
+  return boundingBox
+}

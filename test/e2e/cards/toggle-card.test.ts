@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import {
   assertHTML,
@@ -11,7 +11,7 @@ import {
   waitForHistoryGroupBoundary,
 } from '#/utils/e2e'
 
-async function insertToggleCard(page) {
+async function insertToggleCard(page: Page) {
   await page.keyboard.type('/toggle')
   await page.waitForSelector('[data-inkling-card-menu-item="Toggle"][data-inkling-cardmenu-selected="true"]')
   await page.keyboard.press('Enter')
@@ -19,8 +19,7 @@ async function insertToggleCard(page) {
 }
 
 test.describe('Toggle card', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })

@@ -1,10 +1,9 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { assertHTML, assertPosition, assertSelection, focusEditor, html, initialize, insertCard } from '#/utils/e2e'
 
 test.describe('Plus button', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })
@@ -28,14 +27,14 @@ test.describe('Plus button', async () => {
 
       // expect button to be positioned for first paragraph
       const firstPara = await page.locator('[data-lexical-editor] > p')
-      const firstParaRect = await firstPara.boundingBox()
+      const firstParaRect = await getBoundingBox(firstPara)
       await assertPosition(page, '[data-inkling-plus-button]', { y: firstParaRect.y }, { threshold: 5 })
 
       await page.keyboard.press('Enter')
 
       // expect button to be positioned for second paragraph
       const secondPara = await page.locator('[data-lexical-editor] > p:nth-of-type(2)')
-      const secondParaRect = await secondPara.boundingBox()
+      const secondParaRect = await getBoundingBox(secondPara)
       await assertPosition(page, '[data-inkling-plus-button]', { y: secondParaRect.y }, { threshold: 5 })
 
       await page.keyboard.press('ArrowUp')
@@ -106,13 +105,13 @@ test.describe('Plus button', async () => {
       await page.keyboard.press('Enter')
 
       const firstPHandle = await page.locator('[data-lexical-editor] > p').nth(2)
-      const firstPHandleBox = await firstPHandle.boundingBox()
+      const firstPHandleBox = await getBoundingBox(firstPHandle)
       await firstPHandle.hover()
 
       await assertPosition(page, '[data-inkling-plus-button]', { y: firstPHandleBox.y }, { threshold: 5 })
 
       const secondPHandle = await page.locator('[data-lexical-editor] > p:nth-of-type(2)')
-      const secondPHandleBox = await secondPHandle.boundingBox()
+      const secondPHandleBox = await getBoundingBox(secondPHandle)
       await secondPHandle.hover()
 
       await assertPosition(page, '[data-inkling-plus-button]', { y: secondPHandleBox.y }, { threshold: 5 })
@@ -181,8 +180,8 @@ test.describe('Plus button', async () => {
       const pHandle2 = await page.locator('[data-lexical-editor] > p:nth-of-type(2)')
       const pHandle3 = await page.locator('[data-lexical-editor] > p:nth-of-type(3)')
 
-      const pHandle1Box = await pHandle1.boundingBox()
-      const pHandle3Box = await pHandle3.boundingBox()
+      const pHandle1Box = await getBoundingBox(pHandle1)
+      const pHandle3Box = await getBoundingBox(pHandle3)
 
       await assertPosition(page, '[data-inkling-plus-button]', { y: pHandle3Box.y }, { threshold: 5 })
 
@@ -245,7 +244,7 @@ test.describe('Plus button', async () => {
 
       const p1 = await page.locator('[data-lexical-editor] > p:nth-of-type(1)')
       const p3 = await page.locator('[data-lexical-editor] > p:nth-of-type(3)')
-      const p3Box = await p3.boundingBox()
+      const p3Box = await getBoundingBox(p3)
 
       await assertPosition(page, '[data-inkling-plus-button]', { y: p3Box.y }, { threshold: 5 })
 
@@ -293,7 +292,15 @@ test.describe('Plus button', async () => {
 
       await page.keyboard.type('Test')
       await expect(await page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
-      expect(await page.$eval('[data-lexical-editor] > p', (p) => p.innerText)).toBe('Test')
+      expect(
+        await page.$eval('[data-lexical-editor] > p', (element) => {
+          if (!(element instanceof HTMLElement)) {
+            throw new Error('Expected a paragraph element')
+          }
+
+          return element.innerText
+        }),
+      ).toBe('Test')
     })
 
     test('closes and moves focus on up/down', async function () {
@@ -324,7 +331,7 @@ test.describe('Plus button', async () => {
       })
 
       const p1 = await page.locator('[data-lexical-editor] > p').first()
-      const p1Box = await p1.boundingBox()
+      const p1Box = await getBoundingBox(p1)
       await assertPosition(page, '[data-inkling-plus-button]', { y: p1Box.y }, { threshold: 5 })
     })
 
@@ -428,3 +435,12 @@ test.describe('Plus button', async () => {
     })
   })
 })
+
+async function getBoundingBox(locator: Locator) {
+  const boundingBox = await locator.boundingBox()
+  if (boundingBox === null) {
+    throw new Error('Expected the locator to be visible')
+  }
+
+  return boundingBox
+}

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -7,7 +7,7 @@ import { assertHTML, focusEditor, html, initialize } from '#/utils/e2e'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-async function createHeaderCard({ page }) {
+async function createHeaderCard({ page }: { page: Page }) {
   await focusEditor(page)
   await page.keyboard.type('/header')
   await page.waitForSelector('[data-inkling-card-menu-item="Header"][data-inkling-cardmenu-selected="true"]')
@@ -17,8 +17,7 @@ async function createHeaderCard({ page }) {
 
 test.describe('Header card V2', () => {
   // const ctrlOrCmd = isMac() ? 'Meta' : 'Control';
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })
@@ -71,7 +70,7 @@ test.describe('Header card V2', () => {
   })
 
   test('renders header card node', async function () {
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     await assertHTML(
       page,
@@ -86,7 +85,7 @@ test.describe('Header card V2', () => {
   })
 
   test('can edit header', async function () {
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     await page.keyboard.type('Hello world')
     const firstEditor = page.locator('[data-inkling-card="header"] [data-inkling="editor"]').nth(0)
@@ -94,7 +93,7 @@ test.describe('Header card V2', () => {
   })
 
   test('can edit sub header', async function () {
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     await page.keyboard.type('Hello world')
 
@@ -109,7 +108,7 @@ test.describe('Header card V2', () => {
   })
 
   test('can edit sub header via arrow keys', async function () {
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     await page.keyboard.type('Hello')
 
@@ -128,7 +127,7 @@ test.describe('Header card V2', () => {
   })
 
   test('can add and remove button', async function () {
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     // click on the toggle with data-testid="header-button-toggle"
     await page.click('[data-testid="header-button-toggle"]')
@@ -156,7 +155,7 @@ test.describe('Header card V2', () => {
   })
 
   test('can change the button background color and text color', async function () {
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     await page.click('[data-testid="header-button-toggle"]')
 
@@ -171,14 +170,14 @@ test.describe('Header card V2', () => {
     await expect(page.locator('[data-testid="header-card-button"]')).toHaveCSS('color', 'rgb(255, 255, 255)')
 
     await page.click('[data-testid="header-button-color"] [data-testid="color-selector-button"]')
-    await selectCustomColor(page, '#f7f7f7', null)
+    await selectCustomColor(page, '#f7f7f7')
 
     await expect(page.locator('[data-testid="header-card-button"]')).toHaveCSS('background-color', 'rgb(247, 247, 247)')
     await expect(page.locator('[data-testid="header-card-button"]')).toHaveCSS('color', 'rgb(0, 0, 0)')
   })
 
   test('can change the background color and text color', async function () {
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     await page.click('[data-testid="header-background-color"] [data-testid="color-selector-button"]')
 
@@ -192,14 +191,14 @@ test.describe('Header card V2', () => {
     await expect(container).toHaveCSS('color', 'rgb(255, 255, 255)')
 
     await page.click('[data-testid="header-background-color"] [data-testid="color-selector-button"]')
-    await selectCustomColor(page, '#f7f7f7', null)
+    await selectCustomColor(page, '#f7f7f7')
 
     await expect(container).toHaveCSS('background-color', 'rgb(247, 247, 247)')
     await expect(container).toHaveCSS('color', 'rgb(0, 0, 0)')
   })
 
   test('can change to grey, black, brand background color', async function () {
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     await page.click('[data-testid="header-background-color"] [data-testid="color-selector-button"]')
 
@@ -222,7 +221,7 @@ test.describe('Header card V2', () => {
 
   test('can switch between background image and color', async function () {
     const filePath = path.relative(process.cwd(), __dirname + `/../fixtures/large-image.jpeg`)
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
     // Choose an image
     const fileChooserPromise = page.waitForEvent('filechooser')
 
@@ -276,7 +275,7 @@ test.describe('Header card V2', () => {
   test('can add and remove background image in split layout', async function () {
     const filePath = path.relative(process.cwd(), __dirname + `/../fixtures/large-image.jpeg`)
     const fileChooserPromise = page.waitForEvent('filechooser')
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     await page.click('[data-testid="settings-panel"]')
     await page.waitForSelector('[data-testid="header-layout-split"]')
@@ -297,7 +296,7 @@ test.describe('Header card V2', () => {
   })
 
   test('changes the alignment options from the settings panel', async function () {
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     // Default: centre alignment
     const header = page.getByTestId('header-heading-editor')
@@ -310,7 +309,7 @@ test.describe('Header card V2', () => {
   })
 
   test('keeps focus on previous editor when changing layout opts', async function () {
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     // Start editing the header
     await page.locator('[data-inkling-card="header"] [data-inkling="editor"] [contenteditable]').nth(0).fill('')
@@ -328,7 +327,7 @@ test.describe('Header card V2', () => {
   })
 
   test('keeps focus on previous editor when changing alignment opts', async function () {
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     // Start editing the subheader
     await page.keyboard.press('Enter')
@@ -348,7 +347,7 @@ test.describe('Header card V2', () => {
 
   test('can swap split layout sides on image', async function () {
     const filePath = path.relative(process.cwd(), __dirname + `/../fixtures/large-image.jpeg`)
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
     // Mouse position from earlier test can mean a tooltip is covering the split layout button
     await page.mouse.move(0, 0)
     await page.locator('[data-testid="header-layout-split"]').click()
@@ -415,7 +414,7 @@ test.describe('Header card V2', () => {
     await expect(page.getByTestId('header-subheader-editor').locator('p span').nth(1)).toHaveText('byebye sub')
   })
   test('can add a shift-enter to header and subheader', async function () {
-    await createHeaderCard({ page, version: 2 })
+    await createHeaderCard({ page })
 
     await page.keyboard.type('Hello world')
     await page.keyboard.press('Shift+Enter')

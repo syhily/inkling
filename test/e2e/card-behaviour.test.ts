@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import {
   assertHTML,
@@ -12,8 +12,7 @@ import {
 } from '#/utils/e2e'
 
 test.describe('Card behaviour', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })
@@ -763,6 +762,9 @@ test.describe('Card behaviour', async () => {
 
       const paragraph = page.locator('[data-lexical-editor] > p').first()
       const box = await paragraph.boundingBox()
+      if (!box) {
+        throw new Error('Expected paragraph bounding box')
+      }
       await page.mouse.click(box.x + 1, box.y + 5)
       await page.keyboard.press('ArrowUp')
 
@@ -961,6 +963,9 @@ test.describe('Card behaviour', async () => {
       // place cursor at beginning of first line
       const pHandle = await page.locator('[data-lexical-editor] > p').nth(0)
       const pRect = await pHandle.boundingBox()
+      if (!pRect) {
+        throw new Error('Expected paragraph bounding box')
+      }
       await page.mouse.click(pRect.x + 5, pRect.y + 5)
 
       // sanity check
@@ -1725,7 +1730,11 @@ test.describe('Card behaviour', async () => {
         await page.evaluate(() => {
           const editor = (window as unknown as { lexicalEditor: { getRootElement: () => HTMLElement | null } })
             .lexicalEditor
-          const paragraph = editor.getRootElement().querySelector('p')
+          const rootElement = editor.getRootElement()
+          if (!rootElement) {
+            throw new Error('Expected editor root element')
+          }
+          const paragraph = rootElement.querySelector('p')
           const span = paragraph?.querySelector('span[data-lexical-text="true"]')
           const textNode = span?.firstChild
           if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
@@ -1810,7 +1819,11 @@ test.describe('Card behaviour', async () => {
         await page.evaluate(() => {
           const editor = (window as unknown as { lexicalEditor: { getRootElement: () => HTMLElement | null } })
             .lexicalEditor
-          const paragraph = editor.getRootElement().querySelector('p')
+          const rootElement = editor.getRootElement()
+          if (!rootElement) {
+            throw new Error('Expected editor root element')
+          }
+          const paragraph = rootElement.querySelector('p')
           const span = paragraph?.querySelector('span[data-lexical-text="true"]')
           const textNode = span?.firstChild
           if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
@@ -2377,7 +2390,7 @@ test.describe('Card behaviour', async () => {
         backgroundColor: 'blue',
       }
 
-      const children = [{ ...calloutCard }]
+      const children: object[] = [{ ...calloutCard }]
 
       for (let i = 0; i < 30; i++) {
         children.push({
@@ -2429,15 +2442,19 @@ test.describe('Card behaviour', async () => {
       // Start monitoring for any scroll movement
       await page.evaluate(() => {
         const container = document.querySelector('.h-full.overflow-auto')
-        window._scrollStartPosition = container.scrollTop
-        window._maxScrollDeviation = 0
-        window._scrollHandler = () => {
-          const deviation = Math.abs(container.scrollTop - window._scrollStartPosition)
-          if (deviation > window._maxScrollDeviation) {
-            window._maxScrollDeviation = deviation
-          }
+        if (!container) {
+          throw new Error('Expected editor scroll container')
         }
-        container.addEventListener('scroll', window._scrollHandler)
+        container.setAttribute('data-scroll-start-position', String(container.scrollTop))
+        container.setAttribute('data-max-scroll-deviation', '0')
+        container.addEventListener('scroll', () => {
+          const startPosition = Number(container.getAttribute('data-scroll-start-position'))
+          const maxDeviation = Number(container.getAttribute('data-max-scroll-deviation'))
+          const deviation = Math.abs(container.scrollTop - startPosition)
+          if (deviation > maxDeviation) {
+            container.setAttribute('data-max-scroll-deviation', String(deviation))
+          }
+        })
       })
 
       // Enter edit mode on the first card — the second card's nested
@@ -2449,8 +2466,10 @@ test.describe('Card behaviour', async () => {
       // Check no scroll movement occurred (even transiently)
       const maxDeviation = await page.evaluate(() => {
         const container = document.querySelector('.h-full.overflow-auto')
-        container.removeEventListener('scroll', window._scrollHandler)
-        return window._maxScrollDeviation
+        if (!container) {
+          throw new Error('Expected editor scroll container')
+        }
+        return Number(container.getAttribute('data-max-scroll-deviation'))
       })
 
       expect(maxDeviation).toBe(0)

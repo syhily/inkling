@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -21,8 +21,7 @@ const __dirname = path.dirname(__filename)
 // Need to get video thumbnail before uploading on the server; for this purpose, convert video to blob (see extractVideoMetadata.js)
 // The problem is that Chromium can't read video src as blob
 test.describe('Video card', async () => {
-  let page
-
+  let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
   })
@@ -436,7 +435,7 @@ test.describe('Video card', async () => {
       const video = state.root.children.find(
         (child: { type?: string; src?: string; thumbnailSrc?: string }) => child.type === 'video',
       )
-      return video && video.src && video.thumbnailSrc
+      return video && 'src' in video && 'thumbnailSrc' in video && video.src && video.thumbnailSrc
     })
 
     await page.click('[data-testid="video-card-caption"]')
@@ -516,7 +515,7 @@ test.describe('Video card', async () => {
   })
 })
 
-async function uploadVideo(page, fileName = 'video.mp4') {
+async function uploadVideo(page: Page, fileName = 'video.mp4') {
   const filePath = path.relative(process.cwd(), __dirname + `/../fixtures/${fileName}`)
 
   const fileChooserPromise = page.waitForEvent('filechooser')
