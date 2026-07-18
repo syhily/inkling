@@ -24,14 +24,13 @@ Fresh `tsc --showConfig`/`--listFilesOnly` inspection established:
 - comparison against the filesystem found **0 missing** eligible files and **0 unexpected** test files;
 - **0** `test/e2e/**` files and no `test/utils/e2e.ts` are included.
 
-`package.json` makes `pnpm typecheck` the canonical composition of `typecheck:source` and `typecheck:unit`. The existing
-CI static job already runs `pnpm typecheck`, so no workflow edit was required. The existing e2e job continues to run
-`pnpm test:e2e`, which is Playwright's compile-and-execute gate.
+`package.json` made `pnpm typecheck` the canonical composition of `typecheck:source` and `typecheck:unit`. The existing CI
+static job already ran `pnpm typecheck`, so no workflow edit was required at Task 5 HEAD. The e2e job continued to run
+`pnpm test:e2e`, which transformed and executed the browser suite but did not perform semantic TypeScript analysis.
 
-README documents the separation explicitly: Playwright specs and their browser-only helper stay with the Playwright
-runner so its fixtures and browser scaffolding do not leak into the production/Vitest TypeScript programs. This is a
-separate visible gate, not a silent production-config exclusion. The deliberate negative fixtures continue to be
-exercised positively by `pnpm verify:types`.
+README originally documented Playwright transformation/execution as the separate e2e path. Final review established that
+this was not a semantic TypeScript gate; the final-review remediation below supersedes that incomplete architecture. The
+deliberate negative fixtures continue to be exercised positively by `pnpm verify:types`.
 
 ## Exact RED evidence
 
@@ -178,3 +177,74 @@ separate behavior-fix batch with an integration regression test.
 - Complete Lexical composer tuples are repeated across plugin/component tests. Each literal directly states the real
   context contract at its use site. A shared composer-mock helper may reduce repetition later, but introducing one is not
   required to make the strict gate honest and would be a separate test-architecture change.
+
+## Final-review remediation — strict semantic e2e gate
+
+Final review correctly found that Playwright's transform-and-execute path was insufficient: it did not run TypeScript's
+semantic analysis over `test/e2e/**` or `test/utils/e2e.ts`. Commit `a7dd99f` closes that architecture gap.
+
+### Gate architecture
+
+- Added `tsconfig.e2e.json`, extending the canonical `tsconfig.json` without disabling or overriding `strict`.
+- Its explicit root boundary is `test/e2e/**/*` plus `test/utils/e2e.ts`; source/demo declaration roots supply the same
+  browser/module declarations as the other programs. The unit, deliberate typecheck, and consumer-fixture trees are
+  explicitly excluded.
+- `compilerOptions.types` is exactly `node` and `@playwright/test`, so Playwright ambient types do not leak into the source
+  or Vitest programs.
+- `tsc --showConfig` and `--listFilesOnly` establish `strict: true`, **45** Playwright spec roots, **1** e2e-helper root,
+  and **0** other test roots. The existing `test/utils/color-select-helper.ts` is additionally checked as a normal
+  transitive import from two specs; it remains a root of the unit/utils gate.
+- Added `pnpm typecheck:e2e` and composed it into canonical `pnpm typecheck` after source and unit checks. The unchanged CI
+  static job therefore reaches all three semantic programs. `pnpm test:e2e` remains the separate browser execution gate.
+- README now distinguishes semantic `tsc` analysis from Playwright transformation and execution.
+
+### Exact compiler RED
+
+After adding only the config and script wiring, the first command was:
+
+```text
+./node_modules/.bin/tsc --noEmit -p tsconfig.e2e.json --pretty false
+exit 2; 3,960 diagnostics across all 46 target files
+```
+
+| Code | Count | Root category |
+| --- | ---: | --- |
+| TS7005 | 3,687 | untyped shared Playwright `page` variables at use sites |
+| TS7006 | 61 | implicit-any callback/helper parameters |
+| TS2353 | 59 | object literals outside the declared helper/domain contract |
+| TS7034 | 48 | implicitly typed shared variables |
+| TS2339 | 40 | missing properties on inferred DOM/serialized/browser values |
+| TS2345 | 22 | arguments outside the callee's real contract |
+| TS18047 | 14 | nullable DOM/Playwright results |
+| TS2531 | 10 | possibly-null object access |
+| TS7031 | 4 | implicit-any destructured bindings |
+| TS7053 | 4 | untyped dynamic property access |
+| TS2551 | 3 | misspelled/missing browser bridge property |
+| TS2554 | 3 | wrong argument count |
+| TS7016 | 2 | missing declaration for an imported JavaScript package/module |
+| TS2349 | 1 | non-callable value invoked |
+| TS2774 | 1 | always-true function condition |
+| TS2794 | 1 | unresolved Promise value type |
+
+The totals reconcile to **3,960 diagnostics / 46 files**. Grouped broadly, they were **3,800** implicit-any diagnostics,
+**102** property/shape diagnostics, **25** argument/arity diagnostics, **24** nullability diagnostics, **4** dynamic-index
+diagnostics, **2** missing-declaration diagnostics, and **3** call/control-flow diagnostics.
+
+### Root-cause GREEN repair
+
+- Typed every shared browser fixture and helper parameter with Playwright's actual `Page`, `Locator`, and `Route`
+  contracts. This removed the 3,735 shared-variable cascade at its declarations rather than annotating use sites.
+- Closed `test/utils/e2e.ts` around its real APIs: `force` navigation, partial position assertions, bounding boxes,
+  selection paths, callback execution, path-backed file payloads, data-transfer serialization, and the already-runtime-true
+  `window.lexicalEditor` bridge. Nullable browser and DOM results now fail with descriptive guards.
+- Narrowed serialized card data by discriminants/runtime checks, guarded nullable element/bounding-box/selection results,
+  replaced the undeclared `fs-extra` import with Node's typed `readFileSync`, and corrected HTML paste callers to use the
+  existing `pasteHtml` API.
+- Added no `any`, `as any`, `as unknown as`, `as never`, non-null assertion, TypeScript suppression, or lint suppression.
+  The two pre-existing, audit-sanctioned `window.lexicalEditor` structural doubles in `card-behaviour.test.ts` are unchanged.
+- Removed the unrelated final-review provider casts in `InklingComposer.test.tsx`: the factory is explicitly guarded, its
+  provider remains typed, and `provider.disconnect()` is invoked directly.
+
+Fresh GREEN evidence is recorded in `task-6-report.md`. The accepted RestrictContent mismatch remains exactly the same
+pre-existing behavior and expectation described in the STOP section above; no production paste handler or expectation was
+changed.
