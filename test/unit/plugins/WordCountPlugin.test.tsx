@@ -195,9 +195,10 @@ describe('WordCountPlugin', () => {
 
     await updateEditor(editor, () => {
       const textNode = $getRoot().getFirstDescendant()
-      if ($isTextNode(textNode)) {
-        textNode.setFormat(1)
+      if (!$isTextNode(textNode)) {
+        throw new Error('Expected the word-count fixture to contain a text node')
       }
+      textNode.setFormat(1)
     })
 
     await flushThrottle()
@@ -294,12 +295,14 @@ describe('WordCountPlugin', () => {
 
     await updateEditor(editor, () => {
       const firstParagraph = $getRoot().getFirstChild()
-      if ($isElementNode(firstParagraph)) {
-        const firstText = firstParagraph.getFirstChild()
-        if ($isTextNode(firstText)) {
-          firstText.setTextContent('Paragraph zero has several words to count')
-        }
+      if (!$isElementNode(firstParagraph)) {
+        throw new Error('Expected the long-document fixture to start with a paragraph')
       }
+      const firstText = firstParagraph.getFirstChild()
+      if (!$isTextNode(firstText)) {
+        throw new Error('Expected the first paragraph to contain a text node')
+      }
+      firstText.setTextContent('Paragraph zero has several words to count')
     })
 
     await flushThrottle()

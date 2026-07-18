@@ -1,10 +1,14 @@
 import { createHeadlessEditor } from '@lexical/headless'
-import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
+import { $createParagraphNode, $createTextNode, $getRoot, type EditorConfig, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { AsideNode, $createAsideNode, $isAsideNode } from '@/nodes/AsideNode'
 
 const editorNodes = [AsideNode]
+const asideEditorConfig: EditorConfig = {
+  namespace: 'test',
+  theme: { aside: 'inkling-aside' },
+}
 
 function updateEditor(editor: LexicalEditor, updateFn: () => void) {
   return new Promise<void>((resolve) => {
@@ -29,7 +33,7 @@ describe('AsideNode', () => {
   it('creates an aside DOM element with the theme class', async () => {
     await updateEditor(editor, () => {
       const asideNode = $createAsideNode()
-      const element = asideNode.createDOM({ ...editor._config, theme: { aside: 'inkling-aside' } })
+      const element = asideNode.createDOM(asideEditorConfig)
 
       expect(element.tagName).toBe('ASIDE')
       expect(element.className).toBe('inkling-aside')

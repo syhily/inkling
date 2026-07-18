@@ -1,11 +1,15 @@
 import { createHeadlessEditor } from '@lexical/headless'
-import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
+import { $createParagraphNode, $createTextNode, $getRoot, type EditorConfig, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { ImageNode, $createImageNode, $isImageNode, INSERT_IMAGE_COMMAND } from '@/nodes/ImageNode'
 
 const editorNodes = [ImageNode]
+const imageEditorConfig: EditorConfig = {
+  namespace: 'test',
+  theme: {},
+}
 
 function updateEditor(editor: LexicalEditor, updateFn: () => void) {
   return new Promise<void>((resolve) => {
@@ -99,7 +103,7 @@ describe('ImageNode', () => {
   it('creates a div DOM element', async () => {
     await updateEditor(editor, () => {
       const imageNode = $createImageNode({ src: '/image.png' })
-      const element = imageNode.createDOM(editor._config, editor)
+      const element = imageNode.createDOM(imageEditorConfig, editor)
       expect(element.tagName).toBe('DIV')
     })
   })
