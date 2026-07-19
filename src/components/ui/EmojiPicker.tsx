@@ -2,7 +2,8 @@ import { Picker } from 'emoji-mart'
 import React, { useEffect, useRef } from 'react'
 
 // the runtime instance is the picker's custom element, which also exposes an
-// update() method (emoji-mart ships no usable types)
+// update() method — emoji-mart ships dist/index.d.ts, but its types are `any`
+// throughout, so the instance shape we rely on is declared here
 interface EmojiMartInstance extends HTMLElement {
   update: (props: Record<string, unknown>) => void
 }

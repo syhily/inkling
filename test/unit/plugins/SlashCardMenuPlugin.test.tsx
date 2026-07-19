@@ -1,4 +1,3 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import {
   $createParagraphNode,
@@ -11,6 +10,7 @@ import {
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import { INSERT_HTML_COMMAND } from '@/nodes/HtmlNode'
@@ -123,7 +123,7 @@ async function setupSlashPlugin() {
 
   const contextValue = createComposerContext()
 
-  vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => null }])
+  mockComposerContext(editor)
   const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
 
   render(

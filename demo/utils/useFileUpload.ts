@@ -77,7 +77,7 @@ function isFileTypeKey(type: string): type is keyof FileTypes {
 }
 
 export function useFileUpload({ isMultiplayer = false }: UseFileUploadOptions = {}) {
-  return function useFileUploadFn(type: string = ''): FileUploadState {
+  return function useFileUploadFn(type: keyof FileTypes): FileUploadState {
     const [progress, setProgress] = useState(100)
     const [isLoading, setLoading] = useState(false)
     const [errors, setErrors] = useState<Error[]>([])

@@ -98,6 +98,9 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
 
       if ($isNodeSelection(selection)) {
         const currentNode = selection.getNodes()[0]
+        if (!currentNode) {
+          return false
+        }
         const previousSibling = currentNode.getPreviousSibling()
 
         if (!previousSibling && cursorDidExitAtTop) {
@@ -214,6 +217,9 @@ export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNa
 
       if ($isNodeSelection(selection)) {
         const currentNode = selection.getNodes()[0]
+        if (!currentNode) {
+          return false
+        }
         const nextSibling = currentNode.getNextSibling()
 
         // create a new paragraph and select it if selected card is at end of document
@@ -269,6 +275,9 @@ export function registerArrowLeftCommand(editor: LexicalEditor, deps: KeyboardNa
       if (cursorDidExitAtTop) {
         if ($isNodeSelection(selection)) {
           const currentNode = selection.getNodes()[0]
+          if (!currentNode) {
+            return false
+          }
           const previousSibling = currentNode.getPreviousSibling()
 
           if (!previousSibling) {
@@ -289,6 +298,9 @@ export function registerArrowLeftCommand(editor: LexicalEditor, deps: KeyboardNa
       }
 
       const firstNode = selection.getNodes()[0]
+      if (!firstNode) {
+        return false
+      }
       // non-card selections resolve their top-level element; cards resolve themselves
       const referenceNode = $isInklingCard(firstNode) ? firstNode : firstNode.getTopLevelElement()
       const previousCard = referenceNode ? $getLogicallyAdjacentCard('previous', referenceNode) : null
@@ -322,6 +334,9 @@ export function registerArrowRightCommand(editor: LexicalEditor, _deps: Keyboard
 
       const selectedNodes = selection.getNodes()
       const lastNode = selectedNodes[selectedNodes.length - 1]
+      if (!lastNode) {
+        return false
+      }
 
       // cards resolve themselves; other selections resolve their top-level element
       const referenceNode = $isInklingCard(lastNode) ? lastNode : lastNode.getTopLevelElement()

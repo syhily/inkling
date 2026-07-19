@@ -1,9 +1,9 @@
-import { addClassNamesToElement, $createParagraphNode } from 'lexical'
+import { addClassNamesToElement, $createParagraphNode, type EditorConfig } from 'lexical'
 
 import { AsideNode as BaseAsideNode } from '@/nodes/base'
 
 export class AsideNode extends BaseAsideNode {
-  createDOM(config: import('lexical').EditorConfig) {
+  createDOM(config: EditorConfig) {
     const element = document.createElement('aside')
     addClassNamesToElement(element, config.theme.aside)
     return element

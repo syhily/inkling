@@ -2,9 +2,14 @@ import { act, render, screen } from '@testing-library/react'
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { MovablePosition, MovablePositionWithSpacing, UseMovableResult } from '@/hooks/useMovable'
-
+import useMovable from '@/hooks/useMovable'
 import useSettingsPanelReposition from '@/hooks/useSettingsPanelReposition'
+
+// the hook keeps its option/result interfaces internal; derive the contract
+// here instead of importing named types
+type UseMovableResult = ReturnType<typeof useMovable>
+type MovablePosition = Parameters<UseMovableResult['setPosition']>[0]
+type MovablePositionWithSpacing = ReturnType<UseMovableResult['getPosition']>
 
 const mockMovable = vi.hoisted(() => {
   type Instance = {

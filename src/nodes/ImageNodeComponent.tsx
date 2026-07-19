@@ -1,5 +1,12 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $createNodeSelection, $getNodeByKey, $setSelection, type NodeKey } from 'lexical'
+import {
+  $createNodeSelection,
+  $getNodeByKey,
+  $setSelection,
+  type EditorState,
+  type LexicalEditor,
+  type NodeKey,
+} from 'lexical'
 import React from 'react'
 
 import type { GalleryImage } from '@/types/gallery'
@@ -33,8 +40,8 @@ export interface ImageNodeComponentProps {
   initialFile?: File
   src: string
   altText?: string
-  captionEditor?: import('lexical').LexicalEditor
-  captionEditorInitialState?: import('lexical').EditorState
+  captionEditor?: LexicalEditor
+  captionEditorInitialState?: EditorState
   triggerFileDialog?: boolean
   previewSrc?: string | null
   href?: string

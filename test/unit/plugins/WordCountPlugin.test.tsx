@@ -14,6 +14,7 @@ import {
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import { WordCountHandleContext } from '@/context/WordCountHandleContext'
 import { createWordCountHandle } from '@/plugins/behaviour/wordCountHandle'
 import { WordCountPlugin } from '@/plugins/WordCountPlugin'
@@ -102,8 +103,7 @@ describe('WordCountPlugin', () => {
   })
 
   async function renderPlugin(onChange: (count: number) => void, pluginEditor = editor) {
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    vi.mocked(useLexicalComposerContext).mockReturnValue([pluginEditor, { getTheme: () => null }])
+    mockComposerContext(pluginEditor)
 
     const wordCountHandle = createWordCountHandle()
     const result = renderHook(() => WordCountPlugin({ onChange }), {

@@ -1,4 +1,3 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { render, screen, act } from '@testing-library/react'
 import { $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
@@ -6,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import CardContext from '@/context/CardContext'
 import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
@@ -106,7 +106,7 @@ describe('InklingCardWrapper', () => {
 
   beforeEach(async () => {
     editor = createTestEditor()
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
   })
 
   it('renders children with the card type derived from the node', async () => {

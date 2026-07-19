@@ -9,9 +9,10 @@ export function ButtonCard({
   buttonText,
   buttonPlaceholder,
   buttonUrl,
-  handleAlignmentChange,
-  handleButtonTextChange,
-  handleButtonUrlChange,
+  // stories render without handlers; the settings become no-ops
+  handleAlignmentChange = () => {},
+  handleButtonTextChange = () => {},
+  handleButtonUrlChange = () => {},
   isEditing,
 }: {
   alignment?: string
@@ -56,21 +57,21 @@ export function ButtonCard({
           <ButtonGroupSetting
             buttons={buttonGroupChildren}
             label="Content alignment"
-            selectedName={alignment!}
-            onClick={handleAlignmentChange!}
+            selectedName={alignment}
+            onClick={handleAlignmentChange}
           />
           <InputSetting
             dataTestId="button-input-text"
             label="Button text"
             placeholder="Add button text"
-            value={buttonText!}
-            onChange={handleButtonTextChange!}
+            value={buttonText ?? ''}
+            onChange={handleButtonTextChange}
           />
           <InputUrlSetting
             dataTestId="button-input-url"
             label="Button URL"
-            value={buttonUrl!}
-            onChange={handleButtonUrlChange!}
+            value={buttonUrl ?? ''}
+            onChange={handleButtonUrlChange}
           />
         </SettingsPanel>
       )}

@@ -91,7 +91,7 @@ export function FloatingLinkToolbar({ anchorElem, onEditLink, disabled }: Floati
       return
     }
     editor.update(() => {
-      linkNode!.select()
+      linkNode.select()
       editor.dispatchCommand(TOGGLE_LINK_COMMAND, null)
       setLinkNode(null)
     })

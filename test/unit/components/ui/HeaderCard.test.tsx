@@ -3,18 +3,8 @@ import { createEditor } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { FileUploaderLike } from '@/components/ui/cards/card-ui-types'
-import type { UseFileDragAndDropResult } from '@/hooks/useFileDragAndDrop'
-
+import { createDragHandler, createUploader } from '#/utils/mock-file-factories'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
-
-function createUploader(overrides: Partial<FileUploaderLike> = {}): FileUploaderLike {
-  return { isLoading: false, upload: async () => undefined, errors: [], ...overrides }
-}
-
-function createDragHandler(overrides: Partial<UseFileDragAndDropResult> = {}): UseFileDragAndDropResult {
-  return { isDraggedOver: false, setRef: vi.fn(), ...overrides }
-}
 
 vi.mock('../../../../src/components/ui/MediaUploader', () => ({
   MediaUploader: ({ additionalActions, ...props }: Record<string, unknown>) => (

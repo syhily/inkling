@@ -17,6 +17,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import {
   $createAtLinkNode,
   $createAtLinkSearchNode,
@@ -25,8 +26,6 @@ import {
   AtLinkSearchNode,
   ZWNJNode,
 } from '@/nodes/base'
-import { InklingAtLinkPlugin } from '@/plugins/AtLinkPlugin'
-
 // Characterization pins for the at-link node lifecycle, driven black-box
 // through the mounted InklingAtLinkPlugin so the same file keeps passing
 // across the node/session split (plan 053).
@@ -45,6 +44,7 @@ import { InklingAtLinkPlugin } from '@/plugins/AtLinkPlugin'
 //   implementation, so the guard's `instanceof ClipboardEvent` branch cannot
 //   be reached. Coverage stays with e2e (test/e2e/linking.test.ts "can paste
 //   into at-link node").
+import { InklingAtLinkPlugin } from '@/plugins/AtLinkPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -251,8 +251,7 @@ describe('at-link node lifecycle (through the mounted plugin)', () => {
   let rootElement: HTMLDivElement
 
   async function mountPlugin(target: LexicalEditor = editor) {
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    vi.mocked(useLexicalComposerContext).mockReturnValue([target, { getTheme: () => undefined }])
+    mockComposerContext(target)
     const searchLinks = vi.fn().mockResolvedValue([])
     await act(async () => {
       renderHook(() => InklingAtLinkPlugin({ searchLinks }))

@@ -1,3 +1,4 @@
+import type { EditorState, LexicalEditor } from 'lexical'
 import type { RefObject } from 'react'
 
 import type { DragHandlerLike, FileChangeEvent, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
@@ -185,8 +186,8 @@ function EmptyVideoCard({
 }
 
 export interface VideoCardProps {
-  captionEditor: import('lexical').LexicalEditor | null
-  captionEditorInitialState: import('lexical').EditorState | undefined
+  captionEditor: LexicalEditor | null
+  captionEditorInitialState: EditorState | undefined
   isSelected?: boolean
   isEditing?: boolean
   fileInputRef: RefObject<HTMLInputElement | null>
@@ -238,7 +239,7 @@ export function VideoCard({
         />
       )}
       <CardCaptionEditor
-        captionEditor={captionEditor!}
+        captionEditor={captionEditor}
         captionEditorInitialState={captionEditorInitialState}
         captionPlaceholder="Type caption for video (optional)"
         dataTestId="video-card-caption"

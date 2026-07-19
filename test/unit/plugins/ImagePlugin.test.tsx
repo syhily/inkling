@@ -1,8 +1,8 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { act, renderHook } from '@testing-library/react'
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import { ImageNode, INSERT_IMAGE_COMMAND } from '@/nodes/ImageNode'
 import { INSERT_MEDIA_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
 import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
@@ -26,7 +26,7 @@ describe('Image insert commands (CardInsertPlugin)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     editor = createTestEditor()
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => null }])
+    mockComposerContext(editor)
   })
 
   it('returns null', () => {

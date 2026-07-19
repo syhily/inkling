@@ -1,4 +1,3 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { act, renderHook } from '@testing-library/react'
 import {
   $createLineBreakNode,
@@ -10,6 +9,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import { HtmlOutputPlugin } from '@/plugins/HtmlOutputPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -38,7 +38,7 @@ describe('HtmlOutputPlugin', () => {
     editor = createTestEditor()
     setHtml = vi.fn<(html: string) => void>()
 
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
   })
 
   it('calls setHtml with the generated HTML when the editor has text', async () => {

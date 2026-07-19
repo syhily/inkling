@@ -1,9 +1,9 @@
 import { createHeadlessEditor } from '@lexical/headless'
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { renderHook } from '@testing-library/react'
 import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_CRITICAL, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import { INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
 import { INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
 import { INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
@@ -34,7 +34,7 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
 }
 
 async function setupPluginTest(editor: LexicalEditor) {
-  vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+  mockComposerContext(editor)
   renderHook(() => CardInsertPlugin())
   // allow React effects to register commands
   await new Promise((resolve) => {

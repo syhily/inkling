@@ -2,18 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import type { FileUploaderLike } from '@/components/ui/cards/card-ui-types'
-import type { UseFileDragAndDropResult } from '@/hooks/useFileDragAndDrop'
-
+import { createDragHandler, createUploader } from '#/utils/mock-file-factories'
 import { ImageCard } from '@/components/ui/cards/ImageCard'
-
-function createUploader(overrides: Partial<FileUploaderLike> = {}): FileUploaderLike {
-  return { isLoading: false, upload: async () => undefined, ...overrides }
-}
-
-function createDragHandler(overrides: Partial<UseFileDragAndDropResult> = {}): UseFileDragAndDropResult {
-  return { isDraggedOver: false, setRef: vi.fn(), ...overrides }
-}
 
 vi.mock('../../../src/components/ui/CardCaptionEditor', () => ({
   CardCaptionEditor: () => <div data-testid="card-caption-editor" />,

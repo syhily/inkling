@@ -1,4 +1,3 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { renderHook } from '@testing-library/react'
 import {
   $createParagraphNode,
@@ -10,6 +9,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
@@ -44,7 +44,7 @@ describe('InklingBehaviourPlugin', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     editor = createTestEditor()
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
   })
 
   it('renders and registers commands as an aggregator', async () => {

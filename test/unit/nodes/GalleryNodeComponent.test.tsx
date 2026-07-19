@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { GalleryImage } from '@/types/gallery'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext, {
   type CardConfig,
@@ -93,8 +94,7 @@ describe('GalleryNodeComponent', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     editor = createTestEditor()
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
     vi.mocked(getImageDimensions).mockResolvedValue({ width: 100, height: 100 })
     previewCount = 0
     vi.spyOn(globalThis.URL, 'createObjectURL').mockImplementation(() => {

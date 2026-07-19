@@ -280,7 +280,7 @@ export function GalleryCard({
 
         <form>
           <input
-            ref={fileInputRef as React.Ref<HTMLInputElement>}
+            ref={fileInputRef}
             accept={imageMimeTypes.join(',')}
             hidden={true}
             multiple={true}

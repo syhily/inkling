@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { generateDtsBundle } from 'dts-bundle-generator'
 /* oxlint-disable no-console -- CLI script: stdout is its output channel */
 // Bundled declaration build for @inkling/editor (plan 028).
 //
@@ -11,11 +12,8 @@
 // the same ownership contract as scripts/verify-packed-package.ts.
 import { execFileSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-
-const require = createRequire(import.meta.url)
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const ENTRY = resolve(REPO_ROOT, 'src/dts-entry.ts')
@@ -47,8 +45,6 @@ const INLINED_LIBRARIES = [
   'clsx',
   'react-error-boundary',
 ]
-
-const { generateDtsBundle } = require('dts-bundle-generator') as typeof import('dts-bundle-generator')
 
 const [content] = generateDtsBundle(
   [

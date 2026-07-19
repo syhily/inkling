@@ -7,6 +7,7 @@ import {
   $isTextNode,
   COMMAND_PRIORITY_LOW,
   KEY_MODIFIER_COMMAND,
+  type LexicalEditor,
 } from 'lexical'
 import React from 'react'
 
@@ -29,7 +30,7 @@ export default function FloatingToolbarPlugin({
 }
 
 function useFloatingFormatToolbar(
-  editor: import('lexical').LexicalEditor,
+  editor: LexicalEditor,
   anchorElem: HTMLElement,
   isSnippetsEnabled?: boolean,
   hiddenFormats: string[] = [],

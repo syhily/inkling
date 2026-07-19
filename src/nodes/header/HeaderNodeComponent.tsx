@@ -32,12 +32,10 @@ interface HeaderNodeComponentProps {
   header?: string
   headerTextEditor: LexicalEditor
   headerTextEditorInitialState?: EditorState | undefined
-  headerTextEditorState?: EditorState | undefined
   layout: string
   subheader?: string
   subheaderTextEditor: LexicalEditor
   subheaderTextEditorInitialState?: EditorState | undefined
-  subheaderTextEditorState?: EditorState | undefined
   textColor: string
   isSwapped: boolean
   accentColor?: string

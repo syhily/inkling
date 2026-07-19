@@ -1,13 +1,13 @@
 import type { Klass, LexicalCommand, LexicalEditor, LexicalNode } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { renderHook } from '@testing-library/react'
 import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_CRITICAL } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { OpenCardInEditModePayload } from '@/plugins/behaviour/types'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import { AudioNode, INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
 import { BookmarkNode, INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
 import { ButtonNode, INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
@@ -22,8 +22,6 @@ import { ToggleNode, INSERT_TOGGLE_COMMAND } from '@/nodes/ToggleNode'
 import { VideoNode, INSERT_VIDEO_COMMAND } from '@/nodes/VideoNode'
 import { INSERT_MEDIA_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
 import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
-import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
-
 /**
  * The card insert registration matrix against the Step-2 registrar (plan
  * 043) — the same scenarios and expectations as the Step-1 characterization
@@ -32,6 +30,7 @@ import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
  * zero-drift proof; the header churn case flips here: the registrar's single
  * effect registers once per mount.
  */
+import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -52,7 +51,7 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
 }
 
 async function mountRegistrar(editor: LexicalEditor) {
-  vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+  mockComposerContext(editor)
   renderHook(() => CardInsertPlugin())
   // allow React effects to register commands
   await new Promise((resolve) => {
@@ -264,7 +263,7 @@ describe('CardInsertPlugin', () => {
 
   it('header: registers its insert command once per mount, not once per render', async () => {
     editor = createTestEditor([HeaderNode])
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
     const registerSpy = vi.spyOn(editor, 'registerCommand')
 
     const headerRegistrations = () =>

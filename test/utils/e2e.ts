@@ -8,6 +8,8 @@ import fs from 'node:fs'
 
 declare global {
   interface Window {
+    // set by initialize() → exposeLexicalEditor before any test body runs;
+    // declared non-optional so evaluate callbacks don't each re-narrow
     lexicalEditor: LexicalEditor
     navigate?: NavigateFunction
     originalEditorState: EditorState
@@ -208,7 +210,7 @@ export async function assertHTML(
   expect(actual).toEqual(expected)
 }
 
-export function prettifyHTML(string: string, options: Record<string, unknown> = {}) {
+export function prettifyHTML(string: string, options: Omit<AssertHTMLOptions, 'selector'> = {}) {
   let output = string
 
   if (options.ignoreInnerSVG) {
@@ -356,7 +358,7 @@ export async function assertSelection(page: Page, expected: ExpectedSelection) {
       focusOffset,
       focusPath: getPathFromNode(focusNode),
     }
-  }, expected)
+  })
 
   expect(selection.anchorPath).toEqual(expected.anchorPath)
 

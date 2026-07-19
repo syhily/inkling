@@ -45,7 +45,7 @@ export interface ImageCardProps {
   captionEditorInitialState?: EditorState
   altText?: string
   setAltText: (value: string) => void
-  setFigureRef?: (ref: FileInputRef) => void
+  setFigureRef?: (ref: React.RefObject<HTMLElement | null>) => void
   fileInputRef?: FileInputRef
   cardWidth?: string
   previewSrc?: string | null
@@ -197,7 +197,7 @@ export function ImageCard({
 
   React.useEffect(() => {
     if (setFigureRef) {
-      setFigureRef(figureRef as FileInputRef)
+      setFigureRef(figureRef)
     }
   }, [figureRef, setFigureRef])
 
@@ -218,7 +218,7 @@ export function ImageCard({
             isPinturaEnabled={isPinturaEnabled}
             openImageEditor={openImageEditor}
             previewSrc={previewSrc}
-            src={src!}
+            src={src ?? ''}
             onFileChange={onFileChange}
           />
         ) : (

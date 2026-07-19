@@ -3,6 +3,7 @@ import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext, {
   type CardConfig,
@@ -90,8 +91,7 @@ describe('FileNodeComponent', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     editor = createTestEditor()
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
   })
 
   interface RenderOptions {

@@ -141,14 +141,13 @@ const DECORATE_RENDER = {
       buttonUrl={node.buttonUrl}
       header={node.header}
       headerTextEditor={node.__headerTextEditor}
-      headerTextEditorState={node.__headerTextEditorInitialState}
+      headerTextEditorInitialState={node.__headerTextEditorInitialState}
       isSwapped={node.swapped}
       layout={node.layout}
       nodeKey={node.getKey()}
       subheader={node.subheader}
       subheaderTextEditor={node.__subheaderTextEditor}
       subheaderTextEditorInitialState={node.__subheaderTextEditorInitialState}
-      subheaderTextEditorState={node.__subheaderTextEditorInitialState}
       textColor={node.textColor}
     />
   ),

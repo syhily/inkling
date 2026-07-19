@@ -4,6 +4,7 @@ import { $isParagraphNode, createEditor, $getRoot, type LexicalEditor, type Node
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { BookmarkNode, $createBookmarkNode } from '@/nodes/BookmarkNode'
@@ -83,8 +84,7 @@ describe('BookmarkNodeComponent', () => {
 
   beforeEach(async () => {
     editor = createTestEditor()
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
   })
 
   it('pastes as link when async metadata fetch fails on init', async () => {

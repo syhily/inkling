@@ -53,7 +53,7 @@ export const TitleTextBox = React.forwardRef<TitleTextBoxRef, TitleTextBoxProps>
       if (key === 'Enter' || key === 'Tab' || arrowLeavingTitle) {
         event.preventDefault()
 
-        const editorIsEmpty = editorAPI.editorIsEmpty() ?? false
+        const editorIsEmpty = editorAPI.editorIsEmpty()
         if (key === 'Enter' && !editorIsEmpty) {
           editorAPI.insertParagraphAtTop({ focus: true })
         } else {

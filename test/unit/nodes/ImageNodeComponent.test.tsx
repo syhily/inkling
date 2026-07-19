@@ -3,6 +3,7 @@ import { createEditor, type LexicalEditor } from 'lexical'
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext, {
   type CardConfig,
@@ -83,8 +84,7 @@ describe('ImageNodeComponent', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     editor = createTestEditor()
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
     vi.mocked(getImageDimensions).mockResolvedValue({ width: 100, height: 200 })
     createObjectURLSpy = vi.spyOn(globalThis.URL, 'createObjectURL').mockReturnValue('blob:image-preview')
     revokeObjectURLSpy = vi.spyOn(globalThis.URL, 'revokeObjectURL').mockImplementation(() => {})

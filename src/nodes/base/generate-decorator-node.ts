@@ -456,7 +456,7 @@ export function generateDecoratorNode<
      * @see https://lexical.dev/docs/concepts/nodes#extending-decoratornode
      */
     static clone(node: GeneratedDecoratorNodeInstance<DecoratorNodeValueMap<Props, HasVisibility>, TOutput>) {
-      return new this(node.getDataset() as Partial<DecoratorNodeValueMap<Props, HasVisibility>>, node.__key)
+      return new this(node.getDataset(), node.__key)
     }
 
     /**
@@ -569,6 +569,10 @@ export function generateDecoratorNode<
         data[prop.name] = serializedNode[prop.name]
       })
 
+      // Trust boundary: payloads are trusted to match the declared prop types
+      // (same model as Lexical's own importJSON and upstream koenig). Only
+      // BookmarkNode validates its payload; a corrupt payload lands wrong-typed
+      // values in `__` fields and fails later at read/export time.
       return new this(data as Partial<DecoratorNodeValueMap<Props, HasVisibility>>)
     }
 

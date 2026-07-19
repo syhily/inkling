@@ -96,12 +96,11 @@ interface CalloutCardProps {
   handleColorChange?: (name?: string) => void
   changeEmoji: (emoji: { native?: string }) => void
   calloutEmoji?: string
-  textEditor?: LexicalEditor
+  textEditor: LexicalEditor
   textEditorInitialState?: InitialEditorStateType
   nodeKey?: string
   toggleEmojiPicker?: () => void
   showEmojiPicker?: boolean
-  [key: string]: unknown
 }
 
 export function CalloutCard({
@@ -110,7 +109,8 @@ export function CalloutCard({
   setShowEmojiPicker,
   toggleEmoji,
   hasEmoji = true,
-  handleColorChange,
+  // stories render without a color-change handler; the picker becomes a no-op
+  handleColorChange = () => {},
   changeEmoji,
   calloutEmoji = '💡',
   textEditor,
@@ -156,7 +156,7 @@ export function CalloutCard({
         <InklingNestedEditor
           autoFocus={true}
           defaultInklingEnterBehaviour={true}
-          initialEditor={textEditor!}
+          initialEditor={textEditor}
           initialEditorState={textEditorInitialState}
           nodes="minimal"
           placeholderClassName={`font-serif text-xl font-normal tracking-wide text-grey-500 !dark:text-white opacity-30`}
@@ -173,7 +173,7 @@ export function CalloutCard({
             dataTestId="callout-color-picker"
             label="Background"
             selectedName={color}
-            onClick={handleColorChange!}
+            onClick={handleColorChange}
           />
         </SettingsPanel>
       ) : (

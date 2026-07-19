@@ -91,7 +91,6 @@ export function CalloutNodeComponent({
   return (
     <>
       <CalloutCard
-        backgroundColor={backgroundColor}
         calloutEmoji={calloutEmoji}
         changeEmoji={handleEmojiSelect}
         color={isCalloutColorName(backgroundColor) ? backgroundColor : 'blue'}

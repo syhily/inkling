@@ -7,7 +7,7 @@ export interface LinkToolbarProps {
   dataTestId?: string
 }
 
-export function LinkToolbar({ href, onEdit, onRemove, dataTestId }: LinkToolbarProps) {
+export function LinkToolbar({ href, onEdit, onRemove, dataTestId = 'link-toolbar' }: LinkToolbarProps) {
   return (
     <div className="flex items-center gap-2" data-testid={dataTestId}>
       <a

@@ -27,7 +27,7 @@ export interface DraggableContainerHandle {
 }
 
 export class DragDropHandler {
-  EE: EventEmitter
+  eventEmitter: EventEmitter
   editorContainerElement: HTMLElement | null = null
   containers: DragDropContainer[] = []
   draggableInfo: DraggableInfo | null = null
@@ -72,7 +72,7 @@ export class DragDropHandler {
     // append body elements
     this._appendDragPreviewContainerElement()
 
-    this.EE = new EventEmitter()
+    this.eventEmitter = new EventEmitter()
   }
 
   destroy() {
@@ -223,7 +223,7 @@ export class DragDropHandler {
 
     // if we somehow already have a waiting promise, cancel it and keep the new one
     if (this._waitForDragStartPromise) {
-      this.EE.emit('drag-start-canceled')
+      this.eventEmitter.emit('drag-start-canceled')
       this._waitForDragStartPromise = null
     }
 
@@ -235,16 +235,16 @@ export class DragDropHandler {
         Math.abs(startEvent.clientX - currentX) > moveThreshold ||
         Math.abs(startEvent.clientY - currentY) > moveThreshold
       ) {
-        this.EE.emit('drag-start-conditions-met')
+        this.eventEmitter.emit('drag-start-conditions-met')
       }
     }
 
     const onUp = () => {
-      this.EE.emit('drag-start-canceled')
+      this.eventEmitter.emit('drag-start-canceled')
     }
 
     const onHtmlDrag = () => {
-      this.EE.emit('drag-start-canceled')
+      this.eventEmitter.emit('drag-start-canceled')
     }
 
     const waitForDragStart = () => {
@@ -254,17 +254,17 @@ export class DragDropHandler {
 
       return new Promise<void>((resolve, reject) => {
         const conditionsMet = () => {
-          this.EE.removeListener('drag-start-canceled', canceled)
+          this.eventEmitter.removeListener('drag-start-canceled', canceled)
           resolve()
         }
 
         const canceled = () => {
-          this.EE.removeListener('drag-start-conditions-met', conditionsMet)
+          this.eventEmitter.removeListener('drag-start-conditions-met', conditionsMet)
           reject({ isCanceled: true })
         }
 
-        this.EE.once('drag-start-conditions-met', conditionsMet)
-        this.EE.once('drag-start-canceled', canceled)
+        this.eventEmitter.once('drag-start-conditions-met', conditionsMet)
+        this.eventEmitter.once('drag-start-canceled', canceled)
       })
     }
 
@@ -545,7 +545,7 @@ export class DragDropHandler {
   }
 
   _resetDrag() {
-    this.EE.emit('drag-start-canceled')
+    this.eventEmitter.emit('drag-start-canceled')
     this._hideDropIndicator()
     this._removeMoveListeners()
     this._removeReleaseListeners()

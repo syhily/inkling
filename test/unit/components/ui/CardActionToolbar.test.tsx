@@ -1,9 +1,9 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { createEditor, type LexicalEditor } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import { CardActionToolbar, type CardToolbarItem } from '@/components/ui/CardActionToolbar'
 import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
@@ -55,7 +55,7 @@ describe('CardActionToolbar', () => {
 
   beforeEach(async () => {
     editor = createEditor({ namespace: 'test', onError: () => {} })
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
   })
 
   function renderToolbar({

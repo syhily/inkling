@@ -75,11 +75,41 @@ function createCardTransformer<T extends LexicalNode>({
   }
 }
 
+// `createNode` receives JSON.parse output from the card fence body: validate
+// the fields it reads instead of asserting them, so malformed markdown throws
+// a clear TypeError at the transformer boundary naming the card and field
+// instead of failing confusingly downstream (the same honest-boundary idiom
+// as asBookmarkMetadata in base/nodes/bookmark/BookmarkNode.ts).
+function describeValue(value: unknown): string {
+  return value === null ? 'null' : Array.isArray(value) ? 'an array' : typeof value
+}
+
+function str(value: unknown, field: string): string {
+  if (typeof value !== 'string') {
+    throw new TypeError(`card markdown transformer: expected '${field}' to be a string, got ${describeValue(value)}`)
+  }
+  return value
+}
+
+function galleryImages(value: unknown, field: string): GalleryImage[] {
+  if (!Array.isArray(value)) {
+    throw new TypeError(`card markdown transformer: expected '${field}' to be an array, got ${describeValue(value)}`)
+  }
+  return value.map((image, index) => {
+    if (typeof image !== 'object' || image === null || Array.isArray(image)) {
+      throw new TypeError(
+        `card markdown transformer: expected '${field}[${index}]' to be an object, got ${describeValue(image)}`,
+      )
+    }
+    return image as GalleryImage
+  })
+}
+
 export const HTML_CARD_TRANSFORMER = createCardTransformer({
   card: 'html',
   nodeClass: HtmlNode,
   getData: (node) => ({ html: node.html }),
-  createNode: (data) => $createHtmlNode({ html: data.html as string }),
+  createNode: (data) => $createHtmlNode({ html: str(data.html, 'html.html') }),
 })
 
 export const FILE_CARD_TRANSFORMER = createCardTransformer({
@@ -92,9 +122,9 @@ export const FILE_CARD_TRANSFORMER = createCardTransformer({
   }),
   createNode: (data) =>
     $createFileNode({
-      src: data.src as string,
-      fileName: data.fileName as string,
-      fileCaption: data.fileCaption as string,
+      src: str(data.src, 'file.src'),
+      fileName: str(data.fileName, 'file.fileName'),
+      fileCaption: str(data.fileCaption, 'file.fileCaption'),
     }),
 })
 
@@ -107,8 +137,8 @@ export const BUTTON_CARD_TRANSFORMER = createCardTransformer({
   }),
   createNode: (data) =>
     $createButtonNode({
-      buttonUrl: data.buttonUrl as string,
-      buttonText: data.buttonText as string,
+      buttonUrl: str(data.buttonUrl, 'button.buttonUrl'),
+      buttonText: str(data.buttonText, 'button.buttonText'),
     }),
 })
 
@@ -121,8 +151,8 @@ export const AUDIO_CARD_TRANSFORMER = createCardTransformer({
   }),
   createNode: (data) =>
     $createAudioNode({
-      src: data.src as string,
-      title: data.caption as string,
+      src: str(data.src, 'audio.src'),
+      title: str(data.caption, 'audio.caption'),
     }),
 })
 
@@ -136,9 +166,9 @@ export const VIDEO_CARD_TRANSFORMER = createCardTransformer({
   }),
   createNode: (data) => {
     const node = $createVideoNode({
-      src: data.src as string,
-      caption: data.caption as string,
-      thumbnailSrc: data.thumbnailSrc as string,
+      src: str(data.src, 'video.src'),
+      caption: str(data.caption, 'video.caption'),
+      thumbnailSrc: str(data.thumbnailSrc, 'video.thumbnailSrc'),
     })
     // Keep caption as plain text for round-trip; don't serialise the nested editor HTML.
     node.__captionEditor = null
@@ -156,8 +186,8 @@ export const GALLERY_CARD_TRANSFORMER = createCardTransformer({
   }),
   createNode: (data) => {
     const node = $createGalleryNode({
-      images: data.images as GalleryImage[],
-      caption: data.caption as string,
+      images: galleryImages(data.images, 'gallery.images'),
+      caption: str(data.caption, 'gallery.caption'),
     })
     // Keep caption as plain text for round-trip; don't serialise the nested editor HTML.
     node.__captionEditor = null
@@ -175,10 +205,10 @@ export const BOOKMARK_CARD_TRANSFORMER = createCardTransformer({
   }),
   createNode: (data) =>
     $createBookmarkNode({
-      url: data.url as string,
+      url: str(data.url, 'bookmark.url'),
       metadata: {
-        title: data.title as string,
-        description: data.description as string,
+        title: str(data.title, 'bookmark.title'),
+        description: str(data.description, 'bookmark.description'),
       },
     }),
 })
@@ -192,8 +222,8 @@ export const TOGGLE_CARD_TRANSFORMER = createCardTransformer({
   }),
   createNode: (data) => {
     const node = $createToggleNode({
-      heading: data.heading as string,
-      content: data.content as string,
+      heading: str(data.heading, 'toggle.heading'),
+      content: str(data.content, 'toggle.content'),
     })
     // Keep heading/content as plain text for round-trip; nested markdown is deferred.
     node.__titleEditor = null
@@ -211,8 +241,8 @@ export const CALLOUT_CARD_TRANSFORMER = createCardTransformer({
   }),
   createNode: (data) => {
     const node = $createCalloutNode({
-      calloutText: data.text as string,
-      backgroundColor: data.backgroundColor as string,
+      calloutText: str(data.text, 'callout.text'),
+      backgroundColor: str(data.backgroundColor, 'callout.backgroundColor'),
     })
     // Keep callout text as plain text for round-trip; nested markdown is deferred.
     node.__calloutTextEditor = null

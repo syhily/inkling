@@ -214,8 +214,8 @@ export function FloatingFormatToolbar({
             hiddenFormats={hiddenFormats}
             isLinkSelected={!!href || (isLinkSearchEnabled && isLinkToolbar)}
             isSnippetsEnabled={isSnippetsEnabled}
-            onLinkClick={() => setToolbarItemType!(toolbarItemTypes.link)}
-            onSnippetClick={() => setToolbarItemType!(toolbarItemTypes.snippet)}
+            onLinkClick={() => setToolbarItemType(toolbarItemTypes.link)}
+            onSnippetClick={() => setToolbarItemType(toolbarItemTypes.snippet)}
           />
         )}
       </FloatingToolbar>

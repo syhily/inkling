@@ -25,7 +25,7 @@ interface VideoCardStoryArgs extends Partial<VideoCardProps> {
 function VideoCardStory({ display = 'Default', caption = '', ...args }: VideoCardStoryArgs) {
   const captionEditor = createEditor({ nodes: MINIMAL_NODES })
   populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
-  const fileInputRef = React.useRef<HTMLInputElement>(null) as React.RefObject<HTMLInputElement>
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
   const displayState = displayOptions[display]
   const componentProps = {
     captionEditorInitialState: undefined,

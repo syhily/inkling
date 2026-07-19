@@ -1,8 +1,8 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { renderHook } from '@testing-library/react'
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import { $createHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { ExternalControlPlugin } from '@/plugins/ExternalControlPlugin'
 
@@ -38,7 +38,7 @@ describe('ExternalControlPlugin', () => {
   })
 
   it('registers an API object via registerAPI', async () => {
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
 
     const registerAPI = vi.fn()
     renderHook(() => ExternalControlPlugin({ registerAPI }))
@@ -57,7 +57,7 @@ describe('ExternalControlPlugin', () => {
   })
 
   it('serializes editor state', async () => {
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
 
     const registerAPI = vi.fn()
     renderHook(() => ExternalControlPlugin({ registerAPI }))
@@ -68,7 +68,7 @@ describe('ExternalControlPlugin', () => {
   })
 
   it('reports editorIsEmpty', async () => {
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
 
     const registerAPI = vi.fn()
     renderHook(() => ExternalControlPlugin({ registerAPI }))
@@ -86,7 +86,7 @@ describe('ExternalControlPlugin', () => {
   })
 
   it('inserts paragraphs at top and bottom', async () => {
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
 
     const registerAPI = vi.fn()
     renderHook(() => ExternalControlPlugin({ registerAPI }))
@@ -103,7 +103,7 @@ describe('ExternalControlPlugin', () => {
   })
 
   it('passes rootStart default selection to editor.focus for position top', async () => {
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
 
     const registerAPI = vi.fn()
     renderHook(() => ExternalControlPlugin({ registerAPI }))
@@ -123,7 +123,7 @@ describe('ExternalControlPlugin', () => {
 
   it('reports lastNodeIsDecorator for decorator nodes', async () => {
     editor = createEditor({ namespace: 'test', nodes: [HorizontalRuleNode], onError: () => {} })
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
 
     const registerAPI = vi.fn()
     renderHook(() => ExternalControlPlugin({ registerAPI }))

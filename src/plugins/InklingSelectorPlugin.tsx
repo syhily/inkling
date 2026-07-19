@@ -46,6 +46,9 @@ export const InklingSelectorPlugin = () => {
             return false
           }
           const selectedNode = selection.getNodes()[0]
+          if (!selectedNode) {
+            return false
+          }
 
           editor.dispatchCommand(INSERT_CARD_COMMAND, { cardNode: imageNode })
           selectedNode.remove()

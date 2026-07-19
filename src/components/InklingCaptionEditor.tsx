@@ -1,3 +1,5 @@
+import type { InitialEditorStateType } from '@lexical/react/LexicalComposer'
+
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
   mergeRegister,
@@ -8,6 +10,7 @@ import {
   KEY_ARROW_DOWN_COMMAND,
   KEY_ARROW_UP_COMMAND,
   KEY_ENTER_COMMAND,
+  type LexicalEditor,
 } from 'lexical'
 import React, { useCallback, useContext } from 'react'
 
@@ -29,7 +32,7 @@ const Placeholder = ({ text = 'Type here' }) => {
   )
 }
 
-function CaptionPlugin({ parentEditor }: { parentEditor: import('lexical').LexicalEditor }) {
+function CaptionPlugin({ parentEditor }: { parentEditor: LexicalEditor }) {
   const [editor] = useLexicalComposerContext()
   const { setCaptionHasFocus, captionHasFocus, nodeKey, isSelected } = useContext(CardContext)
 
@@ -159,8 +162,8 @@ function CaptionPlugin({ parentEditor }: { parentEditor: import('lexical').Lexic
 
 interface InklingCaptionEditorProps {
   paragraphs?: number
-  captionEditor: import('lexical').LexicalEditor
-  captionEditorInitialState?: import('@lexical/react/LexicalComposer').InitialEditorStateType
+  captionEditor: LexicalEditor
+  captionEditorInitialState?: InitialEditorStateType
   placeholderText?: string
   className?: string
 }

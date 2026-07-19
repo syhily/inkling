@@ -1,4 +1,3 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { renderHook } from '@testing-library/react'
 import {
   $createParagraphNode,
@@ -11,6 +10,7 @@ import {
 } from 'lexical'
 import { describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -48,7 +48,7 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
 describe('useInklingTextEntity', () => {
   it('creates an entity node when text matches', async () => {
     const editor = createTestEditor()
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
 
     const getMatch = (text: string) => {
       const match = /^@\w+/.exec(text)
@@ -75,7 +75,7 @@ describe('useInklingTextEntity', () => {
 
   it('does not replace text when there is no match', async () => {
     const editor = createTestEditor()
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
 
     const getMatch = (text: string) => {
       const match = /^@\w+/.exec(text)
@@ -103,7 +103,7 @@ describe('useInklingTextEntity', () => {
 
   it('reverts an entity node when it no longer matches', async () => {
     const editor = createTestEditor()
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
 
     const getMatch = (text: string) => {
       const match = /^@\w+/.exec(text)
@@ -131,7 +131,7 @@ describe('useInklingTextEntity', () => {
 
   it('uses the default TextNode when nodeType is not provided', async () => {
     const editor = createTestEditor()
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
 
     const getMatch = (text: string) => {
       const match = /^@\w+/.exec(text)

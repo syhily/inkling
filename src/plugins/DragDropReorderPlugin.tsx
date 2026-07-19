@@ -58,9 +58,13 @@ function useDragDropReorder(editor: LexicalEditor): void {
     let draggableInfo: DraggableInfo | undefined
 
     editor.update(() => {
-      const cardNode = $getNearestNodeFromDOMNode(draggableElement)
+      const nearestNode = $getNearestNodeFromDOMNode(draggableElement)
+      const cardNode = nearestNode as CardNode | null
 
-      if (cardNode) {
+      // draggableSelector matches top-level <div>s; a consumer-registered
+      // node rendering one is not a card and has no getDataset — treat it as
+      // non-draggable instead of crashing on the missing method
+      if (cardNode && typeof cardNode.getDataset === 'function') {
         draggableInfo = {
           type: 'card',
           nodeKey: cardNode.getKey(),
@@ -68,7 +72,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
           element: draggableElement,
           target: null,
           mousePosition: { x: 0, y: 0 },
-          dataset: (cardNode as CardNode).getDataset(),
+          dataset: cardNode.getDataset(),
           // what the per-card getIcon() copies returned: the first cardMenu
           // entry's icon (menu-less cards fall back inside getCardDragIcon)
           Icon: getCardDragIcon(cardNode.getType()),

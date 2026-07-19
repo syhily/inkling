@@ -132,3 +132,21 @@ the authorized type-gate repair.
   `test/e2e/card-behaviour.test.ts` remain unchanged. No new browser bridge hatch was added.
 - No deliberate typecheck fixture, production paste handler, RestrictContent expectation, production source file, or CI
   workflow was changed.
+
+## Addendum — STOP and minor ledger resolution (later session)
+
+The accepted RestrictContent STOP is **resolved**: `RestrictContentPlugin`'s `PASTE_COMMAND` listener now registers at
+`COMMAND_PRIORITY_HIGH` so the restriction preempts `InklingBehaviourPlugin`'s general LOW-priority plain-text handler
+regardless of mount order; a unit test pins the registration-order integration, and the e2e expectation
+(`<p><span>Hello world Hello world</span></p>`) passes unmodified. The 6 inherited empty `test.fixme` linking toolbar
+tests are now real implementations (`LinkToolbar` gained a default `dataTestId`; its rendered testids were previously
+`undefined-*`). Minor ledger items 1, 3, and 4 are resolved: composer tuples now share
+`test/utils/composer-context.ts` (`mockComposerContext`), the duplicated uploader/drag factories share
+`test/utils/mock-file-factories.ts`, `useMovable`'s three interfaces are module-internal again (the one test consumer
+derives them from the hook), and `DragDropHandler.EE` is renamed `eventEmitter` (file-private; no cross-repo consumer).
+
+A fresh line-level JS→TS audit across all src domains followed, fixing 6 medium findings (unguarded `as CardNode` in
+drag reorder, dropped Header nested-editor initial state, `ImageCard` figure-ref type lie, CalloutCard index-signature
+dead props, ButtonCard `!`-asserted optional values, `prettifyHTML` options type) and 15 low findings. Final gates:
+`pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test:unit` (2,012 passed), full `pnpm test:e2e:quiet`
+(**598 passed, 2 platform-conditional skips, 0 failed**), `pnpm verify:package`, `pnpm verify:types` — all green.

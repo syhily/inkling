@@ -265,8 +265,8 @@ function readImportPayload(conversion: ImportConversionSpec, domNode: HTMLElemen
       continue
     }
 
-    if (read.parse) {
-      value = read.parse(value as string)
+    if (read.parse && typeof value === 'string') {
+      value = read.parse(value)
       if (value === undefined) {
         continue
       }

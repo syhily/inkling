@@ -3,6 +3,7 @@ import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext, {
   type CardConfig,
@@ -109,8 +110,7 @@ describe('AudioNodeComponent', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     editor = createTestEditor()
-    const { useLexicalComposerContext } = await import('@lexical/react/LexicalComposerContext')
-    vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => undefined }])
+    mockComposerContext(editor)
     createObjectURLSpy = vi.spyOn(globalThis.URL, 'createObjectURL').mockReturnValue('blob:audio-preview')
     revokeObjectURLSpy = vi.spyOn(globalThis.URL, 'revokeObjectURL').mockImplementation(() => {})
   })

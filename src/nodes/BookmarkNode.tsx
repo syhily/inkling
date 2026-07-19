@@ -1,4 +1,4 @@
-import { type LexicalEditor } from 'lexical'
+import { type EditorState, type LexicalEditor } from 'lexical'
 
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
@@ -23,7 +23,7 @@ export class BookmarkNode extends BaseBookmarkNode {
   // nested-editor setup always assigns an editor (only the video/gallery/
   // callout/toggle editors are ever nulled, by the markdown card transformers).
   declare __captionEditor: LexicalEditor
-  declare __captionEditorInitialState: import('lexical').EditorState | undefined
+  declare __captionEditorInitialState: EditorState | undefined
   __createdWithUrl
 
   // adopt the card declaration's nested-editor spec

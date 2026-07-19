@@ -26,7 +26,7 @@ export default function HtmlEditor({
 
   const onChange = React.useCallback(
     (value: string) => {
-      updateHtml!(value)
+      updateHtml(value)
     },
     [updateHtml],
   )

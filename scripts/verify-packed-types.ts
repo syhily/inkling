@@ -177,7 +177,7 @@ try {
     throw new Error('pnpm pack failed; see errors above')
   }
   const jsonStart = packOutput.indexOf('{')
-  const packJson = JSON.parse(jsonStart === -1 ? packOutput : packOutput.slice(jsonStart))
+  const packJson = JSON.parse(jsonStart === -1 ? packOutput : packOutput.slice(jsonStart)) as { filename: string }
   tarballPath = isAbsolute(packJson.filename) ? packJson.filename : join(tempRoot, packJson.filename)
   console.log(`tarball: ${packJson.filename}`)
 

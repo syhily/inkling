@@ -113,7 +113,6 @@ export function useGif({ config }: UseGifOptions): UseGifResult {
   const nextPos = useRef<string | null>(null)
   const loadedType = useRef<string>('')
   const columnHeights = useRef<number[]>([])
-  const lastRequestArgs = useRef<IArguments | null>(null)
   const searchTerm = useRef<string>('')
   const columnCount = useRef<number>(4)
   const internalStateColumns = useRef<GifData[][]>([])
@@ -229,8 +228,6 @@ export function useGif({ config }: UseGifOptions): UseGifResult {
     params.set('contentfilter', getContentFilter())
 
     url.search = params.toString()
-
-    lastRequestArgs.current = arguments
 
     setError(null)
     setLoading(true)

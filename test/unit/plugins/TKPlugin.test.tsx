@@ -1,9 +1,9 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { render, screen } from '@testing-library/react'
 import { $createTextNode, createEditor, type LexicalEditor, type LexicalNodeConfig } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { mockComposerContext } from '#/utils/composer-context'
 import CardContext, { type CardContextValue } from '@/context/CardContext'
 import { useTKContext, type TKContextValue } from '@/context/TKContext'
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
@@ -56,7 +56,7 @@ function createCardContextValue(overrides: Partial<CardContextValue> = {}): Card
 }
 
 function mockComposerEditor(editor: LexicalEditor) {
-  vi.mocked(useLexicalComposerContext).mockReturnValue([editor, { getTheme: () => null }])
+  mockComposerContext(editor)
 }
 
 function mockTKContext(value: TKContextValue) {
