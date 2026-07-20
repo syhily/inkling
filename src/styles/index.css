@@ -1,10 +1,12 @@
+@layer theme, base, components, utilities;
+
 @import 'tailwindcss/theme';
 
-@import './preflight.css';
-@import './components/inkling-lexical';
-@import './components/inkling-prose';
-@import './components/simplemde';
-@import './components/react-colorful';
+@import './preflight.css' layer(base);
+@import './components/inkling-lexical' layer(components);
+@import './components/inkling-prose' layer(components);
+@import './components/simplemde' layer(components);
+@import './components/react-colorful' layer(components);
 @import 'tailwindcss/utilities';
 
 @theme {

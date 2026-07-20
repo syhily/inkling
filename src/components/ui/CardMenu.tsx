@@ -78,19 +78,19 @@ export const CardMenuItem = ({
             <Icon className="size-[1.8rem]" />
           </div>
         )}
-        <div className="flex w-full justify-between">
-          <div className="flex flex-col items-start">
-            <div className="m-0 truncate text-[1.35rem] leading-snug font-medium tracking-[.02rem] text-grey-900 dark:text-grey-200">
+        <div className="flex w-full justify-between gap-2">
+          <div className="flex min-w-0 flex-1 flex-col items-start">
+            <div className="m-0 w-full truncate text-[1.35rem] leading-snug font-medium tracking-[.02rem] text-grey-900 dark:text-grey-200">
               {label}
             </div>
             {desc && (
-              <div className="m-0 truncate text-[1.35rem] leading-snug font-medium tracking-[.02rem] text-grey-500 dark:text-grey-200">
+              <div className="m-0 text-[1.35rem] leading-snug font-medium tracking-[.02rem] break-words whitespace-normal text-grey-500 dark:text-grey-200">
                 {desc}
               </div>
             )}
           </div>
           {shortcut && (
-            <div className="invisible m-0 truncate text-[1.35rem] leading-snug font-medium tracking-[.02rem] text-grey-500 group-hover:visible dark:text-grey-200">
+            <div className="invisible m-0 shrink-0 truncate text-[1.35rem] leading-snug font-medium tracking-[.02rem] text-grey-500 group-hover:visible dark:text-grey-200">
               {shortcut}
             </div>
           )}
