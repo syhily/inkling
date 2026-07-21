@@ -2,8 +2,10 @@ import { act, renderHook } from '@testing-library/react'
 import React from 'react'
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { ContainerDragHandlers, DraggableInfo } from '@/utils/draggable/DragDropContainer'
+
 import { DragDropHandleContext } from '@/context/DragDropHandleContext'
-import useCardDragAndDrop from '@/hooks/useCardDragAndDrop'
+import useDropTarget from '@/hooks/useDropTarget'
 import { createDragDropHandle } from '@/plugins/behaviour/dragDropHandle'
 import { DragDropHandler } from '@/utils/draggable/DragDropHandler'
 
@@ -36,12 +38,21 @@ function makeWrapper(withHandler: boolean) {
 // enable/disable pair can then be observed on the live container
 const stableCanDrop = () => true
 
-function renderDragAndDropHook({ withHandler = true }: { withHandler?: boolean } = {}) {
+function renderDropTarget({
+  withHandler = true,
+  canDrop = stableCanDrop,
+  adjustEnableOnDragStart,
+}: {
+  withHandler?: boolean
+  canDrop?: (draggableInfo: DraggableInfo) => boolean
+  adjustEnableOnDragStart?: (draggableInfo: DraggableInfo) => boolean | undefined
+} = {}) {
   return renderHook(
     ({ enabled }) =>
-      useCardDragAndDrop({
+      useDropTarget({
         enabled,
-        canDrop: stableCanDrop,
+        canDrop,
+        adjustEnableOnDragStart,
         draggableSelector: '[data-draggable]',
         droppableSelector: '[data-droppable]',
       }),
@@ -49,7 +60,18 @@ function renderDragAndDropHook({ withHandler = true }: { withHandler?: boolean }
   )
 }
 
-describe('useCardDragAndDrop', () => {
+/** The handlers the hook registered on the drag-drop container. */
+function registeredHandlers(): ContainerDragHandlers {
+  const call = registerContainer.mock.calls.at(-1)
+  if (!call) {
+    throw new Error('expected the container to be registered')
+  }
+  return call[1] as ContainerDragHandlers
+}
+
+const draggableInfo = { type: 'card', cardName: 'image' } as unknown as DraggableInfo
+
+describe('useDropTarget', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -58,7 +80,7 @@ describe('useCardDragAndDrop', () => {
     // the silent no-op when drag reorder is disabled: the plugin that installs
     // the handler never mounts, so the hook does nothing for the editor's
     // lifetime
-    const { result } = renderDragAndDropHook({ withHandler: false })
+    const { result } = renderDropTarget({ withHandler: false })
 
     await act(async () => {
       result.current.setRef(document.createElement('div'))
@@ -68,7 +90,7 @@ describe('useCardDragAndDrop', () => {
   })
 
   it('registers a drag/drop container with the named callbacks when a handler is available', async () => {
-    const { result } = renderDragAndDropHook()
+    const { result } = renderDropTarget()
     const element = document.createElement('div')
 
     await act(async () => {
@@ -100,7 +122,7 @@ describe('useCardDragAndDrop', () => {
   })
 
   it('calls enableDrag/disableDrag on the registered container as enabled toggles', async () => {
-    const { result, rerender } = renderDragAndDropHook()
+    const { result, rerender } = renderDropTarget()
 
     await act(async () => {
       result.current.setRef(document.createElement('div'))
@@ -129,7 +151,7 @@ describe('useCardDragAndDrop', () => {
       React.createElement(DragDropHandleContext.Provider, { value: dragDropHandle }, children)
     const { result } = renderHook(
       () =>
-        useCardDragAndDrop({
+        useDropTarget({
           enabled: true,
           canDrop: stableCanDrop,
           draggableSelector: '[data-draggable]',
@@ -148,5 +170,97 @@ describe('useCardDragAndDrop', () => {
     })
 
     expect(registerContainer).toHaveBeenCalledTimes(1)
+  })
+
+  it('lights the hover flag when the hover policy accepts the entering drag', async () => {
+    const { result } = renderDropTarget({ canDrop: () => true })
+    await act(async () => {
+      result.current.setRef(document.createElement('div'))
+    })
+
+    const handlers = registeredHandlers()
+    await act(async () => {
+      handlers.droppable.onDragEnterContainer?.(draggableInfo)
+    })
+    expect(result.current.isDraggedOver).toBe(true)
+
+    await act(async () => {
+      handlers.droppable.onDragLeaveContainer?.(draggableInfo)
+    })
+    expect(result.current.isDraggedOver).toBe(false)
+  })
+
+  it('does not light the hover flag when the hover policy rejects the drag', async () => {
+    const { result } = renderDropTarget({ canDrop: () => false })
+    await act(async () => {
+      result.current.setRef(document.createElement('div'))
+    })
+
+    await act(async () => {
+      registeredHandlers().droppable.onDragEnterContainer?.(draggableInfo)
+    })
+    expect(result.current.isDraggedOver).toBe(false)
+  })
+
+  it('clears the hover flag on drag end', async () => {
+    const { result } = renderDropTarget()
+    await act(async () => {
+      result.current.setRef(document.createElement('div'))
+    })
+
+    const handlers = registeredHandlers()
+    await act(async () => {
+      handlers.droppable.onDragEnterContainer?.(draggableInfo)
+    })
+    expect(result.current.isDraggedOver).toBe(true)
+
+    await act(async () => {
+      handlers.lifecycle?.onDragEnd?.()
+    })
+    expect(result.current.isDraggedOver).toBe(false)
+  })
+
+  it('enables or disables drag at drag start following the hover policy by default', async () => {
+    const { result, rerender } = renderHook(
+      ({ canDrop }) =>
+        useDropTarget({
+          enabled: true,
+          canDrop,
+          draggableSelector: '[data-draggable]',
+          droppableSelector: '[data-droppable]',
+        }),
+      { wrapper: makeWrapper(true), initialProps: { canDrop: () => true } },
+    )
+    await act(async () => {
+      result.current.setRef(document.createElement('div'))
+    })
+
+    await act(async () => {
+      registeredHandlers().lifecycle?.onDragStart?.(draggableInfo)
+    })
+    expect(mockContainer.enableDrag).toHaveBeenCalledTimes(1)
+
+    // ref-forwarding: the fresh predicate reaches the registered container
+    rerender({ canDrop: () => false })
+    await act(async () => {
+      registeredHandlers().lifecycle?.onDragStart?.(draggableInfo)
+    })
+    expect(mockContainer.disableDrag).toHaveBeenCalledTimes(1)
+  })
+
+  it('leaves enablement untouched when the start policy returns undefined', async () => {
+    const { result } = renderDropTarget({
+      canDrop: () => true,
+      adjustEnableOnDragStart: () => undefined,
+    })
+    await act(async () => {
+      result.current.setRef(document.createElement('div'))
+    })
+
+    await act(async () => {
+      registeredHandlers().lifecycle?.onDragStart?.(draggableInfo)
+    })
+    expect(mockContainer.enableDrag).not.toHaveBeenCalled()
+    expect(mockContainer.disableDrag).not.toHaveBeenCalled()
   })
 })

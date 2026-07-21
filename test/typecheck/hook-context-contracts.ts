@@ -1,6 +1,6 @@
 import type { BookmarkEmbedResponse, CardConfig } from '@/context/InklingHostIntegrationContext'
 /** Compile-time contracts closed by the hooks/context conversion-repair batch. */
-import type { UseCardDragAndDropOptions } from '@/hooks/useCardDragAndDrop'
+import type { UseDropTargetOptions } from '@/hooks/useDropTarget'
 import type { PinturaConfig } from '@/hooks/usePinturaEditor'
 
 const pinturaConfig = { jsUrl: '/pintura.js', cssUrl: '/pintura.css' } satisfies PinturaConfig
@@ -17,8 +17,8 @@ const embedResponse: Promise<BookmarkEmbedResponse | undefined> | undefined = ca
 )
 void embedResponse
 
-type GetDraggableInfo = NonNullable<UseCardDragAndDropOptions['getDraggableInfo']>
-type GetIndicatorPosition = NonNullable<UseCardDragAndDropOptions['getIndicatorPosition']>
+type GetDraggableInfo = NonNullable<UseDropTargetOptions['getDraggableInfo']>
+type GetIndicatorPosition = NonNullable<UseDropTargetOptions['getIndicatorPosition']>
 
 // @ts-expect-error - the legacy empty-object sentinel is not draggable information
 const legacyDraggableResult: ReturnType<GetDraggableInfo> = {}

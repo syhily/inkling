@@ -3,6 +3,7 @@ import React from 'react'
 import type { GalleryImage } from '@/types/gallery'
 import type { DraggableInfo, DroppablePosition, IndicatorPosition } from '@/utils/draggable/DragDropContainer'
 
+import useDropTarget from '@/hooks/useDropTarget'
 import { pick } from '@/utils'
 import {
   adjustInsertIndexForRemoval,
@@ -10,7 +11,6 @@ import {
   resolveDrop,
   resolveReorder,
 } from '@/utils/draggable/reorder-rules'
-import { useDragDropContainer } from '@/utils/draggable/useDragDropContainer'
 import { getImageFilenameFromSrc } from '@/utils/getImageFilenameFromSrc'
 
 export type { GalleryImage }
@@ -35,9 +35,6 @@ export default function useGalleryReorder({
   maxImages = 9,
   disabled = false,
 }: UseGalleryReorderOptions): UseGalleryReorderResult {
-  const [containerRef, setContainerRef] = React.useState<HTMLElement | null>(null)
-  const [isDraggedOver, setIsDraggedOver] = React.useState<boolean>(false)
-
   const onDrop = (draggableInfo: DraggableInfo) => {
     // do not allow dropping of non-images
     if (draggableInfo.type !== 'image' && draggableInfo.cardName !== 'image') {
@@ -54,7 +51,7 @@ export default function useGalleryReorder({
     }
 
     const resolution = resolveDrop(
-      createReorderGeometry(containerRef, '[data-image]'),
+      createReorderGeometry(containerElement, '[data-image]'),
       draggableInfo.element,
       insertIndex,
     )
@@ -159,7 +156,7 @@ export default function useGalleryReorder({
     // the single insertIndex derivation of this drag — the handler ferries it
     // to onDrop on draggableInfo.insertIndex
     const resolution = resolveReorder(
-      createReorderGeometry(containerRef, '[data-image]'),
+      createReorderGeometry(containerElement, '[data-image]'),
       draggableInfo.element,
       droppableElem,
       position,
@@ -169,43 +166,30 @@ export default function useGalleryReorder({
     return resolution ? { insertIndex: resolution.insertIndex } : false
   }
 
-  const container = useDragDropContainer({
-    element: containerRef,
+  const dropTarget = useDropTarget({
     enabled: isSelected,
+    isDragEnabled: !disabled && images.length > 0,
     // re-register when the image set changes so the container re-scans the
     // gallery's draggable/droppable markers (callbacks are ref-forwarded and
     // would see fresh images either way)
     reRegisterKey: images,
-    draggable: {
-      draggableSelector: '[data-image]',
-      isDragEnabled: !disabled && images.length > 0,
-      getDraggableInfo,
-    },
-    droppable: {
-      droppableSelector: '[data-image]',
-      getIndicatorPosition,
-      onDrop,
-      onDragEnterContainer: () => {
-        setIsDraggedOver(true)
-      },
-      onDragLeaveContainer: () => {
-        setIsDraggedOver(false)
-      },
-    },
-    lifecycle: {
-      onDragStart: (draggableInfo) => {
-        // enable dropping when an image is dragged in from outside of this card
-        const isImageDrag = draggableInfo.type === 'image' || draggableInfo.cardName === 'image'
-        if (isImageDrag && draggableInfo.dataset.src && images.length !== maxImages) {
-          container.enableDrag()
-        }
-      },
-      onDragEnd: () => {
-        setIsDraggedOver(false)
-      },
-      onDropEnd,
+    draggableSelector: '[data-image]',
+    droppableSelector: '[data-image]',
+    getDraggableInfo,
+    getIndicatorPosition,
+    onDrop,
+    onDropEnd,
+    // hover policy: any drag entering the gallery lights it up
+    canDrop: () => true,
+    // enablement policy: enable dropping when an image is dragged in from
+    // outside of this card — other drags leave enablement untouched
+    adjustEnableOnDragStart: (draggableInfo) => {
+      const isImageDrag = draggableInfo.type === 'image' || draggableInfo.cardName === 'image'
+      return isImageDrag && draggableInfo.dataset.src && images.length !== maxImages ? true : undefined
     },
   })
+  const container = dropTarget.container
+  const containerElement = dropTarget.containerElement
 
-  return { setContainerRef, isDraggedOver }
+  return { setContainerRef: dropTarget.setRef, isDraggedOver: dropTarget.isDraggedOver }
 }

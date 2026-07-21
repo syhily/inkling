@@ -19,7 +19,7 @@ import { ImageUploadForm } from '@/components/ui/ImageUploadForm'
 import { LinkInput } from '@/components/ui/LinkInput'
 import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import useCardDragAndDrop from '@/hooks/useCardDragAndDrop'
+import useDropTarget from '@/hooks/useDropTarget'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
@@ -145,7 +145,7 @@ export function ImageNodeComponent({
   )
 
   const imageFileDragHandler = useFileDragAndDrop({ handleDrop: handleImageDrop })
-  const imageCardDragHandler = useCardDragAndDrop({
+  const imageCardDragHandler = useDropTarget({
     canDrop: canDropImageCard,
     // the container ref is the image wrapper itself, so :scope makes the
     // whole image card draggable/droppable for creating galleries
