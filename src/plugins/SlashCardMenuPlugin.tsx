@@ -18,43 +18,53 @@ import React from 'react'
 import { CardMenu } from '@/components/ui/CardMenu'
 import { SlashMenu } from '@/components/ui/SlashMenu'
 import { useCardMenu } from '@/hooks/useCardMenu'
+import { useCardMenuSession } from '@/hooks/useCardMenuSession'
 import trackEvent from '@/utils/analytics'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
 function useSlashCardMenu(editor: LexicalEditor) {
-  const [isShowingMenu, setIsShowingMenu] = React.useState(false)
+  // the popup session (cursor lease, close policy) lives in useCardMenuSession;
+  // this plugin keeps the slash trigger, the query state, and the anchoring
+  const {
+    containerRef,
+    isOpen: isShowingMenu,
+    openMenu,
+    closeMenu: closeSessionMenu,
+    saveCursor,
+  } = useCardMenuSession()
   const [position, setPosition] = React.useState<React.CSSProperties>({})
   const [query, setQuery] = React.useState('')
   const [commandParams, setCommandParams] = React.useState<string[]>([])
   const [selectedItemIndex, setSelectedItemIndex] = React.useState(0)
   const [scrollToSelectedItem, setScrollToSelectedItem] = React.useState(false)
-  const cachedRange = React.useRef<Range | null>(null)
-  const containerRef = React.useRef<HTMLDivElement | null>(null)
 
-  function setMenuPosition(elem: HTMLElement | null) {
-    if (!elem) {
-      return
-    }
+  const setMenuPosition = React.useCallback(
+    (elem: HTMLElement | null) => {
+      if (!elem) {
+        return
+      }
 
-    const elemRect = elem.getBoundingClientRect()
-    const containerRect = elem.parentElement?.getBoundingClientRect()
-    const menuRect = containerRef.current?.getBoundingClientRect()
+      const elemRect = elem.getBoundingClientRect()
+      const containerRect = elem.parentElement?.getBoundingClientRect()
+      const menuRect = containerRef.current?.getBoundingClientRect()
 
-    if (!containerRect || !menuRect) {
-      return
-    }
+      if (!containerRect || !menuRect) {
+        return
+      }
 
-    const wouldBeOffscreenBottom = elemRect.bottom - containerRect.top + menuRect.height > window.innerHeight
-    const wouldBeOffscreenTop = elemRect.top - menuRect.height < 0
+      const wouldBeOffscreenBottom = elemRect.bottom - containerRect.top + menuRect.height > window.innerHeight
+      const wouldBeOffscreenTop = elemRect.top - menuRect.height < 0
 
-    if (wouldBeOffscreenBottom && !wouldBeOffscreenTop) {
-      const bottom = containerRect.height - elem.offsetTop
-      setPosition({ left: 0, bottom })
-    } else {
-      const top = elem.offsetTop + elemRect.height
-      setPosition({ top, left: 0 })
-    }
-  }
+      if (wouldBeOffscreenBottom && !wouldBeOffscreenTop) {
+        const bottom = containerRect.height - elem.offsetTop
+        setPosition({ left: 0, bottom })
+      } else {
+        const top = elem.offsetTop + elemRect.height
+        setPosition({ top, left: 0 })
+      }
+    },
+    [containerRef],
+  )
 
   function getSelectionElement(): HTMLElement | null {
     const anchorNode = window.getSelection()?.anchorNode
@@ -70,36 +80,15 @@ function useSlashCardMenu(editor: LexicalEditor) {
     return anchorNode instanceof HTMLElement ? anchorNode : null
   }
 
-  function moveCursorToCachedRange() {
-    if (!cachedRange.current) {
-      return
-    }
-    const sel = document.getSelection()
-    if (sel) {
-      sel.removeAllRanges()
-      sel.addRange(cachedRange.current)
-    }
-  }
-
-  const openMenu = React.useCallback(() => {
-    setIsShowingMenu(true)
-  }, [setIsShowingMenu])
-
-  const closeMenu = React.useCallback(
-    ({ resetCursor = false }: { resetCursor?: boolean } = {}) => {
-      if (resetCursor) {
-        moveCursorToCachedRange()
-      }
-      setIsShowingMenu(false)
+  // slash-specific trigger state resets whenever the session closes the menu,
+  // no matter which close path fired (Escape, outside mousedown, insert, …)
+  React.useEffect(() => {
+    if (!isShowingMenu) {
       setQuery('')
-      if (commandParams.length > 0) {
-        setCommandParams([])
-      }
+      setCommandParams((current) => (current.length > 0 ? [] : current))
       setScrollToSelectedItem(false)
-      cachedRange.current = null
-    },
-    [setIsShowingMenu, commandParams],
-  )
+    }
+  }, [isShowingMenu])
 
   const { cardMenu, insert: insertCardItem } = useCardMenu(editor, query, {
     commandParams,
@@ -109,9 +98,9 @@ function useSlashCardMenu(editor: LexicalEditor) {
   const insert = React.useCallback(
     (insertCommand: unknown, params: { insertParams?: Record<string, unknown>; queryParams?: string[] } = {}) => {
       insertCardItem(insertCommand, params)
-      closeMenu()
+      closeSessionMenu()
     },
-    [insertCardItem, closeMenu],
+    [insertCardItem, closeSessionMenu],
   )
 
   // close menu if selection moves out of the slash command
@@ -136,14 +125,14 @@ function useSlashCardMenu(editor: LexicalEditor) {
             return
           }
 
-          closeMenu()
+          closeSessionMenu()
           return
         }
 
         const node = getSelectedNode(selection).getTopLevelElement()
 
         if (!node || !$isParagraphNode(node) || !node.getTextContent().startsWith('/')) {
-          closeMenu()
+          closeSessionMenu()
           return
         }
 
@@ -152,14 +141,14 @@ function useSlashCardMenu(editor: LexicalEditor) {
         const rootElement = editor.getRootElement()
 
         if (anchorNode?.nodeType !== Node.TEXT_NODE || !rootElement?.contains(anchorNode)) {
-          closeMenu()
+          closeSessionMenu()
           return
         }
 
-        // store the cached range so we can reset the cursor when Escape is pressed
-        // because that will _always_ blur the contenteditable which we don't want
+        // lease the cursor range to the session so Escape can restore it —
+        // Escape always blurs the contenteditable, which we don't want
         if (nativeSelection) {
-          cachedRange.current = nativeSelection.getRangeAt(0)
+          saveCursor(nativeSelection.getRangeAt(0))
         }
 
         // capture text after the / as a query for filtering cards
@@ -169,7 +158,7 @@ function useSlashCardMenu(editor: LexicalEditor) {
         setCommandParams(cps)
       })
     })
-  }, [editor, isShowingMenu, closeMenu, setQuery, setCommandParams])
+  }, [editor, isShowingMenu, closeSessionMenu, saveCursor])
 
   // open the menu when / is pressed on a blank paragraph
   React.useEffect(() => {
@@ -223,45 +212,6 @@ function useSlashCardMenu(editor: LexicalEditor) {
       window.removeEventListener('keypress', triggerMenu)
     }
   }, [editor, isShowingMenu, openMenu])
-
-  // close the menu when Escape is pressed
-  React.useEffect(() => {
-    if (!isShowingMenu) {
-      return
-    }
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        closeMenu({ resetCursor: true })
-        return
-      }
-    }
-
-    window.addEventListener('keydown', handleEscape)
-    return () => {
-      window.removeEventListener('keydown', handleEscape)
-    }
-  }, [isShowingMenu, closeMenu])
-
-  // close the menu on clicks outside the menu
-  React.useEffect(() => {
-    if (!isShowingMenu) {
-      return
-    }
-
-    const handleMousedown = (event: MouseEvent) => {
-      if (containerRef.current?.contains(event.target as Node)) {
-        return
-      }
-
-      closeMenu()
-    }
-
-    window.addEventListener('mousedown', handleMousedown)
-    return () => {
-      window.removeEventListener('mousedown', handleMousedown)
-    }
-  }, [isShowingMenu, closeMenu])
 
   // capture key navigation to move/insert selected card item
   React.useEffect(() => {
@@ -333,7 +283,7 @@ function useSlashCardMenu(editor: LexicalEditor) {
     return () => {
       resizeObserver.disconnect()
     }
-  }, [isShowingMenu])
+  }, [isShowingMenu, setMenuPosition])
 
   // use this to position the menu based on the window size
   React.useLayoutEffect(() => {
@@ -341,12 +291,12 @@ function useSlashCardMenu(editor: LexicalEditor) {
       return
     }
 
-    if (!containerRef || !containerRef.current) {
+    if (!containerRef.current) {
       return
     }
 
     setMenuPosition(getSelectionElement())
-  }, [isShowingMenu])
+  }, [isShowingMenu, containerRef, setMenuPosition])
 
   if (cardMenu.items.length === 0) {
     return null
@@ -357,7 +307,7 @@ function useSlashCardMenu(editor: LexicalEditor) {
       <div ref={containerRef} className="absolute -left-2 z-50 mt-2" style={position} data-inkling-slash-container>
         <SlashMenu>
           <CardMenu
-            closeMenu={closeMenu}
+            closeMenu={closeSessionMenu}
             insert={insert}
             items={cardMenu.items}
             scrollToSelectedItem={scrollToSelectedItem}

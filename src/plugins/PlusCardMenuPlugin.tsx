@@ -5,14 +5,26 @@ import React from 'react'
 import { CardMenu } from '@/components/ui/CardMenu'
 import { PlusButton, PlusMenu } from '@/components/ui/PlusMenu'
 import { useCardMenu } from '@/hooks/useCardMenu'
+import { useCardMenuSession } from '@/hooks/useCardMenuSession'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
 function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
+  // the popup session (cursor lease, close policy, Escape/outside-mousedown)
+  // lives in useCardMenuSession; this plugin keeps the plus-button trigger and
+  // its anchoring. cachedRange here is the button's anchor — a copy is leased
+  // to the session when the menu opens so closes can release it without
+  // losing the button's position.
+  const {
+    containerRef,
+    isOpen: isShowingMenu,
+    openMenu: openSessionMenu,
+    closeMenu,
+    saveCursor,
+    restoreCursor,
+  } = useCardMenuSession()
   const [isShowingButton, setIsShowingButton] = React.useState<boolean>(false)
-  const [isShowingMenu, setIsShowingMenu] = React.useState<boolean>(false)
   const [topPosition, setTopPosition] = React.useState<number>(0)
   const [cachedRange, setCachedRange] = React.useState<Range | null>(null)
-  const containerRef = React.useRef<HTMLDivElement | null>(null)
 
   function getTopPosition(elem: Element): number {
     const elemRect = elem.getBoundingClientRect()
@@ -31,15 +43,6 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
     return range
   }
 
-  const moveCursorToCachedRange = React.useCallback(() => {
-    if (!cachedRange) {
-      return
-    }
-    const sel = document.getSelection()
-    sel?.removeAllRanges()
-    sel?.addRange(cachedRange)
-  }, [cachedRange])
-
   const showButton = React.useCallback(
     (elem: Element) => {
       const range = getElementRange(elem)
@@ -51,9 +54,9 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
 
   const hideButton = React.useCallback(() => {
     setIsShowingButton(false)
-    setIsShowingMenu(false)
     setCachedRange(null)
-  }, [setIsShowingButton, setIsShowingMenu, setCachedRange])
+    closeMenu()
+  }, [setIsShowingButton, setCachedRange, closeMenu])
 
   const openMenu = React.useCallback(
     (event?: React.MouseEvent) => {
@@ -66,20 +69,11 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
         { discrete: true },
       )
 
-      moveCursorToCachedRange()
-      setIsShowingMenu(true)
+      saveCursor(cachedRange)
+      restoreCursor()
+      openSessionMenu()
     },
-    [editor, moveCursorToCachedRange, setIsShowingMenu],
-  )
-
-  const closeMenu = React.useCallback(
-    ({ resetCursor = false } = {}) => {
-      if (resetCursor) {
-        moveCursorToCachedRange()
-      }
-      setIsShowingMenu(false)
-    },
-    [moveCursorToCachedRange, setIsShowingMenu],
+    [editor, cachedRange, saveCursor, restoreCursor, openSessionMenu],
   )
 
   const updateButton = React.useCallback(() => {
@@ -147,7 +141,7 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
         hideButton()
       }
     }
-  }, [editor, isShowingButton, isShowingMenu, hideButton])
+  }, [editor, isShowingButton, isShowingMenu, hideButton, containerRef])
 
   React.useEffect(() => {
     document.addEventListener('selectionchange', hideButtonOnOutsideSelection)
@@ -194,32 +188,11 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
     }
   }, [updateButtonOnMousemove])
 
-  const closeMenuOnClickOutside = React.useCallback(
-    (event: MouseEvent) => {
-      if (isShowingMenu) {
-        if (!containerRef.current?.contains(event.target as Node)) {
-          return closeMenu()
-        }
-      }
-    },
-    [isShowingMenu, closeMenu],
-  )
-
-  React.useEffect(() => {
-    window.addEventListener('mousedown', closeMenuOnClickOutside)
-    return () => {
-      window.removeEventListener('mousedown', closeMenuOnClickOutside)
-    }
-  }, [closeMenuOnClickOutside])
-
+  // arrows close the menu (leaving the cursor alone); Escape and
+  // outside-mousedown are owned by the session
   const handleKeydown = React.useCallback(
     (event: KeyboardEvent) => {
       if (isShowingMenu) {
-        if (event.key === 'Escape') {
-          closeMenu({ resetCursor: true })
-          return
-        }
-
         const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
         if (arrowKeys.includes(event.key)) {
           closeMenu()
