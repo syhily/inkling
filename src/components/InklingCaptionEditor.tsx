@@ -14,13 +14,16 @@ import {
 } from 'lexical'
 import React, { useCallback, useContext } from 'react'
 
-import type { NestedKeyboardEvent } from '@/types/events'
-
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingNestedComposer from '@/components/InklingNestedComposer'
 import CardContext from '@/context/CardContext'
 import { MINIMAL_TRANSFORMERS } from '@/markdown/transformers'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
+import {
+  isTypeaheadMenuOpen,
+  markEventFromCaptionEditor,
+  markEventFromNested,
+} from '@/plugins/behaviour/nested-editor-protocol'
 import { EmojiPickerPlugin } from '@/plugins/EmojiPickerPlugin'
 import RestrictContentPlugin from '@/plugins/RestrictContentPlugin'
 
@@ -87,12 +90,10 @@ function CaptionPlugin({ parentEditor }: { parentEditor: LexicalEditor }) {
       editor.registerCommand(
         KEY_ENTER_COMMAND,
         (event) => {
-          // Lexical 0.46.0 added `commandPriority` to typeahead menus, but the
-          // project's menus still register at the default `COMMAND_PRIORITY_LOW`,
-          // which is the same priority used here. Until the menu is configured
-          // to register at a higher priority, bail out when a typeahead menu is
-          // open so the menu can handle Enter itself.
-          if (document.querySelector(`#typeahead-menu`)) {
+          // bail out when a typeahead menu is open so the menu can handle
+          // Enter itself — see nested-editor-protocol for why this can't be
+          // priority-based yet
+          if (isTypeaheadMenuOpen()) {
             return false
           }
 
@@ -109,9 +110,7 @@ function CaptionPlugin({ parentEditor }: { parentEditor: LexicalEditor }) {
           // otherwise, let the parent editor handle the enter key
           // - with ctrl/cmd+enter toggles edit mode
           // - or creates paragraph after card and moves cursor
-          const nestedEvent: NestedKeyboardEvent = event
-          nestedEvent._fromNested = true
-          parentEditor.dispatchCommand(KEY_ENTER_COMMAND, nestedEvent)
+          parentEditor.dispatchCommand(KEY_ENTER_COMMAND, markEventFromNested(event))
 
           // prevent normal/InklingBehaviourPlugin enter key behaviour
           return true
@@ -121,17 +120,13 @@ function CaptionPlugin({ parentEditor }: { parentEditor: LexicalEditor }) {
       editor.registerCommand(
         KEY_ARROW_DOWN_COMMAND,
         (event) => {
-          // Lexical 0.46.0 added `commandPriority` to typeahead menus, but the
-          // project's menus still register at the default `COMMAND_PRIORITY_LOW`.
-          // Bail out when a typeahead menu is open so arrow keys navigate the
-          // menu instead of moving focus to the next/parent editor.
-          if (document.querySelector(`#typeahead-menu`)) {
+          // bail out when a typeahead menu is open so arrow keys navigate the
+          // menu instead of moving focus to the next/parent editor
+          if (isTypeaheadMenuOpen()) {
             return false
           }
           // handle moving focus at the parent editor level (select next card)
-          const captionEvent: NestedKeyboardEvent = event
-          captionEvent._fromCaptionEditor = true
-          parentEditor.dispatchCommand(KEY_ARROW_DOWN_COMMAND, captionEvent)
+          parentEditor.dispatchCommand(KEY_ARROW_DOWN_COMMAND, markEventFromCaptionEditor(event))
           return true
         },
         COMMAND_PRIORITY_HIGH,
@@ -139,17 +134,13 @@ function CaptionPlugin({ parentEditor }: { parentEditor: LexicalEditor }) {
       editor.registerCommand(
         KEY_ARROW_UP_COMMAND,
         (event) => {
-          // Lexical 0.46.0 added `commandPriority` to typeahead menus, but the
-          // project's menus still register at the default `COMMAND_PRIORITY_LOW`.
-          // Bail out when a typeahead menu is open so arrow keys navigate the
-          // menu instead of moving focus to the next/parent editor.
-          if (document.querySelector(`#typeahead-menu`)) {
+          // bail out when a typeahead menu is open so arrow keys navigate the
+          // menu instead of moving focus to the next/parent editor
+          if (isTypeaheadMenuOpen()) {
             return false
           }
           // handle moving focus at the parent editor level (select next card)
-          const captionEvent: NestedKeyboardEvent = event
-          captionEvent._fromCaptionEditor = true
-          parentEditor.dispatchCommand(KEY_ARROW_UP_COMMAND, captionEvent)
+          parentEditor.dispatchCommand(KEY_ARROW_UP_COMMAND, markEventFromCaptionEditor(event))
           return true
         },
         COMMAND_PRIORITY_HIGH,

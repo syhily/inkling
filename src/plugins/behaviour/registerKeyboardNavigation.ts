@@ -21,6 +21,11 @@ import { registerTabCommand } from './keyboard-navigation/tab'
 
 export function registerKeyboardNavigation(editor: LexicalEditor, deps: KeyboardNavigationDeps) {
   return mergeRegister(
+    // ORDER IS LOAD-BEARING: every handler here registers at
+    // COMMAND_PRIORITY_LOW, and same-priority handlers run in registration
+    // order. The key-down passthrough must stay first so it can swallow key
+    // events from card inner elements before any sibling handler sees them
+    // (pinned by key-down.test.ts).
     registerKeyDownPassthrough(editor, deps),
     registerEnterCommand(editor, deps),
     registerArrowUpCommand(editor, deps),

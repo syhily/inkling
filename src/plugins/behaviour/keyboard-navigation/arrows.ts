@@ -15,14 +15,13 @@ import {
   KEY_ARROW_UP_COMMAND,
 } from 'lexical'
 
-import type { NestedKeyboardEvent } from '@/types/events'
-
 import { $isInklingCard } from '@/nodes/base'
 import { $isAtStartOfDocument, $selectDecoratorNode } from '@/utils'
 
 import type { KeyboardNavigationDeps } from './types'
 
 import { $getLogicallyAdjacentCard, $getVisuallyAdjacentCard, $selectCard, editorOwnsFocus } from '../card-adjacency'
+import { getEventProvenance } from '../nested-editor-protocol'
 
 export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
   const { store, cursorDidExitAtTop } = deps
@@ -86,7 +85,7 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
 
       // if we're in a nested editor, we need to move selection back to the parent editor
       const { selectedCardKey } = store.getState()
-      if (selectedCardKey && (event as NestedKeyboardEvent)?._fromCaptionEditor) {
+      if (selectedCardKey && getEventProvenance(event) === 'caption-editor') {
         $selectCard(editor, selectedCardKey)
         return true
       }
@@ -205,7 +204,7 @@ export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNa
 
       // if we're in a nested editor, we need to move selection back to the parent editor
       const { selectedCardKey } = store.getState()
-      if (selectedCardKey && (event as NestedKeyboardEvent)?._fromCaptionEditor) {
+      if (selectedCardKey && getEventProvenance(event) === 'caption-editor') {
         $selectCard(editor, selectedCardKey)
         return true
       }

@@ -10,9 +10,8 @@ import {
 } from 'lexical'
 import React from 'react'
 
-import type { NestedKeyboardEvent } from '@/types/events'
-
 import CardContext from '@/context/CardContext'
+import { isTypeaheadMenuOpen, markEventFromNested } from '@/plugins/behaviour/nested-editor-protocol'
 import { getParentEditor } from '@/utils/lexical-internals'
 
 // the nested editor the Enter key hands focus to (Header subheader, Toggle
@@ -83,12 +82,9 @@ function InklingNestedEditorPlugin({
         (event) => {
           const parentEditor = getParentEditor(editor)
 
-          // Lexical 0.46.0 added `commandPriority` to typeahead menus, but the
-          // project's menus still register at the default `COMMAND_PRIORITY_LOW`.
-          // Until they are configured to register at a higher priority, this
-          // check prevents nested editor enter handlers from swallowing events
-          // meant for the open typeahead menu.
-          if (document.querySelector(`#typeahead-menu`)) {
+          // don't swallow events meant for an open typeahead menu — the
+          // protocol module explains why this can't be priority-based yet
+          if (isTypeaheadMenuOpen()) {
             return false
           }
 
@@ -97,9 +93,7 @@ function InklingNestedEditorPlugin({
             if (!parentEditor) {
               return true
             }
-            const nestedEvent: NestedKeyboardEvent = event
-            nestedEvent._fromNested = true
-            parentEditor.dispatchCommand(KEY_ENTER_COMMAND, nestedEvent)
+            parentEditor.dispatchCommand(KEY_ENTER_COMMAND, markEventFromNested(event))
             return true
           }
 
@@ -125,8 +119,7 @@ function InklingNestedEditorPlugin({
               return false
             }
             if (event) {
-              const nestedEvent: NestedKeyboardEvent = event
-              nestedEvent._fromNested = true
+              markEventFromNested(event)
             }
             parentEditor.dispatchCommand(KEY_ENTER_COMMAND, event)
 
