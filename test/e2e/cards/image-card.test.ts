@@ -372,6 +372,8 @@ test.describe('Image card', async () => {
       page,
       'This is link <a href="https://inkling.local/changelog/markdown/">inkling.local/changelog/markdown/</a>',
     )
+    // wait for the paste to land before the one-shot snapshot assert below
+    await expect(await page.locator('text="This is link"')).toBeVisible()
 
     await assertHTML(
       page,
