@@ -2,6 +2,7 @@ import { $getSelection, type LexicalEditor } from 'lexical'
 import React from 'react'
 
 import Portal from '@/components/ui/Portal'
+import { usePopupRepositionSubscriptions } from '@/hooks/useSelectionAnchoredPopup'
 import { $getSelectionRangeRect } from '@/utils/$getSelectionRangeRect'
 import { getScrollParent } from '@/utils/getScrollParent'
 import { setFloatingElemPosition } from '@/utils/setFloatingElemPosition'
@@ -73,19 +74,8 @@ export default function FloatingToolbar({
     }
   }, [isVisible, onReposition, shouldReposition, updateToolbarPosition])
 
-  React.useEffect(() => {
-    const scrollElement = getScrollParent(anchorElem)
-
-    const onResize = () => updateToolbarPosition()
-    const onScroll = () => updateToolbarPosition()
-    window.addEventListener('resize', onResize)
-    scrollElement.addEventListener('scroll', onScroll)
-
-    return () => {
-      window.removeEventListener('resize', onResize)
-      scrollElement.removeEventListener('scroll', onScroll)
-    }
-  }, [anchorElem, updateToolbarPosition])
+  const scrollElement = React.useMemo(() => getScrollParent(anchorElem), [anchorElem])
+  usePopupRepositionSubscriptions(updateToolbarPosition, scrollElement)
 
   if (!isVisible) {
     return null

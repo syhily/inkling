@@ -1,7 +1,6 @@
 import type { LexicalNode } from 'lexical'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getSelection } from 'lexical'
 import React from 'react'
 
 import type { ListOptionItem, ListOptionSection } from '@/hooks/useSearchLinks'
@@ -9,8 +8,9 @@ import type { ListOptionItem, ListOptionSection } from '@/hooks/useSearchLinks'
 import { InputListGroup } from '@/components/ui/InputList'
 import { KeyboardSelectionWithGroups } from '@/components/ui/KeyboardSelectionWithGroups'
 import { LinkInputSearchItem } from '@/components/ui/LinkInputSearchItem'
+import { useSelectionAnchoredPopup } from '@/hooks/useSelectionAnchoredPopup'
 import trackEvent from '@/utils/analytics'
-import { getScrollParent } from '@/utils/getScrollParent'
+import { createNodeElementAnchor, POPUP_LIST_MAX_HEIGHT } from '@/utils/selection-anchored-popup'
 
 interface AtLinkResultsPopupProps {
   atLinkNode: LexicalNode
@@ -30,88 +30,15 @@ export function AtLinkResultsPopup({ atLinkNode, isSearching, listOptions, query
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const scrollContainer = React.useMemo(() => {
-    return getScrollParent(editor.getRootElement())
-  }, [editor])
-
   const popupRef = React.useRef<HTMLDivElement | null>(null)
 
   const testId = 'at-link-results'
 
-  // Position the results popup when they open.
-  // Appears below the at-link node unless at bottom of the document where it appears above.
-  const updatePopupPosition = React.useCallback(() => {
-    editor.update(() => {
-      const popupElement = popupRef.current
-      if (!popupElement) {
-        return
-      }
-
-      const selection = $getSelection()
-      if (!selection) {
-        return
-      }
-
-      const atLinkElement = editor.getElementByKey(atLinkNode.getKey())
-      if (!atLinkElement) {
-        return
-      }
-      const atLinkRect = atLinkElement.getBoundingClientRect()
-
-      const editorElem = editor.getRootElement()
-
-      if (!editorElem) {
-        return
-      }
-
-      const editorRect = editorElem.getBoundingClientRect()
-
-      const top = atLinkRect.bottom + 10
-      const left = editorRect.left
-      const right = editorRect.right
-
-      popupElement.style.top = `${top}px`
-      popupElement.style.left = `${left}px`
-      popupElement.style.width = `${right - left}px`
-
-      // TODO: Max height is hardcoded to 30% of window height for results list + 54px (toolbar height),
-      //  this is based on current styling and will need adjusting if styles change. We make this calculation
-      //  to avoid the toolbar jumping between above/below positioning when the results list changes size.
-      const popupMaxHeight = (window.innerHeight / 100) * 30 + 54
-      const popupRect = popupElement.getBoundingClientRect()
-
-      if (scrollContainer.scrollTop + popupRect.top + popupMaxHeight > scrollContainer.scrollHeight) {
-        popupElement.style.top = `${atLinkRect.top - popupRect.height - 10}px`
-      }
-    })
-  }, [editor, atLinkNode, scrollContainer])
-
-  React.useEffect(() => {
-    updatePopupPosition()
-  }, [updatePopupPosition])
-
-  // re-position on document scroll, window resize,
-  // plus search results change to avoid gap appearing when positioned above the toolbar
-  React.useEffect(() => {
-    const onResize = () => updatePopupPosition()
-    const onScroll = () => updatePopupPosition()
-    window.addEventListener('resize', onResize)
-    scrollContainer.addEventListener('scroll', onScroll)
-
-    const popupElement = popupRef.current
-    const popupMutationObserver = new MutationObserver(() => updatePopupPosition())
-    if (popupElement) {
-      popupMutationObserver.observe(popupElement, { childList: true, subtree: true })
-    }
-
-    return () => {
-      window.removeEventListener('resize', onResize)
-      scrollContainer.removeEventListener('scroll', onScroll)
-      if (popupElement) {
-        popupMutationObserver.disconnect()
-      }
-    }
-  }, [editor, scrollContainer, updatePopupPosition])
+  // Position the results popup below the at-link node, flipping above it at the
+  // bottom of the document; the deep module owns rect resolution and the flip.
+  const anchor = React.useMemo(() => createNodeElementAnchor(editor, atLinkNode.getKey()), [editor, atLinkNode])
+  const containerRect = React.useCallback(() => editor.getRootElement()?.getBoundingClientRect() ?? null, [editor])
+  useSelectionAnchoredPopup({ editor, popupRef, anchor, containerRect })
 
   const getItem = (item: ListOptionItem, selected: boolean, onMouseOver: () => void, scrollIntoView: boolean) => {
     return (
@@ -135,7 +62,10 @@ export function AtLinkResultsPopup({ atLinkNode, isSearching, listOptions, query
   return (
     <div ref={popupRef} className="not-inkling-prose fixed z-[10000]" data-testid="at-link-results">
       <div className="relative m-0 flex w-full flex-col rounded-lg bg-white p-1 px-2 font-sans text-sm font-medium shadow-md dark:bg-grey-950">
-        <ul className="max-h-[30vh] w-full overflow-y-auto bg-white py-1 dark:bg-grey-950">
+        <ul
+          className="w-full overflow-y-auto bg-white py-1 dark:bg-grey-950"
+          style={{ maxHeight: POPUP_LIST_MAX_HEIGHT }}
+        >
           <KeyboardSelectionWithGroups
             getGroup={getGroup}
             getItem={getItem}

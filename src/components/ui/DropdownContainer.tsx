@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import React, { useLayoutEffect } from 'react'
 
 import { debounce } from '@/utils'
+import { POPUP_LIST_MAX_HEIGHT } from '@/utils/selection-anchored-popup'
 
 /**
  * Note: when using the DropdownContainer, make sure the input and the dropdown both are in a relative container with a defined z-index (or new stacking context)
@@ -20,7 +21,7 @@ interface DropdownContainerProps {
 
 export function DropdownContainer({
   dataTestId,
-  className = 'z-[-1] max-h-[30vh] w-full overflow-y-auto bg-white shadow rounded-lg dark:border-grey-800 dark:bg-grey-900',
+  className = 'z-[-1] w-full overflow-y-auto bg-white shadow rounded-lg dark:border-grey-800 dark:bg-grey-900',
   placementTopClass = '-top-0.5 -translate-y-full',
   placementBottomClass = 'mt-0.5',
   children,
@@ -78,6 +79,9 @@ export function DropdownContainer({
         placement === 'bottom' && placementBottomClass,
         className,
       )}
+      // Single-sourced with the selection-anchored popup flip budget — a
+      // tailwind arbitrary value cannot reference the constant.
+      style={{ maxHeight: POPUP_LIST_MAX_HEIGHT }}
       data-testid={dataTestId ? `${dataTestId}-dropdown` : undefined}
     >
       {children}

@@ -7,6 +7,7 @@ import { LinkInputSearchItem } from '@/components/ui/LinkInputSearchItem'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useSearchLinks, type ListOptionItem, type ListOptionSection } from '@/hooks/useSearchLinks'
 import trackEvent from '@/utils/analytics'
+import { POPUP_LIST_MAX_HEIGHT } from '@/utils/selection-anchored-popup'
 
 interface LinkInputWithSearchProps {
   href?: string
@@ -141,7 +142,10 @@ export function LinkInputWithSearch({ href, update, cancel }: LinkInputWithSearc
       />
       {showSuggestions && (
         <>
-          <ul className="max-h-[30vh] w-full overflow-y-auto bg-white py-1 dark:bg-grey-950">
+          <ul
+            className="w-full overflow-y-auto bg-white py-1 dark:bg-grey-950"
+            style={{ maxHeight: POPUP_LIST_MAX_HEIGHT }}
+          >
             {isSearching && !listOptions.length && <InputListLoadingItem dataTestId={testId} />}
             <KeyboardSelectionWithGroups
               getGroup={getGroup}

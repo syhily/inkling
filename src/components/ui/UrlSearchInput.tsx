@@ -145,7 +145,7 @@ export function UrlSearchInput({
       <InputList
         autoFocus={true}
         dataTestId={dataTestId}
-        dropdownClassName="z-[-1] max-h-[30vh] w-full overflow-y-auto bg-white px-2 py-1 shadow-md dark:bg-grey-950"
+        dropdownClassName="z-[-1] w-full overflow-y-auto bg-white px-2 py-1 shadow-md dark:bg-grey-950"
         dropdownPlacementBottomClass="mt-[.6rem] rounded-md"
         dropdownPlacementTopClass="top-[-.6rem] -translate-y-full rounded-md"
         getItem={getItem}

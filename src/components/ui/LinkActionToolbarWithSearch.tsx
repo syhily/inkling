@@ -6,10 +6,10 @@ import React from 'react'
 import { LinkInputWithSearch } from '@/components/ui/LinkInputWithSearch'
 import Portal from '@/components/ui/Portal'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { $getSelectionRangeRect } from '@/utils/$getSelectionRangeRect'
+import { useSelectionAnchoredPopup } from '@/hooks/useSelectionAnchoredPopup'
 import trackEvent from '@/utils/analytics'
-import { getScrollParent } from '@/utils/getScrollParent'
 import { isInternalUrl } from '@/utils/isInternalUrl'
+import { createSelectionAnchor } from '@/utils/selection-anchored-popup'
 
 interface LinkActionToolbarWithSearchProps {
   anchorElem: HTMLElement
@@ -21,84 +21,14 @@ export function LinkActionToolbarWithSearch({ anchorElem, href, onClose }: LinkA
   const [editor] = useLexicalComposerContext()
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
 
-  const scrollContainer = React.useMemo(() => {
-    return getScrollParent(editor.getRootElement())
-  }, [editor])
-
   const linkToolbarRef = React.useRef<HTMLDivElement | null>(null)
 
-  // Position the link input and search results when they open.
-  // Appears below the selected text unless at bottom of the document where it appears above toolbar.
-  const updateLinkToolbarPosition = React.useCallback(() => {
-    editor.update(() => {
-      const toolbarElement = linkToolbarRef.current
-      if (!toolbarElement) {
-        return
-      }
-
-      const selection = $getSelection()
-      if (!selection) {
-        return
-      }
-
-      const rangeRect = $getSelectionRangeRect({ editor, selection })
-
-      const editorElem = anchorElem.parentElement
-
-      if (!rangeRect || !editorElem) {
-        return
-      }
-
-      const editorRect = editorElem.getBoundingClientRect()
-
-      const top = rangeRect.bottom + 10
-      const left = editorRect.left
-      const right = editorRect.right
-
-      toolbarElement.style.top = `${top}px`
-      toolbarElement.style.left = `${left}px`
-      toolbarElement.style.width = `${right - left}px`
-
-      // TODO: Max height is hardcoded to 30% of window height for results list + 54px (toolbar height),
-      //  this is based on current styling and will need adjusting if styles change. We make this calculation
-      //  to avoid the toolbar jumping between above/below positioning when the results list changes size.
-      const toolbarMaxHeight = (window.innerHeight / 100) * 30 + 54
-      const toolbarRect = toolbarElement.getBoundingClientRect()
-
-      if (scrollContainer.scrollTop + toolbarRect.top + toolbarMaxHeight > scrollContainer.scrollHeight) {
-        toolbarElement.style.top = `${rangeRect.top - toolbarRect.height - 55}px`
-      }
-    })
-  }, [anchorElem, editor, scrollContainer])
-
-  React.useEffect(() => {
-    updateLinkToolbarPosition()
-  }, [updateLinkToolbarPosition])
-
-  // re-position on document scroll, window resize,
-  // plus search results change to avoid gap appearing when positioned above the toolbar
-  React.useEffect(() => {
-    const scrollElement = getScrollParent(anchorElem)
-
-    const onResize = () => updateLinkToolbarPosition()
-    const onScroll = () => updateLinkToolbarPosition()
-    window.addEventListener('resize', onResize)
-    scrollElement.addEventListener('scroll', onScroll)
-
-    const toolbarElement = linkToolbarRef.current
-    const toolbarMutationObserver = new MutationObserver(() => updateLinkToolbarPosition())
-    if (toolbarElement) {
-      toolbarMutationObserver.observe(toolbarElement, { childList: true, subtree: true })
-    }
-
-    return () => {
-      window.removeEventListener('resize', onResize)
-      scrollElement.removeEventListener('scroll', onScroll)
-      if (toolbarElement) {
-        toolbarMutationObserver.disconnect()
-      }
-    }
-  }, [anchorElem, updateLinkToolbarPosition])
+  // Position the link input and search results below the selected text,
+  // flipping above it at the bottom of the document; the deep module owns
+  // rect resolution and the flip.
+  const anchor = React.useMemo(() => createSelectionAnchor(editor), [editor])
+  const containerRect = React.useCallback(() => anchorElem.parentElement?.getBoundingClientRect() ?? null, [anchorElem])
+  useSelectionAnchoredPopup({ editor, popupRef: linkToolbarRef, anchor, containerRect, aboveGap: 55 })
 
   const onLinkUpdate = (updatedHref: string, type?: string) => {
     editor.update(() => {
