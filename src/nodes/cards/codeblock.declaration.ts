@@ -1,6 +1,6 @@
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { CodeBlockNode } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
+import { BaseCodeBlockNode } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
@@ -26,12 +26,15 @@ const transientProps: readonly TransientPropSpec[] = [
 
 export const codeBlockDeclaration = {
   nodeType: 'codeblock',
-  baseNode: CodeBlockNode,
+  baseNode: BaseCodeBlockNode,
   nestedEditors,
   transientProps,
   decorateTarget: {
     wrapperStyle: 'code-card',
   },
+  // No menu entry — the code block is inserted by its markdown code fence —
+  // so the drag-preview icon is named explicitly instead.
+  dragIcon: 'codeblock',
   surfaces: {
     default: true,
     emailEditor: false,

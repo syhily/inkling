@@ -1,5 +1,6 @@
-import type { Klass, LexicalNode } from 'lexical'
+import type { Klass, LexicalCommand, LexicalNode } from 'lexical'
 
+import type { CardConfig } from '@/context/InklingHostIntegrationContext'
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
@@ -28,9 +29,10 @@ export interface CardSurfaces {
  * The card's decorate-target wrapper props (CONTEXT.md: "card spec") — the
  * React-free half of what a card's `decorate()` passes to
  * `InklingCardWrapper`. The component render and the `IndicatorIcon`
- * component attach one layer up (`@/nodes/cards/card-decorate`) because they
- * are React-bearing; the shared adapter (`@/nodes/decorate-card`) merges both
- * halves. Cards with no wrapper props (Audio, Bookmark, Callout, File,
+ * component attach one layer up in the per-card modules under
+ * `@/nodes/cards/decorate` (paired with the declaration by
+ * `@/nodes/cards/card-decorate`) because they are React-bearing; the shared
+ * adapter (`@/nodes/decorate-card`) merges both halves. Cards with no wrapper props (Audio, Bookmark, Callout, File,
  * HorizontalRule) omit this entry.
  *
  * `width` is either a constant or a node→width mapper for cards whose width
@@ -50,15 +52,18 @@ export interface DecorateTargetSpec {
 /**
  * The card's membership in the insert-command surface (CONTEXT.md: "card
  * declaration") — the per-card facts the eleven hand-written insert plugins
- * held: which insert command the card joins (resolved from its menu's first
- * entry by the projection), whether it dispatches `INSERT_CARD_COMMAND` with
- * `openInEditMode: true`, and whether it claims media inserts. The presence
- * of `insert` is the opt-in; an empty spec (file, gallery) is the common
- * case. CodeBlock and HorizontalRule omit the entry — they have no derived
- * insert registration. React-free; the registrar
- * (`@/plugins/CardInsertPlugin`) is its derived view.
+ * held: which insert command the card joins (named here as `command`, so menu
+ * entry order carries no command semantics), whether it dispatches
+ * `INSERT_CARD_COMMAND` with `openInEditMode: true`, and whether it claims
+ * media inserts. The presence of `insert` is the opt-in; a spec carrying only
+ * its command (file, gallery) is the common case. CodeBlock and
+ * HorizontalRule omit the entry — they have no derived insert registration.
+ * React-free; the registrar (`@/plugins/CardInsertPlugin`) is its derived
+ * view.
  */
 export interface CardInsertSpec {
+  /** the insert command this card joins (from `@/nodes/cards/card-commands`) */
+  command: LexicalCommand<unknown>
   /** dispatch INSERT_CARD_COMMAND with openInEditMode: true after construction */
   openInEditMode?: boolean
   /** claim INSERT_MEDIA_COMMAND payloads whose type equals this card's nodeType */
@@ -71,13 +76,70 @@ export interface CardInsertSpec {
 }
 
 /**
- * The single per-card source of truth (CONTEXT.md: "card declaration").
+ * The card menu icon ids (CONTEXT.md: "card declaration" names the card menu
+ * as part of the declaration's knowledge). Naming the icon by id keeps the
+ * declaration React-free; the SVGR icon components attach one layer up in
+ * `@/nodes/cards/card-menus`.
+ */
+export type CardIconId =
+  | 'audio'
+  | 'bookmark'
+  | 'button'
+  | 'callout'
+  | 'codeblock'
+  | 'divider'
+  | 'file'
+  | 'gallery'
+  | 'gif'
+  | 'header'
+  | 'html'
+  | 'image'
+  | 'toggle'
+  | 'video'
+
+/**
+ * One slash/plus menu entry, React-free: everything a `MenuItem`
+ * (`@/utils/buildCardMenu`) carries except the icon component and the command
+ * object, which are named by id / referenced from
+ * `@/nodes/cards/card-commands` instead. Each entry names the command it
+ * dispatches, so entry order never carries command semantics (Image's second
+ * entry is the GIF selector, not an insert command). The derived view in
+ * `@/nodes/cards/card-menus` resolves `icon` to the SVGR component and
+ * `command` to the entry's `insertCommand`.
+ */
+export interface CardMenuEntrySpec {
+  label: string
+  desc?: string
+  icon: CardIconId
+  /** the command this entry dispatches */
+  command: LexicalCommand<unknown>
+  insertParams?: Record<string, unknown> | (() => Record<string, unknown>)
+  matches?: string[]
+  priority?: number
+  shortcut?: string
+  queryParams?: string[]
+  isHidden?: (args: { config: CardConfig | undefined }) => boolean
+}
+
+/**
+ * The single per-card source of truth (CONTEXT.md: "card declaration"). Every
+ * card registry is a derived view over these declarations: the menus
+ * (`@/nodes/cards/card-menus`), the decorate renders
+ * (`@/nodes/cards/card-decorate`), the wrapper node classes
+ * (`@/nodes/cards/card-wrappers`), the insert registrations
+ * (`@/nodes/cards/card-insert-commands`), and the hand-written-wrapper
+ * own-method lists in the editor node sets. Adding a card means adding its
+ * declaration here plus its per-card React module — nothing is
+ * hand-maintained in two places.
+ *
  * React-free: `baseNode` is imported from its deep `@/nodes/base/nodes/...`
  * path so `@/nodes/base` can derive its node set from the declarations
- * without pulling in the wrapper/component layer. The wrapper node class is
- * attached one layer up (`@/nodes/cards/card-wrappers`) — the declarations
- * must never import wrappers, or the base barrel would close an import
- * cycle through the wrapper files.
+ * without pulling in the wrapper/component layer. The wrapper node class and
+ * the React-bearing decorate/menu pieces attach one layer up — the
+ * declarations must never import wrappers, or the base barrel would close an
+ * import cycle through the wrapper files. Menu icons and component renders
+ * are therefore named by id (`CardIconId`) or attached in per-card modules
+ * under `@/nodes/cards/decorate`.
  *
  * Declarations use `satisfies CardDeclaration<'<nodeType>'>` so the literal
  * node type survives on the declaration's type.
@@ -111,5 +173,25 @@ export interface CardDeclaration<NodeType extends string = string> {
    * opts the card into the insert-command surface.
    */
   insert?: CardInsertSpec
+  /**
+   * The card's slash/plus menu entries (CONTEXT.md: "card declaration");
+   * see `CardMenuEntrySpec`. CodeBlock has no menu entry — it is inserted by
+   * its markdown code fence.
+   */
+  menu?: readonly CardMenuEntrySpec[]
+  /**
+   * The drag-preview icon for cards with no menu entry to derive it from
+   * (CodeBlock is the only one). Menu-bearing cards use their first entry's
+   * icon; see `getCardDragIcon` in `@/nodes/cards/card-menus`.
+   */
+  dragIcon?: CardIconId
+  /**
+   * Set on the three surviving hand-written wrappers (Bookmark, Header,
+   * Toggle) — cards whose registered class is a hand-written subclass rather
+   * than an `assembleCardNode` product. The editor node sets derive their
+   * `ensureLexicalNodeOwnMethods` list from this flag
+   * (`@/nodes/cards/card-wrappers`).
+   */
+  handWrittenWrapper?: boolean
   surfaces: CardSurfaces
 }

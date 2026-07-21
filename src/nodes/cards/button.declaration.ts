@@ -1,15 +1,29 @@
-import { ButtonNode } from '@/nodes/base/nodes/button/ButtonNode'
+import { BaseButtonNode } from '@/nodes/base/nodes/button/ButtonNode'
 
 import type { CardDeclaration } from './card-declaration'
 
+import { INSERT_BUTTON_COMMAND } from './card-commands'
+
 export const buttonDeclaration = {
   nodeType: 'button',
-  baseNode: ButtonNode,
+  baseNode: BaseButtonNode,
   decorateTarget: {
     width: 'regular',
     wrapperStyle: 'wide',
   },
-  insert: { openInEditMode: true },
+  menu: [
+    {
+      label: 'Button',
+      desc: 'Call-to-action button',
+      icon: 'button',
+      command: INSERT_BUTTON_COMMAND,
+      insertParams: {},
+      matches: ['button', 'btn'],
+      priority: 16,
+      shortcut: '/button',
+    },
+  ],
+  insert: { command: INSERT_BUTTON_COMMAND, openInEditMode: true },
   surfaces: {
     default: true,
     emailEditor: true,

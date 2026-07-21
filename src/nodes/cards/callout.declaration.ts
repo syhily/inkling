@@ -1,9 +1,11 @@
 import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
 
-import { CalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
+import { BaseCalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
+
+import { INSERT_CALLOUT_COMMAND } from './card-commands'
 
 const nestedEditors: readonly NestedEditorSpec[] = [
   {
@@ -16,9 +18,20 @@ const nestedEditors: readonly NestedEditorSpec[] = [
 
 export const calloutDeclaration = {
   nodeType: 'callout',
-  baseNode: CalloutNode,
+  baseNode: BaseCalloutNode,
   nestedEditors,
-  insert: { openInEditMode: true },
+  menu: [
+    {
+      label: 'Callout',
+      desc: 'Info boxes that stand out',
+      icon: 'callout',
+      command: INSERT_CALLOUT_COMMAND,
+      matches: ['callout'],
+      priority: 9,
+      shortcut: '/callout',
+    },
+  ],
+  insert: { command: INSERT_CALLOUT_COMMAND, openInEditMode: true },
   surfaces: {
     default: true,
     emailEditor: true,

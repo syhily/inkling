@@ -6,7 +6,7 @@ import { assembleCardNode } from '@/nodes/assemble-card-node'
 import { calloutDeclaration } from '@/nodes/cards/callout.declaration'
 
 export { $isCalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
-export { INSERT_CALLOUT_COMMAND } from '@/nodes/cards/card-menus'
+export { INSERT_CALLOUT_COMMAND } from '@/nodes/cards/card-commands'
 
 export type CalloutNodeDataset = CalloutData & {
   calloutTextEditor?: LexicalEditor

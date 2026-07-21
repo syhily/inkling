@@ -7,7 +7,7 @@ import { assembleCardNode } from '@/nodes/assemble-card-node'
 import { codeBlockDeclaration } from '@/nodes/cards/codeblock.declaration'
 
 export { $isCodeBlockNode } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
-export { INSERT_CODE_BLOCK_COMMAND } from '@/nodes/cards/card-menus'
+export { INSERT_CODE_BLOCK_COMMAND } from '@/nodes/cards/card-commands'
 
 export type CodeBlockNodeDataset = CodeBlockData &
   CaptionEditorDataset & {

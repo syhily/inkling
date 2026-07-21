@@ -2,12 +2,12 @@ import { type EditorState, type LexicalEditor } from 'lexical'
 
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
-import { BookmarkNode as BaseBookmarkNode, type BookmarkData } from '@/nodes/base'
+import { BaseBookmarkNode, type BookmarkData } from '@/nodes/base'
 import { bookmarkDeclaration } from '@/nodes/cards/bookmark.declaration'
-import { CARD_MENUS } from '@/nodes/cards/card-menus'
+import { getCardMenu } from '@/nodes/cards/card-menus'
 import { decorateCard } from '@/nodes/decorate-card'
 
-export { INSERT_BOOKMARK_COMMAND } from '@/nodes/cards/card-menus'
+export { INSERT_BOOKMARK_COMMAND } from '@/nodes/cards/card-commands'
 
 export type BookmarkNodeDataset = BookmarkData &
   CaptionEditorDataset & {
@@ -29,7 +29,7 @@ export class BookmarkNode extends BaseBookmarkNode {
   // adopt the card declaration's nested-editor spec
   static nestedEditors = bookmarkDeclaration.nestedEditors
 
-  static cardMenu = CARD_MENUS.bookmark
+  static cardMenu = getCardMenu(bookmarkDeclaration.nodeType)
 
   constructor(dataset: BookmarkNodeDataset = {}, key?: string) {
     super(dataset, key)

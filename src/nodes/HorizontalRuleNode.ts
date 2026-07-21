@@ -2,7 +2,7 @@ import { assembleCardNode } from '@/nodes/assemble-card-node'
 import { horizontalRuleDeclaration } from '@/nodes/cards/horizontalrule.declaration'
 
 export { $isHorizontalRuleNode } from '@/nodes/base/nodes/horizontalrule/HorizontalRuleNode'
-export { INSERT_HORIZONTAL_RULE_COMMAND } from '@/nodes/cards/card-menus'
+export { INSERT_HORIZONTAL_RULE_COMMAND } from '@/nodes/cards/card-commands'
 
 /**
  * Transition shim (plan 039, Batch 5): the hand-written wrapper is gone — the

@@ -28,8 +28,8 @@ describe('ToggleNode', () => {
   })
 
   it('exposes a static cardMenu entry', () => {
-    expect(ToggleNode.cardMenu[0].label).toBe('Toggle')
-    expect(ToggleNode.cardMenu[0].insertCommand).toBe(INSERT_TOGGLE_COMMAND)
+    expect(ToggleNode.cardMenu?.[0]?.label).toBe('Toggle')
+    expect(ToggleNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_TOGGLE_COMMAND)
   })
 
   it('resolves the toggle drag icon from the card menu', () => {

@@ -1,12 +1,12 @@
 import { $canShowPlaceholderCurry } from '@lexical/text'
 import { type EditorState, type LexicalEditor } from 'lexical'
 
-import { ToggleNode as BaseToggleNode, type ToggleData } from '@/nodes/base'
-import { CARD_MENUS } from '@/nodes/cards/card-menus'
+import { BaseToggleNode, type ToggleData } from '@/nodes/base'
+import { getCardMenu } from '@/nodes/cards/card-menus'
 import { toggleDeclaration } from '@/nodes/cards/toggle.declaration'
 import { decorateCard } from '@/nodes/decorate-card'
 
-export { INSERT_TOGGLE_COMMAND } from '@/nodes/cards/card-menus'
+export { INSERT_TOGGLE_COMMAND } from '@/nodes/cards/card-commands'
 
 export type ToggleNodeDataset = ToggleData & {
   titleEditor?: LexicalEditor
@@ -31,7 +31,7 @@ export class ToggleNode extends BaseToggleNode {
   // adopt the card declaration's nested-editor spec
   static nestedEditors = toggleDeclaration.nestedEditors
 
-  static cardMenu = CARD_MENUS.toggle
+  static cardMenu = getCardMenu(toggleDeclaration.nodeType)
 
   isEmpty() {
     // Null only inside the headless markdown round-trip editor (the toggle

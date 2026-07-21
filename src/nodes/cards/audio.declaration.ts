@@ -4,6 +4,8 @@ import { BaseAudioNode } from '@/nodes/base/nodes/audio/AudioNode'
 
 import type { CardDeclaration } from './card-declaration'
 
+import { INSERT_AUDIO_COMMAND } from './card-commands'
+
 const transientProps: readonly TransientPropSpec[] = [
   {
     name: 'triggerFileDialog',
@@ -17,7 +19,21 @@ export const audioDeclaration = {
   nodeType: 'audio',
   baseNode: BaseAudioNode,
   transientProps,
-  insert: { claimsMediaInsert: true },
+  menu: [
+    {
+      label: 'Audio',
+      desc: 'Upload and play an audio file',
+      icon: 'audio',
+      command: INSERT_AUDIO_COMMAND,
+      insertParams: {
+        triggerFileDialog: true,
+      },
+      matches: ['audio'],
+      priority: 14,
+      shortcut: '/audio',
+    },
+  ],
+  insert: { command: INSERT_AUDIO_COMMAND, claimsMediaInsert: true },
   surfaces: {
     default: true,
     emailEditor: false,

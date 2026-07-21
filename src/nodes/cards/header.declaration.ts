@@ -2,11 +2,13 @@ import type { LexicalNode } from 'lexical'
 
 import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
 
-import { HeaderNode } from '@/nodes/base/nodes/header/HeaderNode'
+import { BaseHeaderNode } from '@/nodes/base/nodes/header/HeaderNode'
 import { normalizeCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
+
+import { INSERT_HEADER_COMMAND } from './card-commands'
 
 const nestedEditors: readonly NestedEditorSpec[] = [
   {
@@ -33,18 +35,33 @@ const nestedEditors: readonly NestedEditorSpec[] = [
  * `getCardWidth()` delegates to the spec mapper instead of duplicating it.
  */
 export const headerCardWidth = (node: LexicalNode): CardWidth | undefined => {
-  const layout = (node as HeaderNode).layout
+  const layout = (node as BaseHeaderNode).layout
   return normalizeCardWidth(layout === 'split' ? 'full' : layout)
 }
 
 export const headerDeclaration = {
   nodeType: 'header',
-  baseNode: HeaderNode,
+  baseNode: BaseHeaderNode,
   nestedEditors,
   decorateTarget: {
     width: headerCardWidth,
   },
-  insert: { openInEditMode: true },
+  insert: { command: INSERT_HEADER_COMMAND, openInEditMode: true },
+  menu: [
+    {
+      label: 'Header',
+      desc: 'Add a header',
+      icon: 'header',
+      command: INSERT_HEADER_COMMAND,
+      matches: ['header', 'heading'],
+      priority: 11,
+      insertParams: () => ({
+        version: 2,
+      }),
+      shortcut: '/header',
+    },
+  ],
+  handWrittenWrapper: true,
   surfaces: {
     default: true,
     emailEditor: false,

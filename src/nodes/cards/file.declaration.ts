@@ -1,8 +1,10 @@
 import type { TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { FileNode } from '@/nodes/base/nodes/file/FileNode'
+import { BaseFileNode } from '@/nodes/base/nodes/file/FileNode'
 
 import type { CardDeclaration } from './card-declaration'
+
+import { INSERT_FILE_COMMAND } from './card-commands'
 
 const transientProps: readonly TransientPropSpec[] = [
   {
@@ -15,9 +17,23 @@ const transientProps: readonly TransientPropSpec[] = [
 
 export const fileDeclaration = {
   nodeType: 'file',
-  baseNode: FileNode,
+  baseNode: BaseFileNode,
   transientProps,
-  insert: {},
+  menu: [
+    {
+      label: 'File',
+      desc: 'Upload a downloadable file',
+      icon: 'file',
+      command: INSERT_FILE_COMMAND,
+      insertParams: {
+        triggerFileDialog: true,
+      },
+      matches: ['file'],
+      priority: 15,
+      shortcut: '/file',
+    },
+  ],
+  insert: { command: INSERT_FILE_COMMAND },
   surfaces: {
     default: true,
     emailEditor: false,

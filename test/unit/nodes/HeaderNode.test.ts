@@ -28,8 +28,8 @@ describe('HeaderNode', () => {
   })
 
   it('exposes a static cardMenu entry', () => {
-    expect(HeaderNode.cardMenu[0].label).toBe('Header')
-    expect(HeaderNode.cardMenu[0].insertCommand).toBe(INSERT_HEADER_COMMAND)
+    expect(HeaderNode.cardMenu?.[0]?.label).toBe('Header')
+    expect(HeaderNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_HEADER_COMMAND)
   })
 
   it('resolves the header drag icon from the card menu', () => {

@@ -4,7 +4,7 @@ import { assembleCardNode } from '@/nodes/assemble-card-node'
 import { fileDeclaration } from '@/nodes/cards/file.declaration'
 
 export { $isFileNode } from '@/nodes/base/nodes/file/FileNode'
-export { INSERT_FILE_COMMAND } from '@/nodes/cards/card-menus'
+export { INSERT_FILE_COMMAND } from '@/nodes/cards/card-commands'
 
 export type FileNodeDataset = FileData & {
   initialFile?: File

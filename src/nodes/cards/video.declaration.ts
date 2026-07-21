@@ -2,11 +2,13 @@ import type { LexicalNode } from 'lexical'
 
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { VideoNode } from '@/nodes/base/nodes/video/VideoNode'
+import { BaseVideoNode } from '@/nodes/base/nodes/video/VideoNode'
 import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
+
+import { INSERT_VIDEO_COMMAND } from './card-commands'
 
 const nestedEditors: readonly NestedEditorSpec[] = [
   {
@@ -27,13 +29,27 @@ const transientProps: readonly TransientPropSpec[] = [
 
 export const videoDeclaration = {
   nodeType: 'video',
-  baseNode: VideoNode,
+  baseNode: BaseVideoNode,
   nestedEditors,
   transientProps,
   decorateTarget: {
-    width: (node: LexicalNode) => normalizeCardWidth((node as VideoNode).cardWidth) ?? 'regular',
+    width: (node: LexicalNode) => normalizeCardWidth((node as BaseVideoNode).cardWidth) ?? 'regular',
   },
-  insert: { claimsMediaInsert: true },
+  menu: [
+    {
+      label: 'Video',
+      desc: 'Upload and play a video file',
+      icon: 'video',
+      command: INSERT_VIDEO_COMMAND,
+      insertParams: {
+        triggerFileDialog: true,
+      },
+      matches: ['video'],
+      priority: 13,
+      shortcut: '/video',
+    },
+  ],
+  insert: { command: INSERT_VIDEO_COMMAND, claimsMediaInsert: true },
   surfaces: {
     default: true,
     emailEditor: false,

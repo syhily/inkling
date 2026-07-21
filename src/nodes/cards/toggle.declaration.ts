@@ -1,10 +1,12 @@
 import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
 
-import { ToggleNode } from '@/nodes/base/nodes/toggle/ToggleNode'
+import { BaseToggleNode } from '@/nodes/base/nodes/toggle/ToggleNode'
 import BASIC_NODES from '@/nodes/BasicNodes'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
+
+import { INSERT_TOGGLE_COMMAND } from './card-commands'
 
 const nestedEditors: readonly NestedEditorSpec[] = [
   {
@@ -23,12 +25,25 @@ const nestedEditors: readonly NestedEditorSpec[] = [
 
 export const toggleDeclaration = {
   nodeType: 'toggle',
-  baseNode: ToggleNode,
+  baseNode: BaseToggleNode,
   nestedEditors,
   decorateTarget: {
     width: 'regular',
   },
-  insert: { openInEditMode: true },
+  menu: [
+    {
+      label: 'Toggle',
+      desc: 'Collapsible content block',
+      icon: 'toggle',
+      command: INSERT_TOGGLE_COMMAND,
+      insertParams: {},
+      matches: ['toggle', 'collapsible', 'accordion'],
+      priority: 16,
+      shortcut: '/toggle',
+    },
+  ],
+  insert: { command: INSERT_TOGGLE_COMMAND, openInEditMode: true },
+  handWrittenWrapper: true,
   surfaces: {
     default: true,
     emailEditor: false,

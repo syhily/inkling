@@ -6,7 +6,7 @@ import type { CardDeclaration } from '@/nodes/cards/card-declaration'
 import type { MenuItem } from '@/utils/buildCardMenu'
 
 import { ensureLexicalNodeOwnMethods } from '@/nodes/base/ensure-node-own-methods'
-import { CARD_MENUS } from '@/nodes/cards/card-menus'
+import { getCardMenu } from '@/nodes/cards/card-menus'
 import { decorateCard } from '@/nodes/decorate-card'
 
 /**
@@ -55,7 +55,7 @@ export function assembleCardNode<TNode extends LexicalNode>(
     static nestedEditors = declaration.nestedEditors
     static transientProps = declaration.transientProps
     // undefined for CodeBlock, the one card with no menu entry
-    static cardMenu: MenuItem[] | undefined = (CARD_MENUS as Partial<Record<string, MenuItem[]>>)[declaration.nodeType]
+    static cardMenu: MenuItem[] | undefined = getCardMenu(declaration.nodeType)
 
     decorate(): ReactNode {
       return decorateCard(this)

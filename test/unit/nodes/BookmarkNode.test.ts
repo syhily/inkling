@@ -28,8 +28,8 @@ describe('BookmarkNode', () => {
   })
 
   it('exposes a static cardMenu entry', () => {
-    expect(BookmarkNode.cardMenu[0].label).toBe('Bookmark')
-    expect(BookmarkNode.cardMenu[0].insertCommand).toBe(INSERT_BOOKMARK_COMMAND)
+    expect(BookmarkNode.cardMenu?.[0]?.label).toBe('Bookmark')
+    expect(BookmarkNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_BOOKMARK_COMMAND)
   })
 
   it('resolves the bookmark drag icon from the card menu', () => {

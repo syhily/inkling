@@ -1,12 +1,12 @@
 import { $canShowPlaceholderCurry } from '@lexical/text'
 import { type EditorState, type LexicalEditor } from 'lexical'
 
-import { HeaderNode as BaseHeaderNode, type CardWidth, type HeaderData } from '@/nodes/base'
-import { CARD_MENUS } from '@/nodes/cards/card-menus'
+import { BaseHeaderNode, type CardWidth, type HeaderData } from '@/nodes/base'
+import { getCardMenu } from '@/nodes/cards/card-menus'
 import { headerCardWidth, headerDeclaration } from '@/nodes/cards/header.declaration'
 import { decorateCard } from '@/nodes/decorate-card'
 
-export { INSERT_HEADER_COMMAND } from '@/nodes/cards/card-menus'
+export { INSERT_HEADER_COMMAND } from '@/nodes/cards/card-commands'
 
 export type HeaderNodeDataset = HeaderData & {
   headerTextEditor?: LexicalEditor
@@ -33,7 +33,7 @@ export class HeaderNode extends BaseHeaderNode {
   // adopt the card declaration's nested-editor spec
   static nestedEditors = headerDeclaration.nestedEditors
 
-  static cardMenu = CARD_MENUS.header
+  static cardMenu = getCardMenu(headerDeclaration.nodeType)
 
   getCardWidth(): CardWidth | undefined {
     return headerCardWidth(this)

@@ -4,7 +4,7 @@ import { assembleCardNode } from '@/nodes/assemble-card-node'
 import { audioDeclaration } from '@/nodes/cards/audio.declaration'
 
 export { $isAudioNode } from '@/nodes/base/nodes/audio/AudioNode'
-export { INSERT_AUDIO_COMMAND } from '@/nodes/cards/card-menus'
+export { INSERT_AUDIO_COMMAND } from '@/nodes/cards/card-commands'
 
 export type AudioNodeDataset = AudioData & {
   initialFile?: File
