@@ -1,8 +1,6 @@
-import React from 'react'
-
 import type { CardSelectionState } from '@/plugins/behaviour/cardSelectionStore'
 
-import { CardSelectionStoreContext } from '@/context/CardSelectionStoreContext'
+import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 
 // Render-only subscription to the per-composer card selection store
 // (plan 038). useSyncExternalStore compares snapshots with Object.is, so a
@@ -10,7 +8,5 @@ import { CardSelectionStoreContext } from '@/context/CardSelectionStoreContext'
 // returning primitives (e.g. state => state.selectedCardKey), not fresh
 // objects.
 export function useCardSelection<T>(selector: (state: CardSelectionState) => T): T {
-  const store = React.useContext(CardSelectionStoreContext)
-  const getSnapshot = () => selector(store.getState())
-  return React.useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot)
+  return useCardSelectionState(selector)
 }
