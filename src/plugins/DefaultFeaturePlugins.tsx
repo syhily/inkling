@@ -9,7 +9,12 @@ import HorizontalRulePlugin from '@/plugins/HorizontalRulePlugin'
 import InklingSelectorPlugin from '@/plugins/InklingSelectorPlugin'
 import { InklingSnippetPlugin } from '@/plugins/InklingSnippetPlugin'
 
-export const AllDefaultPlugins = () => {
+// The feature plugin bundle InklingEditor adds on top of the core plugins
+// InklingComposableEditor always mounts (behaviour, toolbar, markdown,
+// drag-drop, history). This is deliberately not "all defaults": the core set
+// lives in InklingComposableEditor, and EmailEditor composes its own subset
+// instead of using this bundle.
+export const DefaultFeaturePlugins = () => {
   return (
     <>
       {/* Lexical Plugins */}
@@ -29,4 +34,4 @@ export const AllDefaultPlugins = () => {
   )
 }
 
-export default AllDefaultPlugins
+export default DefaultFeaturePlugins

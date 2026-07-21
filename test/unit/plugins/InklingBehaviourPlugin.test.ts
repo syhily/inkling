@@ -9,8 +9,8 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
-import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import InklingBehaviourPlugin, {
@@ -31,11 +31,11 @@ function createTestEditor(nodes: Array<unknown> = []) {
   })
 }
 
-// Mount the plugin under the real InklingSelectedCardContext provider: it
-// creates the per-composer card selection store and the drag/visibility
-// context the plugin consumes (plan 038 — no whole-context mock).
+// Mount the plugin under a per-composer card selection store provider, the
+// same store InklingComposer provides in production (plan 038 — no
+// whole-context mock).
 function renderPlugin() {
-  return renderHook(() => InklingBehaviourPlugin({}), { wrapper: InklingSelectedCardContext })
+  return renderHook(() => InklingBehaviourPlugin({}), { wrapper: createCardSelectionStoreWrapper().wrapper })
 }
 
 describe('InklingBehaviourPlugin', () => {

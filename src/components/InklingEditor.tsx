@@ -5,7 +5,7 @@ import type { InklingComposableEditorProps } from '@/components/InklingComposabl
 
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import { SharedEditorStateContext } from '@/context/SharedEditorStateContext'
-import { AllDefaultPlugins } from '@/plugins/AllDefaultPlugins'
+import { DefaultFeaturePlugins } from '@/plugins/DefaultFeaturePlugins'
 
 export type InklingEditorProps = InklingComposableEditorProps
 
@@ -13,7 +13,7 @@ const InklingEditor = ({ onChange, children, ...props }: InklingEditorProps) => 
   return (
     <SharedEditorStateContext onChange={onChange}>
       <InklingComposableEditor {...props}>
-        <AllDefaultPlugins />
+        <DefaultFeaturePlugins />
         {children}
       </InklingComposableEditor>
     </SharedEditorStateContext>

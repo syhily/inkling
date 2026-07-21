@@ -5,7 +5,6 @@ import { mergeRegister } from '@lexical/utils'
 import React from 'react'
 
 import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
-import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { registerDefaultTransforms } from '@/transforms'
 
 import { getModifierState } from './behaviour/clipboard-protocol'
@@ -56,7 +55,6 @@ function useInklingBehaviour({
   cursorDidExitAtTop?: () => void
   isNested?: boolean
 }) {
-  const { setShowVisibilitySettings } = useInklingSelectedCardContext()
   const cardSelectionStore = useCardSelectionStore()
 
   const isShiftPressed = getModifierState(editor)
@@ -76,7 +74,6 @@ function useInklingBehaviour({
       }),
       registerCardCommands(editor, {
         store: cardSelectionStore,
-        setShowVisibilitySettings,
       }),
       registerKeyboardNavigation(editor, {
         store: cardSelectionStore,
@@ -88,10 +85,9 @@ function useInklingBehaviour({
       registerClickAndCut(editor),
       registerVisibilityHandler(editor, {
         store: cardSelectionStore,
-        setShowVisibilitySettings,
       }),
     )
-  }, [editor, cardSelectionStore, isNested, cursorDidExitAtTop, setShowVisibilitySettings, isShiftPressed])
+  }, [editor, cardSelectionStore, isNested, cursorDidExitAtTop, isShiftPressed])
 
   // remove alignment formats,
   // denest invalid node nesting,

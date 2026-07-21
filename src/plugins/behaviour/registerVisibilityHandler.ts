@@ -20,11 +20,10 @@ import {
 
 interface VisibilityHandlerDeps {
   store: CardSelectionStore
-  setShowVisibilitySettings: (show: boolean) => void
 }
 
 export function registerVisibilityHandler(editor: LexicalEditor, deps: VisibilityHandlerDeps) {
-  const { store, setShowVisibilitySettings } = deps
+  const { store } = deps
 
   return mergeRegister(
     editor.registerCommand(
@@ -38,13 +37,13 @@ export function registerVisibilityHandler(editor: LexicalEditor, deps: Visibilit
           // because we want to show the visibility settings panel while in selected mode
           // instead of entering edit mode
           if ($isHtmlNode(cardNode)) {
-            setShowVisibilitySettings(true)
+            store.setState({ showVisibilitySettings: true })
             if (!selectedCardKey) {
               editor.dispatchCommand(SELECT_CARD_COMMAND, { cardKey, focusEditor: true })
             }
           } else {
             if (cardNode?.hasEditMode?.() && !isEditingCard) {
-              setShowVisibilitySettings(true)
+              store.setState({ showVisibilitySettings: true })
               editor.dispatchCommand(EDIT_CARD_COMMAND, { cardKey, focusEditor: true })
             } else if (isEditingCard) {
               $deselectCard(editor, cardKey)
@@ -59,7 +58,7 @@ export function registerVisibilityHandler(editor: LexicalEditor, deps: Visibilit
       HIDE_CARD_VISIBILITY_SETTINGS_COMMAND,
       ({ cardKey }) => {
         editor.update(() => {
-          setShowVisibilitySettings(false)
+          store.setState({ showVisibilitySettings: false })
           editor.dispatchCommand(DESELECT_CARD_COMMAND, { cardKey })
         })
         return true

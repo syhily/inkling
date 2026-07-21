@@ -3,10 +3,10 @@ import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexica
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { HtmlNode } from '@/nodes/HtmlNode'
 import { HtmlNodeComponent } from '@/nodes/HtmlNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
@@ -79,13 +79,14 @@ describe('HtmlNodeComponent', () => {
 
     const composerValue = createComposerContext()
     const cardValue = createCardContext()
+    const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
     render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
-        <InklingSelectedCardContext>
+        <CardSelectionStoreProvider>
           <CardContext.Provider value={cardValue}>
             <HtmlNodeComponent html="<p>Hello</p>" nodeKey={nodeKey} />
           </CardContext.Provider>
-        </InklingSelectedCardContext>
+        </CardSelectionStoreProvider>
       </InklingHostIntegrationContext.Provider>,
     )
 
@@ -96,13 +97,14 @@ describe('HtmlNodeComponent', () => {
     function renderWithToolbar(cardOverrides: Record<string, unknown> = {}, cardConfig = {}) {
       const composerValue = createComposerContext(cardConfig)
       const cardValue = createCardContext(cardOverrides)
+      const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
-          <InklingSelectedCardContext>
+          <CardSelectionStoreProvider>
             <CardContext.Provider value={cardValue}>
               <HtmlNodeComponent html="<p>Hello</p>" nodeKey="html-1" />
             </CardContext.Provider>
-          </InklingSelectedCardContext>
+          </CardSelectionStoreProvider>
         </InklingHostIntegrationContext.Provider>,
       )
     }

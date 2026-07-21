@@ -30,11 +30,10 @@ import {
 
 interface CardCommandDeps {
   store: CardSelectionStore
-  setShowVisibilitySettings: (show: boolean) => void
 }
 
 export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDeps) {
-  const { store, setShowVisibilitySettings } = deps
+  const { store } = deps
 
   return mergeRegister(
     editor.registerCommand(
@@ -82,7 +81,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
         if (selectedCardKey && selectedCardKey !== cardKey) {
           $deselectCard(editor, selectedCardKey)
           // Hide visibility settings when switching to a different card
-          setShowVisibilitySettings(false)
+          store.setState({ showVisibilitySettings: false })
         }
 
         $selectCard(editor, cardKey)
@@ -117,9 +116,8 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
       ({ cardKey }) => {
         $deselectCard(editor, cardKey)
 
-        store.setState({ selectedCardKey: null, isEditingCard: false })
         // Hide visibility settings when deselecting a card
-        setShowVisibilitySettings(false)
+        store.setState({ selectedCardKey: null, isEditingCard: false, showVisibilitySettings: false })
         return true
       },
       COMMAND_PRIORITY_LOW,
@@ -169,8 +167,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
           rootElement.focus()
         }
 
-        store.setState({ selectedCardKey: null, isEditingCard: false })
-        setShowVisibilitySettings(false)
+        store.setState({ selectedCardKey: null, isEditingCard: false, showVisibilitySettings: false })
         return true
       },
       COMMAND_PRIORITY_LOW,

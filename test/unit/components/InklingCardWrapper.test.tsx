@@ -5,12 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import CardContext from '@/context/CardContext'
 import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { buildDefaultVisibility } from '@/nodes/base/utils/visibility'
 import { HtmlNode } from '@/nodes/HtmlNode'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
@@ -66,14 +66,15 @@ function renderWrapper(
   { cardConfig, select }: { cardConfig?: Record<string, unknown>; select?: boolean } = {},
 ) {
   const composerValue = createComposerContext(cardConfig)
+  const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
   return render(
     <InklingHostIntegrationContext.Provider value={composerValue}>
-      <InklingSelectedCardContext>
+      <CardSelectionStoreProvider>
         {select ? <SelectCard nodeKey={nodeKey} /> : null}
         <InklingCardWrapper nodeKey={nodeKey}>
           <div data-testid="card-content">card content</div>
         </InklingCardWrapper>
-      </InklingSelectedCardContext>
+      </CardSelectionStoreProvider>
     </InklingHostIntegrationContext.Provider>,
   )
 }
@@ -88,13 +89,14 @@ function CardWidthProbe({ widths }: { widths: CardWidth[] }) {
 
 function renderWrapperWithWidth(nodeKey: NodeKey, width: CardWidth, widths: CardWidth[]) {
   const composerValue = createComposerContext()
+  const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
   const tree = (nextWidth: CardWidth) => (
     <InklingHostIntegrationContext.Provider value={composerValue}>
-      <InklingSelectedCardContext>
+      <CardSelectionStoreProvider>
         <InklingCardWrapper nodeKey={nodeKey} width={nextWidth}>
           <CardWidthProbe widths={widths} />
         </InklingCardWrapper>
-      </InklingSelectedCardContext>
+      </CardSelectionStoreProvider>
     </InklingHostIntegrationContext.Provider>
   )
   const result = render(tree(width))
@@ -178,6 +180,7 @@ describe('InklingCardWrapper', () => {
     const nodeKey = await addHtmlNode(editor)
     const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
     const composerValue = createComposerContext()
+    const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
     let captured: React.ContextType<typeof CardContext> | undefined
     function ContextProbe() {
       captured = React.useContext(CardContext)
@@ -186,11 +189,11 @@ describe('InklingCardWrapper', () => {
 
     render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
-        <InklingSelectedCardContext>
+        <CardSelectionStoreProvider>
           <InklingCardWrapper nodeKey={nodeKey}>
             <ContextProbe />
           </InklingCardWrapper>
-        </InklingSelectedCardContext>
+        </CardSelectionStoreProvider>
       </InklingHostIntegrationContext.Provider>,
     )
 

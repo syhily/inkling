@@ -15,7 +15,6 @@ function createTestEditor() {
 
 describe('registerVisibilityHandler', () => {
   let editor: LexicalEditor
-  const setShowVisibilitySettings = vi.fn()
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -25,7 +24,6 @@ describe('registerVisibilityHandler', () => {
   it('registers visibility command listeners and returns a cleanup function', () => {
     const cleanup = registerVisibilityHandler(editor, {
       store: createCardSelectionStore(),
-      setShowVisibilitySettings,
     })
 
     expect(typeof cleanup).toBe('function')

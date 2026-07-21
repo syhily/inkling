@@ -28,9 +28,9 @@ import EMAIL_EDITOR_NODES from '@/nodes/EmailEditorNodes'
 import EMAIL_NODES from '@/nodes/EmailNodes'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 /* Plugins */
-import AllDefaultPlugins from '@/plugins/AllDefaultPlugins'
 import CardInsertPlugin from '@/plugins/CardInsertPlugin'
 import CardMenuPlugin from '@/plugins/CardMenuPlugin'
+import DefaultFeaturePlugins from '@/plugins/DefaultFeaturePlugins'
 import DragDropPastePlugin from '@/plugins/DragDropPastePlugin'
 import DragDropReorderPlugin from '@/plugins/DragDropReorderPlugin'
 import EmEnDashPlugin from '@/plugins/EmEnDashPlugin'
@@ -94,7 +94,7 @@ export {
   InklingComposer,
   InklingEditor,
   InklingNestedComposer,
-  AllDefaultPlugins,
+  DefaultFeaturePlugins,
   CardInsertPlugin,
   CardMenuPlugin,
   DragDropPastePlugin,

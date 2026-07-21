@@ -24,7 +24,6 @@ function updateEditor(editor: LexicalEditor, updateFn: () => void) {
 describe('registerCardCommands', () => {
   let editor: LexicalEditor
   let store: CardSelectionStore
-  const setShowVisibilitySettings = vi.fn()
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -35,7 +34,6 @@ describe('registerCardCommands', () => {
   function register(deps: Partial<Parameters<typeof registerCardCommands>[1]> = {}) {
     return registerCardCommands(editor, {
       store,
-      setShowVisibilitySettings,
       ...deps,
     })
   }

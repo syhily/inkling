@@ -7,8 +7,8 @@ import { SettingsPanel } from '@/components/ui/SettingsPanel'
 import { VisibilitySettings } from '@/components/ui/VisibilitySettings'
 import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 import { useVisibilityToggle } from '@/hooks/useVisibilityToggle'
 import { $updateCardNode } from '@/nodes/base'
 import { $isHtmlNode } from '@/nodes/HtmlNode'
@@ -20,7 +20,9 @@ export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: s
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const { darkMode } = React.useContext(InklingUiPrefsContext)
 
-  const { showVisibilitySettings } = useInklingSelectedCardContext()
+  // the sole indicator-icon card reads the visibility panel flag straight
+  // from the card selection store, gated by its own selected state below
+  const showVisibilitySettings = useCardSelection((state) => state.showVisibilitySettings)
 
   const { isVisibilityEnabled, visibilityOptions, toggleVisibility } = useVisibilityToggle(editor, nodeKey, cardConfig)
 

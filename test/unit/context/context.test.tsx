@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest'
 import CardContext from '@/context/CardContext'
 import InklingCollaborationContext from '@/context/InklingCollaborationContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { InklingSelectedCardContext, useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import {
   SharedEditorStateContext,
@@ -42,7 +41,6 @@ describe('InklingCollaborationContext', () => {
 
     render(<Consumer />)
 
-    expect(captured!.enableMultiplayer).toBe(false)
     expect(captured!.createWebsocketProvider).toBeDefined()
   })
 })
@@ -76,21 +74,6 @@ describe('CardContext', () => {
     expect(captured!.isSelected).toBe(false)
     expect(captured!.cardWidth).toBe('regular')
     expect(typeof captured!.setEditing).toBe('function')
-  })
-})
-
-describe('InklingSelectedCardContext', () => {
-  it('initializes state and exposes setters', async () => {
-    const { result } = renderHook(() => useInklingSelectedCardContext(), {
-      wrapper: InklingSelectedCardContext,
-    })
-
-    expect(result.current.showVisibilitySettings).toBe(false)
-
-    result.current.setShowVisibilitySettings(true)
-    await waitFor(() => {
-      expect(result.current.showVisibilitySettings).toBe(true)
-    })
   })
 })
 

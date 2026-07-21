@@ -35,7 +35,6 @@ vi.mock('@/plugins/ReplacementStringsPlugin', () => ({
 
 function createCollaborationValue() {
   return {
-    enableMultiplayer: false,
     createWebsocketProvider: vi.fn(),
   }
 }

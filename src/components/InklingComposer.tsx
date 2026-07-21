@@ -8,15 +8,16 @@ import { Doc } from 'yjs'
 import type { LexicalProviderFactory } from '@/context/InklingCollaborationContext'
 import type { CardConfig, FileUploader, FileUploaderInput } from '@/context/InklingHostIntegrationContext'
 
+import { CardSelectionStoreContext } from '@/context/CardSelectionStoreContext'
 import { DragDropHandleContext } from '@/context/DragDropHandleContext'
 import InklingCollaborationContext from '@/context/InklingCollaborationContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { InklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { TKContext } from '@/context/TKContext'
 import { WordCountHandleContext } from '@/context/WordCountHandleContext'
 import { DEFAULT_CONFIG } from '@/nodes/base'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
+import { createCardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
 import { createDragDropHandle } from '@/plugins/behaviour/dragDropHandle'
 import { createWordCountHandle } from '@/plugins/behaviour/wordCountHandle'
 import defaultTheme from '@/themes/default'
@@ -189,6 +190,7 @@ const InklingComposer = ({
   // initializer keeps each instance stable for the provider's lifetime
   const [dragDropHandle] = React.useState(createDragDropHandle)
   const [wordCountHandle] = React.useState(createWordCountHandle)
+  const [cardSelectionStore] = React.useState(createCardSelectionStore)
 
   const normalizedFileUploader = React.useMemo<FileUploader>(() => {
     const fileTypes = readFileTypes(fileUploader)
@@ -239,16 +241,7 @@ const InklingComposer = ({
     [normalizedFileUploader, cardConfig, onError],
   )
 
-  const collaborationValue = React.useMemo(
-    () => ({
-      enableMultiplayer,
-      multiplayerEndpoint,
-      multiplayerDocId,
-      multiplayerUsername,
-      createWebsocketProvider,
-    }),
-    [createWebsocketProvider, enableMultiplayer, multiplayerDocId, multiplayerEndpoint, multiplayerUsername],
-  )
+  const collaborationValue = React.useMemo(() => ({ createWebsocketProvider }), [createWebsocketProvider])
 
   const uiPrefsValue = React.useMemo(
     () => ({
@@ -265,7 +258,7 @@ const InklingComposer = ({
           <InklingHostIntegrationContext.Provider value={hostIntegrationValue}>
             <InklingCollaborationContext.Provider value={collaborationValue}>
               <InklingUiPrefsContext.Provider value={uiPrefsValue}>
-                <InklingSelectedCardContext>
+                <CardSelectionStoreContext.Provider value={cardSelectionStore}>
                   <TKContext>
                     <LexicalCollaboration>
                       {enableMultiplayer ? (
@@ -280,7 +273,7 @@ const InklingComposer = ({
                       {children}
                     </LexicalCollaboration>
                   </TKContext>
-                </InklingSelectedCardContext>
+                </CardSelectionStoreContext.Provider>
               </InklingUiPrefsContext.Provider>
             </InklingCollaborationContext.Provider>
           </InklingHostIntegrationContext.Provider>

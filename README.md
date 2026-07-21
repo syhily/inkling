@@ -69,11 +69,11 @@ Everything below is exported from the package entry point.
 
 Around 20 plugins are exported:
 
-`AllDefaultPlugins`, `CardInsertPlugin`, `CardMenuPlugin`, `DragDropPastePlugin`, `DragDropReorderPlugin`, `EmEnDashPlugin`, `EmojiPickerPlugin`, `ExternalControlPlugin`, `FloatingToolbarPlugin`, `HorizontalRulePlugin`, `HtmlOutputPlugin`, `InklingBehaviourPlugin`, `InklingSelectorPlugin`, `InklingSnippetPlugin`, `ListPlugin`, `MarkdownShortcutPlugin`, `PlusCardMenuPlugin`, `ReplacementStringsPlugin`, `RestrictContentPlugin`, `SlashCardMenuPlugin`, `TKCountPlugin`, `WordCountPlugin`.
+`CardInsertPlugin`, `CardMenuPlugin`, `DefaultFeaturePlugins`, `DragDropPastePlugin`, `DragDropReorderPlugin`, `EmEnDashPlugin`, `EmojiPickerPlugin`, `ExternalControlPlugin`, `FloatingToolbarPlugin`, `HorizontalRulePlugin`, `HtmlOutputPlugin`, `InklingBehaviourPlugin`, `InklingSelectorPlugin`, `InklingSnippetPlugin`, `ListPlugin`, `MarkdownShortcutPlugin`, `PlusCardMenuPlugin`, `ReplacementStringsPlugin`, `RestrictContentPlugin`, `SlashCardMenuPlugin`, `TKCountPlugin`, `WordCountPlugin`.
 
 Most map to a card or an obvious editor feature. The less obvious ones:
 
-- `AllDefaultPlugins` — the full default plugin bundle used by `InklingEditor`.
+- `DefaultFeaturePlugins` — the feature plugin bundle `InklingEditor` adds on top of the core plugins `InklingComposableEditor` always mounts.
 - `CardInsertPlugin` — registers every card's insert command, derived from the card declarations.
 - `InklingBehaviourPlugin` — core keyboard and paste behaviors plus card commands.
 - `CardMenuPlugin` — bundles `PlusCardMenuPlugin` and `SlashCardMenuPlugin`.

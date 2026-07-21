@@ -6,21 +6,16 @@ import React from 'react'
 // (unexported) ProviderFactory alias
 export type LexicalProviderFactory = React.ComponentProps<typeof CollaborationPlugin>['providerFactory']
 
-// Collaboration lifecycle (plan 047). The four multiplayer fields are
-// write-only: InklingComposer places them here but no consumer reads them
-// from this context — only createWebsocketProvider is consumed (by
-// InklingNestedComposer). They are grouped under collaboration, their only
-// reader's lifecycle.
+// Collaboration lifecycle: the only value consumers read from this context.
+// InklingNestedComposer uses the factory to mount a CollaborationPlugin for
+// each nested editor; everything else about multiplayer (enable flag,
+// endpoint, doc id, username) is consumed directly from InklingComposer's
+// props and never read back out of context.
 export interface InklingCollaborationContextValue {
-  enableMultiplayer: boolean
-  multiplayerEndpoint?: string
-  multiplayerDocId?: string
-  multiplayerUsername?: string
   createWebsocketProvider: LexicalProviderFactory
 }
 
 const InklingCollaborationContext = React.createContext<InklingCollaborationContextValue>({
-  enableMultiplayer: false,
   createWebsocketProvider: () => ({
     awareness: {
       getLocalState: () => null,
