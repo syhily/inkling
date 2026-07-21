@@ -193,7 +193,23 @@ type GeneratedDecoratorNodeInstance<
 > = {
   exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): TOutput
 } & GeneratedDecoratorNodeBase &
-  TDataset
+  TDataset &
+  PrivateDatasetFields<TDataset>
+
+/**
+ * The node's private `__<name>` fields, derived from the declared dataset
+ * properties: every `{ name: 'src' }` property is stored on (and readable
+ * through) `__src` at the property's value type. This is what closes the
+ * field seam — `__`-prefixed reads on a typed card node are checked against
+ * the card's declared vocabulary instead of an open index signature.
+ * Transient-prop and nested-editor fields (`__triggerFileDialog`,
+ * `__captionEditor`, …) are per-class spec state, not dataset properties;
+ * each card's node type declares them one layer up (the wrapper modules and
+ * the hand-written wrappers).
+ */
+type PrivateDatasetFields<TDataset extends Record<string, unknown>> = {
+  [K in keyof TDataset as `__${string & K}`]: TDataset[K]
+}
 
 // An intersection rather than Lexical's `Spread` utility: `Spread` isn't provably
 // assignable to `SerializedLexicalNode` when TDataset is an unresolved generic, which
@@ -227,16 +243,21 @@ export interface GeneratedDecoratorNodeClass<
 // Type-only view of the generated node's instance side, used in the instance
 // intersection above and by consumers holding a card node without its
 // concrete dataset type. Extending InklingDecoratorNode keeps generated nodes
-// LexicalNode-typed while declaring the generated members and the
-// dynamic-dataset index signature. This cannot be a merged declaration on the
-// generator's real class: that class is function-local and its dataset
-// members depend on the function's type parameters, which merged
-// declarations cannot capture. The surface is declared here once, as types
-// only — the generated class below supplies every member at runtime, and the
-// return-site cast bridges the two.
+// LexicalNode-typed while declaring the generated members. This cannot be a
+// merged declaration on the generator's real class: that class is
+// function-local and its dataset members depend on the function's type
+// parameters, which merged declarations cannot capture. The surface is
+// declared here once, as types only — the generated class below supplies
+// every member at runtime, and the return-site cast bridges the two.
+//
+// There is deliberately NO index signature here: field reads on a card node
+// must resolve against the card's declared vocabulary (the dataset
+// properties, mirrored as typed `__<name>` fields by `PrivateDatasetFields`,
+// plus the per-class transient/nested-editor fields the wrapper node types
+// declare). The function-local class below keeps its own index signature for
+// its dynamic spec-driven assignments; it never reaches consumers because
+// the class is only exposed through the `GeneratedDecoratorNodeClass` cast.
 export interface GeneratedDecoratorNodeBase extends InklingDecoratorNode {
-  [key: string]: unknown
-
   getDataset(): Record<string, unknown>
   appendNestedEditorDataset<T extends Record<string, unknown>>(dataset: T): T
   appendTransientDataset<T extends Record<string, unknown>>(dataset: T): T
@@ -307,6 +328,11 @@ export function generateDecoratorNode<
   }
 
   class GeneratedDecoratorNode extends InklingDecoratorNode {
+    // Function-local escape hatch for the spec-driven dynamic assignments
+    // below (`this[prop.privateName] = …`). Never visible to consumers: the
+    // class is only exposed through the `GeneratedDecoratorNodeClass` cast,
+    // whose instance side has no index signature (see the note on
+    // `GeneratedDecoratorNodeBase`).
     [key: string]: unknown
 
     /**

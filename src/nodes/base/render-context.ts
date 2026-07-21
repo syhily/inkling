@@ -1,6 +1,11 @@
 import DOMPurify, { type Config as DOMPurifyConfig } from 'dompurify'
 
-import type { ExportDOMDesignOptions, ExportDOMFeatureOptions, ExportDOMOptionsBase } from '@/nodes/base/export-dom'
+import type {
+  ExportDOMDesignOptions,
+  ExportDOMFeatureOptions,
+  ExportDOMOptions,
+  ImageOptimizationOptions,
+} from '@/nodes/base/export-dom'
 
 import { cleanDOM } from '@/nodes/base/utils/clean-dom'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
@@ -132,19 +137,6 @@ export function isEmailButtonColorValue(value: string): boolean {
   return COLOR_VALUE_REGEX.test(value) && value !== 'transparent'
 }
 
-/**
- * The image-optimization keys the image/gallery renderers and the srcset
- * helper consume, single-sourced here (plan 042) from the three renderer-local
- * declarations it replaces. The options bag types `imageOptimization` as
- * `Record<string, unknown>`; the factory validates the three known keys into
- * this shape while snapshotting (mistyped keys are dropped, never frozen in).
- */
-export interface ImageOptimizationOptions {
-  defaultMaxWidth?: number
-  contentImageSizes?: Record<string, { width: number }>
-  srcsets?: boolean
-}
-
 function isContentImageSizes(value: unknown): value is Record<string, { width: number }> {
   if (typeof value !== 'object' || value === null) {
     return false
@@ -158,9 +150,11 @@ function isContentImageSizes(value: unknown): value is Record<string, { width: n
  * Validates the host-supplied imageOptimization bag into the typed snapshot:
  * each documented key is copied only when its runtime type matches, so a
  * mistyped host option degrades to "absent" (the consumers' documented
- * fallback path) instead of being frozen into the context as a lie.
+ * fallback path) instead of being frozen into the context as a lie. The
+ * `ImageOptimizationOptions` type itself lives in `@/nodes/base/export-dom`
+ * next to `ExportDOMOptions`.
  */
-function readImageOptimization(bag: Record<string, unknown>): ImageOptimizationOptions {
+function readImageOptimization(bag: ImageOptimizationOptions): ImageOptimizationOptions {
   const validated: ImageOptimizationOptions = {}
   if (typeof bag.defaultMaxWidth === 'number') {
     validated.defaultMaxWidth = bag.defaultMaxWidth
@@ -184,7 +178,7 @@ export interface RenderContext {
   readonly imageOptimization: ImageOptimizationOptions | undefined
   readonly canTransformImage: ((src: string) => boolean) | undefined
   readonly canTransformImageToFormat: ((format: string) => boolean) | undefined
-  /** The markdown card's slug-policy input, consumed by `markdown-html-renderer`. */
+  /** The markdown card's slug-policy input, consumed by `@/markdown/paste-dialect`. */
   readonly inklingVersion: string | undefined
   /** Frozen snapshots of the feature/design option bags (absent when not passed). */
   readonly feature: Readonly<ExportDOMFeatureOptions> | undefined
@@ -248,7 +242,7 @@ export interface RenderContext {
  * is read, never mutated — preserving its exact non-browser throw. The
  * browser-global fallback is covered by the seam tests via stubbed globals.
  */
-function resolveCreateDocument(options: ExportDOMOptionsBase): () => Document {
+function resolveCreateDocument(options: ExportDOMOptions): () => Document {
   if (options.createDocument) {
     // A truthy non-function `createDocument` is a caller bug. The pinned
     // TypeError message names the historical caller — the check lived in the
@@ -281,7 +275,7 @@ function resolveCreateDocument(options: ExportDOMOptionsBase): () => Document {
 /**
  * Builds the read-only render context for one render pass.
  */
-export function createRenderContext(options: ExportDOMOptionsBase): RenderContext {
+export function createRenderContext(options: ExportDOMOptions): RenderContext {
   const createDocument = resolveCreateDocument(options)
   const usedIdAttributes: Record<string, number> = {}
 

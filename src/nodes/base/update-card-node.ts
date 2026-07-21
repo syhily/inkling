@@ -5,9 +5,10 @@ import { $getNodeByKey, type LexicalNode, type NodeKey } from 'lexical'
  * the `$getNodeByKey` + `GeneratedDecoratorNodeBase`-cast idiom, which
  * erased the typed datasets: the guard does the narrowing, so every field
  * the mutator writes is checked against the card's own node type. Call
- * inside `editor.update()`. Known limitation: generated node classes inherit
- * `[key: string]: unknown`, so unknown field names still compile — the
- * seam's guarantee is value typing on known fields plus an explicit guard.
+ * inside `editor.update()`. Generated node types carry no index signature,
+ * so unknown field names fail typecheck; the dataset properties are writable
+ * through their plain-name accessors, and transient/nested-editor fields are
+ * declared on each card's node type.
  */
 export function $updateCardNode<T extends LexicalNode>(
   nodeKey: NodeKey,

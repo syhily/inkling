@@ -20,6 +20,12 @@ export interface UseVisibilityToggleResult {
   toggleVisibility: (type: string, key: string, value: boolean) => void
 }
 
+// The hook's structural card view (paired with the recorded write-seam
+// exception below): Html is the only visibility-bearing card, and the tests
+// drive a plain-object double, so the field is spelled out structurally
+// rather than narrowed through `$isHtmlNode`.
+type VisibilityCardNode = GeneratedDecoratorNodeBase & { visibility?: Visibility }
+
 export const useVisibilityToggle = (
   editor: LexicalEditor,
   nodeKey: NodeKey,
@@ -44,7 +50,7 @@ export const useVisibilityToggle = (
     if (!htmlNode) {
       return
     }
-    currentVisibility = (htmlNode as GeneratedDecoratorNodeBase).visibility as Visibility
+    currentVisibility = (htmlNode as VisibilityCardNode).visibility
   })
 
   const visibilityData = parseVisibilityToToggles(currentVisibility)
@@ -61,7 +67,7 @@ export const useVisibilityToggle = (
           return
         }
         const newVisibilityOptions = structuredClone(
-          getVisibilityOptions((node as GeneratedDecoratorNodeBase).visibility as Visibility, {
+          getVisibilityOptions((node as VisibilityCardNode).visibility, {
             isStripeEnabled,
             showWeb,
             showEmail,
