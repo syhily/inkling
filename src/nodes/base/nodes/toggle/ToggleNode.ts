@@ -29,19 +29,19 @@ export const toggleImportSpec = {
 
 export type ToggleData = DecoratorNodeData<typeof toggleProperties>
 
-export interface ToggleNode extends DecoratorNodeValueMap<typeof toggleProperties> {}
+export interface BaseToggleNode extends DecoratorNodeValueMap<typeof toggleProperties> {}
 
-export class ToggleNode extends generateDecoratorNode({
+export class BaseToggleNode extends generateDecoratorNode({
   nodeType: 'toggle',
   properties: toggleProperties,
   defaultRenderFn: renderToggleNode,
   importSpec: toggleImportSpec,
 }) {}
 
-export const $createToggleNode = (dataset: ToggleData = {}) => {
-  return new ToggleNode(dataset)
+export const $createBaseToggleNode = (dataset: ToggleData = {}) => {
+  return new BaseToggleNode(dataset)
 }
 
-export function $isToggleNode(node: unknown): node is ToggleNode {
-  return node instanceof ToggleNode
+export function $isToggleNode(node: unknown): node is BaseToggleNode {
+  return node instanceof BaseToggleNode
 }

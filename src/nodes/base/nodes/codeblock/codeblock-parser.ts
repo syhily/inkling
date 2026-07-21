@@ -5,7 +5,7 @@ import type { LexicalNode } from 'lexical'
 
 import { readCaptionFromElement } from '@/nodes/base/utils/read-caption-from-element'
 
-export function parseCodeBlockNode(CodeBlockNode: new (data: Record<string, unknown>) => LexicalNode) {
+export function parseCodeBlockNode(BaseCodeBlockNode: new (data: Record<string, unknown>) => LexicalNode) {
   return {
     figure: (nodeElem: HTMLElement) => {
       // tagName is guaranteed by Lexical's nodeName dispatch ('figure' key)
@@ -34,7 +34,7 @@ export function parseCodeBlockNode(CodeBlockNode: new (data: Record<string, unkn
               payload.language = languageMatches[1].toLowerCase()
             }
 
-            const node = new CodeBlockNode(payload)
+            const node = new BaseCodeBlockNode(payload)
             return { node }
           },
           priority: 2 as const, // falls back to pre if no caption
@@ -56,7 +56,7 @@ export function parseCodeBlockNode(CodeBlockNode: new (data: Record<string, unkn
           if (languageMatches) {
             payload.language = languageMatches[1].toLowerCase()
           }
-          const node = new CodeBlockNode(payload)
+          const node = new BaseCodeBlockNode(payload)
           return { node }
         }
 

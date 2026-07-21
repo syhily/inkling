@@ -16,7 +16,7 @@ interface CalloutEditorDataset {
   calloutTextEditor?: LexicalEditor
 }
 
-export interface CalloutNode {
+export interface BaseCalloutNode {
   calloutText: string
   calloutEmoji: string
   backgroundColor: string
@@ -46,7 +46,7 @@ export const calloutImportSpec = {
   ],
 } satisfies CardImportSpec
 
-export class CalloutNode extends generateDecoratorNode({
+export class BaseCalloutNode extends generateDecoratorNode({
   nodeType: 'callout',
   properties: calloutProperties,
   defaultRenderFn: renderCalloutNode,
@@ -69,10 +69,10 @@ export class CalloutNode extends generateDecoratorNode({
   }
 }
 
-export function $isCalloutNode(node: unknown): node is CalloutNode {
-  return node instanceof CalloutNode
+export function $isCalloutNode(node: unknown): node is BaseCalloutNode {
+  return node instanceof BaseCalloutNode
 }
 
-export const $createCalloutNode = (dataset: CalloutData = {}) => {
-  return new CalloutNode(dataset)
+export const $createBaseCalloutNode = (dataset: CalloutData = {}) => {
+  return new BaseCalloutNode(dataset)
 }

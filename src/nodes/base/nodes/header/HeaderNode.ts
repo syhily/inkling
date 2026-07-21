@@ -32,9 +32,9 @@ const headerProperties = [
 
 export type HeaderData = DecoratorNodeData<typeof headerProperties>
 
-export interface HeaderNode extends DecoratorNodeValueMap<typeof headerProperties> {}
+export interface BaseHeaderNode extends DecoratorNodeValueMap<typeof headerProperties> {}
 
-export class HeaderNode extends generateDecoratorNode({
+export class BaseHeaderNode extends generateDecoratorNode({
   nodeType: 'header',
   properties: headerProperties,
   defaultRenderFn: renderHeaderNodeV2,
@@ -44,10 +44,10 @@ export class HeaderNode extends generateDecoratorNode({
   }
 }
 
-export const $createHeaderNode = (dataset: HeaderData = {}) => {
-  return new HeaderNode(dataset)
+export const $createBaseHeaderNode = (dataset: HeaderData = {}) => {
+  return new BaseHeaderNode(dataset)
 }
 
-export function $isHeaderNode(node: unknown): node is HeaderNode {
-  return node instanceof HeaderNode
+export function $isHeaderNode(node: unknown): node is BaseHeaderNode {
+  return node instanceof BaseHeaderNode
 }

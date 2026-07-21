@@ -6,7 +6,7 @@ import { $getRoot } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { dom, createDocument, html } from '#/nodes-base/test-utils/index'
-import { BaseAudioNode, $createAudioNode, $isAudioNode, type ExportDOMOptions } from '@/nodes/base/index'
+import { BaseAudioNode, $createBaseAudioNode, $isAudioNode, type ExportDOMOptions } from '@/nodes/base/index'
 
 const editorNodes = [BaseAudioNode]
 
@@ -63,7 +63,7 @@ describe('BaseAudioNode', function () {
   it(
     'matches node with $isAudioNode',
     editorTest(async function () {
-      const audioNode = $createAudioNode(dataset)
+      const audioNode = $createBaseAudioNode(dataset)
       expect($isAudioNode(audioNode)).toBe(true)
     }),
   )
@@ -72,7 +72,7 @@ describe('BaseAudioNode', function () {
     it(
       'has getters for all properties',
       editorTest(async function () {
-        const audioNode = $createAudioNode(dataset)
+        const audioNode = $createBaseAudioNode(dataset)
 
         expect(audioNode.src).toBe(dataset.src)
         expect(audioNode.title).toBe(dataset.title)
@@ -85,7 +85,7 @@ describe('BaseAudioNode', function () {
     it(
       'has setters for all properties',
       editorTest(async function () {
-        const audioNode = $createAudioNode({})
+        const audioNode = $createBaseAudioNode({})
 
         expect(audioNode.src).toBe('')
         audioNode.src = '/content/audio/2022/12/inkling-lexical.mp3'
@@ -112,7 +112,7 @@ describe('BaseAudioNode', function () {
     it(
       'can be created without a dataset',
       editorTest(async function () {
-        const audioNode = $createAudioNode()
+        const audioNode = $createBaseAudioNode()
 
         expect(audioNode.getDataset()).toEqual({
           duration: 0,
@@ -127,7 +127,7 @@ describe('BaseAudioNode', function () {
     it(
       'has getDataset() convenience method',
       editorTest(async function () {
-        const audioNode = $createAudioNode(dataset)
+        const audioNode = $createBaseAudioNode(dataset)
         const audioNodeDataset = audioNode.getDataset()
 
         expect(audioNodeDataset).toEqual({
@@ -150,7 +150,7 @@ describe('BaseAudioNode', function () {
     it(
       'returns a copy of the current node',
       editorTest(async function () {
-        const audioNode = $createAudioNode(dataset)
+        const audioNode = $createBaseAudioNode(dataset)
         const audioNodeDataset = audioNode.getDataset()
         const clone = BaseAudioNode.clone(audioNode) as BaseAudioNode
         const cloneDataset = clone.getDataset()
@@ -175,7 +175,7 @@ describe('BaseAudioNode', function () {
     it(
       'returns true',
       editorTest(async function () {
-        const audioNode = $createAudioNode(dataset)
+        const audioNode = $createBaseAudioNode(dataset)
         expect(audioNode.hasEditMode()).toBe(true)
       }),
     )
@@ -185,7 +185,7 @@ describe('BaseAudioNode', function () {
     it(
       'contains all data',
       editorTest(async function () {
-        const audioNode = $createAudioNode(dataset)
+        const audioNode = $createBaseAudioNode(dataset)
         const json = audioNode.exportJSON()
 
         expect(json).toEqual({
@@ -245,7 +245,7 @@ describe('BaseAudioNode', function () {
     it(
       'creates an audio card',
       editorTest(async function () {
-        const audioNode = $createAudioNode(dataset)
+        const audioNode = $createBaseAudioNode(dataset)
         const { element } = audioNode.exportDOM(editor, exportOptions)
 
         await expectPrettifiedHtml(
@@ -320,7 +320,7 @@ describe('BaseAudioNode', function () {
     it(
       'renders an empty span with a missing src',
       editorTest(async function () {
-        const audioNode = $createAudioNode({})
+        const audioNode = $createBaseAudioNode({})
         const { element } = audioNode.exportDOM(editor, exportOptions)
 
         expect(getHTMLElement(element).outerHTML).toBe('<span></span>')
@@ -339,7 +339,7 @@ describe('BaseAudioNode', function () {
         it(
           `renders an audio card for allowed media source ${src}`,
           editorTest(async function () {
-            const audioNode = $createAudioNode({ ...dataset, src })
+            const audioNode = $createBaseAudioNode({ ...dataset, src })
             const { element } = audioNode.exportDOM(editor, exportOptions)
 
             expect(getHTMLElement(element).querySelector('audio')!.getAttribute('src')).toBe(src)
@@ -350,7 +350,7 @@ describe('BaseAudioNode', function () {
       it(
         'renders an empty span with an unsupported primary source',
         editorTest(async function () {
-          const audioNode = $createAudioNode({ ...dataset, src: 'unsupported-scheme:payload' })
+          const audioNode = $createBaseAudioNode({ ...dataset, src: 'unsupported-scheme:payload' })
           const { element } = audioNode.exportDOM(editor, exportOptions)
 
           expect(getHTMLElement(element).outerHTML).toBe('<span></span>')
@@ -360,7 +360,7 @@ describe('BaseAudioNode', function () {
       it(
         'renders an empty span for the email target with an unsupported primary source',
         editorTest(async function () {
-          const audioNode = $createAudioNode({ ...dataset, src: 'unsupported-scheme:payload' })
+          const audioNode = $createBaseAudioNode({ ...dataset, src: 'unsupported-scheme:payload' })
           const { element } = audioNode.exportDOM(editor, {
             ...exportOptions,
             target: 'email',
@@ -374,7 +374,7 @@ describe('BaseAudioNode', function () {
       it(
         'hides an unsupported thumbnail and shows the placeholder',
         editorTest(async function () {
-          const audioNode = $createAudioNode({ ...dataset, thumbnailSrc: 'unsupported-scheme:payload' })
+          const audioNode = $createBaseAudioNode({ ...dataset, thumbnailSrc: 'unsupported-scheme:payload' })
           const { element } = audioNode.exportDOM(editor, exportOptions)
           const el = getHTMLElement(element)
           const output = el.outerHTML
@@ -391,7 +391,7 @@ describe('BaseAudioNode', function () {
       it(
         'uses the placeholder icon for an unsupported email thumbnail',
         editorTest(async function () {
-          const audioNode = $createAudioNode({ ...dataset, thumbnailSrc: 'unsupported-scheme:payload' })
+          const audioNode = $createBaseAudioNode({ ...dataset, thumbnailSrc: 'unsupported-scheme:payload' })
           const { element } = audioNode.exportDOM(editor, {
             ...exportOptions,
             target: 'email',
@@ -408,7 +408,7 @@ describe('BaseAudioNode', function () {
     it(
       'renders email links with postUrl',
       editorTest(async function () {
-        const audioNode = $createAudioNode(dataset)
+        const audioNode = $createBaseAudioNode(dataset)
         const { element } = audioNode.exportDOM(editor, {
           ...exportOptions,
           target: 'email',
@@ -424,7 +424,7 @@ describe('BaseAudioNode', function () {
     it(
       'pins the full email output',
       editorTest(async function () {
-        const audioNode = $createAudioNode(dataset)
+        const audioNode = $createBaseAudioNode(dataset)
         const { element } = audioNode.exportDOM(editor, {
           ...exportOptions,
           target: 'email',
@@ -506,7 +506,7 @@ describe('BaseAudioNode', function () {
     it(
       'throws when rendering email without postUrl',
       editorTest(async function () {
-        const audioNode = $createAudioNode(dataset)
+        const audioNode = $createBaseAudioNode(dataset)
 
         expect(() => audioNode.exportDOM(editor, { ...exportOptions, target: 'email' })).toThrow(
           /^renderAudioNode requires options\.postUrl when options\.target is "email"$/,
@@ -517,7 +517,7 @@ describe('BaseAudioNode', function () {
     it(
       'escapes the title in the email template',
       editorTest(async function () {
-        const audioNode = $createAudioNode({
+        const audioNode = $createBaseAudioNode({
           ...dataset,
           title: '"><script>alert(1)</script>',
         })
@@ -660,7 +660,7 @@ describe('BaseAudioNode', function () {
     it(
       'returns contents',
       editorTest(async function () {
-        const node = $createAudioNode({})
+        const node = $createBaseAudioNode({})
         node.title = 'Testing'
 
         // audio nodes don't have text content

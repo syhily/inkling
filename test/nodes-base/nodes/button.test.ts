@@ -6,11 +6,11 @@ import { $getRoot } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
-import { ButtonNode, $createButtonNode, $isButtonNode } from '@/nodes/base/index'
+import { BaseButtonNode, $createBaseButtonNode, $isButtonNode } from '@/nodes/base/index'
 
-const editorNodes = [ButtonNode]
+const editorNodes = [BaseButtonNode]
 
-describe('ButtonNode', function () {
+describe('BaseButtonNode', function () {
   let editor: LexicalEditor
   let dataset: { buttonText: string; buttonUrl: string; alignment: string }
   let exportOptions: Record<string, unknown>
@@ -45,7 +45,7 @@ describe('ButtonNode', function () {
   it(
     'matches node with $isButtonNode',
     editorTest(async function () {
-      const buttonNode = $createButtonNode(dataset)
+      const buttonNode = $createBaseButtonNode(dataset)
       expect($isButtonNode(buttonNode)).toBe(true)
     }),
   )
@@ -54,7 +54,7 @@ describe('ButtonNode', function () {
     it(
       'has getters for all properties',
       editorTest(async function () {
-        const buttonNode = $createButtonNode(dataset)
+        const buttonNode = $createBaseButtonNode(dataset)
 
         expect(buttonNode.buttonUrl).toBe(dataset.buttonUrl)
         expect(buttonNode.buttonText).toBe(dataset.buttonText)
@@ -65,7 +65,7 @@ describe('ButtonNode', function () {
     it(
       'has setters for all properties',
       editorTest(async function () {
-        const buttonNode = $createButtonNode()
+        const buttonNode = $createBaseButtonNode()
 
         expect(buttonNode.buttonUrl).toBe('')
         buttonNode.buttonUrl = 'http://someblog.com/somepost'
@@ -84,7 +84,7 @@ describe('ButtonNode', function () {
     it(
       'has getDataset() convenience method',
       editorTest(async function () {
-        const buttonNode = $createButtonNode(dataset)
+        const buttonNode = $createBaseButtonNode(dataset)
         const buttonNodeDataset = buttonNode.getDataset()
 
         expect(buttonNodeDataset).toEqual({
@@ -98,7 +98,7 @@ describe('ButtonNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        expect(ButtonNode.getType()).toBe('button')
+        expect(BaseButtonNode.getType()).toBe('button')
       }),
     )
   })
@@ -107,9 +107,9 @@ describe('ButtonNode', function () {
     it(
       'returns a copy of the current node',
       editorTest(async function () {
-        const buttonNode = $createButtonNode(dataset)
+        const buttonNode = $createBaseButtonNode(dataset)
         const buttonNodeDataset = buttonNode.getDataset()
-        const clone = ButtonNode.clone(buttonNode) as ButtonNode
+        const clone = BaseButtonNode.clone(buttonNode) as BaseButtonNode
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...buttonNodeDataset })
@@ -121,7 +121,7 @@ describe('ButtonNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        expect(ButtonNode.urlTransformMap).toEqual({
+        expect(BaseButtonNode.urlTransformMap).toEqual({
           buttonUrl: 'url',
         })
       }),
@@ -132,7 +132,7 @@ describe('ButtonNode', function () {
     it(
       'returns true',
       editorTest(async function () {
-        const buttonNode = $createButtonNode(dataset)
+        const buttonNode = $createBaseButtonNode(dataset)
         expect(buttonNode.hasEditMode()).toBe(true)
       }),
     )
@@ -142,7 +142,7 @@ describe('ButtonNode', function () {
     it(
       'creates a button card',
       editorTest(async function () {
-        const buttonNode = $createButtonNode(dataset)
+        const buttonNode = $createBaseButtonNode(dataset)
         const result = buttonNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -158,7 +158,7 @@ describe('ButtonNode', function () {
     it(
       'renders for email target',
       editorTest(async function () {
-        const buttonNode = $createButtonNode(dataset)
+        const buttonNode = $createBaseButtonNode(dataset)
         const options = {
           target: 'email',
         }
@@ -176,7 +176,7 @@ describe('ButtonNode', function () {
     it(
       'pins the full legacy email output',
       editorTest(async function () {
-        const buttonNode = $createButtonNode(dataset)
+        const buttonNode = $createBaseButtonNode(dataset)
         const result = buttonNode.exportDOM(editor, { ...exportOptions, target: 'email' })
         const element = result.element as HTMLElement
 
@@ -204,7 +204,7 @@ describe('ButtonNode', function () {
     it(
       'renders for email target (emailCustomization)',
       editorTest(async function () {
-        const buttonNode = $createButtonNode(dataset)
+        const buttonNode = $createBaseButtonNode(dataset)
         const options = {
           target: 'email',
           feature: {
@@ -243,7 +243,7 @@ describe('ButtonNode', function () {
     it(
       'renders for email target (emailCustomizationAlpha)',
       editorTest(async function () {
-        const buttonNode = $createButtonNode(dataset)
+        const buttonNode = $createBaseButtonNode(dataset)
         const options = {
           target: 'email',
           feature: {
@@ -282,7 +282,7 @@ describe('ButtonNode', function () {
     it(
       'renders for email target with explicit design outline',
       editorTest(async function () {
-        const buttonNode = $createButtonNode(dataset)
+        const buttonNode = $createBaseButtonNode(dataset)
         const result = buttonNode.exportDOM(editor, {
           ...exportOptions,
           target: 'email',
@@ -319,7 +319,7 @@ describe('ButtonNode', function () {
     it(
       'renders an empty span with a missing buttonUrl',
       editorTest(async function () {
-        const buttonNode = $createButtonNode()
+        const buttonNode = $createBaseButtonNode()
         const result = buttonNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -330,7 +330,7 @@ describe('ButtonNode', function () {
     it(
       'rejects an unsafe button URL',
       editorTest(function () {
-        const buttonNode = $createButtonNode({
+        const buttonNode = $createBaseButtonNode({
           buttonText: 'click me',
           buttonUrl: 'javascript:alert(1)',
           alignment: 'center',
@@ -345,7 +345,7 @@ describe('ButtonNode', function () {
     it(
       'rejects an unsafe button URL for the email target',
       editorTest(function () {
-        const buttonNode = $createButtonNode({
+        const buttonNode = $createBaseButtonNode({
           buttonText: 'click me',
           buttonUrl: 'javascript:alert(1)',
           alignment: 'center',
@@ -360,7 +360,7 @@ describe('ButtonNode', function () {
     it(
       'escapes button text markup',
       editorTest(function () {
-        const buttonNode = $createButtonNode({
+        const buttonNode = $createBaseButtonNode({
           buttonText: '<script>alert(1)</script>',
           buttonUrl: 'https://example.com/',
           alignment: 'center',
@@ -376,7 +376,7 @@ describe('ButtonNode', function () {
     it(
       'escapes a quote-containing button URL in email templates',
       editorTest(function () {
-        const buttonNode = $createButtonNode({
+        const buttonNode = $createBaseButtonNode({
           buttonText: 'click me',
           buttonUrl: '#/portal/"quoted"',
           alignment: 'center',
@@ -397,7 +397,7 @@ describe('ButtonNode', function () {
     it(
       'contains all data',
       editorTest(async function () {
-        const buttonNode = $createButtonNode(dataset)
+        const buttonNode = $createBaseButtonNode(dataset)
         const json = buttonNode.exportJSON()
 
         expect(json).toEqual({
@@ -435,7 +435,7 @@ describe('ButtonNode', function () {
 
         editor.getEditorState().read(() => {
           try {
-            const [buttonNode] = $getRoot().getChildren() as ButtonNode[]
+            const [buttonNode] = $getRoot().getChildren() as BaseButtonNode[]
 
             expect(buttonNode.buttonUrl).toBe(dataset.buttonUrl)
             expect(buttonNode.buttonText).toBe(dataset.buttonText)
@@ -453,14 +453,14 @@ describe('ButtonNode', function () {
     it(
       'getType',
       editorTest(async function () {
-        expect(ButtonNode.getType()).toBe('button')
+        expect(BaseButtonNode.getType()).toBe('button')
       }),
     )
 
     it(
       'urlTransformMap',
       editorTest(async function () {
-        expect(ButtonNode.urlTransformMap).toEqual({
+        expect(BaseButtonNode.urlTransformMap).toEqual({
           buttonUrl: 'url',
         })
       }),
@@ -476,7 +476,7 @@ describe('ButtonNode', function () {
             <a href="http://someblog.com/somepost" class="inkling-btn inkling-btn-accent">click me</a>
           </div>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ButtonNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseButtonNode[]
         expect(nodes.length).toBe(1)
         expect(nodes[0].buttonUrl).toBe('http://someblog.com/somepost')
         expect(nodes[0].buttonText).toBe('click me')
@@ -492,7 +492,7 @@ describe('ButtonNode', function () {
             <a href="#/portal/signup" class="inkling-btn inkling-btn-accent">Subscribe 1</a>
           </div>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ButtonNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseButtonNode[]
         expect(nodes.length).toBe(1)
         expect(nodes[0].buttonUrl).toBe('#/portal/signup')
         expect(nodes[0].buttonText).toBe('Subscribe 1')
@@ -505,7 +505,7 @@ describe('ButtonNode', function () {
     it(
       'returns contents',
       editorTest(async function () {
-        const node = $createButtonNode()
+        const node = $createBaseButtonNode()
         node.buttonText = 'Testing'
         node.buttonUrl = 'http://someblog.com/somepost'
 

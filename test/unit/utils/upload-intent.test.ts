@@ -8,8 +8,8 @@ import {
   $isFileNode,
   $isImageNode,
   type BaseAudioNode as AudioNodeType,
-  type FileNode as FileNodeType,
-  type ImageNode as ImageNodeType,
+  type BaseFileNode as FileNodeType,
+  type BaseImageNode as ImageNodeType,
 } from '@/nodes/base'
 import { FileNode, $createFileNode } from '@/nodes/FileNode'
 import { ImageNode, $createImageNode } from '@/nodes/ImageNode'

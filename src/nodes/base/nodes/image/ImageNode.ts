@@ -63,9 +63,9 @@ export const imageImportSpec = {
 
 export type ImageData = DecoratorNodeData<typeof imageProperties>
 
-export interface ImageNode extends DecoratorNodeValueMap<typeof imageProperties> {}
+export interface BaseImageNode extends DecoratorNodeValueMap<typeof imageProperties> {}
 
-export class ImageNode extends generateDecoratorNode({
+export class BaseImageNode extends generateDecoratorNode({
   nodeType: 'image',
   properties: imageProperties,
   defaultRenderFn: renderImageNode,
@@ -104,9 +104,11 @@ export class ImageNode extends generateDecoratorNode({
   static uploadType = 'image'
 
   // The transient-prop spec (image.declaration.ts) initializes this only on
-  // spec-adopting assembled classes; a raw `new ImageNode()` leaves it unset,
+  // spec-adopting assembled classes; a raw `new BaseImageNode()` leaves it unset,
   // so `undefined` is part of the honest type for spec-less base instances
   declare __previewSrc: string | null | undefined
+  // see `__previewSrc` — same spec-adoption lifecycle
+  declare __triggerFileDialog: boolean | undefined
 
   get previewSrc() {
     const self = this.getLatest()
@@ -128,10 +130,10 @@ export class ImageNode extends generateDecoratorNode({
   }
 }
 
-export const $createImageNode = (dataset?: ImageData) => {
-  return new ImageNode(dataset)
+export const $createBaseImageNode = (dataset?: ImageData) => {
+  return new BaseImageNode(dataset)
 }
 
-export function $isImageNode(node: unknown): node is ImageNode {
-  return node instanceof ImageNode
+export function $isImageNode(node: unknown): node is BaseImageNode {
+  return node instanceof BaseImageNode
 }

@@ -19,7 +19,7 @@ export interface BookmarkData {
   caption?: string
 }
 
-export interface BookmarkNode {
+export interface BaseBookmarkNode {
   title: string
   description: string
   url: string
@@ -70,7 +70,7 @@ const bookmarkProperties = [
   { name: 'thumbnail', urlPath: 'metadata.thumbnail', default: '', urlType: 'url' },
 ] as const satisfies readonly DecoratorNodeProperty[]
 
-export class BookmarkNode extends generateDecoratorNode({
+export class BaseBookmarkNode extends generateDecoratorNode({
   nodeType: 'bookmark',
   properties: bookmarkProperties,
   defaultRenderFn: renderBookmarkNode,
@@ -165,10 +165,10 @@ export class BookmarkNode extends generateDecoratorNode({
   }
 }
 
-export const $createBookmarkNode = (dataset: BookmarkData = {}) => {
-  return new BookmarkNode(dataset)
+export const $createBaseBookmarkNode = (dataset: BookmarkData = {}) => {
+  return new BaseBookmarkNode(dataset)
 }
 
-export function $isBookmarkNode(node: unknown): node is BookmarkNode {
-  return node instanceof BookmarkNode
+export function $isBookmarkNode(node: unknown): node is BaseBookmarkNode {
+  return node instanceof BaseBookmarkNode
 }

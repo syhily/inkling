@@ -3,7 +3,7 @@
 // structural, not flat per-property reads.
 import type { LexicalNode } from 'lexical'
 
-export function parseHtmlNode(HtmlNode: new (data: Record<string, unknown>) => LexicalNode) {
+export function parseHtmlNode(BaseHtmlNode: new (data: Record<string, unknown>) => LexicalNode) {
   return {
     '#comment': (nodeElem: Node) => {
       if (nodeElem.nodeType === 8 && nodeElem.nodeValue?.trim().match(/^inkling-card-begin:\s?html$/)) {
@@ -43,7 +43,7 @@ export function parseHtmlNode(HtmlNode: new (data: Record<string, unknown>) => L
             }
 
             const payload: Record<string, unknown> = { html: html.join('\n').trim() }
-            const node = new HtmlNode(payload)
+            const node = new BaseHtmlNode(payload)
             return { node }
           },
           priority: 0 as const,
@@ -57,7 +57,7 @@ export function parseHtmlNode(HtmlNode: new (data: Record<string, unknown>) => L
         return {
           conversion(domNode: HTMLElement) {
             const payload: Record<string, unknown> = { html: domNode.outerHTML }
-            const node = new HtmlNode(payload)
+            const node = new BaseHtmlNode(payload)
             return { node }
           },
           priority: 0 as const,

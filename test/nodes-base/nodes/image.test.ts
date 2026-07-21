@@ -4,11 +4,11 @@ import { $getRoot, LexicalEditor } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
-import { ImageNode, $createImageNode, $isImageNode } from '@/nodes/base/index'
+import { BaseImageNode, $createBaseImageNode, $isImageNode } from '@/nodes/base/index'
 
-const editorNodes = [ImageNode]
+const editorNodes = [BaseImageNode]
 
-describe('ImageNode', function () {
+describe('BaseImageNode', function () {
   let editor: LexicalEditor
   let dataset: Record<string, unknown>
   let exportOptions: Record<string, unknown>
@@ -58,7 +58,7 @@ describe('ImageNode', function () {
   it(
     'matches node with $isImageNode',
     editorTest(async function () {
-      const imageNode = $createImageNode(dataset)
+      const imageNode = $createBaseImageNode(dataset)
       expect($isImageNode(imageNode)).toBe(true)
     }),
   )
@@ -67,7 +67,7 @@ describe('ImageNode', function () {
     it(
       'has getters for all properties',
       editorTest(async function () {
-        const imageNode = $createImageNode(dataset)
+        const imageNode = $createBaseImageNode(dataset)
 
         expect(imageNode.src).toBe('/content/images/2022/11/inkling-lexical.jpg')
         expect(imageNode.width!).toBe(3840)
@@ -83,7 +83,7 @@ describe('ImageNode', function () {
     it(
       'can be created without a dataset',
       editorTest(async function () {
-        const imageNode = $createImageNode()
+        const imageNode = $createBaseImageNode()
 
         expect(imageNode.getDataset()).toEqual({
           src: '',
@@ -101,7 +101,7 @@ describe('ImageNode', function () {
     it(
       'has setters for all properties',
       editorTest(async function () {
-        const imageNode = $createImageNode({} as Record<string, unknown>)
+        const imageNode = $createBaseImageNode({} as Record<string, unknown>)
 
         expect(imageNode.src).toBe('')
         imageNode.src = '/content/images/2022/11/inkling-lexical.jpg'
@@ -140,7 +140,7 @@ describe('ImageNode', function () {
     it(
       'has getDataset() convenience method',
       editorTest(async function () {
-        const imageNode = $createImageNode(dataset)
+        const imageNode = $createBaseImageNode(dataset)
         const imageNodeDataset = imageNode.getDataset()
 
         expect(imageNodeDataset).toEqual({
@@ -155,7 +155,7 @@ describe('ImageNode', function () {
     it(
       'creates a full-featured image card',
       editorTest(async function () {
-        const imageNode = $createImageNode(dataset)
+        const imageNode = $createBaseImageNode(dataset)
         const { element } = imageNode.exportDOM(editor, exportOptions)
 
         await expectPrettifiedHtml(
@@ -188,7 +188,7 @@ describe('ImageNode', function () {
     it(
       'sanitizes caption HTML',
       editorTest(async function () {
-        const imageNode = $createImageNode({
+        const imageNode = $createBaseImageNode({
           ...dataset,
           caption: 'Caption \u003cscript\u003ealert(1)\u003c/script\u003e \u003cimg src=x onerror=alert(1)\u003e',
         })
@@ -204,7 +204,7 @@ describe('ImageNode', function () {
     it(
       'creates a full-featured image card with link',
       editorTest(async function () {
-        const imageNode = $createImageNode({
+        const imageNode = $createBaseImageNode({
           ...dataset,
           href: 'https://example.com',
         })
@@ -241,7 +241,7 @@ describe('ImageNode', function () {
     it(
       'drops the link when the href is unsafe',
       editorTest(async function () {
-        const imageNode = $createImageNode({
+        const imageNode = $createBaseImageNode({
           src: '/image.png',
           href: 'javascript:alert(1)',
         })
@@ -257,7 +257,7 @@ describe('ImageNode', function () {
     it(
       'creates a minimal image card',
       editorTest(async function () {
-        const imageNode = $createImageNode({ src: '/image.png' })
+        const imageNode = $createBaseImageNode({ src: '/image.png' })
         const { element } = imageNode.exportDOM(editor, exportOptions)
 
         await expectPrettifiedHtml(
@@ -274,7 +274,7 @@ describe('ImageNode', function () {
     it(
       'renders an empty span with a missing src',
       editorTest(async function () {
-        const imageNode = $createImageNode({} as Record<string, unknown>)
+        const imageNode = $createBaseImageNode({} as Record<string, unknown>)
         const { element } = imageNode.exportDOM(editor, exportOptions)
 
         expect((element as HTMLElement).outerHTML).toBe('<span></span>')
@@ -293,7 +293,7 @@ describe('ImageNode', function () {
         it(
           `renders an image card for allowed media source ${src}`,
           editorTest(async function () {
-            const imageNode = $createImageNode({ src })
+            const imageNode = $createBaseImageNode({ src })
             const { element } = imageNode.exportDOM(editor, exportOptions)
 
             expect((element as HTMLElement).querySelector('img')!.getAttribute('src')).toBe(src)
@@ -306,7 +306,7 @@ describe('ImageNode', function () {
         editorTest(async function () {
           const canTransformImage = vi.fn(() => true)
           const canTransformImageToFormat = vi.fn(() => true)
-          const imageNode = $createImageNode({
+          const imageNode = $createBaseImageNode({
             ...dataset,
             src: 'unsupported-scheme:payload',
           })
@@ -330,7 +330,7 @@ describe('ImageNode', function () {
       'renders a wide image',
       editorTest(async function () {
         dataset.cardWidth = 'wide'
-        const imageNode = $createImageNode(dataset)
+        const imageNode = $createBaseImageNode(dataset)
         const { element } = imageNode.exportDOM(editor, exportOptions)
 
         expect((element as HTMLElement).classList.contains('inkling-width-wide')).toBe(true)
@@ -346,7 +346,7 @@ describe('ImageNode', function () {
         ;(exportOptions.imageOptimization as Record<string, unknown>).defaultMaxWidth = 2000
         exportOptions.canTransformImage = () => true
 
-        const imageNode = $createImageNode(dataset)
+        const imageNode = $createBaseImageNode(dataset)
         const { element } = imageNode.exportDOM(editor, exportOptions)
         const output = (element as HTMLElement).outerHTML
 
@@ -365,7 +365,7 @@ describe('ImageNode', function () {
         ;(exportOptions.imageOptimization as Record<string, unknown>).defaultMaxWidth = 2000
         exportOptions.canTransformImage = () => true
 
-        const imageNode = $createImageNode(dataset)
+        const imageNode = $createBaseImageNode(dataset)
         const { element } = imageNode.exportDOM(editor, exportOptions)
         const output = (element as HTMLElement).outerHTML
 
@@ -381,7 +381,7 @@ describe('ImageNode', function () {
         dataset.height = 6000
         exportOptions.canTransformImage = () => false
 
-        const imageNode = $createImageNode(dataset)
+        const imageNode = $createBaseImageNode(dataset)
         const { element } = imageNode.exportDOM(editor, exportOptions)
         const output = (element as HTMLElement).outerHTML
 
@@ -395,7 +395,7 @@ describe('ImageNode', function () {
         editorTest(async function () {
           exportOptions.target = 'email'
 
-          const imageNode = $createImageNode(dataset)
+          const imageNode = $createBaseImageNode(dataset)
           const { element } = imageNode.exportDOM(editor, exportOptions)
           const output = (element as HTMLElement).outerHTML
 
@@ -421,7 +421,7 @@ describe('ImageNode', function () {
           dataset.width = 3000
           dataset.height = 6000
 
-          const imageNode = $createImageNode(dataset)
+          const imageNode = $createBaseImageNode(dataset)
           const { element } = imageNode.exportDOM(editor, exportOptions)
           const output = (element as HTMLElement).outerHTML
 
@@ -436,7 +436,7 @@ describe('ImageNode', function () {
           dataset.height = 2000
           dataset.cardWidth = 'wide'
 
-          const imageNode = $createImageNode(dataset)
+          const imageNode = $createBaseImageNode(dataset)
           const { element } = imageNode.exportDOM(editor, exportOptions)
           const output = (element as HTMLElement).outerHTML
 
@@ -456,7 +456,7 @@ describe('ImageNode', function () {
       it(
         'pins the full email output',
         editorTest(async function () {
-          const imageNode = $createImageNode(dataset)
+          const imageNode = $createBaseImageNode(dataset)
           const { element } = imageNode.exportDOM(editor, { ...exportOptions, target: 'email' })
 
           await expectPrettifiedHtml(
@@ -497,7 +497,7 @@ describe('ImageNode', function () {
       it(
         'wraps the image in a picture element with avif/webp sources when the feature flag is on',
         editorTest(async function () {
-          const imageNode = $createImageNode(dataset)
+          const imageNode = $createBaseImageNode(dataset)
           const { element } = imageNode.exportDOM(editor, pictureOptions())
           const el = element as HTMLElement
 
@@ -521,7 +521,7 @@ describe('ImageNode', function () {
       it(
         'wraps the picture inside the link when href is set',
         editorTest(async function () {
-          const imageNode = $createImageNode({ ...dataset, href: 'https://example.com' })
+          const imageNode = $createBaseImageNode({ ...dataset, href: 'https://example.com' })
           const { element } = imageNode.exportDOM(editor, pictureOptions())
           const el = element as HTMLElement
 
@@ -534,7 +534,7 @@ describe('ImageNode', function () {
       it(
         'is omitted for animated (gif) images',
         editorTest(async function () {
-          const imageNode = $createImageNode({ ...dataset, src: '/content/images/2022/11/animation.gif' })
+          const imageNode = $createBaseImageNode({ ...dataset, src: '/content/images/2022/11/animation.gif' })
           const { element } = imageNode.exportDOM(editor, pictureOptions())
           const el = element as HTMLElement
 
@@ -546,7 +546,7 @@ describe('ImageNode', function () {
       it(
         'is omitted when canTransformImageToFormat rejects every format',
         editorTest(async function () {
-          const imageNode = $createImageNode(dataset)
+          const imageNode = $createBaseImageNode(dataset)
           const { element } = imageNode.exportDOM(editor, {
             ...exportOptions,
             feature: { pictureImageFormats: true },
@@ -562,7 +562,7 @@ describe('ImageNode', function () {
       it(
         'is omitted when the feature flag is off',
         editorTest(async function () {
-          const imageNode = $createImageNode(dataset)
+          const imageNode = $createBaseImageNode(dataset)
           const { element } = imageNode.exportDOM(editor, exportOptions)
           const el = element as HTMLElement
 
@@ -573,7 +573,7 @@ describe('ImageNode', function () {
       it(
         'is omitted when target is email',
         editorTest(async function () {
-          const imageNode = $createImageNode(dataset)
+          const imageNode = $createBaseImageNode(dataset)
           const { element } = imageNode.exportDOM(editor, { ...pictureOptions(), target: 'email' })
           const el = element as HTMLElement
 
@@ -591,7 +591,7 @@ describe('ImageNode', function () {
         const document = createDocument(html`
           <img src="/image.png" alt="Alt text" title="Title text" width="3000" height="2000" />
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseImageNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].src).toBe('/image.png')
@@ -610,7 +610,7 @@ describe('ImageNode', function () {
             <img src="http://example.com/test.png" alt="Alt test" title="Title test" />
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseImageNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].src).toBe('http://example.com/test.png')
@@ -628,7 +628,7 @@ describe('ImageNode', function () {
             <figcaption>&nbsp; <strong>Caption test</strong></figcaption>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseImageNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].src).toBe('http://example.com/test.png')
@@ -644,7 +644,7 @@ describe('ImageNode', function () {
             <img src="http://example.com/test.png" />
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseImageNode[]
         expect(nodes.length).toBe(1)
         expect(nodes[0].cardWidth).toBe('wide')
       }),
@@ -658,7 +658,7 @@ describe('ImageNode', function () {
             <img src="http://example.com/test.png" />
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseImageNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].cardWidth).toBe('full')
@@ -673,7 +673,7 @@ describe('ImageNode', function () {
             <img src="http://example.com/test.png" width="640" height="480" />
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseImageNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].src).toBe('http://example.com/test.png')
@@ -690,7 +690,7 @@ describe('ImageNode', function () {
             <img src="http://example.com/test.png" width="640" height="480" />
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseImageNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].src).toBe('http://example.com/test.png')
@@ -707,7 +707,7 @@ describe('ImageNode', function () {
             <img src="http://example.com/test.png" data-image-dimensions="640x480" />
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseImageNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].src).toBe('http://example.com/test.png')
@@ -726,7 +726,7 @@ describe('ImageNode', function () {
             </a>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseImageNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].src).toBe('http://example.com/test.png')
@@ -742,7 +742,7 @@ describe('ImageNode', function () {
             <img src="http://example.com/test.png" />
           </a>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ImageNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseImageNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].src).toBe('http://example.com/test.png')
@@ -757,7 +757,7 @@ describe('ImageNode', function () {
       editorTest(async function () {
         dataset.cardWidth = 'wide'
 
-        const imageNode = $createImageNode(dataset)
+        const imageNode = $createBaseImageNode(dataset)
         const json = imageNode.exportJSON()
 
         expect(json).toEqual({
@@ -801,7 +801,7 @@ describe('ImageNode', function () {
 
         editor.getEditorState().read(() => {
           try {
-            const [imageNode] = $getRoot().getChildren() as ImageNode[]
+            const [imageNode] = $getRoot().getChildren() as BaseImageNode[]
 
             expect(imageNode.src).toBe('/content/images/2022/11/inkling-lexical.jpg')
             expect(imageNode.width!).toBe(3840)
@@ -823,7 +823,7 @@ describe('ImageNode', function () {
     it(
       'returns contents',
       editorTest(async function () {
-        const node = $createImageNode({} as Record<string, unknown>)
+        const node = $createBaseImageNode({} as Record<string, unknown>)
         expect(node.getTextContent()).toBe('')
 
         node.caption = 'Test caption'

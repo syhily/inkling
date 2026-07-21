@@ -2,9 +2,9 @@ import { JSDOM } from 'jsdom'
 import Prettier from 'prettier'
 
 import { LexicalHTMLRenderer as Renderer } from '@/html/renderer/index'
-import { ImageNode, HtmlNode } from '@/nodes/base'
+import { BaseImageNode, BaseHtmlNode } from '@/nodes/base'
 
-const nodes = [ImageNode, HtmlNode]
+const nodes = [BaseImageNode, BaseHtmlNode]
 
 interface TestLexicalState {
   root: {

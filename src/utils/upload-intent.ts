@@ -11,8 +11,8 @@ import {
   $updateCardNode,
   MAX_IMAGES,
   recalculateImageRows,
-  type FileNode,
-  type ImageNode,
+  type BaseFileNode,
+  type BaseImageNode,
 } from '@/nodes/base'
 import { getAudioMetadata } from '@/utils/getAudioMetadata'
 import { getImageDimensions } from '@/utils/getImageDimensions'
@@ -292,7 +292,7 @@ export function imageUploadIntent({
   upload,
   files,
   prePatch,
-}: CardUploadIntentDeps & { prePatch?: (node: ImageNode) => void }): Promise<string | undefined> {
+}: CardUploadIntentDeps & { prePatch?: (node: BaseImageNode) => void }): Promise<string | undefined> {
   return runUploadIntent({
     editor,
     nodeKey,
@@ -373,7 +373,7 @@ export function fileUploadIntent({
   upload,
   files,
   prePatch,
-}: CardUploadIntentDeps & { prePatch?: (node: FileNode) => void }): Promise<string | undefined> {
+}: CardUploadIntentDeps & { prePatch?: (node: BaseFileNode) => void }): Promise<string | undefined> {
   return runUploadIntent({
     editor,
     nodeKey,

@@ -3,7 +3,7 @@
 // not flat per-property reads.
 import type { LexicalNode } from 'lexical'
 
-export function parseBookmarkNode(BookmarkNode: new (data: Record<string, unknown>) => LexicalNode) {
+export function parseBookmarkNode(BaseBookmarkNode: new (data: Record<string, unknown>) => LexicalNode) {
   return {
     figure: (nodeElem: HTMLElement) => {
       // tagName is guaranteed by Lexical's nodeName dispatch ('figure' key)
@@ -30,7 +30,7 @@ export function parseBookmarkNode(BookmarkNode: new (data: Record<string, unknow
               },
               caption: caption,
             }
-            const node = new BookmarkNode(payload)
+            const node = new BaseBookmarkNode(payload)
             return { node }
           },
           priority: 1 as const,
@@ -91,7 +91,7 @@ export function parseBookmarkNode(BookmarkNode: new (data: Record<string, unknow
                 thumbnail,
               },
             }
-            const node = new BookmarkNode(payload)
+            const node = new BaseBookmarkNode(payload)
             return { node }
           },
           priority: 1 as const,

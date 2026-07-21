@@ -32,19 +32,19 @@ export const buttonImportSpec = {
 
 export type ButtonData = DecoratorNodeData<typeof buttonProperties>
 
-export interface ButtonNode extends DecoratorNodeValueMap<typeof buttonProperties> {}
+export interface BaseButtonNode extends DecoratorNodeValueMap<typeof buttonProperties> {}
 
-export class ButtonNode extends generateDecoratorNode({
+export class BaseButtonNode extends generateDecoratorNode({
   nodeType: 'button',
   properties: buttonProperties,
   defaultRenderFn: renderButtonNode,
   importSpec: buttonImportSpec,
 }) {}
 
-export const $createButtonNode = (dataset: ButtonData = {}) => {
-  return new ButtonNode(dataset)
+export const $createBaseButtonNode = (dataset: ButtonData = {}) => {
+  return new BaseButtonNode(dataset)
 }
 
-export function $isButtonNode(node: unknown): node is ButtonNode {
-  return node instanceof ButtonNode
+export function $isButtonNode(node: unknown): node is BaseButtonNode {
+  return node instanceof BaseButtonNode
 }

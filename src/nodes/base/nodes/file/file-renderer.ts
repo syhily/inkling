@@ -127,7 +127,7 @@ function cardTemplate(node: FileNodeData, document: Document, context: RenderCon
 
   const filesize = document.createElement('div')
   filesize.setAttribute('class', 'inkling-file-card-filesize')
-  // same value the FileNode.formattedFileSize getter computes (bytesToSize
+  // same value the BaseFileNode.formattedFileSize getter computes (bytesToSize
   // never returns an empty string)
   filesize.textContent = bytesToSize(node.fileSize)
 

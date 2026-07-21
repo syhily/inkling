@@ -24,7 +24,7 @@ const galleryProperties = [
 
 export type GalleryData = DecoratorNodeData<typeof galleryProperties>
 
-export interface GalleryNode extends DecoratorNodeValueMap<typeof galleryProperties> {}
+export interface BaseGalleryNode extends DecoratorNodeValueMap<typeof galleryProperties> {}
 
 export const MAX_IMAGES = 9
 export const MAX_PER_ROW = 3
@@ -38,7 +38,7 @@ export function recalculateImageRows(images: GalleryImage[]) {
   })
 }
 
-export class GalleryNode extends generateDecoratorNode({
+export class BaseGalleryNode extends generateDecoratorNode({
   nodeType: 'gallery',
   properties: galleryProperties,
   defaultRenderFn: renderGalleryNode,
@@ -84,10 +84,10 @@ export class GalleryNode extends generateDecoratorNode({
   }
 }
 
-export const $createGalleryNode = (dataset?: GalleryData) => {
-  return new GalleryNode(dataset)
+export const $createBaseGalleryNode = (dataset?: GalleryData) => {
+  return new BaseGalleryNode(dataset)
 }
 
-export function $isGalleryNode(node: unknown): node is GalleryNode {
-  return node instanceof GalleryNode
+export function $isGalleryNode(node: unknown): node is BaseGalleryNode {
+  return node instanceof BaseGalleryNode
 }

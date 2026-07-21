@@ -7,7 +7,7 @@ export const horizontalRuleImportSpec = {
   conversions: [{ tag: 'hr', priority: 0, reads: [] }],
 } satisfies CardImportSpec
 
-export class HorizontalRuleNode extends generateDecoratorNode({
+export class BaseHorizontalRuleNode extends generateDecoratorNode({
   nodeType: 'horizontalrule',
   defaultRenderFn: renderHorizontalRuleNode,
   importSpec: horizontalRuleImportSpec,
@@ -21,10 +21,10 @@ export class HorizontalRuleNode extends generateDecoratorNode({
   }
 }
 
-export function $createHorizontalRuleNode() {
-  return new HorizontalRuleNode()
+export function $createBaseHorizontalRuleNode() {
+  return new BaseHorizontalRuleNode()
 }
 
-export function $isHorizontalRuleNode(node: unknown): node is HorizontalRuleNode {
-  return node instanceof HorizontalRuleNode
+export function $isHorizontalRuleNode(node: unknown): node is BaseHorizontalRuleNode {
+  return node instanceof BaseHorizontalRuleNode
 }

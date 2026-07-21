@@ -55,9 +55,11 @@ export const audioImportSpec = {
 
 export type AudioData = DecoratorNodeData<typeof audioProperties>
 
-// Named `BaseAudioNode` (not `AudioNode`) so the base class never shares a
-// name with the DOM's global Web Audio `AudioNode` interface — declaration
-// bundlers merge the global into their collision scope and mis-rename both.
+// Every base card class is named `Base*` (never the card's plain name, which
+// belongs to the spec-adopting wrapper/assembled class one layer up). The
+// uniform convention also covers the original collision that started it: the
+// DOM's global Web Audio `AudioNode` interface — declaration bundlers merge
+// the global into their collision scope and mis-rename both.
 export interface BaseAudioNode extends DecoratorNodeValueMap<typeof audioProperties> {}
 
 export class BaseAudioNode extends generateDecoratorNode({
@@ -71,13 +73,18 @@ export class BaseAudioNode extends generateDecoratorNode({
   // from the declaration and inherits it; renderer surfaces never invoke it.
   static uploadType = 'audio'
 
+  // The transient-prop spec (audio.declaration.ts) initializes this only on
+  // spec-adopting assembled classes; a raw `new BaseAudioNode()` leaves it
+  // unset, so `undefined` is part of the honest type for spec-less instances
+  declare __triggerFileDialog: boolean | undefined
+
   set triggerFileDialog(shouldTrigger: boolean) {
     const writable = this.getWritable()
     writable.__triggerFileDialog = shouldTrigger
   }
 }
 
-export const $createAudioNode = (dataset: AudioData = {}) => {
+export const $createBaseAudioNode = (dataset: AudioData = {}) => {
   return new BaseAudioNode(dataset)
 }
 

@@ -1,5 +1,5 @@
 /**
- * The `m:ss` duration format shared by the VideoNode.formattedDuration
+ * The `m:ss` duration format shared by the BaseVideoNode.formattedDuration
  * getter (editor surface) and the video renderer (export surface) — the
  * renderer only receives the node's dataset, so the formatting lives here
  * instead of on the node class.

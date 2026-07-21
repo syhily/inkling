@@ -4,7 +4,7 @@
 // version: 2 constant.
 import type { LexicalNode } from 'lexical'
 
-export function parseHeaderNode(HeaderNode: new (data: Record<string, unknown>) => LexicalNode) {
+export function parseHeaderNode(BaseHeaderNode: new (data: Record<string, unknown>) => LexicalNode) {
   return {
     div: (nodeElem: HTMLElement) => {
       // tagName is guaranteed by Lexical's nodeName dispatch ('div' key)
@@ -51,7 +51,7 @@ export function parseHeaderNode(HeaderNode: new (data: Record<string, unknown>) 
               version: 2,
             }
 
-            const node = new HeaderNode(payload)
+            const node = new BaseHeaderNode(payload)
             return { node }
           },
           priority: 1 as const,

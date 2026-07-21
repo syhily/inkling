@@ -6,13 +6,13 @@ import type { GalleryImage } from '@/types/gallery'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
-import { GalleryNode, $createGalleryNode, $isGalleryNode, ImageNode } from '@/nodes/base/index'
+import { BaseGalleryNode, $createBaseGalleryNode, $isGalleryNode, BaseImageNode } from '@/nodes/base/index'
 
-// include ImageNode so we can make sure imported sibling nodes do not get
+// include BaseImageNode so we can make sure imported sibling nodes do not get
 // processed by other lower priority nodes when skipped with dataset.hasBeenProcessed
-const editorNodes = [GalleryNode, ImageNode]
+const editorNodes = [BaseGalleryNode, BaseImageNode]
 
-describe('GalleryNode', function () {
+describe('BaseGalleryNode', function () {
   let editor: LexicalEditor
   let dataset: Record<string, unknown>
   let exportOptions: Record<string, unknown>
@@ -118,7 +118,7 @@ describe('GalleryNode', function () {
   it(
     'matches node with $isGalleryNode',
     editorTest(async function () {
-      const node = $createGalleryNode(dataset)
+      const node = $createBaseGalleryNode(dataset)
       expect($isGalleryNode(node)).toBe(true)
     }),
   )
@@ -127,7 +127,7 @@ describe('GalleryNode', function () {
     it(
       'has getters for all properties',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode(dataset)
+        const galleryNode = $createBaseGalleryNode(dataset)
 
         expect(galleryNode.images).toEqual(dataset.images)
         expect(galleryNode.caption).toBe(dataset.caption)
@@ -137,7 +137,7 @@ describe('GalleryNode', function () {
     it(
       'can be created without a dataset',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode()
+        const galleryNode = $createBaseGalleryNode()
 
         expect(galleryNode.getDataset()).toEqual({
           images: [],
@@ -149,7 +149,7 @@ describe('GalleryNode', function () {
     it(
       'has setters for all properties',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode({} as Record<string, unknown>)
+        const galleryNode = $createBaseGalleryNode({} as Record<string, unknown>)
 
         expect(galleryNode.images).toEqual([])
         galleryNode.images = [{ src: 'image1.jpg' }]
@@ -164,7 +164,7 @@ describe('GalleryNode', function () {
     it(
       'has getDataset() convenience method',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode(dataset)
+        const galleryNode = $createBaseGalleryNode(dataset)
 
         expect(galleryNode.getDataset()).toEqual(dataset)
       }),
@@ -175,7 +175,7 @@ describe('GalleryNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        expect(GalleryNode.getType()).toBe('gallery')
+        expect(BaseGalleryNode.getType()).toBe('gallery')
       }),
     )
   })
@@ -184,9 +184,9 @@ describe('GalleryNode', function () {
     it(
       'returns a copy of the current node',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode(dataset)
+        const galleryNode = $createBaseGalleryNode(dataset)
         const galleryNodeDataset = galleryNode.getDataset()
-        const clone = GalleryNode.clone(galleryNode) as GalleryNode
+        const clone = BaseGalleryNode.clone(galleryNode) as BaseGalleryNode
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...galleryNodeDataset })
@@ -198,7 +198,7 @@ describe('GalleryNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        expect(GalleryNode.urlTransformMap).toEqual({
+        expect(BaseGalleryNode.urlTransformMap).toEqual({
           caption: 'html',
           images: {
             src: 'url',
@@ -213,7 +213,7 @@ describe('GalleryNode', function () {
     it(
       'returns false',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode(dataset)
+        const galleryNode = $createBaseGalleryNode(dataset)
         expect(galleryNode.hasEditMode()).toBe(false)
       }),
     )
@@ -243,7 +243,7 @@ describe('GalleryNode', function () {
 
         editor.getEditorState().read(() => {
           try {
-            const [galleryNode] = $getRoot().getChildren() as GalleryNode[]
+            const [galleryNode] = $getRoot().getChildren() as BaseGalleryNode[]
 
             expect(galleryNode.images).toEqual(dataset.images)
             expect(galleryNode.caption).toBe(dataset.caption)
@@ -260,7 +260,7 @@ describe('GalleryNode', function () {
     it(
       'contains all data',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode(dataset)
+        const galleryNode = $createBaseGalleryNode(dataset)
         const json = galleryNode.exportJSON()
 
         expect(json).toEqual({
@@ -305,7 +305,7 @@ describe('GalleryNode', function () {
                 <!--inkling-card-end: gallery-->
             `)
 
-        const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseGalleryNode[]
         expect(nodes.length).toBe(1)
 
         expect(nodes[0].images).toEqual([
@@ -376,7 +376,7 @@ describe('GalleryNode', function () {
                 </div>
             `)
 
-        const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseGalleryNode[]
         expect(nodes.length).toBe(1)
 
         expect(nodes[0].images).toEqual([
@@ -446,7 +446,7 @@ describe('GalleryNode', function () {
                 </div>
             `)
 
-        const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseGalleryNode[]
         expect(nodes.length).toBe(1)
 
         expect(nodes[0].caption).toBe('First Caption / End Caption')
@@ -516,7 +516,7 @@ describe('GalleryNode', function () {
             </div>
           `)
 
-          const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
+          const nodes = $generateNodesFromDOM(editor, document) as BaseGalleryNode[]
           expect(nodes.length).toBe(1)
 
           expect(nodes[0].getType()).toBe('gallery')
@@ -615,7 +615,7 @@ describe('GalleryNode', function () {
             </div>
           `)
 
-          const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
+          const nodes = $generateNodesFromDOM(editor, document) as BaseGalleryNode[]
           expect(nodes.length).toBe(1)
 
           const images = nodes[0].images
@@ -716,7 +716,7 @@ describe('GalleryNode', function () {
             </div>
           `)
 
-          const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
+          const nodes = $generateNodesFromDOM(editor, document) as BaseGalleryNode[]
           expect(nodes.length).toBe(1)
 
           const images = nodes[0].images
@@ -823,7 +823,7 @@ describe('GalleryNode', function () {
             </div>
           `)
 
-          const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
+          const nodes = $generateNodesFromDOM(editor, document) as BaseGalleryNode[]
           expect(nodes.length).toBe(1)
 
           const images = nodes[0].images
@@ -914,7 +914,7 @@ describe('GalleryNode', function () {
             </div>
           `)
 
-          const nodes = $generateNodesFromDOM(editor, document) as GalleryNode[]
+          const nodes = $generateNodesFromDOM(editor, document) as BaseGalleryNode[]
           expect(nodes.some((node) => node.getType() === 'gallery')).toBe(false)
         }),
       )
@@ -925,7 +925,7 @@ describe('GalleryNode', function () {
     it(
       'renders empty span with no images',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode({ images: [], caption: null as unknown as string })
+        const galleryNode = $createBaseGalleryNode({ images: [], caption: null as unknown as string })
         const { element } = galleryNode.exportDOM(editor, exportOptions)
 
         expect((element as HTMLElement).outerHTML).toBe('<span></span>')
@@ -935,7 +935,7 @@ describe('GalleryNode', function () {
     it(
       'renders empty span no valid images',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode({
+        const galleryNode = $createBaseGalleryNode({
           images: [{ src: 'undefined' }],
           caption: null as unknown as string,
         })
@@ -966,7 +966,7 @@ describe('GalleryNode', function () {
         it(
           `renders gallery items with allowed media source ${src}`,
           editorTest(async function () {
-            const galleryNode = $createGalleryNode({
+            const galleryNode = $createBaseGalleryNode({
               images: [galleryImage({ src })],
               caption: '',
             })
@@ -980,7 +980,7 @@ describe('GalleryNode', function () {
       it(
         'excludes images with unsupported media sources from a mixed gallery',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [galleryImage({}), galleryImage({ fileName: 'Bad.jpg', src: 'unsupported-scheme:payload' })],
             caption: '',
           })
@@ -998,7 +998,7 @@ describe('GalleryNode', function () {
       it(
         'leaves no empty row when the rejected image was the only row member',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               galleryImage({}),
               galleryImage({ row: 1, fileName: 'Bad.jpg', src: 'unsupported-scheme:payload' }),
@@ -1018,7 +1018,7 @@ describe('GalleryNode', function () {
       it(
         'renders an empty span when every image source is unsupported',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [galleryImage({ fileName: 'Bad.jpg', src: 'unsupported-scheme:payload' })],
             caption: '',
           })
@@ -1032,7 +1032,7 @@ describe('GalleryNode', function () {
     it(
       'sanitizes caption HTML',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode({
+        const galleryNode = $createBaseGalleryNode({
           ...dataset,
           caption: 'Gallery \u003cscript\u003ealert(1)\u003c/script\u003e \u003cimg src=x onerror=alert(1)\u003e',
         })
@@ -1048,7 +1048,7 @@ describe('GalleryNode', function () {
     it(
       'does not link images with unsafe hrefs',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode({
+        const galleryNode = $createBaseGalleryNode({
           ...dataset,
           caption: '',
           images: [
@@ -1073,7 +1073,7 @@ describe('GalleryNode', function () {
     it(
       'renders',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode(dataset)
+        const galleryNode = $createBaseGalleryNode(dataset)
         const { element } = galleryNode.exportDOM(editor, { ...exportOptions, canTransformImage: () => false })
 
         await expectPrettifiedHtml(
@@ -1172,7 +1172,7 @@ describe('GalleryNode', function () {
     it(
       'renders images with alt text',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode({
+        const galleryNode = $createBaseGalleryNode({
           images: [
             {
               row: 0,
@@ -1214,7 +1214,7 @@ describe('GalleryNode', function () {
     it(
       'renders images with blank alt text',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode({
+        const galleryNode = $createBaseGalleryNode({
           images: [
             {
               row: 0,
@@ -1255,7 +1255,7 @@ describe('GalleryNode', function () {
     it(
       'skips invalid images',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode({
+        const galleryNode = $createBaseGalleryNode({
           images: [
             {
               row: 0,
@@ -1364,7 +1364,7 @@ describe('GalleryNode', function () {
     it(
       'outputs width/height matching default max image width',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode({
+        const galleryNode = $createBaseGalleryNode({
           images: [
             {
               row: 0,
@@ -1402,7 +1402,7 @@ describe('GalleryNode', function () {
     it(
       'renders all 9 images in a 3x3 grid',
       editorTest(async function () {
-        const galleryNode = $createGalleryNode({
+        const galleryNode = $createBaseGalleryNode({
           images: [
             {
               row: 0,
@@ -1578,7 +1578,7 @@ describe('GalleryNode', function () {
       it(
         'is included when image src is relative',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               {
                 row: 0,
@@ -1649,7 +1649,7 @@ describe('GalleryNode', function () {
       it(
         'is included when image src is absolute or __INKLING_URL__',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               {
                 row: 0,
@@ -1721,7 +1721,7 @@ describe('GalleryNode', function () {
       it(
         'is omitted when target === email',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               {
                 row: 0,
@@ -1744,7 +1744,7 @@ describe('GalleryNode', function () {
       it(
         'is omitted when no contentImageSizes are passed as options',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               {
                 row: 0,
@@ -1766,7 +1766,7 @@ describe('GalleryNode', function () {
       it(
         'is omitted when `srcsets: false` is passed as an options',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               {
                 row: 0,
@@ -1790,7 +1790,7 @@ describe('GalleryNode', function () {
       it(
         'is included for images over 720px',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               {
                 row: 0,
@@ -1823,7 +1823,7 @@ describe('GalleryNode', function () {
       it(
         'uses "wide" media query for large single-image galleries',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               {
                 row: 0,
@@ -1846,7 +1846,7 @@ describe('GalleryNode', function () {
       it(
         'uses "standard" media query for medium single-image galleries',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               {
                 row: 0,
@@ -1867,7 +1867,7 @@ describe('GalleryNode', function () {
       it(
         'is omitted when srcsets are not available',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               {
                 row: 0,
@@ -1905,7 +1905,7 @@ describe('GalleryNode', function () {
       it(
         'pins the full email output',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               {
                 row: 0,
@@ -1963,7 +1963,7 @@ describe('GalleryNode', function () {
       it(
         'adds width/height and uses resized images',
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               {
                 row: 0,
@@ -2013,7 +2013,7 @@ describe('GalleryNode', function () {
       it(
         "resizes width/height attributes but uses original image when local image can't be transformed",
         editorTest(async function () {
-          const galleryNode = $createGalleryNode({
+          const galleryNode = $createBaseGalleryNode({
             images: [
               {
                 row: 0,
@@ -2044,7 +2044,7 @@ describe('GalleryNode', function () {
       'resizes CDN gallery images to the max width when imageBaseUrl is configured',
       editorTest(async function () {
         const cdnUrl = 'https://cdn.example.com/c/uuid'
-        const galleryNode = $createGalleryNode({
+        const galleryNode = $createBaseGalleryNode({
           images: [
             {
               row: 0,
@@ -2069,7 +2069,7 @@ describe('GalleryNode', function () {
       'uses a retina CDN src for email gallery images when imageBaseUrl is configured',
       editorTest(async function () {
         const cdnUrl = 'https://cdn.example.com/c/uuid'
-        const galleryNode = $createGalleryNode({
+        const galleryNode = $createBaseGalleryNode({
           images: [
             {
               row: 0,
@@ -2093,7 +2093,7 @@ describe('GalleryNode', function () {
       'generates srcset for CDN gallery images when imageBaseUrl is configured',
       editorTest(async function () {
         const cdnUrl = 'https://cdn.example.com/c/uuid'
-        const galleryNode = $createGalleryNode({
+        const galleryNode = $createBaseGalleryNode({
           images: [
             {
               row: 0,
@@ -2117,7 +2117,7 @@ describe('GalleryNode', function () {
       'does not generate srcset for CDN gallery images when imageBaseUrl is not configured',
       editorTest(async function () {
         const cdnUrl = 'https://cdn.example.com/c/uuid'
-        const galleryNode = $createGalleryNode({
+        const galleryNode = $createBaseGalleryNode({
           images: [
             {
               row: 0,
@@ -2140,7 +2140,7 @@ describe('GalleryNode', function () {
     it(
       'returns contents',
       editorTest(async function () {
-        const node = $createGalleryNode({} as Record<string, unknown>)
+        const node = $createBaseGalleryNode({} as Record<string, unknown>)
         expect(node.getTextContent()).toBe('')
 
         node.caption = 'Test caption'

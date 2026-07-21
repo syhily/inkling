@@ -5,7 +5,7 @@ import { $createHeadingNode, HeadingNode } from '@lexical/rich-text'
 import { $createParagraphNode, $createTextNode, $getRoot, ParagraphNode, TextNode } from 'lexical'
 
 import { assertTransform, createEditor } from '#/transforms/utils'
-import { ExtendedHeadingNode, ImageNode } from '@/nodes/base'
+import { ExtendedHeadingNode, BaseImageNode } from '@/nodes/base'
 import { registerDenestTransform } from '@/transforms/index'
 
 describe('Denest transform', function () {
@@ -158,7 +158,7 @@ describe('Denest transform', function () {
       },
     }
 
-    const editor = createEditor({ nodes: [ListNode, ListItemNode, ImageNode] })
+    const editor = createEditor({ nodes: [ListNode, ListItemNode, BaseImageNode] })
 
     assertTransform(editor, registerTransforms, before, after)
   })

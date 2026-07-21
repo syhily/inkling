@@ -5,11 +5,11 @@ import { $generateNodesFromDOM } from '@lexical/html'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
-import { HeaderNode, $createHeaderNode, $isHeaderNode } from '@/nodes/base/index'
+import { BaseHeaderNode, $createBaseHeaderNode, $isHeaderNode } from '@/nodes/base/index'
 
-const editorNodes = [HeaderNode]
+const editorNodes = [BaseHeaderNode]
 
-describe('HeaderNode', function () {
+describe('BaseHeaderNode', function () {
   describe('v2', function () {
     let editor: LexicalEditor
     let dataset: Record<string, unknown>
@@ -65,7 +65,7 @@ describe('HeaderNode', function () {
     it(
       'matches node with $isHeaderNode',
       editorTest(function () {
-        const headerNode = $createHeaderNode(dataset)
+        const headerNode = $createBaseHeaderNode(dataset)
         expect($isHeaderNode(headerNode)).toBe(true)
       }),
     )
@@ -74,7 +74,7 @@ describe('HeaderNode', function () {
       it(
         'has getters for all properties',
         editorTest(function () {
-          const node = $createHeaderNode(dataset)
+          const node = $createBaseHeaderNode(dataset)
           expect(node.version).toBe(2)
           expect(node.backgroundImageSrc).toBe('https://example.com/image.jpg')
           expect(node.buttonEnabled).toBe(true)
@@ -96,7 +96,7 @@ describe('HeaderNode', function () {
       it(
         'has setters for all properties',
         editorTest(function () {
-          const node = $createHeaderNode(dataset)
+          const node = $createBaseHeaderNode(dataset)
           node.backgroundImageSrc = 'https://example.com/image2.jpg'
           node.buttonEnabled = false
           node.buttonText = 'The button 2'
@@ -146,7 +146,7 @@ describe('HeaderNode', function () {
                         </div>
                     </div>`
           const document = createDocument(htmlstring)
-          const nodes = $generateNodesFromDOM(editor, document) as HeaderNode[]
+          const nodes = $generateNodesFromDOM(editor, document) as BaseHeaderNode[]
           expect(nodes.length).toBe(1)
           const node = nodes[0]
           expect(node.backgroundColor).toBe('accent')
@@ -175,7 +175,7 @@ describe('HeaderNode', function () {
             </div>`
 
           const document = createDocument(htmlstring)
-          const nodes = $generateNodesFromDOM(editor, document) as HeaderNode[]
+          const nodes = $generateNodesFromDOM(editor, document) as BaseHeaderNode[]
           const headerNodes = nodes.filter((node) => $isHeaderNode(node))
           expect(headerNodes.length).toBe(0)
         }),
@@ -186,7 +186,7 @@ describe('HeaderNode', function () {
       it(
         'returns correct node type',
         editorTest(function () {
-          const node = $createHeaderNode(dataset)
+          const node = $createBaseHeaderNode(dataset)
           expect(node.getType()).toBe('header')
         }),
       )
@@ -196,9 +196,9 @@ describe('HeaderNode', function () {
       it(
         'returns a copy of the current node',
         editorTest(function () {
-          const headerNode = $createHeaderNode(dataset)
+          const headerNode = $createBaseHeaderNode(dataset)
           const headerNodeDataset = headerNode.getDataset()
-          const clone = HeaderNode.clone(headerNode) as HeaderNode
+          const clone = BaseHeaderNode.clone(headerNode) as BaseHeaderNode
           const cloneDataset = clone.getDataset()
           expect(cloneDataset).toEqual({ ...headerNodeDataset })
         }),
@@ -209,7 +209,7 @@ describe('HeaderNode', function () {
       it(
         'contains the expected URL mapping',
         editorTest(function () {
-          expect(HeaderNode.urlTransformMap).toEqual({
+          expect(BaseHeaderNode.urlTransformMap).toEqual({
             buttonUrl: 'url',
             backgroundImageSrc: 'url',
             header: 'html',
@@ -223,7 +223,7 @@ describe('HeaderNode', function () {
       it(
         'returns true',
         editorTest(function () {
-          const headerNode = $createHeaderNode(dataset)
+          const headerNode = $createBaseHeaderNode(dataset)
           expect(headerNode.hasEditMode()).toBe(true)
         }),
       )
@@ -233,7 +233,7 @@ describe('HeaderNode', function () {
       it(
         'renders version 2 html',
         editorTest(function () {
-          const headerNode = $createHeaderNode(dataset)
+          const headerNode = $createBaseHeaderNode(dataset)
           const { element } = headerNode.exportDOM(editor, exportOptions)
           const el = element as HTMLElement
 
@@ -259,7 +259,7 @@ describe('HeaderNode', function () {
       it(
         'renders empty card when header and subheader is undefined and the button is disabled',
         editorTest(function () {
-          const node = $createHeaderNode(dataset)
+          const node = $createBaseHeaderNode(dataset)
           node.header = null as unknown as string
           node.subheader = null as unknown as string
           node.buttonEnabled = false
@@ -287,7 +287,7 @@ describe('HeaderNode', function () {
             style: 'dark',
             subheader: '',
           }
-          const node = $createHeaderNode(payload)
+          const node = $createBaseHeaderNode(payload)
 
           const { element } = node.exportDOM(editor, exportOptions)
           const el = element as HTMLElement
@@ -323,7 +323,7 @@ describe('HeaderNode', function () {
             style: 'dark',
             subheader: '',
           }
-          const node = $createHeaderNode(payload)
+          const node = $createBaseHeaderNode(payload)
 
           const { element } = node.exportDOM(editor, exportOptions)
           const el = element as HTMLElement
@@ -364,7 +364,7 @@ describe('HeaderNode', function () {
             layout: 'full',
             swapped: false,
           }
-          const node = $createHeaderNode(payload)
+          const node = $createBaseHeaderNode(payload)
           const { element } = node.exportDOM(editor, exportOptions)
           const html = (element as HTMLElement).outerHTML
 
@@ -381,7 +381,7 @@ describe('HeaderNode', function () {
       it(
         'falls back to the default text color when textColor breaks out of its attribute',
         editorTest(function () {
-          const node = $createHeaderNode({
+          const node = $createBaseHeaderNode({
             ...dataset,
             textColor: 'red"><img src=x onerror=alert(1)>',
           })
@@ -402,7 +402,7 @@ describe('HeaderNode', function () {
       it(
         'falls back to transparent when backgroundColor is a url() value',
         editorTest(function () {
-          const node = $createHeaderNode({
+          const node = $createBaseHeaderNode({
             ...dataset,
             backgroundColor: 'url(https://evil.example/x)',
           })
@@ -419,7 +419,7 @@ describe('HeaderNode', function () {
       it(
         'falls back to transparent when buttonColor contains attacker content',
         editorTest(function () {
-          const node = $createHeaderNode({
+          const node = $createBaseHeaderNode({
             ...dataset,
             buttonColor: 'expression(alert(1))',
           })
@@ -440,7 +440,7 @@ describe('HeaderNode', function () {
         'renders picker-produced color formats unchanged',
         editorTest(function () {
           for (const color of ['#aabbcc', '#abc', 'rgb(1, 2, 3)', 'rgba(1, 2, 3, 0.5)', 'white']) {
-            const node = $createHeaderNode({
+            const node = $createBaseHeaderNode({
               ...dataset,
               textColor: color,
               buttonTextColor: color,
@@ -463,7 +463,7 @@ describe('HeaderNode', function () {
       it(
         'preserves the accent sentinel for background and button colors',
         editorTest(function () {
-          const node = $createHeaderNode({
+          const node = $createBaseHeaderNode({
             ...dataset,
             backgroundColor: 'accent',
             buttonColor: 'accent',
@@ -485,7 +485,7 @@ describe('HeaderNode', function () {
       it(
         'sanitizes color values in the email renderer',
         editorTest(function () {
-          const node = $createHeaderNode({
+          const node = $createBaseHeaderNode({
             ...dataset,
             backgroundImageSrc: '',
             textColor: 'red"><img src=x onerror=alert(1)>',
@@ -507,7 +507,7 @@ describe('HeaderNode', function () {
       it(
         'pins the full modern email output (useModernButton)',
         editorTest(async function () {
-          const headerNode = $createHeaderNode(dataset)
+          const headerNode = $createBaseHeaderNode(dataset)
           const { element } = headerNode.exportDOM(editor, {
             ...exportOptions,
             target: 'email',
@@ -585,7 +585,7 @@ describe('HeaderNode', function () {
       it(
         'pins the full legacy email output (no customization flags)',
         editorTest(async function () {
-          const headerNode = $createHeaderNode(dataset)
+          const headerNode = $createBaseHeaderNode(dataset)
           const { element } = headerNode.exportDOM(editor, { ...exportOptions, target: 'email' })
 
           await expectPrettifiedHtml(
@@ -624,11 +624,11 @@ describe('HeaderNode', function () {
       it(
         'adds a dark/light background class based on the text color',
         editorTest(function () {
-          const darkNode = $createHeaderNode({ ...dataset, backgroundImageSrc: '', textColor: '#FFFFFF' })
+          const darkNode = $createBaseHeaderNode({ ...dataset, backgroundImageSrc: '', textColor: '#FFFFFF' })
           const { element: darkElement } = darkNode.exportDOM(editor, emailOptions())
           expect((darkElement as HTMLElement).className).toContain('inkling-header-card-dark-bg')
 
-          const lightNode = $createHeaderNode({ ...dataset, backgroundImageSrc: '', textColor: '#000000' })
+          const lightNode = $createBaseHeaderNode({ ...dataset, backgroundImageSrc: '', textColor: '#000000' })
           const { element: lightElement } = lightNode.exportDOM(editor, emailOptions())
           expect((lightElement as HTMLElement).className).toContain('inkling-header-card-light-bg')
         }),
@@ -637,7 +637,7 @@ describe('HeaderNode', function () {
       it(
         'adds the background class to the legacy (non-customization) email output too',
         editorTest(function () {
-          const node = $createHeaderNode({ ...dataset, backgroundImageSrc: '', textColor: '#FFFFFF' })
+          const node = $createBaseHeaderNode({ ...dataset, backgroundImageSrc: '', textColor: '#FFFFFF' })
           const { element } = node.exportDOM(editor, { ...exportOptions, target: 'email' })
           expect((element as HTMLElement).className).toContain('inkling-header-card-dark-bg')
         }),
@@ -646,7 +646,7 @@ describe('HeaderNode', function () {
       it(
         'renders a VML background image for Outlook in split layout',
         editorTest(function () {
-          const node = $createHeaderNode({ ...dataset, layout: 'split', backgroundSize: 'contain' })
+          const node = $createBaseHeaderNode({ ...dataset, layout: 'split', backgroundSize: 'contain' })
           const { element } = node.exportDOM(editor, emailOptions())
           const html = (element as HTMLElement).outerHTML
 
@@ -661,7 +661,7 @@ describe('HeaderNode', function () {
       it(
         'wraps the content in a VML image rect when a background image is used without split layout',
         editorTest(function () {
-          const node = $createHeaderNode({ ...dataset, layout: 'full' })
+          const node = $createBaseHeaderNode({ ...dataset, layout: 'full' })
           const { element } = node.exportDOM(editor, emailOptions())
           const html = (element as HTMLElement).outerHTML
 
@@ -676,7 +676,7 @@ describe('HeaderNode', function () {
       it(
         'omits VML content wrappers when there is no background image',
         editorTest(function () {
-          const node = $createHeaderNode({ ...dataset, backgroundImageSrc: '' })
+          const node = $createBaseHeaderNode({ ...dataset, backgroundImageSrc: '' })
           const { element } = node.exportDOM(editor, emailOptions())
           const html = (element as HTMLElement).outerHTML
 
@@ -688,7 +688,7 @@ describe('HeaderNode', function () {
       it(
         'does not interpolate an unsafe background image src into VML',
         editorTest(function () {
-          const node = $createHeaderNode({ ...dataset, backgroundImageSrc: 'javascript:alert(1)' })
+          const node = $createBaseHeaderNode({ ...dataset, backgroundImageSrc: 'javascript:alert(1)' })
           const { element } = node.exportDOM(editor, emailOptions())
           const html = (element as HTMLElement).outerHTML
 
@@ -702,7 +702,7 @@ describe('HeaderNode', function () {
       it(
         'renders outline button with empty feature bag',
         editorTest(function () {
-          const node = $createHeaderNode({
+          const node = $createBaseHeaderNode({
             ...dataset,
             backgroundImageSrc: '',
             buttonColor: '#FF0000',
@@ -725,7 +725,7 @@ describe('HeaderNode', function () {
       it(
         'renders fill button with empty feature bag',
         editorTest(function () {
-          const node = $createHeaderNode({
+          const node = $createBaseHeaderNode({
             ...dataset,
             backgroundImageSrc: '',
             buttonColor: '#FF0000',
@@ -746,7 +746,7 @@ describe('HeaderNode', function () {
       it(
         'chooses white text for a dark custom fill',
         editorTest(function () {
-          const node = $createHeaderNode({
+          const node = $createBaseHeaderNode({
             ...dataset,
             backgroundImageSrc: '',
             buttonColor: '#000000',
@@ -766,7 +766,7 @@ describe('HeaderNode', function () {
       it(
         'chooses black text for a light custom fill',
         editorTest(function () {
-          const node = $createHeaderNode({
+          const node = $createBaseHeaderNode({
             ...dataset,
             backgroundImageSrc: '',
             buttonColor: '#FFFFFF',
@@ -786,7 +786,7 @@ describe('HeaderNode', function () {
       it(
         'resolves accent color to a concrete value',
         editorTest(function () {
-          const node = $createHeaderNode({
+          const node = $createBaseHeaderNode({
             ...dataset,
             backgroundImageSrc: '',
             buttonColor: 'accent',

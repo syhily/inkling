@@ -4,19 +4,19 @@ import { $getRoot, type ElementNode, type LexicalEditor } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
-import { CodeBlockNode, $createCodeBlockNode, $isCodeBlockNode } from '@/nodes/base/index'
+import { BaseCodeBlockNode, $createBaseCodeBlockNode, $isCodeBlockNode } from '@/nodes/base/index'
 
-const editorNodes = [CodeBlockNode]
+const editorNodes = [BaseCodeBlockNode]
 
-function unwrapCodeBlock(nodes: unknown[]): CodeBlockNode {
-  const firstNode = nodes[0] as CodeBlockNode | ElementNode
+function unwrapCodeBlock(nodes: unknown[]): BaseCodeBlockNode {
+  const firstNode = nodes[0] as BaseCodeBlockNode | ElementNode
   if ((firstNode as ElementNode).getType?.() === 'paragraph') {
-    return (firstNode as ElementNode).getChildren()[0] as CodeBlockNode
+    return (firstNode as ElementNode).getChildren()[0] as BaseCodeBlockNode
   }
-  return firstNode as CodeBlockNode
+  return firstNode as BaseCodeBlockNode
 }
 
-describe('CodeBlockNode', function () {
+describe('BaseCodeBlockNode', function () {
   let dataset: Record<string, unknown>
   let editor: LexicalEditor
   let code: string
@@ -60,7 +60,7 @@ describe('CodeBlockNode', function () {
   it(
     'matches node with $isCodeBlockNode',
     editorTest(async function () {
-      const codeBlockNode = $createCodeBlockNode({ language, code, caption })
+      const codeBlockNode = $createBaseCodeBlockNode({ language, code, caption })
       expect($isCodeBlockNode(codeBlockNode)).toBe(true)
     }),
   )
@@ -92,7 +92,7 @@ describe('CodeBlockNode', function () {
 
         editorState.read(() => {
           try {
-            const codeBlockNode = $getRoot().getChildren()[0] as CodeBlockNode
+            const codeBlockNode = $getRoot().getChildren()[0] as BaseCodeBlockNode
             expect(codeBlockNode.code).toBe(`<?php echo 'Hello World'; ?>`)
             expect(codeBlockNode.language).toBe('php')
             expect(codeBlockNode.caption).toBe('Your first PHP enabled page')
@@ -110,7 +110,7 @@ describe('CodeBlockNode', function () {
         editor.update(
           () => {
             try {
-              const codeBlockNode = $createCodeBlockNode({ code, language, caption })
+              const codeBlockNode = $createBaseCodeBlockNode({ code, language, caption })
               $getRoot().append(codeBlockNode)
             } catch (e) {
               reject(e)
@@ -138,7 +138,7 @@ describe('CodeBlockNode', function () {
     it(
       'has getters for all properties',
       editorTest(async function () {
-        const codeBlockNode = $createCodeBlockNode({ language, code, caption })
+        const codeBlockNode = $createBaseCodeBlockNode({ language, code, caption })
 
         expect(codeBlockNode.code).toBe('<script></script>')
         expect(codeBlockNode.language).toBe('javascript')
@@ -149,7 +149,7 @@ describe('CodeBlockNode', function () {
     it(
       'has setters for all properties',
       editorTest(async function () {
-        const codeBlockNode = $createCodeBlockNode({ language: '', code: '', caption: '' })
+        const codeBlockNode = $createBaseCodeBlockNode({ language: '', code: '', caption: '' })
 
         expect(codeBlockNode.language).toBe('')
         codeBlockNode.language = 'javascript'
@@ -168,7 +168,7 @@ describe('CodeBlockNode', function () {
     it(
       'has getDataset() convenience method',
       editorTest(async function () {
-        const codeBlockNode = $createCodeBlockNode({ language, code, caption })
+        const codeBlockNode = $createBaseCodeBlockNode({ language, code, caption })
         const codeBlockNodeDataset = codeBlockNode.getDataset()
 
         expect(codeBlockNodeDataset).toEqual({
@@ -184,7 +184,7 @@ describe('CodeBlockNode', function () {
     it(
       'returns true if markdown is empty',
       editorTest(async function () {
-        const codeBlockNode = $createCodeBlockNode(dataset)
+        const codeBlockNode = $createBaseCodeBlockNode(dataset)
 
         expect(codeBlockNode.isEmpty()).toBe(false)
         codeBlockNode.code = ''
@@ -197,7 +197,7 @@ describe('CodeBlockNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        expect(CodeBlockNode.getType()).toBe('codeblock')
+        expect(BaseCodeBlockNode.getType()).toBe('codeblock')
       }),
     )
   })
@@ -206,9 +206,9 @@ describe('CodeBlockNode', function () {
     it(
       'returns a copy of the current node',
       editorTest(async function () {
-        const codeBlockNode = $createCodeBlockNode(dataset)
+        const codeBlockNode = $createBaseCodeBlockNode(dataset)
         const codeBlockNodeDataset = codeBlockNode.getDataset()
-        const clone = CodeBlockNode.clone(codeBlockNode) as CodeBlockNode
+        const clone = BaseCodeBlockNode.clone(codeBlockNode) as BaseCodeBlockNode
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...codeBlockNodeDataset })
@@ -220,7 +220,7 @@ describe('CodeBlockNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        expect(CodeBlockNode.urlTransformMap).toEqual({
+        expect(BaseCodeBlockNode.urlTransformMap).toEqual({
           caption: 'html',
         })
       }),
@@ -231,7 +231,7 @@ describe('CodeBlockNode', function () {
     it(
       'returns true',
       editorTest(async function () {
-        const codeBlockNode = $createCodeBlockNode(dataset)
+        const codeBlockNode = $createBaseCodeBlockNode(dataset)
         expect(codeBlockNode.hasEditMode()).toBe(true)
       }),
     )
@@ -241,7 +241,7 @@ describe('CodeBlockNode', function () {
     it(
       'renders and escapes',
       editorTest(async function () {
-        const codeBlockNode = $createCodeBlockNode({ code })
+        const codeBlockNode = $createBaseCodeBlockNode({ code })
         const { element } = codeBlockNode.exportDOM(editor, exportOptions)
         const el = element as HTMLElement
 
@@ -252,7 +252,7 @@ describe('CodeBlockNode', function () {
     it(
       'renders language class if provided',
       editorTest(async function () {
-        const codeBlockNode = $createCodeBlockNode({ language, code })
+        const codeBlockNode = $createBaseCodeBlockNode({ language, code })
         const { element } = codeBlockNode.exportDOM(editor, exportOptions)
         const el = element as HTMLElement
 
@@ -266,7 +266,7 @@ describe('CodeBlockNode', function () {
     it(
       'renders empty span when code is undefined or empty',
       editorTest(async function () {
-        const codeBlockNode = $createCodeBlockNode({ code: '' })
+        const codeBlockNode = $createBaseCodeBlockNode({ code: '' })
         const { element } = codeBlockNode.exportDOM(editor, exportOptions)
         const el = element as HTMLElement
 
@@ -277,7 +277,7 @@ describe('CodeBlockNode', function () {
     it(
       'renders a figure if a caption is provided',
       editorTest(async function () {
-        const codeBlockNode = $createCodeBlockNode({ language, code, caption })
+        const codeBlockNode = $createBaseCodeBlockNode({ language, code, caption })
         const { element } = codeBlockNode.exportDOM(editor, exportOptions)
         const el = element as HTMLElement
 
@@ -297,7 +297,7 @@ describe('CodeBlockNode', function () {
   it(
     'sanitizes caption HTML',
     editorTest(async function () {
-      const codeBlockNode = $createCodeBlockNode({
+      const codeBlockNode = $createBaseCodeBlockNode({
         language,
         code,
         caption: 'Caption \u003cscript\u003ealert(1)\u003c/script\u003e \u003cimg src=x onerror=alert(1)\u003e',
@@ -339,7 +339,7 @@ describe('CodeBlockNode', function () {
             <figcaption>Test caption</figcaption>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as CodeBlockNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseCodeBlockNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].code).toBe('Test code')
@@ -357,7 +357,7 @@ describe('CodeBlockNode', function () {
             <figcaption>Test caption</figcaption>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as CodeBlockNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseCodeBlockNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].code).toBe('Test code')
@@ -375,7 +375,7 @@ describe('CodeBlockNode', function () {
             <figcaption>Test caption</figcaption>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as CodeBlockNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseCodeBlockNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].code).toBe('Test code')
@@ -460,7 +460,7 @@ describe('CodeBlockNode', function () {
     it(
       'returns contents',
       editorTest(async function () {
-        const node = $createCodeBlockNode()
+        const node = $createBaseCodeBlockNode()
         expect(node.getTextContent()).toBe('')
 
         node.code = '<script>const test = true;</script>'

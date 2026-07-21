@@ -3,9 +3,9 @@ import type { LexicalEditor } from 'lexical'
 import { createHeadlessEditor } from '@lexical/headless'
 import { describe, expect, it } from 'vitest'
 
-import { $createFileNode, FileNode } from '@/nodes/base/nodes/file/FileNode'
-import { $createImageNode, ImageNode } from '@/nodes/base/nodes/image/ImageNode'
-import { $createVideoNode, VideoNode } from '@/nodes/base/nodes/video/VideoNode'
+import { $createBaseFileNode, BaseFileNode } from '@/nodes/base/nodes/file/FileNode'
+import { $createBaseImageNode, BaseImageNode } from '@/nodes/base/nodes/image/ImageNode'
+import { $createBaseVideoNode, BaseVideoNode } from '@/nodes/base/nodes/video/VideoNode'
 
 /**
  * Drift guard for the cards whose `exportJSON` is (or was) a hand-written key
@@ -18,7 +18,7 @@ import { $createVideoNode, VideoNode } from '@/nodes/base/nodes/video/VideoNode'
  * flat property list.
  */
 
-const editor: LexicalEditor = createHeadlessEditor({ nodes: [ImageNode, VideoNode, FileNode] })
+const editor: LexicalEditor = createHeadlessEditor({ nodes: [BaseImageNode, BaseVideoNode, BaseFileNode] })
 
 function inEditor<T>(fn: () => T): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -39,19 +39,19 @@ function declaredPropertyNames(nodeClass: { getPropertyDefaults(): Record<string
 describe('card exportJSON vocabulary', function () {
   it('video exportJSON keys are exactly the declared properties, in declared order', () =>
     inEditor(() => {
-      const json = $createVideoNode().exportJSON()
-      expect(Object.keys(json)).toEqual(['type', 'version', ...declaredPropertyNames(VideoNode)])
+      const json = $createBaseVideoNode().exportJSON()
+      expect(Object.keys(json)).toEqual(['type', 'version', ...declaredPropertyNames(BaseVideoNode)])
     }))
 
   it('file exportJSON keys are exactly the declared properties, in declared order', () =>
     inEditor(() => {
-      const json = $createFileNode().exportJSON()
-      expect(Object.keys(json)).toEqual(['type', 'version', ...declaredPropertyNames(FileNode)])
+      const json = $createBaseFileNode().exportJSON()
+      expect(Object.keys(json)).toEqual(['type', 'version', ...declaredPropertyNames(BaseFileNode)])
     }))
 
   it('image exportJSON keys are exactly the declared properties, in the historical persisted order', () =>
     inEditor(() => {
-      const json = $createImageNode().exportJSON()
+      const json = $createBaseImageNode().exportJSON()
       // the persisted key order differs from `imageProperties` order and
       // must not change — payloads stay byte-identical
       expect(Object.keys(json)).toEqual([
@@ -66,13 +66,13 @@ describe('card exportJSON vocabulary', function () {
         'cardWidth',
         'href',
       ])
-      expect(Object.keys(json).sort()).toEqual(['type', 'version', ...declaredPropertyNames(ImageNode)].sort())
+      expect(Object.keys(json).sort()).toEqual(['type', 'version', ...declaredPropertyNames(BaseImageNode)].sort())
     }))
 
   it.each([
-    { card: 'image', create: $createImageNode },
-    { card: 'video', create: $createVideoNode },
-    { card: 'file', create: $createFileNode },
+    { card: 'image', create: $createBaseImageNode },
+    { card: 'video', create: $createBaseVideoNode },
+    { card: 'file', create: $createBaseFileNode },
   ])('$card exportJSON persists the placeholder for a data-string src', ({ create }) =>
     inEditor(() => {
       const json = create({ src: 'data:image/png;base64,iVBORw0KGgo=' }).exportJSON()

@@ -7,11 +7,11 @@ import { $getRoot } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
-import { BookmarkNode, $createBookmarkNode, $isBookmarkNode, type BookmarkData } from '@/nodes/base/index'
+import { BaseBookmarkNode, $createBaseBookmarkNode, $isBookmarkNode, type BookmarkData } from '@/nodes/base/index'
 
-const editorNodes = [BookmarkNode]
+const editorNodes = [BaseBookmarkNode]
 
-describe('BookmarkNode', function () {
+describe('BaseBookmarkNode', function () {
   let editor: LexicalEditor
   let dataset: BookmarkData
   let exportOptions: Record<string, unknown>
@@ -55,7 +55,7 @@ describe('BookmarkNode', function () {
   it(
     'matches node with $isBookmarkNode',
     editorTest(async function () {
-      const bookmarkNode = $createBookmarkNode(dataset)
+      const bookmarkNode = $createBaseBookmarkNode(dataset)
       expect($isBookmarkNode(bookmarkNode)).toBe(true)
     }),
   )
@@ -64,7 +64,7 @@ describe('BookmarkNode', function () {
     it(
       'has getters for all properties',
       editorTest(async function () {
-        const bookmarkNode = $createBookmarkNode(dataset)
+        const bookmarkNode = $createBaseBookmarkNode(dataset)
 
         const metadata = dataset.metadata as Record<string, unknown>
         expect(bookmarkNode.url).toBe(dataset.url)
@@ -81,7 +81,7 @@ describe('BookmarkNode', function () {
     it(
       'has setters for all properties',
       editorTest(async function () {
-        const bookmarkNode = $createBookmarkNode()
+        const bookmarkNode = $createBaseBookmarkNode()
 
         expect(bookmarkNode.url).toBe('')
         bookmarkNode.url = 'https://inkling.local/'
@@ -120,7 +120,7 @@ describe('BookmarkNode', function () {
     it(
       'has getDataset() convenience method',
       editorTest(async function () {
-        const bookmarkNode = $createBookmarkNode(dataset)
+        const bookmarkNode = $createBaseBookmarkNode(dataset)
         const bookmarkNodeDataset = bookmarkNode.getDataset()
 
         expect(bookmarkNodeDataset).toEqual({
@@ -134,7 +134,7 @@ describe('BookmarkNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        expect(BookmarkNode.getType()).toBe('bookmark')
+        expect(BaseBookmarkNode.getType()).toBe('bookmark')
       }),
     )
   })
@@ -143,9 +143,9 @@ describe('BookmarkNode', function () {
     it(
       'returns a copy of the current node',
       editorTest(async function () {
-        const bookmarkNode = $createBookmarkNode(dataset)
+        const bookmarkNode = $createBaseBookmarkNode(dataset)
         const bookmarkNodeDataset = bookmarkNode.getDataset()
-        const clone = BookmarkNode.clone(bookmarkNode) as BookmarkNode
+        const clone = BaseBookmarkNode.clone(bookmarkNode) as BaseBookmarkNode
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...bookmarkNodeDataset })
@@ -157,7 +157,7 @@ describe('BookmarkNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        expect(BookmarkNode.urlTransformMap).toEqual({
+        expect(BaseBookmarkNode.urlTransformMap).toEqual({
           url: 'url',
           'metadata.icon': 'url',
           'metadata.thumbnail': 'url',
@@ -170,7 +170,7 @@ describe('BookmarkNode', function () {
     it(
       'returns true',
       editorTest(async function () {
-        const bookmarkNode = $createBookmarkNode(dataset)
+        const bookmarkNode = $createBaseBookmarkNode(dataset)
         expect(bookmarkNode.hasEditMode()).toBe(true)
       }),
     )
@@ -180,7 +180,7 @@ describe('BookmarkNode', function () {
     it(
       'returns true if url is empty',
       editorTest(async function () {
-        const bookmarkNode = $createBookmarkNode(dataset)
+        const bookmarkNode = $createBaseBookmarkNode(dataset)
 
         expect(bookmarkNode.isEmpty()).toBe(false)
         bookmarkNode.url = ''
@@ -193,7 +193,7 @@ describe('BookmarkNode', function () {
     it(
       'creates an bookmark card',
       editorTest(async function () {
-        const bookmarkNode = $createBookmarkNode(dataset)
+        const bookmarkNode = $createBaseBookmarkNode(dataset)
         const result = bookmarkNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
         const metadata = dataset.metadata as Record<string, unknown>
@@ -230,7 +230,7 @@ describe('BookmarkNode', function () {
         const options = {
           target: 'email',
         }
-        const bookmarkNode = $createBookmarkNode(dataset)
+        const bookmarkNode = $createBaseBookmarkNode(dataset)
         const result = bookmarkNode.exportDOM(editor, { ...exportOptions, ...options })
         const element = result.element as HTMLElement
 
@@ -244,7 +244,7 @@ describe('BookmarkNode', function () {
     it(
       'pins the full email output',
       editorTest(async function () {
-        const bookmarkNode = $createBookmarkNode(dataset)
+        const bookmarkNode = $createBaseBookmarkNode(dataset)
         const result = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
         const element = result.element as HTMLElement
 
@@ -352,7 +352,7 @@ describe('BookmarkNode', function () {
     it(
       'renders an empty span with a missing src',
       editorTest(async function () {
-        const bookmarkNode = $createBookmarkNode()
+        const bookmarkNode = $createBaseBookmarkNode()
         const result = bookmarkNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -376,7 +376,7 @@ describe('BookmarkNode', function () {
           caption:
             '<p dir="ltr"><span style="white-space: pre-wrap;">This is a </span><b><strong style="white-space: pre-wrap;">caption</strong></b></p>',
         }
-        const bookmarkNode = $createBookmarkNode(dataset)
+        const bookmarkNode = $createBaseBookmarkNode(dataset)
         const result = bookmarkNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -414,7 +414,7 @@ describe('BookmarkNode', function () {
           caption:
             '<p dir="ltr"><span style="white-space: pre-wrap;">This is a </span><b><strong style="white-space: pre-wrap;">caption</strong></b></p>',
         }
-        const bookmarkNode = $createBookmarkNode(dataset)
+        const bookmarkNode = $createBaseBookmarkNode(dataset)
         const result = bookmarkNode.exportDOM(editor, { ...exportOptions, ...options })
         const element = result.element as HTMLElement
 
@@ -439,7 +439,7 @@ describe('BookmarkNode', function () {
     it(
       'drops a bookmark with an unsafe URL',
       editorTest(function () {
-        const bookmarkNode = $createBookmarkNode({
+        const bookmarkNode = $createBaseBookmarkNode({
           url: 'javascript:alert(1)',
           metadata: {
             icon: '',
@@ -470,7 +470,7 @@ describe('BookmarkNode', function () {
         it(
           `renders optional media for allowed media source ${src}`,
           editorTest(async function () {
-            const bookmarkNode = $createBookmarkNode({
+            const bookmarkNode = $createBaseBookmarkNode({
               ...dataset,
               metadata: { ...(dataset.metadata as Record<string, unknown>), icon: src, thumbnail: src },
             })
@@ -486,7 +486,7 @@ describe('BookmarkNode', function () {
       it(
         'omits unsupported optional media in web output',
         editorTest(async function () {
-          const bookmarkNode = $createBookmarkNode({
+          const bookmarkNode = $createBaseBookmarkNode({
             ...dataset,
             metadata: {
               ...(dataset.metadata as Record<string, unknown>),
@@ -509,7 +509,7 @@ describe('BookmarkNode', function () {
       it(
         'omits unsupported optional media in email output',
         editorTest(async function () {
-          const bookmarkNode = $createBookmarkNode({
+          const bookmarkNode = $createBaseBookmarkNode({
             ...dataset,
             metadata: {
               ...(dataset.metadata as Record<string, unknown>),
@@ -530,7 +530,7 @@ describe('BookmarkNode', function () {
       'sanitizes a malicious caption in web and email',
       editorTest(function () {
         const maliciousCaption = '<img src=x onerror=alert(1)>'
-        const bookmarkNode = $createBookmarkNode({
+        const bookmarkNode = $createBaseBookmarkNode({
           url: 'https://www.fake.org/',
           metadata: {
             icon: '',
@@ -558,7 +558,7 @@ describe('BookmarkNode', function () {
     it(
       'does not double-escape the description in email',
       editorTest(function () {
-        const bookmarkNode = $createBookmarkNode({
+        const bookmarkNode = $createBaseBookmarkNode({
           url: 'https://www.fake.org/',
           metadata: {
             icon: '',
@@ -582,7 +582,7 @@ describe('BookmarkNode', function () {
     it(
       'escapes a quote-containing URL in email templates',
       editorTest(function () {
-        const bookmarkNode = $createBookmarkNode({
+        const bookmarkNode = $createBaseBookmarkNode({
           url: '/x"><svg/onload=alert(1)>',
           metadata: {
             icon: '',
@@ -610,7 +610,7 @@ describe('BookmarkNode', function () {
     it(
       'contains all data',
       editorTest(async function () {
-        const bookmarkNode = $createBookmarkNode(dataset)
+        const bookmarkNode = $createBaseBookmarkNode(dataset)
         const json = bookmarkNode.exportJSON()
         const metadata = dataset.metadata as Record<string, unknown>
 
@@ -656,7 +656,7 @@ describe('BookmarkNode', function () {
 
         editor.getEditorState().read(() => {
           try {
-            const [bookmarkNode] = $getRoot().getChildren() as BookmarkNode[]
+            const [bookmarkNode] = $getRoot().getChildren() as BaseBookmarkNode[]
 
             expect(bookmarkNode.url).toBe(dataset.url)
             expect(bookmarkNode.icon).toBe((dataset.metadata as Record<string, unknown>).icon)
@@ -699,7 +699,7 @@ describe('BookmarkNode', function () {
 
         editor.getEditorState().read(() => {
           try {
-            const [bookmarkNode] = $getRoot().getChildren() as BookmarkNode[]
+            const [bookmarkNode] = $getRoot().getChildren() as BaseBookmarkNode[]
 
             // non-string url/caption coerce to ''; metadata keeps only the
             // declared string fields
@@ -720,14 +720,14 @@ describe('BookmarkNode', function () {
     it(
       'getType',
       editorTest(async function () {
-        expect(BookmarkNode.getType()).toBe('bookmark')
+        expect(BaseBookmarkNode.getType()).toBe('bookmark')
       }),
     )
 
     it(
       'urlTransformMap',
       editorTest(async function () {
-        expect(BookmarkNode.urlTransformMap).toEqual({
+        expect(BaseBookmarkNode.urlTransformMap).toEqual({
           url: 'url',
           'metadata.icon': 'url',
           'metadata.thumbnail': 'url',
@@ -763,7 +763,7 @@ describe('BookmarkNode', function () {
         const nodes = $generateNodesFromDOM(editor, document)
 
         expect(nodes.length).toBe(1)
-        const node = nodes[0] as BookmarkNode
+        const node = nodes[0] as BaseBookmarkNode
         expect(node.url).toBe(dataset.url)
         expect(node.icon).toBe((dataset.metadata as Record<string, unknown>).icon)
         expect(node.title).toBe((dataset.metadata as Record<string, unknown>).title)
@@ -807,7 +807,7 @@ describe('BookmarkNode', function () {
           const nodes = $generateNodesFromDOM(editor, document)
 
           expect(nodes.length).toBe(1)
-          const bookmarkNode = nodes[0] as BookmarkNode
+          const bookmarkNode = nodes[0] as BaseBookmarkNode
 
           expect(bookmarkNode.url).toBe('https://slack.engineering/typescript-at-slack-a81307fa288d')
           expect(bookmarkNode.title).toBe('TypeScript at Slack')
@@ -844,7 +844,7 @@ describe('BookmarkNode', function () {
           const nodes = $generateNodesFromDOM(editor, document)
 
           expect(nodes.length).toBe(1)
-          const bookmarkNode = nodes[0] as BookmarkNode
+          const bookmarkNode = nodes[0] as BaseBookmarkNode
 
           expect(bookmarkNode.url).toBe('https://slack.engineering/typescript-at-slack-a81307fa288d')
           expect(bookmarkNode.title).toBe('')
@@ -884,7 +884,7 @@ describe('BookmarkNode', function () {
           const nodes = $generateNodesFromDOM(editor, document)
 
           expect(nodes.length).toBe(1)
-          const bookmarkNode = nodes[0] as BookmarkNode
+          const bookmarkNode = nodes[0] as BaseBookmarkNode
 
           expect(bookmarkNode.url).toBe('https://slack.engineering/typescript-at-slack-a81307fa288d')
           expect(bookmarkNode.title).toBe('TypeScript at Slack')
@@ -902,7 +902,7 @@ describe('BookmarkNode', function () {
     it(
       'returns contents',
       editorTest(async function () {
-        const node = $createBookmarkNode()
+        const node = $createBaseBookmarkNode()
         expect(node.getTextContent()).toBe('')
 
         node.title = 'Test'

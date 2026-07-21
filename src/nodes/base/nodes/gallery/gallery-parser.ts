@@ -3,7 +3,7 @@
 // SQS branch's DOM mutation are structural, not flat per-property reads.
 import type { LexicalNode } from 'lexical'
 
-// MAX_PER_ROW is only read inside function bodies, so the GalleryNode ↔
+// MAX_PER_ROW is only read inside function bodies, so the BaseGalleryNode ↔
 // parser cycle stays TDZ-safe (same pattern as gallery-renderer.ts)
 import { MAX_PER_ROW } from '@/nodes/base/nodes/gallery/GalleryNode'
 import { readCaptionFromElement } from '@/nodes/base/utils/read-caption-from-element'
@@ -18,7 +18,7 @@ function readGalleryImageAttributesFromElement(element: HTMLImageElement, imgNum
   return image
 }
 
-export function parseGalleryNode(GalleryNode: new (data: Record<string, unknown>) => LexicalNode) {
+export function parseGalleryNode(BaseGalleryNode: new (data: Record<string, unknown>) => LexicalNode) {
   return {
     figure: (nodeElem: HTMLElement) => {
       // Inkling gallery card
@@ -31,7 +31,7 @@ export function parseGalleryNode(GalleryNode: new (data: Record<string, unknown>
             payload.images = imgs.map(readGalleryImageAttributesFromElement)
             payload.caption = readCaptionFromElement(domNode)
 
-            const node = new GalleryNode(payload)
+            const node = new BaseGalleryNode(payload)
             return { node }
           },
           priority: 1 as const,
@@ -81,7 +81,7 @@ export function parseGalleryNode(GalleryNode: new (data: Record<string, unknown>
 
             payload.images = imgs.map(readGalleryImageAttributesFromElement)
 
-            const node = new GalleryNode(payload)
+            const node = new BaseGalleryNode(payload)
             return { node }
           },
           priority: 1 as const,
@@ -129,7 +129,7 @@ export function parseGalleryNode(GalleryNode: new (data: Record<string, unknown>
 
             payload.caption = readCaptionFromElement(domNode, { selector: '.meta-title' })
 
-            const node = new GalleryNode(payload)
+            const node = new BaseGalleryNode(payload)
             return { node }
           },
           priority: 1 as const,

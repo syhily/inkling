@@ -6,11 +6,11 @@ import { $getRoot } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
-import { ToggleNode, $createToggleNode, $isToggleNode } from '@/nodes/base/index'
+import { BaseToggleNode, $createBaseToggleNode, $isToggleNode } from '@/nodes/base/index'
 
-const editorNodes = [ToggleNode]
+const editorNodes = [BaseToggleNode]
 
-describe('ToggleNode', function () {
+describe('BaseToggleNode', function () {
   let editor: LexicalEditor
   let dataset: { heading: string; content: string }
   let exportOptions: Record<string, unknown>
@@ -49,7 +49,7 @@ describe('ToggleNode', function () {
   it(
     'matches node with $isToggleNode',
     editorTest(async function () {
-      const toggleNode = $createToggleNode(dataset)
+      const toggleNode = $createBaseToggleNode(dataset)
       expect($isToggleNode(toggleNode)).toBe(true)
     }),
   )
@@ -58,7 +58,7 @@ describe('ToggleNode', function () {
     it(
       'has getters for all properties',
       editorTest(async function () {
-        const toggleNode = $createToggleNode(dataset)
+        const toggleNode = $createBaseToggleNode(dataset)
 
         expect(toggleNode.heading).toBe(dataset.heading)
         expect(toggleNode.content).toBe(dataset.content)
@@ -68,7 +68,7 @@ describe('ToggleNode', function () {
     it(
       'has setters for all properties',
       editorTest(async function () {
-        const toggleNode = $createToggleNode()
+        const toggleNode = $createBaseToggleNode()
 
         expect(toggleNode.heading).toBe('')
         toggleNode.heading = 'Heading'
@@ -83,7 +83,7 @@ describe('ToggleNode', function () {
     it(
       'has getDataset() convenience method',
       editorTest(async function () {
-        const toggleNode = $createToggleNode(dataset)
+        const toggleNode = $createBaseToggleNode(dataset)
         const toggleNodeDataset = toggleNode.getDataset()
 
         expect(toggleNodeDataset).toEqual({
@@ -97,7 +97,7 @@ describe('ToggleNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        expect(ToggleNode.getType()).toBe('toggle')
+        expect(BaseToggleNode.getType()).toBe('toggle')
       }),
     )
   })
@@ -106,9 +106,9 @@ describe('ToggleNode', function () {
     it(
       'returns a copy of the current node',
       editorTest(async function () {
-        const toggleNode = $createToggleNode(dataset)
+        const toggleNode = $createBaseToggleNode(dataset)
         const toggleNodeDataset = toggleNode.getDataset()
-        const clone = ToggleNode.clone(toggleNode) as ToggleNode
+        const clone = BaseToggleNode.clone(toggleNode) as BaseToggleNode
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...toggleNodeDataset })
@@ -120,7 +120,7 @@ describe('ToggleNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        expect(ToggleNode.urlTransformMap).toEqual({
+        expect(BaseToggleNode.urlTransformMap).toEqual({
           heading: 'html',
           content: 'html',
         })
@@ -132,7 +132,7 @@ describe('ToggleNode', function () {
     it(
       'returns true',
       editorTest(async function () {
-        const toggleNode = $createToggleNode(dataset)
+        const toggleNode = $createBaseToggleNode(dataset)
         expect(toggleNode.hasEditMode()).toBe(true)
       }),
     )
@@ -142,7 +142,7 @@ describe('ToggleNode', function () {
     it(
       'contains all data',
       editorTest(async function () {
-        const toggleNode = $createToggleNode(dataset)
+        const toggleNode = $createBaseToggleNode(dataset)
         const json = toggleNode.exportJSON()
 
         expect(json).toEqual({
@@ -179,7 +179,7 @@ describe('ToggleNode', function () {
 
         editor.getEditorState().read(() => {
           try {
-            const [toggleNode] = $getRoot().getChildren() as ToggleNode[]
+            const [toggleNode] = $getRoot().getChildren() as BaseToggleNode[]
 
             expect(toggleNode.heading).toBe(dataset.heading)
             expect(toggleNode.content).toBe(dataset.content)
@@ -200,7 +200,7 @@ describe('ToggleNode', function () {
           heading: 'Heading',
           content: 'Content',
         }
-        const toggleNode = $createToggleNode(payload)
+        const toggleNode = $createBaseToggleNode(payload)
         const result = toggleNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -235,7 +235,7 @@ describe('ToggleNode', function () {
           target: 'email',
           postUrl: 'https://example.com/my-post',
         }
-        const toggleNode = $createToggleNode(payload)
+        const toggleNode = $createBaseToggleNode(payload)
         const result = toggleNode.exportDOM(editor, { ...exportOptions, ...options })
         const element = result.element as HTMLElement
 
@@ -269,7 +269,7 @@ describe('ToggleNode', function () {
             emailCustomizationAlpha: true,
           },
         }
-        const toggleNode = $createToggleNode(payload)
+        const toggleNode = $createBaseToggleNode(payload)
         const result = toggleNode.exportDOM(editor, { ...exportOptions, ...options })
         const element = result.element as HTMLElement
 
@@ -308,7 +308,7 @@ describe('ToggleNode', function () {
             emailCustomization: true,
           },
         }
-        const toggleNode = $createToggleNode(payload)
+        const toggleNode = $createBaseToggleNode(payload)
         const result = toggleNode.exportDOM(editor, { ...exportOptions, ...options })
         const element = result.element as HTMLElement
 
@@ -350,7 +350,7 @@ describe('ToggleNode', function () {
       it(
         'escapes the heading and sanitizes the content in web output',
         editorTest(async function () {
-          const toggleNode = $createToggleNode(adversarialPayload)
+          const toggleNode = $createBaseToggleNode(adversarialPayload)
           const result = toggleNode.exportDOM(editor, exportOptions)
           const element = result.element as HTMLElement
 
@@ -376,7 +376,7 @@ describe('ToggleNode', function () {
       it(
         'escapes the heading and sanitizes the content in legacy email output',
         editorTest(async function () {
-          const toggleNode = $createToggleNode(adversarialPayload)
+          const toggleNode = $createBaseToggleNode(adversarialPayload)
           const result = toggleNode.exportDOM(editor, {
             ...exportOptions,
             target: 'email',
@@ -403,7 +403,7 @@ describe('ToggleNode', function () {
       it(
         'escapes the heading and sanitizes the content in email customization output',
         editorTest(async function () {
-          const toggleNode = $createToggleNode(adversarialPayload)
+          const toggleNode = $createBaseToggleNode(adversarialPayload)
           const result = toggleNode.exportDOM(editor, {
             ...exportOptions,
             target: 'email',
@@ -441,7 +441,7 @@ describe('ToggleNode', function () {
           content: 'Content',
         }
 
-        const toggleNode = $createToggleNode(payload)
+        const toggleNode = $createBaseToggleNode(payload)
         const result = toggleNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
         expect(element.outerHTML).toContain('<h4 class="inkling-toggle-heading-text">Heading</h4>')
@@ -456,7 +456,7 @@ describe('ToggleNode', function () {
           content: 'Content',
         }
 
-        const toggleNode = $createToggleNode(payload)
+        const toggleNode = $createBaseToggleNode(payload)
         const result = toggleNode.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
         expect(element.outerHTML).toContain('<div class="inkling-toggle-content">Content</div>')
@@ -481,7 +481,7 @@ describe('ToggleNode', function () {
             <div class="inkling-toggle-content">Content</div>
           </div>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as ToggleNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseToggleNode[]
         expect(nodes.length).toBe(1)
         expect(nodes[0].heading).toBe('Heading')
         expect(nodes[0].content).toBe('Content')
@@ -493,7 +493,7 @@ describe('ToggleNode', function () {
     it(
       'returns contents',
       editorTest(async function () {
-        const node = $createToggleNode()
+        const node = $createBaseToggleNode()
         expect(node.getTextContent()).toBe('')
 
         node.heading = 'header'

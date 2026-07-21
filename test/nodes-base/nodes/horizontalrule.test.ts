@@ -6,9 +6,9 @@ import { $getRoot } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
-import { HorizontalRuleNode, $createHorizontalRuleNode, $isHorizontalRuleNode } from '@/nodes/base/index'
+import { BaseHorizontalRuleNode, $createBaseHorizontalRuleNode, $isHorizontalRuleNode } from '@/nodes/base/index'
 
-const editorNodes = [HorizontalRuleNode]
+const editorNodes = [BaseHorizontalRuleNode]
 
 describe('HorizontalNode', function () {
   let editor: LexicalEditor
@@ -43,7 +43,7 @@ describe('HorizontalNode', function () {
   it(
     'matches node with $isHorizontalRuleNode',
     editorTest(async function () {
-      const hrNode = $createHorizontalRuleNode()
+      const hrNode = $createBaseHorizontalRuleNode()
       expect($isHorizontalRuleNode(hrNode)).toBe(true)
     }),
   )
@@ -52,7 +52,7 @@ describe('HorizontalNode', function () {
     it(
       'creates hr element',
       editorTest(async function () {
-        const hrNode = $createHorizontalRuleNode()
+        const hrNode = $createBaseHorizontalRuleNode()
         const { element } = hrNode.exportDOM(editor, exportOptions)
 
         await expectPrettifiedHtml((element as HTMLElement).outerHTML, html` <hr /> `)
@@ -62,7 +62,7 @@ describe('HorizontalNode', function () {
     it(
       'creates an Outlook-compatible table with hidden hr when target is email',
       editorTest(async function () {
-        const hrNode = $createHorizontalRuleNode()
+        const hrNode = $createBaseHorizontalRuleNode()
         const { element } = hrNode.exportDOM(editor, { ...exportOptions, target: 'email' })
         const output = (element as HTMLElement).outerHTML
 
@@ -77,7 +77,7 @@ describe('HorizontalNode', function () {
     it(
       'pins the full email output byte-for-byte',
       editorTest(async function () {
-        const hrNode = $createHorizontalRuleNode()
+        const hrNode = $createBaseHorizontalRuleNode()
         const { element } = hrNode.exportDOM(editor, { ...exportOptions, target: 'email' })
 
         await expectPrettifiedHtml(
@@ -124,7 +124,7 @@ describe('HorizontalNode', function () {
         const nodes = $generateNodesFromDOM(editor, document)
 
         expect(nodes.length).toBe(1)
-        expect(nodes[0]).toBeInstanceOf(HorizontalRuleNode)
+        expect(nodes[0]).toBeInstanceOf(BaseHorizontalRuleNode)
       }),
     )
   })
@@ -135,7 +135,7 @@ describe('HorizontalNode', function () {
       editorTest(async function () {
         dataset.cardWidth = 'wide'
 
-        const asideNode = $createHorizontalRuleNode()
+        const asideNode = $createBaseHorizontalRuleNode()
         const json = asideNode.exportJSON()
 
         expect(json).toEqual({
@@ -167,7 +167,7 @@ describe('HorizontalNode', function () {
         editor.getEditorState().read(() => {
           try {
             const [hrNode] = $getRoot().getChildren()
-            expect(hrNode).toBeInstanceOf(HorizontalRuleNode)
+            expect(hrNode).toBeInstanceOf(BaseHorizontalRuleNode)
 
             resolve()
           } catch (e) {
@@ -181,7 +181,7 @@ describe('HorizontalNode', function () {
     it(
       'returns plaintext representation',
       editorTest(async function () {
-        const node = $createHorizontalRuleNode()
+        const node = $createBaseHorizontalRuleNode()
         expect(node.getTextContent()).toBe('---\n\n')
       }),
     )
@@ -191,7 +191,7 @@ describe('HorizontalNode', function () {
     it(
       'returns false (has no visibility property)',
       editorTest(async function () {
-        const node = $createHorizontalRuleNode()
+        const node = $createBaseHorizontalRuleNode()
         expect(node.getIsVisibilityActive()).toBe(false)
       }),
     )

@@ -15,9 +15,9 @@ const codeBlockProperties = [
 
 export type CodeBlockData = DecoratorNodeData<typeof codeBlockProperties>
 
-export interface CodeBlockNode extends DecoratorNodeValueMap<typeof codeBlockProperties> {}
+export interface BaseCodeBlockNode extends DecoratorNodeValueMap<typeof codeBlockProperties> {}
 
-export class CodeBlockNode extends generateDecoratorNode({
+export class BaseCodeBlockNode extends generateDecoratorNode({
   nodeType: 'codeblock',
   properties: codeBlockProperties,
   defaultRenderFn: renderCodeBlockNode,
@@ -25,6 +25,12 @@ export class CodeBlockNode extends generateDecoratorNode({
   static importDOM() {
     return parseCodeBlockNode(this)
   }
+
+  // The transient-prop spec (codeblock.declaration.ts) initializes this only
+  // on spec-adopting assembled classes; a raw `new BaseCodeBlockNode()`
+  // leaves it unset, so `undefined` is part of the honest type for spec-less
+  // instances
+  declare __openInEditMode: boolean | undefined
 
   // Clears the transient `_openInEditMode` flag the card spec initializes
   // from the construction dataset; a no-op for spec-less instances.
@@ -38,10 +44,10 @@ export class CodeBlockNode extends generateDecoratorNode({
   }
 }
 
-export function $createCodeBlockNode(dataset: CodeBlockData = {}) {
-  return new CodeBlockNode(dataset)
+export function $createBaseCodeBlockNode(dataset: CodeBlockData = {}) {
+  return new BaseCodeBlockNode(dataset)
 }
 
-export function $isCodeBlockNode(node: unknown): node is CodeBlockNode {
-  return node instanceof CodeBlockNode
+export function $isCodeBlockNode(node: unknown): node is BaseCodeBlockNode {
+  return node instanceof BaseCodeBlockNode
 }

@@ -93,9 +93,9 @@ export const videoImportSpec = {
 
 export type VideoData = DecoratorNodeData<typeof videoProperties>
 
-export interface VideoNode extends DecoratorNodeValueMap<typeof videoProperties> {}
+export interface BaseVideoNode extends DecoratorNodeValueMap<typeof videoProperties> {}
 
-export class VideoNode extends generateDecoratorNode({
+export class BaseVideoNode extends generateDecoratorNode({
   nodeType: 'video',
   properties: videoProperties,
   defaultRenderFn: renderVideoNode,
@@ -120,6 +120,11 @@ export class VideoNode extends generateDecoratorNode({
   // from the declaration and inherits it; renderer surfaces never invoke it.
   static uploadType = 'video'
 
+  // The transient-prop spec (video.declaration.ts) initializes this only on
+  // spec-adopting assembled classes; a raw `new BaseVideoNode()` leaves it
+  // unset, so `undefined` is part of the honest type for spec-less instances
+  declare __triggerFileDialog: boolean | undefined
+
   set triggerFileDialog(shouldTrigger: boolean) {
     const writable = this.getWritable()
     writable.__triggerFileDialog = shouldTrigger
@@ -130,10 +135,10 @@ export class VideoNode extends generateDecoratorNode({
   }
 }
 
-export const $createVideoNode = (dataset?: VideoData) => {
-  return new VideoNode(dataset)
+export const $createBaseVideoNode = (dataset?: VideoData) => {
+  return new BaseVideoNode(dataset)
 }
 
-export function $isVideoNode(node: unknown): node is VideoNode {
-  return node instanceof VideoNode
+export function $isVideoNode(node: unknown): node is BaseVideoNode {
+  return node instanceof BaseVideoNode
 }

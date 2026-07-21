@@ -4,11 +4,11 @@ import { $getRoot, LexicalEditor } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
-import { VideoNode, $createVideoNode, $isVideoNode, type ExportDOMOptions } from '@/nodes/base/index'
+import { BaseVideoNode, $createBaseVideoNode, $isVideoNode, type ExportDOMOptions } from '@/nodes/base/index'
 
-const editorNodes = [VideoNode]
+const editorNodes = [BaseVideoNode]
 
-describe('VideoNode', function () {
+describe('BaseVideoNode', function () {
   let editor: LexicalEditor
   let dataset: Record<string, unknown>
   let exportOptions: ExportDOMOptions
@@ -53,7 +53,7 @@ describe('VideoNode', function () {
   it(
     'matches node with $isVideoNode',
     editorTest(async function () {
-      const videoNode = $createVideoNode(dataset)
+      const videoNode = $createBaseVideoNode(dataset)
       expect($isVideoNode(videoNode)).toBe(true)
     }),
   )
@@ -62,7 +62,7 @@ describe('VideoNode', function () {
     it(
       'has getters for all properties',
       editorTest(async function () {
-        const videoNode = $createVideoNode(dataset)
+        const videoNode = $createBaseVideoNode(dataset)
 
         expect(videoNode.src).toBe(dataset.src)
         expect(videoNode.caption).toBe(dataset.caption)
@@ -83,7 +83,7 @@ describe('VideoNode', function () {
     it(
       'can be created without a dataset',
       editorTest(async function () {
-        const videoNode = $createVideoNode()
+        const videoNode = $createBaseVideoNode()
 
         expect(videoNode.getDataset()).toEqual({
           src: '',
@@ -106,7 +106,7 @@ describe('VideoNode', function () {
     it(
       'has setters for all properties',
       editorTest(async function () {
-        const videoNode = $createVideoNode({} as Record<string, unknown>)
+        const videoNode = $createBaseVideoNode({} as Record<string, unknown>)
 
         expect(videoNode.src).toBe('')
         videoNode.src = '/content/images/2022/12/inkling-lexical.mp4'
@@ -165,7 +165,7 @@ describe('VideoNode', function () {
     it(
       'has getDataset() convenience method',
       editorTest(async function () {
-        const videoNode = $createVideoNode(dataset)
+        const videoNode = $createBaseVideoNode(dataset)
         const videoNodeDataset = videoNode.getDataset()
 
         expect(videoNodeDataset).toEqual({
@@ -179,7 +179,7 @@ describe('VideoNode', function () {
     it(
       'can format duration',
       editorTest(async function () {
-        const videoNode = $createVideoNode(dataset)
+        const videoNode = $createBaseVideoNode(dataset)
 
         videoNode.duration = 60
         expect(videoNode.formattedDuration).toBe('1:00')
@@ -202,7 +202,7 @@ describe('VideoNode', function () {
       editorTest(async function () {
         dataset.cardWidth = 'wide'
 
-        const videoNode = $createVideoNode(dataset)
+        const videoNode = $createBaseVideoNode(dataset)
         const json = videoNode.exportJSON()
 
         expect(json).toEqual({
@@ -252,7 +252,7 @@ describe('VideoNode', function () {
 
         editor.getEditorState().read(() => {
           try {
-            const [videoNode] = $getRoot().getChildren() as VideoNode[]
+            const [videoNode] = $getRoot().getChildren() as BaseVideoNode[]
 
             expect(videoNode.src).toBe(dataset.src)
             expect(videoNode.caption).toBe(dataset.caption)
@@ -287,7 +287,7 @@ describe('VideoNode', function () {
           duration: 60,
           thumbnailSrc: '/content/images/2022/11/inkling-lexical.jpg',
         }
-        const videoNode = $createVideoNode(payload)
+        const videoNode = $createBaseVideoNode(payload)
         const { element } = videoNode.exportDOM(editor, exportOptions)
 
         await expectPrettifiedHtml(
@@ -375,7 +375,7 @@ describe('VideoNode', function () {
           target: 'email',
           postUrl: 'https://example.com/my-post',
         }
-        const videoNode = $createVideoNode(payload)
+        const videoNode = $createBaseVideoNode(payload)
         const { element } = videoNode.exportDOM(editor, { ...exportOptions, ...options })
         const output = (element as HTMLElement).outerHTML
 
@@ -402,7 +402,7 @@ describe('VideoNode', function () {
           target: 'email',
           postUrl: 'https://example.com/my-post',
         }
-        const videoNode = $createVideoNode(payload)
+        const videoNode = $createBaseVideoNode(payload)
         const { element } = videoNode.exportDOM(editor, { ...exportOptions, ...options })
 
         await expectPrettifiedHtml(
@@ -492,7 +492,7 @@ describe('VideoNode', function () {
           thumbnailSrc: '/content/images/2022/11/inkling-lexical.jpg',
         }
 
-        const videoNode = $createVideoNode(payload)
+        const videoNode = $createBaseVideoNode(payload)
 
         expect(() => videoNode.exportDOM(editor, { ...exportOptions, target: 'email' })).toThrow(
           /^renderVideoNode requires options\.postUrl when options\.target is "email"$/,
@@ -511,7 +511,7 @@ describe('VideoNode', function () {
           thumbnailSrc: '/content/images/2022/11/inkling-lexical.jpg',
         }
 
-        const videoNode = $createVideoNode(payload)
+        const videoNode = $createBaseVideoNode(payload)
         const { element } = videoNode.exportDOM(editor, exportOptions)
         const output = (element as HTMLElement).outerHTML
 
@@ -537,7 +537,7 @@ describe('VideoNode', function () {
           target: 'email',
           postUrl: 'https://example.com/my-post',
         }
-        const videoNode = $createVideoNode(payload)
+        const videoNode = $createBaseVideoNode(payload)
         const { element } = videoNode.exportDOM(editor, { ...exportOptions, ...options })
         const output = (element as HTMLElement).outerHTML
 
@@ -559,7 +559,7 @@ describe('VideoNode', function () {
           cardWidth: 'wide',
         }
 
-        const videoNode = $createVideoNode(payload)
+        const videoNode = $createBaseVideoNode(payload)
         const { element } = videoNode.exportDOM(editor, exportOptions)
         const output = (element as HTMLElement).outerHTML
         expect(output).toContain('inkling-card inkling-video-card inkling-width-wide')
@@ -578,7 +578,7 @@ describe('VideoNode', function () {
           loop: true,
         }
 
-        const videoNode = $createVideoNode(payload)
+        const videoNode = $createBaseVideoNode(payload)
         const { element } = videoNode.exportDOM(editor, exportOptions)
         const output = (element as HTMLElement).outerHTML
         expect(output).toContain('loop')
@@ -597,7 +597,7 @@ describe('VideoNode', function () {
           caption: '<strong>Caption</strong>',
         }
 
-        const videoNode = $createVideoNode(payload)
+        const videoNode = $createBaseVideoNode(payload)
         const { element } = videoNode.exportDOM(editor, exportOptions)
         const output = (element as HTMLElement).outerHTML
         expect(output).toContain(
@@ -619,7 +619,7 @@ describe('VideoNode', function () {
           caption: '<strong>Caption</strong>',
         }
 
-        const videoNode = $createVideoNode(payload)
+        const videoNode = $createBaseVideoNode(payload)
         const { element } = videoNode.exportDOM(editor, exportOptions)
 
         expect((element as HTMLElement).outerHTML).toBe('<span></span>')
@@ -639,7 +639,7 @@ describe('VideoNode', function () {
           caption: '<img src=x onerror=alert(1)>',
         }
 
-        const videoNode = $createVideoNode(payload)
+        const videoNode = $createBaseVideoNode(payload)
         const { element } = videoNode.exportDOM(editor, exportOptions)
         const output = (element as HTMLElement).outerHTML
 
@@ -660,7 +660,7 @@ describe('VideoNode', function () {
           thumbnailSrc: '/x"><img/src=y/onerror=alert(1)>',
         }
 
-        const videoNode = $createVideoNode(payload)
+        const videoNode = $createBaseVideoNode(payload)
         const { element } = videoNode.exportDOM(editor, exportOptions)
         const output = (element as HTMLElement).outerHTML
 
@@ -675,7 +675,7 @@ describe('VideoNode', function () {
     it(
       'returns true',
       editorTest(async function () {
-        const videoNode = $createVideoNode(dataset)
+        const videoNode = $createBaseVideoNode(dataset)
         expect(videoNode.hasEditMode()).toBe(true)
       }),
     )
@@ -750,7 +750,7 @@ describe('VideoNode', function () {
             <figcaption>Video caption</figcaption>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as VideoNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseVideoNode[]
         expect(nodes.length).toBe(1)
         expect(nodes[0].src).toBe('/content/images/2022/11/inkling-lexical.mp4')
         expect(nodes[0].width!).toBe(200)
@@ -831,7 +831,7 @@ describe('VideoNode', function () {
             </div>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as VideoNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseVideoNode[]
         expect(nodes.length).toBe(1)
         expect(nodes[0].caption).toBe('')
       }),
@@ -904,7 +904,7 @@ describe('VideoNode', function () {
             </div>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as VideoNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseVideoNode[]
         expect(nodes.length).toBe(1)
         expect(nodes[0].thumbnailSrc).toBe('')
         expect(nodes[0].customThumbnailSrc).toBe('/content/images/2022/11/inkling-lexical-custom.jpg')
@@ -936,7 +936,7 @@ describe('VideoNode', function () {
             </div>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as VideoNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseVideoNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].width).toBe(null)
@@ -963,7 +963,7 @@ describe('VideoNode', function () {
             </div>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as VideoNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseVideoNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].cardWidth).toBe('wide')
@@ -989,7 +989,7 @@ describe('VideoNode', function () {
             </div>
           </figure>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as VideoNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseVideoNode[]
 
         expect(nodes.length).toBe(1)
         expect(nodes[0].duration).toBe(0)
@@ -1018,7 +1018,7 @@ describe('VideoNode', function () {
     it(
       'returns contents',
       editorTest(async function () {
-        const node = $createVideoNode({} as Record<string, unknown>)
+        const node = $createBaseVideoNode({} as Record<string, unknown>)
         expect(node.getTextContent()).toBe('')
 
         node.caption = 'Test caption'

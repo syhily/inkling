@@ -4,11 +4,11 @@ import { $getRoot, type LexicalEditor } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { dom, createDocument, html } from '#/nodes-base/test-utils/index'
-import { FileNode, $createFileNode, $isFileNode } from '@/nodes/base/index'
+import { BaseFileNode, $createBaseFileNode, $isFileNode } from '@/nodes/base/index'
 
-const editorNodes = [FileNode]
+const editorNodes = [BaseFileNode]
 
-describe('FileNode', function () {
+describe('BaseFileNode', function () {
   let editor: LexicalEditor
   let dataset: Record<string, unknown>
   let exportOptions: Record<string, unknown>
@@ -46,9 +46,9 @@ describe('FileNode', function () {
   })
 
   it(
-    'can match node with FileNode',
+    'can match node with BaseFileNode',
     editorTest(function () {
-      const node = $createFileNode(dataset)
+      const node = $createBaseFileNode(dataset)
       expect($isFileNode(node)).toBe(true)
     }),
   )
@@ -57,7 +57,7 @@ describe('FileNode', function () {
     it(
       'has getters from all properties',
       editorTest(function () {
-        const node = $createFileNode(dataset)
+        const node = $createBaseFileNode(dataset)
         expect(node.src).toBe(dataset.src)
         expect(node.fileTitle).toBe(dataset.fileTitle)
         expect(node.fileSize).toBe(dataset.fileSize)
@@ -69,7 +69,7 @@ describe('FileNode', function () {
     it(
       'has setters for all properties',
       editorTest(function () {
-        const node = $createFileNode(dataset)
+        const node = $createBaseFileNode(dataset)
         node.src = '/content/files/2023/03/IMG_0196.jpeg'
         expect(node.src).toBe('/content/files/2023/03/IMG_0196.jpeg')
         node.fileTitle = 'new title'
@@ -87,7 +87,7 @@ describe('FileNode', function () {
     it(
       'has getDataset() convenience method',
       editorTest(function () {
-        const node = $createFileNode(dataset)
+        const node = $createBaseFileNode(dataset)
         const fileNodeDataset = node.getDataset()
         expect(fileNodeDataset).toEqual(dataset)
       }),
@@ -98,7 +98,7 @@ describe('FileNode', function () {
     it(
       'creates a file card',
       editorTest(function () {
-        const fileNode = $createFileNode(dataset)
+        const fileNode = $createBaseFileNode(dataset)
         const { element } = fileNode.exportDOM(editor, exportOptions)
         expect((element as HTMLElement).outerHTML).toBe(
           `<div class="inkling-card inkling-file-card"><a class="inkling-file-card-container" href="/content/files/2023/03/IMG_0196.jpeg" title="Download" download=""><div class="inkling-file-card-contents"><div class="inkling-file-card-title">Cool image to download</div><div class="inkling-file-card-caption">This is a description</div><div class="inkling-file-card-metadata"><div class="inkling-file-card-filename">IMG_0196.jpeg</div><div class="inkling-file-card-filesize">121 KB</div></div></div><div class="inkling-file-card-icon"><svg viewBox="0 0 24 24"><defs><style>.a{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.5px;}</style></defs><title>download-circle</title><polyline class="a" points="8.25 14.25 12 18 15.75 14.25"></polyline><line class="a" x1="12" y1="6.75" x2="12" y2="18"></line><circle class="a" cx="12" cy="12" r="11.25"></circle></svg></div></a></div>`,
@@ -109,7 +109,7 @@ describe('FileNode', function () {
     it(
       'does not create an anchor for unsafe src URLs',
       editorTest(function () {
-        const fileNode = $createFileNode({ ...dataset, src: 'javascript:alert(1)' })
+        const fileNode = $createBaseFileNode({ ...dataset, src: 'javascript:alert(1)' })
         const { element } = fileNode.exportDOM(editor, exportOptions)
         const html = (element as HTMLElement).outerHTML
 
@@ -128,7 +128,7 @@ describe('FileNode', function () {
       it(
         'renders complete email template with all fields',
         editorTest(function () {
-          const fileNode = $createFileNode(dataset)
+          const fileNode = $createBaseFileNode(dataset)
           const { element } = fileNode.exportDOM(editor, exportOptions)
           const el = element as HTMLElement
 
@@ -161,7 +161,7 @@ describe('FileNode', function () {
       it(
         'pins the full email output byte-for-byte',
         editorTest(async function () {
-          const fileNode = $createFileNode(dataset)
+          const fileNode = $createBaseFileNode(dataset)
           const { element } = fileNode.exportDOM(editor, exportOptions)
 
           await expectPrettifiedHtml(
@@ -238,7 +238,7 @@ describe('FileNode', function () {
             fileName: 'IMG_0196.jpeg',
             fileSize: 123456,
           }
-          const fileNode = $createFileNode(minimalDataset)
+          const fileNode = $createBaseFileNode(minimalDataset)
           const { element } = fileNode.exportDOM(editor, exportOptions)
           const el = element as HTMLElement
 
@@ -263,7 +263,7 @@ describe('FileNode', function () {
             fileCaption: 'Caption with <strong>html</strong>',
             fileName: 'file<.html',
           }
-          const fileNode = $createFileNode(datasetWithHtml)
+          const fileNode = $createBaseFileNode(datasetWithHtml)
           const { element } = fileNode.exportDOM(editor, exportOptions)
           const el = element as HTMLElement
 
@@ -279,7 +279,7 @@ describe('FileNode', function () {
         'does not link fields when the href is unsafe',
         editorTest(function () {
           exportOptions.postUrl = 'javascript:alert(1)'
-          const fileNode = $createFileNode(dataset)
+          const fileNode = $createBaseFileNode(dataset)
           const { element } = fileNode.exportDOM(editor, exportOptions)
           const el = element as HTMLElement
 
@@ -300,7 +300,7 @@ describe('FileNode', function () {
     it(
       'returns the correct node type',
       editorTest(function () {
-        expect(FileNode.getType()).toBe('file')
+        expect(BaseFileNode.getType()).toBe('file')
       }),
     )
   })
@@ -309,9 +309,9 @@ describe('FileNode', function () {
     it(
       'returns a copy of the current node',
       editorTest(function () {
-        const fileNode = $createFileNode(dataset)
+        const fileNode = $createBaseFileNode(dataset)
         const fileNodeDataset = fileNode.getDataset()
-        const clone = FileNode.clone(fileNode) as FileNode
+        const clone = BaseFileNode.clone(fileNode) as BaseFileNode
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...fileNodeDataset })
@@ -323,7 +323,7 @@ describe('FileNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(function () {
-        expect(FileNode.urlTransformMap).toEqual({
+        expect(BaseFileNode.urlTransformMap).toEqual({
           src: 'url',
         })
       }),
@@ -334,7 +334,7 @@ describe('FileNode', function () {
     it(
       'returns true',
       editorTest(function () {
-        const fileNode = $createFileNode(dataset)
+        const fileNode = $createBaseFileNode(dataset)
         expect(fileNode.hasEditMode()).toBe(true)
       }),
     )
@@ -377,7 +377,7 @@ describe('FileNode', function () {
                     </a>
                 </div>
             `)
-        const nodes = $generateNodesFromDOM(editor, document) as FileNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseFileNode[]
         expect(nodes.length).toBe(1)
         expect(nodes[0].src).toBe('/content/files/2023/03/IMG_0196.jpeg')
         expect(nodes[0].fileTitle).toBe('Cool image to download')
@@ -412,7 +412,7 @@ describe('FileNode', function () {
 
         editor.getEditorState().read(() => {
           try {
-            const [fileNode] = $getRoot().getChildren() as FileNode[]
+            const [fileNode] = $getRoot().getChildren() as BaseFileNode[]
             expect(fileNode.src).toBe('/content/files/2023/03/IMG_0196.jpeg')
             expect(fileNode.fileTitle).toBe('Cool image to download')
             expect(fileNode.fileCaption).toBe('This is a description')
@@ -431,7 +431,7 @@ describe('FileNode', function () {
     it(
       'exports all data',
       editorTest(function () {
-        const fileNode = $createFileNode(dataset)
+        const fileNode = $createBaseFileNode(dataset)
         const json = fileNode.exportJSON()
         expect(json).toEqual({
           type: 'file',
@@ -446,7 +446,7 @@ describe('FileNode', function () {
     it(
       'returns contents',
       editorTest(function () {
-        const node = $createFileNode()
+        const node = $createBaseFileNode()
         expect(node.getTextContent()).toBe('')
 
         node.fileTitle = 'Testing'

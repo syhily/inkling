@@ -38,9 +38,9 @@ export const fileImportSpec = {
 
 export type FileData = DecoratorNodeData<typeof fileProperties>
 
-export interface FileNode extends DecoratorNodeValueMap<typeof fileProperties> {}
+export interface BaseFileNode extends DecoratorNodeValueMap<typeof fileProperties> {}
 
-export class FileNode extends generateDecoratorNode({
+export class BaseFileNode extends generateDecoratorNode({
   nodeType: 'file',
   properties: fileProperties,
   defaultRenderFn: renderFileNode,
@@ -63,6 +63,11 @@ export class FileNode extends generateDecoratorNode({
   // from the declaration and inherits it; renderer surfaces never invoke it.
   static uploadType = 'file'
 
+  // The transient-prop spec (file.declaration.ts) initializes this only on
+  // spec-adopting assembled classes; a raw `new BaseFileNode()` leaves it
+  // unset, so `undefined` is part of the honest type for spec-less instances
+  declare __triggerFileDialog: boolean | undefined
+
   set triggerFileDialog(shouldTrigger: boolean) {
     const writable = this.getWritable()
     writable.__triggerFileDialog = shouldTrigger
@@ -73,10 +78,10 @@ export class FileNode extends generateDecoratorNode({
   }
 }
 
-export function $isFileNode(node: unknown): node is FileNode {
-  return node instanceof FileNode
+export function $isFileNode(node: unknown): node is BaseFileNode {
+  return node instanceof BaseFileNode
 }
 
-export const $createFileNode = (dataset: FileData = {}) => {
-  return new FileNode(dataset)
+export const $createBaseFileNode = (dataset: FileData = {}) => {
+  return new BaseFileNode(dataset)
 }

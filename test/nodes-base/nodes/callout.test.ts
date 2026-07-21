@@ -6,11 +6,11 @@ import { $getRoot } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
-import { CalloutNode, $createCalloutNode, $isCalloutNode } from '@/nodes/base/index'
+import { BaseCalloutNode, $createBaseCalloutNode, $isCalloutNode } from '@/nodes/base/index'
 
-const editorNodes = [CalloutNode]
+const editorNodes = [BaseCalloutNode]
 
-describe('CalloutNode', function () {
+describe('BaseCalloutNode', function () {
   let editor: LexicalEditor
   let dataset: { calloutText: string; calloutEmoji: string; backgroundColor: string }
   let exportOptions: Record<string, unknown>
@@ -50,7 +50,7 @@ describe('CalloutNode', function () {
   it(
     'can match node with calloutNode',
     editorTest(async function () {
-      const node = $createCalloutNode(dataset)
+      const node = $createBaseCalloutNode(dataset)
       expect($isCalloutNode(node)).toBe(true)
     }),
   )
@@ -59,7 +59,7 @@ describe('CalloutNode', function () {
     it(
       'has getters for all properties',
       editorTest(async function () {
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         expect(node.calloutText).toBe(dataset.calloutText)
         expect(node.calloutEmoji).toBe(dataset.calloutEmoji)
         expect(node.backgroundColor).toBe(dataset.backgroundColor)
@@ -69,7 +69,7 @@ describe('CalloutNode', function () {
     it(
       'has setters for all properties',
       editorTest(async function () {
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         node.calloutText = 'new text'
         expect(node.calloutText).toBe('new text')
         node.backgroundColor = 'red'
@@ -82,7 +82,7 @@ describe('CalloutNode', function () {
     it(
       'has getDataset() method',
       editorTest(async function () {
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         const nodeDataset = node.getDataset()
         expect(nodeDataset).toEqual(dataset)
       }),
@@ -93,7 +93,7 @@ describe('CalloutNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        expect(CalloutNode.getType()).toBe('callout')
+        expect(BaseCalloutNode.getType()).toBe('callout')
       }),
     )
   })
@@ -102,9 +102,9 @@ describe('CalloutNode', function () {
     it(
       'returns a copy of the current node',
       editorTest(async function () {
-        const calloutNode = $createCalloutNode(dataset)
+        const calloutNode = $createBaseCalloutNode(dataset)
         const calloutNodeDataset = calloutNode.getDataset()
-        const clone = CalloutNode.clone(calloutNode) as CalloutNode
+        const clone = BaseCalloutNode.clone(calloutNode) as BaseCalloutNode
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...calloutNodeDataset })
@@ -116,7 +116,7 @@ describe('CalloutNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        expect(CalloutNode.urlTransformMap).toEqual({})
+        expect(BaseCalloutNode.urlTransformMap).toEqual({})
       }),
     )
   })
@@ -125,7 +125,7 @@ describe('CalloutNode', function () {
     it(
       'returns true',
       editorTest(async function () {
-        const calloutNode = $createCalloutNode(dataset)
+        const calloutNode = $createBaseCalloutNode(dataset)
         expect(calloutNode.hasEditMode()).toBe(true)
       }),
     )
@@ -135,7 +135,7 @@ describe('CalloutNode', function () {
     it(
       'contains all data',
       editorTest(async function () {
-        const calloutNode = $createCalloutNode(dataset)
+        const calloutNode = $createBaseCalloutNode(dataset)
         const json = calloutNode.exportJSON()
 
         expect(json).toEqual({
@@ -151,7 +151,7 @@ describe('CalloutNode', function () {
     it(
       'can render to HTML',
       editorTest(async function () {
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
         await expectPrettifiedHtml(
@@ -179,7 +179,7 @@ describe('CalloutNode', function () {
           calloutEmoji: '',
           backgroundColor: 'blue',
         }
-        const node = $createCalloutNode(dataset2)
+        const node = $createBaseCalloutNode(dataset2)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
         await expectPrettifiedHtml(
@@ -202,7 +202,7 @@ describe('CalloutNode', function () {
       editorTest(async function () {
         dataset.backgroundColor = 'rgba(124, 139, 154, 0.13)'
 
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -228,7 +228,7 @@ describe('CalloutNode', function () {
         dataset.calloutText =
           '<p><span style="white-space: pre-wrap;">Does </span><code spellcheck="false" style="white-space: pre-wrap;"><span>inline code</span></code><span style="white-space: pre-wrap;"> render properly?</span></p>'
 
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -251,7 +251,7 @@ describe('CalloutNode', function () {
       editorTest(async function () {
         dataset.calloutText = '<a href="javascript:alert(1)" onmouseover="alert(2)">x</a>'
 
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -272,7 +272,7 @@ describe('CalloutNode', function () {
       editorTest(async function () {
         dataset.calloutText = '<a href="https://example.com">ok</a>'
 
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -293,7 +293,7 @@ describe('CalloutNode', function () {
       editorTest(async function () {
         dataset.calloutText = '<mark style="background:red" onclick="x">m</mark>'
 
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -314,7 +314,7 @@ describe('CalloutNode', function () {
       editorTest(async function () {
         dataset.calloutText = '<code style="position:fixed;inset:0">x</code>'
 
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -335,7 +335,7 @@ describe('CalloutNode', function () {
       editorTest(async function () {
         dataset.calloutText = '<code spellcheck="false" style="white-space: pre-wrap;">inline code</code>'
 
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -358,7 +358,7 @@ describe('CalloutNode', function () {
       editorTest(async function () {
         dataset.calloutText = '<strong>bold</strong><div><script>alert(1)</script>text</div>'
 
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -379,7 +379,7 @@ describe('CalloutNode', function () {
       editorTest(async function () {
         dataset.calloutText = '<strong>keep<div><span>deep</span></div></strong>'
 
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -400,7 +400,7 @@ describe('CalloutNode', function () {
       editorTest(async function () {
         dataset.calloutText = '<div><span><script>alert(1)</script>text</span></div>'
 
-        const node = $createCalloutNode(dataset)
+        const node = $createBaseCalloutNode(dataset)
         const result = node.exportDOM(editor, exportOptions)
         const element = result.element as HTMLElement
 
@@ -427,7 +427,7 @@ describe('CalloutNode', function () {
             <div class="inkling-callout-text">This is a callout</div>
           </div>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as CalloutNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseCalloutNode[]
         expect(nodes.length).toBe(1)
         expect(nodes[0].backgroundColor).toBe('red')
         expect(nodes[0].calloutText).toBe('This is a callout')
@@ -443,7 +443,7 @@ describe('CalloutNode', function () {
             <div class="inkling-callout-text">This is a callout</div>
           </div>
         `)
-        const nodes = $generateNodesFromDOM(editor, document) as CalloutNode[]
+        const nodes = $generateNodesFromDOM(editor, document) as BaseCalloutNode[]
         expect(nodes.length).toBe(1)
         expect(nodes[0].backgroundColor).toBe('red')
         expect(nodes[0].calloutText).toBe('This is a callout')
@@ -476,7 +476,7 @@ describe('CalloutNode', function () {
 
         editor.getEditorState().read(() => {
           try {
-            const [calloutNode] = $getRoot().getChildren() as CalloutNode[]
+            const [calloutNode] = $getRoot().getChildren() as BaseCalloutNode[]
             expect(calloutNode.calloutText).toBe(dataset.calloutText)
             expect(calloutNode.calloutEmoji).toBe(dataset.calloutEmoji)
             expect(calloutNode.backgroundColor).toBe(dataset.backgroundColor)
@@ -492,7 +492,7 @@ describe('CalloutNode', function () {
     it(
       'returns contents',
       editorTest(async function () {
-        const node = $createCalloutNode()
+        const node = $createBaseCalloutNode()
         expect(node.getTextContent()).toBe('')
 
         node.calloutText = 'Test'

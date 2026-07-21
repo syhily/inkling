@@ -4,12 +4,12 @@ import { $getRoot, type LexicalEditor } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
-import { HtmlNode, $createHtmlNode, $isHtmlNode, type ExportDOMOptions, utils } from '@/nodes/base/index'
+import { BaseHtmlNode, $createBaseHtmlNode, $isHtmlNode, type ExportDOMOptions, utils } from '@/nodes/base/index'
 
-const editorNodes = [HtmlNode]
+const editorNodes = [BaseHtmlNode]
 const { ALL_MEMBERS_SEGMENT, NO_MEMBERS_SEGMENT } = utils.visibility
 
-describe('HtmlNode', function () {
+describe('BaseHtmlNode', function () {
   let editor: LexicalEditor
   let dataset: Record<string, unknown>
   let exportOptions: ExportDOMOptions
@@ -49,7 +49,7 @@ describe('HtmlNode', function () {
   it(
     'matches node with $isImageNode',
     editorTest(async function () {
-      const htmlNode = $createHtmlNode(dataset)
+      const htmlNode = $createBaseHtmlNode(dataset)
       expect($isHtmlNode(htmlNode)).toBe(true)
     }),
   )
@@ -58,7 +58,7 @@ describe('HtmlNode', function () {
     it(
       'has getters for all properties',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode(dataset)
+        const htmlNode = $createBaseHtmlNode(dataset)
 
         expect(htmlNode.html).toBe('<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>')
       }),
@@ -67,7 +67,7 @@ describe('HtmlNode', function () {
     it(
       'has setters for all properties',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode(dataset)
+        const htmlNode = $createBaseHtmlNode(dataset)
 
         expect(htmlNode.html).toBe('<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>')
         htmlNode.html = '<p>Paragraph 1</p><p>Paragraph 2</p>'
@@ -78,7 +78,7 @@ describe('HtmlNode', function () {
     it(
       'has getDataset() convenience method',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode(dataset)
+        const htmlNode = $createBaseHtmlNode(dataset)
         const htmlNodeDataset = htmlNode.getDataset()
 
         expect(htmlNodeDataset).toEqual({
@@ -99,7 +99,7 @@ describe('HtmlNode', function () {
     it(
       'has isEmpty() convenience method',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode(dataset)
+        const htmlNode = $createBaseHtmlNode(dataset)
 
         expect(htmlNode.isEmpty()).toBe(false)
         htmlNode.html = ''
@@ -112,7 +112,7 @@ describe('HtmlNode', function () {
     it(
       'returns true if markdown is empty',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode(dataset)
+        const htmlNode = $createBaseHtmlNode(dataset)
 
         expect(htmlNode.isEmpty()).toBe(false)
         htmlNode.html = ''
@@ -125,7 +125,7 @@ describe('HtmlNode', function () {
     it(
       'returns the correct node type',
       editorTest(async function () {
-        expect(HtmlNode.getType()).toBe('html')
+        expect(BaseHtmlNode.getType()).toBe('html')
       }),
     )
   })
@@ -134,7 +134,7 @@ describe('HtmlNode', function () {
     it(
       'returns the correct default values',
       editorTest(async function () {
-        const defaults = HtmlNode.getPropertyDefaults()
+        const defaults = BaseHtmlNode.getPropertyDefaults()
 
         expect(defaults).toEqual({
           html: '',
@@ -156,9 +156,9 @@ describe('HtmlNode', function () {
     it(
       'returns a copy of the current node',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode(dataset)
+        const htmlNode = $createBaseHtmlNode(dataset)
         const htmlNodeDataset = htmlNode.getDataset()
-        const clone = HtmlNode.clone(htmlNode) as HtmlNode
+        const clone = BaseHtmlNode.clone(htmlNode) as BaseHtmlNode
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...htmlNodeDataset })
@@ -170,7 +170,7 @@ describe('HtmlNode', function () {
     it(
       'contains the expected URL mapping',
       editorTest(async function () {
-        expect(HtmlNode.urlTransformMap).toEqual({
+        expect(BaseHtmlNode.urlTransformMap).toEqual({
           html: 'html',
         })
       }),
@@ -181,7 +181,7 @@ describe('HtmlNode', function () {
     it(
       'returns true',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode(dataset)
+        const htmlNode = $createBaseHtmlNode(dataset)
         expect(htmlNode.hasEditMode()).toBe(true)
       }),
     )
@@ -191,7 +191,7 @@ describe('HtmlNode', function () {
     it(
       'creates a html card',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode(dataset)
+        const htmlNode = $createBaseHtmlNode(dataset)
         const result = htmlNode.exportDOM(editor, exportOptions)
         expect(result.type).toBe('value')
         const element = result.element as HTMLTextAreaElement
@@ -213,7 +213,7 @@ describe('HtmlNode', function () {
     it(
       'renders an empty span with missing html',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode()
+        const htmlNode = $createBaseHtmlNode()
         const result = htmlNode.exportDOM(editor, exportOptions)
         expect(result.type).toBe('inner')
         const element = result.element as HTMLElement
@@ -225,7 +225,7 @@ describe('HtmlNode', function () {
     it(
       'renders unclosed tags',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode({ html: '<div style="color:red">' })
+        const htmlNode = $createBaseHtmlNode({ html: '<div style="color:red">' })
         const result = htmlNode.exportDOM(editor, exportOptions)
         expect(result.type).toBe('value')
         const element = result.element as HTMLTextAreaElement
@@ -240,7 +240,7 @@ describe('HtmlNode', function () {
     it(
       'renders html entities',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode({ html: '<p>&lt;pre&gt;Test&lt;/pre&gt;</p>' })
+        const htmlNode = $createBaseHtmlNode({ html: '<p>&lt;pre&gt;Test&lt;/pre&gt;</p>' })
         const result = htmlNode.exportDOM(editor, exportOptions)
         expect(result.type).toBe('value')
         const element = result.element as HTMLTextAreaElement
@@ -254,7 +254,7 @@ describe('HtmlNode', function () {
     it(
       'handles single-quote attributes',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode({
+        const htmlNode = $createBaseHtmlNode({
           html: '<div data-graph-name=\'The "all-in" cost of a grant\'>Test</div>',
         })
         const result = htmlNode.exportDOM(editor, exportOptions)
@@ -270,7 +270,7 @@ describe('HtmlNode', function () {
     it(
       'wraps uniqueid replacement strings when emailUniqueid feature is enabled',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode({
+        const htmlNode = $createBaseHtmlNode({
           html: '<img src="https://ads.example.com/banner.jpg?id={uniqueid}" alt="Ad">',
         })
         const result = htmlNode.exportDOM(editor, { ...exportOptions, feature: { emailUniqueid: true } })
@@ -286,7 +286,7 @@ describe('HtmlNode', function () {
     it(
       'does not wrap uniqueid replacement strings when emailUniqueid feature is disabled',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode({
+        const htmlNode = $createBaseHtmlNode({
           html: '<img src="https://ads.example.com/banner.jpg?id={uniqueid}" alt="Ad">',
         })
         const result = htmlNode.exportDOM(editor, { ...exportOptions, feature: { emailUniqueid: false } })
@@ -302,7 +302,7 @@ describe('HtmlNode', function () {
     describe('visibility rendering', function () {
       describe('with old visibility settings', function () {
         function testWebRender(visibility: Record<string, unknown>) {
-          const htmlNode = $createHtmlNode({ html: '<div>Test</div>', visibility })
+          const htmlNode = $createBaseHtmlNode({ html: '<div>Test</div>', visibility })
           const result = htmlNode.exportDOM(editor, exportOptions)
           expect(result.type).toBe('value')
           const element = result.element as HTMLTextAreaElement
@@ -312,7 +312,7 @@ describe('HtmlNode', function () {
         }
 
         function testEmailRender(visibility: Record<string, unknown>) {
-          const htmlNode = $createHtmlNode({ html: '<div>Test</div>', visibility })
+          const htmlNode = $createBaseHtmlNode({ html: '<div>Test</div>', visibility })
           const result = htmlNode.exportDOM(editor, { ...exportOptions, target: 'email' })
           const expectedContents = '<!--inkling-card-begin: html-->\n<div>Test</div>\n<!--inkling-card-end: html-->'
 
@@ -322,7 +322,7 @@ describe('HtmlNode', function () {
         }
 
         function testBlankRender(visibility: Record<string, unknown>, target: string) {
-          const htmlNode = $createHtmlNode({ html: '<div>Test</div>', visibility })
+          const htmlNode = $createBaseHtmlNode({ html: '<div>Test</div>', visibility })
           const result = htmlNode.exportDOM(editor, { ...exportOptions, target })
           expect(result.type).toBe('inner')
           const element = result.element as HTMLElement
@@ -359,7 +359,7 @@ describe('HtmlNode', function () {
 
       describe('with new visibility settings', function () {
         function testWebRender(visibility: Record<string, unknown>, expectedGateParams?: string | null) {
-          const htmlNode = $createHtmlNode({ html: '<div>Test</div>', visibility })
+          const htmlNode = $createBaseHtmlNode({ html: '<div>Test</div>', visibility })
           const result = htmlNode.exportDOM(editor, exportOptions)
           expect(result.type).toBe('value')
           const element = result.element as HTMLTextAreaElement
@@ -373,7 +373,7 @@ describe('HtmlNode', function () {
         }
 
         function testEmailRender(visibility: Record<string, unknown>, expectedSegment: string) {
-          const htmlNode = $createHtmlNode({ html: '<div>Test</div>', visibility })
+          const htmlNode = $createBaseHtmlNode({ html: '<div>Test</div>', visibility })
           const result = htmlNode.exportDOM(editor, { ...exportOptions, target: 'email' })
           const expectedContents = '<!--inkling-card-begin: html-->\n<div>Test</div>\n<!--inkling-card-end: html-->'
 
@@ -391,7 +391,7 @@ describe('HtmlNode', function () {
         }
 
         function testBlankRender(visibility: Record<string, unknown>, target: string) {
-          const htmlNode = $createHtmlNode({ html: '<div>Test</div>', visibility })
+          const htmlNode = $createBaseHtmlNode({ html: '<div>Test</div>', visibility })
           const result = htmlNode.exportDOM(editor, { ...exportOptions, target })
           expect(result.type).toBe('inner')
           const element = result.element as HTMLElement
@@ -529,7 +529,7 @@ describe('HtmlNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document)
         expect(nodes.length).toBe(1)
-        expect(nodes[0]).toBeInstanceOf(HtmlNode)
+        expect(nodes[0]).toBeInstanceOf(BaseHtmlNode)
       }),
     )
 
@@ -565,8 +565,8 @@ describe('HtmlNode', function () {
           >
         `)
 
-        const nodes = $generateNodesFromDOM(editor, document) as HtmlNode[]
-        const htmlNodes = nodes.filter((node) => node instanceof HtmlNode)
+        const nodes = $generateNodesFromDOM(editor, document) as BaseHtmlNode[]
+        const htmlNodes = nodes.filter((node) => node instanceof BaseHtmlNode)
 
         expect(htmlNodes.length).toBe(1)
         expect(htmlNodes[0].html).toBe('')
@@ -596,7 +596,7 @@ describe('HtmlNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document)
         expect(nodes.length).toBe(1)
-        expect(nodes[0]).toBeInstanceOf(HtmlNode)
+        expect(nodes[0]).toBeInstanceOf(BaseHtmlNode)
       }),
     )
 
@@ -632,7 +632,7 @@ describe('HtmlNode', function () {
         `)
         const nodes = $generateNodesFromDOM(editor, document)
         expect(nodes.length).toBe(1)
-        expect(nodes[0]).toBeInstanceOf(HtmlNode)
+        expect(nodes[0]).toBeInstanceOf(BaseHtmlNode)
       }),
     )
   })
@@ -641,7 +641,7 @@ describe('HtmlNode', function () {
     it(
       'contains all data',
       editorTest(async function () {
-        const htmlNode = $createHtmlNode(dataset)
+        const htmlNode = $createBaseHtmlNode(dataset)
         const json = htmlNode.exportJSON()
 
         expect(json).toEqual({
@@ -686,7 +686,7 @@ describe('HtmlNode', function () {
 
         editor.getEditorState().read(() => {
           try {
-            const [htmlNode] = $getRoot().getChildren() as HtmlNode[]
+            const [htmlNode] = $getRoot().getChildren() as BaseHtmlNode[]
 
             expect(htmlNode.html).toBe('<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>')
 
@@ -724,7 +724,7 @@ describe('HtmlNode', function () {
 
         editor.getEditorState().read(() => {
           try {
-            const [htmlNode] = $getRoot().getChildren() as HtmlNode[]
+            const [htmlNode] = $getRoot().getChildren() as BaseHtmlNode[]
 
             expect(htmlNode.visibility as Record<string, unknown>).toEqual({
               showOnWeb: true,
@@ -750,7 +750,7 @@ describe('HtmlNode', function () {
     it(
       'returns contents',
       editorTest(async function () {
-        const node = $createHtmlNode()
+        const node = $createBaseHtmlNode()
         expect(node.getTextContent()).toBe('')
 
         node.html = '<script>const test = true;</script>'
@@ -762,7 +762,7 @@ describe('HtmlNode', function () {
 
   describe('getIsVisibilityActive', function () {
     function testIsVisibilityActive(expected: boolean, visibility: Record<string, unknown>) {
-      const node = $createHtmlNode()
+      const node = $createBaseHtmlNode()
       node.visibility = visibility
       expect(node.getIsVisibilityActive()).toBe(expected)
     }

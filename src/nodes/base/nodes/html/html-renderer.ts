@@ -8,7 +8,7 @@ import { renderWithVisibility } from '@/nodes/base/utils/visibility'
 
 interface HtmlNodeData {
   html: string
-  // HtmlNode is generated with hasVisibility: true, so the constructor
+  // BaseHtmlNode is generated with hasVisibility: true, so the constructor
   // guarantees a Visibility shape here (never absent)
   visibility: Visibility
 }

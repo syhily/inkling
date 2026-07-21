@@ -13,9 +13,9 @@ const htmlProperties = [
 
 export type HtmlData = DecoratorNodeData<typeof htmlProperties, true>
 
-export interface HtmlNode extends DecoratorNodeValueMap<typeof htmlProperties, true> {}
+export interface BaseHtmlNode extends DecoratorNodeValueMap<typeof htmlProperties, true> {}
 
-export class HtmlNode extends generateDecoratorNode({
+export class BaseHtmlNode extends generateDecoratorNode({
   nodeType: 'html',
   hasVisibility: true,
   properties: htmlProperties,
@@ -30,10 +30,10 @@ export class HtmlNode extends generateDecoratorNode({
   }
 }
 
-export function $createHtmlNode(dataset: HtmlData = {}) {
-  return new HtmlNode(dataset)
+export function $createBaseHtmlNode(dataset: HtmlData = {}) {
+  return new BaseHtmlNode(dataset)
 }
 
-export function $isHtmlNode(node: unknown): node is HtmlNode {
-  return node instanceof HtmlNode
+export function $isHtmlNode(node: unknown): node is BaseHtmlNode {
+  return node instanceof BaseHtmlNode
 }
