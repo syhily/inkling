@@ -1,12 +1,11 @@
-import { TOGGLE_LINK_COMMAND } from '@lexical/link'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $createRangeSelection, $getSelection, $isRangeSelection, $isTextNode, $setSelection } from 'lexical'
 import React from 'react'
 
 import { LinkInputWithSearch } from '@/components/ui/LinkInputWithSearch'
 import Portal from '@/components/ui/Portal'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useSelectionAnchoredPopup } from '@/hooks/useSelectionAnchoredPopup'
+import { $applyLinkToSelection } from '@/plugins/behaviour/link-editing'
 import trackEvent from '@/utils/analytics'
 import { isInternalUrl } from '@/utils/isInternalUrl'
 import { createSelectionAnchor } from '@/utils/selection-anchored-popup'
@@ -32,24 +31,7 @@ export function LinkActionToolbarWithSearch({ anchorElem, href, onClose }: LinkA
 
   const onLinkUpdate = (updatedHref: string, type?: string) => {
     editor.update(() => {
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, updatedHref || null)
-
-      // remove selection to avoid format menu popup
-      const selection = $getSelection()
-      if (selection && $isRangeSelection(selection)) {
-        const focusNode = selection.focus.getNode()
-        if (!$isTextNode(focusNode)) {
-          return
-        }
-        const rangeSelection = $createRangeSelection()
-        rangeSelection.setTextNodeRange(
-          focusNode,
-          focusNode.getTextContentSize(),
-          focusNode,
-          focusNode.getTextContentSize(),
-        )
-        $setSelection(rangeSelection)
-      }
+      $applyLinkToSelection(editor, updatedHref)
 
       onClose()
 

@@ -1,10 +1,11 @@
 import { $isLinkNode, type LinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $createRangeSelection, $getNearestNodeFromDOMNode, $isTextNode, $setSelection } from 'lexical'
+import { $getNearestNodeFromDOMNode } from 'lexical'
 import React from 'react'
 
 import FloatingToolbar from '@/components/ui/FloatingToolbar'
 import { LinkToolbar } from '@/components/ui/LinkToolbar'
+import { $selectLinkText } from '@/plugins/behaviour/link-editing'
 import { debounce } from '@/utils'
 
 interface FloatingLinkToolbarProps {
@@ -73,16 +74,9 @@ export function FloatingLinkToolbar({ anchorElem, onEditLink, disabled }: Floati
       return
     }
     editor.update(() => {
-      const selection = $createRangeSelection()
-      // select all children because createRectsFromDOMRange method from lexical is not working properly for link node
-      const firstChild = linkNode.getFirstChild()
-      const lastChild = linkNode.getLastChild()
-      if (!firstChild || !lastChild || !$isTextNode(firstChild) || !$isTextNode(lastChild)) {
-        return
+      if ($selectLinkText(linkNode)) {
+        onEditLink({ href })
       }
-      selection.setTextNodeRange(firstChild, 0, lastChild, lastChild.getTextContentSize())
-      $setSelection(selection)
-      onEditLink({ href })
     })
   }
 

@@ -1,16 +1,6 @@
 import type { LexicalEditor } from 'lexical'
 
-import { TOGGLE_LINK_COMMAND } from '@lexical/link'
-import {
-  mergeRegister,
-  $createRangeSelection,
-  $getSelection,
-  $isRangeSelection,
-  $isTextNode,
-  $setSelection,
-  COMMAND_PRIORITY_LOW,
-  DELETE_CHARACTER_COMMAND,
-} from 'lexical'
+import { $getSelection, $isRangeSelection } from 'lexical'
 import React from 'react'
 
 import FloatingToolbar from '@/components/ui/FloatingToolbar'
@@ -19,6 +9,7 @@ import { LinkActionToolbarWithSearch } from '@/components/ui/LinkActionToolbarWi
 import { LinkInput } from '@/components/ui/LinkInput'
 import { SnippetActionToolbar } from '@/components/ui/SnippetActionToolbar'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { $applyLinkToSelection } from '@/plugins/behaviour/link-editing'
 import { debounce } from '@/utils'
 
 // don't show the toolbar until the mouse has moved a certain distance,
@@ -37,7 +28,9 @@ export function FloatingFormatToolbar({
   href,
   isSnippetsEnabled,
   toolbarItemType,
-  setToolbarItemType,
+  onClose,
+  onOpenLink,
+  onOpenSnippet,
   hiddenFormats = [],
 }: {
   editor: LexicalEditor
@@ -45,7 +38,9 @@ export function FloatingFormatToolbar({
   href?: string
   isSnippetsEnabled?: boolean
   toolbarItemType?: string | null
-  setToolbarItemType: (type: string | null) => void
+  onClose: () => void
+  onOpenLink: () => void
+  onOpenSnippet: () => void
   hiddenFormats?: string[]
 }) {
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
@@ -90,19 +85,7 @@ export function FloatingFormatToolbar({
     }
   }, [editor, showToolbarIfHidden])
 
-  // clear out toolbar when use removes selected content
-  React.useEffect(() => {
-    return mergeRegister(
-      editor.registerCommand(
-        DELETE_CHARACTER_COMMAND,
-        () => {
-          setToolbarItemType(null)
-          return false
-        },
-        COMMAND_PRIORITY_LOW,
-      ),
-    )
-  }, [editor, setToolbarItemType])
+  const handleActionToolbarClose = onClose
 
   React.useEffect(() => {
     let initialPosition: { x: number; y: number } | null = null
@@ -145,10 +128,6 @@ export function FloatingFormatToolbar({
     }
   }, [editor, showToolbarIfHidden])
 
-  const handleActionToolbarClose = () => {
-    setToolbarItemType(null)
-  }
-
   const isSnippetToolbar = toolbarItemTypes.snippet === toolbarItemType
   const isLinkToolbar = toolbarItemTypes.link === toolbarItemType
   const isTextToolbar = toolbarItemTypes.text === toolbarItemType
@@ -183,25 +162,7 @@ export function FloatingFormatToolbar({
             cancel={handleActionToolbarClose}
             update={(url) => {
               editor.update(() => {
-                editor.dispatchCommand(TOGGLE_LINK_COMMAND, url || null)
-
-                // collapse the selection to the end of the focus node to avoid
-                // the format toolbar popping up again over the linked text
-                const selection = $getSelection()
-                if ($isRangeSelection(selection)) {
-                  const focusNode = selection.focus.getNode()
-                  if (!$isTextNode(focusNode)) {
-                    return
-                  }
-                  const rangeSelection = $createRangeSelection()
-                  rangeSelection.setTextNodeRange(
-                    focusNode,
-                    focusNode.getTextContentSize(),
-                    focusNode,
-                    focusNode.getTextContentSize(),
-                  )
-                  $setSelection(rangeSelection)
-                }
+                $applyLinkToSelection(editor, url)
               })
               handleActionToolbarClose()
             }}
@@ -214,8 +175,8 @@ export function FloatingFormatToolbar({
             hiddenFormats={hiddenFormats}
             isLinkSelected={!!href || (isLinkSearchEnabled && isLinkToolbar)}
             isSnippetsEnabled={isSnippetsEnabled}
-            onLinkClick={() => setToolbarItemType(toolbarItemTypes.link)}
-            onSnippetClick={() => setToolbarItemType(toolbarItemTypes.snippet)}
+            onLinkClick={onOpenLink}
+            onSnippetClick={onOpenSnippet}
           />
         )}
       </FloatingToolbar>

@@ -1,4 +1,3 @@
-import { $isLinkNode } from '@lexical/link'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
   $getSelection,
@@ -6,14 +5,16 @@ import {
   $isRangeSelection,
   $isTextNode,
   COMMAND_PRIORITY_LOW,
+  DELETE_CHARACTER_COMMAND,
   KEY_MODIFIER_COMMAND,
   type LexicalEditor,
 } from 'lexical'
 import React from 'react'
 
-import { FloatingFormatToolbar, toolbarItemTypes } from '@/components/ui/FloatingFormatToolbar'
+import { FloatingFormatToolbar } from '@/components/ui/FloatingFormatToolbar'
 import { FloatingLinkToolbar } from '@/components/ui/FloatingLinkToolbar'
 import { $isAtLinkSearchNode } from '@/nodes/base'
+import { $getLinkHrefAtSelection, createToolbarSession, type ToolbarSession } from '@/plugins/behaviour/link-editing'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
 export default function FloatingToolbarPlugin({
@@ -35,12 +36,19 @@ function useFloatingFormatToolbar(
   isSnippetsEnabled?: boolean,
   hiddenFormats: string[] = [],
 ) {
-  const [toolbarItemType, setToolbarItemType] = React.useState<string | null>(null)
-  const [href, setHref] = React.useState<string>('')
+  // the toolbar session (hidden | text | link | snippet) lives in the headless
+  // link-editing module; this hook only feeds it selection/DOM events and
+  // renders its state
+  const sessionRef = React.useRef<ToolbarSession | null>(null)
+  if (!sessionRef.current) {
+    sessionRef.current = createToolbarSession()
+  }
+  const session = sessionRef.current
+  const { type, href } = React.useSyncExternalStore(session.handle.subscribe, session.handle.getState)
 
-  const setToolbarType = React.useCallback(() => {
+  const syncToolbarToSelection = React.useCallback(() => {
     editor.getEditorState().read(() => {
-      // Should not to pop up the floating toolbar when using IME input
+      // Should not pop up the floating toolbar when using IME input
       if (editor.isComposing()) {
         return
       }
@@ -54,51 +62,43 @@ function useFloatingFormatToolbar(
         nativeSelection !== null &&
         (!$isRangeSelection(selection) || rootElement === null || !rootElement.contains(nativeSelection.anchorNode))
       ) {
-        setToolbarItemType(null)
+        session.syncSelection(null)
         return
       }
 
       if (!$isRangeSelection(selection) || $isAtLinkSearchNode(selection.anchor.getNode())) {
-        if (toolbarItemType) {
-          setToolbarItemType(null)
-        }
+        session.syncSelection(null)
         return
       }
 
       const anchorNode = getSelectedNode(selection)
-      const parent = anchorNode.getParent()
-
-      if ($isLinkNode(parent)) {
-        setHref(parent.getURL())
-      } else if ($isLinkNode(anchorNode)) {
-        setHref(anchorNode.getURL())
-      } else {
-        setHref('')
-      }
-
-      if (selection.getTextContent().trim() !== '' && ($isTextNode(anchorNode) || $isParagraphNode(anchorNode))) {
-        setToolbarItemType(toolbarItemTypes.text)
-        return
-      }
-
-      setToolbarItemType(null)
+      const textSelected =
+        selection.getTextContent().trim() !== '' && ($isTextNode(anchorNode) || $isParagraphNode(anchorNode))
+      session.syncSelection({ textSelected, href: $getLinkHrefAtSelection() })
     })
-  }, [editor, toolbarItemType])
+  }, [editor, session])
 
   React.useEffect(() => {
-    // Add a listener if the text toolbar is active. It helps to prevent events bubbling
-    // when a user is interacting with inputs in the link/snippets toolbar
-    if (!!toolbarItemType && toolbarItemType !== toolbarItemTypes.text) {
-      return
-    }
-    document.addEventListener('selectionchange', setToolbarType)
+    document.addEventListener('selectionchange', syncToolbarToSelection)
     return () => {
-      document.removeEventListener('selectionchange', setToolbarType)
+      document.removeEventListener('selectionchange', syncToolbarToSelection)
     }
-  }, [setToolbarType, toolbarItemType])
+  }, [syncToolbarToSelection])
 
   React.useEffect(() => {
-    editor.registerCommand(
+    // clear out the toolbar when the user removes selected content
+    return editor.registerCommand(
+      DELETE_CHARACTER_COMMAND,
+      () => {
+        session.close()
+        return false
+      },
+      COMMAND_PRIORITY_LOW,
+    )
+  }, [editor, session])
+
+  React.useEffect(() => {
+    return editor.registerCommand(
       KEY_MODIFIER_COMMAND,
       (event: KeyboardEvent) => {
         const { keyCode, ctrlKey, metaKey, shiftKey } = event
@@ -106,7 +106,7 @@ function useFloatingFormatToolbar(
         if (!shiftKey && keyCode === 75 && (ctrlKey || metaKey)) {
           const selection = $getSelection()
           if ($isRangeSelection(selection) && !selection.isCollapsed()) {
-            setToolbarItemType(toolbarItemTypes.link)
+            session.openLink()
             event.preventDefault()
             return true
           }
@@ -115,14 +115,14 @@ function useFloatingFormatToolbar(
       },
       COMMAND_PRIORITY_LOW,
     )
-  }, [editor])
+  }, [editor, session])
 
   // use native mousedown event so the toolbar can close when something is
   // clicked outside of the editor and the selection is lost
   React.useEffect(() => {
     const handleMousedown = (event: MouseEvent) => {
       if (!anchorElem.contains(event.target as Node)) {
-        setToolbarItemType(null)
+        session.close()
       }
     }
 
@@ -133,11 +133,6 @@ function useFloatingFormatToolbar(
     }
   })
 
-  const handleLinkEdit = (data: { href: string }) => {
-    setToolbarItemType(toolbarItemTypes.link)
-    setHref(data.href)
-  }
-
   return (
     <>
       <FloatingFormatToolbar
@@ -146,14 +141,16 @@ function useFloatingFormatToolbar(
         hiddenFormats={hiddenFormats}
         href={href}
         isSnippetsEnabled={isSnippetsEnabled}
-        setToolbarItemType={setToolbarItemType}
-        toolbarItemType={toolbarItemType}
+        toolbarItemType={type === 'hidden' ? null : type}
+        onClose={session.close}
+        onOpenLink={() => session.openLink()}
+        onOpenSnippet={session.openSnippet}
       />
 
       <FloatingLinkToolbar
         anchorElem={anchorElem}
-        disabled={!!toolbarItemType} // don't show link toolbar on hover when format toolbar is active
-        onEditLink={handleLinkEdit}
+        disabled={type !== 'hidden'} // don't show link toolbar on hover when format toolbar is active
+        onEditLink={({ href: editHref }) => session.openLink(editHref)}
       />
     </>
   )

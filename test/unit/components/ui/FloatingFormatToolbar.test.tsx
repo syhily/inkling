@@ -38,14 +38,16 @@ describe('FloatingFormatToolbar', () => {
   it('collapses the selection to the end of the focus node after a link update', async () => {
     const editor = createTestEditor()
     await selectText(editor, 'hello')
-    const setToolbarItemType = vi.fn()
+    const onClose = vi.fn()
 
     render(
       <FloatingFormatToolbar
         anchorElem={document.body}
         editor={editor}
-        setToolbarItemType={setToolbarItemType}
         toolbarItemType="link"
+        onClose={onClose}
+        onOpenLink={() => {}}
+        onOpenSnippet={() => {}}
       />,
     )
 
@@ -66,6 +68,6 @@ describe('FloatingFormatToolbar', () => {
       }
     })
 
-    expect(setToolbarItemType).toHaveBeenCalledWith(null)
+    expect(onClose).toHaveBeenCalled()
   })
 })
