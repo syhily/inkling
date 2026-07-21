@@ -1,11 +1,11 @@
 // The headless leg of the paste markdown dialect: clipboard markdown text in,
 // sanitized HTML out. `MarkdownPastePlugin` feeds the result into Lexical's
 // HTML import; tests and other headless callers can use it without mounting a
-// composer or synthesizing a DataTransfer. The markdown-it engine stays in
-// `@/markdown/markdown-html-renderer` — the same cached engine the markdown
-// card's HTML export uses (`@/nodes/base/nodes/markdown/markdown-renderer`),
-// so "paste" names this pipeline, not a forked engine. See `@/markdown/dialects`.
-import { render as markdownRender } from '@/markdown/markdown-html-renderer'
+// composer or synthesizing a DataTransfer. The engine is `pasteDialect`
+// (`@/markdown/paste-dialect`) — the same dialect module the markdown card's
+// HTML export uses (`@/nodes/base/nodes/markdown/markdown-renderer`), so
+// "paste" names this pipeline, not a forked engine. See `@/markdown/dialects`.
+import { pasteDialect } from '@/markdown/paste-dialect'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 
 interface MarkdownPasteOptions {
@@ -13,7 +13,7 @@ interface MarkdownPasteOptions {
 }
 
 export function markdownToSanitizedHtml(text: string, { allowBr }: MarkdownPasteOptions): string {
-  const markdownHtml = markdownRender(text)
+  const markdownHtml = pasteDialect.render(text)
   // don't use cleanBasicHtml as it removes images and hr; in this case, we need to remove just br
   const cleanedHtml = allowBr ? markdownHtml : markdownHtml.replace(/<br\s?\/?>/g, '')
   return sanitizeHtml(cleanedHtml, { replaceJS: true })

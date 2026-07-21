@@ -9,7 +9,7 @@ import type { ExportDOMOptions } from '@/nodes/base'
 import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import { htmlToLexical } from '@/html/html-to-lexical/index'
 import { LexicalHTMLRenderer as Renderer } from '@/html/renderer/index'
-import { ImageNode } from '@/nodes/base'
+import { BaseImageNode } from '@/nodes/base'
 
 const dom = new JSDOM()
 
@@ -28,7 +28,7 @@ class CustomBlockNode extends ParagraphNode {
 }
 
 // Replaces the default image card when registered after the defaults
-class CustomImageNode extends ImageNode {
+class CustomImageNode extends BaseImageNode {
   exportDOM(_editor: LexicalEditor, options: ExportDOMOptions = {}) {
     const element = options.dom!.window.document.createElement('div')
     element.setAttribute('data-custom-image', 'true')

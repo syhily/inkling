@@ -28,7 +28,7 @@ export const HR = {
   // seam (@/markdown/card-shortcuts)
   regExp: DIVIDER_REGEXP,
   replace: (parentNode: ElementNode, _children: LexicalNode[], _match: string[], isImport: boolean) => {
-    $insertHorizontalRuleForMarkdownTrigger(parentNode, isImport)
+    $insertHorizontalRuleForMarkdownTrigger(parentNode, isImport ? 'import' : 'typing')
   },
   type: 'element' as const,
 }

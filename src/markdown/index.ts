@@ -1,2 +1,2 @@
-export { render } from '@/markdown/markdown-html-renderer'
+export { render } from '@/markdown/paste-dialect'
 export { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown/round-trip'

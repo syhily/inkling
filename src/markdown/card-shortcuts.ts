@@ -32,9 +32,10 @@
 // KEEPS the emptied paragraph after the rule, while the per-update scan
 // creates a FRESH paragraph (different node identity, pinned in
 // test/unit/plugins/HorizontalRulePlugin.test.tsx), and only the markdown
-// trigger has an isImport branch (import replaces the paragraph outright).
-// Converging them would move a pinned behavior, so each variant names its
-// trigger. (The fresh-key side is key-pinned in
+// trigger has a phase branch (import replaces the paragraph outright — the
+// paragraph is container text, not the writer's caret paragraph). Converging
+// them would move a pinned behavior, so each variant names its trigger. (The
+// fresh-key side is key-pinned in
 // test/unit/plugins/HorizontalRulePlugin.test.tsx; the kept-paragraph side is
 // covered by the import pin and typing e2e, not by key.)
 
@@ -75,16 +76,24 @@ export function $insertCodeBlockForShortcut(topLevelElement: ElementNode, langua
 export const DIVIDER_REGEXP = /^(---|\*\*\*|___)\s?$/
 
 /**
+ * The phase a markdown transformer `replace` runs in, named at the seam
+ * instead of threading `@lexical/markdown`'s `isImport` boolean through:
+ * 'import' during `$convertFromMarkdownString`, 'typing' on a live shortcut
+ * keystroke. Only the HR markdown trigger branches on it — the code fence
+ * and the card transformers behave identically in either phase.
+ */
+export type MarkdownTriggerPhase = 'import' | 'typing'
+
+/**
  * markdown transformer trigger (typing + import). On import, or when a next
  * sibling exists, the paragraph is replaced outright; at the document end on
  * a typing keystroke the (framework-emptied) paragraph is KEPT after the
- * rule. Branch structure preserved exactly, including the isImport flag.
+ * rule so the caret has somewhere to land.
  */
-export function $insertHorizontalRuleForMarkdownTrigger(parentNode: ElementNode, isImport: boolean): void {
+export function $insertHorizontalRuleForMarkdownTrigger(parentNode: ElementNode, phase: MarkdownTriggerPhase): void {
   const line = $createHorizontalRuleNode()
 
-  // TODO: Get rid of isImport flag
-  if (isImport || parentNode.getNextSibling() !== null) {
+  if (phase === 'import' || parentNode.getNextSibling() !== null) {
     parentNode.replace(line)
   } else {
     parentNode.insertBefore(line)

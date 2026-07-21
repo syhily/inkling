@@ -1,6 +1,6 @@
-import { render } from '@/markdown/markdown-html-renderer'
+import { render } from '@/markdown/paste-dialect'
 
-describe('Markdown HTML renderer', function () {
+describe('Paste dialect markdown-it engine', function () {
   describe('latest', function () {
     it('outputs urlencoded headers', function () {
       const markdown = `\n# Header One\n\n## Héader Two\n`

@@ -1,41 +1,36 @@
-// One markdown module, two dialects — this module names them in prose and
-// owns the seam facts. Nothing here merges them; the merge question at the
-// bottom is deliberately open. The dialect names used to have exported
-// consts (`PASTE_DIALECT`, `CARD_AWARE_ROUND_TRIP_DIALECT`, `MarkdownDialect`);
-// they had zero importers, so the names now live in this documentation only.
+// Inkling speaks two markdown dialects. The divergence used to live only in
+// this file's prose; it is now structural — each dialect is a real module
+// whose `grammar` declares what it speaks as data, and this file is the
+// shared seam both declare against:
 //
-// **Paste dialect** — `PASTE_MARKDOWN_COMMAND` (`@/plugins/behaviour/clipboard-protocol`)
-// handled by `@/plugins/MarkdownPastePlugin`, whose markdown-it → sanitize
-// chain is the headless `markdownToSanitizedHtml`
-// (`@/plugins/behaviour/markdownPaste`): markdown-it with the footnote,
-// lazy-headers, mark, image-lazy-loading, named-headers, sub, and sup plugins
-// (`@/markdown/markdown-html-renderer`) → `<br>` strip (unless `allowBr`) →
-// `sanitizeHtml` → Lexical HTML import. It speaks footnotes (`[^1]`), `==mark==`, `~sub~`,
-// `^sup^` — and has no card-fence grammar. The same markdown-it engine has a
-// second consumer: the markdown card's HTML export
-// (`@/nodes/base/nodes/markdown/markdown-renderer`), so "paste" names the
-// pipeline, not the engine's only user.
+// - **Paste dialect** → `@/markdown/paste-dialect` (`pasteDialect`):
+//   clipboard markdown (`PASTE_MARKDOWN_COMMAND` → `MarkdownPastePlugin` →
+//   the headless `markdownToSanitizedHtml`) and the markdown card's HTML
+//   export (`@/nodes/base/nodes/markdown/markdown-renderer`).
+// - **Card-aware round-trip dialect** → `@/markdown/round-trip`
+//   (`roundTripDialect`): the public markdown import/export API
+//   (`markdownToLexicalState` / `lexicalStateToMarkdown`).
 //
-// **Card-aware round-trip dialect** — `markdownToLexicalState` /
-// `lexicalStateToMarkdown` (`@/markdown/round-trip`): `@lexical/markdown`'s
-// `$convertFromMarkdownString` / `$convertToMarkdownString` with the Inkling
-// card transformers (`@/nodes/cards/card-markdown-transformers`; the
-// `inkling:markdown` fence lives separately in `@/markdown/card-transformers`)
-// plus `DEFAULT_TRANSFORMERS` (`@/markdown/transformers`). It speaks
-// ```inkling:<card>``` fences (html, file, button, audio, video, gallery,
-// bookmark, toggle, callout, markdown), standard `![alt](src)` image syntax,
-// and `~`/`^` sub/sup — but not footnotes. `==mark==` converts in both
-// dialects: `@lexical/markdown`'s TEXT_FORMAT_TRANSFORMERS include HIGHLIGHT.
-//
-// Where the dialects meet: the round-trip dialect's own export does not
-// survive the paste dialect. Pasting a ```inkling:*``` fence renders through
-// markdown-it as `<pre><code class="language-inkling:*">` and imports as a
-// code block card whose language is the fence tag and whose code is the JSON
-// body — pinned in `test/unit/plugins/MarkdownPastePlugin.test.tsx` ("paste
-// dialect coverage"). The same string imported through
-// `markdownToLexicalState` recreates the card — pinned in
-// `test/markdown/round-trip-cards.test.ts`.
-//
-// Open question (docs/markdown-api.md): should the paste path adopt the
-// card-aware round-trip dialect so pasted card fences recreate cards? That
-// merge is a product decision, deliberately not taken here.
+// Nothing here merges them: whether the paste path should adopt the
+// round-trip dialect so pasted card fences recreate cards is an open product
+// question (docs/markdown-api.md).
+
+/**
+ * What a markdown dialect speaks, declared as data on the dialect module so
+ * the divergence between the two dialects is observable in code, not prose.
+ */
+export interface MarkdownDialectGrammar {
+  /** `[^1]` footnote references. */
+  footnotes: boolean
+  /** `==mark==` highlight. */
+  mark: boolean
+  /** `~sub~` and `^sup^`. */
+  subSup: boolean
+  /** ` ```inkling:<card>``` ` fences recreate cards on import. */
+  cardFences: boolean
+}
+
+export interface MarkdownDialect {
+  name: string
+  grammar: MarkdownDialectGrammar
+}

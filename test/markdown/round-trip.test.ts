@@ -36,9 +36,16 @@ describe('Markdown round-trip', function () {
 
   it('round-trips a code block', function () {
     const markdown = '```js\nconst x = 1\n```'
-    // The transformer escapes backticks in code blocks on export; this is a
-    // known limitation of the current transformer set.
-    expect(roundTrip(markdown)).toBe('\\`\\`\\`js\nconst x = 1\n\\`\\`\\`')
+    const state = markdownToLexicalState(markdown)
+    // the dialect's own CODE_FENCE transformer claims the fence on import —
+    // no more literal paragraphs that export re-escapes to \`\`\`
+    expect((state.root.children[0] as unknown as { type: string }).type).toBe('codeblock')
+    expect(lexicalStateToMarkdown(state)).toBe(markdown)
+  })
+
+  it('round-trips a code block without a language', function () {
+    const markdown = '```\nplain code\n```'
+    expect(roundTrip(markdown)).toBe(markdown)
   })
 
   it('round-trips a horizontal rule', function () {

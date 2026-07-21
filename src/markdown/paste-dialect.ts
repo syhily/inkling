@@ -1,3 +1,22 @@
+// The paste dialect — one of Inkling's two markdown dialects (the shared
+// seam and grammar interface live in `@/markdown/dialects`; the card-aware
+// round-trip dialect is `@/markdown/round-trip`). Two pipelines speak it:
+// clipboard markdown (the headless `markdownToSanitizedHtml` in
+// `@/plugins/behaviour/markdownPaste`, fed into Lexical's HTML import by
+// `MarkdownPastePlugin`) and the markdown card's HTML export
+// (`@/nodes/base/nodes/markdown/markdown-renderer`).
+//
+// What the dialect speaks is declared as data on `pasteDialect.grammar`
+// (footnotes, ==mark==, ~sub~, ^sup^ — and no card-fence grammar). The
+// engine — markdown-it with its plugin stack, the cached per-slug-policy
+// instances, and the legacy `inklingVersion` slug branching — is the
+// module's hidden implementation below.
+//
+// Where the dialects meet: the round-trip dialect's own export does not
+// survive this dialect — a pasted ```inkling:*``` fence renders as
+// `<pre><code class="language-inkling:*">` and imports as a code block card
+// whose language is the fence tag (pinned in
+// test/unit/plugins/MarkdownPastePlugin.test.tsx, "paste dialect coverage").
 import type { Options } from 'markdown-it'
 import type Renderer from 'markdown-it/lib/renderer.mjs'
 import type Token from 'markdown-it/lib/token.mjs'
@@ -9,6 +28,8 @@ import markdownItLazyHeaders from 'markdown-it-lazy-headers'
 import markdownItMark from 'markdown-it-mark'
 import markdownItSub from 'markdown-it-sub'
 import markdownItSup from 'markdown-it-sup'
+
+import type { MarkdownDialect } from '@/markdown/dialects'
 
 import { slugify } from '@/utils'
 
@@ -118,6 +139,18 @@ const selectRenderer = function (options: RenderOptions): MarkdownIt {
   }
 }
 
+/** Render markdown to (unsanitized) HTML through the paste dialect's engine. */
 export function render(markdown: string, options: RenderOptions = {}): string {
   return selectRenderer(options).render(markdown)
+}
+
+export const pasteDialect: MarkdownDialect & { render: typeof render } = {
+  name: 'paste',
+  grammar: {
+    footnotes: true,
+    mark: true,
+    subSup: true,
+    cardFences: false,
+  },
+  render,
 }

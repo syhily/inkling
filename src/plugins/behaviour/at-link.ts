@@ -361,7 +361,9 @@ export function registerAtLinkGuards(editor: LexicalEditor) {
     // prevent formatting commands when an at-link-search node is focused
     editor.registerCommand(FORMAT_TEXT_COMMAND, $skipFormatCommandIfNeeded, COMMAND_PRIORITY_HIGH),
     editor.registerCommand(FORMAT_ELEMENT_COMMAND, $skipFormatCommandIfNeeded, COMMAND_PRIORITY_HIGH),
-    // prevent paste in the search node triggering external paste handlers
+    // prevent paste in the search node triggering external paste handlers.
+    // COMMAND_PRIORITY_HIGH is load-bearing: it must pre-empt
+    // registerPasteHandler's COMMAND_PRIORITY_LOW PASTE_COMMAND handler.
     editor.registerCommand(
       PASTE_COMMAND,
       (clipboardEvent) => {

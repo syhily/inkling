@@ -1,9 +1,9 @@
 import type { ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-// The markdown card's HTML export shares the paste dialect's markdown-it
-// engine (`@/markdown/markdown-html-renderer`) — see `@/markdown/dialects`.
-import { render } from '@/markdown/markdown-html-renderer'
+// The markdown card's HTML export speaks the paste dialect
+// (`@/markdown/paste-dialect`) — see `@/markdown/dialects`.
+import { pasteDialect } from '@/markdown/paste-dialect'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 
 interface MarkdownNodeData {
@@ -13,10 +13,10 @@ interface MarkdownNodeData {
 export function renderMarkdownNode(node: MarkdownNodeData, context: RenderContext): ExportDOMOutput<'inner'> {
   const document = context.createDocument()
 
-  // markdown-html-renderer reads exactly one key off the options bag —
+  // pasteDialect.render reads exactly one key off the options bag —
   // `inklingVersion` (its slug-policy input) — so the pass is narrowed to
   // that key, byte-identical to forwarding the whole bag.
-  const html = sanitizeHtml(render(node.markdown || '', { inklingVersion: context.inklingVersion }))
+  const html = sanitizeHtml(pasteDialect.render(node.markdown || '', { inklingVersion: context.inklingVersion }))
 
   const element = document.createElement('div')
   element.innerHTML = html
