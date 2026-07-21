@@ -25,7 +25,7 @@ import {
   type IndicatorPosition,
 } from '@/utils/draggable/DragDropContainer'
 import { DragDropHandler } from '@/utils/draggable/DragDropHandler'
-import { isCardDropAllowed } from '@/utils/draggable/draggable-utils'
+import { createReorderGeometry, resolveDrop, resolveReorder } from '@/utils/draggable/reorder-rules'
 import { useDragDropContainer } from '@/utils/draggable/useDragDropContainer'
 
 function preventDefault(event: Event): void {
@@ -65,8 +65,8 @@ function useDragDropReorder(editor: LexicalEditor): void {
               target: null,
               mousePosition: { x: 0, y: 0 },
               dataset: cardNode.getDataset(),
-              // what the per-card getIcon() copies returned: the first cardMenu
-              // entry's icon (menu-less cards fall back inside getCardDragIcon)
+              // what the per-card getIcon() copies returned: the first menu
+              // entry's icon, or the declaration's dragIcon for menu-less cards
               Icon: getCardDragIcon(cardNode.getType()),
             }
           }
@@ -126,29 +126,27 @@ function useDragDropReorder(editor: LexicalEditor): void {
         droppableElem: HTMLElement,
         position: DroppablePosition,
       ): IndicatorPosition | false => {
-        const rootElement = editor.getRootElement()
-        if (!rootElement || !draggableInfo.element) {
-          return false
-        }
-        const droppables = Array.from(rootElement.querySelectorAll<HTMLElement>(':scope > *'))
-        const droppableIndex = droppables.indexOf(droppableElem)
-        const draggableIndex = droppables.indexOf(draggableInfo.element)
-
         // only allow card and image drops (images can be dragged out of a gallery)
         if (draggableInfo.type !== 'card' && draggableInfo.type !== 'image') {
           return false
         }
 
-        if (isCardDropAllowed(draggableIndex, droppableIndex, position)) {
-          let insertIndex = droppableIndex
-          if (position.match(/bottom/)) {
-            insertIndex += 1
-          }
-
-          return { insertIndex }
+        const rootElement = editor.getRootElement()
+        if (!rootElement || !draggableInfo.element) {
+          return false
         }
 
-        return false
+        // the single insertIndex derivation of this drag — the handler ferries
+        // it to onDrop on draggableInfo.insertIndex
+        const resolution = resolveReorder(
+          createReorderGeometry(rootElement, ':scope > *'),
+          draggableInfo.element,
+          droppableElem,
+          position,
+          'vertical',
+        )
+
+        return resolution ? { insertIndex: resolution.insertIndex } : false
       },
       onDrop: (
         draggableInfo: DraggableInfo,
@@ -163,64 +161,72 @@ function useDragDropReorder(editor: LexicalEditor): void {
         if (!rootElement || !draggableInfo.element) {
           return false
         }
-        const droppables = Array.from(rootElement.querySelectorAll<HTMLElement>(':scope > *'))
-        const draggableIndex = droppables.indexOf(draggableInfo.element)
+
+        // insertIndex was derived by getIndicatorPosition (resolveReorder) and
+        // ferried here by the handler — re-verify it against a fresh scan,
+        // never re-derive it
         const insertIndex = draggableInfo.insertIndex ?? 0
+        const resolution = resolveDrop(
+          createReorderGeometry(rootElement, ':scope > *'),
+          draggableInfo.element,
+          insertIndex,
+        )
+        if (!resolution) {
+          return false
+        }
+        const { droppables } = resolution
 
-        if (isCardDropAllowed(draggableIndex, insertIndex)) {
-          let result: DropResult = false
+        let result: DropResult = false
 
-          editor.update(() => {
-            // change card order on card drops
-            if (draggableInfo.type === 'card') {
-              const draggedNode = draggableInfo.nodeKey ? $getNodeByKey(draggableInfo.nodeKey) : null
-              if (!draggedNode) {
-                return
-              }
-
-              if (insertIndex >= droppables.length) {
-                // drop at end of document
-                const targetNode = $getNearestNodeFromDOMNode(droppables[droppables.length - 1])
-                if (targetNode) {
-                  targetNode.insertAfter(draggedNode)
-                }
-              } else {
-                const targetNode = $getNearestNodeFromDOMNode(droppables[insertIndex])
-                if (targetNode) {
-                  targetNode.insertBefore(draggedNode)
-                }
-              }
-
-              // clear selection so we don't show any toolbars immediately and the
-              // cursor isn't left stranded somewhere else in the document
-              $setSelection(null)
-
-              // the card was re-ordered in place, not moved inside another
-              // card — onDropEnd must not remove the source
-              result = { success: true, sourceHandled: true }
+        editor.update(() => {
+          // change card order on card drops
+          if (draggableInfo.type === 'card') {
+            const draggedNode = draggableInfo.nodeKey ? $getNodeByKey(draggableInfo.nodeKey) : null
+            if (!draggedNode) {
               return
             }
 
-            // insert new image node on image drops
-            if (draggableInfo.type === 'image') {
+            if (insertIndex >= droppables.length) {
+              // drop at end of document
+              const targetNode = $getNearestNodeFromDOMNode(droppables[droppables.length - 1])
+              if (targetNode) {
+                targetNode.insertAfter(draggedNode)
+              }
+            } else {
               const targetNode = $getNearestNodeFromDOMNode(droppables[insertIndex])
               if (targetNode) {
-                const imageNode = $createImageNode(draggableInfo.dataset as Parameters<typeof $createImageNode>[0])
-                targetNode.insertBefore(imageNode)
-
-                // select the newly inserted image card
-                const nodeSelection = $createNodeSelection()
-                nodeSelection.add(imageNode.getKey())
-                $setSelection(nodeSelection)
+                targetNode.insertBefore(draggedNode)
               }
-
-              result = true
             }
-          })
 
-          return result
-        }
-        return false
+            // clear selection so we don't show any toolbars immediately and the
+            // cursor isn't left stranded somewhere else in the document
+            $setSelection(null)
+
+            // the card was re-ordered in place, not moved inside another
+            // card — onDropEnd must not remove the source
+            result = { success: true, sourceHandled: true }
+            return
+          }
+
+          // insert new image node on image drops
+          if (draggableInfo.type === 'image') {
+            const targetNode = $getNearestNodeFromDOMNode(droppables[insertIndex])
+            if (targetNode) {
+              const imageNode = $createImageNode(draggableInfo.dataset as Parameters<typeof $createImageNode>[0])
+              targetNode.insertBefore(imageNode)
+
+              // select the newly inserted image card
+              const nodeSelection = $createNodeSelection()
+              nodeSelection.add(imageNode.getKey())
+              $setSelection(nodeSelection)
+            }
+
+            result = true
+          }
+        })
+
+        return result
       },
     },
     lifecycle: {

@@ -1,39 +1,13 @@
-import type { DroppablePosition } from '@/utils/draggable/DragDropContainer'
-
-// NOTE: the DnD geometry helpers in this file (isCardDropAllowed, getParent,
-// sibling lookups, scrollable-element lookups) are vendor-synced with the
-// inkling-card-gallery repo, which keeps its own copy (differing mainly in
-// drag direction). There is no shared package yet — any behavior change here
-// must be mirrored there, and vice versa. See docs/tech-debt-triage.md for
-// the duplication decision.
-export function isCardDropAllowed(
-  draggableIndex: number,
-  droppableIndex: number,
-  position?: DroppablePosition,
-): boolean {
-  // images can be dragged out of a gallery to any position
-  if (draggableIndex === -1) {
-    return true
-  }
-
-  // can't drop on itself
-  if (draggableIndex === droppableIndex) {
-    return false
-  }
-
-  // account for dropping at beginning or end of a row
-  let adjustedDroppable = droppableIndex
-  if (position?.startsWith('top')) {
-    adjustedDroppable -= 1
-  }
-
-  if (position?.startsWith('bottom')) {
-    adjustedDroppable += 1
-  }
-
-  return adjustedDroppable !== draggableIndex
-}
-
+// NOTE: the DOM-walk helpers in this file (getParent, sibling lookups,
+// scrollable-element lookups) are vendor-synced with the inkling-card-gallery
+// repo, which keeps its own copy. There is no shared package yet — any
+// behavior change here must be mirrored there, and vice versa. The
+// drop-allowance / insert-index rules that used to live here
+// (isCardDropAllowed) were consolidated into @/utils/draggable/reorder-rules,
+// which is deliberately NOT synced — the gallery repo keeps its own
+// direction-specific copy. See docs/tech-debt-triage.md for the duplication
+// decision.
+//
 // unlike Element.closest, getParent can match the passed-in element itself;
 // the name is kept for parity with the inkling-card-gallery copy — renaming
 // requires changing both repos (see header note)

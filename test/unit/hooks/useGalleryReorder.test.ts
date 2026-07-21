@@ -189,7 +189,7 @@ describe('useGalleryReorder', () => {
       element: draggableElement,
       target: null,
       mousePosition: { x: 0, y: 0 },
-      insertIndex: 1,
+      insertIndex: 2,
       dataset: { src: 'https://example.com/removed-remotely.jpg' },
     }
 
@@ -211,7 +211,7 @@ describe('useGalleryReorder', () => {
       element: draggableElement as HTMLElement,
       target: null,
       mousePosition: { x: 0, y: 0 },
-      insertIndex: 1,
+      insertIndex: 2,
       dataset: { src: 'https://example.com/one.jpg' },
     }
 
@@ -219,6 +219,10 @@ describe('useGalleryReorder', () => {
     // onDropEnd — sourceHandled tells it not to remove the reordered image
     const result = options.droppable.onDrop(draggableInfo, droppableElement as HTMLElement, 'top-right')
     expect(result).toEqual({ success: true, sourceHandled: true })
+    expect(updateImages).toHaveBeenCalledWith([
+      { src: 'https://example.com/two.jpg' },
+      { src: 'https://example.com/one.jpg' },
+    ])
     onDropEnd(draggableInfo, true, true)
 
     expect(updateImages).toHaveBeenCalledTimes(1)

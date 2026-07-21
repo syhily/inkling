@@ -7,33 +7,9 @@ import {
   getParent,
   getParentScrollableElement,
   getPreviousSibling,
-  isCardDropAllowed,
 } from '@/utils/draggable/draggable-utils'
 
 describe('draggable-utils', () => {
-  describe('isCardDropAllowed', () => {
-    it('allows dropping an external draggable', () => {
-      expect(isCardDropAllowed(-1, 2)).toBe(true)
-      expect(isCardDropAllowed(-1, 0, 'top-left')).toBe(true)
-    })
-
-    it('blocks dropping on itself', () => {
-      expect(isCardDropAllowed(3, 3)).toBe(false)
-    })
-
-    it('adjusts index for top positions', () => {
-      // dropping before index 2 (draggableIndex=1) should be blocked because it
-      // would end up at index 1
-      expect(isCardDropAllowed(1, 2, 'top-left')).toBe(false)
-      expect(isCardDropAllowed(0, 2, 'top-right')).toBe(true)
-    })
-
-    it('adjusts index for bottom positions', () => {
-      expect(isCardDropAllowed(2, 1, 'bottom-left')).toBe(false)
-      expect(isCardDropAllowed(0, 1, 'bottom-right')).toBe(true)
-    })
-  })
-
   describe('getParent', () => {
     let root: HTMLElement
 
