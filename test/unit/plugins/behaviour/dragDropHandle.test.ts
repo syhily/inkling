@@ -30,7 +30,7 @@ describe('createDragDropHandle', () => {
   it('starts with no container element and no handler', () => {
     const handle = createDragDropHandle()
 
-    expect(handle.getState()).toEqual({ containerElement: null, handler: null })
+    expect(handle.getState()).toEqual({ containerElement: null, handler: null, isDragging: false })
   })
 
   it('merges partial updates into the state', () => {
@@ -39,13 +39,31 @@ describe('createDragDropHandle', () => {
     const handler = createHandler()
 
     handle.setState({ containerElement: element })
-    expect(handle.getState()).toEqual({ containerElement: element, handler: null })
+    expect(handle.getState()).toEqual({ containerElement: element, handler: null, isDragging: false })
 
     handle.setState({ handler })
-    expect(handle.getState()).toEqual({ containerElement: element, handler })
+    expect(handle.getState()).toEqual({ containerElement: element, handler, isDragging: false })
 
     handle.setState({ containerElement: null, handler: null })
-    expect(handle.getState()).toEqual({ containerElement: null, handler: null })
+    expect(handle.getState()).toEqual({ containerElement: null, handler: null, isDragging: false })
+  })
+
+  it('tracks the isDragging flag as an independent slice', () => {
+    const handle = createDragDropHandle()
+    const listener = vi.fn()
+    handle.subscribe(listener)
+
+    handle.setState({ isDragging: true })
+    expect(handle.getState().isDragging).toBe(true)
+    expect(listener).toHaveBeenCalledTimes(1)
+
+    // an identical flag is swallowed by the change guard
+    handle.setState({ isDragging: true })
+    expect(listener).toHaveBeenCalledTimes(1)
+
+    handle.setState({ isDragging: false })
+    expect(handle.getState().isDragging).toBe(false)
+    expect(listener).toHaveBeenCalledTimes(2)
   })
 
   it('notifies listeners with the new state when a value changes', () => {
@@ -57,7 +75,7 @@ describe('createDragDropHandle', () => {
     handle.setState({ handler })
 
     expect(listener).toHaveBeenCalledTimes(1)
-    expect(listener).toHaveBeenCalledWith({ containerElement: null, handler })
+    expect(listener).toHaveBeenCalledWith({ containerElement: null, handler, isDragging: false })
   })
 
   it('does not notify when the update keeps every value identical', () => {
@@ -159,6 +177,6 @@ describe('DragDropHandleContext', () => {
   it('falls back to a default handle outside any provider', () => {
     const { result } = renderHook(() => useDragDropHandle())
 
-    expect(result.current.getState()).toEqual({ containerElement: null, handler: null })
+    expect(result.current.getState()).toEqual({ containerElement: null, handler: null, isDragging: false })
   })
 })

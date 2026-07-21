@@ -19,6 +19,12 @@ export const HtmlOutputPlugin = ({
 
   const exportHtml = React.useCallback(() => {
     editor.update(() => {
+      // This live export path deliberately produces different markup than the
+      // headless LexicalHTMLRenderer path: $generateHtmlFromNodes emits
+      // Lexical-core HTML (dir attributes, pre-wrap spans, doubled format
+      // tags) and no heading ids, while the headless element transformers
+      // emit clean markup with generated heading ids. The divergence is
+      // pinned by test/unit/plugins/HtmlOutputPlugin.export-parity.test.ts.
       const htmlString = $generateHtmlFromNodes(editor, null)
       const rootText = editor.getEditorState().read(() => $getRoot().getTextContent())
       const hasContent = rootText.trim().length > 0

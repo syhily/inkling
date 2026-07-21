@@ -217,6 +217,10 @@ export const CardSnippetItem = ({
 
 export interface CardMenuProps {
   menu?: Map<string, CardMenuItemData[]>
+  /** Flat resolved items in render order (buildCardMenu's `items`); takes
+   * precedence over `menu`. Section labels are read off each item, so the
+   * rendered `data-inkling-cardmenu-idx` numbering IS the list index. */
+  items?: CardMenuItemData[]
   insert?: (
     insertCommand?: unknown,
     params?: { insertParams?: Record<string, unknown>; queryParams?: string[] },
@@ -226,20 +230,45 @@ export interface CardMenuProps {
   closeMenu?: () => void
 }
 
+/** Groups a flat render-ordered item list back into sections. buildCardMenu
+ * emits items section-contiguously (Primary first), so a run of equal labels
+ * is one section. */
+function groupItemsBySection(items: CardMenuItemData[]): Array<[string, CardMenuItemData[]]> {
+  const sections: Array<[string, CardMenuItemData[]]> = []
+
+  for (const item of items) {
+    const label = item.section || 'Primary'
+    const current = sections[sections.length - 1]
+
+    if (current && current[0] === label) {
+      current[1].push(item)
+    } else {
+      sections.push([label, [item]])
+    }
+  }
+
+  return sections
+}
+
 export const CardMenu = ({
-  menu = new Map<string, CardMenuItemData[]>(),
+  menu,
+  items,
   insert = () => {},
   selectedItemIndex = 0,
   scrollToSelectedItem = false,
   closeMenu,
 }: CardMenuProps) => {
+  const sections: Array<[string, CardMenuItemData[]]> = items
+    ? groupItemsBySection(items)
+    : [...(menu ?? new Map<string, CardMenuItemData[]>()).entries()]
+
   const CardMenuSections: React.ReactElement[] = []
 
   let itemIndex = 0
-  for (const [sectionLabel, items] of menu) {
+  for (const [sectionLabel, sectionItems] of sections) {
     const CardMenuItems: React.ReactElement[] = []
 
-    items.forEach((item) => {
+    sectionItems.forEach((item) => {
       const isSelected = itemIndex === selectedItemIndex
       const onClick = (event: React.MouseEvent): void => {
         event.preventDefault()

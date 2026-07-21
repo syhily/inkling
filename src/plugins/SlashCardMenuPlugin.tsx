@@ -1,9 +1,8 @@
-import type { LexicalCommand, LexicalEditor } from 'lexical'
+import type { LexicalEditor } from 'lexical'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
   mergeRegister,
-  $createParagraphNode,
   $getSelection,
   $isParagraphNode,
   $isRangeSelection,
@@ -16,13 +15,10 @@ import {
 } from 'lexical'
 import React from 'react'
 
-import type { BuildCardMenuResult } from '@/utils/buildCardMenu'
-
 import { CardMenu } from '@/components/ui/CardMenu'
 import { SlashMenu } from '@/components/ui/SlashMenu'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { buildCardMenu } from '@/utils/buildCardMenu'
-import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
+import { useCardMenu } from '@/hooks/useCardMenu'
+import trackEvent from '@/utils/analytics'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
 function useSlashCardMenu(editor: LexicalEditor) {
@@ -30,12 +26,10 @@ function useSlashCardMenu(editor: LexicalEditor) {
   const [position, setPosition] = React.useState<React.CSSProperties>({})
   const [query, setQuery] = React.useState('')
   const [commandParams, setCommandParams] = React.useState<string[]>([])
-  const [cardMenu, setCardMenu] = React.useState<BuildCardMenuResult>({ menu: new Map(), maxItemIndex: -1 })
   const [selectedItemIndex, setSelectedItemIndex] = React.useState(0)
   const [scrollToSelectedItem, setScrollToSelectedItem] = React.useState(false)
   const cachedRange = React.useRef<Range | null>(null)
   const containerRef = React.useRef<HTMLDivElement | null>(null)
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
 
   function setMenuPosition(elem: HTMLElement | null) {
     if (!elem) {
@@ -107,52 +101,17 @@ function useSlashCardMenu(editor: LexicalEditor) {
     [setIsShowingMenu, commandParams],
   )
 
+  const { cardMenu, insert: insertCardItem } = useCardMenu(editor, query, {
+    commandParams,
+    replaceTriggerParagraph: true,
+  })
+
   const insert = React.useCallback(
-    (
-      insertCommand: unknown,
-      { insertParams = {}, queryParams = [] }: { insertParams?: Record<string, unknown>; queryParams?: string[] } = {},
-    ) => {
-      const dataset = { ...insertParams }
-
-      for (let i = 0; i < queryParams.length; i++) {
-        if (commandParams[i]) {
-          const key = queryParams[i]
-          const value = commandParams[i]
-          dataset[key] = value
-        }
-      }
-
-      editor.update(() => {
-        const selection = $getSelection()
-        if (!$isRangeSelection(selection)) {
-          return
-        }
-
-        const focusPNode = selection.focus.getNode().getTopLevelElement()
-
-        if (!focusPNode) {
-          return
-        }
-
-        // paragraphs at the beginning of the document will delete themselves
-        // via .collapseAtStart() if their contents are deleted so we create
-        // a new paragraph and delete the old one before the insert command
-        // replaces the selection with the new node
-        const paragraph = $createParagraphNode()
-        focusPNode.insertAfter(paragraph)
-        focusPNode.remove()
-        paragraph.select()
-
-        // deliberate boundary: the card menu is a heterogeneous registry of
-        // command/payload pairs built from each node's static `cardMenu`, so
-        // the specific payload type is erased here. Each plugin handler
-        // re-narrows the payload with its own dataset type guard.
-        editor.dispatchCommand(insertCommand as LexicalCommand<unknown>, dataset)
-      })
-
+    (insertCommand: unknown, params: { insertParams?: Record<string, unknown>; queryParams?: string[] } = {}) => {
+      insertCardItem(insertCommand, params)
       closeMenu()
     },
-    [editor, commandParams, closeMenu],
+    [insertCardItem, closeMenu],
   )
 
   // close menu if selection moves out of the slash command
@@ -335,11 +294,13 @@ function useSlashCardMenu(editor: LexicalEditor) {
     }
 
     const enter = (event: KeyboardEvent) => {
-      ;(
-        document.querySelector(
-          `[data-inkling-slash-menu] [data-inkling-cardmenu-idx="${selectedItemIndex}"]`,
-        ) as HTMLElement | null
-      )?.click()
+      // insert from the flat item list — the same data CardMenu renders — so
+      // selection never depends on the menu's DOM
+      const item = cardMenu.items[selectedItemIndex]
+      if (item) {
+        insert(item.insertCommand, item)
+        trackEvent('Card Added', { card: item.label ?? 'unknown' })
+      }
       event.preventDefault()
       return true
     }
@@ -351,14 +312,12 @@ function useSlashCardMenu(editor: LexicalEditor) {
       editor.registerCommand(KEY_ARROW_LEFT_COMMAND, moveUp, COMMAND_PRIORITY_HIGH),
       editor.registerCommand(KEY_ENTER_COMMAND, enter, COMMAND_PRIORITY_HIGH),
     )
-  }, [editor, isShowingMenu, cardMenu, selectedItemIndex])
+  }, [editor, isShowingMenu, cardMenu, selectedItemIndex, insert])
 
-  // build up the card menu based on registered nodes and current search
+  // reset the keyboard selection whenever the menu rebuilds
   React.useEffect(() => {
-    const cardNodes = getEditorCardNodes(editor)
-    setCardMenu(buildCardMenu(cardNodes, { query, config: cardConfig }))
     setSelectedItemIndex(0)
-  }, [editor, query, setCardMenu, setSelectedItemIndex, cardConfig])
+  }, [cardMenu])
 
   // attach a resize observer to call setMenuPosition when the window resizes
   React.useEffect(() => {
@@ -389,7 +348,7 @@ function useSlashCardMenu(editor: LexicalEditor) {
     setMenuPosition(getSelectionElement())
   }, [isShowingMenu])
 
-  if (cardMenu.menu.size === 0) {
+  if (cardMenu.items.length === 0) {
     return null
   }
 
@@ -400,7 +359,7 @@ function useSlashCardMenu(editor: LexicalEditor) {
           <CardMenu
             closeMenu={closeMenu}
             insert={insert}
-            menu={cardMenu.menu}
+            items={cardMenu.items}
             scrollToSelectedItem={scrollToSelectedItem}
             selectedItemIndex={selectedItemIndex}
           />

@@ -1,6 +1,6 @@
 import type { TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { FileNode, fileImportSpec } from '@/nodes/base/nodes/file/FileNode'
+import { FileNode } from '@/nodes/base/nodes/file/FileNode'
 
 import type { CardDeclaration } from './card-declaration'
 
@@ -17,7 +17,6 @@ export const fileDeclaration = {
   nodeType: 'file',
   baseNode: FileNode,
   transientProps,
-  importSpec: fileImportSpec,
   insert: {},
   surfaces: {
     default: true,

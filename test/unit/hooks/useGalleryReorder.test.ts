@@ -111,9 +111,11 @@ describe('useGalleryReorder', () => {
       },
     }
 
-    const success = options.droppable.onDrop(draggableInfo, null, null)
+    const result = options.droppable.onDrop(draggableInfo, null, null)
 
-    expect(success).toBe(true)
+    // the gallery consumed the drop itself, so it reports the source as
+    // handled — its own onDropEnd must not remove the image again
+    expect(result).toEqual({ success: true, sourceHandled: true })
     expect(updateImages).toHaveBeenCalledWith([
       expect.objectContaining({
         src: 'https://example.com/image.jpg',
@@ -141,9 +143,9 @@ describe('useGalleryReorder', () => {
       dataset: { src },
     }
 
-    const success = options.droppable.onDrop(draggableInfo, null, null)
+    const result = options.droppable.onDrop(draggableInfo, null, null)
 
-    expect(success).toBe(true)
+    expect(result).toEqual({ success: true, sourceHandled: true })
     expect(updateImages).toHaveBeenCalledWith([expect.objectContaining({ src })])
   })
 
@@ -167,9 +169,9 @@ describe('useGalleryReorder', () => {
       dataset: { src: 'https://example.com/one.jpg' },
     }
 
-    const success = options.droppable.onDrop(draggableInfo, droppableElement as HTMLElement, 'top-right')
+    const result = options.droppable.onDrop(draggableInfo, droppableElement as HTMLElement, 'top-right')
 
-    expect(success).toBe(true)
+    expect(result).toEqual({ success: true, sourceHandled: true })
     expect(updateImages).toHaveBeenCalledWith([
       { src: 'https://example.com/two.jpg' },
       { src: 'https://example.com/three.jpg' },
@@ -213,8 +215,11 @@ describe('useGalleryReorder', () => {
       dataset: { src: 'https://example.com/one.jpg' },
     }
 
-    options.droppable.onDrop(draggableInfo, droppableElement as HTMLElement, 'top-right')
-    onDropEnd(draggableInfo, true)
+    // the handler routes the drop result back to the target container's own
+    // onDropEnd — sourceHandled tells it not to remove the reordered image
+    const result = options.droppable.onDrop(draggableInfo, droppableElement as HTMLElement, 'top-right')
+    expect(result).toEqual({ success: true, sourceHandled: true })
+    onDropEnd(draggableInfo, true, true)
 
     expect(updateImages).toHaveBeenCalledTimes(1)
   })
@@ -231,7 +236,9 @@ describe('useGalleryReorder', () => {
       dataset: { src: 'https://example.com/one.jpg' },
     }
 
-    onDropEnd(draggableInfo, true)
+    // dropped elsewhere: this gallery's onDrop never ran, so the handler
+    // reports sourceHandled=false and the source image is removed
+    onDropEnd(draggableInfo, true, false)
 
     expect(updateImages).toHaveBeenCalledWith([{ src: 'https://example.com/two.jpg' }])
   })

@@ -11,11 +11,13 @@ import { createCommand } from 'lexical'
 // - plain-text classifier: `plainTextPaste.ts` (plan 010's consolidation)
 // - link leg: `PASTE_LINK_COMMAND` (already headless in `behaviour/commands.ts`)
 //   → `registerLinkMatching.ts`
-// - markdown leg: `PASTE_MARKDOWN_COMMAND` (below) → `MarkdownPastePlugin.tsx`
+// - markdown leg: `PASTE_MARKDOWN_COMMAND` (below) → the headless
+//   `markdownToSanitizedHtml` (`markdownPaste.ts`) → `MarkdownPastePlugin.tsx`
+//   keeps only the DataTransfer glue and command handling
 // - file leg: `INSERT_MEDIA_COMMAND` (below), dispatched by
 //   `DragDropPastePlugin.tsx` → claimed per card by `CardInsertPlugin.tsx`
 // - shared modifier state: one `ModifierState` per editor (below), written by
-//   each consumer's own keydown/keyup listeners and read by the markdown and
+//   this module's own keydown/keyup listeners and read by the markdown and
 //   link legs
 // - input-side link acceptance: `isPasteableLinkUrl` (below) decides whether
 //   pasted text becomes a link
@@ -36,17 +38,36 @@ const modifierStates = new WeakMap<LexicalEditor, ModifierState>()
 // One modifier-state object per editor, created lazily. The
 // `{ current: boolean }` shape matches `LinkMatchingDeps.isShiftPressed`
 // (`registerLinkMatching.ts`), so the behaviour layer's deps interface is
-// unchanged. Each plugin keeps its own keydown/keyup listeners (it must work
-// standalone). The two write formulations (MarkdownPastePlugin writes on
-// `e.key === 'Shift'`, InklingBehaviourPlugin writes `event.shiftKey`) agree
-// on every real browser event stream except one corner: releasing one of two
-// held Shift keys, where the stale value self-corrects on the next key event
-// — only a menu-paste inside that window observes it (pre-existing).
+// unchanged. The protocol owns the writes as well as the state: the first
+// `getModifierState(editor)` call for an editor attaches one document
+// keydown/keyup listener pair that writes the single `event.shiftKey`
+// formulation. Reading the held-state off every key event (rather than
+// toggling on `e.key === 'Shift'`) also covers the dual-shift corner —
+// releasing one of two held Shift keys reports `shiftKey: true`, so the
+// state stays pressed until the last Shift is released.
+//
+// Teardown: there is none, by convention. Lexical editors have no destroy
+// hook, and the codebase's other per-editor WeakMap resource
+// (`WordCountPlugin`'s word-count state) likewise relies on the key's GC
+// rather than explicit teardown. The listeners close over the state object
+// only — never the editor — so the editor itself stays collectible; a
+// destroyed editor leaves an inert listener pair writing to an orphaned
+// state object until page unload.
 export function getModifierState(editor: LexicalEditor): ModifierState {
-  let state = modifierStates.get(editor)
-  if (!state) {
-    state = { current: false }
-    modifierStates.set(editor, state)
+  const existing = modifierStates.get(editor)
+  if (existing) {
+    return existing
+  }
+  const state: ModifierState = { current: false }
+  modifierStates.set(editor, state)
+  // Guarded for SSR/headless environments: `getModifierState` runs during
+  // plugin render, where `document` may not exist.
+  if (typeof document !== 'undefined') {
+    const writeShiftState = (event: KeyboardEvent) => {
+      state.current = event.shiftKey
+    }
+    document.addEventListener('keydown', writeShiftState)
+    document.addEventListener('keyup', writeShiftState)
   }
   return state
 }

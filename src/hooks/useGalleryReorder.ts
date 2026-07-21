@@ -2,10 +2,9 @@ import React from 'react'
 
 import type { GalleryImage } from '@/types/gallery'
 import type { DraggableInfo, DroppablePosition, IndicatorPosition } from '@/utils/draggable/DragDropContainer'
-import type { DraggableContainerHandle } from '@/utils/draggable/DragDropHandler'
 
-import { useDragDropState } from '@/hooks/useDragDropState'
 import { pick } from '@/utils'
+import { useDragDropContainer } from '@/utils/draggable/useDragDropContainer'
 import { getImageFilenameFromSrc } from '@/utils/getImageFilenameFromSrc'
 
 export type { GalleryImage }
@@ -30,32 +29,8 @@ export default function useGalleryReorder({
   maxImages = 9,
   disabled = false,
 }: UseGalleryReorderOptions): UseGalleryReorderResult {
-  const handler = useDragDropState((state) => state.handler)
-
   const [containerRef, setContainerRef] = React.useState<HTMLElement | null>(null)
   const [isDraggedOver, setIsDraggedOver] = React.useState<boolean>(false)
-  const dragDropContainer = React.useRef<DraggableContainerHandle | null>(null)
-  const skipOnDragEndRef = React.useRef<boolean>(false)
-
-  const onDragStart = (draggableInfo: DraggableInfo) => {
-    // enable dropping when an image is dragged in from outside of this card
-    const isImageDrag = draggableInfo.type === 'image' || draggableInfo.cardName === 'image'
-    if (isImageDrag && draggableInfo.dataset.src && images.length !== maxImages) {
-      dragDropContainer.current?.enableDrag()
-    }
-  }
-
-  const onDragEnd = () => {
-    setIsDraggedOver(false)
-  }
-
-  const onDragEnterContainer = () => {
-    setIsDraggedOver(true)
-  }
-
-  const onDragLeaveContainer = () => {
-    setIsDraggedOver(false)
-  }
 
   const onDrop = (draggableInfo: DraggableInfo) => {
     // do not allow dropping of non-images
@@ -109,26 +84,25 @@ export default function useGalleryReorder({
         const filtered = updatedImages.filter((i) => i !== draggedImage)
         filtered.splice(insertIndex + accountForRemoval, 0, draggedImage)
         updateImages(filtered)
-        dragDropContainer.current?.refresh()
+        container.refresh()
 
-        skipOnDragEndRef.current = true
-        return true
+        // this gallery consumed the drop itself — onDropEnd must not remove it
+        return { success: true, sourceHandled: true }
       }
 
       updateImages(updatedImages)
-      dragDropContainer.current?.refresh()
+      container.refresh()
 
-      skipOnDragEndRef.current = true
-      return true
+      // this gallery consumed the drop itself — onDropEnd must not remove it
+      return { success: true, sourceHandled: true }
     }
 
     return false
   }
 
   // if an image is dragged out of a gallery we need to remove it
-  const onDropEnd = (draggableInfo: DraggableInfo, success: boolean) => {
-    if (skipOnDragEndRef.current || !success) {
-      skipOnDragEndRef.current = false
+  const onDropEnd = (draggableInfo: DraggableInfo, success: boolean, sourceHandled: boolean) => {
+    if (sourceHandled || !success) {
       return
     }
 
@@ -136,7 +110,7 @@ export default function useGalleryReorder({
     if (image) {
       const updatedImages = images.filter((i) => i !== image)
       updateImages(updatedImages)
-      dragDropContainer.current?.refresh()
+      container.refresh()
     }
   }
 
@@ -173,29 +147,7 @@ export default function useGalleryReorder({
     const droppableIndex = droppables.indexOf(droppableElem)
 
     if (row && isDropAllowed(draggableIndex, droppableIndex, position)) {
-      const rowImages = Array.from(row.querySelectorAll<HTMLElement>('[data-image]'))
-      const rowDroppableIndex = rowImages.indexOf(droppableElem)
       let insertIndex = droppableIndex
-      const beforeElems: HTMLElement[] = []
-      const afterElems: HTMLElement[] = []
-
-      rowImages.forEach((image, index) => {
-        if (index < rowDroppableIndex) {
-          beforeElems.push(image)
-        }
-
-        if (index === rowDroppableIndex) {
-          if (position.match(/left/)) {
-            afterElems.push(image)
-          } else {
-            beforeElems.push(image)
-          }
-        }
-
-        if (index > rowDroppableIndex) {
-          afterElems.push(image)
-        }
-      })
 
       if (position.match(/right/)) {
         insertIndex += 1
@@ -233,51 +185,43 @@ export default function useGalleryReorder({
     return adjustedDroppableIndex !== draggableIndex
   }
 
-  React.useEffect(() => {
-    if (isSelected) {
-      dragDropContainer.current?.enableDrag()
-    } else {
-      dragDropContainer.current?.disableDrag()
-    }
-  }, [isSelected, containerRef])
-
-  React.useEffect(() => {
-    const galleryElem = containerRef
-
-    if (!galleryElem || !handler) {
-      return
-    }
-
-    const container = handler.registerContainer(galleryElem, {
-      draggable: {
-        draggableSelector: '[data-image]',
-        isDragEnabled: !disabled && images.length > 0,
-        getDraggableInfo,
+  const container = useDragDropContainer({
+    element: containerRef,
+    enabled: isSelected,
+    // re-register when the image set changes so the container re-scans the
+    // gallery's draggable/droppable markers (callbacks are ref-forwarded and
+    // would see fresh images either way)
+    reRegisterKey: images,
+    draggable: {
+      draggableSelector: '[data-image]',
+      isDragEnabled: !disabled && images.length > 0,
+      getDraggableInfo,
+    },
+    droppable: {
+      droppableSelector: '[data-image]',
+      getIndicatorPosition,
+      onDrop,
+      onDragEnterContainer: () => {
+        setIsDraggedOver(true)
       },
-      droppable: {
-        droppableSelector: '[data-image]',
-        getIndicatorPosition,
-        onDrop,
-        onDragEnterContainer,
-        onDragLeaveContainer,
+      onDragLeaveContainer: () => {
+        setIsDraggedOver(false)
       },
-      lifecycle: {
-        onDragStart,
-        onDragEnd,
-        onDropEnd,
+    },
+    lifecycle: {
+      onDragStart: (draggableInfo) => {
+        // enable dropping when an image is dragged in from outside of this card
+        const isImageDrag = draggableInfo.type === 'image' || draggableInfo.cardName === 'image'
+        if (isImageDrag && draggableInfo.dataset.src && images.length !== maxImages) {
+          container.enableDrag()
+        }
       },
-    })
-    dragDropContainer.current = container
-
-    return () => {
-      container.destroy()
-      dragDropContainer.current = null
-    }
-
-    // we want to be specific about when we want the drag/drop handler to
-    // be set up or refreshed so we disable the exhaustive-deps rule here
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerRef, images, handler])
+      onDragEnd: () => {
+        setIsDraggedOver(false)
+      },
+      onDropEnd,
+    },
+  })
 
   return { setContainerRef, isDraggedOver }
 }

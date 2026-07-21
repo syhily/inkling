@@ -62,24 +62,6 @@ function useInklingBehaviour({
   const isShiftPressed = getModifierState(editor)
 
   React.useEffect(() => {
-    const keyDown = (event: KeyboardEvent) => {
-      isShiftPressed.current = event.shiftKey
-    }
-
-    const keyUp = (event: KeyboardEvent) => {
-      isShiftPressed.current = event.shiftKey
-    }
-
-    document.addEventListener('keydown', keyDown)
-    document.addEventListener('keyup', keyUp)
-
-    return () => {
-      document.removeEventListener('keydown', keyDown)
-      document.removeEventListener('keyup', keyUp)
-    }
-  }, [isShiftPressed])
-
-  React.useEffect(() => {
     return registerMouseEvents(editor, { containerElem, isNested })
   }, [editor, containerElem, isNested])
 

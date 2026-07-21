@@ -1,19 +1,10 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import {
-  $getSelection,
-  $isParagraphNode,
-  $isRangeSelection,
-  $setSelection,
-  type LexicalCommand,
-  type LexicalEditor,
-} from 'lexical'
+import { $getSelection, $isParagraphNode, $isRangeSelection, $setSelection, type LexicalEditor } from 'lexical'
 import React from 'react'
 
 import { CardMenu } from '@/components/ui/CardMenu'
 import { PlusButton, PlusMenu } from '@/components/ui/PlusMenu'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { buildCardMenu } from '@/utils/buildCardMenu'
-import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
+import { useCardMenu } from '@/hooks/useCardMenu'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
 function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
@@ -21,12 +12,7 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
   const [isShowingMenu, setIsShowingMenu] = React.useState<boolean>(false)
   const [topPosition, setTopPosition] = React.useState<number>(0)
   const [cachedRange, setCachedRange] = React.useState<Range | null>(null)
-  const [cardMenu, setCardMenu] = React.useState<ReturnType<typeof buildCardMenu>>({
-    menu: new Map(),
-    maxItemIndex: 0,
-  })
   const containerRef = React.useRef<HTMLDivElement | null>(null)
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
 
   function getTopPosition(elem: Element): number {
     const elemRect = elem.getBoundingClientRect()
@@ -130,18 +116,14 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
     })
   }, [editor, showButton, hideButton])
 
+  const { cardMenu, insert: insertCardItem } = useCardMenu(editor)
+
   const insert = React.useCallback(
-    (insertCommand: unknown, { insertParams = {} }: { insertParams?: Record<string, unknown> } = {}): void => {
-      const commandParams = { ...insertParams }
-      // deliberate boundary: the card menu is a heterogeneous registry of
-      // command/payload pairs built from each node's static `cardMenu`, so
-      // the specific payload type is erased here (same boundary as
-      // SlashCardMenuPlugin). Each plugin handler re-narrows the payload
-      // with its own dataset type guard.
-      editor.dispatchCommand(insertCommand as LexicalCommand<unknown>, commandParams)
+    (insertCommand: unknown, params: { insertParams?: Record<string, unknown> } = {}): void => {
+      insertCardItem(insertCommand, params)
       closeMenu()
     },
-    [editor, closeMenu],
+    [insertCardItem, closeMenu],
   )
 
   React.useEffect(() => {
@@ -254,16 +236,11 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
     }
   }, [handleKeydown])
 
-  React.useEffect(() => {
-    const cardNodes = getEditorCardNodes(editor)
-    setCardMenu(buildCardMenu(cardNodes, { config: cardConfig }))
-  }, [cardConfig, editor])
-
   const style: React.CSSProperties = {
     top: `${topPosition}px`,
   }
 
-  if (cardMenu.menu.size === 0) {
+  if (cardMenu.items.length === 0) {
     return null
   }
 
@@ -273,7 +250,7 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
         <PlusButton onClick={openMenu} />
         {isShowingMenu && (
           <PlusMenu>
-            <CardMenu closeMenu={closeMenu} insert={insert} menu={cardMenu.menu} />
+            <CardMenu closeMenu={closeMenu} insert={insert} items={cardMenu.items} />
           </PlusMenu>
         )}
       </div>

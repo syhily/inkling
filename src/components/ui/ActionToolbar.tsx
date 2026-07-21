@@ -1,6 +1,6 @@
 import type React from 'react'
 
-import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
+import { useDragDropState } from '@/hooks/useDragDropState'
 
 export function ActionToolbar({
   isVisible,
@@ -11,7 +11,7 @@ export function ActionToolbar({
   children?: React.ReactNode
   'data-inkling-card-toolbar'?: string
 }) {
-  const { isDragging } = useInklingSelectedCardContext()
+  const isDragging = useDragDropState((state) => state.isDragging)
 
   if (isVisible && !isDragging) {
     return (

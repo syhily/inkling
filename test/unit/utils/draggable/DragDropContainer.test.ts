@@ -102,7 +102,7 @@ describe('DragDropContainer', () => {
     customDragPreviewElement.id = 'custom-drag-preview'
 
     const handlers = createHandlers()
-    handlers.draggable.createDragPreviewElement = vi.fn().mockReturnValue(customDragPreviewElement)
+    handlers.draggable.createDragPreviewElement = vi.fn().mockReturnValue({ element: customDragPreviewElement })
 
     const container = new DragDropContainer(containerElement, handlers)
     const draggable = containerElement.querySelector('.draggable') as HTMLElement
@@ -113,8 +113,8 @@ describe('DragDropContainer', () => {
       dataset: {},
     }
 
-    const dragPreviewElement = container.createDragPreviewElement(info)
-    expect(dragPreviewElement).toBe(customDragPreviewElement)
+    const dragPreview = container.createDragPreviewElement(info)
+    expect(dragPreview?.element).toBe(customDragPreviewElement)
   })
 
   it('createDragPreviewElement returns image drag preview for image type', () => {
@@ -136,10 +136,10 @@ describe('DragDropContainer', () => {
       dataset: {},
     }
 
-    const dragPreviewElement = container.createDragPreviewElement(info)
-    expect(dragPreviewElement).toBeInstanceOf(HTMLImageElement)
-    expect(dragPreviewElement?.id).toBe('inkling-drag-drop-preview')
-    expect(dragPreviewElement?.style.position).toBe('absolute')
+    const dragPreview = container.createDragPreviewElement(info)
+    expect(dragPreview?.element).toBeInstanceOf(HTMLImageElement)
+    expect(dragPreview?.element.id).toBe('inkling-drag-drop-preview')
+    expect(dragPreview?.element.style.position).toBe('absolute')
   })
 
   it('createDragPreviewElement returns image drag preview for image cardName', () => {
@@ -161,8 +161,8 @@ describe('DragDropContainer', () => {
       dataset: {},
     }
 
-    const dragPreviewElement = container.createDragPreviewElement(info)
-    expect(dragPreviewElement).toBeInstanceOf(HTMLImageElement)
+    const dragPreview = container.createDragPreviewElement(info)
+    expect(dragPreview?.element).toBeInstanceOf(HTMLImageElement)
   })
 
   it('createDragPreviewElement returns undefined when no drag preview can be created', () => {

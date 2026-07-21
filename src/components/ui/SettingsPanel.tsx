@@ -14,6 +14,7 @@ import { MultiSelectDropdown } from '@/components/ui/MultiSelectDropdown'
 import { Slider } from '@/components/ui/Slider'
 import { TabView } from '@/components/ui/TabView'
 import { Toggle } from '@/components/ui/Toggle'
+import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import useSettingsPanelReposition from '@/hooks/useSettingsPanelReposition'
 
@@ -27,7 +28,8 @@ export type SettingsPanelProps = {
 )
 
 export function SettingsPanel({ children, darkMode, cardWidth, tabs, defaultTab, className = '' }: SettingsPanelProps) {
-  const { ref } = useSettingsPanelReposition<HTMLDivElement>({ cardWidth: cardWidth ?? 'regular' })
+  const { nodeKey } = React.useContext(CardContext)
+  const { ref } = useSettingsPanelReposition<HTMLDivElement>({ cardWidth: cardWidth ?? 'regular', cardKey: nodeKey })
 
   const tabContent = React.useMemo<Record<string, React.ReactNode>>(() => {
     if (!tabs) {

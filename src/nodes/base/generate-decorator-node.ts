@@ -80,7 +80,6 @@ function validateArguments(nodeType: string, properties: readonly DecoratorNodeP
  * 'markdown' when its content may contain URLs — for the out-of-repo
  * `urlTransformMap` consumer, and `urlPath` remaps the key used there.
  * `wordCount` includes the property in the node's text content.
- * `privateName` overrides the backing `__<name>` field.
  */
 export interface DecoratorNodeProperty<Name extends string = string, Default = unknown> {
   name: Name
@@ -89,7 +88,6 @@ export interface DecoratorNodeProperty<Name extends string = string, Default = u
   urlType?: 'url' | 'html' | 'markdown'
   urlPath?: string
   wordCount?: boolean
-  privateName?: string
 }
 
 /**
@@ -194,7 +192,7 @@ type GeneratedDecoratorNodeInstance<
   TOutput extends ExportDOMOutput = ExportDOMOutput,
 > = {
   exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): TOutput
-} & GeneratedDecoratorNodeBase<TDataset> &
+} & GeneratedDecoratorNodeBase &
   TDataset
 
 // An intersection rather than Lexical's `Spread` utility: `Spread` isn't provably
@@ -226,65 +224,27 @@ export interface GeneratedDecoratorNodeClass<
   importJSON(serializedNode: Record<string, unknown>): GeneratedDecoratorNodeInstance<TDataset, TOutput>
 }
 
-// Type-only base class used as the return type of generateDecoratorNode.
-// This ensures TypeScript recognizes generated nodes as LexicalNode subclasses
-// while preserving the dynamic property index signature.
-export class GeneratedDecoratorNodeBase<
-  TDataset extends Record<string, unknown> = Record<string, unknown>,
-> extends InklingDecoratorNode {
+// Type-only view of the generated node's instance side, used in the instance
+// intersection above and by consumers holding a card node without its
+// concrete dataset type. Extending InklingDecoratorNode keeps generated nodes
+// LexicalNode-typed while declaring the generated members and the
+// dynamic-dataset index signature. This cannot be a merged declaration on the
+// generator's real class: that class is function-local and its dataset
+// members depend on the function's type parameters, which merged
+// declarations cannot capture. The surface is declared here once, as types
+// only — the generated class below supplies every member at runtime, and the
+// return-site cast bridges the two.
+export interface GeneratedDecoratorNodeBase extends InklingDecoratorNode {
   [key: string]: unknown
 
-  constructor(data?: Partial<TDataset>, key?: string) {
-    super(key)
-  }
-
-  getDataset(): Record<string, unknown> {
-    return {}
-  }
-
-  appendNestedEditorDataset<T extends Record<string, unknown>>(dataset: T): T {
-    return dataset
-  }
-
-  appendTransientDataset<T extends Record<string, unknown>>(dataset: T): T {
-    return dataset
-  }
-
-  serializeNestedEditorHtml<T extends Record<string, unknown>>(json: T): T {
-    return json
-  }
-
-  exportJSON(): { type: string; version: number; [key: string]: unknown } {
-    return { type: '', version: 1 }
-  }
-
-  static getPropertyDefaults(): Record<string, unknown> {
-    return {}
-  }
-
-  static get urlTransformMap(): Record<string, string | Record<string, string>> {
-    return {}
-  }
-
-  static importJSON(_serializedNode: Record<string, unknown>): GeneratedDecoratorNodeBase<Record<string, unknown>> {
-    return new GeneratedDecoratorNodeBase()
-  }
-
-  static transform() {
-    return null
-  }
-
-  isInklingCard(): true {
-    return true
-  }
-
-  hasEditMode(): boolean {
-    return true
-  }
-
-  getIsVisibilityActive(): boolean {
-    return false
-  }
+  getDataset(): Record<string, unknown>
+  appendNestedEditorDataset<T extends Record<string, unknown>>(dataset: T): T
+  appendTransientDataset<T extends Record<string, unknown>>(dataset: T): T
+  serializeNestedEditorHtml<T extends Record<string, unknown>>(json: T): T
+  exportJSON(): { type: string; version: number; [key: string]: unknown }
+  isInklingCard(): true
+  hasEditMode(): boolean
+  getIsVisibilityActive(): boolean
 }
 
 export function generateDecoratorNode<
@@ -322,20 +282,10 @@ export function generateDecoratorNode<
 
   // Adds a `privateName` field to the properties for convenience (e.g. `__name`):
   // properties: [{name: 'name', privateName: '__name', default: 'hello'}, {...}]
-  const internalProps = nodeProperties.map((prop) => {
-    return Object.defineProperties(
-      {},
-      {
-        ...Object.getOwnPropertyDescriptors(prop),
-        privateName: {
-          configurable: true,
-          enumerable: true,
-          value: `__${prop.name}`,
-          writable: true,
-        },
-      },
-    ) as DecoratorNodeProperty & { privateName: string }
-  })
+  const internalProps: (DecoratorNodeProperty & { privateName: string })[] = nodeProperties.map((prop) => ({
+    ...prop,
+    privateName: `__${prop.name}`,
+  }))
 
   // Adds `visibility` property to the properties array if `hasVisibility` is true
   // uses a getter for `default` to avoid problems with mutation of nested objects
@@ -376,9 +326,10 @@ export function generateDecoratorNode<
     static transientProps: readonly TransientPropSpec[] | undefined = undefined
 
     /**
-     * The card's import spec (CONTEXT.md: "import spec"), exposed so the
-     * declaration layer can assert it references the same object. Undefined
-     * for cards whose structural parsing keeps a hand-written parser.
+     * The card's import spec (CONTEXT.md: "import spec"), exposed as a static
+     * so `importDOM` and the classification invariant read it off the class.
+     * Undefined for cards whose structural parsing keeps a hand-written
+     * parser.
      */
     static importSpec: CardImportSpec | undefined = importSpec
 

@@ -1,4 +1,4 @@
-export { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
+export type { GeneratedDecoratorNodeBase } from '@/nodes/base/generate-decorator-node'
 export { $updateCardNode } from '@/nodes/base/update-card-node'
 export * from '@/nodes/base/export-dom'
 export { ensureLexicalNodeOwnMethods } from '@/nodes/base/ensure-node-own-methods'

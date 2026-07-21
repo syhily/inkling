@@ -5,12 +5,14 @@ import {
   $getRoot,
   $isElementNode,
   createEditor,
+  KEY_ENTER_COMMAND,
   type LexicalEditor,
 } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import { INSERT_HTML_COMMAND } from '@/nodes/HtmlNode'
@@ -19,21 +21,6 @@ import SlashCardMenuPlugin from '@/plugins/SlashCardMenuPlugin'
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function createComposerContext() {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        upload: () => Promise.resolve(undefined),
-      }),
-    },
-    cardConfig: {},
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
-    onError: vi.fn(),
-  }
-}
 
 function createTestEditor(): LexicalEditor {
   return createEditor({
@@ -91,6 +78,11 @@ async function setupSlashPlugin() {
         get focusNode() {
           return getAnchorNode()
         },
+        // Lexical reads the offsets when deriving a selection from the DOM
+        // (e.g. during a command dispatch); missing offsets throw
+        // $validatePoint inside $beginUpdate, silently swallowed by onError
+        anchorOffset: 0,
+        focusOffset: 0,
         get isCollapsed() {
           return true
         },
@@ -99,6 +91,9 @@ async function setupSlashPlugin() {
         },
         removeAllRanges: () => {},
         addRange: () => {},
+        // Lexical's commit phase reconciles the DOM selection through this;
+        // without it the KEY_ENTER dispatch commit throws into onError
+        setBaseAndExtent: () => {},
         getRangeAt: () => ({}) as Range,
         toString: () => '',
       }) as unknown as Selection,
@@ -121,7 +116,7 @@ async function setupSlashPlugin() {
     value: 0,
   })
 
-  const contextValue = createComposerContext()
+  const contextValue = createHostIntegrationValue()
 
   mockComposerContext(editor)
   const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
@@ -212,6 +207,42 @@ describe('SlashCardMenuPlugin', () => {
 
     await waitFor(() => {
       expect(dispatchCommandSpy).toHaveBeenCalledWith(INSERT_HTML_COMMAND, expect.any(Object))
+    })
+  })
+
+  it('inserts the selected item from the flat list when Enter is pressed', async () => {
+    const { editor, dispatchCommandSpy } = await setupSlashPlugin()
+
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keypress', { key: '/', bubbles: true }))
+    })
+
+    await act(async () => {
+      await updateEditor(editor, () => {
+        const paragraph = $getRoot().getFirstChild()
+        if ($isElementNode(paragraph)) {
+          paragraph.clear()
+          paragraph.append($createTextNode('/html'))
+        }
+      })
+    })
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-inkling-slash-menu]')).toBeInTheDocument()
+    })
+
+    // Enter resolves the item from buildCardMenu's flat list and dispatches
+    // its insert command directly — no menu DOM involved in the selection
+    await act(async () => {
+      editor.dispatchCommand(KEY_ENTER_COMMAND, new KeyboardEvent('keydown', { key: 'Enter' }))
+    })
+
+    await waitFor(() => {
+      expect(dispatchCommandSpy).toHaveBeenCalledWith(INSERT_HTML_COMMAND, expect.any(Object))
+    })
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-inkling-slash-menu]')).not.toBeInTheDocument()
     })
   })
 

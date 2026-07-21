@@ -1,4 +1,7 @@
-import { useCallback, useLayoutEffect, useRef } from 'react'
+import type { LexicalEditor, NodeKey } from 'lexical'
+
+import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import { useCallback, useContext, useLayoutEffect, useRef } from 'react'
 
 import useMovable from '@/hooks/useMovable'
 import { debounce } from '@/utils'
@@ -25,7 +28,6 @@ interface SpacingOptions {
 interface KeepWithinSpacingOptions extends SpacingOptions {
   x: number
   y: number
-  origin?: Origin
   lastSpacing?: {
     top: number
     bottom: number
@@ -38,21 +40,34 @@ function isMobile(): boolean {
   return window.innerWidth < 768 && window.innerHeight > window.innerWidth
 }
 
-const getSelectedCardOrigin = (): Origin => {
-  const cardElement = document.querySelector('[data-inkling-card-editing="true"]')
+// Resolves the card's wrapper element from its node key. The wrapper inside the
+// Lexical decorator element carries the card-width transform (e.g. wide cards),
+// so it — not the decorator element — is the positioning anchor.
+function findCardElement(editor: LexicalEditor, cardKey: NodeKey): HTMLElement | null {
+  const decoratorElement = editor.getElementByKey(cardKey)
+  if (!decoratorElement) {
+    return null
+  }
+  return decoratorElement.querySelector('[data-inkling-card]') ?? decoratorElement
+}
+
+// The origin is always derived from the card element: if the card has a
+// transform applied (e.g. wide cards) the panel becomes positioned relative to
+// the card element rather than the window, and every clamp below must agree on
+// the same origin. It used to be an options parameter that was unconditionally
+// overwritten here — deriving it in one place keeps that de-facto behaviour
+// without the dead parameter.
+function getCardOrigin(cardElement: HTMLElement | null): Origin {
+  const origin: Origin = { x: 0, y: 0 }
   if (!cardElement) {
-    return { x: 0, y: 0 }
+    return origin
+  }
+  if (window.getComputedStyle(cardElement).transform === 'none') {
+    return origin
   }
   const containerRect = cardElement.getBoundingClientRect()
-
-  // if the card element has a transform applied (e.g. wide cards) our panel elem becomes positioned
-  // relative to the card element rather than the window
-  const cardStyles = window.getComputedStyle(cardElement)
-  const origin: Origin = { x: 0, y: 0 }
-  if (cardStyles.transform !== 'none') {
-    origin.x = containerRect.left
-    origin.y = containerRect.top
-  }
+  origin.x = containerRect.left
+  origin.y = containerRect.top
   return origin
 }
 
@@ -78,9 +93,13 @@ function getViewportDimensions(panelElem: HTMLElement | null): ViewportDimension
   }
 }
 
-function keepWithinSpacing(panelElem: HTMLElement | null, options: KeepWithinSpacingOptions): Origin {
-  let { x, y, origin = { x: 0, y: 0 }, topSpacing, bottomSpacing, rightSpacing, leftSpacing, lastSpacing } = options
-  origin = getSelectedCardOrigin()
+function keepWithinSpacing(
+  panelElem: HTMLElement | null,
+  options: KeepWithinSpacingOptions,
+  cardElement: HTMLElement | null,
+): Origin {
+  let { x, y, topSpacing, bottomSpacing, rightSpacing, leftSpacing, lastSpacing } = options
+  const origin = getCardOrigin(cardElement)
 
   if (!panelElem) {
     return { x: x + origin.x, y: y + origin.y }
@@ -136,7 +155,8 @@ function keepWithinSpacing(panelElem: HTMLElement | null, options: KeepWithinSpa
 
 function keepWithinSpacingOnDrag(
   panelElem: HTMLElement | null,
-  { x, y, origin }: { x: number; y: number; origin?: Origin },
+  { x, y }: { x: number; y: number },
+  cardElement: HTMLElement | null,
 ): Origin {
   const DISTANCE_FROM_BOUNDARY = 10
 
@@ -146,54 +166,97 @@ function keepWithinSpacingOnDrag(
   const leftSpacing = DISTANCE_FROM_BOUNDARY
 
   // Last spacing is ignored
-  return keepWithinSpacing(panelElem, {
-    x,
-    y,
-    origin,
-    topSpacing,
-    bottomSpacing,
-    rightSpacing,
-    leftSpacing,
-    lastSpacing: undefined,
-  })
+  return keepWithinSpacing(
+    panelElem,
+    {
+      x,
+      y,
+      topSpacing,
+      bottomSpacing,
+      rightSpacing,
+      leftSpacing,
+      lastSpacing: undefined,
+    },
+    cardElement,
+  )
 }
 
 function keepWithinSpacingOnResize(
   panelElem: HTMLElement | null,
-  {
-    x,
-    y,
-    origin,
-    lastSpacing,
-  }: { x: number; y: number; origin?: Origin; lastSpacing?: KeepWithinSpacingOptions['lastSpacing'] },
+  { x, y, lastSpacing }: { x: number; y: number; lastSpacing?: KeepWithinSpacingOptions['lastSpacing'] },
+  cardElement: HTMLElement | null,
 ): Origin {
   return keepWithinSpacingOnDrag(
     panelElem,
-    keepWithinSpacing(panelElem, {
-      x,
-      y,
-      origin,
-      topSpacing: MIN_TOP_SPACING,
-      bottomSpacing: MIN_BOTTOM_SPACING,
-      rightSpacing: MIN_RIGHT_SPACING,
-      leftSpacing: MIN_LEFT_SPACING,
-      lastSpacing,
-    }),
+    keepWithinSpacing(
+      panelElem,
+      {
+        x,
+        y,
+        topSpacing: MIN_TOP_SPACING,
+        bottomSpacing: MIN_BOTTOM_SPACING,
+        rightSpacing: MIN_RIGHT_SPACING,
+        leftSpacing: MIN_LEFT_SPACING,
+        lastSpacing,
+      },
+      cardElement,
+    ),
+    cardElement,
   )
 }
 
 interface UseSettingsPanelRepositionOptions {
   positionToRef?: React.RefObject<HTMLElement | null>
+  cardKey?: NodeKey
   cardWidth: string
 }
 
 export default function useSettingsPanelReposition<T extends HTMLElement = HTMLDivElement>({
   positionToRef,
+  cardKey,
   cardWidth,
 }: UseSettingsPanelRepositionOptions): { ref: React.RefObject<T | null> } {
+  // read the raw context (null-safe) so the panel can still render outside a
+  // composer (e.g. isolated unit tests) — useLexicalComposerContext would throw
+  const composerContext = useContext(LexicalComposerContext)
+  const editor = composerContext?.[0] ?? null
+
+  // the card that renders the panel is the positioning anchor — resolve its
+  // element from the node key (CardContext) instead of querying global DOM
+  // selection attributes
+  const resolveCardElement = useCallback((): HTMLElement | null => {
+    if (positionToRef?.current) {
+      return positionToRef.current
+    }
+    if (editor && cardKey) {
+      return findCardElement(editor, cardKey)
+    }
+    return null
+  }, [positionToRef, editor, cardKey])
+
+  // useMovable captures the adjust callbacks in a mount-only effect, so they
+  // must keep a stable identity and read the resolver through a ref
+  const resolveCardElementRef = useRef<() => HTMLElement | null>(resolveCardElement)
+  useLayoutEffect(() => {
+    resolveCardElementRef.current = resolveCardElement
+  }, [resolveCardElement])
+
+  const adjustOnResize = useCallback(
+    (
+      panelElem: HTMLElement | null,
+      position: { x: number; y: number; lastSpacing?: KeepWithinSpacingOptions['lastSpacing'] },
+    ): Origin => keepWithinSpacingOnResize(panelElem, position, resolveCardElementRef.current()),
+    [],
+  )
+  const adjustOnDrag = useCallback(
+    (panelElem: HTMLElement | null, position: { x: number; y: number }): Origin =>
+      keepWithinSpacingOnDrag(panelElem, position, resolveCardElementRef.current()),
+    [],
+  )
+
   const { ref, getPosition, setPosition } = useMovable<T>({
-    adjustOnResize: keepWithinSpacingOnResize,
-    adjustOnDrag: keepWithinSpacingOnDrag,
+    adjustOnResize,
+    adjustOnDrag,
   })
   const previousViewport = useRef<ViewportDimensions>(getViewportDimensions(ref.current))
   const previousCardWidth = useRef<string>(cardWidth)
@@ -205,10 +268,7 @@ export default function useSettingsPanelReposition<T extends HTMLElement = HTMLD
         return
       }
       const panelHeight = panelElem.offsetHeight
-      const cardElement =
-        positionToRef?.current ||
-        document.querySelector('[data-inkling-card-editing="true"]') ||
-        document.querySelector('[data-inkling-card-selected="true"]')
+      const cardElement = resolveCardElement()
       if (!cardElement) {
         return
       }
@@ -218,7 +278,7 @@ export default function useSettingsPanelReposition<T extends HTMLElement = HTMLD
         // Mobile behaviour: position below card
         const x = window.innerWidth / 2 - panelElem.offsetWidth / 2
         const y = containerRect.bottom + CARD_SPACING
-        return keepWithinSpacingOnDrag(panelElem, { x, y })
+        return keepWithinSpacingOnDrag(panelElem, { x, y }, cardElement)
       }
 
       // We correct the height of the container to the height of the container that is on screen, then the positioning is better
@@ -228,23 +288,14 @@ export default function useSettingsPanelReposition<T extends HTMLElement = HTMLD
       // if we already have top set, leave it so that toggling additional settings doesn't cause the panel to jump (unless it would be offscreen)
       const containerMiddle = containerRect.top + visibleHeight / 2
 
-      let y = containerMiddle - panelHeight / 2
+      const y = containerMiddle - panelHeight / 2
 
       // position to right of panel
-      let x = containerRect.right + CARD_SPACING
+      const x = containerRect.right + CARD_SPACING
 
-      // if the card element has a transform applied (e.g. wide cards) our panel elem becomes positioned
-      // relative to the card element rather than the window
-      const cardStyles = window.getComputedStyle(cardElement)
-      const origin: Origin = { x: 0, y: 0 }
-      if (cardStyles.transform !== 'none') {
-        origin.x = containerRect.left
-        origin.y = containerRect.top
-      }
-
-      return keepWithinSpacingOnResize(panelElem, { x, y, origin })
+      return keepWithinSpacingOnResize(panelElem, { x, y }, cardElement)
     },
-    [positionToRef],
+    [resolveCardElement],
   )
 
   const onResize = useCallback(
@@ -275,11 +326,11 @@ export default function useSettingsPanelReposition<T extends HTMLElement = HTMLD
         }
       }
 
-      setPosition(keepWithinSpacingOnResize(panelElem, { x, y, lastSpacing }))
+      setPosition(keepWithinSpacingOnResize(panelElem, { x, y, lastSpacing }, resolveCardElement()))
 
       previousViewport.current = viewport
     },
-    [getInitialPosition, setPosition, getPosition],
+    [getInitialPosition, setPosition, getPosition, resolveCardElement],
   )
 
   // reposition on scroll container resize, covers two cases:
@@ -342,7 +393,7 @@ export default function useSettingsPanelReposition<T extends HTMLElement = HTMLD
   useLayoutEffect(() => {
     if (cardWidth === 'wide' && previousCardWidth.current !== 'wide') {
       // offset origin to account for wide card (origin = card origin)
-      const cardElement = document.querySelector('[data-inkling-card-editing="true"]')
+      const cardElement = resolveCardElement()
       if (!cardElement) {
         return
       }
@@ -352,15 +403,15 @@ export default function useSettingsPanelReposition<T extends HTMLElement = HTMLD
 
       const x = getPosition().x - origin.x
       const y = getPosition().y - origin.y
-      setPosition(keepWithinSpacingOnResize(ref.current, { x, y, origin }))
+      setPosition(keepWithinSpacingOnResize(ref.current, { x, y }, cardElement))
     } else if (previousCardWidth.current === 'wide' && cardWidth !== 'wide') {
       // reset origin to window origin
       const x = getPosition().x + previousCardOrigin.current.x
       const y = getPosition().y + previousCardOrigin.current.y
-      setPosition(keepWithinSpacingOnResize(ref.current, { x, y, origin: { x: 0, y: 0 } }))
+      setPosition(keepWithinSpacingOnResize(ref.current, { x, y }, resolveCardElement()))
     }
     previousCardWidth.current = cardWidth
-  }, [cardWidth, getPosition, getInitialPosition, setPosition, ref])
+  }, [cardWidth, getPosition, resolveCardElement, setPosition, ref])
 
   return { ref }
 }

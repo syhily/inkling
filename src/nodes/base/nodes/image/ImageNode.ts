@@ -73,6 +73,11 @@ export class ImageNode extends generateDecoratorNode({
 }) {
   /* @override */
   exportJSON() {
+    // Hand-written rather than derived from the generated exportJSON: the
+    // persisted key order below (width/height before title/alt/caption) is
+    // historical and differs from `imageProperties` order, and payloads must
+    // stay byte-identical. The blob guard is the card-specific logic — an
+    // upload-in-progress data-string src must not be persisted.
     // checks if src is a data string
     const { src, width, height, title, alt, caption, cardWidth, href } = this
     const isBlob = src && src.startsWith('data:')

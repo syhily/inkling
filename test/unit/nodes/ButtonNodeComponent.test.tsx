@@ -9,7 +9,8 @@ import InklingHostIntegrationContext from '@/context/InklingHostIntegrationConte
 import { ButtonNode } from '@/nodes/ButtonNode'
 import { ButtonNodeComponent } from '@/nodes/ButtonNodeComponent'
 
-vi.mock('@lexical/react/LexicalComposerContext', () => ({
+vi.mock('@lexical/react/LexicalComposerContext', async (importOriginal) => ({
+  ...(await importOriginal()),
   useLexicalComposerContext: vi.fn(),
 }))
 

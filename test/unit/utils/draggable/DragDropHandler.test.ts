@@ -139,6 +139,9 @@ describe('DragDropHandler', () => {
     expect(document.getElementById(INKLING_CONTAINER_ID)).not.toBeInTheDocument()
   })
 
+  // the handler's test seam: performs the mousedown grab and resolves the
+  // drag-start wait synchronously — no real mousemove choreography, no
+  // wall-clock sleeps
   async function initiateDrag(containerName: string) {
     const containerElement = createContainer(containerName)
     handler.registerContainer(containerElement, createHandlers())
@@ -149,26 +152,7 @@ describe('DragDropHandler', () => {
     img.height = 100
     draggable.appendChild(img)
 
-    const mouseDown = new MouseEvent('mousedown', {
-      bubbles: true,
-      clientX: 10,
-      clientY: 10,
-      button: 0,
-    })
-    draggable.dispatchEvent(mouseDown)
-
-    const mouseMove = new MouseEvent('mousemove', {
-      bubbles: true,
-      clientX: 15,
-      clientY: 15,
-      button: 0,
-    })
-    document.dispatchEvent(mouseMove)
-
-    // Allow the drag-start promise to resolve
-    await new Promise((resolve) => {
-      setTimeout(resolve, 50)
-    })
+    await handler.simulateDrag(draggable)
 
     return { containerElement, draggable }
   }
@@ -218,19 +202,11 @@ describe('DragDropHandler', () => {
     handler.registerContainer(containerElement, handlers)
     document.elementFromPoint = vi.fn(() => droppable)
 
-    const drag = async () => {
-      draggable.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0, clientX: 10, clientY: 10 }))
-      document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, button: 0, clientX: 15, clientY: 15 }))
-      await new Promise((resolve) => {
-        setTimeout(resolve, 50)
-      })
-    }
-
-    await drag()
+    await handler.simulateDrag(draggable)
     expect(handler.draggableInfo?.insertIndex).toBe(1)
     document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
 
-    await drag()
+    await handler.simulateDrag(draggable)
 
     expect(handlers.droppable.getIndicatorPosition).toHaveBeenCalledTimes(2)
     expect(handler.draggableInfo?.insertIndex).toBe(2)
@@ -271,7 +247,7 @@ describe('DragDropHandler', () => {
     removeSpy.mockRestore()
   })
 
-  it('does not initiate drag on right click', async () => {
+  it('does not initiate drag on right click', () => {
     const containerElement = createContainer('rightclick')
     handler.registerContainer(containerElement, createHandlers())
     const draggable = containerElement.querySelector('.draggable') as HTMLElement
@@ -284,18 +260,6 @@ describe('DragDropHandler', () => {
     })
     draggable.dispatchEvent(mouseDown)
 
-    const mouseMove = new MouseEvent('mousemove', {
-      bubbles: true,
-      clientX: 15,
-      clientY: 15,
-      button: 2,
-    })
-    document.dispatchEvent(mouseMove)
-
-    await new Promise((resolve) => {
-      setTimeout(resolve, 50)
-    })
-
     expect(handler.isDragging).toBe(false)
   })
 
@@ -307,7 +271,7 @@ describe('DragDropHandler', () => {
     expect(handler.grabbedElement).toBeNull()
   })
 
-  it('does not initiate drag when drag disabled element is target', async () => {
+  it('does not initiate drag when drag disabled element is target', () => {
     const containerElement = createContainer('dragdisabled')
     handler.registerContainer(containerElement, createHandlers())
     const draggable = containerElement.querySelector('.draggable') as HTMLElement
@@ -323,18 +287,6 @@ describe('DragDropHandler', () => {
       button: 0,
     })
     dragDisabled.dispatchEvent(mouseDown)
-
-    const mouseMove = new MouseEvent('mousemove', {
-      bubbles: true,
-      clientX: 15,
-      clientY: 15,
-      button: 0,
-    })
-    document.dispatchEvent(mouseMove)
-
-    await new Promise((resolve) => {
-      setTimeout(resolve, 50)
-    })
 
     expect(handler.isDragging).toBe(false)
   })
@@ -358,25 +310,7 @@ describe('DragDropHandler', () => {
     img.height = 100
     draggable.appendChild(img)
 
-    const mouseDown = new MouseEvent('mousedown', {
-      bubbles: true,
-      clientX: 10,
-      clientY: 10,
-      button: 0,
-    })
-    draggable.dispatchEvent(mouseDown)
-
-    const mouseMove = new MouseEvent('mousemove', {
-      bubbles: true,
-      clientX: 15,
-      clientY: 15,
-      button: 0,
-    })
-    document.dispatchEvent(mouseMove)
-
-    await new Promise((resolve) => {
-      setTimeout(resolve, 50)
-    })
+    await handler.simulateDrag(draggable)
 
     expect(document.getElementById(DROP_INDICATOR_ID)).toBeInTheDocument()
 
@@ -403,25 +337,7 @@ describe('DragDropHandler', () => {
     img.height = 100
     draggable.appendChild(img)
 
-    const mouseDown = new MouseEvent('mousedown', {
-      bubbles: true,
-      clientX: 10,
-      clientY: 10,
-      button: 0,
-    })
-    draggable.dispatchEvent(mouseDown)
-
-    const mouseMove = new MouseEvent('mousemove', {
-      bubbles: true,
-      clientX: 15,
-      clientY: 15,
-      button: 0,
-    })
-    document.dispatchEvent(mouseMove)
-
-    await new Promise((resolve) => {
-      setTimeout(resolve, 50)
-    })
+    await handler.simulateDrag(draggable)
 
     expect(editorRoot.dataset.inklingDragging).toBe('true')
 

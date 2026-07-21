@@ -4,6 +4,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import { INSERT_HTML_COMMAND } from '@/nodes/HtmlNode'
@@ -12,21 +13,6 @@ import PlusCardMenuPlugin from '@/plugins/PlusCardMenuPlugin'
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function createComposerContext() {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        upload: () => Promise.resolve(undefined),
-      }),
-    },
-    cardConfig: {},
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
-    onError: vi.fn(),
-  }
-}
 
 function createTestEditor(): LexicalEditor {
   return createEditor({
@@ -61,7 +47,7 @@ async function setupPlusPlugin() {
 
   paragraphElement = rootElement.querySelector('p')
 
-  const contextValue = createComposerContext()
+  const contextValue = createHostIntegrationValue()
 
   mockComposerContext(editor)
   const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')

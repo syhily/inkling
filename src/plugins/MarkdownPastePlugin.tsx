@@ -1,72 +1,46 @@
 // The paste dialect of Inkling's two markdown dialects — markdown-it →
-// sanitize → Lexical HTML import. See `@/markdown/dialects` for the seam
-// facts and the open merge question.
+// sanitize → Lexical HTML import. The markdown-it → sanitize chain is the
+// headless `markdownToSanitizedHtml` (`@/plugins/behaviour/markdownPaste`);
+// this plugin keeps only the DataTransfer glue and command handling. See
+// `@/markdown/dialects` for the seam facts and the open merge question.
 import { $insertDataTransferForRichText } from '@lexical/clipboard'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister, $getSelection, $isRangeSelection, COMMAND_PRIORITY_LOW } from 'lexical'
+import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_LOW } from 'lexical'
 import React from 'react'
 
-import { render as markdownRender } from '@/markdown/markdown-html-renderer'
 import {
   getModifierState,
   MIME_TEXT_HTML,
   MIME_TEXT_PLAIN,
   PASTE_MARKDOWN_COMMAND,
 } from '@/plugins/behaviour/clipboard-protocol'
-import { sanitizeHtml } from '@/utils/sanitize-html'
+import { markdownToSanitizedHtml } from '@/plugins/behaviour/markdownPaste'
 
 export const MarkdownPastePlugin = () => {
   const [editor] = useLexicalComposerContext()
+  // Reading the modifier state also attaches the protocol's own keydown/keyup
+  // listeners (lazily, once per editor) — see clipboard-protocol.ts.
   const modifierState = getModifierState(editor)
 
-  // Per-consumer listeners are deliberate: the plugin must work standalone.
-  // This writer uses `e.key === 'Shift'` (pinned by this plugin's
-  // synthetic-event tests); see clipboard-protocol.ts for why the two writer
-  // formulations agree on real event streams.
   React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Shift') {
-        modifierState.current = true
-      }
-    }
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'Shift') {
-        modifierState.current = false
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    document.addEventListener('keyup', handleKeyUp)
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-      document.removeEventListener('keyup', handleKeyUp)
-    }
-  }, [modifierState])
+    return editor.registerCommand(
+      PASTE_MARKDOWN_COMMAND,
+      ({ text, allowBr }) => {
+        const selection = $getSelection()
+        if (!$isRangeSelection(selection)) {
+          return false
+        }
+        const dataTransfer = new DataTransfer()
+        if (modifierState.current) {
+          dataTransfer.setData(MIME_TEXT_PLAIN, text)
+        } else {
+          dataTransfer.setData(MIME_TEXT_HTML, markdownToSanitizedHtml(text, { allowBr }))
+        }
+        $insertDataTransferForRichText(dataTransfer, selection, editor)
 
-  React.useEffect(() => {
-    return mergeRegister(
-      editor.registerCommand(
-        PASTE_MARKDOWN_COMMAND,
-        ({ text, allowBr }) => {
-          const selection = $getSelection()
-          if (!$isRangeSelection(selection)) {
-            return false
-          }
-          const dataTransfer = new DataTransfer()
-          if (modifierState.current) {
-            dataTransfer.setData(MIME_TEXT_PLAIN, text)
-          } else {
-            const markdownHtml = markdownRender(text)
-            // don't use cleanBasicHtml as it removes images and hr; in this case, we need to remove just br
-            const cleanedHtml = allowBr ? markdownHtml : markdownHtml.replace(/<br\s?\/?>/g, '')
-            const sanitizedHtml = sanitizeHtml(cleanedHtml, { replaceJS: true })
-            dataTransfer.setData(MIME_TEXT_HTML, sanitizedHtml)
-          }
-          $insertDataTransferForRichText(dataTransfer, selection, editor)
-
-          return true
-        },
-        COMMAND_PRIORITY_LOW,
-      ),
+        return true
+      },
+      COMMAND_PRIORITY_LOW,
     )
   }, [editor, modifierState])
 

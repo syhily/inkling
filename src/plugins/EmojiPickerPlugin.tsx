@@ -19,7 +19,9 @@ import Portal from '@/components/ui/Portal'
 import useTypeaheadTriggerMatch from '@/hooks/useTypeaheadTriggerMatch'
 import trackEvent from '@/utils/analytics'
 
-init({ data: emojiData })
+// emoji-mart's init is a global side effect; the plugin runs it once on first
+// mount instead of at module import time
+let emojiDataInitialized = false
 
 interface EmojiSkin {
   native: string
@@ -82,7 +84,15 @@ export function EmojiPickerPlugin() {
 
   const checkForTriggerMatch = useTypeaheadTriggerMatch(':', { minLength: 1 })
 
-  const cursorInInlineCodeBlock = () => {
+  React.useEffect(() => {
+    if (emojiDataInitialized) {
+      return
+    }
+    emojiDataInitialized = true
+    init({ data: emojiData })
+  }, [])
+
+  const cursorInInlineCodeBlock = React.useCallback(() => {
     return editor.getEditorState().read(() => {
       const selection = $getSelection()
       if (!$isRangeSelection(selection)) {
@@ -94,7 +104,36 @@ export function EmojiPickerPlugin() {
       }
       return false
     })
-  }
+  }, [editor])
+
+  const handleCompletionInsertion = React.useCallback(
+    (emoji: EmojiSearchResult | null) => {
+      editor.update(() => {
+        const selection = $getSelection()
+
+        if (!$isRangeSelection(selection) || emoji === null) {
+          return
+        }
+
+        const currentNode = selection.anchor.getNode()
+        if (!$isTextNode(currentNode)) {
+          return
+        }
+        // need to replace the last text matching the :test: pattern with a single emoji
+        const shortcodeLength = emoji.id.length + 1 // +1 for the end colon
+        const textNode = currentNode.spliceText(
+          selection.anchor.offset - shortcodeLength,
+          shortcodeLength,
+          emoji.skins[0].native,
+          true,
+        )
+        textNode.setFormat(selection.format)
+
+        trackEvent('Emoji Inserted', { method: 'completed' })
+      })
+    },
+    [editor],
+  )
 
   // handle exact match typed like :emoji:
   //  the typeahead menu does not account for exact matches/closing characters
@@ -127,36 +166,7 @@ export function EmojiPickerPlugin() {
         COMMAND_PRIORITY_HIGH,
       ),
     )
-  })
-
-  const handleCompletionInsertion = React.useCallback(
-    (emoji: EmojiSearchResult | null) => {
-      editor.update(() => {
-        const selection = $getSelection()
-
-        if (!$isRangeSelection(selection) || emoji === null) {
-          return
-        }
-
-        const currentNode = selection.anchor.getNode()
-        if (!$isTextNode(currentNode)) {
-          return
-        }
-        // need to replace the last text matching the :test: pattern with a single emoji
-        const shortcodeLength = emoji.id.length + 1 // +1 for the end colon
-        const textNode = currentNode.spliceText(
-          selection.anchor.offset - shortcodeLength,
-          shortcodeLength,
-          emoji.skins[0].native,
-          true,
-        )
-        textNode.setFormat(selection.format)
-
-        trackEvent('Emoji Inserted', { method: 'completed' })
-      })
-    },
-    [editor],
-  )
+  }, [editor, queryString, cursorInInlineCodeBlock, handleCompletionInsertion])
 
   React.useEffect(() => {
     if (!queryString) {
@@ -215,7 +225,7 @@ export function EmojiPickerPlugin() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  })
+  }, [])
 
   function getPositionStyles() {
     const selection = window.getSelection()

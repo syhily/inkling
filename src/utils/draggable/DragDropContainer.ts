@@ -14,8 +14,17 @@ import {
 export interface ContainerDraggableConfig {
   draggableSelector: string
   getDraggableInfo: (draggableElement: HTMLElement | null) => DraggableInfo | false
-  createDragPreviewElement?: (draggableInfo: DraggableInfo) => HTMLElement | undefined
+  createDragPreviewElement?: (draggableInfo: DraggableInfo) => DragPreview | undefined
   isDragEnabled?: boolean
+}
+
+// the drag preview following the pointer, with an optional typed disposal
+// hook. Producers that back the preview with owned resources (e.g. the card
+// drag producer renders the icon with a React root) hand teardown to the
+// handler through dispose() — the handler never learns what the preview is
+export interface DragPreview {
+  element: HTMLElement
+  dispose?: () => void
 }
 
 export interface ContainerDroppableConfig {
@@ -25,7 +34,11 @@ export interface ContainerDroppableConfig {
     droppableElem: HTMLElement,
     position: DroppablePosition,
   ) => IndicatorPosition | false
-  onDrop: (draggableInfo: DraggableInfo, droppable: HTMLElement | null, position: DroppablePosition | null) => boolean
+  onDrop: (
+    draggableInfo: DraggableInfo,
+    droppable: HTMLElement | null,
+    position: DroppablePosition | null,
+  ) => DropResult
   onDragEnterContainer?: (draggableInfo: DraggableInfo) => void
   onDragEnterDroppable?: (droppable: HTMLElement, position: DroppablePosition) => void
   onDragOverDroppable?: (droppable: HTMLElement, position: DroppablePosition) => void
@@ -33,10 +46,19 @@ export interface ContainerDroppableConfig {
   onDragLeaveContainer?: (draggableInfo: DraggableInfo) => void
 }
 
+// what a drop did, reported by the drop target's onDrop. A bare boolean is
+// shorthand for { success }. sourceHandled marks drops where the target
+// already moved/consumed the source itself (a reorder within one container,
+// an image added to the gallery it was dragged onto) — the DragDropHandler
+// routes it back to that container's onDropEnd so the source is not removed
+export type DropResult = boolean | { success: boolean; sourceHandled?: boolean }
+
 export interface ContainerLifecycleHandlers {
   onDragStart?: (draggableInfo: DraggableInfo) => void
   onDragEnd?: () => void
-  onDropEnd?: (draggableInfo: DraggableInfo, success: boolean) => void
+  // sourceHandled is true only for the container whose own onDrop reported
+  // { sourceHandled: true }; every other container receives false
+  onDropEnd?: (draggableInfo: DraggableInfo, success: boolean, sourceHandled: boolean) => void
 }
 
 export interface ContainerDragHandlers {
@@ -137,19 +159,18 @@ export class DragDropContainer {
     this.refresh()
   }
 
-  // TODO: allow configuration for drag preview element creation
   // builds an element that is attached to the mouse pointer when dragging.
-  // currently grabs the first <img> and uses that but should be configurable:
-  // - a selector for which element in the draggable to copy
-  // - a function to hand off element creation to the consumer
-  createDragPreviewElement(draggableInfo: DraggableInfo): HTMLElement | undefined {
-    let dragPreviewElement: HTMLElement | undefined
-
+  // A producer-supplied factory wins; otherwise the fallback grabs the first
+  // <img> of an image draggable and uses that
+  createDragPreviewElement(draggableInfo: DraggableInfo): DragPreview | undefined {
     if (typeof this._createDragPreviewElement === 'function') {
-      dragPreviewElement = this._createDragPreviewElement(draggableInfo)
+      const preview = this._createDragPreviewElement(draggableInfo)
+      if (preview) {
+        return preview
+      }
     }
 
-    if (!dragPreviewElement && (draggableInfo.type === 'image' || draggableInfo.cardName === 'image')) {
+    if (draggableInfo.type === 'image' || draggableInfo.cardName === 'image') {
       const image = draggableInfo.element?.querySelector('img')
       if (image) {
         const aspectRatio = image.width / image.height
@@ -175,12 +196,8 @@ export class DragDropContainer {
         img.style.left = `-${width}px`
         img.style.zIndex = String(INKLING_ZINDEX)
         img.style.willChange = 'transform'
-        dragPreviewElement = img
+        return { element: img }
       }
-    }
-
-    if (dragPreviewElement) {
-      return dragPreviewElement
     }
 
     return undefined

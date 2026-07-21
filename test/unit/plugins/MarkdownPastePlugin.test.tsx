@@ -113,7 +113,7 @@ describe('MarkdownPastePlugin', () => {
 
   it('inserts raw text without markdown conversion while shift is held', async () => {
     await act(async () => {
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift' }))
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', shiftKey: true }))
     })
 
     await pasteMarkdown(editor, '# Title', false)
@@ -125,7 +125,7 @@ describe('MarkdownPastePlugin', () => {
     })
 
     await act(async () => {
-      document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift' }))
+      document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', shiftKey: false }))
     })
   })
 

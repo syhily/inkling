@@ -1,6 +1,6 @@
 import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
 
-import { CalloutNode, calloutImportSpec } from '@/nodes/base/nodes/callout/CalloutNode'
+import { CalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
@@ -18,7 +18,6 @@ export const calloutDeclaration = {
   nodeType: 'callout',
   baseNode: CalloutNode,
   nestedEditors,
-  importSpec: calloutImportSpec,
   insert: { openInEditMode: true },
   surfaces: {
     default: true,

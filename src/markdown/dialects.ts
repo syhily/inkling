@@ -1,9 +1,13 @@
-// One markdown module, two dialects — this module names them and owns the
-// seam facts. Nothing here merges them; the merge question at the bottom is
-// deliberately open.
+// One markdown module, two dialects — this module names them in prose and
+// owns the seam facts. Nothing here merges them; the merge question at the
+// bottom is deliberately open. The dialect names used to have exported
+// consts (`PASTE_DIALECT`, `CARD_AWARE_ROUND_TRIP_DIALECT`, `MarkdownDialect`);
+// they had zero importers, so the names now live in this documentation only.
 //
 // **Paste dialect** — `PASTE_MARKDOWN_COMMAND` (`@/plugins/behaviour/clipboard-protocol`)
-// handled by `@/plugins/MarkdownPastePlugin`: markdown-it with the footnote,
+// handled by `@/plugins/MarkdownPastePlugin`, whose markdown-it → sanitize
+// chain is the headless `markdownToSanitizedHtml`
+// (`@/plugins/behaviour/markdownPaste`): markdown-it with the footnote,
 // lazy-headers, mark, image-lazy-loading, named-headers, sub, and sup plugins
 // (`@/markdown/markdown-html-renderer`) → `<br>` strip (unless `allowBr`) →
 // `sanitizeHtml` → Lexical HTML import. It speaks footnotes (`[^1]`), `==mark==`, `~sub~`,
@@ -35,11 +39,3 @@
 // Open question (docs/markdown-api.md): should the paste path adopt the
 // card-aware round-trip dialect so pasted card fences recreate cards? That
 // merge is a product decision, deliberately not taken here.
-
-/** The paste dialect: markdown-it → sanitize → Lexical HTML import. */
-export const PASTE_DIALECT = 'paste'
-
-/** The card-aware round-trip dialect: `@lexical/markdown` + Inkling card transformers. */
-export const CARD_AWARE_ROUND_TRIP_DIALECT = 'card-aware-round-trip'
-
-export type MarkdownDialect = typeof PASTE_DIALECT | typeof CARD_AWARE_ROUND_TRIP_DIALECT

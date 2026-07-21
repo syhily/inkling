@@ -85,12 +85,11 @@ describe('InklingSelectedCardContext', () => {
       wrapper: InklingSelectedCardContext,
     })
 
-    expect(result.current.isDragging).toBe(false)
     expect(result.current.showVisibilitySettings).toBe(false)
 
-    result.current.setIsDragging(true)
+    result.current.setShowVisibilitySettings(true)
     await waitFor(() => {
-      expect(result.current.isDragging).toBe(true)
+      expect(result.current.showVisibilitySettings).toBe(true)
     })
   })
 })

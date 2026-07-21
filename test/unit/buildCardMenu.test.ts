@@ -176,6 +176,61 @@ describe('buildCardMenu', function () {
     )
   })
 
+  it('returns a flat items list in render order matching the sectioned menu', async function () {
+    const nodes: NodeEntries = [
+      [
+        'one',
+        {
+          cardMenu: {
+            label: 'One',
+            desc: 'Card test one',
+            Icon,
+            insertCommand: 'insert_card_one',
+          },
+        },
+      ],
+      [
+        'two',
+        {
+          cardMenu: {
+            label: 'Two',
+            desc: 'Card test two',
+            section: 'Secondary',
+            Icon,
+            insertCommand: 'insert_card_two',
+          },
+        },
+      ],
+      [
+        'three',
+        {
+          cardMenu: {
+            label: 'Three',
+            desc: 'Card test three',
+            Icon,
+            insertCommand: 'insert_card_three',
+          },
+        },
+      ],
+    ]
+
+    const cardMenu = buildCardMenu(nodes)
+
+    // Primary section first, then declaration order — the same order CardMenu
+    // assigns data-inkling-cardmenu-idx
+    expect(cardMenu.items.map((item) => item.label)).to.deep.equal(['One', 'Three', 'Two'])
+    expect(cardMenu.maxItemIndex).to.equal(cardMenu.items.length - 1)
+    // shares item identity with the sectioned menu so the two views can't drift
+    expect(cardMenu.items).to.deep.equal([...cardMenu.menu.values()].flat())
+  })
+
+  it('returns an empty items list when nothing matches', async function () {
+    const cardMenu = buildCardMenu([], { query: 'unknown' })
+
+    expect(cardMenu.items).to.deep.equal([])
+    expect(cardMenu.maxItemIndex).to.equal(-1)
+  })
+
   describe('filtering', function () {
     it('adds all items for blank query', async function () {
       const nodes: NodeEntries = [

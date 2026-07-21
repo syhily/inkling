@@ -103,43 +103,16 @@ export class VideoNode extends generateDecoratorNode({
 }) {
   /* override */
   exportJSON() {
-    const {
-      src,
-      caption,
-      fileName,
-      mimeType,
-      width,
-      height,
-      duration,
-      thumbnailSrc,
-      customThumbnailSrc,
-      thumbnailWidth,
-      thumbnailHeight,
-      cardWidth,
-      loop,
-    } = this
-    // checks if src is a data string
-    const isBlob = src && src.startsWith('data:')
-
-    // serializeNestedEditorHtml re-serializes the caption editor for wrapper
-    // subclasses that adopt a `nestedEditors` spec; a no-op on the base class
-    return this.serializeNestedEditorHtml({
-      type: 'video',
-      version: 1,
-      src: isBlob ? '<base64String>' : src,
-      caption,
-      fileName,
-      mimeType,
-      width,
-      height,
-      duration,
-      thumbnailSrc,
-      customThumbnailSrc,
-      thumbnailWidth,
-      thumbnailHeight,
-      cardWidth,
-      loop,
-    })
+    // the generated exportJSON already serializes every declared property in
+    // `videoProperties` order and re-serializes the caption editor for wrapper
+    // subclasses that adopt a `nestedEditors` spec; the only card-specific
+    // logic is the blob guard — an upload-in-progress data-string src must
+    // not be persisted
+    const json = super.exportJSON()
+    if (typeof json.src === 'string' && json.src.startsWith('data:')) {
+      json.src = '<base64String>'
+    }
+    return json
   }
 
   // Editor-side upload behaviour the card spec doesn't cover lives on the

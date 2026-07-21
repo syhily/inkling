@@ -43,6 +43,11 @@ export interface BuildCardMenuConfig {
 
 export interface BuildCardMenuResult {
   menu: Map<string, ResolvedMenuItem[]>
+  /** Every resolved item in render order — `items[i]` is exactly what CardMenu
+   * renders with `data-inkling-cardmenu-idx="i"`, so keyboard selection reads
+   * the list instead of scraping the DOM. Derived from the final sorted
+   * `menu` and sharing item identity with it, so the two views can't drift. */
+  items: ResolvedMenuItem[]
   maxItemIndex: number
 }
 
@@ -53,8 +58,6 @@ export function buildCardMenu(
   let menu = new Map<string, ResolvedMenuItem[]>()
 
   const lowerQuery = query?.toLowerCase()
-
-  let maxItemIndex = -1
 
   function addMenuItem(item: MenuItem): void {
     // items hidden based on missing config (e.g. GIF provider API key)
@@ -97,8 +100,6 @@ export function buildCardMenu(
     } else {
       menu.get(section)?.push(resolvedItem)
     }
-
-    maxItemIndex = maxItemIndex + 1
   }
 
   for (const [nodeType, nodeClass] of nodes) {
@@ -145,7 +146,9 @@ export function buildCardMenu(
     }),
   )
 
-  return { menu, maxItemIndex }
+  const items = [...menu.values()].flat()
+
+  return { menu, items, maxItemIndex: items.length - 1 }
 }
 
 function buildSnippetMenuItem(data: SnippetItem, config: CardConfig | undefined): MenuItem {

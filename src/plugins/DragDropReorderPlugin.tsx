@@ -9,244 +9,247 @@ import {
 } from 'lexical'
 import React from 'react'
 import { flushSync } from 'react-dom'
-import { createRoot, type Root } from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
 
 import type { CardNode } from '@/types/lexical-internals'
 
 import { useDragDropHandle } from '@/context/DragDropHandleContext'
-import { useInklingSelectedCardContext } from '@/context/InklingSelectedCardContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
 import { useDragDropState } from '@/hooks/useDragDropState'
 import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { $createImageNode } from '@/nodes/ImageNode'
-import { type DraggableInfo, type DroppablePosition, type IndicatorPosition } from '@/utils/draggable/DragDropContainer'
-import { DragDropHandler, type DraggableContainerHandle } from '@/utils/draggable/DragDropHandler'
+import {
+  type DraggableInfo,
+  type DroppablePosition,
+  type DropResult,
+  type IndicatorPosition,
+} from '@/utils/draggable/DragDropContainer'
+import { DragDropHandler } from '@/utils/draggable/DragDropHandler'
 import { isCardDropAllowed } from '@/utils/draggable/draggable-utils'
+import { useDragDropContainer } from '@/utils/draggable/useDragDropContainer'
 
 function preventDefault(event: Event): void {
   event.preventDefault()
 }
 
-interface DragPreviewElement extends HTMLDivElement {
-  __reactRoot?: Root
-}
-
 function useDragDropReorder(editor: LexicalEditor): void {
   const dragDropHandle = useDragDropHandle()
   const containerElement = useDragDropState((state) => state.containerElement)
-  const { setIsDragging } = useInklingSelectedCardContext()
   const isEditingCard = useCardSelection((state) => state.isEditingCard)
 
-  const cardContainer = React.useRef<DraggableContainerHandle | null>(null)
-  const skipOnDropEnd = React.useRef<boolean>(false)
-
-  // useRef because we need stable function references to pass into the drag drop container instance
-  const onDragStart = React.useRef(() => {
-    cardContainer.current?.refresh()
-    setIsDragging(true)
-  })
-
-  const onDragEnd = React.useRef(() => {
-    setIsDragging(false)
-  })
-
-  const getDraggableInfo = React.useRef((draggableElement: HTMLElement | null): DraggableInfo | false => {
-    if (!draggableElement) {
-      return false
-    }
-
-    let draggableInfo: DraggableInfo | undefined
-
-    editor.update(() => {
-      const nearestNode = $getNearestNodeFromDOMNode(draggableElement)
-      const cardNode = nearestNode as CardNode | null
-
-      // draggableSelector matches top-level <div>s; a consumer-registered
-      // node rendering one is not a card and has no getDataset — treat it as
-      // non-draggable instead of crashing on the missing method
-      if (cardNode && typeof cardNode.getDataset === 'function') {
-        draggableInfo = {
-          type: 'card',
-          nodeKey: cardNode.getKey(),
-          cardName: cardNode.getType(),
-          element: draggableElement,
-          target: null,
-          mousePosition: { x: 0, y: 0 },
-          dataset: cardNode.getDataset(),
-          // what the per-card getIcon() copies returned: the first cardMenu
-          // entry's icon (menu-less cards fall back inside getCardDragIcon)
-          Icon: getCardDragIcon(cardNode.getType()),
-        }
-      }
-    })
-
-    return draggableInfo || false
-  })
-
-  const createCardDragElement = React.useRef((draggableInfo: DraggableInfo): HTMLElement | undefined => {
-    const { cardName } = draggableInfo
-    const { Icon } = draggableInfo
-
-    if (!cardName || cardName === 'image') {
-      return
-    }
-
-    const style = {
-      top: '0',
-      left: '-100%',
-      zIndex: 10001,
-      willChange: 'transform',
-    }
-
-    const dragPreviewElement: DragPreviewElement = document.createElement('div') as DragPreviewElement
-    // classes kept so Tailwind picks up usage
-    dragPreviewElement.className =
-      'absolute flex size-16 flex-col items-center justify-center rounded bg-white shadow-sm'
-    Object.assign(dragPreviewElement.style, style)
-
-    const iconWrapper = document.createElement('div')
-    iconWrapper.className = 'flex items-center'
-    dragPreviewElement.appendChild(iconWrapper)
-
-    // Icon is a React component — render synchronously via flushSync
-    const iconRoot = document.createElement('div')
-    iconWrapper.appendChild(iconRoot)
-    const reactRoot = createRoot(iconRoot)
-    if (Icon) {
-      flushSync(() => {
-        reactRoot.render(<Icon className="size-8" />)
-      })
-    }
-
-    // Store the React root so DragDropHandler can unmount it on cleanup
-    dragPreviewElement.__reactRoot = reactRoot
-
-    return dragPreviewElement
-  })
-
-  const getDropIndicatorPosition = React.useRef(
-    (
-      draggableInfo: DraggableInfo,
-      droppableElem: HTMLElement,
-      position: DroppablePosition,
-    ): IndicatorPosition | false => {
-      const rootElement = editor.getRootElement()
-      if (!rootElement || !draggableInfo.element) {
-        return false
-      }
-      const droppables = Array.from(rootElement.querySelectorAll<HTMLElement>(':scope > *'))
-      const droppableIndex = droppables.indexOf(droppableElem)
-      const draggableIndex = droppables.indexOf(draggableInfo.element)
-
-      // only allow card and image drops (images can be dragged out of a gallery)
-      if (draggableInfo.type !== 'card' && draggableInfo.type !== 'image') {
-        return false
-      }
-
-      if (isCardDropAllowed(draggableIndex, droppableIndex, position)) {
-        let insertIndex = droppableIndex
-        if (position.match(/bottom/)) {
-          insertIndex += 1
+  const cardContainer = useDragDropContainer({
+    element: editor.getRootElement(),
+    enabled: !isEditingCard,
+    draggable: {
+      draggableSelector: ':scope > div', // cards
+      getDraggableInfo: (draggableElement: HTMLElement | null): DraggableInfo | false => {
+        if (!draggableElement) {
+          return false
         }
 
-        return { insertIndex }
-      }
-
-      return false
-    },
-  )
-
-  const onCardDrop = React.useRef(
-    (draggableInfo: DraggableInfo, droppable: HTMLElement | null, position: DroppablePosition | null): boolean => {
-      if (draggableInfo.type !== 'card' && draggableInfo.type !== 'image') {
-        return false
-      }
-
-      const rootElement = editor.getRootElement()
-      if (!rootElement || !draggableInfo.element) {
-        return false
-      }
-      const droppables = Array.from(rootElement.querySelectorAll<HTMLElement>(':scope > *'))
-      const draggableIndex = droppables.indexOf(draggableInfo.element)
-      const insertIndex = draggableInfo.insertIndex ?? 0
-
-      if (isCardDropAllowed(draggableIndex, insertIndex)) {
-        let returnValue = false
+        let draggableInfo: DraggableInfo | undefined
 
         editor.update(() => {
-          // change card order on card drops
-          if (draggableInfo.type === 'card') {
-            const draggedNode = draggableInfo.nodeKey ? $getNodeByKey(draggableInfo.nodeKey) : null
-            if (!draggedNode) {
-              return
+          const nearestNode = $getNearestNodeFromDOMNode(draggableElement)
+          const cardNode = nearestNode as CardNode | null
+
+          // draggableSelector matches top-level <div>s; a consumer-registered
+          // node rendering one is not a card and has no getDataset — treat it as
+          // non-draggable instead of crashing on the missing method
+          if (cardNode && typeof cardNode.getDataset === 'function') {
+            draggableInfo = {
+              type: 'card',
+              nodeKey: cardNode.getKey(),
+              cardName: cardNode.getType(),
+              element: draggableElement,
+              target: null,
+              mousePosition: { x: 0, y: 0 },
+              dataset: cardNode.getDataset(),
+              // what the per-card getIcon() copies returned: the first cardMenu
+              // entry's icon (menu-less cards fall back inside getCardDragIcon)
+              Icon: getCardDragIcon(cardNode.getType()),
             }
-
-            if (insertIndex >= droppables.length) {
-              // drop at end of document
-              const targetNode = $getNearestNodeFromDOMNode(droppables[droppables.length - 1])
-              if (targetNode) {
-                targetNode.insertAfter(draggedNode)
-              }
-            } else {
-              const targetNode = $getNearestNodeFromDOMNode(droppables[insertIndex])
-              if (targetNode) {
-                targetNode.insertBefore(draggedNode)
-              }
-            }
-
-            // clear selection so we don't show any toolbars immediately and the
-            // cursor isn't left stranded somewhere else in the document
-            $setSelection(null)
-
-            // skip card removal as we're not moving a card inside another card
-            skipOnDropEnd.current = true
-
-            returnValue = true
-            return
-          }
-
-          // insert new image node on image drops
-          if (draggableInfo.type === 'image') {
-            const targetNode = $getNearestNodeFromDOMNode(droppables[insertIndex])
-            if (targetNode) {
-              const imageNode = $createImageNode(draggableInfo.dataset as Parameters<typeof $createImageNode>[0])
-              targetNode.insertBefore(imageNode)
-
-              // select the newly inserted image card
-              const nodeSelection = $createNodeSelection()
-              nodeSelection.add(imageNode.getKey())
-              $setSelection(nodeSelection)
-            }
-
-            returnValue = true
           }
         })
 
-        return returnValue
-      }
-      return false
+        return draggableInfo || false
+      },
+      createDragPreviewElement: (draggableInfo: DraggableInfo) => {
+        const { cardName } = draggableInfo
+        const { Icon } = draggableInfo
+
+        if (!cardName || cardName === 'image') {
+          return
+        }
+
+        const style = {
+          top: '0',
+          left: '-100%',
+          zIndex: 10001,
+          willChange: 'transform',
+        }
+
+        const dragPreviewElement = document.createElement('div')
+        // classes kept so Tailwind picks up usage
+        dragPreviewElement.className =
+          'absolute flex size-16 flex-col items-center justify-center rounded bg-white shadow-sm'
+        Object.assign(dragPreviewElement.style, style)
+
+        const iconWrapper = document.createElement('div')
+        iconWrapper.className = 'flex items-center'
+        dragPreviewElement.appendChild(iconWrapper)
+
+        // Icon is a React component — render synchronously via flushSync
+        const iconRoot = document.createElement('div')
+        iconWrapper.appendChild(iconRoot)
+        const reactRoot = createRoot(iconRoot)
+        if (Icon) {
+          flushSync(() => {
+            reactRoot.render(<Icon className="size-8" />)
+          })
+        }
+
+        // the typed disposal contract: the handler unmounts the React root
+        // through dispose() without knowing the preview is React-backed
+        return {
+          element: dragPreviewElement,
+          dispose: () => {
+            reactRoot.unmount()
+          },
+        }
+      },
     },
-  )
+    droppable: {
+      droppableSelector: ':scope > *', // all block elements
+      getIndicatorPosition: (
+        draggableInfo: DraggableInfo,
+        droppableElem: HTMLElement,
+        position: DroppablePosition,
+      ): IndicatorPosition | false => {
+        const rootElement = editor.getRootElement()
+        if (!rootElement || !draggableInfo.element) {
+          return false
+        }
+        const droppables = Array.from(rootElement.querySelectorAll<HTMLElement>(':scope > *'))
+        const droppableIndex = droppables.indexOf(droppableElem)
+        const draggableIndex = droppables.indexOf(draggableInfo.element)
 
-  // a card can be dropped into another card which means we need to remove the original
-  const onDropEnd = React.useRef((draggableInfo: DraggableInfo, success: boolean): void => {
-    // avoid removing the card if it's just a re-order or no move occurred
-    if (skipOnDropEnd.current || !success || draggableInfo.type !== 'card') {
-      skipOnDropEnd.current = false
-      return
-    }
+        // only allow card and image drops (images can be dragged out of a gallery)
+        if (draggableInfo.type !== 'card' && draggableInfo.type !== 'image') {
+          return false
+        }
 
-    editor.update(() => {
-      const cardNode = draggableInfo.nodeKey ? $getNodeByKey(draggableInfo.nodeKey) : null
-      if (cardNode) {
-        cardNode.remove(false)
-      }
-    })
+        if (isCardDropAllowed(draggableIndex, droppableIndex, position)) {
+          let insertIndex = droppableIndex
+          if (position.match(/bottom/)) {
+            insertIndex += 1
+          }
+
+          return { insertIndex }
+        }
+
+        return false
+      },
+      onDrop: (
+        draggableInfo: DraggableInfo,
+        droppable: HTMLElement | null,
+        position: DroppablePosition | null,
+      ): DropResult => {
+        if (draggableInfo.type !== 'card' && draggableInfo.type !== 'image') {
+          return false
+        }
+
+        const rootElement = editor.getRootElement()
+        if (!rootElement || !draggableInfo.element) {
+          return false
+        }
+        const droppables = Array.from(rootElement.querySelectorAll<HTMLElement>(':scope > *'))
+        const draggableIndex = droppables.indexOf(draggableInfo.element)
+        const insertIndex = draggableInfo.insertIndex ?? 0
+
+        if (isCardDropAllowed(draggableIndex, insertIndex)) {
+          let result: DropResult = false
+
+          editor.update(() => {
+            // change card order on card drops
+            if (draggableInfo.type === 'card') {
+              const draggedNode = draggableInfo.nodeKey ? $getNodeByKey(draggableInfo.nodeKey) : null
+              if (!draggedNode) {
+                return
+              }
+
+              if (insertIndex >= droppables.length) {
+                // drop at end of document
+                const targetNode = $getNearestNodeFromDOMNode(droppables[droppables.length - 1])
+                if (targetNode) {
+                  targetNode.insertAfter(draggedNode)
+                }
+              } else {
+                const targetNode = $getNearestNodeFromDOMNode(droppables[insertIndex])
+                if (targetNode) {
+                  targetNode.insertBefore(draggedNode)
+                }
+              }
+
+              // clear selection so we don't show any toolbars immediately and the
+              // cursor isn't left stranded somewhere else in the document
+              $setSelection(null)
+
+              // the card was re-ordered in place, not moved inside another
+              // card — onDropEnd must not remove the source
+              result = { success: true, sourceHandled: true }
+              return
+            }
+
+            // insert new image node on image drops
+            if (draggableInfo.type === 'image') {
+              const targetNode = $getNearestNodeFromDOMNode(droppables[insertIndex])
+              if (targetNode) {
+                const imageNode = $createImageNode(draggableInfo.dataset as Parameters<typeof $createImageNode>[0])
+                targetNode.insertBefore(imageNode)
+
+                // select the newly inserted image card
+                const nodeSelection = $createNodeSelection()
+                nodeSelection.add(imageNode.getKey())
+                $setSelection(nodeSelection)
+              }
+
+              result = true
+            }
+          })
+
+          return result
+        }
+        return false
+      },
+    },
+    lifecycle: {
+      onDragStart: () => {
+        cardContainer.refresh()
+        dragDropHandle.setState({ isDragging: true })
+      },
+      onDragEnd: () => {
+        dragDropHandle.setState({ isDragging: false })
+      },
+      // a card can be dropped into another card which means we need to remove the original
+      onDropEnd: (draggableInfo: DraggableInfo, success: boolean, sourceHandled: boolean): void => {
+        // avoid removing the card if it's just a re-order or no move occurred
+        if (sourceHandled || !success || draggableInfo.type !== 'card') {
+          return
+        }
+
+        editor.update(() => {
+          const cardNode = draggableInfo.nodeKey ? $getNodeByKey(draggableInfo.nodeKey) : null
+          if (cardNode) {
+            cardNode.remove(false)
+          }
+        })
+      },
+    },
   })
 
   React.useEffect(() => {
-    const rootElement = editor.getRootElement()
-    if (!containerElement || !rootElement) {
+    if (!containerElement || !editor.getRootElement()) {
       return
     }
     const dndHandler = new DragDropHandler({
@@ -258,26 +261,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
     // dependency)
     dragDropHandle.setState({ handler: dndHandler })
 
-    cardContainer.current = dndHandler.registerContainer(rootElement, {
-      draggable: {
-        draggableSelector: ':scope > div', // cards
-        getDraggableInfo: getDraggableInfo.current,
-        createDragPreviewElement: createCardDragElement.current,
-      },
-      droppable: {
-        droppableSelector: ':scope > *', // all block elements
-        getIndicatorPosition: getDropIndicatorPosition.current,
-        onDrop: onCardDrop.current,
-      },
-      lifecycle: {
-        onDragStart: onDragStart.current,
-        onDragEnd: onDragEnd.current,
-        onDropEnd: onDropEnd.current,
-      },
-    })
-
     return () => {
-      cardContainer.current = null
       dragDropHandle.setState({ handler: null })
       dndHandler.destroy()
     }
@@ -313,13 +297,13 @@ function useDragDropReorder(editor: LexicalEditor): void {
           }
           const node = $getNodeByKey(key)
           if (node && node.getParent() === root) {
-            cardContainer.current?.refresh()
+            cardContainer.refresh()
             return
           }
         }
       })
     })
-  }, [editor])
+  }, [editor, cardContainer])
 
   // disable normal drag start events so they don't interfere with our custom drag handling
   React.useEffect(() => {
@@ -328,15 +312,6 @@ function useDragDropReorder(editor: LexicalEditor): void {
       prevRootElement?.removeEventListener('dragstart', preventDefault)
     })
   }, [editor])
-
-  // Disable drag-drop-reorder when editing a card
-  React.useEffect(() => {
-    if (isEditingCard) {
-      cardContainer.current?.disableDrag()
-    } else {
-      cardContainer.current?.enableDrag()
-    }
-  }, [isEditingCard])
 }
 
 export default function DragDropReorderPlugin(): null {

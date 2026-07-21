@@ -48,18 +48,14 @@ export class FileNode extends generateDecoratorNode({
 }) {
   /* @override */
   exportJSON() {
-    const { src, fileTitle, fileCaption, fileName, fileSize } = this
-    const isBlob = src && src.startsWith('data:')
-
-    return {
-      type: 'file' as const,
-      version: 1,
-      src: isBlob ? '<base64String>' : src,
-      fileTitle,
-      fileCaption,
-      fileName,
-      fileSize,
+    // the generated exportJSON already serializes every declared property in
+    // `fileProperties` order; the only card-specific logic is the blob guard —
+    // an upload-in-progress data-string src must not be persisted
+    const json = super.exportJSON()
+    if (typeof json.src === 'string' && json.src.startsWith('data:')) {
+      json.src = '<base64String>'
     }
+    return json
   }
 
   // Editor-side upload behaviour the card spec doesn't cover lives on the

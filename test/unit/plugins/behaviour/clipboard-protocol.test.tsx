@@ -42,6 +42,61 @@ describe('getModifierState', () => {
   it('starts with no modifier pressed', () => {
     expect(getModifierState(createTestEditor()).current).toBe(false)
   })
+
+  it('attaches the protocol listeners only once per editor', () => {
+    const addEventListenerSpy = vi.spyOn(document, 'addEventListener')
+    const editor = createTestEditor()
+    getModifierState(editor)
+    getModifierState(editor)
+    const keyListenerCalls = addEventListenerSpy.mock.calls.filter(
+      ([type]) => type === 'keydown' || type === 'keyup',
+    ).length
+    expect(keyListenerCalls).toBe(2)
+    addEventListenerSpy.mockRestore()
+  })
+})
+
+describe('protocol-owned modifier listeners', () => {
+  // The protocol itself writes the modifier state from real document
+  // keydown/keyup events — no plugin needs to mount its own listeners.
+  it('tracks Shift from real key events with no plugin mounted', () => {
+    const state = getModifierState(createTestEditor())
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', shiftKey: true }))
+    expect(state.current).toBe(true)
+
+    document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', shiftKey: false }))
+    expect(state.current).toBe(false)
+  })
+
+  it('tracks Shift for every editor that asked for state', () => {
+    const first = getModifierState(createTestEditor())
+    const second = getModifierState(createTestEditor())
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', shiftKey: true }))
+    expect(first.current).toBe(true)
+    expect(second.current).toBe(true)
+
+    document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', shiftKey: false }))
+  })
+
+  it('stays pressed while one of two held Shift keys is released', () => {
+    // The dual-shift corner that split the old per-plugin writers: reading
+    // `event.shiftKey` off every key event reports held-state, so releasing
+    // one of two held Shift keys (shiftKey still true) keeps the state
+    // pressed until the last Shift is released.
+    const state = getModifierState(createTestEditor())
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true }))
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', code: 'ShiftRight', shiftKey: true }))
+    expect(state.current).toBe(true)
+
+    document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', code: 'ShiftLeft', shiftKey: true }))
+    expect(state.current).toBe(true)
+
+    document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', code: 'ShiftRight', shiftKey: false }))
+    expect(state.current).toBe(false)
+  })
 })
 
 describe('MarkdownPastePlugin modifier state', () => {
@@ -59,12 +114,12 @@ describe('MarkdownPastePlugin modifier state', () => {
     expect(registrations).toBeGreaterThan(0)
 
     await act(async () => {
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift' }))
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', shiftKey: true }))
     })
     expect(getModifierState(editor).current).toBe(true)
 
     await act(async () => {
-      document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift' }))
+      document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift', shiftKey: false }))
     })
     expect(getModifierState(editor).current).toBe(false)
 

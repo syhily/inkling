@@ -1,3 +1,6 @@
+import type { LexicalEditor, NodeKey } from 'lexical'
+
+import { LexicalComposerContext, type LexicalComposerContextWithEditor } from '@lexical/react/LexicalComposerContext'
 import { act, render, screen } from '@testing-library/react'
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -117,10 +120,13 @@ interface HarnessProps {
 }
 
 function Harness({ positionToRef, cardWidth = 'regular' }: HarnessProps) {
-  const { ref } = useSettingsPanelReposition({ positionToRef, cardWidth })
+  const ownCardRef = React.useRef<HTMLDivElement | null>(null)
+  // pass the card element in through the hook's interface instead of seeding
+  // global DOM selection attributes
+  const { ref } = useSettingsPanelReposition({ positionToRef: positionToRef ?? ownCardRef, cardWidth })
   return (
     <div data-testid="scroll-container" style={{ overflowY: 'auto', width: 800, height: 600 }}>
-      <div data-inkling-card-editing="true" style={{ width: 200, height: 100 }} />
+      <div ref={ownCardRef} data-testid="card" style={{ width: 200, height: 100 }} />
       <div ref={ref} data-testid="settings-panel" style={{ width: 100, height: 100 }} />
     </div>
   )
@@ -128,6 +134,28 @@ function Harness({ positionToRef, cardWidth = 'regular' }: HarnessProps) {
 
 function findContainerObserver(container: Element) {
   return MockResizeObserver.instances.find((instance) => instance.targets.includes(container))
+}
+
+interface KeyHarnessProps {
+  cardKey: NodeKey
+  editor: LexicalEditor
+}
+
+function KeyHarnessInner({ cardKey }: { cardKey: NodeKey }) {
+  const { ref } = useSettingsPanelReposition<HTMLDivElement>({ cardWidth: 'regular', cardKey })
+  return <div ref={ref} data-testid="settings-panel" />
+}
+
+function KeyHarness({ cardKey, editor }: KeyHarnessProps) {
+  const composerContextValue = React.useMemo<LexicalComposerContextWithEditor>(
+    () => [editor, { getTheme: () => null }],
+    [editor],
+  )
+  return (
+    <LexicalComposerContext.Provider value={composerContextValue}>
+      <KeyHarnessInner cardKey={cardKey} />
+    </LexicalComposerContext.Provider>
+  )
 }
 
 describe('useSettingsPanelReposition', () => {
@@ -144,6 +172,16 @@ describe('useSettingsPanelReposition', () => {
     restoreWindowSize()
     globalThis.ResizeObserver = originalResizeObserver
     MockResizeObserver.instances.length = 0
+  })
+
+  it('resolves the card element from the card key via editor.getElementByKey', () => {
+    const cardElement = document.createElement('div')
+    const getElementByKey = vi.fn<(key: NodeKey) => HTMLElement | null>(() => cardElement)
+    const editor = { getElementByKey } as unknown as LexicalEditor
+
+    render(<KeyHarness cardKey="card-1" editor={editor} />)
+
+    expect(getElementByKey).toHaveBeenCalledWith('card-1')
   })
 
   it('invokes the leading resize callback immediately and the trailing callback after the burst settles', async () => {

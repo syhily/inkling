@@ -1,5 +1,6 @@
 import EventEmitter from 'eventemitter3'
 
+import { ActiveDrag } from '@/utils/draggable/ActiveDrag'
 import { DragDropContainer, type DraggableInfo, type DroppablePosition } from '@/utils/draggable/DragDropContainer'
 import {
   CONTAINER_SELECTOR,
@@ -30,31 +31,28 @@ export class DragDropHandler {
   eventEmitter: EventEmitter
   editorContainerElement: HTMLElement | null = null
   containers: DragDropContainer[] = []
-  draggableInfo: DraggableInfo | null = null
-  // the card drag producer (DragDropReorderPlugin) renders the preview icon
-  // with a React root and stashes it on the element — an honest optional
-  // expando, unmounted here on reset
-  dragPreviewInfo: {
-    element: HTMLElement & { __reactRoot?: { unmount: () => void } }
-    positionX: number
-    positionY: number
-  } | null = null
+  // grab-phase state: set on mousedown, consumed (or discarded) when the drag
+  // start threshold is met — everything the initiated drag owns lives in
+  // _activeDrag instead
   grabbedElement: HTMLElement | null = null
-  scrollHandler: ScrollHandler
   sourceContainer: DragDropContainer | null = null
+  scrollHandler: ScrollHandler
 
-  _currentOverContainer: DragDropContainer | null = null
-  _currentOverContainerElem: Element | null = null
-  _currentOverDroppableElem: HTMLElement | null = null
-  _currentOverDroppablePosition: DroppablePosition | null = null
+  _activeDrag: ActiveDrag | null = null
   _dropIndicator: HTMLElement | null = null
   _eventHandlers: Record<string, EventHandlerEntry> = {}
   _dragPreviewContainerElement: HTMLElement | null = null
   _rafUpdateDragPreviewElementPosition: () => void
   _waitForDragStartPromise: Promise<void> | null = null
-  _dropIndicatorTimeout: ReturnType<typeof setTimeout> | null = null
 
   isDragging: boolean = false
+
+  // the in-flight drag's info; null between drags. Kept as an accessor so the
+  // handler's external interface survives the ActiveDrag collapse
+  get draggableInfo(): DraggableInfo | null {
+    return this._activeDrag?.draggableInfo ?? null
+  }
+
   // lifecycle ---------------------------------------------------------------
 
   constructor({ editorContainerElement }: { editorContainerElement?: HTMLElement } = {}) {
@@ -128,6 +126,27 @@ export class DragDropHandler {
     this._resetDrag()
   }
 
+  // test seam: runs the grab → drag-start choreography synchronously so unit
+  // tests don't re-create it with real mousedown/mousemove sequences and
+  // wall-clock sleeps. Dispatches a real mousedown (the grab path runs
+  // end-to-end), then resolves the drag-start wait immediately. Resolves once
+  // the drag has been initiated — or immediately when the grab never started
+  // a wait (right click, drag-disabled target, drag already in progress)
+  async simulateDrag(element: HTMLElement, start: { x: number; y: number } = { x: 10, y: 10 }): Promise<void> {
+    element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: start.x, clientY: start.y, button: 0 }))
+
+    const pending = this._waitForDragStartPromise
+    if (!pending) {
+      return
+    }
+
+    this.eventEmitter.emit('drag-start-conditions-met')
+    // the _onMouseDown continuation that calls _initiateDrag is attached to
+    // this promise before our await, so initiation has completed by the time
+    // simulateDrag resolves
+    await pending.catch(() => {})
+  }
+
   // event handlers ----------------------------------------------------------
 
   // we use a custom "drag" detection rather than native drag events because it
@@ -181,26 +200,30 @@ export class DragDropHandler {
   }
 
   _onMouseUp() {
-    const draggableInfo = this.draggableInfo
-    if (draggableInfo) {
+    const drag = this._activeDrag
+    if (drag) {
       let success = false
+      let sourceHandled = false
+      const dropTarget = drag.overContainer
 
-      // TODO: accept object rather than positioned args? OR, should the
-      // droppable data be stored on draggableInfo?
-      if (this._currentOverContainer) {
-        success = this._currentOverContainer.onDrop(
-          draggableInfo,
-          this._currentOverDroppableElem,
-          this._currentOverDroppablePosition,
-        )
+      if (dropTarget) {
+        const result = dropTarget.onDrop(drag.draggableInfo, drag.overDroppableElem, drag.overDroppablePosition)
+        if (typeof result === 'boolean') {
+          success = result
+        } else {
+          success = result.success
+          sourceHandled = result.sourceHandled ?? false
+        }
       }
 
       this.containers.forEach((container) => {
-        container.onDropEnd(draggableInfo, success)
+        // the sourceHandled report belongs to the drop target alone — every
+        // other container must still remove its source on a successful drop
+        container.onDropEnd(drag.draggableInfo, success, sourceHandled && container === dropTarget)
       })
     }
 
-    // remove drag info and any drag preview element
+    // dispose the drag and any drag preview element
     this._resetDrag()
   }
 
@@ -310,7 +333,18 @@ export class DragDropHandler {
         y: startEvent.clientY,
       },
     }
-    this.draggableInfo = draggableInfo
+
+    // one object owns everything this drag creates — its listeners included —
+    // so reset is disposal rather than a field-nulling checklist
+    const activeDrag = new ActiveDrag({
+      draggableInfo,
+      listeners: {
+        onMouseMove: (event) => this._onMouseMove(event),
+        onMouseUp: () => this._onMouseUp(),
+        onKeyDown: (event) => this._onKeyDown(event),
+      },
+    })
+    this._activeDrag = activeDrag
 
     this.containers.forEach((container) => {
       container.onDragStart(draggableInfo)
@@ -323,12 +357,13 @@ export class DragDropHandler {
 
     // create the drag preview element and cache its position to avoid costly
     // getBoundingClientRect calls in the mousemove handler
-    const dragPreviewElement = this.sourceContainer.createDragPreviewElement(draggableInfo)
-    if (dragPreviewElement) {
-      this._dragPreviewContainerElement?.appendChild(dragPreviewElement)
-      const dragPreviewElementRect = dragPreviewElement.getBoundingClientRect()
-      this.dragPreviewInfo = {
-        element: dragPreviewElement,
+    const dragPreview = this.sourceContainer.createDragPreviewElement(draggableInfo)
+    if (dragPreview) {
+      this._dragPreviewContainerElement?.appendChild(dragPreview.element)
+      const dragPreviewElementRect = dragPreview.element.getBoundingClientRect()
+      activeDrag.dragPreviewInfo = {
+        element: dragPreview.element,
+        dispose: dragPreview.dispose,
         positionX: dragPreviewElementRect.x,
         positionY: dragPreviewElementRect.y,
       }
@@ -336,11 +371,6 @@ export class DragDropHandler {
       this._resetDrag()
       return
     }
-
-    // add watches to follow the drag/drop
-    this._addMoveListeners()
-    this._addReleaseListeners()
-    this._addKeyDownListeners()
 
     // start drag preview element following the mouse
     requestAnimationFrame(this._rafUpdateDragPreviewElementPosition)
@@ -374,18 +404,20 @@ export class DragDropHandler {
 
   // called when mouse moves whilst a drag is in progress
   _handleDrag(_event?: MouseEvent) {
-    if (!this.draggableInfo || !this._dragPreviewContainerElement) {
+    const drag = this._activeDrag
+    if (!drag || !this._dragPreviewContainerElement) {
       return
     }
+    const { draggableInfo } = drag
 
     // hide the drag preview element so that it's not picked up by elementFromPoint
     // when determining the target element under the mouse
     this._dragPreviewContainerElement.hidden = true
-    const target = document.elementFromPoint(this.draggableInfo.mousePosition.x, this.draggableInfo.mousePosition.y)
-    this.draggableInfo.target = target instanceof HTMLElement ? target : null
+    const target = document.elementFromPoint(draggableInfo.mousePosition.x, draggableInfo.mousePosition.y)
+    draggableInfo.target = target instanceof HTMLElement ? target : null
     this._dragPreviewContainerElement.hidden = false
 
-    this.scrollHandler.dragMove(this.draggableInfo)
+    this.scrollHandler.dragMove(draggableInfo)
 
     const overContainerElem = getParent(target, CONTAINER_SELECTOR)
     let overDroppableElem: Element | null = getParent(target, DROPPABLE_SELECTOR)
@@ -397,60 +429,55 @@ export class DragDropHandler {
       overDroppableElem = null
     }
 
-    const currentOverDroppableElem = this._currentOverDroppableElem
-    const isLeavingContainer =
-      this._currentOverContainerElem !== null && overContainerElem !== this._currentOverContainerElem
+    const currentOverDroppableElem = drag.overDroppableElem
+    const isLeavingContainer = drag.overContainerElem !== null && overContainerElem !== drag.overContainerElem
     const isLeavingDroppable = currentOverDroppableElem !== null && overDroppableElem !== currentOverDroppableElem
-    const isOverContainer = overContainerElem !== null && overContainerElem !== this._currentOverContainerElem
+    const isOverContainer = overContainerElem !== null && overContainerElem !== drag.overContainerElem
 
-    if (isLeavingContainer && this._currentOverContainer) {
-      this._currentOverContainer.onDragLeaveContainer(this.draggableInfo)
-      this._currentOverContainer = null
-      this._currentOverContainerElem = null
+    if (isLeavingContainer && drag.overContainer) {
+      drag.overContainer.onDragLeaveContainer(draggableInfo)
+      drag.overContainer = null
+      drag.overContainerElem = null
       this._hideDropIndicator()
     }
 
     if (isOverContainer) {
       const container = this.containers.find((c) => c.element === overContainerElem)
-      if (!this._currentOverContainer && container) {
-        container.onDragEnterContainer(this.draggableInfo)
+      if (!drag.overContainer && container) {
+        container.onDragEnterContainer(draggableInfo)
       }
 
-      this._currentOverContainer = container ?? null
-      this._currentOverContainerElem = overContainerElem
+      drag.overContainer = container ?? null
+      drag.overContainerElem = overContainerElem
     }
 
-    if (isLeavingDroppable && this._currentOverContainer && currentOverDroppableElem) {
-      this._currentOverContainer.onDragLeaveDroppable(currentOverDroppableElem)
-      this._currentOverDroppableElem = null
+    if (isLeavingDroppable && drag.overContainer && currentOverDroppableElem) {
+      drag.overContainer.onDragLeaveDroppable(currentOverDroppableElem)
+      drag.overDroppableElem = null
     }
 
     if (overDroppableElem instanceof HTMLElement) {
       // get position within the droppable
       const rect = overDroppableElem.getBoundingClientRect()
-      const inTop = this.draggableInfo.mousePosition.y < rect.y + rect.height / 2
-      const inLeft = this.draggableInfo.mousePosition.x < rect.x + rect.width / 2
+      const inTop = draggableInfo.mousePosition.y < rect.y + rect.height / 2
+      const inLeft = draggableInfo.mousePosition.x < rect.x + rect.width / 2
       const position: DroppablePosition = `${inTop ? 'top' : 'bottom'}-${inLeft ? 'left' : 'right'}`
 
-      if (!this._currentOverDroppableElem && this._currentOverContainer) {
-        this._currentOverContainer.onDragEnterDroppable(overDroppableElem, position)
+      if (!drag.overDroppableElem && drag.overContainer) {
+        drag.overContainer.onDragEnterDroppable(overDroppableElem, position)
       }
 
-      if (overDroppableElem !== this._currentOverDroppableElem || position !== this._currentOverDroppablePosition) {
-        this._currentOverDroppableElem = overDroppableElem
-        this._currentOverDroppablePosition = position
-        if (this._currentOverContainer) {
-          this._currentOverContainer.onDragOverDroppable(overDroppableElem, position)
+      if (overDroppableElem !== drag.overDroppableElem || position !== drag.overDroppablePosition) {
+        drag.overDroppableElem = overDroppableElem
+        drag.overDroppablePosition = position
+        if (drag.overContainer) {
+          drag.overContainer.onDragOverDroppable(overDroppableElem, position)
         }
 
         // container.getIndicatorPosition returns false if the drop is not allowed
-        const indicatorPosition = this._currentOverContainer?.getIndicatorPosition(
-          this.draggableInfo,
-          overDroppableElem,
-          position,
-        )
+        const indicatorPosition = drag.overContainer?.getIndicatorPosition(draggableInfo, overDroppableElem, position)
         if (indicatorPosition) {
-          this.draggableInfo.insertIndex = indicatorPosition.insertIndex
+          draggableInfo.insertIndex = indicatorPosition.insertIndex
           this._showDropIndicator()
         } else {
           this._hideDropIndicator()
@@ -464,8 +491,9 @@ export class DragDropHandler {
       requestAnimationFrame(this._rafUpdateDragPreviewElementPosition)
     }
 
-    const { dragPreviewInfo, draggableInfo } = this
-    if (draggableInfo && dragPreviewInfo) {
+    const drag = this._activeDrag
+    if (drag?.dragPreviewInfo) {
+      const { dragPreviewInfo, draggableInfo } = drag
       const left = dragPreviewInfo.positionX * -1 + draggableInfo.mousePosition.x
       const top = dragPreviewInfo.positionY * -1 + draggableInfo.mousePosition.y
       dragPreviewInfo.element.style.transform = `translate3d(${left}px, ${top}px, 0)`
@@ -476,15 +504,16 @@ export class DragDropHandler {
   // The visual position is derived from the current droppable and its quadrant.
   _showDropIndicator() {
     const dropIndicator = this._dropIndicator
-    if (!dropIndicator) {
+    const drag = this._activeDrag
+    if (!dropIndicator || !drag) {
       return
     }
 
     // reset everything except insertIndex before re-displaying indicator
     this._hideDropIndicator({ clearInsertIndex: false })
 
-    const droppable = this._currentOverDroppableElem
-    const position = this._currentOverDroppablePosition
+    const droppable = drag.overDroppableElem
+    const position = drag.overDroppablePosition
     if (!droppable || !position) {
       return
     }
@@ -515,7 +544,7 @@ export class DragDropHandler {
     } else {
       dropIndicator.style.opacity = '0'
 
-      this._dropIndicatorTimeout = setTimeout(() => {
+      drag.dropIndicatorTimeout = setTimeout(() => {
         dropIndicator.style.width = `${newWidth}px`
         dropIndicator.style.height = `${newHeight}px`
         dropIndicator.style.left = `${newLeft}px`
@@ -526,16 +555,18 @@ export class DragDropHandler {
   }
 
   _hideDropIndicator({ clearInsertIndex = true }: { clearInsertIndex?: boolean } = {}) {
+    const drag = this._activeDrag
+
     // make sure the indicator isn't shown due to a running timeout
-    if (this._dropIndicatorTimeout) {
-      clearTimeout(this._dropIndicatorTimeout)
-      this._dropIndicatorTimeout = null
+    if (drag?.dropIndicatorTimeout) {
+      clearTimeout(drag.dropIndicatorTimeout)
+      drag.dropIndicatorTimeout = null
     }
 
     // clear droppable insert index unless instructed not to (eg, when
     // resetting the display before re-positioning the indicator)
-    if (clearInsertIndex && this.draggableInfo) {
-      delete this.draggableInfo.insertIndex
+    if (clearInsertIndex && drag) {
+      delete drag.draggableInfo.insertIndex
     }
 
     // hide drop indicator
@@ -547,9 +578,6 @@ export class DragDropHandler {
   _resetDrag() {
     this.eventEmitter.emit('drag-start-canceled')
     this._hideDropIndicator()
-    this._removeMoveListeners()
-    this._removeReleaseListeners()
-    this._removeKeyDownListeners()
 
     this.scrollHandler.dragStop()
 
@@ -558,19 +586,14 @@ export class DragDropHandler {
     }
 
     this.isDragging = false
-    this.draggableInfo = null
     this.grabbedElement = null
     this.sourceContainer = null
-    this._currentOverContainer = null
-    this._currentOverContainerElem = null
-    this._currentOverDroppableElem = null
-    this._currentOverDroppablePosition = null
 
-    if (this.dragPreviewInfo) {
-      this.dragPreviewInfo.element.__reactRoot?.unmount()
-      this.dragPreviewInfo.element.remove()
-      this.dragPreviewInfo = null
-    }
+    // disposal owns the whole per-drag teardown: listeners, indicator
+    // timeout, drag preview (element removal + producer dispose hook)
+    const activeDrag = this._activeDrag
+    this._activeDrag = null
+    activeDrag?.dispose()
 
     this.containers.forEach((container) => {
       container.onDragEnd()
@@ -628,36 +651,14 @@ export class DragDropHandler {
     this._dragPreviewContainerElement?.remove()
   }
 
+  // the grab (mousedown) listener is the handler's only permanent listener;
+  // the per-drag move/release/escape listeners live on ActiveDrag
   _addGrabListeners() {
     this._addEventListener('mousedown', this._onMouseDown, { passive: false })
   }
 
   _removeGrabListeners() {
     this._removeEventListener('mousedown')
-  }
-
-  _addMoveListeners() {
-    this._addEventListener('mousemove', this._onMouseMove, { passive: false })
-  }
-
-  _removeMoveListeners() {
-    this._removeEventListener('mousemove')
-  }
-
-  _addReleaseListeners() {
-    this._addEventListener('mouseup', this._onMouseUp, { passive: false })
-  }
-
-  _removeReleaseListeners() {
-    this._removeEventListener('mouseup')
-  }
-
-  _addKeyDownListeners() {
-    this._addEventListener('keydown', this._onKeyDown)
-  }
-
-  _removeKeyDownListeners() {
-    this._removeEventListener('keydown')
   }
 
   _addEventListener<K extends keyof DocumentEventMap>(
