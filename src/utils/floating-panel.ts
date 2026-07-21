@@ -149,8 +149,10 @@ export function clampOnDrag(input: ClampRest): PanelPosition {
 
 /** Settle clamp: minimum spacing ( honouring previous spacing), then the drag boundary. */
 export function clampOnResize(input: ClampRest & { lastSpacing?: PanelSpacing | null }): PanelPosition {
-  const settled = clampWithinSpacing({ ...input, spacing: MIN_PANEL_SPACING })
-  return clampOnDrag({ ...input, x: settled.x, y: settled.y })
+  const { lastSpacing, ...rest } = input
+  const settled = clampWithinSpacing({ ...rest, spacing: MIN_PANEL_SPACING, lastSpacing })
+  // the boundary pass ignores previous spacing, matching the drag clamp
+  return clampOnDrag({ ...rest, x: settled.x, y: settled.y })
 }
 
 export interface InitialPanelPositionInput {
