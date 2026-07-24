@@ -7,6 +7,7 @@ import { $getRoot } from 'lexical'
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { BaseToggleNode, $createBaseToggleNode, $isToggleNode } from '@/nodes/base/index'
+import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 const editorNodes = [BaseToggleNode]
 
@@ -134,6 +135,47 @@ describe('BaseToggleNode', function () {
       editorTest(async function () {
         const toggleNode = $createBaseToggleNode(dataset)
         expect(toggleNode.hasEditMode()).toBe(true)
+      }),
+    )
+  })
+
+  describe('isEmpty()', function () {
+    it(
+      'returns false when the nested editors are unset (spec-less base instance)',
+      editorTest(async function () {
+        expect($createBaseToggleNode().isEmpty()).toBe(false)
+      }),
+    )
+
+    it(
+      'returns false when a nested editor is nulled (the markdown round-trip idiom)',
+      editorTest(async function () {
+        const toggleNode = $createBaseToggleNode()
+        toggleNode.__titleEditor = null
+        toggleNode.__contentEditor = setupNestedEditor()
+        expect(toggleNode.isEmpty()).toBe(false)
+      }),
+    )
+
+    it(
+      'returns true when both nested editors are empty',
+      editorTest(async function () {
+        const toggleNode = $createBaseToggleNode()
+        toggleNode.__titleEditor = setupNestedEditor()
+        toggleNode.__contentEditor = setupNestedEditor()
+        expect(toggleNode.isEmpty()).toBe(true)
+      }),
+    )
+
+    it(
+      'returns false when a nested editor has content',
+      editorTest(async function () {
+        const toggleNode = $createBaseToggleNode()
+        const titleEditor = setupNestedEditor()
+        populateNestedEditor(titleEditor, '<p>Heading</p>')
+        toggleNode.__titleEditor = titleEditor
+        toggleNode.__contentEditor = setupNestedEditor()
+        expect(toggleNode.isEmpty()).toBe(false)
       }),
     )
   })

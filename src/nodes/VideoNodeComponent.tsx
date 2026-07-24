@@ -6,8 +6,8 @@ import type { FileChangeEvent } from '@/components/ui/cards/card-ui-types'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { VideoCard } from '@/components/ui/cards/VideoCard'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import { usePreviewLease } from '@/hooks/usePreviewLease'
@@ -49,7 +49,8 @@ export function VideoNodeComponent({
 }: VideoNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
-  const cardContext = React.useContext(CardContext)
+  const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
+  const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
   const videoFileInputRef = React.useRef<HTMLInputElement | null>(null)
   const [previewThumbnail, setThumbnailPreview] = usePreviewLease()
   const videoUploader = fileUploader.useFileUpload('video')
@@ -167,7 +168,6 @@ export function VideoNodeComponent({
       $updateCardNode(nodeKey, $isVideoNode, (node) => {
         node.cardWidth = width
       })
-      cardContext.setCardWidth(width)
     })
   }
 
@@ -190,9 +190,9 @@ export function VideoNodeComponent({
         customThumbnail={customThumbnail}
         customThumbnailUploader={customThumbnailUploader}
         fileInputRef={videoFileInputRef}
-        isEditing={cardContext.isEditing}
+        isEditing={isEditing}
         isLoopChecked={isLoopChecked}
-        isSelected={cardContext.isSelected}
+        isSelected={isSelected}
         thumbnail={previewThumbnail || thumbnail}
         thumbnailDragHandler={thumbnailDragHandler}
         thumbnailMimeTypes={fileUploader.fileTypes?.image?.mimeTypes ?? []}

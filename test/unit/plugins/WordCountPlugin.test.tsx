@@ -1,33 +1,25 @@
-import { act, renderHook } from '@testing-library/react'
-import {
-  $createParagraphNode,
-  $createTextNode,
-  $getRoot,
-  $isElementNode,
-  $isTextNode,
-  createEditor,
-  DecoratorNode,
-  type LexicalEditor,
-  type LexicalNodeConfig,
-  type NodeKey,
-} from 'lexical'
+import { renderHook } from '@testing-library/react'
+import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
 import React from 'react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
 import { WordCountHandleContext } from '@/context/WordCountHandleContext'
 import { createWordCountHandle } from '@/plugins/behaviour/wordCountHandle'
 import { WordCountPlugin } from '@/plugins/WordCountPlugin'
-import { getTopLevelEditor } from '@/utils/lexical-internals'
+
+// Smoke suite for the React adapter: handle publish/clear and engine wiring.
+// The counting behaviour itself (initial count, incremental flushes, dirty-key
+// remapping, nested-editor fallback, detach) is pinned headlessly and without
+// wall-clock sleeps in test/unit/plugins/behaviour/word-counter.test.ts.
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
 
-function createTestEditor(overrides: { nodes?: LexicalNodeConfig[]; parentEditor?: LexicalEditor } = {}) {
+function createTestEditor(overrides: { parentEditor?: LexicalEditor } = {}) {
   const editor = createEditor({
     namespace: 'test',
-    nodes: overrides.nodes,
     onError: () => {},
     parentEditor: overrides.parentEditor,
   })
@@ -43,53 +35,6 @@ function createTestEditor(overrides: { nodes?: LexicalNodeConfig[]; parentEditor
   return editor
 }
 
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { discrete: true, onUpdate: () => resolve() })
-  })
-}
-
-class TestDecoratorNode extends DecoratorNode<null> {
-  __nestedEditor: LexicalEditor
-
-  constructor(nestedEditor: LexicalEditor = createTestEditor(), key?: NodeKey) {
-    super(key)
-    this.__nestedEditor = nestedEditor
-  }
-
-  static getType() {
-    return 'test-decorator'
-  }
-
-  static clone(node: TestDecoratorNode) {
-    return new TestDecoratorNode(node.__nestedEditor, node.__key)
-  }
-
-  createDOM() {
-    return document.createElement('div')
-  }
-
-  updateDOM() {
-    return false
-  }
-
-  decorate() {
-    return null
-  }
-
-  getTextContent() {
-    let text = ''
-    this.__nestedEditor.getEditorState().read(() => {
-      text = $getRoot().getTextContent()
-    })
-    return text
-  }
-}
-
-function $createTestDecoratorNode(nestedEditor: LexicalEditor) {
-  return new TestDecoratorNode(nestedEditor)
-}
-
 describe('WordCountPlugin', () => {
   let editor: LexicalEditor
 
@@ -98,11 +43,7 @@ describe('WordCountPlugin', () => {
     editor = createTestEditor()
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
-  async function renderPlugin(onChange: (count: number) => void, pluginEditor = editor) {
+  function renderPlugin(onChange?: (count: number) => void, pluginEditor = editor) {
     mockComposerContext(pluginEditor)
 
     const wordCountHandle = createWordCountHandle()
@@ -114,23 +55,15 @@ describe('WordCountPlugin', () => {
     return { wordCountHandle, ...result }
   }
 
-  async function flushThrottle() {
-    await act(async () => {
-      await new Promise((resolve) => {
-        setTimeout(resolve, 250)
-      })
-    })
-  }
-
-  it('counts words on mount with an empty editor', async () => {
+  it('counts words on mount with an empty editor', () => {
     const onChange = vi.fn()
-    await renderPlugin(onChange)
+    renderPlugin(onChange)
     expect(onChange).toHaveBeenCalledWith(0)
   })
 
-  it('publishes the shared callback on the word-count handle and clears it on unmount', async () => {
+  it('publishes the shared callback on the word-count handle and clears it on unmount', () => {
     const onChange = vi.fn()
-    const { unmount, wordCountHandle } = await renderPlugin(onChange)
+    const { unmount, wordCountHandle } = renderPlugin(onChange)
 
     // a top-level plugin owns the shared callback so that nested composers can
     // mount their own WordCountPlugin with it
@@ -141,172 +74,41 @@ describe('WordCountPlugin', () => {
     expect(wordCountHandle.getState().onChange).toBeNull()
   })
 
-  it('counts words after typing', async () => {
-    const onChange = vi.fn()
-    await renderPlugin(onChange)
-
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello world')))
-    })
-
-    await flushThrottle()
-
-    expect(onChange).toHaveBeenLastCalledWith(2)
-  })
-
-  it('counts words after deletion', async () => {
-    const onChange = vi.fn()
-    await renderPlugin(onChange)
-
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello world foo bar')))
-    })
-
-    await flushThrottle()
-    expect(onChange).toHaveBeenLastCalledWith(4)
-
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello world')))
-    })
-
-    await flushThrottle()
-    expect(onChange).toHaveBeenLastCalledWith(2)
-  })
-
-  it('does not call onChange when the count is unchanged', async () => {
-    const onChange = vi.fn()
-    await renderPlugin(onChange)
-
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello world')))
-    })
-
-    await flushThrottle()
-    expect(onChange).toHaveBeenLastCalledWith(2)
-    onChange.mockClear()
-
-    await updateEditor(editor, () => {
-      const textNode = $getRoot().getFirstDescendant()
-      if (!$isTextNode(textNode)) {
-        throw new Error('Expected the word-count fixture to contain a text node')
-      }
-      textNode.setFormat(1)
-    })
-
-    await flushThrottle()
-    expect(onChange).not.toHaveBeenCalled()
-  })
-
-  it('counts words from nested editors', async () => {
-    const topLevelEditor = createTestEditor({
-      nodes: [TestDecoratorNode],
-    })
+  it('does not publish the shared callback when mounted in a nested editor', () => {
+    const topLevelEditor = createTestEditor()
     const nestedEditor = createTestEditor({ parentEditor: topLevelEditor })
 
-    // Set up the top-level state before mounting the nested plugin so the
-    // initial full count includes the top-level paragraph.
-    await updateEditor(topLevelEditor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello world')))
-      root.append($createTestDecoratorNode(nestedEditor))
-    })
+    const onChange = vi.fn()
+    const { unmount, wordCountHandle } = renderPlugin(onChange, nestedEditor)
+
+    // Nested plugins do not own the shared root callback, but still count.
+    expect(wordCountHandle.getState().onChange).toBeNull()
+    expect(onChange).toHaveBeenCalledWith(0)
+
+    unmount()
+
+    expect(wordCountHandle.getState().onChange).toBeNull()
+  })
+
+  it('does nothing without an onChange callback', () => {
+    const { wordCountHandle } = renderPlugin(undefined)
+
+    expect(wordCountHandle.getState().onChange).toBeNull()
+  })
+
+  it('counts pre-existing content on mount', () => {
+    editor.update(
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append($createParagraphNode().append($createTextNode('Hello world')))
+      },
+      { discrete: true },
+    )
 
     const onChange = vi.fn()
-    await renderPlugin(onChange, nestedEditor)
+    renderPlugin(onChange)
 
     expect(onChange).toHaveBeenCalledWith(2)
-    onChange.mockClear()
-
-    await updateEditor(nestedEditor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Nested content')))
-    })
-
-    await flushThrottle()
-
-    expect(onChange).toHaveBeenLastCalledWith(4)
-  })
-
-  it('traverses from a grandchild editor to the top-level editor', async () => {
-    const topLevelEditor = createTestEditor()
-    const childEditor = createTestEditor({ parentEditor: topLevelEditor })
-    const grandchildEditor = createTestEditor({ parentEditor: childEditor })
-
-    expect(getTopLevelEditor(grandchildEditor)).toBe(topLevelEditor)
-
-    await updateEditor(topLevelEditor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Top level words')))
-    })
-
-    const onChange = vi.fn()
-    const { wordCountHandle } = await renderPlugin(onChange, grandchildEditor)
-
-    // Nested plugins do not own the shared root callback.
-    expect(wordCountHandle.getState().onChange).toBeNull()
-
-    // Initial count is computed from the top-level editor.
-    expect(onChange).toHaveBeenCalledWith(3)
-    onChange.mockClear()
-
-    // Updating the grandchild editor triggers the plugin's listener, which
-    // recomputes the top-level count. Lexical caches RootNode.getTextContent()
-    // across nested-editor boundaries, so the grandchild text does not reach
-    // the top-level count; we assert the callback is reached with the current
-    // top-level count.
-    await updateEditor(grandchildEditor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Grandchild words')))
-    })
-
-    await flushThrottle()
-
-    expect(onChange).toHaveBeenCalled()
-    expect(onChange).toHaveBeenLastCalledWith(3)
-  })
-
-  it('reports the correct count after a small edit in a long document', async () => {
-    const onChange = vi.fn()
-    await renderPlugin(onChange)
-
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      for (let i = 0; i < 100; i++) {
-        root.append($createParagraphNode().append($createTextNode(`Paragraph ${i} has several words to count`)))
-      }
-    })
-
-    await flushThrottle()
-    const initialCount = onChange.mock.calls[onChange.mock.calls.length - 1][0]
-    expect(initialCount).toBeGreaterThan(0)
-
-    await updateEditor(editor, () => {
-      const firstParagraph = $getRoot().getFirstChild()
-      if (!$isElementNode(firstParagraph)) {
-        throw new Error('Expected the long-document fixture to start with a paragraph')
-      }
-      const firstText = firstParagraph.getFirstChild()
-      if (!$isTextNode(firstText)) {
-        throw new Error('Expected the first paragraph to contain a text node')
-      }
-      firstText.setTextContent('Paragraph zero has several words to count')
-    })
-
-    await flushThrottle()
-
-    expect(onChange).toHaveBeenLastCalledWith(initialCount)
   })
 })

@@ -223,7 +223,7 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
         <PlusButton onClick={openMenu} />
         {isShowingMenu && (
           <PlusMenu>
-            <CardMenu closeMenu={closeMenu} insert={insert} items={cardMenu.items} />
+            <CardMenu closeMenu={closeMenu} insert={insert} sections={cardMenu.sections} />
           </PlusMenu>
         )}
       </div>

@@ -3,7 +3,7 @@ import type { EditorState, LexicalEditor } from 'lexical'
 import type { GalleryData } from '@/nodes/base/nodes/gallery/GalleryNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
-import { assembleCardNode } from '@/nodes/assemble-card-node'
+import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { galleryDeclaration } from '@/nodes/cards/gallery.declaration'
 
 export {
@@ -24,7 +24,7 @@ export type GalleryNodeDataset = GalleryData & CaptionEditorDataset
  * `$createGalleryNode` keeps constructing the assembled class so the
  * nested-editor spec is set up.
  */
-export const GalleryNode = assembleCardNode(galleryDeclaration)
+export const GalleryNode = assembleCardNodeOnce(galleryDeclaration)
 export type GalleryNode = InstanceType<typeof GalleryNode> & {
   __captionEditor: LexicalEditor | null
   __captionEditorInitialState: EditorState | undefined

@@ -4,7 +4,7 @@ import type React from 'react'
 import type { ImageData } from '@/nodes/base/nodes/image/ImageNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
-import { assembleCardNode } from '@/nodes/assemble-card-node'
+import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { imageDeclaration } from '@/nodes/cards/image.declaration'
 
 export { $isImageNode } from '@/nodes/base/nodes/image/ImageNode'
@@ -29,7 +29,7 @@ export type ImageNodeDataset = ImageData &
  * keeps constructing the assembled class so the nested-editor and
  * transient-prop specs are initialized.
  */
-export const ImageNode = assembleCardNode(imageDeclaration)
+export const ImageNode = assembleCardNodeOnce(imageDeclaration)
 export type ImageNode = InstanceType<typeof ImageNode> & {
   __triggerFileDialog: boolean
   __previewSrc: string | null

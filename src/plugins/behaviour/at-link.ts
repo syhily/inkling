@@ -1,5 +1,6 @@
-import type { LexicalEditor } from 'lexical'
+import type { LexicalEditor, PointType } from 'lexical'
 
+import { $createLinkNode } from '@lexical/link'
 import { $insertFirst, mergeRegister } from '@lexical/utils'
 import {
   $createTextNode,
@@ -7,6 +8,7 @@ import {
   $isElementNode,
   $isRangeSelection,
   $isTextNode,
+  $nodesOfType,
   COMMAND_PRIORITY_HIGH,
   CONTROLLED_TEXT_INSERTION_COMMAND,
   DELETE_CHARACTER_COMMAND,
@@ -25,10 +27,14 @@ import {
   $isZWNJNode,
   AtLinkNode,
 } from '@/nodes/base'
+import { $createBookmarkNode } from '@/nodes/BookmarkNode'
 
 // Headless half of the at-link plugin: node lifecycle (insertion, shape
-// transform, command guards). The React half (search session + popup) lives
-// in src/plugins/AtLinkPlugin.tsx and consumes these registrations.
+// transform, command guards), the search session (registerAtLinkSession —
+// the focused-node/query synchronization policy and the selection clamps),
+// and the commit surgery ($commitAtLinkSelection). The React half
+// (src/plugins/AtLinkPlugin.tsx) is a pure adapter: it subscribes to session
+// snapshots, renders the results popup, and delegates commits.
 //
 // Both insertion paths share $insertAtLink; the deliberate asymmetries
 // between them (document why, don't flatten):
@@ -70,6 +76,49 @@ export function $removeAtLink(node: AtLinkNode, { focus = false } = {}) {
   if (focus) {
     textNode.selectEnd()
   }
+}
+
+export interface AtLinkCommitResult {
+  isBookmark: boolean
+}
+
+// Commit a chosen search result: replace the at-link node with a text link
+// carrying the '@' character's format when it sits among other content, or
+// with a bookmark card when it is the paragraph's only child. Returns the
+// committed shape so the caller can attach product analytics; null when the
+// node is detached (nothing committed).
+export function $commitAtLinkSelection(
+  node: AtLinkNode,
+  { label, value }: { label: string; value: string },
+): AtLinkCommitResult | null {
+  const parent = node.getParent()
+  if (!parent) {
+    return null
+  }
+
+  const children = parent.getChildren()
+  const isTextLink = children.length !== 1 || !$isAtLinkNode(children[0])
+
+  if (isTextLink) {
+    const linkNode = $createLinkNode(value)
+    const textNode = $createTextNode(label)
+    textNode.setFormat(node.getLinkFormat() ?? 0)
+    linkNode.append(textNode)
+
+    node.replace(linkNode)
+    linkNode.selectEnd()
+
+    return { isBookmark: false }
+  }
+
+  const bookmarkNode = $createBookmarkNode({
+    url: value,
+    title: label,
+  })
+  node.replace(bookmarkNode)
+  bookmarkNode.selectEnd()
+
+  return { isBookmark: true }
 }
 
 function $shouldConvertAtLink(): boolean {
@@ -443,5 +492,153 @@ export function registerAtLinkNodeTransform(editor: LexicalEditor) {
     if (consolidatedText !== currentText) {
       searchNode.setTextContent(consolidatedText)
     }
+  })
+}
+
+export interface AtLinkSessionSnapshot {
+  focusedNode: AtLinkNode | null
+  query: string
+}
+
+interface RegisterAtLinkSessionOptions {
+  onSessionChange: (snapshot: AtLinkSessionSnapshot) => void
+}
+
+// The at-link node containing a selection point (the point's node or its
+// parent), shared by the collapsed-focus tracking and the range-span clamp.
+function $getContainingAtLinkNode(point: PointType): AtLinkNode | null {
+  const node = point.getNode()
+  if ($isAtLinkNode(node)) {
+    return node
+  }
+  const parent = node.getParent()
+  return $isAtLinkNode(parent) ? parent : null
+}
+
+// The at-link search session: owns the synchronization policy between the
+// node tree and the consumer's focused-node/query state — unfocused-node
+// removal, query extraction from the at-link-search node text, ZWNJ caret
+// normalization, empty-search backspace removal, and the range-span clamp.
+// The consumer (the React adapter) receives { focusedNode, query } snapshots
+// and renders from them; it holds no policy of its own.
+export function registerAtLinkSession(editor: LexicalEditor, { onSessionChange }: RegisterAtLinkSessionOptions) {
+  let focusedNode: AtLinkNode | null = null
+  let query = ''
+
+  const emitSession = (node: AtLinkNode | null, nextQuery: string) => {
+    // key-based change guard: consumers render/track by key, so a
+    // cloned-but-equivalent node instance is not a session change
+    if (node?.getKey() === focusedNode?.getKey() && nextQuery === query) {
+      return
+    }
+    focusedNode = node
+    query = nextQuery
+    onSessionChange({ focusedNode: node, query: nextQuery })
+  }
+
+  // - emit the focused at-link node and search query as session snapshots
+  // - remove at-link nodes when they don't have focus (e.g. arrow keys)
+  // - keep the caret inside the at-link node (ZWNJ normalization, range clamp)
+  return editor.registerUpdateListener(({ dirtyLeaves, dirtyElements }) => {
+    // do nothing if we're in the middle of composing text
+    if (editor.isComposing()) {
+      return
+    }
+
+    // Skip the full-tree at-link scan unless an at-link is active or the
+    // update touched nodes that could contain one — at-link nodes only
+    // exist transiently while the search popup is open, tracked via
+    // focusedNode (selection changes away from an at-link have empty dirty
+    // sets but a focused at-link, so the focusedNode check keeps the
+    // removal path working).
+    if (!focusedNode && dirtyLeaves.size === 0 && dirtyElements.size === 0) {
+      return
+    }
+
+    editor.update(() => {
+      const atLinkNodes = $nodesOfType(AtLinkNode)
+      const selection = $getSelection()
+
+      // we don't have a normal selection so we don't have a cursor inside
+      // an at-link node, remove all of them
+      if (!$isRangeSelection(selection)) {
+        atLinkNodes.forEach((atLinkNode) => $removeAtLink(atLinkNode))
+        emitSession(null, '')
+        return
+      }
+
+      // we have a collapsed selection, remove any at-link nodes that don't
+      // have focus — handles cursor movement out of at-link nodes
+      if (selection.isCollapsed()) {
+        const selectedAtLinkNode = $getContainingAtLinkNode(selection.anchor)
+
+        atLinkNodes.forEach((atLinkNode) => {
+          if (atLinkNode !== selectedAtLinkNode) {
+            $removeAtLink(atLinkNode)
+          }
+        })
+
+        if (selectedAtLinkNode) {
+          // search node is focused, emit the search query — at-link nodes
+          // always have a ZWNJ node followed by an at-link-search node
+          const searchNode = selectedAtLinkNode.getChildAtIndex(1)
+          const searchNodeText = $isAtLinkSearchNode(searchNode) ? searchNode.getTextContent() : ''
+          emitSession(selectedAtLinkNode, searchNodeText)
+
+          // normalize selection to be inside the search node when on zwnj
+          // - handles case where text is backspaced to empty
+          if ($isZWNJNode(selection.focus.getNode()) && window.getSelection()?.anchorOffset === 0) {
+            selectedAtLinkNode.select(1, 1)
+            const rangeSelection = $getSelection()
+            if ($isRangeSelection(rangeSelection) && $isAtLinkSearchNode(searchNode)) {
+              rangeSelection.anchor.set(searchNode.getKey(), 0, 'text')
+              rangeSelection.focus.set(searchNode.getKey(), 0, 'text')
+            }
+          }
+
+          // if the search node is already empty but active, remove the at-link node on backspace
+          if (searchNodeText === '' && $isZWNJNode(selection.anchor.getNode())) {
+            $removeAtLink(selectedAtLinkNode, { focus: true })
+          }
+        } else {
+          // search node isn't focused, reset the session
+          emitSession(null, '')
+        }
+
+        return
+      }
+
+      // A range selection must not span outside an at-link node: with one
+      // endpoint inside and the other outside, delete/format commands would
+      // operate across the node boundary and leave a broken half-node.
+      // Clamp the outside endpoint(s) to the search node's nearest edge.
+      // Selections wholly inside one at-link node (shift-selecting query
+      // text) or wholly outside one (select-all) are left alone.
+      const anchorAtLinkNode = $getContainingAtLinkNode(selection.anchor)
+      const focusAtLinkNode = $getContainingAtLinkNode(selection.focus)
+
+      if (anchorAtLinkNode === focusAtLinkNode) {
+        return
+      }
+
+      const atLinkNode = anchorAtLinkNode ?? focusAtLinkNode
+      const searchNode = atLinkNode?.getChildAtIndex(1)
+      if (!atLinkNode || !$isAtLinkSearchNode(searchNode)) {
+        return
+      }
+
+      const clampToSearchEdge = (point: PointType) => {
+        // document-order approximation: a point on an ancestor element
+        // reads as "before" — either edge satisfies the invariant
+        const offset = atLinkNode.isBefore(point.getNode()) ? searchNode.getTextContentSize() : 0
+        point.set(searchNode.getKey(), offset, 'text')
+      }
+      if (anchorAtLinkNode !== atLinkNode) {
+        clampToSearchEdge(selection.anchor)
+      }
+      if (focusAtLinkNode !== atLinkNode) {
+        clampToSearchEdge(selection.focus)
+      }
+    })
   })
 }

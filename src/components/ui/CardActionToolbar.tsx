@@ -1,12 +1,14 @@
 import type { NodeKey } from 'lexical'
 
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import React from 'react'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator, type ToolbarIconName } from '@/components/ui/ToolbarMenu'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
+import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 export type CardToolbarItem =
   | { kind: 'edit'; dataTestId?: string }
@@ -50,14 +52,16 @@ export function CardActionToolbar({
   items = DEFAULT_ITEMS,
   beforeMenu,
 }: CardActionToolbarProps) {
+  const [editor] = useLexicalComposerContext()
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
-  const { isSelected, isEditing, setEditing } = React.useContext(CardContext)
+  const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
+  const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
   const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
 
   const handleEdit = (event: React.MouseEvent): void => {
     event.preventDefault()
     event.stopPropagation()
-    setEditing(true)
+    editor.dispatchCommand(EDIT_CARD_COMMAND, { cardKey: nodeKey })
   }
 
   // separators default to the snippet gate: they exist to separate the

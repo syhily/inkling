@@ -2,6 +2,7 @@ import { $createLinkNode, LinkNode } from '@lexical/link'
 import { ListItemNode, ListNode } from '@lexical/list'
 import {
   $createLineBreakNode,
+  $createNodeSelection,
   $createParagraphNode,
   $createTextNode,
   $getNodeByKey,
@@ -13,6 +14,7 @@ import {
   $isParagraphNode,
   $isRangeSelection,
   $isTextNode,
+  $setSelection,
   createEditor,
   DELETE_LINE_COMMAND,
   KEY_ARROW_DOWN_COMMAND,
@@ -33,6 +35,7 @@ import { $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { createCardSelectionStore, type CardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
 import { DELETE_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
+import { markEventFromCaptionEditor } from '@/plugins/behaviour/nested-editor-protocol'
 import { registerKeyboardNavigation } from '@/plugins/behaviour/registerKeyboardNavigation'
 
 // Minimal node set that lets the keyboard plugin's listeners run in jsdom.
@@ -588,6 +591,317 @@ describe('registerKeyboardNavigation', () => {
         expect($isParagraphNode(paragraph)).toBe(true)
         expect(paragraph?.getTextContent()).toBe('```js')
       })
+
+      cleanup()
+    })
+  })
+
+  // The shift+arrow selection extension had zero coverage at any level (no
+  // shiftKey in the unit suite, no Shift+Arrow in e2e) while living as two
+  // ~50-line mirror blocks. The direction-parameterized helper
+  // ($extendSelectionAcrossCardBoundary) is pure Lexical selection arithmetic
+  // — no geometry — so the boundary matrix is pinned here for both
+  // directions, plus the caption-provenance return the arrow handlers share.
+  describe('shift+arrow selection extension', () => {
+    /** Build a flat document of cards and text paragraphs, in order. */
+    async function setupBlocks(blocks: Array<'card' | string>) {
+      const keys: { cardKeys: string[]; textNodeKeys: string[] } = { cardKeys: [], textNodeKeys: [] }
+      await updateEditor(editor, () => {
+        const root = $getRoot()
+        for (const block of blocks) {
+          if (block === 'card') {
+            const image = $createImageNode({ src: '/image.png' })
+            root.append(image)
+            keys.cardKeys.push(image.getKey())
+          } else {
+            const paragraph = $createParagraphNode()
+            const textNode = $createTextNode(block)
+            paragraph.append(textNode)
+            root.append(paragraph)
+            keys.textNodeKeys.push(textNode.getKey())
+          }
+        }
+      })
+      return keys
+    }
+
+    async function selectTextRange(textNodeKey: string, anchorOffset: number, focusOffset: number) {
+      await updateEditor(editor, () => {
+        const textNode = $getNodeByKey(textNodeKey)
+        if ($isTextNode(textNode)) {
+          textNode.select(anchorOffset, focusOffset)
+        }
+      })
+    }
+
+    async function selectNode(cardKey: string) {
+      await updateEditor(editor, () => {
+        const nodeSelection = $createNodeSelection()
+        nodeSelection.add(cardKey)
+        $setSelection(nodeSelection)
+      })
+    }
+
+    function readSelectionPoints() {
+      return editor.getEditorState().read(() => {
+        const selection = $getSelection()
+        if (!$isRangeSelection(selection)) {
+          return null
+        }
+        return {
+          anchorKey: selection.anchor.key,
+          anchorOffset: selection.anchor.offset,
+          focusKey: selection.focus.key,
+          focusOffset: selection.focus.offset,
+        }
+      })
+    }
+
+    function shiftArrowEvent(key: 'ArrowUp' | 'ArrowDown') {
+      // cancelable like a real keydown so preventDefault is observable
+      return new KeyboardEvent('keydown', { key, shiftKey: true, cancelable: true })
+    }
+
+    it('extends onto the card above on shift+arrow up at the start of a paragraph', async () => {
+      const { textNodeKeys } = await setupBlocks(['card', 'hello'])
+      await selectTextRange(textNodeKeys[0], 0, 0)
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const event = shiftArrowEvent('ArrowUp')
+      const result = await dispatchAndCommit(editor, KEY_ARROW_UP_COMMAND, event)
+
+      expect(result).toBe(true)
+      expect(event.defaultPrevented).toBe(true)
+      // the paragraph is treated as not selected: the extension covers the card only
+      expect(readSelectionPoints()).toEqual({ anchorKey: 'root', anchorOffset: 1, focusKey: 'root', focusOffset: 0 })
+
+      cleanup()
+    })
+
+    it('selects the entire current node on shift+arrow up mid-paragraph with a card above', async () => {
+      const { textNodeKeys } = await setupBlocks(['card', 'hello'])
+      await selectTextRange(textNodeKeys[0], 3, 3)
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const event = shiftArrowEvent('ArrowUp')
+      const result = await dispatchAndCommit(editor, KEY_ARROW_UP_COMMAND, event)
+
+      expect(result).toBe(true)
+      expect(event.defaultPrevented).toBe(true)
+      expect(readSelectionPoints()).toEqual({ anchorKey: 'root', anchorOffset: 2, focusKey: 'root', focusOffset: 1 })
+
+      cleanup()
+    })
+
+    it('falls through to default behavior on shift+arrow up between two text blocks', async () => {
+      const { textNodeKeys } = await setupBlocks(['one', 'two'])
+      await selectTextRange(textNodeKeys[1], 1, 1)
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(editor, KEY_ARROW_UP_COMMAND, shiftArrowEvent('ArrowUp'))
+
+      expect(result).toBe(false)
+      expect(readSelectionPoints()).toEqual({
+        anchorKey: textNodeKeys[1],
+        anchorOffset: 1,
+        focusKey: textNodeKeys[1],
+        focusOffset: 1,
+      })
+
+      cleanup()
+    })
+
+    it('extends the root-offset selection one more node on a repeated shift+arrow up', async () => {
+      const { textNodeKeys } = await setupBlocks(['card', 'card', 'hello'])
+      await selectTextRange(textNodeKeys[0], 0, 0)
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      await dispatchAndCommit(editor, KEY_ARROW_UP_COMMAND, shiftArrowEvent('ArrowUp'))
+      expect(readSelectionPoints()).toEqual({ anchorKey: 'root', anchorOffset: 2, focusKey: 'root', focusOffset: 1 })
+
+      await dispatchAndCommit(editor, KEY_ARROW_UP_COMMAND, shiftArrowEvent('ArrowUp'))
+      expect(readSelectionPoints()).toEqual({ anchorKey: 'root', anchorOffset: 2, focusKey: 'root', focusOffset: 0 })
+
+      cleanup()
+    })
+
+    it('consumes shift+arrow up at the start of the document without moving the focus', async () => {
+      const { textNodeKeys } = await setupBlocks(['card', 'hello'])
+      await selectTextRange(textNodeKeys[0], 0, 0)
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      await dispatchAndCommit(editor, KEY_ARROW_UP_COMMAND, shiftArrowEvent('ArrowUp'))
+      const event = shiftArrowEvent('ArrowUp')
+      const result = await dispatchAndCommit(editor, KEY_ARROW_UP_COMMAND, event)
+
+      expect(result).toBe(true)
+      expect(event.defaultPrevented).toBe(true)
+      expect(readSelectionPoints()).toEqual({ anchorKey: 'root', anchorOffset: 1, focusKey: 'root', focusOffset: 0 })
+
+      cleanup()
+    })
+
+    it('falls through to default behavior on shift+arrow up with a node selection', async () => {
+      const { cardKeys } = await setupBlocks(['card', 'hello'])
+      await selectNode(cardKeys[0])
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(editor, KEY_ARROW_UP_COMMAND, shiftArrowEvent('ArrowUp'))
+
+      expect(result).toBe(false)
+
+      cleanup()
+    })
+
+    it('extends onto the card below on shift+arrow down at the end of a paragraph', async () => {
+      const { textNodeKeys } = await setupBlocks(['hello', 'card'])
+      await selectTextRange(textNodeKeys[0], 5, 5)
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const event = shiftArrowEvent('ArrowDown')
+      const result = await dispatchAndCommit(editor, KEY_ARROW_DOWN_COMMAND, event)
+
+      expect(result).toBe(true)
+      expect(event.defaultPrevented).toBe(true)
+      // the paragraph is treated as not selected: the extension covers the card only
+      expect(readSelectionPoints()).toEqual({ anchorKey: 'root', anchorOffset: 1, focusKey: 'root', focusOffset: 2 })
+
+      cleanup()
+    })
+
+    it('selects the entire current node on shift+arrow down mid-paragraph with a card below', async () => {
+      const { textNodeKeys } = await setupBlocks(['hello', 'card'])
+      await selectTextRange(textNodeKeys[0], 2, 2)
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const event = shiftArrowEvent('ArrowDown')
+      const result = await dispatchAndCommit(editor, KEY_ARROW_DOWN_COMMAND, event)
+
+      expect(result).toBe(true)
+      expect(event.defaultPrevented).toBe(true)
+      expect(readSelectionPoints()).toEqual({ anchorKey: 'root', anchorOffset: 0, focusKey: 'root', focusOffset: 1 })
+
+      cleanup()
+    })
+
+    it('falls through to default behavior on shift+arrow down between two text blocks', async () => {
+      const { textNodeKeys } = await setupBlocks(['one', 'two'])
+      await selectTextRange(textNodeKeys[0], 1, 1)
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(editor, KEY_ARROW_DOWN_COMMAND, shiftArrowEvent('ArrowDown'))
+
+      expect(result).toBe(false)
+      expect(readSelectionPoints()).toEqual({
+        anchorKey: textNodeKeys[0],
+        anchorOffset: 1,
+        focusKey: textNodeKeys[0],
+        focusOffset: 1,
+      })
+
+      cleanup()
+    })
+
+    it('extends the root-offset selection one more node on a repeated shift+arrow down', async () => {
+      const { textNodeKeys } = await setupBlocks(['hello', 'card', 'card'])
+      await selectTextRange(textNodeKeys[0], 5, 5)
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      await dispatchAndCommit(editor, KEY_ARROW_DOWN_COMMAND, shiftArrowEvent('ArrowDown'))
+      expect(readSelectionPoints()).toEqual({ anchorKey: 'root', anchorOffset: 1, focusKey: 'root', focusOffset: 2 })
+
+      await dispatchAndCommit(editor, KEY_ARROW_DOWN_COMMAND, shiftArrowEvent('ArrowDown'))
+      expect(readSelectionPoints()).toEqual({ anchorKey: 'root', anchorOffset: 1, focusKey: 'root', focusOffset: 3 })
+
+      cleanup()
+    })
+
+    it('consumes shift+arrow down at the end of the document without moving the focus', async () => {
+      const { textNodeKeys } = await setupBlocks(['hello', 'card'])
+      await selectTextRange(textNodeKeys[0], 5, 5)
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      await dispatchAndCommit(editor, KEY_ARROW_DOWN_COMMAND, shiftArrowEvent('ArrowDown'))
+      const event = shiftArrowEvent('ArrowDown')
+      const result = await dispatchAndCommit(editor, KEY_ARROW_DOWN_COMMAND, event)
+
+      expect(result).toBe(true)
+      expect(event.defaultPrevented).toBe(true)
+      expect(readSelectionPoints()).toEqual({ anchorKey: 'root', anchorOffset: 1, focusKey: 'root', focusOffset: 2 })
+
+      cleanup()
+    })
+
+    it('falls through to default behavior on shift+arrow down with a node selection', async () => {
+      const { cardKeys } = await setupBlocks(['card', 'hello'])
+      await selectNode(cardKeys[0])
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const result = await dispatchAndCommit(editor, KEY_ARROW_DOWN_COMMAND, shiftArrowEvent('ArrowDown'))
+
+      expect(result).toBe(false)
+
+      cleanup()
+    })
+
+    it('reselects the card on an arrow up event re-dispatched from its caption editor', async () => {
+      const { cardKeys } = await setupBlocks(['card', 'hello'])
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(cardKeys[0])
+
+      const event = markEventFromCaptionEditor(new KeyboardEvent('keydown', { key: 'ArrowUp' }))
+      const result = await dispatchAndCommit(editor, KEY_ARROW_UP_COMMAND, event)
+
+      expect(result).toBe(true)
+      editor.getEditorState().read(() => {
+        const selection = $getSelection()
+        expect($isNodeSelection(selection)).toBe(true)
+        expect($isNodeSelection(selection) && selection.has(cardKeys[0])).toBe(true)
+      })
+
+      cleanup()
+    })
+
+    it('reselects the card on an arrow down event re-dispatched from its caption editor', async () => {
+      const { cardKeys } = await setupBlocks(['card', 'hello'])
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(cardKeys[0])
+
+      const event = markEventFromCaptionEditor(new KeyboardEvent('keydown', { key: 'ArrowDown' }))
+      const result = await dispatchAndCommit(editor, KEY_ARROW_DOWN_COMMAND, event)
+
+      expect(result).toBe(true)
+      editor.getEditorState().read(() => {
+        const selection = $getSelection()
+        expect($isNodeSelection(selection)).toBe(true)
+        expect($isNodeSelection(selection) && selection.has(cardKeys[0])).toBe(true)
+      })
+
+      cleanup()
+    })
+
+    it('does not consume a caption-marked arrow when no card is selected', async () => {
+      const { textNodeKeys } = await setupBlocks(['hello'])
+      await selectTextRange(textNodeKeys[0], 0, 0)
+      mounted = mountEditor(editor)
+      const cleanup = registerWithCardKey(null)
+
+      const event = markEventFromCaptionEditor(new KeyboardEvent('keydown', { key: 'ArrowUp' }))
+      const result = await dispatchAndCommit(editor, KEY_ARROW_UP_COMMAND, event)
+
+      expect(result).toBe(false)
 
       cleanup()
     })

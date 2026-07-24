@@ -12,7 +12,7 @@ import {
   extendedQuoteNodeReplacement,
   extendedTextNodeReplacement,
 } from '@/nodes/base'
-import { CARD_WRAPPER_NODES, ensureHandWrittenWrapperOwnMethods } from '@/nodes/cards/card-wrappers'
+import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
 import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
 
 // Cards eligible for the email editor, from their declarations; declaration
@@ -41,10 +41,8 @@ const EMAIL_EDITOR_NODES = [
   ...CARDS.map((card) => card.node),
 ]
 
-// Same derived own-method list as `@/nodes/DefaultNodes` — the difference
-// (email only pulls in Bookmark's hand-written wrapper) comes from the
-// declarations' surface data, not a second literal array.
-ensureHandWrittenWrapperOwnMethods(CARDS)
+// Same own-method pass as `@/nodes/DefaultNodes` — the card classes are
+// covered at assembly time (`assembleCardNode`); only AsideNode needs it here.
 ensureLexicalNodeOwnMethods(AsideNode)
 
 export default EMAIL_EDITOR_NODES

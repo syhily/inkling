@@ -17,6 +17,7 @@ import React from 'react'
 
 import { CardMenu } from '@/components/ui/CardMenu'
 import { SlashMenu } from '@/components/ui/SlashMenu'
+import { createMenuNavigator, type MenuNavigator } from '@/hooks/card-menu-navigation'
 import { useCardMenu } from '@/hooks/useCardMenu'
 import { useCardMenuSession } from '@/hooks/useCardMenuSession'
 import trackEvent from '@/utils/analytics'
@@ -35,8 +36,19 @@ function useSlashCardMenu(editor: LexicalEditor) {
   const [position, setPosition] = React.useState<React.CSSProperties>({})
   const [query, setQuery] = React.useState('')
   const [commandParams, setCommandParams] = React.useState<string[]>([])
-  const [selectedItemIndex, setSelectedItemIndex] = React.useState(0)
-  const [scrollToSelectedItem, setScrollToSelectedItem] = React.useState(false)
+
+  // the keyboard-selection state machine (wrap-around index, scroll-request
+  // latch, reset-on-rebuild) lives in the headless menu navigator — created
+  // once, read through its snapshot; the command handlers below call in
+  const navigatorRef = React.useRef<MenuNavigator | null>(null)
+  if (!navigatorRef.current) {
+    navigatorRef.current = createMenuNavigator()
+  }
+  const menuNavigator = navigatorRef.current
+  const { selectedItemIndex, scrollToSelectedItem } = React.useSyncExternalStore(
+    menuNavigator.subscribe,
+    menuNavigator.getSnapshot,
+  )
 
   const setMenuPosition = React.useCallback(
     (elem: HTMLElement | null) => {
@@ -86,9 +98,9 @@ function useSlashCardMenu(editor: LexicalEditor) {
     if (!isShowingMenu) {
       setQuery('')
       setCommandParams((current) => (current.length > 0 ? [] : current))
-      setScrollToSelectedItem(false)
+      menuNavigator.consumeScrollRequest()
     }
-  }, [isShowingMenu])
+  }, [isShowingMenu, menuNavigator])
 
   const { cardMenu, insert: insertCardItem } = useCardMenu(editor, query, {
     commandParams,
@@ -220,25 +232,13 @@ function useSlashCardMenu(editor: LexicalEditor) {
     }
 
     const moveUp = (event: KeyboardEvent) => {
-      if (selectedItemIndex === 0) {
-        setSelectedItemIndex(cardMenu.maxItemIndex)
-      } else {
-        setSelectedItemIndex(selectedItemIndex - 1)
-      }
-      setScrollToSelectedItem(true)
-
+      menuNavigator.moveUp(cardMenu.maxItemIndex)
       event.preventDefault()
       return true
     }
 
     const moveDown = (event: KeyboardEvent) => {
-      if (selectedItemIndex === cardMenu.maxItemIndex) {
-        setSelectedItemIndex(0)
-      } else {
-        setSelectedItemIndex(selectedItemIndex + 1)
-      }
-      setScrollToSelectedItem(true)
-
+      menuNavigator.moveDown(cardMenu.maxItemIndex)
       event.preventDefault()
       return true
     }
@@ -246,7 +246,7 @@ function useSlashCardMenu(editor: LexicalEditor) {
     const enter = (event: KeyboardEvent) => {
       // insert from the flat item list — the same data CardMenu renders — so
       // selection never depends on the menu's DOM
-      const item = cardMenu.items[selectedItemIndex]
+      const item = menuNavigator.selectedItem(cardMenu.items)
       if (item) {
         insert(item.insertCommand, item)
         trackEvent('Card Added', { card: item.label ?? 'unknown' })
@@ -262,12 +262,12 @@ function useSlashCardMenu(editor: LexicalEditor) {
       editor.registerCommand(KEY_ARROW_LEFT_COMMAND, moveUp, COMMAND_PRIORITY_HIGH),
       editor.registerCommand(KEY_ENTER_COMMAND, enter, COMMAND_PRIORITY_HIGH),
     )
-  }, [editor, isShowingMenu, cardMenu, selectedItemIndex, insert])
+  }, [editor, isShowingMenu, cardMenu, insert, menuNavigator])
 
   // reset the keyboard selection whenever the menu rebuilds
   React.useEffect(() => {
-    setSelectedItemIndex(0)
-  }, [cardMenu])
+    menuNavigator.reset()
+  }, [cardMenu, menuNavigator])
 
   // attach a resize observer to call setMenuPosition when the window resizes
   React.useEffect(() => {
@@ -309,8 +309,8 @@ function useSlashCardMenu(editor: LexicalEditor) {
           <CardMenu
             closeMenu={closeSessionMenu}
             insert={insert}
-            items={cardMenu.items}
             scrollToSelectedItem={scrollToSelectedItem}
+            sections={cardMenu.sections}
             selectedItemIndex={selectedItemIndex}
           />
         </SlashMenu>

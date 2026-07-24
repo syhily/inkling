@@ -107,8 +107,8 @@ export interface DecoratorNodeProperty<Name extends string = string, Default = u
  *
  * The spec is adopted per node class through the static `nestedEditors`
  * property, so a base node class stays editor-free while a wrapper subclass
- * (or a generated class passed the `nestedEditors` option) turns the trilogy
- * on. `nodes` are Lexical node-class arrays — the spec stays React-free.
+ * turns the trilogy on. `nodes` are Lexical node-class arrays — the spec
+ * stays React-free.
  */
 export interface NestedEditorSpec {
   /** Dataset key for the editor instance; the node field is `__<name>` and the initial-state keys derive from it. */
@@ -278,7 +278,6 @@ export function generateDecoratorNode<
   defaultRenderFn,
   version = 1,
   hasVisibility,
-  nestedEditors,
   importSpec,
 }: {
   nodeType: string
@@ -292,7 +291,6 @@ export function generateDecoratorNode<
   >
   version?: number
   hasVisibility?: HasVisibility
-  nestedEditors?: readonly NestedEditorSpec[]
   importSpec?: CardImportSpec
 }): GeneratedDecoratorNodeClass<DecoratorNodeValueMap<Props, HasVisibility>, TOutput> {
   type GeneratedDataset = DecoratorNodeValueMap<Props, HasVisibility>
@@ -341,7 +339,7 @@ export function generateDecoratorNode<
      * redeclaring this static while the generated class itself (and spec-less
      * subclasses) run no nested-editor behaviour.
      */
-    static nestedEditors: readonly NestedEditorSpec[] | undefined = nestedEditors
+    static nestedEditors: readonly NestedEditorSpec[] | undefined = undefined
 
     /**
      * The card's transient-prop spec entries (CONTEXT.md: "card spec"). Read

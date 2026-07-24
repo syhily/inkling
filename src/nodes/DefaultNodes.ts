@@ -16,7 +16,7 @@ import {
   extendedQuoteNodeReplacement,
   extendedTextNodeReplacement,
 } from '@/nodes/base'
-import { CARD_WRAPPER_NODES, ensureHandWrittenWrapperOwnMethods } from '@/nodes/cards/card-wrappers'
+import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
 import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
 
 // Cards join the set from their declarations; declaration order reproduces
@@ -43,10 +43,8 @@ const RAW_NODES = [
   ZWNJNode,
 ]
 
-// Only the surviving hand-written wrappers subclass their base nodes without
-// redeclaring Lexical's checked methods; the declarations flag them, so both
-// editor node sets derive this list instead of hand-maintaining it.
-ensureHandWrittenWrapperOwnMethods(CARDS)
+// Every card class is assembled via `assembleCardNode`, which runs this same
+// own-method pass at assembly time; only AsideNode needs it here.
 ensureLexicalNodeOwnMethods(AsideNode)
 
 const DEFAULT_NODES = RAW_NODES

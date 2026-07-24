@@ -105,22 +105,22 @@ describe('CardMenu', () => {
   })
 
   it('renders empty menu', () => {
-    render(<CardMenu menu={new Map()} insert={insert} closeMenu={closeMenu} />)
+    render(<CardMenu insert={insert} sections={[]} closeMenu={closeMenu} />)
     expect(document.querySelector('[data-inkling-card-menu]')).toBeInTheDocument()
   })
 
   it('renders card items and calls insert on click', () => {
-    const menu = new Map([
-      [
-        'Basic',
-        [
+    const sections = [
+      {
+        label: 'Basic',
+        items: [
           { label: 'Paragraph', name: 'paragraph', dataTestId: 'paragraph-item' },
           { label: 'Heading', name: 'heading', dataTestId: 'heading-item' },
         ],
-      ],
-    ])
+      },
+    ]
 
-    render(<CardMenu menu={menu} insert={insert} selectedItemIndex={0} closeMenu={closeMenu} />)
+    render(<CardMenu insert={insert} sections={sections} selectedItemIndex={0} closeMenu={closeMenu} />)
 
     expect(screen.getByText('Basic')).toBeInTheDocument()
     expect(screen.getByTestId('paragraph-item')).toBeInTheDocument()
@@ -131,20 +131,20 @@ describe('CardMenu', () => {
 
   it('renders snippet items and remove button', () => {
     const onRemove = vi.fn()
-    const menu = new Map([
-      [
-        'Snippets',
-        [
+    const sections = [
+      {
+        label: 'Snippets',
+        items: [
           {
             label: 'My Snippet',
             type: 'snippet',
             onRemove,
           },
         ],
-      ],
-    ])
+      },
+    ]
 
-    render(<CardMenu menu={menu} insert={insert} selectedItemIndex={0} closeMenu={closeMenu} />)
+    render(<CardMenu insert={insert} sections={sections} selectedItemIndex={0} closeMenu={closeMenu} />)
 
     expect(screen.getByText('My Snippet')).toBeInTheDocument()
     fireEvent.click(screen.getByText('Remove'))
@@ -153,12 +153,12 @@ describe('CardMenu', () => {
   })
 
   it('does not render dead inkling.local help links', () => {
-    const menu = new Map([
-      ['Primary', [{ label: 'Paragraph', name: 'paragraph', dataTestId: 'paragraph-item' }]],
-      ['Snippets', [{ label: 'My Snippet', type: 'snippet' }]],
-    ])
+    const sections = [
+      { label: 'Primary', items: [{ label: 'Paragraph', name: 'paragraph', dataTestId: 'paragraph-item' }] },
+      { label: 'Snippets', items: [{ label: 'My Snippet', type: 'snippet' }] },
+    ]
 
-    const { container } = render(<CardMenu menu={menu} insert={insert} closeMenu={closeMenu} />)
+    const { container } = render(<CardMenu insert={insert} sections={sections} closeMenu={closeMenu} />)
 
     expect(container.querySelector('a[href*="inkling.local"]')).toBeNull()
     expect(screen.queryByRole('link')).toBeNull()
@@ -166,10 +166,10 @@ describe('CardMenu', () => {
 
   it('renders the snippet item icon', () => {
     const SnippetIcon = (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="snippet-icon" {...props} />
-    const menu = new Map([
-      [
-        'Snippets',
-        [
+    const sections = [
+      {
+        label: 'Snippets',
+        items: [
           {
             label: 'My Snippet',
             type: 'snippet',
@@ -177,28 +177,45 @@ describe('CardMenu', () => {
             dataTestId: 'snippet-menu-item',
           },
         ],
-      ],
-    ])
+      },
+    ]
 
-    render(<CardMenu menu={menu} insert={insert} selectedItemIndex={0} closeMenu={closeMenu} />)
+    render(<CardMenu insert={insert} sections={sections} selectedItemIndex={0} closeMenu={closeMenu} />)
 
     expect(screen.getByTestId('snippet-menu-item').querySelector('svg')).not.toBeNull()
   })
 
   it('marks selected item', () => {
-    const menu = new Map([
-      [
-        'Basic',
-        [
+    const sections = [
+      {
+        label: 'Basic',
+        items: [
           { label: 'Paragraph', name: 'paragraph', dataTestId: 'paragraph-item' },
           { label: 'Heading', name: 'heading', dataTestId: 'heading-item' },
         ],
-      ],
-    ])
+      },
+    ]
 
-    render(<CardMenu menu={menu} insert={insert} selectedItemIndex={1} closeMenu={closeMenu} />)
+    render(<CardMenu insert={insert} sections={sections} selectedItemIndex={1} closeMenu={closeMenu} />)
 
     const headingItem = screen.getByTestId('heading-item')
     expect(headingItem.className).toContain('bg-grey-100')
+  })
+
+  it('numbers item indexes across section boundaries', () => {
+    const sections = [
+      { label: 'Primary', items: [{ label: 'Paragraph', name: 'paragraph', dataTestId: 'paragraph-item' }] },
+      { label: 'Snippets', items: [{ label: 'My Snippet', type: 'snippet', dataTestId: 'snippet-item' }] },
+    ]
+
+    render(<CardMenu insert={insert} sections={sections} selectedItemIndex={1} closeMenu={closeMenu} />)
+
+    expect(screen.getByTestId('paragraph-item').querySelector('[data-inkling-cardmenu-idx]')).toHaveAttribute(
+      'data-inkling-cardmenu-idx',
+      '0',
+    )
+    const snippetItem = screen.getByTestId('snippet-item').querySelector('[data-inkling-cardmenu-idx]')
+    expect(snippetItem).toHaveAttribute('data-inkling-cardmenu-idx', '1')
+    expect(snippetItem).toHaveAttribute('data-inkling-cardmenu-selected', 'true')
   })
 })

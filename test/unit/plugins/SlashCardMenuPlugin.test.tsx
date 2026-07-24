@@ -5,6 +5,8 @@ import {
   $getRoot,
   $isElementNode,
   createEditor,
+  KEY_ARROW_DOWN_COMMAND,
+  KEY_ARROW_UP_COMMAND,
   KEY_ENTER_COMMAND,
   type LexicalEditor,
 } from 'lexical'
@@ -130,10 +132,18 @@ async function setupSlashPlugin() {
   return { editor, rootElement, dispatchCommandSpy }
 }
 
+/** The rendered selection marker — CardMenu's flat data-inkling-cardmenu-idx. */
+function selectedMenuIndex(): string | null | undefined {
+  return document.querySelector('[data-inkling-cardmenu-selected="true"]')?.getAttribute('data-inkling-cardmenu-idx')
+}
+
 describe('SlashCardMenuPlugin', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     vi.restoreAllMocks()
+    // jsdom does not implement scrollIntoView; CardMenuItem calls it when the
+    // keyboard selection moves with a latched scroll request
+    Element.prototype.scrollIntoView = vi.fn()
   })
 
   it('does not render the slash menu initially', async () => {
@@ -243,6 +253,87 @@ describe('SlashCardMenuPlugin', () => {
 
     await waitFor(() => {
       expect(document.querySelector('[data-inkling-slash-menu]')).not.toBeInTheDocument()
+    })
+  })
+
+  // Plugin-level pins for the menu navigator wiring (the state machine itself
+  // is table-tested in test/unit/hooks/card-menu-navigation.test.ts).
+  it('moves the rendered selection on arrow keys and wraps around at both ends', async () => {
+    const { editor } = await setupSlashPlugin()
+
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keypress', { key: '/', bubbles: true }))
+    })
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-inkling-slash-menu]')).toBeInTheDocument()
+    })
+
+    // CardMenuItem stamps data-inkling-cardmenu-idx on both the li and the
+    // button — count the buttons for the true item count
+    const itemCount = document.querySelectorAll('button[data-inkling-cardmenu-idx]').length
+    expect(itemCount).toBeGreaterThan(1)
+    expect(selectedMenuIndex()).toBe('0')
+
+    // down steps forward one item
+    await act(async () => {
+      editor.dispatchCommand(KEY_ARROW_DOWN_COMMAND, new KeyboardEvent('keydown', { key: 'ArrowDown' }))
+    })
+    await waitFor(() => {
+      expect(selectedMenuIndex()).toBe('1')
+    })
+
+    // at the last item, down wraps back to the first
+    await act(async () => {
+      for (let i = 0; i < itemCount - 1; i++) {
+        editor.dispatchCommand(KEY_ARROW_DOWN_COMMAND, new KeyboardEvent('keydown', { key: 'ArrowDown' }))
+      }
+    })
+    await waitFor(() => {
+      expect(selectedMenuIndex()).toBe('0')
+    })
+
+    // up from the first item wraps to the last
+    await act(async () => {
+      editor.dispatchCommand(KEY_ARROW_UP_COMMAND, new KeyboardEvent('keydown', { key: 'ArrowUp' }))
+    })
+    await waitFor(() => {
+      expect(selectedMenuIndex()).toBe(String(itemCount - 1))
+    })
+  })
+
+  it('resets the keyboard selection to the first item when the query rebuilds the menu', async () => {
+    const { editor } = await setupSlashPlugin()
+
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keypress', { key: '/', bubbles: true }))
+    })
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-inkling-slash-menu]')).toBeInTheDocument()
+    })
+
+    await act(async () => {
+      editor.dispatchCommand(KEY_ARROW_DOWN_COMMAND, new KeyboardEvent('keydown', { key: 'ArrowDown' }))
+      editor.dispatchCommand(KEY_ARROW_DOWN_COMMAND, new KeyboardEvent('keydown', { key: 'ArrowDown' }))
+    })
+    await waitFor(() => {
+      expect(selectedMenuIndex()).toBe('2')
+    })
+
+    await act(async () => {
+      await updateEditor(editor, () => {
+        const paragraph = $getRoot().getFirstChild()
+        if ($isElementNode(paragraph)) {
+          paragraph.clear()
+          paragraph.append($createTextNode('/image'))
+        }
+      })
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText('Image')).toBeInTheDocument()
+      expect(selectedMenuIndex()).toBe('0')
     })
   })
 

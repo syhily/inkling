@@ -17,15 +17,15 @@ import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { ImageCard } from '@/components/ui/cards/ImageCard'
 import { ImageUploadForm } from '@/components/ui/ImageUploadForm'
 import { LinkInput } from '@/components/ui/LinkInput'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 import useDropTarget from '@/hooks/useDropTarget'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
 import { $updateCardNode } from '@/nodes/base'
-import { isCardWidth } from '@/nodes/base/utils/card-widths'
+import { isCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 import { $createGalleryNode } from '@/nodes/GalleryNode'
 import { $isImageNode } from '@/nodes/ImageNode'
 import { dataSrcToFile } from '@/utils/dataSrcToFile'
@@ -45,6 +45,9 @@ export interface ImageNodeComponentProps {
   triggerFileDialog?: boolean
   previewSrc?: string | null
   href?: string
+  // resolved from the node's cardWidth by the declaration's decorateTarget
+  // width mapper, so undo/redo and collab changes arrive as a new prop
+  cardWidth: CardWidth
 }
 
 // image card datasets allow null dimensions and carry card-only keys, while
@@ -71,11 +74,12 @@ export function ImageNodeComponent({
   triggerFileDialog,
   previewSrc,
   href,
+  cardWidth,
 }: ImageNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
   const [showLink, setShowLink] = React.useState(false)
   const { fileUploader, cardConfig, onError } = React.useContext(InklingHostIntegrationContext)
-  const { isSelected, cardWidth, setCardWidth } = React.useContext(CardContext)
+  const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
   const toolbarFileInputRef = React.useRef<HTMLInputElement | null>(null)
 
@@ -265,14 +269,15 @@ export function ImageNodeComponent({
         return
       }
 
+      // the node write is enough: decorate() re-reads cardWidth on the commit
+      // and the new width arrives as the cardWidth prop
       editor.update(() => {
         $updateCardNode(nodeKey, $isImageNode, (node) => {
           node.cardWidth = newWidth // this is a property on the node, not the card
-          setCardWidth(newWidth) // sets the state of the toolbar component
         })
       })
     },
-    [allowedImageCardWidths, editor, nodeKey, setCardWidth],
+    [allowedImageCardWidths, editor, nodeKey],
   )
 
   React.useEffect(() => {

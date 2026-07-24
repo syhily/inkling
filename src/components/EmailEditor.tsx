@@ -8,6 +8,7 @@ import type { CardConfig } from '@/context/InklingHostIntegrationContext'
 
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingComposer from '@/components/InklingComposer'
+import { normalizeCardConfig } from '@/context/InklingHostIntegrationContext'
 import { SharedEditorStateContext } from '@/context/SharedEditorStateContext'
 import { EMAIL_TRANSFORMERS } from '@/markdown/transformers'
 import EMAIL_EDITOR_NODES from '@/nodes/EmailEditorNodes'
@@ -22,38 +23,35 @@ import ReplacementStringsPlugin from '@/plugins/ReplacementStringsPlugin'
 import { VISIBILITY_SETTINGS } from '@/utils/visibility'
 
 export const EMAIL_EDITOR_CARD_CONFIG = {
-  editorType: 'email',
   image: {
     allowedWidths: ['regular'],
   },
   visibilitySettings: VISIBILITY_SETTINGS.EMAIL_ONLY,
 }
 
-const ALLOWED_EMAIL_EDITOR_VISIBILITY = new Set([VISIBILITY_SETTINGS.EMAIL_ONLY, VISIBILITY_SETTINGS.NONE])
+const ALLOWED_EMAIL_EDITOR_VISIBILITY: ReadonlySet<string> = new Set([
+  VISIBILITY_SETTINGS.EMAIL_ONLY,
+  VISIBILITY_SETTINGS.NONE,
+])
 
-// Sanitizes a legacy card-config bag for the email editor: clamps
-// `visibilitySettings` to the email-safe set and force-sets `image.allowedWidths`
-// and the write-only `editorType` merge output (pinned by
-// test/unit/EmailEditor.test.ts; read nowhere — kept for runtime tolerance).
-// Plan 048 deliberately keeps the `...cardConfig` spread-through for legacy
-// bags, so the return type admits the arbitrary keys the runtime carries.
-export function getEmailEditorCardConfig(cardConfig: Record<string, unknown> = {}): CardConfig & {
-  editorType: string
-} & Record<string, unknown> {
-  const visibilitySettings =
-    typeof cardConfig.visibilitySettings === 'string' &&
-    ALLOWED_EMAIL_EDITOR_VISIBILITY.has(cardConfig.visibilitySettings)
-      ? cardConfig.visibilitySettings
-      : EMAIL_EDITOR_CARD_CONFIG.visibilitySettings
+// Sanitizes a legacy card-config bag for the email editor: the closed-contract
+// boundary (normalizeCardConfig) drops unknown keys, `visibilitySettings` is
+// clamped to the email-safe set, and `image.allowedWidths` is force-set for
+// the email layout (pinned by test/unit/EmailEditor.test.ts).
+export function getEmailEditorCardConfig(cardConfig: unknown = {}): CardConfig {
+  const normalized = normalizeCardConfig(cardConfig, {
+    visibilityClamp: {
+      allowed: ALLOWED_EMAIL_EDITOR_VISIBILITY,
+      fallback: EMAIL_EDITOR_CARD_CONFIG.visibilitySettings,
+    },
+  })
 
   return {
-    ...cardConfig,
-    editorType: EMAIL_EDITOR_CARD_CONFIG.editorType,
+    ...normalized,
     image: {
-      ...(typeof cardConfig.image === 'object' && cardConfig.image !== null ? cardConfig.image : {}),
+      ...normalized.image,
       ...EMAIL_EDITOR_CARD_CONFIG.image,
     },
-    visibilitySettings,
   }
 }
 
@@ -80,7 +78,7 @@ const EmailEditor = ({
   placeholderText = 'Begin writing your email...',
   ...editorProps
 }: EmailEditorProps) => {
-  const mergedCardConfig = getEmailEditorCardConfig({ ...cardConfig })
+  const mergedCardConfig = getEmailEditorCardConfig(cardConfig)
 
   return (
     <InklingComposer

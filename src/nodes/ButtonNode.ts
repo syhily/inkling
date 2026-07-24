@@ -1,6 +1,6 @@
 import type { ButtonData } from '@/nodes/base/nodes/button/ButtonNode'
 
-import { assembleCardNode } from '@/nodes/assemble-card-node'
+import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { buttonDeclaration } from '@/nodes/cards/button.declaration'
 
 export { $isButtonNode } from '@/nodes/base/nodes/button/ButtonNode'
@@ -13,7 +13,7 @@ export type ButtonNodeDataset = ButtonData
  * registered class is assembled from the card declaration, and `$isButtonNode`
  * is canonical on the base node.
  */
-export const ButtonNode = assembleCardNode(buttonDeclaration)
+export const ButtonNode = assembleCardNodeOnce(buttonDeclaration)
 export type ButtonNode = InstanceType<typeof ButtonNode>
 
 export const $createButtonNode = (dataset?: ButtonNodeDataset): ButtonNode => {

@@ -15,8 +15,8 @@ import type { BookmarkEmbedResponse } from '@/context/InklingHostIntegrationCont
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 import { $isBookmarkNode, $updateCardNode } from '@/nodes/base'
 import trackEvent from '@/utils/analytics'
 import { isInternalUrl } from '@/utils/isInternalUrl'
@@ -83,7 +83,7 @@ export function BookmarkNodeComponent({
   const [editor] = useLexicalComposerContext()
 
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
-  const { isSelected } = React.useContext(CardContext)
+  const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
   const [urlInputValue, setUrlInputValue] = React.useState<string>(url)
   const [loading, setLoading] = React.useState<boolean>(false)
   const [urlError, setUrlError] = React.useState<boolean>(false)

@@ -1,14 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
-import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { CodeBlockNodeComponent } from '@/nodes/CodeBlockNodeComponent'
+import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -22,21 +22,15 @@ function createTestEditor(): LexicalEditor {
   return createEditor({ namespace: 'test', nodes: [CodeBlockNode], onError: () => {} })
 }
 
-function createCardContext(
-  setEditing: () => void,
-  overrides: Partial<React.ContextType<typeof CardContext>> = {},
-): React.ContextType<typeof CardContext> {
-  return {
-    isSelected: true,
-    isEditing: false,
-    captionHasFocus: false,
-    cardWidth: 'regular',
-    nodeKey: 'code-1',
-    setCardWidth: vi.fn(),
-    setCaptionHasFocus: vi.fn(),
-    setEditing,
-    ...overrides,
-  }
+// the store equivalent of the old per-test CardContext factory: the card is
+// selected and not editing unless a test says otherwise
+function createSelection(
+  nodeKey: NodeKey | string = 'code-1',
+  { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
+) {
+  return createCardSelectionStoreWrapper({
+    initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
+  })
 }
 
 function createComposerContext(darkMode: boolean, cardConfig: Record<string, unknown> = {}) {
@@ -69,15 +63,15 @@ function addCodeBlockNode(editor: LexicalEditor): Promise<NodeKey> {
   })
 }
 
-function renderComponent(nodeKey: NodeKey, setEditing: () => void, darkMode: boolean) {
+function renderComponent(nodeKey: NodeKey, darkMode: boolean) {
   const composerValue = createComposerContext(darkMode)
-  const cardValue = createCardContext(setEditing, { nodeKey })
+  const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
   return render(
     <InklingHostIntegrationContext.Provider value={composerValue}>
       <InklingUiPrefsContext.Provider value={composerValue}>
-        <CardContext.Provider value={cardValue}>
+        <CardSelectionStoreProvider>
           <CodeBlockNodeComponent code="const a = 1" language="javascript" nodeKey={nodeKey} />
-        </CardContext.Provider>
+        </CardSelectionStoreProvider>
       </InklingUiPrefsContext.Provider>
     </InklingHostIntegrationContext.Provider>,
   )
@@ -91,22 +85,21 @@ describe('CodeBlockNodeComponent', () => {
     mockComposerContext(editor)
   })
 
-  it('enters edit mode when the toolbar Edit button is clicked', async () => {
+  it('dispatches EDIT_CARD_COMMAND when the toolbar Edit button is clicked', async () => {
     const nodeKey = await addCodeBlockNode(editor)
-    const setEditing = vi.fn()
+    const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
 
-    renderComponent(nodeKey, setEditing, false)
+    renderComponent(nodeKey, false)
 
     fireEvent.click(screen.getByTestId('edit-code-block-card'))
 
-    expect(setEditing).toHaveBeenCalledTimes(1)
-    expect(setEditing).toHaveBeenCalledWith(true)
+    expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: nodeKey })
   })
 
   it('renders a dark preview when darkMode is enabled', async () => {
     const nodeKey = await addCodeBlockNode(editor)
 
-    const { container } = renderComponent(nodeKey, vi.fn(), true)
+    const { container } = renderComponent(nodeKey, true)
 
     expect(container.querySelector('pre')).toHaveClass('bg-grey-950')
   })
@@ -114,21 +107,24 @@ describe('CodeBlockNodeComponent', () => {
   it('renders a light preview when darkMode is disabled', async () => {
     const nodeKey = await addCodeBlockNode(editor)
 
-    const { container } = renderComponent(nodeKey, vi.fn(), false)
+    const { container } = renderComponent(nodeKey, false)
 
     expect(container.querySelector('pre')).toHaveClass('bg-grey-100')
   })
 
   describe('action toolbar', () => {
-    function renderWithToolbar(cardOverrides: Record<string, unknown> = {}, cardConfig = {}) {
+    function renderWithToolbar(
+      selection: { selected?: boolean; editing?: boolean } = {},
+      cardConfig: Record<string, unknown> = {},
+    ) {
       const composerValue = createComposerContext(false, cardConfig)
-      const cardValue = createCardContext(vi.fn(), cardOverrides)
+      const { wrapper: CardSelectionStoreProvider } = createSelection('code-1', selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
           <InklingUiPrefsContext.Provider value={composerValue}>
-            <CardContext.Provider value={cardValue}>
+            <CardSelectionStoreProvider>
               <CodeBlockNodeComponent code="const a = 1" language="javascript" nodeKey="code-1" />
-            </CardContext.Provider>
+            </CardSelectionStoreProvider>
           </InklingUiPrefsContext.Provider>
         </InklingHostIntegrationContext.Provider>,
       )
@@ -139,19 +135,19 @@ describe('CodeBlockNodeComponent', () => {
     }
 
     it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar({ isSelected: false, isEditing: false })
+      const { container } = renderWithToolbar({ selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('hides the toolbar while the card is editing', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: true })
+      const { container } = renderWithToolbar({ selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('renders edit, separator, and snippet items when selected', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false }, { createSnippet: vi.fn() })
+      const { container } = renderWithToolbar({ selected: true }, { createSnippet: vi.fn() })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -166,7 +162,7 @@ describe('CodeBlockNodeComponent', () => {
     })
 
     it('hides the snippet item and its separator when createSnippet is not configured', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
+      const { container } = renderWithToolbar({ selected: true })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
@@ -175,7 +171,7 @@ describe('CodeBlockNodeComponent', () => {
     })
 
     it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false }, { createSnippet: vi.fn() })
+      const { container } = renderWithToolbar({ selected: true }, { createSnippet: vi.fn() })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

@@ -3,11 +3,8 @@ import type { LexicalEditor } from 'lexical'
 import {
   $createParagraphNode,
   $getSelection,
-  $isDecoratorNode,
   $isNodeSelection,
   $isRangeSelection,
-  $isRootNode,
-  $isTextNode,
   COMMAND_PRIORITY_LOW,
   KEY_ARROW_DOWN_COMMAND,
   KEY_ARROW_LEFT_COMMAND,
@@ -20,8 +17,8 @@ import { $isAtStartOfDocument, $selectDecoratorNode } from '@/utils'
 
 import type { KeyboardNavigationDeps } from './types'
 
-import { $getLogicallyAdjacentCard, $getVisuallyAdjacentCard, $selectCard, editorOwnsFocus } from '../card-adjacency'
-import { getEventProvenance } from '../nested-editor-protocol'
+import { $getLogicallyAdjacentCard, $getVisuallyAdjacentCard, editorOwnsFocus } from '../card-adjacency'
+import { $extendSelectionAcrossCardBoundary, $selectCardFromCaptionArrow } from './selection-extension'
 
 export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
   const { store, cursorDidExitAtTop } = deps
@@ -34,50 +31,7 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
       // if a selection is being made, we need to handle it ourselves (lexical does not handle decorator nodes at this time)
       if (event?.shiftKey) {
         if ($isRangeSelection(selection)) {
-          let anchorNode = selection.anchor.getNode()
-
-          if (!$isRootNode(anchorNode)) {
-            const topLevelAnchor = anchorNode.getTopLevelElement()
-            if (!topLevelAnchor) {
-              return false
-            }
-            anchorNode = topLevelAnchor
-            const focusNode = selection.focus.getNode().getTopLevelElement()
-
-            // treat text nodes as normal
-            let previousSibling = focusNode?.getPreviousSibling()
-            if ($isTextNode(focusNode) && $isTextNode(previousSibling)) {
-              return false
-            }
-            // if on or about to move to decorator node selection, select the entire current node using root node offsets
-            if (
-              anchorNode &&
-              focusNode &&
-              previousSibling &&
-              ($isDecoratorNode(anchorNode) || $isDecoratorNode(previousSibling))
-            ) {
-              // if at the start of the line, treat that line/node as not selected
-              if (selection.anchor.offset === 0) {
-                selection.focus.set('root', focusNode.getIndexWithinParent() - 1, 'element')
-                selection.anchor.set('root', anchorNode.getIndexWithinParent(), 'element')
-              } else {
-                selection.focus.set('root', focusNode.getIndexWithinParent(), 'element')
-                selection.anchor.set('root', anchorNode.getIndexWithinParent() + 1, 'element')
-              }
-              event.preventDefault()
-              return true
-            }
-          }
-
-          // if using the root node, simply add the card above
-          if ($isRootNode(anchorNode)) {
-            const offset = selection.focus.offset
-            if (offset > 0) {
-              selection.focus.set('root', selection.focus.offset - 1, 'element')
-            }
-            event.preventDefault()
-            return true
-          }
+          return $extendSelectionAcrossCardBoundary('up', selection, event)
         }
         // use default behavior for other selection
         return false
@@ -85,8 +39,7 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
 
       // if we're in a nested editor, we need to move selection back to the parent editor
       const { selectedCardKey } = store.getState()
-      if (selectedCardKey && getEventProvenance(event) === 'caption-editor') {
-        $selectCard(editor, selectedCardKey)
+      if ($selectCardFromCaptionArrow(editor, selectedCardKey, event)) {
         return true
       }
 
@@ -152,51 +105,7 @@ export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNa
       // if a selection is being made, we need to handle it ourselves (lexical does not handle decorator nodes at this time)
       if (event?.shiftKey) {
         if ($isRangeSelection(selection)) {
-          let anchorNode = selection.anchor.getNode()
-
-          if (!$isRootNode(anchorNode)) {
-            const topLevelAnchor = anchorNode.getTopLevelElement()
-            if (!topLevelAnchor) {
-              return false
-            }
-            anchorNode = topLevelAnchor
-            const focusNode = selection.focus.getNode().getTopLevelElement()
-
-            // treat text nodes as normal
-            let nextSibling = focusNode?.getNextSibling()
-            if ($isTextNode(focusNode) && $isTextNode(nextSibling)) {
-              return false
-            }
-            // if on or about to move to decorator node selection, select the entire current node using root node offsets
-            if (
-              anchorNode &&
-              focusNode &&
-              nextSibling &&
-              ($isDecoratorNode(anchorNode) || $isDecoratorNode(nextSibling))
-            ) {
-              // if at end of a line, treat it as if that line/node is not selected
-              if (selection.anchor.offset === anchorNode.getTextContentSize()) {
-                selection.anchor.set('root', anchorNode.getIndexWithinParent() + 1, 'element')
-                selection.focus.set('root', focusNode.getIndexWithinParent() + 2, 'element')
-              } else {
-                selection.anchor.set('root', anchorNode.getIndexWithinParent(), 'element')
-                selection.focus.set('root', focusNode.getIndexWithinParent() + 1, 'element')
-              }
-              event.preventDefault()
-              return true
-            }
-          }
-
-          // if using the root node, simply add the card below
-          if ($isRootNode(anchorNode)) {
-            const offset = selection.focus.offset
-            const lastChild = anchorNode.getLastChildOrThrow()
-            if (offset <= lastChild.getIndexWithinParent()) {
-              selection.focus.set('root', selection.focus.offset + 1, 'element')
-            }
-            event.preventDefault()
-            return true
-          }
+          return $extendSelectionAcrossCardBoundary('down', selection, event)
         }
         // use default behavior for other selection
         return false
@@ -204,8 +113,7 @@ export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNa
 
       // if we're in a nested editor, we need to move selection back to the parent editor
       const { selectedCardKey } = store.getState()
-      if (selectedCardKey && getEventProvenance(event) === 'caption-editor') {
-        $selectCard(editor, selectedCardKey)
+      if ($selectCardFromCaptionArrow(editor, selectedCardKey, event)) {
         return true
       }
 

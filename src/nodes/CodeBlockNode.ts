@@ -3,7 +3,7 @@ import type { EditorState, LexicalEditor } from 'lexical'
 import type { CodeBlockData } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
-import { assembleCardNode } from '@/nodes/assemble-card-node'
+import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { codeBlockDeclaration } from '@/nodes/cards/codeblock.declaration'
 
 export { $isCodeBlockNode } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
@@ -21,7 +21,7 @@ export type CodeBlockNodeDataset = CodeBlockData &
  * keeps constructing the assembled class so the nested-editor and
  * transient-prop specs are initialized.
  */
-export const CodeBlockNode = assembleCardNode(codeBlockDeclaration)
+export const CodeBlockNode = assembleCardNodeOnce(codeBlockDeclaration)
 export type CodeBlockNode = InstanceType<typeof CodeBlockNode> & {
   __openInEditMode: boolean
   // non-null: the constructor's nested-editor setup always assigns an editor

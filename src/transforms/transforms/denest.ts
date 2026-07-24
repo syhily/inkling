@@ -1,7 +1,7 @@
 import type { ElementNode, Klass, LexicalEditor, LexicalNode } from 'lexical'
 
 /* c8 ignore start */
-import { $isListItemNode, $isListNode } from '@lexical/list'
+import { $isListItemNode, $isListNode, ListItemNode } from '@lexical/list'
 import { $createParagraphNode, $getRoot, $isLineBreakNode, $isRootNode, $isTextNode } from 'lexical'
 /* c8 ignore stop */
 
@@ -42,6 +42,18 @@ function $isInvalidListItemNode(node: LexicalNode) {
 
   const parent = node.getParent()
   return !$isListNode(parent)
+}
+
+// A list item hoisted to the root has to be unwrapped here, at insertion time.
+// Moving this to a follow-up transform is not possible: Lexical 0.46's built-in
+// ListItemNode $transform is seeded with the node class, so it always runs
+// ahead of any editor-registered transform and wraps a root-level orphan in a
+// fresh list before a self-validity transform could observe it.
+function $unwrapListItemForRootInsertion(child: ListItemNode, parent: ElementNode) {
+  const paragraphNode = $createParagraphNode()
+  paragraphNode.append(...child.getChildren())
+  child.remove()
+  parent.insertAfter(paragraphNode)
 }
 
 // non-inline nodes can only exist at top-level inside a root node
@@ -109,13 +121,9 @@ export function denestTransform<T extends ElementNode>(node: T, createNode: Crea
     .getChildren()
     .reverse()
     .forEach((child) => {
-      // ensure we don't add list items directly into root node
-      // TODO: can we handle this elsewhere/more generically?
+      // ensure we don't add list items directly into the root node
       if ($isRootNode(parent.getParent()) && $isListItemNode(child)) {
-        const paragraphNode = $createParagraphNode()
-        paragraphNode.append(...child.getChildren())
-        child.remove()
-        parent.insertAfter(paragraphNode)
+        $unwrapListItemForRootInsertion(child, parent)
         return
       }
 

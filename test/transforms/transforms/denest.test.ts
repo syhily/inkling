@@ -6,7 +6,7 @@ import { $createParagraphNode, $createTextNode, $getRoot, ParagraphNode, TextNod
 
 import { assertTransform, createEditor } from '#/transforms/utils'
 import { ExtendedHeadingNode, BaseImageNode } from '@/nodes/base'
-import { registerDenestTransform } from '@/transforms/index'
+import { registerDefaultTransforms, registerDenestTransform } from '@/transforms/index'
 
 describe('Denest transform', function () {
   it('handles images inside paragraphs', function () {
@@ -586,6 +586,104 @@ describe('Denest transform', function () {
     const editor = createEditor()
 
     assertTransform(editor, registerTransforms, before, after)
+  })
+
+  it('lifts a bare list item nested in a paragraph into a root list', function () {
+    // pins the orphan-list-item case end to end: denest never sees this input
+    // because Lexical 0.46's class-seeded ListItemNode $transform fires on the
+    // parsed item first (dirty nodes run in nodeMap order, ahead of editor-
+    // registered transforms) and lifts it into a fresh list at the root. The
+    // collector path that $unwrapListItemForRootInsertion still owns is pinned
+    // by 'handles headings+text inside list items' above.
+    const before = {
+      root: {
+        children: [
+          {
+            children: [
+              {
+                children: [
+                  {
+                    detail: 0,
+                    format: 0,
+                    mode: 'normal',
+                    style: '',
+                    text: 'Hoisted',
+                    type: 'extended-text',
+                    version: 1,
+                  },
+                ],
+                direction: 'ltr',
+                format: '',
+                indent: 0,
+                type: 'listitem',
+                version: 1,
+                value: 1,
+              },
+            ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            textFormat: 0,
+            textStyle: '',
+            type: 'paragraph',
+            version: 1,
+          },
+        ],
+        direction: 'ltr',
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1,
+      },
+    }
+
+    const after = {
+      root: {
+        children: [
+          {
+            children: [
+              {
+                checked: undefined,
+                children: [
+                  {
+                    detail: 0,
+                    format: 0,
+                    mode: 'normal',
+                    style: '',
+                    text: 'Hoisted',
+                    type: 'extended-text',
+                    version: 1,
+                  },
+                ],
+                direction: 'ltr',
+                format: '',
+                indent: 0,
+                type: 'listitem',
+                version: 1,
+                value: 1,
+              },
+            ],
+            direction: null,
+            format: '',
+            indent: 0,
+            type: 'list',
+            version: 1,
+            listType: 'bullet',
+            start: 1,
+            tag: 'ul',
+          },
+        ],
+        direction: 'ltr',
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1,
+      },
+    }
+
+    const editor = createEditor()
+
+    assertTransform(editor, registerDefaultTransforms, before, after)
   })
 
   it('preserves the extended-heading type without the replacement patch', function () {

@@ -2,10 +2,9 @@ import { CollaborationContext } from '@lexical/react/LexicalCollaborationContext
 import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { createEditor, type LexicalEditor } from 'lexical'
-import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import CardContext from '@/context/CardContext'
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import HeaderNodeComponent from '@/nodes/header/HeaderNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
@@ -23,20 +22,12 @@ function createCollaborationContext() {
   return { color: '#000000', isCollabActive: false, name: 'test', yjsDocMap: new Map() }
 }
 
-function createCardContext(
-  overrides: Partial<React.ContextType<typeof CardContext>> = {},
-): React.ContextType<typeof CardContext> {
-  return {
-    isSelected: true,
-    isEditing: false,
-    captionHasFocus: false,
-    cardWidth: 'regular',
-    nodeKey: 'header-1',
-    setCardWidth: vi.fn(),
-    setCaptionHasFocus: vi.fn(),
-    setEditing: vi.fn(),
-    ...overrides,
-  }
+// the store equivalent of the old per-test CardContext factory: the card is
+// selected and not editing unless a test says otherwise
+function createSelection({ selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {}) {
+  return createCardSelectionStoreWrapper({
+    initialState: { selectedCardKey: selected ? 'header-1' : null, isEditingCard: editing },
+  })
 }
 
 function createComposerContext(cardConfig: Record<string, unknown> = {}) {
@@ -72,15 +63,19 @@ describe('HeaderNodeComponent', () => {
     subheaderTextEditor = createEditor({ namespace: 'subheader-text', nodes: MINIMAL_NODES, onError: () => {} })
   })
 
-  function renderComponent(cardValue: ReturnType<typeof createCardContext>, cardConfig = {}) {
+  function renderComponent(
+    selection: { selected?: boolean; editing?: boolean } = {},
+    cardConfig: Record<string, unknown> = {},
+  ) {
     const collaborationValue = createCollaborationContext()
     const composerValue = createLexicalComposerContext(editor)
     const inklingComposerValue = createComposerContext(cardConfig)
+    const { wrapper: CardSelectionStoreProvider } = createSelection(selection)
     return render(
       <CollaborationContext.Provider value={collaborationValue}>
         <LexicalComposerContext.Provider value={composerValue}>
           <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
-            <CardContext.Provider value={cardValue}>
+            <CardSelectionStoreProvider>
               <HeaderNodeComponent
                 alignment="left"
                 backgroundColor="transparent"
@@ -100,7 +95,7 @@ describe('HeaderNodeComponent', () => {
                 subheaderTextEditor={subheaderTextEditor}
                 textColor=""
               />
-            </CardContext.Provider>
+            </CardSelectionStoreProvider>
           </InklingHostIntegrationContext.Provider>
         </LexicalComposerContext.Provider>
       </CollaborationContext.Provider>,
@@ -109,21 +104,19 @@ describe('HeaderNodeComponent', () => {
 
   describe('action toolbar', () => {
     it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderComponent(createCardContext({ isSelected: false, isEditing: false }))
+      const { container } = renderComponent({ selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('hides the toolbar while the card is editing', () => {
-      const { container } = renderComponent(createCardContext({ isSelected: true, isEditing: true }))
+      const { container } = renderComponent({ selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('renders edit, separator, and snippet items when selected', () => {
-      const { container } = renderComponent(createCardContext({ isSelected: true, isEditing: false }), {
-        createSnippet: vi.fn(),
-      })
+      const { container } = renderComponent({ selected: true }, { createSnippet: vi.fn() })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -137,7 +130,7 @@ describe('HeaderNodeComponent', () => {
     })
 
     it('hides the snippet item and its separator when createSnippet is not configured', () => {
-      const { container } = renderComponent(createCardContext({ isSelected: true, isEditing: false }))
+      const { container } = renderComponent({ selected: true })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
@@ -145,31 +138,16 @@ describe('HeaderNodeComponent', () => {
     })
 
     it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', () => {
-      // the harness mirrors InklingCardWrapper: the context's setEditing(true)
-      // dispatches EDIT_CARD_COMMAND; header currently dispatches the command
-      // directly instead — both land on the same handler, which reads only
-      // `cardKey` (`focusEditor` is read by no handler)
       const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
-      const cardValue = createCardContext({
-        isSelected: true,
-        isEditing: false,
-        setEditing: (shouldEdit: boolean) => {
-          if (shouldEdit) {
-            editor.dispatchCommand(EDIT_CARD_COMMAND, { cardKey: 'header-1' })
-          }
-        },
-      })
-      renderComponent(cardValue)
+      renderComponent({ selected: true })
 
       fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
 
-      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, expect.objectContaining({ cardKey: 'header-1' }))
+      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: 'header-1' })
     })
 
     it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderComponent(createCardContext({ isSelected: true, isEditing: false }), {
-        createSnippet: vi.fn(),
-      })
+      const { container } = renderComponent({ selected: true }, { createSnippet: vi.fn() })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

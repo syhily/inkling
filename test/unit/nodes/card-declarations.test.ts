@@ -1,10 +1,23 @@
 import { describe, expect, it } from 'vitest'
 
-import { CARD_DECLARATIONS } from '@/nodes/cards'
+import { AudioNode } from '@/nodes/AudioNode'
+import { BookmarkNode } from '@/nodes/BookmarkNode'
+import { ButtonNode } from '@/nodes/ButtonNode'
+import { CalloutNode } from '@/nodes/CalloutNode'
+import { CARD_DECLARATIONS, type CardNodeType } from '@/nodes/cards'
 import { CARD_DECORATE_TARGETS } from '@/nodes/cards/card-decorate'
 import { CARD_INSERT_COMMANDS } from '@/nodes/cards/card-insert-commands'
 import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
+import { CodeBlockNode } from '@/nodes/CodeBlockNode'
+import { FileNode } from '@/nodes/FileNode'
+import { GalleryNode } from '@/nodes/GalleryNode'
+import { HeaderNode } from '@/nodes/HeaderNode'
+import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
+import { HtmlNode } from '@/nodes/HtmlNode'
+import { ImageNode } from '@/nodes/ImageNode'
+import { ToggleNode } from '@/nodes/ToggleNode'
+import { VideoNode } from '@/nodes/VideoNode'
 
 // The card declaration is the single per-card source of truth: these tests
 // pin the declarations themselves and that every registry is derived from
@@ -70,10 +83,28 @@ describe('card declarations as the single source of truth', () => {
     }
   })
 
-  it('flags exactly the surviving hand-written wrappers', () => {
-    const handWritten = CARD_DECLARATIONS.filter((card) => 'handWrittenWrapper' in card && card.handWrittenWrapper).map(
-      (card) => card.nodeType,
-    )
-    expect(handWritten).toEqual(['toggle', 'header', 'bookmark'])
+  it('registers the same assembled class each shim exports', () => {
+    // one class object per card: every shim re-exports the memoized
+    // `assembleCardNodeOnce` product, so the registry entries and the
+    // shim-exported classes are identical and importDOM/clone identity is
+    // coherent across every consumer
+    const SHIM_CLASSES = {
+      audio: AudioNode,
+      bookmark: BookmarkNode,
+      button: ButtonNode,
+      callout: CalloutNode,
+      codeblock: CodeBlockNode,
+      file: FileNode,
+      gallery: GalleryNode,
+      header: HeaderNode,
+      horizontalrule: HorizontalRuleNode,
+      html: HtmlNode,
+      image: ImageNode,
+      toggle: ToggleNode,
+      video: VideoNode,
+    } satisfies Record<CardNodeType, unknown>
+    for (const card of CARD_WRAPPER_NODES) {
+      expect(card.node).toBe(SHIM_CLASSES[card.nodeType])
+    }
   })
 })

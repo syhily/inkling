@@ -30,7 +30,6 @@ export class ActiveDrag {
   overDroppableElem: HTMLElement | null = null
   overDroppablePosition: DroppablePosition | null = null
   dragPreviewInfo: (DragPreview & { positionX: number; positionY: number }) | null = null
-  dropIndicatorTimeout: ReturnType<typeof setTimeout> | null = null
 
   private listenerEntries: ListenerEntry[] = []
 
@@ -49,11 +48,6 @@ export class ActiveDrag {
       document.removeEventListener(type, handler)
     }
     this.listenerEntries = []
-
-    if (this.dropIndicatorTimeout) {
-      clearTimeout(this.dropIndicatorTimeout)
-      this.dropIndicatorTimeout = null
-    }
 
     if (this.dragPreviewInfo) {
       this.dragPreviewInfo.dispose?.()

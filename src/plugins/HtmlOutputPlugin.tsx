@@ -1,8 +1,10 @@
-import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html'
+import { $generateNodesFromDOM } from '@lexical/html'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
 import { $getRoot, $insertNodes } from 'lexical'
 import React from 'react'
+
+import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
 
 export const HtmlOutputPlugin = ({
   html = '',
@@ -18,15 +20,16 @@ export const HtmlOutputPlugin = ({
   const debounceTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const exportHtml = React.useCallback(() => {
-    editor.update(() => {
-      // This live export path deliberately produces different markup than the
-      // headless LexicalHTMLRenderer path: $generateHtmlFromNodes emits
-      // Lexical-core HTML (dir attributes, pre-wrap spans, doubled format
-      // tags) and no heading ids, while the headless element transformers
-      // emit clean markup with generated heading ids. The divergence is
-      // pinned by test/unit/plugins/HtmlOutputPlugin.export-parity.test.ts.
-      const htmlString = $generateHtmlFromNodes(editor, null)
-      const rootText = editor.getEditorState().read(() => $getRoot().getTextContent())
+    editor.read(() => {
+      // One serializer for both export paths: the live export runs the same
+      // $convertToHtmlString + element transformers the headless
+      // LexicalHTMLRenderer runs, here against the mounted editor. With no
+      // options bag the render context falls back to the browser's document,
+      // and cards receive the same exportDOM dispatch as the headless path.
+      // Byte-level identity with the headless output is pinned by
+      // test/unit/plugins/HtmlOutputPlugin.export-parity.test.ts.
+      const htmlString = $convertToHtmlString(editor)
+      const rootText = $getRoot().getTextContent()
       const hasContent = rootText.trim().length > 0
       setHtml?.(hasContent ? htmlString : '')
     })

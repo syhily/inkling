@@ -23,6 +23,11 @@ const FORMAT_TAG_MAP: Record<TextFormatType, TextFormatAbbreviation> = {
   capitalize: 'SPAN',
 }
 
+// The case-transform formats have no semantic tag; their SPAN carries the
+// format as an inline text-transform style so it survives serialization
+// (previously they were emitted as a bare SPAN and the format was lost).
+const TEXT_TRANSFORM_FORMATS: ReadonlySet<TextFormatType> = new Set(['lowercase', 'uppercase', 'capitalize'])
+
 type Entries<T> = {
   [K in keyof T]: [K, T[K]]
 }[keyof T][]
@@ -114,6 +119,9 @@ export default class TextContent {
         // open new tags
         formatsToOpen.forEach((format) => {
           const formatTag = document.createElement(FORMAT_TAG_MAP[format])
+          if (TEXT_TRANSFORM_FORMATS.has(format)) {
+            formatTag.setAttribute('style', `text-transform: ${format};`)
+          }
           currentNode.append(formatTag)
           currentNode = formatTag
           openFormats.push(format)

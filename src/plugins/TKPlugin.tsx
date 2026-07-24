@@ -12,14 +12,12 @@ import { useCallback, useContext, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import CardContext from '@/context/CardContext'
-import { useTKContext } from '@/context/TKContext'
+import { useTKHandle, useTKHandleState } from '@/context/TKHandleContext'
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
 import { $createTKNode, $isTKNode, ExtendedTextNode, TKNode } from '@/nodes/base'
+import { getTKMatch } from '@/plugins/behaviour/tk-matcher'
 import { SELECT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 import { getEditorTheme } from '@/utils/lexical-internals'
-
-const REGEX = /(^|.)([^\p{L}\p{N}\s]*(TK|Tk|tk)+[^\p{L}\p{N}\s]*)(.)?/u
-const WORD_CHAR_REGEX = /\p{L}|\p{N}/u
 
 function TKIndicator({
   editor,
@@ -172,7 +170,8 @@ function TKIndicator({
 
 export default function TKPlugin() {
   const [editor] = useLexicalComposerContext()
-  const { tkNodeMap, addEditorTkNode, removeEditorTkNode, removeEditor } = useTKContext()
+  const tkHandle = useTKHandle()
+  const tkNodeMap = useTKHandleState((state) => state.tkNodeMap)
   const { nodeKey: parentEditorNodeKey } = useContext(CardContext)
 
   useEffect(() => {
@@ -183,9 +182,9 @@ export default function TKPlugin() {
     // clean up editor when it is destroyed - ensures counts are up to date
     // when a nested-editor-containing card is deleted
     return () => {
-      removeEditor(editor.getKey())
+      tkHandle.removeEditor(editor.getKey())
     }
-  }, [editor, removeEditor])
+  }, [editor, tkHandle])
 
   useEffect(() => {
     return editor.registerMutationListener(TKNode, (mutatedNodes) => {
@@ -193,73 +192,21 @@ export default function TKPlugin() {
         // mutatedNodes is a Map where each key is the NodeKey, and the value is the state of mutation.
         for (let [tkNodeKey, mutation] of mutatedNodes) {
           if (mutation === 'destroyed') {
-            removeEditorTkNode(editor.getKey(), tkNodeKey)
+            tkHandle.removeEditorTkNode(editor.getKey(), tkNodeKey)
           } else {
             const parentNodeKey = $getNodeByKey(tkNodeKey)?.getTopLevelElement()?.getKey()
             const topLevelNodeKey = parentEditorNodeKey || parentNodeKey
             if (topLevelNodeKey) {
-              addEditorTkNode(editor.getKey(), topLevelNodeKey, tkNodeKey)
+              tkHandle.addEditorTkNode(editor.getKey(), topLevelNodeKey, tkNodeKey)
             }
           }
         }
       })
     })
-  }, [editor, addEditorTkNode, removeEditorTkNode, parentEditorNodeKey])
+  }, [editor, tkHandle, parentEditorNodeKey])
 
   const createTKNode = useCallback((textNode: TextNode): TKNode => {
     return $createTKNode(textNode.getTextContent())
-  }, [])
-
-  const getTKMatch = useCallback((initialText: string) => {
-    let text = initialText
-    let matchArr = REGEX.exec(text)
-
-    if (matchArr === null) {
-      return null
-    }
-
-    function isValidMatch(match: RegExpExecArray) {
-      // negative lookbehind isn't supported before Safari 16.4
-      // so we capture the preceding char and test it here
-      if (match[1] && match[1].trim() && WORD_CHAR_REGEX.test(match[1]) && match[2].slice(0, 1) !== '—') {
-        return false
-      }
-
-      // we also check any following char in code to avoid an overly
-      // complex regex when looking for word-chars following the optional
-      // trailing symbol char
-      if (match[4] && match[4].trim() && WORD_CHAR_REGEX.test(match[4]) && match[2].slice(-1) !== '—') {
-        return false
-      }
-
-      return true
-    }
-
-    // our regex will match invalid TKs because we can't use negative lookbehind
-    // so we need to loop through the matches discarding any that are invalid
-    // and keeping track of the original input so we have correct offsets
-    // when we find a valid match
-    let textBeforeMatch = ''
-
-    while (matchArr !== null && !isValidMatch(matchArr)) {
-      textBeforeMatch += text.slice(0, matchArr.index + matchArr[0].length - 1)
-      text = text.slice(matchArr.index + matchArr[0].length - 1)
-      matchArr = REGEX.exec(text)
-    }
-
-    if (matchArr === null) {
-      return null
-    }
-
-    const offsetAdjustment = textBeforeMatch.length
-
-    const startOffset = offsetAdjustment + matchArr.index + matchArr[1].length
-    const endOffset = startOffset + matchArr[2].length
-
-    return {
-      end: endOffset,
-      start: startOffset,
-    }
   }, [])
 
   const nodeType = editor.hasNode(ExtendedTextNode) ? ExtendedTextNode : TextNode

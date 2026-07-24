@@ -1,9 +1,9 @@
 import React from 'react'
 
-import { useTKContext } from '@/context/TKContext'
+import { useTKHandleState } from '@/context/TKHandleContext'
 
 export default function TKCountPlugin({ onChange }: { onChange?: (count: number) => void }) {
-  const { tkCount } = useTKContext()
+  const tkCount = useTKHandleState((state) => state.tkCount)
 
   React.useEffect(() => {
     if (!onChange) {

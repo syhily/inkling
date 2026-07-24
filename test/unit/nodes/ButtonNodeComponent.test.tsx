@@ -1,13 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
-import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { ButtonNode } from '@/nodes/ButtonNode'
 import { ButtonNodeComponent } from '@/nodes/ButtonNodeComponent'
+import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 vi.mock('@lexical/react/LexicalComposerContext', async (importOriginal) => ({
   ...(await importOriginal()),
@@ -26,20 +26,15 @@ function createTestEditor(): LexicalEditor {
   return createEditor({ namespace: 'test', nodes: [ButtonNode], onError: () => {} })
 }
 
-function createCardContext(
-  overrides: Partial<React.ContextType<typeof CardContext>> = {},
-): React.ContextType<typeof CardContext> {
-  return {
-    isSelected: true,
-    isEditing: true,
-    captionHasFocus: false,
-    cardWidth: 'regular',
-    nodeKey: 'button-1',
-    setCardWidth: vi.fn(),
-    setCaptionHasFocus: vi.fn(),
-    setEditing: vi.fn(),
-    ...overrides,
-  }
+// the store equivalent of the old per-test CardContext factory: the card is
+// selected and editing unless a test says otherwise
+function createSelection(
+  nodeKey: NodeKey | string = 'button-1',
+  { selected = true, editing = true }: { selected?: boolean; editing?: boolean } = {},
+) {
+  return createCardSelectionStoreWrapper({
+    initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
+  })
 }
 
 function createComposerContext(cardConfig: Record<string, unknown> = {}) {
@@ -88,17 +83,17 @@ describe('ButtonNodeComponent', () => {
     const nodeKey = await addButtonNode(editor)
 
     const composerValue = createComposerContext()
-    const cardValue = createCardContext()
+    const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
-        <CardContext.Provider value={cardValue}>
+        <CardSelectionStoreProvider>
           <ButtonNodeComponent
             alignment="center"
             buttonText="Subscribe"
             buttonUrl="https://example.com"
             nodeKey={nodeKey}
           />
-        </CardContext.Provider>
+        </CardSelectionStoreProvider>
       </InklingHostIntegrationContext.Provider>,
     )
 
@@ -106,42 +101,46 @@ describe('ButtonNodeComponent', () => {
     expect(screen.getByTestId('button-card-btn').textContent).toBe('Subscribe')
   })
 
-  it('enters edit mode when the toolbar edit button is clicked', async () => {
+  it('dispatches EDIT_CARD_COMMAND when the toolbar edit button is clicked', async () => {
     const nodeKey = await addButtonNode(editor)
-    const setEditing = vi.fn()
+    const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
     const composerValue = createComposerContext()
-    const cardValue = createCardContext({ isSelected: true, isEditing: false, setEditing })
+    const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, { editing: false })
 
     render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
-        <CardContext.Provider value={cardValue}>
+        <CardSelectionStoreProvider>
           <ButtonNodeComponent
             alignment="center"
             buttonText="Subscribe"
             buttonUrl="https://example.com"
             nodeKey={nodeKey}
           />
-        </CardContext.Provider>
+        </CardSelectionStoreProvider>
       </InklingHostIntegrationContext.Provider>,
     )
 
     fireEvent.click(screen.getByTestId('edit-button-card'))
-    expect(setEditing).toHaveBeenCalledWith(true)
+    expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: nodeKey })
   })
 
   describe('action toolbar', () => {
-    function renderWithToolbar(cardValue: ReturnType<typeof createCardContext>, cardConfig = {}) {
+    function renderWithToolbar(
+      selection: { selected?: boolean; editing?: boolean } = {},
+      cardConfig: Record<string, unknown> = {},
+    ) {
       const composerValue = createComposerContext(cardConfig)
+      const { wrapper: CardSelectionStoreProvider } = createSelection('button-1', selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
-          <CardContext.Provider value={cardValue}>
+          <CardSelectionStoreProvider>
             <ButtonNodeComponent
               alignment="center"
               buttonText="Subscribe"
               buttonUrl="https://example.com"
               nodeKey="button-1"
             />
-          </CardContext.Provider>
+          </CardSelectionStoreProvider>
         </InklingHostIntegrationContext.Provider>,
       )
     }
@@ -151,21 +150,19 @@ describe('ButtonNodeComponent', () => {
     }
 
     it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar(createCardContext({ isSelected: false, isEditing: false }))
+      const { container } = renderWithToolbar({ selected: false, editing: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('hides the toolbar while the card is editing', () => {
-      const { container } = renderWithToolbar(createCardContext({ isSelected: true, isEditing: true }))
+      const { container } = renderWithToolbar({ selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('renders edit, separator, and snippet items when selected', () => {
-      const { container } = renderWithToolbar(createCardContext({ isSelected: true, isEditing: false }), {
-        createSnippet: vi.fn(),
-      })
+      const { container } = renderWithToolbar({ selected: true, editing: false }, { createSnippet: vi.fn() })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -181,7 +178,7 @@ describe('ButtonNodeComponent', () => {
     })
 
     it('hides the snippet item and its separator when createSnippet is not configured', () => {
-      const { container } = renderWithToolbar(createCardContext({ isSelected: true, isEditing: false }))
+      const { container } = renderWithToolbar({ selected: true, editing: false })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
@@ -190,9 +187,7 @@ describe('ButtonNodeComponent', () => {
     })
 
     it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderWithToolbar(createCardContext({ isSelected: true, isEditing: false }), {
-        createSnippet: vi.fn(),
-      })
+      const { container } = renderWithToolbar({ selected: true, editing: false }, { createSnippet: vi.fn() })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

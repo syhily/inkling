@@ -1,6 +1,6 @@
 import type { AudioData } from '@/nodes/base/nodes/audio/AudioNode'
 
-import { assembleCardNode } from '@/nodes/assemble-card-node'
+import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { audioDeclaration } from '@/nodes/cards/audio.declaration'
 
 export { $isAudioNode } from '@/nodes/base/nodes/audio/AudioNode'
@@ -17,7 +17,7 @@ export type AudioNodeDataset = AudioData & {
  * is canonical on the base node. `$createAudioNode` keeps constructing the
  * assembled class so the transient-prop spec is initialized.
  */
-export const AudioNode = assembleCardNode(audioDeclaration)
+export const AudioNode = assembleCardNodeOnce(audioDeclaration)
 export type AudioNode = InstanceType<typeof AudioNode> & {
   __triggerFileDialog: boolean
   __initialFile: File | undefined

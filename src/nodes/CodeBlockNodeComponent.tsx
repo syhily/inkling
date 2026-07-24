@@ -4,10 +4,11 @@ import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CodeBlockCard } from '@/components/ui/cards/CodeBlockCard'
-import CardContext from '@/context/CardContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 import { $updateCardNode } from '@/nodes/base'
 import { $isCodeBlockNode } from '@/nodes/CodeBlockNode'
+import { SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 export interface CodeBlockNodeComponentProps {
   nodeKey: NodeKey
@@ -26,7 +27,16 @@ export function CodeBlockNodeComponent({
 }: CodeBlockNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
   const { darkMode } = React.useContext(InklingUiPrefsContext)
-  const { isEditing, isSelected } = React.useContext(CardContext)
+  const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
+  const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+
+  // mirrors the wrapper's old context setEditing(false): re-select only fires
+  // when the card lost its selection; escape-while-editing is a no-op
+  const exitEditMode = React.useCallback(() => {
+    if (!isSelected) {
+      editor.dispatchCommand(SELECT_CARD_COMMAND, { cardKey: nodeKey })
+    }
+  }, [editor, isSelected, nodeKey])
 
   const updateCode = React.useCallback(
     (value: string) => {
@@ -62,6 +72,7 @@ export function CodeBlockNodeComponent({
         language={language}
         updateCode={updateCode}
         updateLanguage={updateLanguage}
+        onEscape={exitEditMode}
       />
       <CardActionToolbar
         card="code-block"

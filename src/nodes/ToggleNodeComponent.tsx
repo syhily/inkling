@@ -4,7 +4,7 @@ import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { ToggleCard } from '@/components/ui/cards/ToggleCard'
-import CardContext from '@/context/CardContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 
 export function ToggleNodeComponent({
   nodeKey,
@@ -19,7 +19,7 @@ export function ToggleNodeComponent({
   contentEditor: LexicalEditor
   contentEditorInitialState?: EditorState
 }) {
-  const { isEditing } = React.useContext(CardContext)
+  const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
 
   React.useEffect(() => {
     headingEditor.setEditable(isEditing)

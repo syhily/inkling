@@ -4,7 +4,7 @@ import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { ButtonCard } from '@/components/ui/cards/ButtonCard'
-import CardContext from '@/context/CardContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 import { $isButtonNode, $updateCardNode } from '@/nodes/base'
 
 export interface ButtonNodeComponentProps {
@@ -23,7 +23,7 @@ export function ButtonNodeComponent({
   nodeKey,
 }: ButtonNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const { isEditing } = React.useContext(CardContext)
+  const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
 
   const handleButtonTextChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     editor.update(() => {

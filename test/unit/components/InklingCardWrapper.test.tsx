@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -8,12 +8,10 @@ import type { CardWidth } from '@/nodes/base/utils/card-widths'
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
-import CardContext from '@/context/CardContext'
 import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { buildDefaultVisibility } from '@/nodes/base/utils/visibility'
 import { HtmlNode } from '@/nodes/HtmlNode'
-import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { VISIBILITY_SETTINGS } from '@/utils/visibility'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -79,22 +77,14 @@ function renderWrapper(
   )
 }
 
-function CardWidthProbe({ widths }: { widths: CardWidth[] }) {
-  const { cardWidth } = React.useContext(CardContext)
-  React.useEffect(() => {
-    widths.push(cardWidth)
-  }, [cardWidth, widths])
-  return null
-}
-
-function renderWrapperWithWidth(nodeKey: NodeKey, width: CardWidth, widths: CardWidth[]) {
+function renderWrapperWithWidth(nodeKey: NodeKey, width: CardWidth) {
   const composerValue = createComposerContext()
   const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
   const tree = (nextWidth: CardWidth) => (
     <InklingHostIntegrationContext.Provider value={composerValue}>
       <CardSelectionStoreProvider>
         <InklingCardWrapper nodeKey={nodeKey} width={nextWidth}>
-          <CardWidthProbe widths={widths} />
+          <div data-testid="card-content">card content</div>
         </InklingCardWrapper>
       </CardSelectionStoreProvider>
     </InklingHostIntegrationContext.Provider>
@@ -143,26 +133,12 @@ describe('InklingCardWrapper', () => {
     expect(screen.getByTestId('visibility-indicator')).toBeInTheDocument()
   })
 
-  it('syncs the context cardWidth state from the width prop', async () => {
-    const nodeKey = await addHtmlNode(editor)
-    const widths: CardWidth[] = []
-
-    const { rerenderWidth } = renderWrapperWithWidth(nodeKey, 'wide', widths)
-    expect(widths.at(-1)).toBe('wide')
-
-    rerenderWidth('regular')
-    expect(widths.at(-1)).toBe('regular')
-
-    rerenderWidth('wide')
-    expect(widths.at(-1)).toBe('wide')
-  })
-
   it('keys the decorator parent data attribute off the width prop', async () => {
     const nodeKey = await addHtmlNode(editor)
 
     // in this harness the decorator parent element is the render container;
     // in the product it is Lexical's decorator div
-    const { container, rerenderWidth } = renderWrapperWithWidth(nodeKey, 'wide', [])
+    const { container, rerenderWidth } = renderWrapperWithWidth(nodeKey, 'wide')
     expect(container).toHaveAttribute('data-inkling-card-width', 'wide')
 
     // 'regular' deletes the attribute so there is less test churn
@@ -171,36 +147,5 @@ describe('InklingCardWrapper', () => {
 
     rerenderWidth('wide')
     expect(container).toHaveAttribute('data-inkling-card-width', 'wide')
-  })
-
-  it('dispatches EDIT_CARD_COMMAND when the card context setEditing(true) is called', async () => {
-    // the equivalence plan 046 relies on: cards that dispatch
-    // EDIT_CARD_COMMAND directly and cards that call the context's
-    // setEditing(true) reach the same command handler
-    const nodeKey = await addHtmlNode(editor)
-    const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
-    const composerValue = createComposerContext()
-    const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
-    let captured: React.ContextType<typeof CardContext> | undefined
-    function ContextProbe() {
-      captured = React.useContext(CardContext)
-      return null
-    }
-
-    render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
-        <CardSelectionStoreProvider>
-          <InklingCardWrapper nodeKey={nodeKey}>
-            <ContextProbe />
-          </InklingCardWrapper>
-        </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
-    )
-
-    act(() => {
-      captured?.setEditing(true)
-    })
-
-    expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: nodeKey })
   })
 })

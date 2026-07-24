@@ -36,16 +36,13 @@ export interface UseCardMenu {
 export function useCardMenu(editor: LexicalEditor, query?: string, options: UseCardMenuOptions = {}): UseCardMenu {
   const { commandParams = [], replaceTriggerParagraph = false } = options
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
-  const [cardMenu, setCardMenu] = React.useState<BuildCardMenuResult>({
-    menu: new Map(),
-    items: [],
-    maxItemIndex: -1,
-  })
 
-  // rebuild the menu when the registered nodes, query, or host config change
-  React.useEffect(() => {
+  // rebuild the menu when the registered nodes, query, or host config change —
+  // buildCardMenu is pure, so the menu is computed during render (no empty
+  // first-render frame)
+  const cardMenu = React.useMemo<BuildCardMenuResult>(() => {
     const cardNodes = getEditorCardNodes(editor)
-    setCardMenu(buildCardMenu(cardNodes, { query, config: cardConfig }))
+    return buildCardMenu(cardNodes, { query, config: cardConfig })
   }, [editor, query, cardConfig])
 
   const insert = React.useCallback<CardMenuInsert>(

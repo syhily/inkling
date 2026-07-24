@@ -1,10 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
-import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext, {
   type CardConfig,
   type FileUploader,
@@ -12,6 +11,7 @@ import InklingHostIntegrationContext, {
 } from '@/context/InklingHostIntegrationContext'
 import { AudioNode, $createAudioNode } from '@/nodes/AudioNode'
 import { AudioNodeComponent } from '@/nodes/AudioNodeComponent'
+import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { openFileSelection } from '@/utils/openFileSelection'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -32,20 +32,15 @@ function flushMacrotask(): Promise<void> {
   })
 }
 
-function createCardContext(
-  overrides: Partial<React.ContextType<typeof CardContext>> = {},
-): React.ContextType<typeof CardContext> {
-  return {
-    isSelected: true,
-    isEditing: false,
-    captionHasFocus: false,
-    cardWidth: 'regular',
-    nodeKey: 'audio-1',
-    setCardWidth: vi.fn(),
-    setCaptionHasFocus: vi.fn(),
-    setEditing: vi.fn(),
-    ...overrides,
-  }
+// the store equivalent of the old per-test CardContext factory: the card is
+// selected and not editing unless a test says otherwise
+function createSelection(
+  nodeKey: NodeKey | string = 'audio-1',
+  { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
+) {
+  return createCardSelectionStoreWrapper({
+    initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
+  })
 }
 
 function createComposerContext({
@@ -136,10 +131,10 @@ describe('AudioNodeComponent', () => {
       isLoading = false,
     } = options
     const composerValue = createComposerContext({ upload, isLoading })
-    const cardValue = createCardContext()
+    const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     return render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
-        <CardContext.Provider value={cardValue}>
+        <CardSelectionStoreProvider>
           <AudioNodeComponent
             duration={125}
             initialFile={initialFile}
@@ -149,7 +144,7 @@ describe('AudioNodeComponent', () => {
             title="Episode 1"
             triggerFileDialog={triggerFileDialog}
           />
-        </CardContext.Provider>
+        </CardSelectionStoreProvider>
       </InklingHostIntegrationContext.Provider>,
     )
   }
@@ -220,14 +215,14 @@ describe('AudioNodeComponent', () => {
 
   describe('action toolbar', () => {
     function renderWithToolbar(
-      cardOverrides: Record<string, unknown> = {},
+      selection: { selected?: boolean; editing?: boolean } = {},
       { src = '/audio.mp3', cardConfig = {} } = {},
     ) {
       const composerValue = createComposerContext({ cardConfig })
-      const cardValue = createCardContext(cardOverrides)
+      const { wrapper: CardSelectionStoreProvider } = createSelection('audio-1', selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
-          <CardContext.Provider value={cardValue}>
+          <CardSelectionStoreProvider>
             <AudioNodeComponent
               duration={125}
               initialFile={undefined}
@@ -237,7 +232,7 @@ describe('AudioNodeComponent', () => {
               title="Episode 1"
               triggerFileDialog={false}
             />
-          </CardContext.Provider>
+          </CardSelectionStoreProvider>
         </InklingHostIntegrationContext.Provider>,
       )
     }
@@ -247,28 +242,25 @@ describe('AudioNodeComponent', () => {
     }
 
     it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar({ isSelected: false, isEditing: false })
+      const { container } = renderWithToolbar({ selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('hides the toolbar while the card is editing', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: true })
+      const { container } = renderWithToolbar({ selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('hides the toolbar when the card has no src', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false }, { src: '' })
+      const { container } = renderWithToolbar({ selected: true }, { src: '' })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('renders edit, separator, and snippet items when selected and populated', () => {
-      const { container } = renderWithToolbar(
-        { isSelected: true, isEditing: false },
-        { cardConfig: { createSnippet: vi.fn() } },
-      )
+      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -285,27 +277,24 @@ describe('AudioNodeComponent', () => {
     })
 
     it('hides the snippet item and its separator when createSnippet is not configured', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
+      const { container } = renderWithToolbar({ selected: true })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
       expect(screen.queryByTestId('create-snippet')).toBeNull()
     })
 
-    it('enters edit mode through the card context when the edit item is clicked', () => {
-      const setEditing = vi.fn()
-      renderWithToolbar({ isSelected: true, isEditing: false, setEditing })
+    it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', () => {
+      const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
+      renderWithToolbar({ selected: true })
 
       fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
 
-      expect(setEditing).toHaveBeenCalledWith(true)
+      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: 'audio-1' })
     })
 
     it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderWithToolbar(
-        { isSelected: true, isEditing: false },
-        { cardConfig: { createSnippet: vi.fn() } },
-      )
+      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

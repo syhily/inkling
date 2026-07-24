@@ -1,5 +1,6 @@
 import type { ImageNode } from '@/nodes/ImageNode'
 
+import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
 import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
 
 /**
@@ -8,6 +9,7 @@ import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
  */
 export function render(node: ImageNode) {
   const Selector = node.__selector
+  const cardWidth = normalizeCardWidth(node.cardWidth) ?? 'regular'
 
   return (
     <>
@@ -18,6 +20,7 @@ export function render(node: ImageNode) {
           altText={node.alt}
           captionEditor={node.__captionEditor}
           captionEditorInitialState={node.__captionEditorInitialState}
+          cardWidth={cardWidth}
           href={node.href}
           initialFile={node.__initialFile}
           nodeKey={node.getKey()}

@@ -111,7 +111,7 @@ describe('useGalleryReorder', () => {
       },
     }
 
-    const result = options.droppable.onDrop(draggableInfo, null, null)
+    const result = options.droppable.onDrop(draggableInfo)
 
     // the gallery consumed the drop itself, so it reports the source as
     // handled — its own onDropEnd must not remove the image again
@@ -143,7 +143,7 @@ describe('useGalleryReorder', () => {
       dataset: { src },
     }
 
-    const result = options.droppable.onDrop(draggableInfo, null, null)
+    const result = options.droppable.onDrop(draggableInfo)
 
     expect(result).toEqual({ success: true, sourceHandled: true })
     expect(updateImages).toHaveBeenCalledWith([expect.objectContaining({ src })])
@@ -158,7 +158,6 @@ describe('useGalleryReorder', () => {
     const { options, container, updateImages } = await getRegisteredOptions(images)
 
     const draggableElement = container.children[0]
-    const droppableElement = container.children[2]
 
     const draggableInfo: DraggableInfo = {
       type: 'image',
@@ -169,7 +168,7 @@ describe('useGalleryReorder', () => {
       dataset: { src: 'https://example.com/one.jpg' },
     }
 
-    const result = options.droppable.onDrop(draggableInfo, droppableElement as HTMLElement, 'top-right')
+    const result = options.droppable.onDrop(draggableInfo)
 
     expect(result).toEqual({ success: true, sourceHandled: true })
     expect(updateImages).toHaveBeenCalledWith([
@@ -193,7 +192,7 @@ describe('useGalleryReorder', () => {
       dataset: { src: 'https://example.com/removed-remotely.jpg' },
     }
 
-    const success = options.droppable.onDrop(draggableInfo, null, null)
+    const success = options.droppable.onDrop(draggableInfo)
 
     expect(success).toBe(false)
     expect(updateImages).not.toHaveBeenCalled()
@@ -204,7 +203,6 @@ describe('useGalleryReorder', () => {
     const { options, onDropEnd, container, updateImages } = await getRegisteredOptions(images)
 
     const draggableElement = container.children[0]
-    const droppableElement = container.children[1]
 
     const draggableInfo: DraggableInfo = {
       type: 'image',
@@ -217,7 +215,7 @@ describe('useGalleryReorder', () => {
 
     // the handler routes the drop result back to the target container's own
     // onDropEnd — sourceHandled tells it not to remove the reordered image
-    const result = options.droppable.onDrop(draggableInfo, droppableElement as HTMLElement, 'top-right')
+    const result = options.droppable.onDrop(draggableInfo)
     expect(result).toEqual({ success: true, sourceHandled: true })
     expect(updateImages).toHaveBeenCalledWith([
       { src: 'https://example.com/two.jpg' },
@@ -258,7 +256,7 @@ describe('useGalleryReorder', () => {
       dataset: {},
     }
 
-    const success = options.droppable.onDrop(draggableInfo, null, null)
+    const success = options.droppable.onDrop(draggableInfo)
 
     expect(success).toBe(false)
     expect(updateImages).not.toHaveBeenCalled()

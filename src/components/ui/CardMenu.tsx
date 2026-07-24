@@ -1,11 +1,12 @@
 import React from 'react'
 
-import type { ResolvedMenuItem } from '@/utils/buildCardMenu'
+import type { MenuSection, ResolvedMenuItem } from '@/utils/buildCardMenu'
 
 import TrashCardIcon from '@/assets/icons/inkling-trash.svg?react'
 import trackEvent from '@/utils/analytics'
 
 export type CardMenuItemData = ResolvedMenuItem
+export type CardMenuSectionData = MenuSection
 
 export interface CardMenuItemProps {
   label?: string
@@ -216,11 +217,10 @@ export const CardSnippetItem = ({
 }
 
 export interface CardMenuProps {
-  menu?: Map<string, CardMenuItemData[]>
-  /** Flat resolved items in render order (buildCardMenu's `items`); takes
-   * precedence over `menu`. Section labels are read off each item, so the
-   * rendered `data-inkling-cardmenu-idx` numbering IS the list index. */
-  items?: CardMenuItemData[]
+  /** Sections in render order (buildCardMenu's `sections`). The rendered
+   * `data-inkling-cardmenu-idx` numbering is the flat index across sections,
+   * matching buildCardMenu's `items` ordering. */
+  sections?: CardMenuSectionData[]
   insert?: (
     insertCommand?: unknown,
     params?: { insertParams?: Record<string, unknown>; queryParams?: string[] },
@@ -230,97 +230,20 @@ export interface CardMenuProps {
   closeMenu?: () => void
 }
 
-/** Groups a flat render-ordered item list back into sections. buildCardMenu
- * emits items section-contiguously (Primary first), so a run of equal labels
- * is one section. */
-function groupItemsBySection(items: CardMenuItemData[]): Array<[string, CardMenuItemData[]]> {
-  const sections: Array<[string, CardMenuItemData[]]> = []
-
-  for (const item of items) {
-    const label = item.section || 'Primary'
-    const current = sections[sections.length - 1]
-
-    if (current && current[0] === label) {
-      current[1].push(item)
-    } else {
-      sections.push([label, [item]])
-    }
-  }
-
-  return sections
-}
-
 export const CardMenu = ({
-  menu,
-  items,
+  sections = [],
   insert = () => {},
   selectedItemIndex = 0,
   scrollToSelectedItem = false,
   closeMenu,
 }: CardMenuProps) => {
-  const sections: Array<[string, CardMenuItemData[]]> = items
-    ? groupItemsBySection(items)
-    : [...(menu ?? new Map<string, CardMenuItemData[]>()).entries()]
-
-  const CardMenuSections: React.ReactElement[] = []
-
-  let itemIndex = 0
-  for (const [sectionLabel, sectionItems] of sections) {
-    const CardMenuItems: React.ReactElement[] = []
-
-    sectionItems.forEach((item) => {
-      const isSelected = itemIndex === selectedItemIndex
-      const onClick = (event: React.MouseEvent): void => {
-        event.preventDefault()
-        event.stopPropagation()
-        insert?.(item.insertCommand, {
-          insertParams: item.insertParams,
-          queryParams: item.queryParams,
-        })
-        trackEvent('Card Added', { card: item.label ?? 'unknown' })
-      }
-
-      if (!item.type || item.type === 'card') {
-        CardMenuItems.push(
-          <CardMenuItem
-            key={itemIndex}
-            Icon={item.Icon}
-            data-inkling-cardmenu-idx={itemIndex}
-            data-testid={item.dataTestId}
-            dataItemId={itemIndex}
-            desc={item.desc}
-            isSelected={isSelected}
-            label={item.label}
-            scrollToItem={isSelected && scrollToSelectedItem}
-            shortcut={item.shortcut}
-            onClick={onClick}
-          />,
-        )
-      } else if (item.type === 'snippet') {
-        CardMenuItems.push(
-          <CardSnippetItem
-            key={itemIndex}
-            closeMenu={closeMenu}
-            dataItemId={itemIndex}
-            dataTestId={item.dataTestId}
-            Icon={item.Icon}
-            isSelected={isSelected}
-            label={item.label}
-            scrollToItem={isSelected && scrollToSelectedItem}
-            onClick={onClick}
-            onRemove={item.onRemove}
-          />,
-        )
-      }
-
-      itemIndex += 1
-    })
-
-    CardMenuSections.push(
-      <CardMenuSection key={sectionLabel} label={sectionLabel}>
-        {CardMenuItems}
-      </CardMenuSection>,
-    )
+  // the flat item index spans section boundaries so the rendered
+  // data-inkling-cardmenu-idx matches buildCardMenu's items ordering
+  const sectionStartIndexes: number[] = []
+  let itemCount = 0
+  for (const section of sections) {
+    sectionStartIndexes.push(itemCount)
+    itemCount += section.items.length
   }
 
   return (
@@ -329,7 +252,60 @@ export const CardMenu = ({
       data-inkling-card-menu
       role="menu"
     >
-      {CardMenuSections}
+      {sections.map((section, sectionIndex) => (
+        <CardMenuSection key={section.label} label={section.label}>
+          {section.items.map((item, itemIndex) => {
+            const index = sectionStartIndexes[sectionIndex] + itemIndex
+            const isSelected = index === selectedItemIndex
+            const onClick = (event: React.MouseEvent): void => {
+              event.preventDefault()
+              event.stopPropagation()
+              insert?.(item.insertCommand, {
+                insertParams: item.insertParams,
+                queryParams: item.queryParams,
+              })
+              trackEvent('Card Added', { card: item.label ?? 'unknown' })
+            }
+
+            if (!item.type || item.type === 'card') {
+              return (
+                <CardMenuItem
+                  key={index}
+                  Icon={item.Icon}
+                  data-inkling-cardmenu-idx={index}
+                  data-testid={item.dataTestId}
+                  dataItemId={index}
+                  desc={item.desc}
+                  isSelected={isSelected}
+                  label={item.label}
+                  scrollToItem={isSelected && scrollToSelectedItem}
+                  shortcut={item.shortcut}
+                  onClick={onClick}
+                />
+              )
+            }
+
+            if (item.type === 'snippet') {
+              return (
+                <CardSnippetItem
+                  key={index}
+                  closeMenu={closeMenu}
+                  dataItemId={index}
+                  dataTestId={item.dataTestId}
+                  Icon={item.Icon}
+                  isSelected={isSelected}
+                  label={item.label}
+                  scrollToItem={isSelected && scrollToSelectedItem}
+                  onClick={onClick}
+                  onRemove={item.onRemove}
+                />
+              )
+            }
+
+            return null
+          })}
+        </CardMenuSection>
+      ))}
     </ul>
   )
 }

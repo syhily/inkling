@@ -46,6 +46,8 @@ describe('useCardMenu', () => {
     expect(result.current.cardMenu.items.length).toBeGreaterThan(0)
     expect(result.current.cardMenu.maxItemIndex).toBe(result.current.cardMenu.items.length - 1)
     expect(result.current.cardMenu.items.map((item) => item.label)).toContain('HTML')
+    // the flat list is derived from the sections, sharing item identity
+    expect(result.current.cardMenu.items).toEqual(result.current.cardMenu.sections.flatMap((section) => section.items))
   })
 
   it('filters the flat list by query', () => {

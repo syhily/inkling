@@ -1,12 +1,11 @@
 import { $generateNodesFromSerializedNodes, $insertGeneratedNodes } from '@lexical/clipboard'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister, $createParagraphNode, $getSelection, COMMAND_PRIORITY_LOW, createCommand } from 'lexical'
+import { mergeRegister, $createParagraphNode, $getSelection, COMMAND_PRIORITY_LOW } from 'lexical'
 import React from 'react'
 
 import { $isInklingCard } from '@/nodes/base'
+import { INSERT_SNIPPET_COMMAND } from '@/nodes/cards/card-commands'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
-
-export const INSERT_SNIPPET_COMMAND = createCommand('INSERT_SNIPPET_COMMAND')
 
 // command payloads cross an untyped runtime boundary (menu dispatch, external
 // consumers), so narrow before parsing the snippet value

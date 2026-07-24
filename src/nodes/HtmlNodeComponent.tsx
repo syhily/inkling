@@ -5,26 +5,27 @@ import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { HtmlCard } from '@/components/ui/cards/HtmlCard'
 import { SettingsPanel } from '@/components/ui/SettingsPanel'
 import { VisibilitySettings } from '@/components/ui/VisibilitySettings'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
+import { useVisibilitySettingsPanel } from '@/hooks/useVisibilitySettingsPanel'
 import { useVisibilityToggle } from '@/hooks/useVisibilityToggle'
 import { $updateCardNode } from '@/nodes/base'
 import { $isHtmlNode } from '@/nodes/HtmlNode'
-import { SHOW_CARD_VISIBILITY_SETTINGS_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
 export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: string }) {
   const [editor] = useLexicalComposerContext()
-  const cardContext = React.useContext(CardContext)
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const { darkMode } = React.useContext(InklingUiPrefsContext)
 
+  const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
+  const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
   // the sole indicator-icon card reads the visibility panel flag straight
   // from the card selection store, gated by its own selected state below
   const showVisibilitySettings = useCardSelection((state) => state.showVisibilitySettings)
 
-  const { isVisibilityEnabled, visibilityOptions, toggleVisibility } = useVisibilityToggle(editor, nodeKey, cardConfig)
+  const { isVisibilityEnabled, openPanel } = useVisibilitySettingsPanel(nodeKey)
+  const { visibilityOptions, toggleVisibility } = useVisibilityToggle(editor, nodeKey, cardConfig)
 
   const updateHtml = (value: string) => {
     editor.update(() => {
@@ -38,18 +39,9 @@ export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: s
     <VisibilitySettings toggleVisibility={toggleVisibility} visibilityOptions={visibilityOptions} />
   )
 
-  const handleVisibilityToggle = React.useCallback(
-    (event: React.MouseEvent) => {
-      event.preventDefault()
-      event.stopPropagation()
-      editor.dispatchCommand(SHOW_CARD_VISIBILITY_SETTINGS_COMMAND, { cardKey: nodeKey })
-    },
-    [editor, nodeKey],
-  )
-
   return (
     <>
-      <HtmlCard darkMode={darkMode} html={html} isEditing={cardContext.isEditing} updateHtml={updateHtml} />
+      <HtmlCard darkMode={darkMode} html={html} isEditing={isEditing} updateHtml={updateHtml} />
 
       <CardActionToolbar
         card="html"
@@ -63,7 +55,7 @@ export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: s
             icon: 'visibility',
             isActive: showVisibilitySettings,
             label: 'Visibility',
-            onClick: handleVisibilityToggle,
+            onClick: openPanel,
           },
           { kind: 'separator' },
           { kind: 'snippet' },
@@ -71,7 +63,7 @@ export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: s
         nodeKey={nodeKey}
       />
 
-      {isVisibilityEnabled && showVisibilitySettings && cardContext.isSelected && (
+      {isVisibilityEnabled && showVisibilitySettings && isSelected && (
         <SettingsPanel darkMode={darkMode} defaultTab="visibility" tabs>
           {{ visibility: visibilitySettings }}
         </SettingsPanel>

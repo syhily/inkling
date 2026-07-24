@@ -13,16 +13,11 @@ import type { CardNode } from '@/types/lexical-internals'
 
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import CardContext from '@/context/CardContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
 import { useDragDropState } from '@/hooks/useDragDropState'
+import { useVisibilitySettingsPanel } from '@/hooks/useVisibilitySettingsPanel'
 import { type CardWidth } from '@/nodes/base/utils/card-widths'
-import {
-  EDIT_CARD_COMMAND,
-  SELECT_CARD_COMMAND,
-  SHOW_CARD_VISIBILITY_SETTINGS_COMMAND,
-} from '@/plugins/behaviour/commands'
-import { VISIBILITY_SETTINGS } from '@/utils/visibility'
+import { EDIT_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 interface InklingCardWrapperProps {
   nodeKey: NodeKey
@@ -45,12 +40,10 @@ function $isCardNode(node: LexicalNode | null): node is CardNode {
 }
 
 const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, children }: InklingCardWrapperProps) => {
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const [editor] = useLexicalComposerContext()
   const [cardType, setCardType] = React.useState<string | null>(null)
   const [captionHasFocus, setCaptionHasFocus] = React.useState(false)
   const normalizedWidth = width ?? 'regular'
-  const [cardWidth, setCardWidth] = React.useState<CardWidth>(normalizedWidth)
   const containerRef = React.useRef<HTMLDivElement | null>(null)
   const skipClick = React.useRef(false)
 
@@ -61,14 +54,7 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
   const isSelected = selectedCardKey === nodeKey
   const isEditing = isSelected && isEditingCard
 
-  const handleVisibilityToggle = React.useCallback(
-    (event: React.MouseEvent) => {
-      event.preventDefault()
-      event.stopPropagation()
-      editor.dispatchCommand(SHOW_CARD_VISIBILITY_SETTINGS_COMMAND, { cardKey: nodeKey })
-    },
-    [editor, nodeKey],
-  )
+  const { isVisibilityEnabled, openPanel } = useVisibilitySettingsPanel(nodeKey)
 
   React.useLayoutEffect(() => {
     editor.getEditorState().read(() => {
@@ -144,22 +130,6 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
     }
   }, [normalizedWidth])
 
-  // the width prop (resolved from the node via the card's declaration) is the
-  // source of truth; the context state follows it so toolbar active states and
-  // the figure attribute track external node changes (undo/redo, collab).
-  // Toolbar writers still dual-write node + state for immediate feedback.
-  React.useEffect(() => {
-    setCardWidth(normalizedWidth)
-  }, [normalizedWidth])
-
-  const setEditing = (shouldEdit: boolean) => {
-    if (shouldEdit) {
-      editor.dispatchCommand(EDIT_CARD_COMMAND, { cardKey: nodeKey })
-    } else if (!isSelected) {
-      editor.dispatchCommand(SELECT_CARD_COMMAND, { cardKey: nodeKey })
-    }
-  }
-
   React.useEffect(() => {
     const container = containerRef.current
 
@@ -195,7 +165,7 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
   }, [editor, isSelected, isEditing, nodeKey, containerRef])
 
   let isVisibilityActive = false
-  if (cardConfig.visibilitySettings !== VISIBILITY_SETTINGS.NONE) {
+  if (isVisibilityEnabled) {
     editor.getEditorState().read(() => {
       const node = $getNodeByKey(nodeKey)
       isVisibilityActive = $isCardNode(node) ? node.getIsVisibilityActive() : false
@@ -204,18 +174,13 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
 
   const cardContextValue = React.useMemo(
     () => ({
-      isSelected,
       captionHasFocus,
-      isEditing,
-      cardWidth,
-      setCardWidth,
       setCaptionHasFocus,
-      setEditing,
       nodeKey,
     }),
     // setState dispatchers are stable and do not need to be listed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isSelected, captionHasFocus, isEditing, cardWidth, nodeKey],
+    [captionHasFocus, nodeKey],
   )
 
   return (
@@ -230,7 +195,7 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
         isSelected={isSelected}
         isVisibilityActive={isVisibilityActive}
         wrapperStyle={wrapperStyle}
-        onIndicatorClick={handleVisibilityToggle}
+        onIndicatorClick={openPanel}
       >
         {children}
       </CardWrapper>

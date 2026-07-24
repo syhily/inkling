@@ -144,7 +144,6 @@ const cardConfig: CardConfig = {
   ...snippetSettings,
   ...uploadSettings,
   ...visibilitySettings,
-  post: { displayName: 'post' },
 }
 const composerWithConfig = (
   <InklingComposer cardConfig={cardConfig} fileUploader={fileUploader}>

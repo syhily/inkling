@@ -1,6 +1,6 @@
 import type { FileData } from '@/nodes/base/nodes/file/FileNode'
 
-import { assembleCardNode } from '@/nodes/assemble-card-node'
+import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { fileDeclaration } from '@/nodes/cards/file.declaration'
 
 export { $isFileNode } from '@/nodes/base/nodes/file/FileNode'
@@ -17,7 +17,7 @@ export type FileNodeDataset = FileData & {
  * is canonical on the base node. `$createFileNode` keeps constructing the
  * assembled class so the transient-prop spec is initialized.
  */
-export const FileNode = assembleCardNode(fileDeclaration)
+export const FileNode = assembleCardNodeOnce(fileDeclaration)
 export type FileNode = InstanceType<typeof FileNode> & {
   __triggerFileDialog: boolean
   __initialFile: File | undefined

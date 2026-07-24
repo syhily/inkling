@@ -55,16 +55,11 @@ function GalleryCardStory({
 
   const cardContextValue = React.useMemo(
     () => ({
-      isSelected,
-      isEditing,
       captionHasFocus: false,
-      cardWidth: 'regular' as const,
       nodeKey: undefined,
-      setCardWidth: () => {},
       setCaptionHasFocus: () => {},
-      setEditing: () => {},
     }),
-    [isSelected, isEditing],
+    [],
   )
 
   return (

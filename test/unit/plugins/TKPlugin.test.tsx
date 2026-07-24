@@ -5,9 +5,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
 import CardContext, { type CardContextValue } from '@/context/CardContext'
-import { useTKContext, type TKContextValue } from '@/context/TKContext'
+import { TKHandleContext } from '@/context/TKHandleContext'
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
 import { ExtendedTextNode, TKNode } from '@/nodes/base'
+import { createTKHandle, type TKHandle } from '@/plugins/behaviour/tkHandle'
 import TKPlugin from '@/plugins/TKPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -18,39 +19,15 @@ vi.mock('../../../src/hooks/useInklingTextEntity', () => ({
   useInklingTextEntity: vi.fn(),
 }))
 
-vi.mock('../../../src/context/TKContext', async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>
-  return {
-    ...actual,
-    useTKContext: vi.fn(),
-  }
-})
-
 function createTestEditor(nodes: LexicalNodeConfig[] = []): LexicalEditor {
   return createEditor({ namespace: 'test', nodes, onError: () => {} })
 }
 
-function createTKContextValue(overrides: Partial<TKContextValue> = {}): TKContextValue {
-  return {
-    tkNodeMap: {},
-    tkCount: 0,
-    addEditorTkNode: vi.fn(),
-    removeEditorTkNode: vi.fn(),
-    removeEditor: vi.fn(),
-    ...overrides,
-  }
-}
-
 function createCardContextValue(overrides: Partial<CardContextValue> = {}): CardContextValue {
   return {
-    isSelected: false,
-    isEditing: false,
     captionHasFocus: false,
-    cardWidth: 'regular',
     nodeKey: undefined,
-    setCardWidth: vi.fn(),
     setCaptionHasFocus: vi.fn(),
-    setEditing: vi.fn(),
     ...overrides,
   }
 }
@@ -59,32 +36,35 @@ function mockComposerEditor(editor: LexicalEditor) {
   mockComposerContext(editor)
 }
 
-function mockTKContext(value: TKContextValue) {
-  vi.mocked(useTKContext).mockReturnValue(value)
+function renderTKPlugin(handle: TKHandle, cardValue: CardContextValue) {
+  return render(
+    <TKHandleContext.Provider value={handle}>
+      <CardContext.Provider value={cardValue}>
+        <TKPlugin />
+      </CardContext.Provider>
+    </TKHandleContext.Provider>,
+  )
 }
 
 describe('TKPlugin', () => {
   let editor: LexicalEditor
+  let handle: TKHandle
 
   beforeEach(() => {
     vi.clearAllMocks()
     document.body.innerHTML = '<div data-lexical-editor="true"></div>'
+    handle = createTKHandle()
   })
 
   it('throws when TKNode is not registered', () => {
     editor = createTestEditor()
     mockComposerEditor(editor)
-    mockTKContext(createTKContextValue())
 
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const cardValue = createCardContextValue()
     expect(() => {
-      render(
-        <CardContext.Provider value={cardValue}>
-          <TKPlugin />
-        </CardContext.Provider>,
-      )
+      renderTKPlugin(handle, cardValue)
     }).toThrow('TKPlugin: TKNode not registered on editor')
 
     consoleError.mockRestore()
@@ -93,14 +73,9 @@ describe('TKPlugin', () => {
   it('returns null when in nested editor', () => {
     editor = createTestEditor([TKNode, ExtendedTextNode])
     mockComposerEditor(editor)
-    mockTKContext(createTKContextValue())
 
     const cardValue = createCardContextValue({ nodeKey: 'card-1' })
-    const { container } = render(
-      <CardContext.Provider value={cardValue}>
-        <TKPlugin />
-      </CardContext.Provider>,
-    )
+    const { container } = renderTKPlugin(handle, cardValue)
 
     expect(container.firstChild).toBeNull()
   })
@@ -108,17 +83,12 @@ describe('TKPlugin', () => {
   it('returns null when editor has no root parent', () => {
     editor = createTestEditor([TKNode, ExtendedTextNode])
     mockComposerEditor(editor)
-    mockTKContext(createTKContextValue())
 
     // Ensure getRootElement returns null
     editor.setRootElement(null)
 
     const cardValue = createCardContextValue()
-    const { container } = render(
-      <CardContext.Provider value={cardValue}>
-        <TKPlugin />
-      </CardContext.Provider>,
-    )
+    const { container } = renderTKPlugin(handle, cardValue)
 
     expect(container.firstChild).toBeNull()
   })
@@ -132,11 +102,12 @@ describe('TKPlugin', () => {
     paragraph.setAttribute('data-lexical-decorator', 'true')
     document.body.appendChild(paragraph)
 
-    const tkNodeMap = {
-      'paragraph-key': ['tk-1', 'tk-2'],
-    }
-
-    mockTKContext(createTKContextValue({ tkNodeMap }))
+    handle.setState({
+      tkNodeMap: {
+        'paragraph-key': ['tk-1', 'tk-2'],
+      },
+      tkCount: 2,
+    })
 
     vi.spyOn(editor, 'getElementByKey').mockImplementation((key: string) => {
       if (key === 'paragraph-key') {
@@ -146,11 +117,7 @@ describe('TKPlugin', () => {
     })
 
     const cardValue = createCardContextValue()
-    render(
-      <CardContext.Provider value={cardValue}>
-        <TKPlugin />
-      </CardContext.Provider>,
-    )
+    renderTKPlugin(handle, cardValue)
 
     expect(screen.getAllByTestId('tk-indicator')).toHaveLength(1)
   })
@@ -160,20 +127,17 @@ describe('TKPlugin', () => {
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
 
-    const tkNodeMap = {
-      'missing-key': ['tk-1'],
-    }
-
-    mockTKContext(createTKContextValue({ tkNodeMap }))
+    handle.setState({
+      tkNodeMap: {
+        'missing-key': ['tk-1'],
+      },
+      tkCount: 1,
+    })
 
     vi.spyOn(editor, 'getElementByKey').mockReturnValue(null)
 
     const cardValue = createCardContextValue()
-    const { container } = render(
-      <CardContext.Provider value={cardValue}>
-        <TKPlugin />
-      </CardContext.Provider>,
-    )
+    const { container } = renderTKPlugin(handle, cardValue)
 
     expect(container.firstChild).toBeNull()
   })
@@ -183,15 +147,10 @@ describe('TKPlugin', () => {
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
 
-    const removeEditor = vi.fn()
-    mockTKContext(createTKContextValue({ removeEditor }))
+    const removeEditor = vi.spyOn(handle, 'removeEditor')
 
     const cardValue = createCardContextValue()
-    const { unmount } = render(
-      <CardContext.Provider value={cardValue}>
-        <TKPlugin />
-      </CardContext.Provider>,
-    )
+    const { unmount } = renderTKPlugin(handle, cardValue)
 
     unmount()
     expect(removeEditor).toHaveBeenCalledWith(editor.getKey())
@@ -201,14 +160,9 @@ describe('TKPlugin', () => {
     editor = createTestEditor([TKNode, ExtendedTextNode])
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
-    mockTKContext(createTKContextValue())
 
     const cardValue = createCardContextValue()
-    render(
-      <CardContext.Provider value={cardValue}>
-        <TKPlugin />
-      </CardContext.Provider>,
-    )
+    renderTKPlugin(handle, cardValue)
 
     const [getTKMatch] = vi.mocked(useInklingTextEntity).mock.calls[0]
     expect(getTKMatch('hello world')).toBeNull()
@@ -218,14 +172,9 @@ describe('TKPlugin', () => {
     editor = createTestEditor([TKNode, ExtendedTextNode])
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
-    mockTKContext(createTKContextValue())
 
     const cardValue = createCardContextValue()
-    render(
-      <CardContext.Provider value={cardValue}>
-        <TKPlugin />
-      </CardContext.Provider>,
-    )
+    renderTKPlugin(handle, cardValue)
 
     const [getTKMatch] = vi.mocked(useInklingTextEntity).mock.calls[0]
     const match = getTKMatch('hello TK')
@@ -240,14 +189,9 @@ describe('TKPlugin', () => {
     editor = createTestEditor([TKNode, ExtendedTextNode])
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
-    mockTKContext(createTKContextValue())
 
     const cardValue = createCardContextValue()
-    render(
-      <CardContext.Provider value={cardValue}>
-        <TKPlugin />
-      </CardContext.Provider>,
-    )
+    renderTKPlugin(handle, cardValue)
 
     const [getTKMatch] = vi.mocked(useInklingTextEntity).mock.calls[0]
     expect(getTKMatch('wordTK')).toBeNull()
@@ -257,14 +201,9 @@ describe('TKPlugin', () => {
     editor = createTestEditor([TKNode, ExtendedTextNode])
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
-    mockTKContext(createTKContextValue())
 
     const cardValue = createCardContextValue()
-    render(
-      <CardContext.Provider value={cardValue}>
-        <TKPlugin />
-      </CardContext.Provider>,
-    )
+    renderTKPlugin(handle, cardValue)
 
     const [, , createTKNode] = vi.mocked(useInklingTextEntity).mock.calls[0]
 

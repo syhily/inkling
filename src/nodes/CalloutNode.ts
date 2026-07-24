@@ -2,7 +2,7 @@ import type { EditorState, LexicalEditor } from 'lexical'
 
 import type { CalloutData } from '@/nodes/base/nodes/callout/CalloutNode'
 
-import { assembleCardNode } from '@/nodes/assemble-card-node'
+import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { calloutDeclaration } from '@/nodes/cards/callout.declaration'
 
 export { $isCalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
@@ -22,7 +22,7 @@ export type CalloutNodeDataset = CalloutData & {
  * is canonical on the base node. `$createCalloutNode` keeps constructing the
  * assembled class so the nested-editor spec is set up.
  */
-export const CalloutNode = assembleCardNode(calloutDeclaration)
+export const CalloutNode = assembleCardNodeOnce(calloutDeclaration)
 export type CalloutNode = InstanceType<typeof CalloutNode> & {
   __calloutTextEditor: LexicalEditor | null
   __calloutTextEditorInitialState: EditorState | undefined

@@ -93,6 +93,19 @@ describe('DragDropHandler', () => {
     h.destroy()
   })
 
+  it('forwards scrollHandlerOptions to its ScrollHandler', () => {
+    const scrollContainer = document.createElement('div')
+    scrollContainer.className = 'my-scroll-container'
+    const target = document.createElement('div')
+    scrollContainer.appendChild(target)
+    document.body.appendChild(scrollContainer)
+
+    const h = new DragDropHandler({ scrollHandlerOptions: { documentScrollContainerSelector: '.my-scroll-container' } })
+
+    expect(h.scrollHandler.getScrollableElement(target)).toBe(scrollContainer)
+    h.destroy()
+  })
+
   it('registers and destroys containers', () => {
     const containerElement = createContainer('register')
     const handlers = createHandlers()

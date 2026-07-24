@@ -1,12 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
-import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { GalleryImage } from '@/types/gallery'
 
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext, {
   type CardConfig,
   type FileUploader,
@@ -32,20 +31,15 @@ function createTestEditor(): LexicalEditor {
   return createEditor({ namespace: 'test', nodes: [GalleryNode], onError: () => {} })
 }
 
-function createCardContext(
-  overrides: Partial<React.ContextType<typeof CardContext>> = {},
-): React.ContextType<typeof CardContext> {
-  return {
-    isSelected: true,
-    isEditing: false,
-    captionHasFocus: false,
-    cardWidth: 'regular',
-    nodeKey: 'gallery-1',
-    setCardWidth: vi.fn(),
-    setCaptionHasFocus: vi.fn(),
-    setEditing: vi.fn(),
-    ...overrides,
-  }
+// the store equivalent of the old per-test CardContext factory: the card is
+// selected and not editing unless a test says otherwise
+function createSelection(
+  nodeKey: NodeKey | string,
+  { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
+) {
+  return createCardSelectionStoreWrapper({
+    initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
+  })
 }
 
 function createComposerContext(
@@ -110,16 +104,16 @@ describe('GalleryNodeComponent', () => {
 
   function renderComponent(nodeKey: NodeKey, upload?: ReturnType<FileUploader['useFileUpload']>['upload']) {
     const composerValue = createComposerContext(upload)
-    const cardValue = createCardContext()
+    const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     return render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
-        <CardContext.Provider value={cardValue}>
+        <CardSelectionStoreProvider>
           <GalleryNodeComponent
             captionEditor={createTestEditor()}
             captionEditorInitialState={undefined}
             nodeKey={nodeKey}
           />
-        </CardContext.Provider>
+        </CardSelectionStoreProvider>
       </InklingHostIntegrationContext.Provider>,
     )
   }
@@ -240,20 +234,20 @@ describe('GalleryNodeComponent', () => {
   describe('action toolbar', () => {
     function renderWithToolbar(
       nodeKey: NodeKey,
-      cardOverrides: Record<string, unknown> = {},
+      selection: { selected?: boolean; editing?: boolean } = {},
       cardConfig: Record<string, unknown> = {},
     ) {
       const composerValue = createComposerContext(undefined, cardConfig)
-      const cardValue = createCardContext(cardOverrides)
+      const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
-          <CardContext.Provider value={cardValue}>
+          <CardSelectionStoreProvider>
             <GalleryNodeComponent
               captionEditor={createTestEditor()}
               captionEditorInitialState={undefined}
               nodeKey={nodeKey}
             />
-          </CardContext.Provider>
+          </CardSelectionStoreProvider>
         </InklingHostIntegrationContext.Provider>,
       )
     }
@@ -264,7 +258,7 @@ describe('GalleryNodeComponent', () => {
 
     it('hides the toolbar when the card is not selected', async () => {
       const nodeKey = await addGalleryNode(editor)
-      const { container } = renderWithToolbar(nodeKey, { isSelected: false })
+      const { container } = renderWithToolbar(nodeKey, { selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
@@ -272,21 +266,21 @@ describe('GalleryNodeComponent', () => {
     it('keeps the toolbar visible while the card is editing', async () => {
       // gallery's menu toolbar has no !isEditing factor
       const nodeKey = await addGalleryNode(editor)
-      const { container } = renderWithToolbar(nodeKey, { isSelected: true, isEditing: true })
+      const { container } = renderWithToolbar(nodeKey, { selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(1)
     })
 
     it('hides the toolbar when the gallery has no images', async () => {
       const nodeKey = await addGalleryNode(editor, [])
-      const { container } = renderWithToolbar(nodeKey, { isSelected: true })
+      const { container } = renderWithToolbar(nodeKey)
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('hides the toolbar while files are dragged over the card', async () => {
       const nodeKey = await addGalleryNode(editor)
-      const { container } = renderWithToolbar(nodeKey, { isSelected: true })
+      const { container } = renderWithToolbar(nodeKey)
 
       expect(getToolbars(container)).toHaveLength(1)
 
@@ -299,7 +293,7 @@ describe('GalleryNodeComponent', () => {
 
     it('renders add-images, separator, and snippet items when selected', async () => {
       const nodeKey = await addGalleryNode(editor)
-      const { container } = renderWithToolbar(nodeKey, { isSelected: true }, { createSnippet: vi.fn() })
+      const { container } = renderWithToolbar(nodeKey, {}, { createSnippet: vi.fn() })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -315,7 +309,7 @@ describe('GalleryNodeComponent', () => {
 
     it('hides the snippet item and its separator when createSnippet is not configured', async () => {
       const nodeKey = await addGalleryNode(editor)
-      const { container } = renderWithToolbar(nodeKey, { isSelected: true })
+      const { container } = renderWithToolbar(nodeKey)
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
@@ -325,7 +319,7 @@ describe('GalleryNodeComponent', () => {
 
     it('clicks the hidden file input when the add-images item is clicked', async () => {
       const nodeKey = await addGalleryNode(editor)
-      renderWithToolbar(nodeKey, { isSelected: true })
+      renderWithToolbar(nodeKey)
 
       const input = document.querySelector('input[type="file"]') as HTMLInputElement
       const clickSpy = vi.spyOn(input, 'click')
@@ -336,7 +330,7 @@ describe('GalleryNodeComponent', () => {
 
     it('opens the snippet input when the snippet item is clicked', async () => {
       const nodeKey = await addGalleryNode(editor)
-      const { container } = renderWithToolbar(nodeKey, { isSelected: true }, { createSnippet: vi.fn() })
+      const { container } = renderWithToolbar(nodeKey, {}, { createSnippet: vi.fn() })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

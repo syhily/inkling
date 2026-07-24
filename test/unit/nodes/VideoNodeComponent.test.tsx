@@ -2,10 +2,9 @@ import { CollaborationContext } from '@lexical/react/LexicalCollaborationContext
 import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
-import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi, type MockedFunction } from 'vitest'
 
-import CardContext from '@/context/CardContext'
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import InklingHostIntegrationContext, {
   type CardConfig,
   type FileUploader,
@@ -14,6 +13,7 @@ import InklingHostIntegrationContext, {
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { VideoNode, $createVideoNode } from '@/nodes/VideoNode'
 import { VideoNodeComponent } from '@/nodes/VideoNodeComponent'
+import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import extractVideoMetadata from '@/utils/extractVideoMetadata'
 import { openFileSelection } from '@/utils/openFileSelection'
 
@@ -32,20 +32,15 @@ function createTestEditor(): LexicalEditor {
   return editor
 }
 
-function createCardContext(
-  overrides: Partial<React.ContextType<typeof CardContext>> = {},
-): React.ContextType<typeof CardContext> {
-  return {
-    isSelected: true,
-    isEditing: true,
-    captionHasFocus: false,
-    cardWidth: 'regular' as const,
-    nodeKey: 'video-1',
-    setCardWidth: vi.fn(),
-    setCaptionHasFocus: vi.fn(),
-    setEditing: vi.fn(),
-    ...overrides,
-  }
+// the store equivalent of the old per-test CardContext factory: the card is
+// selected and editing unless a test says otherwise
+function createSelection(
+  nodeKey: NodeKey | string = 'video-1',
+  { selected = true, editing = true }: { selected?: boolean; editing?: boolean } = {},
+) {
+  return createCardSelectionStoreWrapper({
+    initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
+  })
 }
 
 function createCollaborationContext() {
@@ -179,13 +174,13 @@ describe('VideoNodeComponent', () => {
     const collaborationValue = createCollaborationContext()
     const composerValue = createLexicalComposerContext(editor)
     const inklingComposerValue = createComposerContext(uploads)
-    const cardValue = createCardContext({ nodeKey })
+    const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
 
     return render(
       <CollaborationContext.Provider value={collaborationValue}>
         <LexicalComposerContext.Provider value={composerValue}>
           <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
-            <CardContext.Provider value={cardValue}>
+            <CardSelectionStoreProvider>
               <VideoNodeComponent
                 captionEditor={captionEditor}
                 captionEditorInitialState={undefined}
@@ -198,7 +193,7 @@ describe('VideoNodeComponent', () => {
                 totalDuration="1:23"
                 triggerFileDialog={triggerFileDialog}
               />
-            </CardContext.Provider>
+            </CardSelectionStoreProvider>
           </InklingHostIntegrationContext.Provider>
         </LexicalComposerContext.Provider>
       </CollaborationContext.Provider>,
@@ -426,19 +421,19 @@ describe('VideoNodeComponent', () => {
 
   describe('action toolbar', () => {
     function renderWithToolbar(
-      cardOverrides: Record<string, unknown> = {},
+      selection: { selected?: boolean; editing?: boolean } = {},
       { thumbnail = 'https://example.com/thumb.jpg', customThumbnail = '', cardConfig = {} } = {},
     ) {
       const collaborationValue = createCollaborationContext()
       const composerValue = createLexicalComposerContext(editor)
       const inklingComposerValue = createComposerContext({}, cardConfig)
-      const cardValue = createCardContext(cardOverrides)
+      const { wrapper: CardSelectionStoreProvider } = createSelection('video-1', { editing: false, ...selection })
 
       return render(
         <CollaborationContext.Provider value={collaborationValue}>
           <LexicalComposerContext.Provider value={composerValue}>
             <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
-              <CardContext.Provider value={cardValue}>
+              <CardSelectionStoreProvider>
                 <VideoNodeComponent
                   captionEditor={captionEditor}
                   captionEditorInitialState={undefined}
@@ -451,7 +446,7 @@ describe('VideoNodeComponent', () => {
                   totalDuration="1:23"
                   triggerFileDialog={false}
                 />
-              </CardContext.Provider>
+              </CardSelectionStoreProvider>
             </InklingHostIntegrationContext.Provider>
           </LexicalComposerContext.Provider>
         </CollaborationContext.Provider>,
@@ -463,26 +458,26 @@ describe('VideoNodeComponent', () => {
     }
 
     it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar({ isSelected: false, isEditing: false })
+      const { container } = renderWithToolbar({ selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('hides the toolbar while the card is editing', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: true })
+      const { container } = renderWithToolbar({ selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('hides the toolbar when the card has no thumbnail', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false }, { thumbnail: '' })
+      const { container } = renderWithToolbar({ selected: true }, { thumbnail: '' })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('shows the toolbar when only a custom thumbnail is set', () => {
       const { container } = renderWithToolbar(
-        { isSelected: true, isEditing: false },
+        { selected: true },
         { thumbnail: '', customThumbnail: 'https://example.com/custom.jpg' },
       )
 
@@ -490,10 +485,7 @@ describe('VideoNodeComponent', () => {
     })
 
     it('renders edit, separator, and snippet items when selected and populated', () => {
-      const { container } = renderWithToolbar(
-        { isSelected: true, isEditing: false },
-        { cardConfig: { createSnippet: vi.fn() } },
-      )
+      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -508,7 +500,7 @@ describe('VideoNodeComponent', () => {
     })
 
     it('hides the snippet item and its separator when createSnippet is not configured', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
+      const { container } = renderWithToolbar({ selected: true })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
@@ -516,20 +508,17 @@ describe('VideoNodeComponent', () => {
       expect(screen.queryByTestId('create-snippet')).toBeNull()
     })
 
-    it('enters edit mode through the card context when the edit item is clicked', () => {
-      const setEditing = vi.fn()
-      renderWithToolbar({ isSelected: true, isEditing: false, setEditing })
+    it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', () => {
+      const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
+      renderWithToolbar({ selected: true })
 
       fireEvent.click(screen.getByTestId('edit-video-card'))
 
-      expect(setEditing).toHaveBeenCalledWith(true)
+      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: 'video-1' })
     })
 
     it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderWithToolbar(
-        { isSelected: true, isEditing: false },
-        { cardConfig: { createSnippet: vi.fn() } },
-      )
+      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

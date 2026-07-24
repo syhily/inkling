@@ -94,13 +94,14 @@ export class BaseBookmarkNode extends generateDecoratorNode({
 
   /* override */
   constructor({ url, metadata, caption, captionEditor }: BookmarkData & CaptionEditorDataset = {}, key?: string) {
-    // Forward the caption and a passed-in caption editor so the generated
-    // constructor can run the nested-editor setup/populate for wrapper
-    // subclasses that adopt a `nestedEditors` spec (a no-op on this class).
-    // __caption is set by super from the same value (?? '' matches || '' for
-    // the string-typed dataset); the metadata remap below covers the keys
+    // Forward the url, metadata, caption, and a passed-in caption editor so
+    // the generated constructor can run the nested-editor setup/populate and
+    // the transient-prop initialization (`createdWithUrl` reads url/metadata)
+    // for subclasses that adopt the specs — both no-ops on this class. The
+    // assignments below re-set the fields from the same values (?? '' matches
+    // || '' for the string-typed dataset); the metadata remap covers the keys
     // super never received.
-    super({ caption, captionEditor }, key)
+    super({ url, metadata, caption, captionEditor }, key)
     this.__url = url || ''
     this.__icon = metadata?.icon || ''
     this.__title = metadata?.title || ''

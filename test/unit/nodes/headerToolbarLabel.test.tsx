@@ -2,10 +2,9 @@ import { CollaborationContext } from '@lexical/react/LexicalCollaborationContext
 import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { createEditor, type LexicalEditor } from 'lexical'
-import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import CardContext from '@/context/CardContext'
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import HeaderNodeComponent from '@/nodes/header/HeaderNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
@@ -20,22 +19,6 @@ function createLexicalComposerContext(editor: LexicalEditor): [LexicalEditor, { 
 
 function createCollaborationContext() {
   return { color: '#000000', isCollabActive: false, name: 'test', yjsDocMap: new Map() }
-}
-
-function createCardContext(
-  overrides: Partial<React.ContextType<typeof CardContext>> = {},
-): React.ContextType<typeof CardContext> {
-  return {
-    isSelected: true,
-    isEditing: false,
-    captionHasFocus: false,
-    cardWidth: 'regular',
-    nodeKey: 'header-1',
-    setCardWidth: vi.fn(),
-    setCaptionHasFocus: vi.fn(),
-    setEditing: vi.fn(),
-    ...overrides,
-  }
 }
 
 function createComposerContext(cardConfig: Record<string, unknown> = {}) {
@@ -66,13 +49,15 @@ describe('headerToolbarLabel', () => {
     const collaborationValue = createCollaborationContext()
     const composerValue = createLexicalComposerContext(editor)
     const inklingComposerValue = createComposerContext({ createSnippet: vi.fn() })
-    const cardValue = createCardContext()
+    const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper({
+      initialState: { selectedCardKey: 'header-1' },
+    })
 
     const { container } = render(
       <CollaborationContext.Provider value={collaborationValue}>
         <LexicalComposerContext.Provider value={composerValue}>
           <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
-            <CardContext.Provider value={cardValue}>
+            <CardSelectionStoreProvider>
               <HeaderNodeComponent
                 alignment="left"
                 backgroundColor="transparent"
@@ -96,7 +81,7 @@ describe('headerToolbarLabel', () => {
                 })}
                 textColor=""
               />
-            </CardContext.Provider>
+            </CardSelectionStoreProvider>
           </InklingHostIntegrationContext.Provider>
         </LexicalComposerContext.Provider>
       </CollaborationContext.Provider>,

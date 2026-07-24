@@ -1,4 +1,4 @@
-import { render, renderHook, waitFor } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import React from 'react'
 import { describe, expect, it } from 'vitest'
 
@@ -11,7 +11,6 @@ import {
   useSharedEditorStateContext,
   type SharedEditorStateContextValue,
 } from '@/context/SharedEditorStateContext'
-import { TKContext, useTKContext } from '@/context/TKContext'
 
 describe('InklingHostIntegrationContext', () => {
   it('provides the default context value', () => {
@@ -71,37 +70,9 @@ describe('CardContext', () => {
 
     render(<Consumer />)
 
-    expect(captured!.isSelected).toBe(false)
-    expect(captured!.cardWidth).toBe('regular')
-    expect(typeof captured!.setEditing).toBe('function')
-  })
-})
-
-describe('TKContext', () => {
-  it('tracks tk nodes per editor', async () => {
-    const { result } = renderHook(() => useTKContext(), {
-      wrapper: TKContext,
-    })
-
-    expect(result.current.tkCount).toBe(0)
-    expect(result.current.tkNodeMap).toEqual({})
-
-    result.current.addEditorTkNode('editor-1', 'top-1', 'tk-1')
-    await waitFor(() => {
-      expect(result.current.tkCount).toBe(1)
-      expect(result.current.tkNodeMap['top-1']).toContain('tk-1')
-    })
-
-    result.current.removeEditorTkNode('editor-1', 'tk-1')
-    await waitFor(() => {
-      expect(result.current.tkCount).toBe(0)
-    })
-
-    result.current.addEditorTkNode('editor-1', 'top-1', 'tk-2')
-    result.current.removeEditor('editor-1')
-    await waitFor(() => {
-      expect(result.current.tkCount).toBe(0)
-    })
+    expect(captured!.captionHasFocus).toBe(false)
+    expect(captured!.nodeKey).toBeUndefined()
+    expect(typeof captured!.setCaptionHasFocus).toBe('function')
   })
 })
 

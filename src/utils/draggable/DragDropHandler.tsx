@@ -7,13 +7,12 @@ import {
   DRAGGABLE_SELECTOR,
   DRAG_DISABLED_SELECTOR,
   DROPPABLE_SELECTOR,
-  DROP_INDICATOR_ID,
-  DROP_INDICATOR_ZINDEX,
   INKLING_ZINDEX,
   INKLING_CONTAINER_ID,
 } from '@/utils/draggable/draggable-constants'
 import { applyUserSelect, getParent } from '@/utils/draggable/draggable-utils'
-import { ScrollHandler } from '@/utils/draggable/ScrollHandler'
+import { DropIndicator } from '@/utils/draggable/drop-indicator'
+import { ScrollHandler, type ScrollHandlerOptions } from '@/utils/draggable/ScrollHandler'
 
 interface EventHandlerEntry {
   handler: (e: Event) => void
@@ -27,6 +26,13 @@ export interface DraggableContainerHandle {
   destroy: () => void
 }
 
+export interface DragDropHandlerOptions {
+  editorContainerElement?: HTMLElement
+  // forwarded to the ScrollHandler — e.g. to point its document scroll
+  // container override at a custom selector
+  scrollHandlerOptions?: ScrollHandlerOptions
+}
+
 export class DragDropHandler {
   eventEmitter: EventEmitter
   editorContainerElement: HTMLElement | null = null
@@ -37,9 +43,9 @@ export class DragDropHandler {
   grabbedElement: HTMLElement | null = null
   sourceContainer: DragDropContainer | null = null
   scrollHandler: ScrollHandler
+  dropIndicator: DropIndicator
 
   _activeDrag: ActiveDrag | null = null
-  _dropIndicator: HTMLElement | null = null
   _eventHandlers: Record<string, EventHandlerEntry> = {}
   _dragPreviewContainerElement: HTMLElement | null = null
   _rafUpdateDragPreviewElementPosition: () => void
@@ -55,11 +61,12 @@ export class DragDropHandler {
 
   // lifecycle ---------------------------------------------------------------
 
-  constructor({ editorContainerElement }: { editorContainerElement?: HTMLElement } = {}) {
+  constructor({ editorContainerElement, scrollHandlerOptions }: DragDropHandlerOptions = {}) {
     this.editorContainerElement =
       editorContainerElement ?? document.querySelector('[data-inkling="editor"] [data-lexical-editor]')
     this.containers = []
-    this.scrollHandler = new ScrollHandler()
+    this.scrollHandler = new ScrollHandler(scrollHandlerOptions)
+    this.dropIndicator = new DropIndicator({ editorContainerElement: this.editorContainerElement })
 
     // bind any raf handler functions
     this._rafUpdateDragPreviewElementPosition = this._updateDragPreviewElementPosition.bind(this)
@@ -81,7 +88,7 @@ export class DragDropHandler {
     this._removeGrabListeners()
 
     // remove body elements
-    this._removeDropIndicator()
+    this.dropIndicator.destroy()
     this._removeDragPreviewContainerElement()
   }
 
@@ -207,7 +214,7 @@ export class DragDropHandler {
       const dropTarget = drag.overContainer
 
       if (dropTarget) {
-        const result = dropTarget.onDrop(drag.draggableInfo, drag.overDroppableElem, drag.overDroppablePosition)
+        const result = dropTarget.onDrop(drag.draggableInfo)
         if (typeof result === 'boolean') {
           success = result
         } else {
@@ -323,7 +330,7 @@ export class DragDropHandler {
     // append the drop indicator if it doesn't already exist - we append to
     // the editor's element rather than body so it needs to be re-appended
     // each time a drag is initiated in a new editor instance
-    this._appendDropIndicator()
+    this.dropIndicator.attach()
 
     const draggableInfo: DraggableInfo = {
       ...initialDraggableInfo,
@@ -438,7 +445,7 @@ export class DragDropHandler {
       drag.overContainer.onDragLeaveContainer(draggableInfo)
       drag.overContainer = null
       drag.overContainerElem = null
-      this._hideDropIndicator()
+      this.dropIndicator.hide({ draggableInfo })
     }
 
     if (isOverContainer) {
@@ -478,9 +485,9 @@ export class DragDropHandler {
         const indicatorPosition = drag.overContainer?.getIndicatorPosition(draggableInfo, overDroppableElem, position)
         if (indicatorPosition) {
           draggableInfo.insertIndex = indicatorPosition.insertIndex
-          this._showDropIndicator()
+          this.dropIndicator.show(overDroppableElem, position)
         } else {
-          this._hideDropIndicator()
+          this.dropIndicator.hide({ draggableInfo })
         }
       }
     }
@@ -500,84 +507,9 @@ export class DragDropHandler {
     }
   }
 
-  // position the drop indicator relative to the current droppable.
-  // The visual position is derived from the current droppable and its quadrant.
-  _showDropIndicator() {
-    const dropIndicator = this._dropIndicator
-    const drag = this._activeDrag
-    if (!dropIndicator || !drag) {
-      return
-    }
-
-    // reset everything except insertIndex before re-displaying indicator
-    this._hideDropIndicator({ clearInsertIndex: false })
-
-    const droppable = drag.overDroppableElem
-    const position = drag.overDroppablePosition
-    if (!droppable || !position) {
-      return
-    }
-
-    const parent = dropIndicator.parentElement
-    if (!parent) {
-      return
-    }
-
-    const parentRect = parent.getBoundingClientRect()
-    const lastLeft = parseInt(dropIndicator.style.left, 10) || 0
-    const lastTop = parseInt(dropIndicator.style.top, 10) || 0
-
-    const newWidth = droppable.offsetWidth
-    const newHeight = 4
-    let newLeft = droppable.offsetLeft
-    let newTop = position.startsWith('top') ? droppable.offsetTop - 2 : droppable.offsetTop + droppable.offsetHeight - 2
-
-    newLeft -= parentRect.left
-    newTop -= parentRect.top
-
-    // if indicator hasn't moved, keep it showing, otherwise wait for
-    // the transform transitions to almost finish before re-positioning
-    // and showing
-    // NOTE: +- 1px is due to sub-pixel positioning of droppables
-    if (newTop >= lastTop - 1 && newTop <= lastTop + 1 && newLeft >= lastLeft - 1 && newLeft <= lastLeft + 1) {
-      dropIndicator.style.opacity = '1'
-    } else {
-      dropIndicator.style.opacity = '0'
-
-      drag.dropIndicatorTimeout = setTimeout(() => {
-        dropIndicator.style.width = `${newWidth}px`
-        dropIndicator.style.height = `${newHeight}px`
-        dropIndicator.style.left = `${newLeft}px`
-        dropIndicator.style.top = `${newTop}px`
-        dropIndicator.style.opacity = '1'
-      }, 150)
-    }
-  }
-
-  _hideDropIndicator({ clearInsertIndex = true }: { clearInsertIndex?: boolean } = {}) {
-    const drag = this._activeDrag
-
-    // make sure the indicator isn't shown due to a running timeout
-    if (drag?.dropIndicatorTimeout) {
-      clearTimeout(drag.dropIndicatorTimeout)
-      drag.dropIndicatorTimeout = null
-    }
-
-    // clear droppable insert index unless instructed not to (eg, when
-    // resetting the display before re-positioning the indicator)
-    if (clearInsertIndex && drag) {
-      delete drag.draggableInfo.insertIndex
-    }
-
-    // hide drop indicator
-    if (this._dropIndicator) {
-      this._dropIndicator.style.opacity = '0'
-    }
-  }
-
   _resetDrag() {
     this.eventEmitter.emit('drag-start-canceled')
-    this._hideDropIndicator()
+    this.dropIndicator.hide({ draggableInfo: this._activeDrag?.draggableInfo ?? null })
 
     this.scrollHandler.dragStop()
 
@@ -589,8 +521,8 @@ export class DragDropHandler {
     this.grabbedElement = null
     this.sourceContainer = null
 
-    // disposal owns the whole per-drag teardown: listeners, indicator
-    // timeout, drag preview (element removal + producer dispose hook)
+    // disposal owns the whole per-drag teardown: listeners and the drag
+    // preview (element removal + producer dispose hook)
     const activeDrag = this._activeDrag
     this._activeDrag = null
     activeDrag?.dispose()
@@ -605,32 +537,6 @@ export class DragDropHandler {
     document.querySelectorAll<HTMLElement>('[data-inkling="editor"] [data-lexical-editor]').forEach((el) => {
       el.style.cursor = ''
     })
-  }
-
-  _appendDropIndicator() {
-    let dropIndicator = document.querySelector<HTMLElement>(`#${DROP_INDICATOR_ID}`)
-    if (!dropIndicator) {
-      dropIndicator = document.createElement('div')
-      dropIndicator.id = DROP_INDICATOR_ID
-      // "rounded-full bg-green" kept as classes so Tailwind picks up usage
-      dropIndicator.className = 'rounded-full bg-green'
-      dropIndicator.style.position = 'absolute'
-      dropIndicator.style.opacity = '0'
-      dropIndicator.style.width = '4px'
-      dropIndicator.style.height = '0'
-      dropIndicator.style.zIndex = String(DROP_INDICATOR_ZINDEX)
-      dropIndicator.style.pointerEvents = 'none'
-
-      if (this.editorContainerElement) {
-        this.editorContainerElement.appendChild(dropIndicator)
-      }
-    }
-
-    this._dropIndicator = dropIndicator
-  }
-
-  _removeDropIndicator() {
-    this._dropIndicator?.remove()
   }
 
   _appendDragPreviewContainerElement() {

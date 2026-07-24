@@ -4,7 +4,7 @@ import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CALLOUT_COLORS, CalloutCard, type CalloutColorName } from '@/components/ui/cards/CalloutCard'
-import CardContext from '@/context/CardContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 import { $isCalloutNode, $updateCardNode } from '@/nodes/base'
 
 // backgroundColor is a free string on the node — HTML import captures any
@@ -40,7 +40,7 @@ export function CalloutNodeComponent({
   calloutTextEditorInitialState,
 }: CalloutNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const { isEditing } = React.useContext(CardContext)
+  const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
   const [showEmojiPicker, setShowEmojiPicker] = React.useState<boolean>(false)
 
   const handleEmojiChange = React.useCallback(

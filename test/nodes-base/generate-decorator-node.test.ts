@@ -1,11 +1,16 @@
-import type { LexicalEditor, LexicalNodeConfig } from 'lexical'
-
 import { createHeadlessEditor } from '@lexical/headless'
+import { $getRoot, type EditorState, type LexicalEditor, type LexicalNodeConfig } from 'lexical'
 
-import type { GeneratedDecoratorNodeClass } from '@/nodes/base/generate-decorator-node'
+import type {
+  GeneratedDecoratorNodeClass,
+  NestedEditorSpec,
+  TransientPropSpec,
+} from '@/nodes/base/generate-decorator-node'
 
 import { dom } from '#/nodes-base/test-utils/index'
-import { utils, type ExportDOMOutput, type Visibility } from '@/nodes/base/index'
+import { ensureLexicalNodeOwnMethods, utils, type ExportDOMOutput, type Visibility } from '@/nodes/base/index'
+import MINIMAL_NODES from '@/nodes/MinimalNodes'
+import { populateNestedEditor } from '@/utils/nested-editors'
 
 const defaultVisibility = utils.visibility.buildDefaultVisibility()
 
@@ -265,6 +270,134 @@ describe('Utils: generateDecoratorNode', function () {
             memberSegment: 'status:free',
           },
         })
+      }),
+    )
+  })
+
+  describe('spec adoption (nested editors and transient props)', function () {
+    // A synthetic card pinning the spec contract the per-card tests cover only
+    // incidentally: the generated base class runs no spec behaviour on its
+    // own; a subclass adopting the specs via statics gets the full
+    // constructor/getDataset/exportJSON treatment — the same shape
+    // `assembleCardNode` produces for the real cards.
+    const specNestedEditors: readonly NestedEditorSpec[] = [
+      { name: 'captionEditor', serializedKey: 'caption', nodes: MINIMAL_NODES },
+      // Header's idiom: the dataset exposes the editor but not its initial state
+      { name: 'bodyEditor', serializedKey: 'body', nodes: MINIMAL_NODES, exposeInitialStateInDataset: false },
+    ]
+    const specTransientProps: readonly TransientPropSpec[] = [
+      {
+        name: 'flag',
+        initial: (dataset) => (!dataset.src && dataset.flag) || false,
+        datasetKey: '__flag',
+      },
+      // no datasetKey: initialized on the node but never re-exposed
+      { name: 'seed' },
+    ]
+
+    class SpeclessNode extends utils.generateDecoratorNode({
+      nodeType: 'spec-contract-test',
+      properties: [
+        { name: 'caption', default: '' },
+        { name: 'body', default: '' },
+        { name: 'src', default: '' },
+      ] as const,
+    }) {}
+
+    class SpecAdoptingNode extends SpeclessNode {
+      static nestedEditors = specNestedEditors
+      static transientProps = specTransientProps
+
+      declare __captionEditor: LexicalEditor
+      declare __captionEditorInitialState: EditorState | undefined
+      declare __bodyEditor: LexicalEditor
+      declare __flag: boolean
+      declare __seed: unknown
+    }
+    ensureLexicalNodeOwnMethods(SpecAdoptingNode)
+
+    beforeAll(function () {
+      editor = createHeadlessEditor({ nodes: [SpecAdoptingNode] })
+    })
+
+    it(
+      'runs no spec behaviour on the spec-less generated class',
+      // a separate editor: the shared one registers the subclass, and Lexical
+      // rejects constructing an unregistered class with the same node type
+      editorTestWithNodes(
+        () => [SpeclessNode] as const,
+        function (_testEditor, [RegisteredSpeclessNode]) {
+          const node = new RegisteredSpeclessNode({ caption: '<p>hi</p>', flag: true, seed: 'abc' })
+          const fields = node as unknown as Record<string, unknown>
+
+          expect(fields.__captionEditor).toBeUndefined()
+          expect(fields.__flag).toBeUndefined()
+          expect(node.getDataset()).toEqual({ caption: '<p>hi</p>', body: '', src: '' })
+        },
+      ),
+    )
+
+    it(
+      'sets up nested editors from their serialized HTML on construction',
+      editorTest(function () {
+        const node = new SpecAdoptingNode({ caption: '<p>Hello caption</p>' })
+
+        expect(node.__captionEditor).toBeDefined()
+        expect(node.__captionEditorInitialState).toBeDefined()
+        expect(node.__captionEditor.getEditorState().read(() => $getRoot().getTextContent())).toBe('Hello caption')
+      }),
+    )
+
+    it(
+      'appends the nested-editor dataset keys, honouring exposeInitialStateInDataset',
+      editorTest(function () {
+        const node = new SpecAdoptingNode({ caption: '<p>Hello caption</p>' })
+        const dataset = node.getDataset()
+
+        expect(dataset.captionEditor).toBe(node.__captionEditor)
+        expect(dataset.captionEditorInitialState).toBe(node.__captionEditorInitialState)
+        // exposeInitialStateInDataset: false — the editor is exposed, its initial state is not
+        expect(dataset.bodyEditor).toBe(node.__bodyEditor)
+        expect(dataset).not.toHaveProperty('bodyEditorInitialState')
+      }),
+    )
+
+    it(
+      'initializes transient props from the dataset and re-exposes only datasetKey specs',
+      editorTest(function () {
+        const node = new SpecAdoptingNode({ flag: true, seed: 'abc' })
+        expect(node.__flag).toBe(true) // the spec's `initial` computes from the dataset
+        expect(node.__seed).toBe('abc') // no `initial`: defaults to dataset[name]
+
+        const dataset = node.getDataset()
+        expect(dataset.__flag).toBe(true)
+        expect(dataset).not.toHaveProperty('__seed')
+
+        const withSrc = new SpecAdoptingNode({ src: 'filled', flag: true })
+        expect(withSrc.__flag).toBe(false)
+      }),
+    )
+
+    it(
+      're-serializes nested editor content back into its serializedKey on exportJSON',
+      editorTest(function () {
+        const node = new SpecAdoptingNode({})
+        // fill the editor the way the constructor does (discrete updates) —
+        // manual root surgery inside an outer update never commits
+        node.__captionEditor = createHeadlessEditor({ nodes: [SpecAdoptingNode] })
+        populateNestedEditor(node.__captionEditor, '<p>Updated caption</p>')
+
+        const json = node.exportJSON()
+        expect(json.caption).toContain('Updated caption')
+      }),
+    )
+
+    it(
+      'never serializes transient props or nested-editor keys to JSON',
+      editorTest(function () {
+        const node = new SpecAdoptingNode({ flag: true, seed: 'abc' })
+
+        expect(Object.keys(node.exportJSON()).sort()).toEqual(['body', 'caption', 'src', 'type', 'version'])
       }),
     )
   })

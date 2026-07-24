@@ -49,9 +49,9 @@ export function createComposerHandle<T extends object>(initialState: T): Compose
   }
 }
 
-export interface ComposerHandleBinding<T> {
-  Context: React.Context<ComposerHandle<T>>
-  useHandle: () => ComposerHandle<T>
+export interface ComposerHandleBinding<T, H extends ComposerHandle<T> = ComposerHandle<T>> {
+  Context: React.Context<H>
+  useHandle: () => H
   useHandleState: <S>(selector: (state: T) => S) => S
 }
 
@@ -63,13 +63,16 @@ export interface ComposerHandleBinding<T> {
 // useHandleState subscription hook. useSyncExternalStore compares snapshots
 // with Object.is, so a subscriber re-renders only when its selected slice
 // changes — keep selectors returning primitives or stable references, not
-// fresh objects.
-export function createComposerHandleBinding<T extends object>(
-  createHandle: () => ComposerHandle<T>,
-): ComposerHandleBinding<T> {
-  const Context = React.createContext<ComposerHandle<T>>(createHandle())
+// fresh objects. The optional H parameter carries a concrete handle subtype
+// (one with extra methods, like the tk handle) through the binding — channels
+// that use it must pass both type arguments explicitly, because TS skips
+// inferring H once the state type argument is given.
+export function createComposerHandleBinding<T extends object, H extends ComposerHandle<T> = ComposerHandle<T>>(
+  createHandle: () => H,
+): ComposerHandleBinding<T, H> {
+  const Context = React.createContext<H>(createHandle())
 
-  function useHandle(): ComposerHandle<T> {
+  function useHandle(): H {
     return React.useContext(Context)
   }
 

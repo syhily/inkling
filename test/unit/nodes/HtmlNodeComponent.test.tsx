@@ -1,11 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
-import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { HtmlNode } from '@/nodes/HtmlNode'
 import { HtmlNodeComponent } from '@/nodes/HtmlNodeComponent'
@@ -20,20 +18,15 @@ function createTestEditor(): LexicalEditor {
   return createEditor({ namespace: 'test', nodes: [HtmlNode], onError: () => {} })
 }
 
-function createCardContext(
-  overrides: Partial<React.ContextType<typeof CardContext>> = {},
-): React.ContextType<typeof CardContext> {
-  return {
-    isSelected: true,
-    isEditing: false,
-    captionHasFocus: false,
-    cardWidth: 'regular',
-    nodeKey: 'html-1',
-    setCardWidth: vi.fn(),
-    setCaptionHasFocus: vi.fn(),
-    setEditing: vi.fn(),
-    ...overrides,
-  }
+// the store equivalent of the old per-test CardContext factory: the card is
+// selected and not editing unless a test says otherwise
+function createSelection(
+  nodeKey: NodeKey | string = 'html-1',
+  { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
+) {
+  return createCardSelectionStoreWrapper({
+    initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
+  })
 }
 
 function createComposerContext(cardConfig: Record<string, unknown> = {}) {
@@ -78,14 +71,11 @@ describe('HtmlNodeComponent', () => {
     const nodeKey = await addHtmlNode(editor)
 
     const composerValue = createComposerContext()
-    const cardValue = createCardContext()
-    const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
+    const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardSelectionStoreProvider>
-          <CardContext.Provider value={cardValue}>
-            <HtmlNodeComponent html="<p>Hello</p>" nodeKey={nodeKey} />
-          </CardContext.Provider>
+          <HtmlNodeComponent html="<p>Hello</p>" nodeKey={nodeKey} />
         </CardSelectionStoreProvider>
       </InklingHostIntegrationContext.Provider>,
     )
@@ -94,16 +84,16 @@ describe('HtmlNodeComponent', () => {
   })
 
   describe('action toolbar', () => {
-    function renderWithToolbar(cardOverrides: Record<string, unknown> = {}, cardConfig = {}) {
+    function renderWithToolbar(
+      selection: { selected?: boolean; editing?: boolean } = {},
+      cardConfig: Record<string, unknown> = {},
+    ) {
       const composerValue = createComposerContext(cardConfig)
-      const cardValue = createCardContext(cardOverrides)
-      const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
+      const { wrapper: CardSelectionStoreProvider } = createSelection('html-1', selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
           <CardSelectionStoreProvider>
-            <CardContext.Provider value={cardValue}>
-              <HtmlNodeComponent html="<p>Hello</p>" nodeKey="html-1" />
-            </CardContext.Provider>
+            <HtmlNodeComponent html="<p>Hello</p>" nodeKey="html-1" />
           </CardSelectionStoreProvider>
         </InklingHostIntegrationContext.Provider>,
       )
@@ -114,13 +104,13 @@ describe('HtmlNodeComponent', () => {
     }
 
     it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar({ isSelected: false, isEditing: false })
+      const { container } = renderWithToolbar({ selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('hides the toolbar while the card is editing', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: true })
+      const { container } = renderWithToolbar({ selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
@@ -128,7 +118,7 @@ describe('HtmlNodeComponent', () => {
     it('renders edit, visibility, and snippet items when visibility settings are enabled', () => {
       // visibility settings default to WEB_AND_EMAIL, so the visibility item
       // renders between edit and the snippet pair
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false }, { createSnippet: vi.fn() })
+      const { container } = renderWithToolbar({ selected: true }, { createSnippet: vi.fn() })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -146,7 +136,7 @@ describe('HtmlNodeComponent', () => {
 
     it('omits the visibility item and its separator when visibility settings are disabled', () => {
       const { container } = renderWithToolbar(
-        { isSelected: true, isEditing: false },
+        { selected: true },
         { createSnippet: vi.fn(), visibilitySettings: VISIBILITY_SETTINGS.NONE },
       )
 
@@ -158,7 +148,7 @@ describe('HtmlNodeComponent', () => {
     })
 
     it('hides the snippet item and its separator when createSnippet is not configured', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
+      const { container } = renderWithToolbar({ selected: true })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(3)
@@ -166,28 +156,16 @@ describe('HtmlNodeComponent', () => {
     })
 
     it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', () => {
-      // the harness mirrors InklingCardWrapper: the context's setEditing(true)
-      // dispatches EDIT_CARD_COMMAND; html currently dispatches the command
-      // directly instead — both land on the same handler, which reads only
-      // `cardKey` (`focusEditor` is read by no handler)
       const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
-      renderWithToolbar({
-        isSelected: true,
-        isEditing: false,
-        setEditing: (shouldEdit: boolean) => {
-          if (shouldEdit) {
-            editor.dispatchCommand(EDIT_CARD_COMMAND, { cardKey: 'html-1' })
-          }
-        },
-      })
+      renderWithToolbar({ selected: true })
 
       fireEvent.click(screen.getByTestId('edit-html'))
 
-      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, expect.objectContaining({ cardKey: 'html-1' }))
+      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: 'html-1' })
     })
 
     it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false }, { createSnippet: vi.fn() })
+      const { container } = renderWithToolbar({ selected: true }, { createSnippet: vi.fn() })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

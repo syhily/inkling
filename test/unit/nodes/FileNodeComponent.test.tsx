@@ -1,10 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
-import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext, {
   type CardConfig,
   type FileUploader,
@@ -12,6 +11,7 @@ import InklingHostIntegrationContext, {
 } from '@/context/InklingHostIntegrationContext'
 import { FileNode, $createFileNode } from '@/nodes/FileNode'
 import FileNodeComponent from '@/nodes/FileNodeComponent'
+import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { openFileSelection } from '@/utils/openFileSelection'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -32,20 +32,15 @@ function flushMacrotask(): Promise<void> {
   })
 }
 
-function createCardContext(
-  overrides: Partial<React.ContextType<typeof CardContext>> = {},
-): React.ContextType<typeof CardContext> {
-  return {
-    isSelected: true,
-    isEditing: false,
-    captionHasFocus: false,
-    cardWidth: 'regular',
-    nodeKey: 'file-1',
-    setCardWidth: vi.fn(),
-    setCaptionHasFocus: vi.fn(),
-    setEditing: vi.fn(),
-    ...overrides,
-  }
+// the store equivalent of the old per-test CardContext factory: the card is
+// selected and not editing unless a test says otherwise
+function createSelection(
+  nodeKey: NodeKey | string = 'file-1',
+  { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
+) {
+  return createCardSelectionStoreWrapper({
+    initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
+  })
 }
 
 function createComposerContext(
@@ -104,10 +99,10 @@ describe('FileNodeComponent', () => {
   function renderComponent(nodeKey: NodeKey, options: RenderOptions = {}) {
     const { fileSrc = '', triggerFileDialog = false, initialFile = undefined, upload } = options
     const composerValue = createComposerContext(upload)
-    const cardValue = createCardContext()
+    const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     return render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
-        <CardContext.Provider value={cardValue}>
+        <CardSelectionStoreProvider>
           <FileNodeComponent
             fileDesc=""
             fileDescPlaceholder="Add a description"
@@ -120,7 +115,7 @@ describe('FileNodeComponent', () => {
             nodeKey={nodeKey}
             triggerFileDialog={triggerFileDialog}
           />
-        </CardContext.Provider>
+        </CardSelectionStoreProvider>
       </InklingHostIntegrationContext.Provider>,
     )
   }
@@ -180,15 +175,15 @@ describe('FileNodeComponent', () => {
     }
 
     function renderWithToolbar(
-      cardOverrides: Record<string, unknown> = {},
+      selection: { selected?: boolean; editing?: boolean } = {},
       { populated = true, cardConfig = {} }: { populated?: boolean; cardConfig?: Record<string, unknown> } = {},
     ) {
       const composerValue = createComposerContext(undefined, cardConfig)
-      const cardValue = createCardContext(cardOverrides)
+      const { wrapper: CardSelectionStoreProvider } = createSelection('file-1', selection)
       const fileProps = populated ? populatedProps : { fileName: '', fileSize: '', fileSrc: '' }
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
-          <CardContext.Provider value={cardValue}>
+          <CardSelectionStoreProvider>
             <FileNodeComponent
               fileDesc=""
               fileDescPlaceholder="Add a description"
@@ -200,7 +195,7 @@ describe('FileNodeComponent', () => {
               nodeKey="file-1"
               triggerFileDialog={false}
             />
-          </CardContext.Provider>
+          </CardSelectionStoreProvider>
         </InklingHostIntegrationContext.Provider>,
       )
     }
@@ -210,26 +205,26 @@ describe('FileNodeComponent', () => {
     }
 
     it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar({ isSelected: false, isEditing: false })
+      const { container } = renderWithToolbar({ selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('hides the toolbar while the card is editing', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: true })
+      const { container } = renderWithToolbar({ selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('hides the toolbar until the card is populated', () => {
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false }, { populated: false })
+      const { container } = renderWithToolbar({ selected: true }, { populated: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('renders edit, separator, and snippet items when selected and populated', () => {
       const { container } = renderWithToolbar(
-        { isSelected: true, isEditing: false },
+        { selected: true },
         {
           cardConfig: { createSnippet: vi.fn() },
         },
@@ -251,7 +246,7 @@ describe('FileNodeComponent', () => {
       // not gate the snippet item (or its separator) on
       // cardConfig.createSnippet — the item opened an input whose creation
       // silently no-oped. It now matches the other ten cards
-      const { container } = renderWithToolbar({ isSelected: true, isEditing: false })
+      const { container } = renderWithToolbar({ selected: true })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
@@ -259,21 +254,21 @@ describe('FileNodeComponent', () => {
       expect(screen.queryByTestId('create-snippet')).toBeNull()
     })
 
-    it('enters edit mode through the card context when the edit item is clicked', () => {
+    it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', () => {
       // plan 046 step 4 deliberate change: file's edit item was wired to an
       // inert no-op (preventDefault/stopPropagation only); it now enters the
       // edit mode FileCard already implements, like every other card
-      const setEditing = vi.fn()
-      renderWithToolbar({ isSelected: true, isEditing: false, setEditing })
+      renderWithToolbar({ selected: true })
+      const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
 
       fireEvent.click(screen.getByTestId('edit-file-upload-card'))
 
-      expect(setEditing).toHaveBeenCalledWith(true)
+      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: 'file-1' })
     })
 
     it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
       const { container } = renderWithToolbar(
-        { isSelected: true, isEditing: false },
+        { selected: true },
         {
           cardConfig: { createSnippet: vi.fn() },
         },

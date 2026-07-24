@@ -11,6 +11,7 @@ import {
 import React from 'react'
 
 import CardContext from '@/context/CardContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 import { isTypeaheadMenuOpen, markEventFromNested } from '@/plugins/behaviour/nested-editor-protocol'
 import { getParentEditor } from '@/utils/lexical-internals'
 
@@ -31,7 +32,10 @@ function InklingNestedEditorPlugin({
   defaultInklingEnterBehaviour?: boolean
 }) {
   const [editor] = useLexicalComposerContext()
-  const { isEditing: isParentCardEditing, nodeKey: parentCardNodeKey } = React.useContext(CardContext)
+  const { nodeKey: parentCardNodeKey } = React.useContext(CardContext)
+  const isParentCardEditing = useCardSelection(
+    (state) => state.selectedCardKey === parentCardNodeKey && state.isEditingCard,
+  )
 
   // using state here because this component can get re-rendered after the
   // editor's editable state changes so we need to re-focus on re-render

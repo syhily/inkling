@@ -2,7 +2,7 @@ import type { CardConfig, SnippetItem } from '@/context/InklingHostIntegrationCo
 import type { CardMenuNodeClass } from '@/utils/inkling-node-class'
 
 import SnippetCardIcon from '@/assets/icons/inkling-card-type-snippet.svg?react'
-import { INSERT_SNIPPET_COMMAND } from '@/plugins/InklingSnippetPlugin'
+import { INSERT_SNIPPET_COMMAND } from '@/nodes/cards/card-commands'
 
 interface MenuItemBase {
   nodeType?: string
@@ -14,7 +14,6 @@ interface MenuItemBase {
   priority?: number
   shortcut?: string
   isHidden?: (args: { config: CardConfig | undefined }) => boolean
-  postType?: string
   section?: string
   type?: string
   onRemove?: () => void
@@ -41,12 +40,21 @@ export interface BuildCardMenuConfig {
   config?: CardConfig
 }
 
+/** One ordered menu section — the menu's primary view: CardMenu renders
+ * sections directly, and `BuildCardMenuResult.items` is derived from them. */
+export interface MenuSection {
+  label: string
+  items: ResolvedMenuItem[]
+}
+
 export interface BuildCardMenuResult {
-  menu: Map<string, ResolvedMenuItem[]>
+  /** Sections in render order (Primary first), each sorted by priority. */
+  sections: MenuSection[]
   /** Every resolved item in render order — `items[i]` is exactly what CardMenu
    * renders with `data-inkling-cardmenu-idx="i"`, so keyboard selection reads
    * the list instead of scraping the DOM. Derived from the final sorted
-   * `menu` and sharing item identity with it, so the two views can't drift. */
+   * `sections` and sharing item identity with them, so the two views can't
+   * drift. */
   items: ResolvedMenuItem[]
   maxItemIndex: number
 }
@@ -62,12 +70,6 @@ export function buildCardMenu(
   function addMenuItem(item: MenuItem): void {
     // items hidden based on missing config (e.g. GIF provider API key)
     if (item.isHidden?.({ config })) {
-      return
-    }
-
-    // items restricted for posts vs. pages (e.g. email CTA card)
-    const postDisplayName = config?.post?.displayName
-    if (item.postType && postDisplayName && item.postType !== postDisplayName) {
       return
     }
 
@@ -88,7 +90,7 @@ export function buildCardMenu(
     }
     if (resolvedItem.insertParams === undefined) {
       // the spread above always writes the key; the pre-resolution shape only
-      // carries insertParams when the declaration set it (menu deep-equality
+      // carries insertParams when the declaration set it (item deep-equality
       // in test/unit/buildCardMenu.test.ts pins key absence)
       delete resolvedItem.insertParams
     }
@@ -146,9 +148,10 @@ export function buildCardMenu(
     }),
   )
 
-  const items = [...menu.values()].flat()
+  const sections: MenuSection[] = [...menu.entries()].map(([label, sectionItems]) => ({ label, items: sectionItems }))
+  const items = sections.flatMap((section) => section.items)
 
-  return { menu, items, maxItemIndex: items.length - 1 }
+  return { sections, items, maxItemIndex: items.length - 1 }
 }
 
 function buildSnippetMenuItem(data: SnippetItem, config: CardConfig | undefined): MenuItem {

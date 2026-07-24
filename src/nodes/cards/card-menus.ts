@@ -70,7 +70,7 @@ const CARD_MENUS: Partial<Record<string, MenuItem[]>> = Object.fromEntries(
  * Resolves a card's slash/plus menu entries — what the hand-written
  * `CARD_MENUS` map keyed by node type used to hold, now derived from the
  * declarations. Consumed by `assembleCardNode` (the assembled class's static
- * `cardMenu`) and the surviving hand-written wrappers.
+ * `cardMenu`).
  */
 export function getCardMenu(nodeType: string): MenuItem[] | undefined {
   return CARD_MENUS[nodeType]

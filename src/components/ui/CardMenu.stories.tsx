@@ -52,10 +52,10 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   args: {
-    menu: new Map([
-      [
-        'Primary',
-        [
+    sections: [
+      {
+        label: 'Primary',
+        items: [
           { label: 'Image', desc: 'Upload, or embed with /image [url]', Icon: ImageCardIcon },
           { label: 'HTML', desc: 'Insert a raw HTML card', Icon: HtmlCardIcon },
           { label: 'Gallery', desc: 'Create an image gallery', Icon: GalleryCardIcon },
@@ -70,21 +70,21 @@ export const Default: Story = {
           { label: 'File', desc: 'Upload a downloadable file', Icon: FileCardIcon },
           { label: 'Header', desc: 'Add a bold section header', Icon: HeaderCardIcon },
         ],
-      ],
-      [
-        'Embed',
-        [
+      },
+      {
+        label: 'Embed',
+        items: [
           { label: 'Twitter', desc: '/twitter [tweet url]', Icon: TwitterCardIcon },
           { label: 'NFT', desc: '/nft [opensea url]', Icon: NftCardIcon },
         ],
-      ],
-      [
-        'Snippets',
-        [
+      },
+      {
+        label: 'Snippets',
+        items: [
           { type: 'snippet', label: 'Snippet one' },
           { type: 'snippet', label: 'Snippet two' },
         ],
-      ],
-    ]),
+      },
+    ],
   },
 }

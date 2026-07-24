@@ -6,8 +6,8 @@ import type { GalleryImage } from '@/types/gallery'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { GalleryCard } from '@/components/ui/cards/GalleryCard'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import useGalleryReorder from '@/hooks/useGalleryReorder'
 import { $isGalleryNode, $updateCardNode } from '@/nodes/base'
@@ -23,7 +23,7 @@ export interface GalleryNodeComponentProps {
 export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInitialState }: GalleryNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
-  const { isSelected } = React.useContext(CardContext)
+  const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const [images, setImages] = React.useState<GalleryImage[]>(() => {

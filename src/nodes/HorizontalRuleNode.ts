@@ -1,4 +1,4 @@
-import { assembleCardNode } from '@/nodes/assemble-card-node'
+import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { horizontalRuleDeclaration } from '@/nodes/cards/horizontalrule.declaration'
 
 export { $isHorizontalRuleNode } from '@/nodes/base/nodes/horizontalrule/HorizontalRuleNode'
@@ -9,7 +9,7 @@ export { INSERT_HORIZONTAL_RULE_COMMAND } from '@/nodes/cards/card-commands'
  * registered class is assembled from the card declaration, and
  * `$isHorizontalRuleNode` is canonical on the base node.
  */
-export const HorizontalRuleNode = assembleCardNode(horizontalRuleDeclaration)
+export const HorizontalRuleNode = assembleCardNodeOnce(horizontalRuleDeclaration)
 export type HorizontalRuleNode = InstanceType<typeof HorizontalRuleNode>
 
 export function $createHorizontalRuleNode() {

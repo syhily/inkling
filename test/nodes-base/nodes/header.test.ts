@@ -6,6 +6,7 @@ import { $generateNodesFromDOM } from '@lexical/html'
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { BaseHeaderNode, $createBaseHeaderNode, $isHeaderNode } from '@/nodes/base/index'
+import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 const editorNodes = [BaseHeaderNode]
 
@@ -225,6 +226,84 @@ describe('BaseHeaderNode', function () {
         editorTest(function () {
           const headerNode = $createBaseHeaderNode(dataset)
           expect(headerNode.hasEditMode()).toBe(true)
+        }),
+      )
+    })
+
+    describe('isEmpty()', function () {
+      it(
+        'returns false when the nested editors are unset (spec-less base instance)',
+        editorTest(function () {
+          expect($createBaseHeaderNode().isEmpty()).toBe(false)
+        }),
+      )
+
+      it(
+        'returns true when both nested editors are empty and no button or background image is set',
+        editorTest(function () {
+          const node = $createBaseHeaderNode()
+          node.__headerTextEditor = setupNestedEditor()
+          node.__subheaderTextEditor = setupNestedEditor()
+          expect(node.isEmpty()).toBe(true)
+        }),
+      )
+
+      it(
+        'returns false when a nested editor has content',
+        editorTest(function () {
+          const node = $createBaseHeaderNode()
+          const headerTextEditor = setupNestedEditor()
+          populateNestedEditor(headerTextEditor, '<p>Header</p>')
+          node.__headerTextEditor = headerTextEditor
+          node.__subheaderTextEditor = setupNestedEditor()
+          expect(node.isEmpty()).toBe(false)
+        }),
+      )
+
+      it(
+        'returns false when the button is set',
+        editorTest(function () {
+          const node = $createBaseHeaderNode({
+            buttonEnabled: true,
+            buttonText: 'The button',
+            buttonUrl: 'https://example.com/',
+          })
+          node.__headerTextEditor = setupNestedEditor()
+          node.__subheaderTextEditor = setupNestedEditor()
+          expect(node.isEmpty()).toBe(false)
+        }),
+      )
+
+      it(
+        'returns false when a background image is set',
+        editorTest(function () {
+          const node = $createBaseHeaderNode({ backgroundImageSrc: 'https://example.com/image.jpg' })
+          node.__headerTextEditor = setupNestedEditor()
+          node.__subheaderTextEditor = setupNestedEditor()
+          expect(node.isEmpty()).toBe(false)
+        }),
+      )
+    })
+
+    describe('getCardWidth()', function () {
+      it(
+        'maps a split layout to full width',
+        editorTest(function () {
+          expect($createBaseHeaderNode({ layout: 'split' }).getCardWidth()).toBe('full')
+        }),
+      )
+
+      it(
+        'returns the layout as the card width otherwise',
+        editorTest(function () {
+          expect($createBaseHeaderNode({ layout: 'regular' }).getCardWidth()).toBe('regular')
+        }),
+      )
+
+      it(
+        'returns undefined when the layout is not a card width',
+        editorTest(function () {
+          expect($createBaseHeaderNode({ layout: 'unknown' }).getCardWidth()).toBeUndefined()
         }),
       )
     })

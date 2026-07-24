@@ -4,8 +4,8 @@ import { $isParagraphNode, createEditor, $getRoot, type LexicalEditor, type Node
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { BookmarkNode, $createBookmarkNode } from '@/nodes/BookmarkNode'
 import { BookmarkNodeComponent } from '@/nodes/BookmarkNodeComponent'
@@ -29,20 +29,15 @@ function createTestEditor(): LexicalEditor {
   return editor
 }
 
-function createCardContext(
-  overrides: Partial<React.ContextType<typeof CardContext>> = {},
-): React.ContextType<typeof CardContext> {
-  return {
-    isSelected: true,
-    isEditing: false,
-    captionHasFocus: false,
-    cardWidth: 'regular',
-    nodeKey: 'bookmark-1',
-    setCardWidth: vi.fn(),
-    setCaptionHasFocus: vi.fn(),
-    setEditing: vi.fn(),
-    ...overrides,
-  }
+// the store equivalent of the old per-test CardContext factory: the card is
+// selected and not editing unless a test says otherwise
+function createSelection(
+  nodeKey: NodeKey | string = 'bookmark-1',
+  { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
+) {
+  return createCardSelectionStoreWrapper({
+    initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
+  })
 }
 
 function createComposerContext(
@@ -92,11 +87,11 @@ describe('BookmarkNodeComponent', () => {
     const nodeKey = await addBookmarkNode(editor, 'https://example.com')
 
     const composerValue = createComposerContext({ fetchEmbed })
-    const cardValue = createCardContext({ nodeKey })
+    const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
 
     render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
-        <CardContext.Provider value={cardValue}>
+        <CardSelectionStoreProvider>
           <BookmarkNodeComponent
             captionEditor={null}
             captionEditorInitialState={undefined}
@@ -104,7 +99,7 @@ describe('BookmarkNodeComponent', () => {
             nodeKey={nodeKey}
             url="https://example.com"
           />
-        </CardContext.Provider>
+        </CardSelectionStoreProvider>
       </InklingHostIntegrationContext.Provider>,
     )
 
@@ -122,14 +117,14 @@ describe('BookmarkNodeComponent', () => {
 
   describe('action toolbar', () => {
     function renderWithToolbar(
-      cardOverrides: Record<string, unknown> = {},
+      selection: { selected?: boolean; editing?: boolean } = {},
       { title = 'Example title', cardConfig = {} }: { title?: string; cardConfig?: Record<string, unknown> } = {},
     ) {
       const composerValue = createComposerContext(cardConfig)
-      const cardValue = createCardContext(cardOverrides)
+      const { wrapper: CardSelectionStoreProvider } = createSelection('bookmark-1', selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
-          <CardContext.Provider value={cardValue}>
+          <CardSelectionStoreProvider>
             <BookmarkNodeComponent
               captionEditor={null}
               captionEditorInitialState={undefined}
@@ -137,7 +132,7 @@ describe('BookmarkNodeComponent', () => {
               title={title}
               url="https://example.com"
             />
-          </CardContext.Provider>
+          </CardSelectionStoreProvider>
         </InklingHostIntegrationContext.Provider>,
       )
     }
@@ -147,7 +142,7 @@ describe('BookmarkNodeComponent', () => {
     }
 
     it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar({ isSelected: false }, { cardConfig: { createSnippet: vi.fn() } })
+      const { container } = renderWithToolbar({ selected: false }, { cardConfig: { createSnippet: vi.fn() } })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
@@ -155,7 +150,7 @@ describe('BookmarkNodeComponent', () => {
     it('keeps the toolbar visible while the card is editing', () => {
       // bookmark's menu toolbar has no !isEditing factor
       const { container } = renderWithToolbar(
-        { isSelected: true, isEditing: true },
+        { selected: true, editing: true },
         { cardConfig: { createSnippet: vi.fn() } },
       )
 
@@ -163,10 +158,7 @@ describe('BookmarkNodeComponent', () => {
     })
 
     it('hides the toolbar until the card has a title', () => {
-      const { container } = renderWithToolbar(
-        { isSelected: true },
-        { title: '', cardConfig: { createSnippet: vi.fn() } },
-      )
+      const { container } = renderWithToolbar({ selected: true }, { title: '', cardConfig: { createSnippet: vi.fn() } })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
@@ -174,13 +166,13 @@ describe('BookmarkNodeComponent', () => {
     it('hides the toolbar when createSnippet is not configured, even with a title', () => {
       // bookmark is the one card whose toolbar visibility itself gates on
       // createSnippet — it exists solely to offer snippet creation
-      const { container } = renderWithToolbar({ isSelected: true })
+      const { container } = renderWithToolbar({ selected: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('renders only the snippet item when selected with a title', () => {
-      const { container } = renderWithToolbar({ isSelected: true }, { cardConfig: { createSnippet: vi.fn() } })
+      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -194,7 +186,7 @@ describe('BookmarkNodeComponent', () => {
     })
 
     it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderWithToolbar({ isSelected: true }, { cardConfig: { createSnippet: vi.fn() } })
+      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

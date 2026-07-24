@@ -3,30 +3,15 @@ import { createEditor, type LexicalEditor } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import { CardActionToolbar, type CardToolbarItem } from '@/components/ui/CardActionToolbar'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function createCardContext(
-  overrides: Partial<React.ContextType<typeof CardContext>> = {},
-): React.ContextType<typeof CardContext> {
-  return {
-    isSelected: true,
-    isEditing: false,
-    captionHasFocus: false,
-    cardWidth: 'regular',
-    nodeKey: 'card-1',
-    setCardWidth: vi.fn(),
-    setCaptionHasFocus: vi.fn(),
-    setEditing: vi.fn(),
-    ...overrides,
-  }
-}
 
 function createComposerContext(cardConfig: Record<string, unknown> = {}) {
   return {
@@ -59,20 +44,25 @@ describe('CardActionToolbar', () => {
   })
 
   function renderToolbar({
-    cardValue = createCardContext(),
+    selected = true,
+    editing = false,
     cardConfig = {},
     props = {},
   }: {
-    cardValue?: ReturnType<typeof createCardContext>
+    selected?: boolean
+    editing?: boolean
     cardConfig?: Record<string, unknown>
     props?: Partial<Parameters<typeof CardActionToolbar>[0]>
   } = {}) {
     const composerValue = createComposerContext(cardConfig)
+    const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper({
+      initialState: { selectedCardKey: selected ? 'card-1' : null, isEditingCard: editing },
+    })
     return render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
-        <CardContext.Provider value={cardValue}>
+        <CardSelectionStoreProvider>
           <CardActionToolbar card="test-card" nodeKey="card-1" {...props} />
-        </CardContext.Provider>
+        </CardSelectionStoreProvider>
       </InklingHostIntegrationContext.Provider>,
     )
   }
@@ -87,20 +77,20 @@ describe('CardActionToolbar', () => {
     })
 
     it('hides the menu toolbar when the card is not selected', () => {
-      const { container } = renderToolbar({ cardValue: createCardContext({ isSelected: false }) })
+      const { container } = renderToolbar({ selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('hides the menu toolbar while editing by default', () => {
-      const { container } = renderToolbar({ cardValue: createCardContext({ isEditing: true }) })
+      const { container } = renderToolbar({ editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
     it('keeps the menu toolbar while editing when hideWhileEditing is false', () => {
       const { container } = renderToolbar({
-        cardValue: createCardContext({ isEditing: true }),
+        editing: true,
         props: { hideWhileEditing: false },
       })
 
@@ -139,13 +129,13 @@ describe('CardActionToolbar', () => {
       expect(screen.getByTestId('edit-test-card')).toBeTruthy()
     })
 
-    it('enters edit mode through the card context when the edit item is clicked', () => {
-      const setEditing = vi.fn()
-      renderToolbar({ cardValue: createCardContext({ setEditing }) })
+    it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', () => {
+      const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
+      renderToolbar()
 
       fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
 
-      expect(setEditing).toHaveBeenCalledWith(true)
+      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: 'card-1' })
     })
   })
 

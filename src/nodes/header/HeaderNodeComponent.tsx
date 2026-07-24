@@ -6,8 +6,8 @@ import type { FileChangeEvent } from '@/components/ui/cards/card-ui-types'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
-import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useCardSelection } from '@/hooks/useCardSelection'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { $updateCardNode } from '@/nodes/base'
@@ -67,7 +67,7 @@ function HeaderNodeComponent({
 }: HeaderNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
   const { cardConfig, fileUploader } = useContext(InklingHostIntegrationContext)
-  const { isEditing } = useContext(CardContext)
+  const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
   const [showBackgroundImage, setShowBackgroundImage] = useState<boolean>(Boolean(backgroundImageSrc))
   const [lastBackgroundImage, setLastBackgroundImage] = useState<string>(backgroundImageSrc)
 

@@ -1,6 +1,6 @@
 import type { HtmlData } from '@/nodes/base/nodes/html/HtmlNode'
 
-import { assembleCardNode } from '@/nodes/assemble-card-node'
+import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { htmlDeclaration } from '@/nodes/cards/html.declaration'
 
 export { $isHtmlNode } from '@/nodes/base/nodes/html/HtmlNode'
@@ -13,7 +13,7 @@ export type HtmlNodeDataset = HtmlData
  * registered class is assembled from the card declaration, and `$isHtmlNode`
  * is canonical on the base node.
  */
-export const HtmlNode = assembleCardNode(htmlDeclaration)
+export const HtmlNode = assembleCardNodeOnce(htmlDeclaration)
 export type HtmlNode = InstanceType<typeof HtmlNode>
 
 export const $createHtmlNode = (dataset: HtmlNodeDataset) => {

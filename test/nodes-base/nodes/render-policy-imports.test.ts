@@ -5,21 +5,12 @@ import { join, sep } from 'node:path'
  * Plan 040 import guard: renderer policy — URL validation, template escaping,
  * sanitization — lives behind the render-context seam
  * (src/nodes/base/render-context.ts). Card sources must not import the policy
- * implementation modules directly; they go through the seam. The allowlists
- * below are the complete intentional exceptions and may only shrink: delete an
- * entry when a file migrates onto the seam.
+ * implementation modules directly; they go through the seam. The guard has
+ * zero exceptions: the last allowlisted importer (the markdown renderer's
+ * `sanitize-html` import) moved onto the seam's `sanitizeBasicHtml` entry.
  */
 
 const POLICY_MODULES = new Set(['is-safe-url', 'escape-html', 'clean-dom', 'sanitize-html'])
-
-// escape-html: no exceptions — all card-template escaping goes through
-// context.escapeText (plan 041); the escape-html implementation is private to
-// the seam.
-// sanitize-html exception: the markdown card sanitizes markdown-it's rendered
-// output with the same DOMPurify-backed helper the seam wraps.
-const ALLOWED_DIRECT_IMPORTS: Record<string, string[]> = {
-  'markdown/markdown-renderer.ts': ['sanitize-html'],
-}
 
 // is-safe-url has exactly one documented importer besides the seam:
 // render-helpers/email-button.ts keeps the legacy isSafeUrl fallback for
@@ -66,7 +57,7 @@ describe('render policy import guard', () => {
       }
     }
 
-    expect(offenders).toEqual(ALLOWED_DIRECT_IMPORTS)
+    expect(offenders).toEqual({})
   })
 
   it('the seam and the documented email-button fallback are the only is-safe-url importers', () => {

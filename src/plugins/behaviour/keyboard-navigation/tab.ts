@@ -11,7 +11,7 @@ import {
   KEY_TAB_COMMAND,
 } from 'lexical'
 
-import { $insertCodeBlockForShortcut, FENCE_KEYBOARD_REGEXP } from '@/markdown/card-shortcuts'
+import { $fireFenceKeyboardShortcut } from '@/markdown/card-shortcuts'
 
 import type { KeyboardNavigationDeps } from './types'
 
@@ -60,23 +60,15 @@ export function registerTabCommand(editor: LexicalEditor, deps: KeyboardNavigati
         }
       }
 
-      // code card shortcut — trigger only; the regex and replace-and-select
-      // live in the card-shortcut seam (@/markdown/card-shortcuts)
+      // code card shortcut — trigger only; the regex, language extraction, and
+      // replace-and-select live in the card-shortcut seam (@/markdown/card-shortcuts)
       if (!isNested && event) {
+        if ($fireFenceKeyboardShortcut(event)) {
+          return true
+        }
+
         const selection = $getSelection()
         const currentNode = selection?.getNodes()[0]
-        if ($isTextNode(currentNode)) {
-          const textContent = currentNode.getTextContent()
-          if (textContent.match(FENCE_KEYBOARD_REGEXP)) {
-            event.preventDefault()
-            const topLevelElement = currentNode.getTopLevelElement()
-            if (!topLevelElement) {
-              return false
-            }
-            $insertCodeBlockForShortcut(topLevelElement, textContent.replace(/^```/, ''))
-            return true
-          }
-        }
 
         // handle indent behavior
         if ($isListItemNode(currentNode) || ($isTextNode(currentNode) && $isListItemNode(currentNode.getParent()))) {

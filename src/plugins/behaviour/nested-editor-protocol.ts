@@ -14,7 +14,7 @@
 //   implementation — only this file knows the property names, so writers and
 //   readers can no longer drift apart.
 //   Writers: `InklingNestedEditorPlugin.tsx`, `InklingCaptionEditor.tsx`.
-//   Readers: `keyboard-navigation/arrows.ts`, `keyboard-navigation/enter.ts`.
+//   Readers: `keyboard-navigation/selection-extension.ts`, `keyboard-navigation/enter.ts`.
 //
 // - Typeahead presence. Lexical 0.46.0 added `commandPriority` to typeahead
 //   menus, but the project's menus still register at the default

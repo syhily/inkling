@@ -10,7 +10,6 @@ import CodeMirror from '@uiw/react-codemirror'
 import React from 'react'
 
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
-import CardContext from '@/context/CardContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { darkBaseExtensions, lightBaseExtensions } from '@/utils/codemirror-config'
 
@@ -159,6 +158,7 @@ interface CodeBlockCardProps {
   language?: string
   updateCode?: (value: string) => void
   updateLanguage?: (value: string) => void
+  onEscape?: () => void
 }
 
 export function CodeBlockCard({
@@ -171,15 +171,14 @@ export function CodeBlockCard({
   language,
   updateCode,
   updateLanguage,
+  onEscape,
 }: CodeBlockCardProps) {
-  const { setEditing } = React.useContext(CardContext)
-
   if (isEditing) {
     return (
       <CodeEditor
         code={code}
         language={language}
-        onEscape={() => setEditing(false)}
+        onEscape={onEscape}
         updateCode={updateCode}
         updateLanguage={updateLanguage}
       />

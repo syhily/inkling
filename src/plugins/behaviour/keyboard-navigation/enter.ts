@@ -4,14 +4,12 @@ import {
   $createParagraphNode,
   $getNodeByKey,
   $getRoot,
-  $getSelection,
   $isDecoratorNode,
-  $isTextNode,
   COMMAND_PRIORITY_LOW,
   KEY_ENTER_COMMAND,
 } from 'lexical'
 
-import { $insertCodeBlockForShortcut, FENCE_KEYBOARD_REGEXP } from '@/markdown/card-shortcuts'
+import { $fireFenceKeyboardShortcut } from '@/markdown/card-shortcuts'
 import { $isInklingCard } from '@/nodes/base'
 import { $selectDecoratorNode } from '@/utils'
 
@@ -103,23 +101,10 @@ export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNaviga
         return true
       }
 
-      // code card shortcut — trigger only; the regex and replace-and-select
-      // live in the card-shortcut seam (@/markdown/card-shortcuts)
-      if (!isNested && event) {
-        const selection = $getSelection()
-        const currentNode = selection?.getNodes()[0]
-        if ($isTextNode(currentNode)) {
-          const textContent = currentNode.getTextContent()
-          if (textContent.match(FENCE_KEYBOARD_REGEXP)) {
-            event.preventDefault()
-            const topLevelElement = currentNode.getTopLevelElement()
-            if (!topLevelElement) {
-              return false
-            }
-            $insertCodeBlockForShortcut(topLevelElement, textContent.replace(/^```/, ''))
-            return true
-          }
-        }
+      // code card shortcut — trigger only; the regex, language extraction, and
+      // replace-and-select live in the card-shortcut seam (@/markdown/card-shortcuts)
+      if (!isNested && event && $fireFenceKeyboardShortcut(event)) {
+        return true
       }
 
       return false

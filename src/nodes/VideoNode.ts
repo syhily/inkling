@@ -3,7 +3,7 @@ import type { EditorState, LexicalEditor } from 'lexical'
 import type { VideoData } from '@/nodes/base/nodes/video/VideoNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
-import { assembleCardNode } from '@/nodes/assemble-card-node'
+import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { videoDeclaration } from '@/nodes/cards/video.declaration'
 
 export { $isVideoNode } from '@/nodes/base/nodes/video/VideoNode'
@@ -22,7 +22,7 @@ export type VideoNodeDataset = VideoData &
  * assembled class so the nested-editor and transient-prop specs are
  * initialized.
  */
-export const VideoNode = assembleCardNode(videoDeclaration)
+export const VideoNode = assembleCardNodeOnce(videoDeclaration)
 export type VideoNode = InstanceType<typeof VideoNode> & {
   __triggerFileDialog: boolean
   __initialFile: File | null

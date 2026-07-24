@@ -6,24 +6,21 @@ import React from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import CardContext from '@/context/CardContext'
-import { TKContext } from '@/context/TKContext'
+import { TKHandleContext } from '@/context/TKHandleContext'
 import { ExtendedTextNode, TKNode, extendedTextNodeReplacement } from '@/nodes/base'
+import { createTKHandle } from '@/plugins/behaviour/tkHandle'
 import ReplacementStringsPlugin from '@/plugins/ReplacementStringsPlugin'
 
 const NESTED_NODES = [ExtendedTextNode, extendedTextNodeReplacement, TKNode]
 
 const cardContextValue: React.ContextType<typeof CardContext> = {
-  isSelected: false,
-  isEditing: false,
   captionHasFocus: false,
-  cardWidth: 'regular',
   nodeKey: 'card-1',
-  setCardWidth: () => {},
   setCaptionHasFocus: () => {},
-  setEditing: () => {},
 }
 
 function TestWrapper({ children }: { children: React.ReactNode }) {
+  const [tkHandle] = React.useState(createTKHandle)
   return (
     <LexicalComposer
       initialConfig={{
@@ -33,9 +30,9 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
         theme: {},
       }}
     >
-      <TKContext>
+      <TKHandleContext.Provider value={tkHandle}>
         <CardContext.Provider value={cardContextValue}>{children}</CardContext.Provider>
-      </TKContext>
+      </TKHandleContext.Provider>
     </LexicalComposer>
   )
 }

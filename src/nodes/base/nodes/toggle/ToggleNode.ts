@@ -1,3 +1,7 @@
+import type { LexicalEditor } from 'lexical'
+
+import { $canShowPlaceholderCurry } from '@lexical/text'
+
 import type { CardImportSpec } from '@/nodes/base/import-spec'
 
 import {
@@ -36,7 +40,30 @@ export class BaseToggleNode extends generateDecoratorNode({
   properties: toggleProperties,
   defaultRenderFn: renderToggleNode,
   importSpec: toggleImportSpec,
-}) {}
+}) {
+  // The generated constructor assigns the nested editors only on subclasses
+  // that adopt a `nestedEditors` spec (the assembled card class); a raw
+  // `new BaseToggleNode()` leaves them unset, and the markdown card
+  // transformer nulls them after plain-text import — so `undefined` and
+  // `null` are part of the honest type here (the
+  // CodeBlockNode.__openInEditMode idiom).
+  declare __titleEditor: LexicalEditor | null | undefined
+  declare __contentEditor: LexicalEditor | null | undefined
+
+  isEmpty() {
+    // Null only inside the headless markdown round-trip editor (the toggle
+    // card transformer nulls both nested editors after plain-text import),
+    // and unset on spec-less base instances; isEmpty is dispatched from
+    // commands those transient nodes never see — guard so the field type
+    // stays honest. A nulled toggle is never auto-removed.
+    if (!this.__titleEditor || !this.__contentEditor) {
+      return false
+    }
+    const isTitleEmpty = this.__titleEditor.getEditorState().read($canShowPlaceholderCurry(false))
+    const isContentEmpty = this.__contentEditor.getEditorState().read($canShowPlaceholderCurry(false))
+    return isTitleEmpty && isContentEmpty
+  }
+}
 
 export const $createBaseToggleNode = (dataset: ToggleData = {}) => {
   return new BaseToggleNode(dataset)

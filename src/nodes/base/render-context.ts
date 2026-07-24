@@ -32,7 +32,10 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  *   `escapeText` (DOMPurify cannot reproduce `escapeHtml` for the video
  *   caption / audio email title corpus) and `CALLOUT_HTML_CONFIG` (DOMPurify
  *   cannot reproduce cleanDOM's per-tag attribute policy), each documented
- *   at its definition.
+ *   at its definition. `sanitizeBasicHtml` is the same default-config
+ *   sanitize under a content-neutral name, for non-caption HTML such as the
+ *   markdown card's rendered body; `sanitizeCaption` stays as the
+ *   caption-call-site alias.
  * - `variant`/`requirePostUrl` unify the email/web branch idioms (Step 5;
  *   `requirePostUrl` preserves the pinned missing-postUrl error messages).
  *   `usesModernEmailButton` and the `isSafeColorValue`/`isEmailButtonColorValue`
@@ -58,9 +61,9 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  * map is safe.
  *
  * Card sources must not import the policy modules (`is-safe-url`,
- * `escape-html`, `clean-dom`, `sanitize-html`) directly — the shrink-only
- * allowlist in `test/nodes-base/nodes/render-policy-imports.test.ts` enforces
- * the seam.
+ * `escape-html`, `clean-dom`, `sanitize-html`) directly — the guard in
+ * `test/nodes-base/nodes/render-policy-imports.test.ts` enforces the seam
+ * with zero exceptions.
  */
 
 export type SafeUrlKind = 'navigation' | 'media'
@@ -195,6 +198,14 @@ export interface RenderContext {
   /** Caption sanitization, routed through the DOMPurify-backed `sanitizeHtml`. */
   sanitizeCaption(html: string): string
   /**
+   * The same default-config `sanitizeHtml` as `sanitizeCaption`, under a
+   * content-neutral name for non-caption HTML (the markdown card's rendered
+   * markdown-it body). Added so no caller has to reach for a "caption" entry
+   * to sanitize basic HTML — the markdown renderer's direct `sanitize-html`
+   * import was the render-policy allowlist's last entry.
+   */
+  sanitizeBasicHtml(html: string): string
+  /**
    * Plain-text template escaping — the single escaping path behind the seam.
    * Introduced for the fields whose pinned output is `escapeHtml`'s (video
    * captions, the audio email title); plan 041 routed every card renderer's
@@ -310,6 +321,9 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
       return isLocalContentImageImpl(url, siteUrl, imageBaseUrl)
     },
     sanitizeCaption(html) {
+      return sanitizeHtml(html)
+    },
+    sanitizeBasicHtml(html) {
       return sanitizeHtml(html)
     },
     escapeText(value) {

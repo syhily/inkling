@@ -126,9 +126,8 @@ export interface CardMenuEntrySpec {
  * card registry is a derived view over these declarations: the menus
  * (`@/nodes/cards/card-menus`), the decorate renders
  * (`@/nodes/cards/card-decorate`), the wrapper node classes
- * (`@/nodes/cards/card-wrappers`), the insert registrations
- * (`@/nodes/cards/card-insert-commands`), and the hand-written-wrapper
- * own-method lists in the editor node sets. Adding a card means adding its
+ * (`@/nodes/cards/card-wrappers`), and the insert registrations
+ * (`@/nodes/cards/card-insert-commands`). Adding a card means adding its
  * declaration here plus its per-card React module — nothing is
  * hand-maintained in two places.
  *
@@ -185,13 +184,5 @@ export interface CardDeclaration<NodeType extends string = string> {
    * icon; see `getCardDragIcon` in `@/nodes/cards/card-menus`.
    */
   dragIcon?: CardIconId
-  /**
-   * Set on the three surviving hand-written wrappers (Bookmark, Header,
-   * Toggle) — cards whose registered class is a hand-written subclass rather
-   * than an `assembleCardNode` product. The editor node sets derive their
-   * `ensureLexicalNodeOwnMethods` list from this flag
-   * (`@/nodes/cards/card-wrappers`).
-   */
-  handWrittenWrapper?: boolean
   surfaces: CardSurfaces
 }

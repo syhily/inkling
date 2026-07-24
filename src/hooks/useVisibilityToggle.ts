@@ -3,6 +3,7 @@ import { $getNodeByKey, type LexicalEditor, type NodeKey } from 'lexical'
 import type { CardConfig } from '@/context/InklingHostIntegrationContext'
 import type { Visibility } from '@/nodes/base/utils/visibility'
 
+import { isVisibilitySettingsEnabled } from '@/hooks/useVisibilitySettingsPanel'
 import { GeneratedDecoratorNodeBase } from '@/nodes/base'
 import {
   VISIBILITY_SETTINGS,
@@ -33,7 +34,7 @@ export const useVisibilityToggle = (
 ): UseVisibilityToggleResult => {
   const isStripeEnabled = !!cardConfig?.stripeEnabled
   const visibilitySetting = cardConfig?.visibilitySettings ?? VISIBILITY_SETTINGS.WEB_AND_EMAIL
-  const isVisibilityEnabled = visibilitySetting !== VISIBILITY_SETTINGS.NONE
+  const isVisibilityEnabled = isVisibilitySettingsEnabled(cardConfig)
   const showWeb =
     visibilitySetting === VISIBILITY_SETTINGS.WEB_AND_EMAIL || visibilitySetting === VISIBILITY_SETTINGS.WEB_ONLY
   const showEmail =

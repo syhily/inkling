@@ -34,11 +34,7 @@ export interface ContainerDroppableConfig {
     droppableElem: HTMLElement,
     position: DroppablePosition,
   ) => IndicatorPosition | false
-  onDrop: (
-    draggableInfo: DraggableInfo,
-    droppable: HTMLElement | null,
-    position: DroppablePosition | null,
-  ) => DropResult
+  onDrop: (draggableInfo: DraggableInfo) => DropResult
   onDragEnterContainer?: (draggableInfo: DraggableInfo) => void
   onDragEnterDroppable?: (droppable: HTMLElement, position: DroppablePosition) => void
   onDragOverDroppable?: (droppable: HTMLElement, position: DroppablePosition) => void

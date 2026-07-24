@@ -43,7 +43,6 @@ export const toggleDeclaration = {
     },
   ],
   insert: { command: INSERT_TOGGLE_COMMAND, openInEditMode: true },
-  handWrittenWrapper: true,
   surfaces: {
     default: true,
     emailEditor: false,

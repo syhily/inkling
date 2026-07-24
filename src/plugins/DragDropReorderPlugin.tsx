@@ -148,11 +148,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
 
         return resolution ? { insertIndex: resolution.insertIndex } : false
       },
-      onDrop: (
-        draggableInfo: DraggableInfo,
-        droppable: HTMLElement | null,
-        position: DroppablePosition | null,
-      ): DropResult => {
+      onDrop: (draggableInfo: DraggableInfo): DropResult => {
         if (draggableInfo.type !== 'card' && draggableInfo.type !== 'image') {
           return false
         }

@@ -5,6 +5,8 @@
 // - **Code fence** (```lang): fired by THREE triggers — the enter key and the
 //   tab key (`@/plugins/behaviour/keyboard-navigation`), and the markdown
 //   shortcut/import `CODE_BLOCK` transformer (`@/markdown/transformers`).
+//   Enter and tab share one trigger body, `$fireFenceKeyboardShortcut` below;
+//   the transformer calls `$insertCodeBlockForShortcut` directly.
 // - **Horizontal rule** (---): fired by TWO triggers — the markdown
 //   shortcut/import `HR` transformer (`@/markdown/transformers`) and the
 //   per-update scan in `@/plugins/HorizontalRulePlugin`.
@@ -17,13 +19,13 @@
 // fence line whose language exceeds 10 word chars still transforms on
 // enter/tab (pinned in test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts).
 //
-// Language extraction differs per trigger too and stays at the call site:
-// enter/tab take the FULL rest of the line (`textContent.replace(/^```/, '')`
-// — 'js extra' and all), the transformer takes the regex's `match[1]`
-// capture. The replace-and-select body below is shared by all three fence
-// triggers: `replace` and `insertAfter` + `remove` were pinned net-identical
-// for this rewrite (same position, paragraph children dropped either way,
-// same NodeSelection), so one body serves every trigger.
+// Language extraction differs per trigger too: the keyboard trigger body
+// takes the FULL rest of the line (`textContent.replace(/^```/, '')` — 'js
+// extra' and all), the transformer takes the regex's `match[1]` capture at
+// its own call site. The replace-and-select body below is shared by all three
+// fence triggers: `replace` and `insertAfter` + `remove` were pinned
+// net-identical for this rewrite (same position, paragraph children dropped
+// either way, same NodeSelection), so one body serves every trigger.
 //
 // The divider regex is single-sourced — both HR triggers already tested the
 // paragraph's full text against the byte-identical expression. The HR
@@ -41,7 +43,7 @@
 
 import type { ElementNode } from 'lexical'
 
-import { $createNodeSelection, $createParagraphNode, $setSelection } from 'lexical'
+import { $createNodeSelection, $createParagraphNode, $getSelection, $isTextNode, $setSelection } from 'lexical'
 
 import { $createCodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $createHorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
@@ -68,6 +70,34 @@ export function $insertCodeBlockForShortcut(topLevelElement: ElementNode, langua
   const replacementSelection = $createNodeSelection()
   replacementSelection.add(replacementNode.getKey())
   $setSelection(replacementSelection)
+}
+
+/**
+ * enter/tab keyboard trigger body: the caret text starts with a fence
+ * (FENCE_KEYBOARD_REGEXP), so swap its paragraph for a code block card. Owns
+ * the keyboard trigger's language extraction — the FULL rest of the line
+ * (`replace(/^```/, '')`, 'js extra' and all) — where the transformer trigger
+ * keeps its `match[1]` capture. Returns true when the shortcut fired (event
+ * consumed); false when the caret isn't on a fence line, so the caller falls
+ * through to its other key handling.
+ */
+export function $fireFenceKeyboardShortcut(event: KeyboardEvent): boolean {
+  const selection = $getSelection()
+  const currentNode = selection?.getNodes()[0]
+  if (!$isTextNode(currentNode)) {
+    return false
+  }
+  const textContent = currentNode.getTextContent()
+  if (!textContent.match(FENCE_KEYBOARD_REGEXP)) {
+    return false
+  }
+  event.preventDefault()
+  const topLevelElement = currentNode.getTopLevelElement()
+  if (!topLevelElement) {
+    return false
+  }
+  $insertCodeBlockForShortcut(topLevelElement, textContent.replace(/^```/, ''))
+  return true
 }
 
 /** divider trigger, single-sourced: both the markdown transformer and the
