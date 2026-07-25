@@ -12,7 +12,7 @@ interface ToggleNodeData {
 function sanitize(node: ToggleNodeData, context: RenderContext) {
   return {
     safeHeading: context.escapeText(node.heading),
-    safeContent: context.sanitizeCaption(node.content),
+    safeContent: context.sanitizeBasicHtml(node.content),
   }
 }
 

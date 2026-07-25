@@ -21,15 +21,15 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  *   seam's private implementation).
  * - `isLocalContentImage` folds the `siteUrl`/`imageBaseUrl` forwarding into
  *   the context (Step 3b), so renderers can't drop an argument.
- * - `sanitizeCaption`/`sanitizeCardHtml` converge sanitization on DOMPurify
+ * - `sanitizeBasicHtml`/`sanitizeCardHtml` converge sanitization on DOMPurify
  *   (Step 4; named configs such as callout's land here). Two recorded STOP
  *   fallbacks from the Step-4 corpus diff live behind the seam too:
  *   `escapeText` (DOMPurify cannot reproduce `escapeHtml` for the video
  *   caption corpus) and `CALLOUT_HTML_CONFIG` (DOMPurify cannot reproduce
  *   cleanDOM's per-tag attribute policy), each documented at its definition.
- *   `sanitizeBasicHtml` is the same default-config sanitize under a
- *   content-neutral name, for non-caption HTML such as the markdown card's
- *   rendered body; `sanitizeCaption` stays as the caption-call-site alias.
+ *   `sanitizeBasicHtml` is the default-config sanitize under a
+ *   content-neutral name, shared by caption call sites and non-caption HTML
+ *   such as the markdown card's rendered body.
  * - `createDocument` resolution absorbed the deleted `addCreateDocumentOption`
  *   helper (Step 6), and `trackIdAttribute` owns the heading-id dedup map the
  *   options bag's `usedIdAttributes` used to carry.
@@ -153,8 +153,6 @@ function readImageOptimization(bag: ImageOptimizationOptions): ImageOptimization
 }
 
 export interface RenderContext {
-  readonly imageBaseUrl: string | undefined
-  readonly siteUrl: string | undefined
   /** Frozen snapshot of the image-optimization bag (absent when not passed). */
   readonly imageOptimization: ImageOptimizationOptions | undefined
   readonly canTransformImage: ((src: string) => boolean) | undefined
@@ -168,18 +166,18 @@ export interface RenderContext {
   /** URL policy: returns `value` when it is safe for `kind`, `''` otherwise. */
   safeUrl(kind: SafeUrlKind, value: string): string
   /**
-   * Local-content check using the context's own `siteUrl`/`imageBaseUrl` —
-   * callers can no longer forget to forward them (the `b87ecc1` bug class).
+   * Local-content check closing over the options' `siteUrl`/`imageBaseUrl`
+   * captured at build time — callers can no longer forget to forward them
+   * (the `b87ecc1` bug class).
    */
   isLocalContentImage(url: string): boolean
-  /** Caption sanitization, routed through the DOMPurify-backed `sanitizeHtml`. */
-  sanitizeCaption(html: string): string
   /**
-   * The same default-config `sanitizeHtml` as `sanitizeCaption`, under a
-   * content-neutral name for non-caption HTML (the markdown card's rendered
-   * markdown-it body). Added so no caller has to reach for a "caption" entry
-   * to sanitize basic HTML — the markdown renderer's direct `sanitize-html`
-   * import was the render-policy allowlist's last entry.
+   * Default-config `sanitizeHtml` under a content-neutral name, shared by
+   * caption call sites and non-caption HTML (the markdown card's rendered
+   * markdown-it body). The content-neutral name exists so no caller has to
+   * reach for a "caption" entry to sanitize basic HTML — the markdown
+   * renderer's direct `sanitize-html` import was the render-policy
+   * allowlist's last entry.
    */
   sanitizeBasicHtml(html: string): string
   /**
@@ -264,8 +262,6 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
     : undefined
 
   const context: RenderContext = {
-    imageBaseUrl,
-    siteUrl,
     imageOptimization,
     canTransformImage: options.canTransformImage,
     canTransformImageToFormat: options.canTransformImageToFormat,
@@ -279,9 +275,6 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
       // `undefined` siteUrl/imageBaseUrl hit the same `''` defaults inside
       // is-local-content-image as the old per-call-site forwarding did.
       return isLocalContentImageImpl(url, siteUrl, imageBaseUrl)
-    },
-    sanitizeCaption(html) {
-      return sanitizeHtml(html)
     },
     sanitizeBasicHtml(html) {
       return sanitizeHtml(html)

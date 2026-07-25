@@ -102,7 +102,7 @@ function frontendTemplate(node: BookmarkNodeData, document: Document, context: R
 
   if (caption) {
     const figCaption = document.createElement('figcaption')
-    figCaption.innerHTML = context.sanitizeCaption(caption)
+    figCaption.innerHTML = context.sanitizeBasicHtml(caption)
     element.appendChild(figCaption)
   }
 

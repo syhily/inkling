@@ -21,7 +21,7 @@ export default function $convertToHtmlString(editor: LexicalEditor, options: Exp
   //
   // The string layer itself stays verbatim — that is a deliberate design
   // decision, not an oversight. Sanitization happens inside the card
-  // renderers via the render context (`sanitizeCaption` / `sanitizeCardHtml`
+  // renderers via the render context (`sanitizeBasicHtml` / `sanitizeCardHtml`
   // / `escapeText`) before markup reaches this layer, so the innerHTML /
   // outerHTML / value concatenation below needs no sanitize pass of its own.
   // Do NOT add a blanket sanitize here: it would double-escape markup the

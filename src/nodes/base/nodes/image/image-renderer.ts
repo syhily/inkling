@@ -176,7 +176,7 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
 
   if (node.caption) {
     const caption = document.createElement('figcaption')
-    caption.innerHTML = context.sanitizeCaption(node.caption)
+    caption.innerHTML = context.sanitizeBasicHtml(node.caption)
     figure.appendChild(caption)
   }
 

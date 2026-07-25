@@ -269,7 +269,7 @@ describe('BaseToggleNode', function () {
       // The toggle renderer interpolates heading/content into HTML strings.
       // Plan 040 Step 4 routes both through the render context: the heading
       // is escaped (context.escapeText) and the nested-editor content is
-      // DOMPurify-sanitized (context.sanitizeCaption), so markup-bearing
+      // DOMPurify-sanitized (context.sanitizeBasicHtml), so markup-bearing
       // inputs are neutralized while benign inputs render byte-identically.
       // A standalone leading <script> parses into the document <head> inside
       // sanitizeHtml's placeholder pass, so the pinned content below

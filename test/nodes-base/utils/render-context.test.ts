@@ -58,7 +58,7 @@ describe('createRenderContext', () => {
 
       expect(Object.isFrozen(context)).toBe(true)
       expect(() => {
-        ;(context as unknown as Record<string, unknown>).siteUrl = 'https://example.com'
+        ;(context as unknown as Record<string, unknown>).inklingVersion = '4.0'
       }).toThrow(TypeError)
       expect(() => {
         ;(context as unknown as Record<string, unknown>).safeUrl = () => ''
@@ -81,15 +81,17 @@ describe('createRenderContext', () => {
       expect(context.feature).toBeUndefined()
     })
 
-    it('copies the scalar option fields', () => {
+    it('closes over siteUrl/imageBaseUrl without exposing them as fields', () => {
       const context = createRenderContext({
         dom,
         imageBaseUrl: 'https://img.example.com',
         siteUrl: 'https://example.com',
       })
 
-      expect(context.imageBaseUrl).toBe('https://img.example.com')
-      expect(context.siteUrl).toBe('https://example.com')
+      expect('imageBaseUrl' in context).toBe(false)
+      expect('siteUrl' in context).toBe(false)
+      expect(context.isLocalContentImage('https://example.com/content/images/test.jpg')).toBe(true)
+      expect(context.isLocalContentImage('https://img.example.com/content/images/test.jpg')).toBe(true)
     })
   })
 
@@ -228,8 +230,8 @@ describe('createRenderContext', () => {
   describe('sanitization', () => {
     const context = createRenderContext({ dom })
 
-    it('sanitizeCaption keeps allowed markup and neutralizes scripts', () => {
-      const output = context.sanitizeCaption('<b>bold</b><script>alert(1)</script>')
+    it('sanitizeBasicHtml keeps allowed markup and neutralizes scripts', () => {
+      const output = context.sanitizeBasicHtml('<b>bold</b><script>alert(1)</script>')
 
       expect(output).toContain('<b>bold</b>')
       expect(output).not.toContain('<script>')

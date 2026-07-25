@@ -135,7 +135,7 @@ export function renderGalleryNode(node: GalleryNodeData, context: RenderContext)
 
   if (node.caption) {
     const figcaption = document.createElement('figcaption')
-    figcaption.innerHTML = context.sanitizeCaption(node.caption)
+    figcaption.innerHTML = context.sanitizeBasicHtml(node.caption)
     figure.appendChild(figcaption)
     figure.setAttribute('class', `${figure.getAttribute('class')} inkling-card-hascaption`)
   }
