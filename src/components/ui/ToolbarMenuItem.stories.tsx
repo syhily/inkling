@@ -96,12 +96,6 @@ export const ImgFull: Story = {
   render: (args) => <ToolbarMenuItemStory {...args} />,
 }
 
-export const imgReplaceArgs = { icon: 'imgReplace' as const, label: 'Replace image', isActive: false as const }
-export const ImgReplace: Story = {
-  args: imgReplaceArgs,
-  render: (args) => <ToolbarMenuItemStory {...args} />,
-}
-
 export const addArgs = { icon: 'add' as const, label: 'Add', isActive: false as const }
 export const Add: Story = {
   args: addArgs,

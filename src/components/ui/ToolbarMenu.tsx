@@ -11,10 +11,7 @@ import LinkIcon from '@/assets/icons/inkling-link.svg?react'
 import QuoteOneIcon from '@/assets/icons/inkling-quote-1.svg?react'
 import QuoteTwoIcon from '@/assets/icons/inkling-quote-2.svg?react'
 import QuoteIcon from '@/assets/icons/inkling-quote.svg?react'
-import ImgReplaceIcon from '@/assets/icons/inkling-replace.svg?react'
 import SnippetIcon from '@/assets/icons/inkling-snippet.svg?react'
-import TrashIcon from '@/assets/icons/inkling-trash.svg?react'
-import WandIcon from '@/assets/icons/inkling-wand.svg?react'
 import { Tooltip } from '@/components/ui/Tooltip'
 
 export const TOOLBAR_ICONS = {
@@ -29,12 +26,9 @@ export const TOOLBAR_ICONS = {
   imgRegular: ImgRegularIcon,
   imgWide: ImgWideIcon,
   imgFull: ImgFullIcon,
-  imgReplace: ImgReplaceIcon,
   add: AddIcon,
   edit: EditIcon,
-  wand: WandIcon,
   snippet: SnippetIcon,
-  remove: TrashIcon,
 } satisfies Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>>
 
 export type ToolbarIconName = keyof typeof TOOLBAR_ICONS
