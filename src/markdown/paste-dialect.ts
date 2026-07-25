@@ -98,37 +98,23 @@ const namedHeaders = function ({ inklingVersion }: RenderOptions = {}) {
 }
 
 const selectRenderer = function (options: RenderOptions): MarkdownIt {
-  if (isLegacyVersion(options.inklingVersion || DEFAULT_INKLING_VERSION)) {
-    if (renderers['<4.x']) {
-      return renderers['<4.x']
-    }
-    const markdownIt = new MarkdownIt({ html: true, breaks: true, linkify: true })
-      .use(markdownItFootnote)
-      .use(markdownItLazyHeaders)
-      .use(markdownItMark)
-      .use(markdownItImageLazyLoading)
-      .use(namedHeaders(options))
-      .use(markdownItSub)
-      .use(markdownItSup)
-    markdownIt.linkify.set({ fuzzyLink: false })
-    renderers['<4.x'] = markdownIt
-    return markdownIt
-  } else {
-    if (renderers.latest) {
-      return renderers.latest
-    }
-    const markdownIt = new MarkdownIt({ html: true, breaks: true, linkify: true })
-      .use(markdownItFootnote)
-      .use(markdownItLazyHeaders)
-      .use(markdownItMark)
-      .use(markdownItImageLazyLoading)
-      .use(namedHeaders(options))
-      .use(markdownItSub)
-      .use(markdownItSup)
-    markdownIt.linkify.set({ fuzzyLink: false })
-    renderers.latest = markdownIt
-    return markdownIt
+  // The slug policy is fixed by the version, so one cached engine per policy;
+  // `namedHeaders(options)` closes over the per-version slug behaviour.
+  const key = isLegacyVersion(options.inklingVersion || DEFAULT_INKLING_VERSION) ? '<4.x' : 'latest'
+  if (renderers[key]) {
+    return renderers[key]
   }
+  const markdownIt = new MarkdownIt({ html: true, breaks: true, linkify: true })
+    .use(markdownItFootnote)
+    .use(markdownItLazyHeaders)
+    .use(markdownItMark)
+    .use(markdownItImageLazyLoading)
+    .use(namedHeaders(options))
+    .use(markdownItSub)
+    .use(markdownItSup)
+  markdownIt.linkify.set({ fuzzyLink: false })
+  renderers[key] = markdownIt
+  return markdownIt
 }
 
 /** Render markdown to (unsanitized) HTML through the paste dialect's engine. */
