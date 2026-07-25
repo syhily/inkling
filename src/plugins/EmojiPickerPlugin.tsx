@@ -1,38 +1,21 @@
 import type { TextNode } from 'lexical'
 
-import emojiData from '@emoji-mart/data'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { LexicalTypeaheadMenuPlugin, MenuOption } from '@lexical/react/LexicalTypeaheadMenuPlugin'
-import { SearchIndex, init } from 'emoji-mart'
-import {
-  $createTextNode,
-  $getSelection,
-  $isRangeSelection,
-  $isTextNode,
-  COMMAND_PRIORITY_HIGH,
-  KEY_DOWN_COMMAND,
-  mergeRegister,
-} from 'lexical'
 import React from 'react'
 
 import Portal from '@/components/ui/Portal'
 import useTypeaheadTriggerMatch from '@/hooks/useTypeaheadTriggerMatch'
 import trackEvent from '@/utils/analytics'
 
-// emoji-mart's init is a global side effect; the plugin runs it once on first
-// mount instead of at module import time
-let emojiDataInitialized = false
-
-interface EmojiSkin {
-  native: string
-}
-
-/** The emoji-mart search-result shape this plugin consumes (SearchIndex.search
- * returns `any`; this is the boundary annotation). */
-interface EmojiSearchResult {
-  id: string
-  skins: EmojiSkin[]
-}
+import {
+  $insertSelectedEmoji,
+  ensureEmojiSearchReady,
+  registerEmojiExactMatchCompletion,
+  searchEmojis,
+  type EmojiSearchResult,
+  type EmojiSkin,
+} from './behaviour/emoji-completion'
 
 class EmojiOption extends MenuOption {
   id: string
@@ -77,6 +60,11 @@ const EmojiMenuItem = function ({ index, isSelected, onClick, onMouseEnter, emoj
   )
 }
 
+// Emoji picker adapter: owns the typeahead menu rendering and the query state,
+// and delegates behaviour to the headless module in
+// ./behaviour/emoji-completion (index lifecycle, query policy, exact-match
+// completion, insertion surgeries). Analytics stays here — it is product
+// glue, not tree policy; the surgeries return commit results to attach it to.
 export function EmojiPickerPlugin() {
   const [editor] = useLexicalComposerContext()
   const [queryString, setQueryString] = React.useState<string | null>(null)
@@ -85,88 +73,24 @@ export function EmojiPickerPlugin() {
   const checkForTriggerMatch = useTypeaheadTriggerMatch(':', { minLength: 1 })
 
   React.useEffect(() => {
-    if (emojiDataInitialized) {
-      return
-    }
-    emojiDataInitialized = true
-    init({ data: emojiData })
+    ensureEmojiSearchReady()
   }, [])
 
-  const cursorInInlineCodeBlock = React.useCallback(() => {
-    return editor.getEditorState().read(() => {
-      const selection = $getSelection()
-      if (!$isRangeSelection(selection)) {
-        return false
-      }
-      const node = selection.anchor.getNode()
-      if (node && $isTextNode(node) && node.hasFormat('code')) {
-        return true
-      }
-      return false
-    })
-  }, [editor])
-
-  const handleCompletionInsertion = React.useCallback(
-    (emoji: EmojiSearchResult | null) => {
-      editor.update(() => {
-        const selection = $getSelection()
-
-        if (!$isRangeSelection(selection) || emoji === null) {
-          return
-        }
-
-        const currentNode = selection.anchor.getNode()
-        if (!$isTextNode(currentNode)) {
-          return
-        }
-        // need to replace the last text matching the :test: pattern with a single emoji
-        const shortcodeLength = emoji.id.length + 1 // +1 for the end colon
-        const textNode = currentNode.spliceText(
-          selection.anchor.offset - shortcodeLength,
-          shortcodeLength,
-          emoji.skins[0].native,
-          true,
-        )
-        textNode.setFormat(selection.format)
-
-        trackEvent('Emoji Inserted', { method: 'completed' })
-      })
-    },
-    [editor],
-  )
+  // the exact-match handler reads the query lazily so its registration is
+  // stable per editor instead of re-registering on every keystroke
+  const queryRef = React.useRef<string | null>(null)
+  React.useEffect(() => {
+    queryRef.current = queryString
+  }, [queryString])
 
   // handle exact match typed like :emoji:
   //  the typeahead menu does not account for exact matches/closing characters
   React.useEffect(() => {
-    return mergeRegister(
-      editor.registerCommand(
-        KEY_DOWN_COMMAND,
-        (event) => {
-          if (!queryString) {
-            return false
-          }
-          if (event.key === ':') {
-            if (cursorInInlineCodeBlock() === true) {
-              return false
-            }
-            void (async () => {
-              const emojis: EmojiSearchResult[] = await SearchIndex.search(queryString)
-              if (emojis.length === 0) {
-                return
-              }
-              const emojiMatch = emojis[0].id === queryString // only look for exact match
-              if (emojiMatch) {
-                handleCompletionInsertion(emojis[0])
-                event.preventDefault()
-              }
-            })()
-          }
-          return false
-        },
-        COMMAND_PRIORITY_HIGH,
-      ),
-    )
-  }, [editor, queryString, cursorInInlineCodeBlock, handleCompletionInsertion])
+    return registerEmojiExactMatchCompletion(editor, {
+      getQuery: () => queryRef.current,
+      onCommit: () => trackEvent('Emoji Inserted', { method: 'completed' }),
+    })
+  }, [editor])
 
   React.useEffect(() => {
     if (!queryString) {
@@ -175,38 +99,18 @@ export function EmojiPickerPlugin() {
     }
     const query = queryString
 
-    async function searchEmojis() {
-      let filteredEmojis: EmojiSearchResult[] = []
-      if ([')', '-)'].includes(query)) {
-        filteredEmojis = await SearchIndex.search('smile')
-      } else if (['(', '-('].includes(query)) {
-        filteredEmojis = await SearchIndex.search('frown')
-      } else {
-        filteredEmojis = await SearchIndex.search(query)
-      }
-      setSearchResults(filteredEmojis.map((emoji) => new EmojiOption(emoji)))
-    }
-
-    searchEmojis()
+    void searchEmojis(query).then((emojis) => {
+      setSearchResults(emojis.map((emoji) => new EmojiOption(emoji)))
+    })
   }, [queryString])
 
   const onEmojiSelect = React.useCallback(
     (selectedOption: EmojiOption, nodeToRemove: TextNode | null, closeMenu: () => void) => {
       editor.update(() => {
-        const selection = $getSelection()
-
-        if (!$isRangeSelection(selection) || selectedOption === null) {
+        const committed = $insertSelectedEmoji(selectedOption, nodeToRemove)
+        if (!committed) {
           return
         }
-
-        if (nodeToRemove) {
-          nodeToRemove.remove()
-        }
-
-        const emojiNode = $createTextNode(selectedOption.skins[0].native)
-        emojiNode.setFormat(selection.format)
-
-        selection.insertNodes([emojiNode])
 
         closeMenu()
 
