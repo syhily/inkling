@@ -312,7 +312,7 @@ describe('BaseImageNode', function () {
           })
           const { element } = imageNode.exportDOM(editor, {
             ...exportOptions,
-            feature: { pictureImageFormats: true },
+            pictureImageFormats: true,
             canTransformImage,
             canTransformImageToFormat,
           })
@@ -442,7 +442,7 @@ describe('BaseImageNode', function () {
     describe('picture element', function () {
       const pictureOptions = () => ({
         ...exportOptions,
-        feature: { pictureImageFormats: true },
+        pictureImageFormats: true,
         canTransformImageToFormat: () => true,
       })
 
@@ -501,7 +501,7 @@ describe('BaseImageNode', function () {
           const imageNode = $createBaseImageNode(dataset)
           const { element } = imageNode.exportDOM(editor, {
             ...exportOptions,
-            feature: { pictureImageFormats: true },
+            pictureImageFormats: true,
             canTransformImageToFormat: () => false,
           })
           const el = element as HTMLElement

@@ -65,20 +65,16 @@ describe('createRenderContext', () => {
       }).toThrow(TypeError)
     })
 
-    it('exposes feature as a frozen snapshot', () => {
-      const feature = { pictureImageFormats: false }
-      const context = createRenderContext({ dom, feature })
+    it('passes pictureImageFormats through', () => {
+      const context = createRenderContext({ dom, pictureImageFormats: true })
 
-      expect(Object.isFrozen(context.feature)).toBe(true)
-
-      feature.pictureImageFormats = true
-      expect(context.feature?.pictureImageFormats).toBe(false)
+      expect(context.pictureImageFormats).toBe(true)
     })
 
-    it('leaves feature undefined when not passed', () => {
+    it('leaves pictureImageFormats undefined when not passed', () => {
       const context = createRenderContext({ dom })
 
-      expect(context.feature).toBeUndefined()
+      expect(context.pictureImageFormats).toBeUndefined()
     })
 
     it('closes over siteUrl/imageBaseUrl without exposing them as fields', () => {

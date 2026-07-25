@@ -7,18 +7,6 @@ export type ExportDOMOutput<TType extends ExportDOMOutputType = ExportDOMOutputT
   type: TType
 }
 
-/**
- * The feature flags card renderers consume (CONTEXT.md: "render context"
- * carries them). Closed on purpose: a flag name outside this list fails
- * typecheck instead of silently reading `undefined`. Untyped hosts can still
- * pass extra keys at runtime — the render-context factory reads only the
- * known ones.
- */
-export interface ExportDOMFeatureOptions {
-  /** image renderer: emit `<picture>` sources for modern formats */
-  pictureImageFormats?: boolean
-}
-
 export interface ExportDOMDom {
   window: { document: Document }
 }
@@ -59,5 +47,6 @@ export interface ExportDOMOptions {
    * `@/markdown/paste-dialect`).
    */
   inklingVersion?: string
-  feature?: ExportDOMFeatureOptions
+  /** image renderer: emit `<picture>` sources for modern formats */
+  pictureImageFormats?: boolean
 }

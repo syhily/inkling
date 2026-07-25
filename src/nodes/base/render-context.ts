@@ -1,6 +1,6 @@
 import DOMPurify, { type Config as DOMPurifyConfig } from 'dompurify'
 
-import type { ExportDOMFeatureOptions, ExportDOMOptions, ImageOptimizationOptions } from '@/nodes/base/export-dom'
+import type { ExportDOMOptions, ImageOptimizationOptions } from '@/nodes/base/export-dom'
 
 import { cleanDOM } from '@/nodes/base/utils/clean-dom'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
@@ -38,10 +38,10 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  *   (a frozen snapshot), the `canTransformImage*` callbacks (by reference),
  *   and `inklingVersion` — are documented at their declarations.
  *
- * The context is read-only: scalar fields are copied, `feature` is a frozen
- * snapshot, and the object itself is frozen. The freeze is shallow — nested
- * values inside `feature` stay shared references and must not carry mutable
- * state. `trackIdAttribute` is the one exception to the read-only surface:
+ * The context is read-only: scalar fields are copied, `imageOptimization` is
+ * a frozen snapshot, and the object itself is frozen. The freeze is shallow —
+ * nested values inside `imageOptimization` stay shared references and must
+ * not carry mutable state. `trackIdAttribute` is the one exception to the read-only surface:
  * it mutates the id-dedup map, which is internal per-render state the seam
  * owns, not exposed policy. The context is cheap to build, so callers
  * construct it once per render pass (per `exportDOM` call in the card
@@ -159,8 +159,8 @@ export interface RenderContext {
   readonly canTransformImageToFormat: ((format: string) => boolean) | undefined
   /** The markdown card's slug-policy input, consumed by `@/markdown/paste-dialect`. */
   readonly inklingVersion: string | undefined
-  /** Frozen snapshot of the feature option bag (absent when not passed). */
-  readonly feature: Readonly<ExportDOMFeatureOptions> | undefined
+  /** image renderer: emit `<picture>` sources for modern formats (absent when not passed). */
+  readonly pictureImageFormats: boolean | undefined
   /** Resolved once: `options.createDocument` / `options.dom` / the browser global, in that order. */
   readonly createDocument: () => Document
   /** URL policy: returns `value` when it is safe for `kind`, `''` otherwise. */
@@ -256,7 +256,6 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
 
   const siteUrl = options.siteUrl
   const imageBaseUrl = options.imageBaseUrl
-  const feature = options.feature ? Object.freeze({ ...options.feature }) : undefined
   const imageOptimization = options.imageOptimization
     ? Object.freeze(readImageOptimization(options.imageOptimization))
     : undefined
@@ -266,7 +265,7 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
     canTransformImage: options.canTransformImage,
     canTransformImageToFormat: options.canTransformImageToFormat,
     inklingVersion: options.inklingVersion,
-    feature,
+    pictureImageFormats: options.pictureImageFormats,
     createDocument,
     safeUrl(kind, value) {
       return (kind === 'media' ? isSafeMediaUrl(value) : isSafeUrl(value)) ? value : ''

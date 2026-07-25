@@ -112,7 +112,7 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
   }
 
   const shouldRenderPicture = Boolean(
-    context.feature?.pictureImageFormats &&
+    context.pictureImageFormats &&
     img.getAttribute('srcset') &&
     !isAnimatedImage(node.src) &&
     context.isLocalContentImage(node.src) &&
