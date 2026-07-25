@@ -390,19 +390,6 @@ describe('BaseImageNode', function () {
     )
 
     describe('srcset attribute', function () {
-      it(
-        'is ommitted when target is email',
-        editorTest(async function () {
-          exportOptions.target = 'email'
-
-          const imageNode = $createBaseImageNode(dataset)
-          const { element } = imageNode.exportDOM(editor, exportOptions)
-          const output = (element as HTMLElement).outerHTML
-
-          expect(output).not.toContain('srcset')
-        }),
-      )
-
       it('is included for absolute images when siteUrl has trailing slash')
       it('is omitted when no contentImageSizes are passed as options')
       it('is omitted when `srcsets: false` is passed in as an option')
@@ -450,41 +437,6 @@ describe('BaseImageNode', function () {
       it('is omitted for standard images when width is less than 720')
       it('is omitted for wide images when width is less than 1200')
       it('is omitted for full images')
-    })
-
-    describe('email target', function () {
-      it(
-        'pins the full email output',
-        editorTest(async function () {
-          const imageNode = $createBaseImageNode(dataset)
-          const { element } = imageNode.exportDOM(editor, { ...exportOptions, target: 'email' })
-
-          await expectPrettifiedHtml(
-            (element as HTMLElement).outerHTML,
-            html`
-              <figure class="inkling-card inkling-image-card inkling-card-hascaption">
-                <img
-                  src="/content/images/size/w1600/2022/11/inkling-lexical.jpg"
-                  class="inkling-image"
-                  alt="This is some alt text"
-                  loading="lazy"
-                  title="This is a title"
-                  width="600"
-                  height="338"
-                />
-                <figcaption>This is a <b>caption</b></figcaption>
-              </figure>
-            `,
-          )
-        }),
-      )
-
-      it('adds width/height and uses resized local image')
-      it('adds width/height and uses original src when local image cannot be transformed')
-      it('uses original image if size is smaller than "retina" size')
-      it('uses original image width/height if image is smaller than 600px wide')
-      it('skips width/height and resize if payload is missing dimensions')
-      it('omits srcset attribute')
     })
 
     describe('picture element', function () {
@@ -567,18 +519,6 @@ describe('BaseImageNode', function () {
           const el = element as HTMLElement
 
           expect(el.querySelector('picture')).toBeNull()
-        }),
-      )
-
-      it(
-        'is omitted when target is email',
-        editorTest(async function () {
-          const imageNode = $createBaseImageNode(dataset)
-          const { element } = imageNode.exportDOM(editor, { ...pictureOptions(), target: 'email' })
-          const el = element as HTMLElement
-
-          expect(el.querySelector('picture')).toBeNull()
-          expect(el.querySelector('source')).toBeNull()
         }),
       )
     })

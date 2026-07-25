@@ -12,7 +12,7 @@ import { imageDeclaration } from './image.declaration'
 import { toggleDeclaration } from './toggle.declaration'
 import { videoDeclaration } from './video.declaration'
 
-export type { CardDeclaration, CardSurfaces } from './card-declaration'
+export type { CardDeclaration } from './card-declaration'
 
 /**
  * The card declarations — the single per-card source of truth (CONTEXT.md:

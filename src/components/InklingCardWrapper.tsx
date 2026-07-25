@@ -15,7 +15,6 @@ import { CardWrapper } from '@/components/ui/CardWrapper'
 import CardContext from '@/context/CardContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
 import { useDragDropState } from '@/hooks/useDragDropState'
-import { useVisibilitySettingsPanel } from '@/hooks/useVisibilitySettingsPanel'
 import { type CardWidth } from '@/nodes/base/utils/card-widths'
 import { EDIT_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
@@ -53,8 +52,6 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
 
   const isSelected = selectedCardKey === nodeKey
   const isEditing = isSelected && isEditingCard
-
-  const { isVisibilityEnabled, openPanel } = useVisibilitySettingsPanel(nodeKey)
 
   React.useLayoutEffect(() => {
     editor.getEditorState().read(() => {
@@ -164,14 +161,6 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
     }
   }, [editor, isSelected, isEditing, nodeKey, containerRef])
 
-  let isVisibilityActive = false
-  if (isVisibilityEnabled) {
-    editor.getEditorState().read(() => {
-      const node = $getNodeByKey(nodeKey)
-      isVisibilityActive = $isCardNode(node) ? node.getIsVisibilityActive() : false
-    })
-  }
-
   const cardContextValue = React.useMemo(
     () => ({
       captionHasFocus,
@@ -193,9 +182,7 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
         isDragging={isDragging}
         isEditing={isEditing}
         isSelected={isSelected}
-        isVisibilityActive={isVisibilityActive}
         wrapperStyle={wrapperStyle}
-        onIndicatorClick={openPanel}
       >
         {children}
       </CardWrapper>

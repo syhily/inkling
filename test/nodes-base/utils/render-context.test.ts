@@ -58,45 +58,38 @@ describe('createRenderContext', () => {
 
       expect(Object.isFrozen(context)).toBe(true)
       expect(() => {
-        ;(context as unknown as Record<string, unknown>).target = 'email'
+        ;(context as unknown as Record<string, unknown>).siteUrl = 'https://example.com'
       }).toThrow(TypeError)
       expect(() => {
         ;(context as unknown as Record<string, unknown>).safeUrl = () => ''
       }).toThrow(TypeError)
     })
 
-    it('exposes feature and design as frozen snapshots', () => {
-      const feature = { emailCustomization: false }
-      const design = { buttonStyle: 'fill' as const }
-      const context = createRenderContext({ dom, feature, design })
+    it('exposes feature as a frozen snapshot', () => {
+      const feature = { pictureImageFormats: false }
+      const context = createRenderContext({ dom, feature })
 
       expect(Object.isFrozen(context.feature)).toBe(true)
-      expect(Object.isFrozen(context.design)).toBe(true)
 
-      feature.emailCustomization = true
-      expect(context.feature?.emailCustomization).toBe(false)
+      feature.pictureImageFormats = true
+      expect(context.feature?.pictureImageFormats).toBe(false)
     })
 
-    it('leaves feature and design undefined when not passed', () => {
+    it('leaves feature undefined when not passed', () => {
       const context = createRenderContext({ dom })
 
       expect(context.feature).toBeUndefined()
-      expect(context.design).toBeUndefined()
     })
 
     it('copies the scalar option fields', () => {
       const context = createRenderContext({
         dom,
-        target: 'email',
         imageBaseUrl: 'https://img.example.com',
         siteUrl: 'https://example.com',
-        postUrl: 'https://example.com/post',
       })
 
-      expect(context.target).toBe('email')
       expect(context.imageBaseUrl).toBe('https://img.example.com')
       expect(context.siteUrl).toBe('https://example.com')
-      expect(context.postUrl).toBe('https://example.com/post')
     })
   })
 
@@ -205,46 +198,6 @@ describe('createRenderContext', () => {
 
       expect(context.isLocalContentImage('https://other.example.com/photos/test.jpg')).toBe(false)
       expect(context.isLocalContentImage('https://example.com.evil.com/content/images/test.jpg')).toBe(false)
-    })
-  })
-
-  describe('variant', () => {
-    it('picks the email branch when target is email', () => {
-      const context = createRenderContext({ dom, target: 'email' })
-
-      expect(context.variant({ web: 'web', email: 'email' })).toBe('email')
-    })
-
-    it('picks the web branch for any other target', () => {
-      expect(createRenderContext({ dom }).variant({ web: 'web', email: 'email' })).toBe('web')
-      expect(createRenderContext({ dom, target: 'html' }).variant({ web: 'web', email: 'email' })).toBe('web')
-    })
-  })
-
-  describe('requirePostUrl', () => {
-    it('returns postUrl when present', () => {
-      const context = createRenderContext({ dom, postUrl: 'https://example.com/post' })
-
-      expect(context.requirePostUrl('renderVideoNode')).toBe('https://example.com/post')
-    })
-
-    it('throws the pinned message naming the caller when postUrl is missing', () => {
-      const context = createRenderContext({ dom, target: 'email' })
-
-      expect(() => context.requirePostUrl('renderVideoNode')).toThrow(
-        /^renderVideoNode requires options\.postUrl when options\.target is "email"$/,
-      )
-      expect(() => context.requirePostUrl('renderAudioNode')).toThrow(
-        /^renderAudioNode requires options\.postUrl when options\.target is "email"$/,
-      )
-    })
-
-    it('throws for a whitespace-only postUrl, matching the video/audio renderer guards', () => {
-      const context = createRenderContext({ dom, target: 'email', postUrl: '   ' })
-
-      expect(() => context.requirePostUrl('renderVideoNode')).toThrow(
-        /^renderVideoNode requires options\.postUrl when options\.target is "email"$/,
-      )
     })
   })
 

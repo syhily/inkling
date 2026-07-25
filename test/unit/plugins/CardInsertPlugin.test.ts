@@ -12,7 +12,6 @@ import { AudioNode, INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
 import { BookmarkNode, INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
 import { ButtonNode, INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
 import { CalloutNode, INSERT_CALLOUT_COMMAND } from '@/nodes/CalloutNode'
-import EMAIL_EDITOR_NODES from '@/nodes/EmailEditorNodes'
 import { FileNode, INSERT_FILE_COMMAND } from '@/nodes/FileNode'
 import { GalleryNode, INSERT_GALLERY_COMMAND } from '@/nodes/GalleryNode'
 import { HeaderNode, INSERT_HEADER_COMMAND } from '@/nodes/HeaderNode'
@@ -196,21 +195,6 @@ describe('CardInsertPlugin', () => {
 
       expect(editor.dispatchCommand(command, null)).toBe(false)
       expect(editor.dispatchCommand(command, 'not-an-object')).toBe(false)
-      expect(ref.payload).toBeUndefined()
-
-      removeListener()
-    },
-  )
-
-  it.each(INSERT_MATRIX.filter(({ card }) => ['audio', 'file', 'gallery', 'header', 'toggle', 'video'].includes(card)))(
-    '$card: registers nothing under EMAIL_EDITOR_NODES (the card is not on the email surface)',
-    async ({ command, dataset }) => {
-      editor = createTestEditor(EMAIL_EDITOR_NODES)
-      await mountRegistrar(editor)
-
-      const { ref, removeListener } = captureInsertCard(editor)
-
-      expect(editor.dispatchCommand(command, dataset)).toBe(false)
       expect(ref.payload).toBeUndefined()
 
       removeListener()

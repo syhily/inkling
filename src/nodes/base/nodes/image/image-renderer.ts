@@ -2,7 +2,6 @@ import type { RenderContext } from '@/nodes/base/render-context'
 
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
-import { applyEmailImageAttributes } from '@/nodes/base/utils/render-helpers/email-image'
 import { getSrcsetAttribute, setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 
 const MODERN_IMAGE_FORMATS = ['avif', 'webp']
@@ -86,92 +85,83 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
 
   let picture: HTMLPictureElement | null = null
 
-  if (context.variant({ web: true, email: false })) {
-    // a null width yields no srcset below, so skip the call outright
-    if (node.width !== null) {
-      const imgAttributes = {
-        src: node.src,
-        width: node.width,
-        height: node.height,
-      }
-      setSrcsetAttribute(img, imgAttributes, context)
+  // a null width yields no srcset below, so skip the call outright
+  if (node.width !== null) {
+    const imgAttributes = {
+      src: node.src,
+      width: node.width,
+      height: node.height,
+    }
+    setSrcsetAttribute(img, imgAttributes, context)
+  }
+
+  let sizes: string | undefined
+  if (img.getAttribute('srcset') && node.width && node.width >= 720) {
+    // standard size
+    if (!node.cardWidth || node.cardWidth === 'regular') {
+      sizes = '(min-width: 720px) 720px'
     }
 
-    let sizes: string | undefined
-    if (img.getAttribute('srcset') && node.width && node.width >= 720) {
-      // standard size
-      if (!node.cardWidth || node.cardWidth === 'regular') {
-        sizes = '(min-width: 720px) 720px'
-      }
-
-      if (node.cardWidth === 'wide' && node.width >= 1200) {
-        sizes = '(min-width: 1200px) 1200px'
-      }
-    }
-
-    if (sizes) {
-      img.setAttribute('sizes', sizes)
-    }
-
-    const shouldRenderPicture = Boolean(
-      context.feature?.pictureImageFormats &&
-      img.getAttribute('srcset') &&
-      !isAnimatedImage(node.src) &&
-      context.isLocalContentImage(node.src) &&
-      context.canTransformImage?.(node.src) &&
-      typeof context.canTransformImageToFormat === 'function',
-    )
-
-    if (shouldRenderPicture) {
-      picture = document.createElement('picture')
-      let sourcesAdded = false
-
-      MODERN_IMAGE_FORMATS.forEach((format) => {
-        // a null width yields no srcset from getSrcsetAttribute — skip early
-        if (node.width === null) {
-          return
-        }
-
-        if (!context.canTransformImageToFormat!(format)) {
-          return
-        }
-
-        const formattedSrcset = getSrcsetAttribute({
-          src: node.src,
-          width: node.width,
-          context,
-          format,
-        })
-
-        if (!formattedSrcset) {
-          return
-        }
-
-        const source = document.createElement('source')
-        source.setAttribute('srcset', formattedSrcset)
-        source.setAttribute('type', `image/${format}`)
-
-        if (sizes) {
-          source.setAttribute('sizes', sizes)
-        }
-
-        picture!.appendChild(source)
-        sourcesAdded = true
-      })
-
-      if (sourcesAdded) {
-        picture.appendChild(img)
-      } else {
-        picture = null
-      }
+    if (node.cardWidth === 'wide' && node.width >= 1200) {
+      sizes = '(min-width: 1200px) 1200px'
     }
   }
 
-  // Outlook is unable to properly resize images without a width/height
-  // so we add that at the expected size in emails and use a higher
-  // resolution image to keep images looking good on retina screens
-  if (context.variant({ web: false, email: true }) && node.width && node.height) {
-    applyEmailImageAttributes(img, { src: node.src, width: node.width, height: node.height }, context)
+  if (sizes) {
+    img.setAttribute('sizes', sizes)
+  }
+
+  const shouldRenderPicture = Boolean(
+    context.feature?.pictureImageFormats &&
+    img.getAttribute('srcset') &&
+    !isAnimatedImage(node.src) &&
+    context.isLocalContentImage(node.src) &&
+    context.canTransformImage?.(node.src) &&
+    typeof context.canTransformImageToFormat === 'function',
+  )
+
+  if (shouldRenderPicture) {
+    picture = document.createElement('picture')
+    let sourcesAdded = false
+
+    MODERN_IMAGE_FORMATS.forEach((format) => {
+      // a null width yields no srcset from getSrcsetAttribute — skip early
+      if (node.width === null) {
+        return
+      }
+
+      if (!context.canTransformImageToFormat!(format)) {
+        return
+      }
+
+      const formattedSrcset = getSrcsetAttribute({
+        src: node.src,
+        width: node.width,
+        context,
+        format,
+      })
+
+      if (!formattedSrcset) {
+        return
+      }
+
+      const source = document.createElement('source')
+      source.setAttribute('srcset', formattedSrcset)
+      source.setAttribute('type', `image/${format}`)
+
+      if (sizes) {
+        source.setAttribute('sizes', sizes)
+      }
+
+      picture!.appendChild(source)
+      sourcesAdded = true
+    })
+
+    if (sourcesAdded) {
+      picture.appendChild(img)
+    } else {
+      picture = null
+    }
   }
 
   const href = context.safeUrl('navigation', node.href)

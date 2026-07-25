@@ -2,8 +2,6 @@ import React from 'react'
 
 import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
-import VisibilityIndicator from '@/assets/icons/inkling-indicator-visibility.svg?react'
-
 const CARD_WIDTH_CLASSES: Partial<Record<CardWidth, string>> = {
   wide: [
     'w-[calc(75vw-var(--inkling-breakout-adjustment-with-fallback)+2px)] mx-[calc(50%-(50vw-var(--inkling-breakout-adjustment-with-fallback))-.8rem)] min-w-[calc(100%+3.6rem)] translate-x-[calc(50vw-50%+.8rem-var(--inkling-breakout-adjustment-with-fallback))]',
@@ -25,8 +23,6 @@ interface CardWrapperProps {
   isDragging?: boolean
   isEditing?: boolean
   isSelected?: boolean
-  isVisibilityActive?: boolean
-  onIndicatorClick?: (event: React.MouseEvent) => void
   wrapperStyle?: string
   children?: React.ReactNode
 }
@@ -41,8 +37,6 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
       isDragging,
       isEditing,
       isSelected,
-      isVisibilityActive,
-      onIndicatorClick,
       wrapperStyle,
       children,
     },
@@ -75,22 +69,7 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
     }
 
     let indicatorIcon
-    if (isVisibilityActive) {
-      indicatorIcon = (
-        <div className="sticky top-0 lg:top-8">
-          <VisibilityIndicator
-            aria-label="Card is hidden for select audiences"
-            className="absolute left-[-6rem] size-5 cursor-pointer text-grey"
-            data-testid="visibility-indicator"
-            style={{
-              left: position.left,
-              top: position.top,
-            }}
-            onClick={onIndicatorClick}
-          />
-        </div>
-      )
-    } else if (IndicatorIcon) {
+    if (IndicatorIcon) {
       indicatorIcon = (
         <div className="sticky top-0 lg:top-8">
           <IndicatorIcon

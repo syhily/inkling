@@ -8,11 +8,9 @@ import type {
 } from '@/nodes/base/generate-decorator-node'
 
 import { dom } from '#/nodes-base/test-utils/index'
-import { ensureLexicalNodeOwnMethods, utils, type ExportDOMOutput, type Visibility } from '@/nodes/base/index'
+import { ensureLexicalNodeOwnMethods, utils, type ExportDOMOutput } from '@/nodes/base/index'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { populateNestedEditor } from '@/utils/nested-editors'
-
-const defaultVisibility = utils.visibility.buildDefaultVisibility()
 
 function createRenderResult(tagName: 'div' | 'span', content: string) {
   const element = dom.window.document.createElement(tagName)
@@ -148,128 +146,6 @@ describe('Utils: generateDecoratorNode', function () {
         expect(node.getDataset().label!).toBe('')
         expect(node.exportJSON().count!).toBe(0)
         expect(node.exportJSON().label!).toBe('')
-      }),
-    )
-  })
-
-  describe('hasVisibility', function () {
-    let NodeWithVisibility: GeneratedDecoratorNodeClass<{ visibility: Visibility }>
-    let $createNodeWithVisibility: (dataset?: Record<string, unknown>) => InstanceType<typeof NodeWithVisibility>
-
-    beforeAll(function () {
-      NodeWithVisibility = utils.generateDecoratorNode({
-        nodeType: 'visibility-test',
-        properties: [],
-        hasVisibility: true,
-      })
-
-      $createNodeWithVisibility = (dataset?: Record<string, unknown>) => {
-        return new NodeWithVisibility(dataset)
-      }
-
-      editor = createHeadlessEditor({ nodes: [NodeWithVisibility] })
-    })
-
-    it(
-      'adds visibility property with default',
-      editorTest(function () {
-        const node = $createNodeWithVisibility()
-
-        expect(node.visibility, 'node.visibility').toEqual(defaultVisibility)
-        expect(node.getDataset().visibility!, 'node.getDataset().visibility').toEqual(defaultVisibility)
-        expect(node.exportJSON().visibility!, 'node.exportJSON().visibility').toEqual(defaultVisibility)
-      }),
-    )
-
-    it(
-      'can update visibility',
-      editorTest(function () {
-        const node = $createNodeWithVisibility()
-
-        const newVisibility: Visibility = {
-          web: {
-            nonMember: false,
-            memberSegment: 'status:free',
-          },
-          email: {
-            memberSegment: 'status:free',
-          },
-        }
-
-        node.visibility = newVisibility
-
-        expect(node.visibility, 'node.visibility').toEqual(newVisibility)
-        expect(node.getDataset().visibility!, 'node.getDataset().visibility').toEqual(newVisibility)
-        expect(node.exportJSON().visibility!, 'node.exportJSON().visibility').toEqual(newVisibility)
-      }),
-    )
-
-    it(
-      "ensures default doesn't change when nested visibility objects are updated",
-      editorTest(function () {
-        const node = $createNodeWithVisibility()
-
-        // NOTE: this wouldn't trigger a Lexical node update, it's just to show
-        // that the default can't be accidentally changed by reference
-        ;(node.visibility as { web: { nonMember: boolean } }).web.nonMember = false
-
-        expect(NodeWithVisibility.getPropertyDefaults().visibility!).toEqual(defaultVisibility)
-      }),
-    )
-
-    // During the early visibility beta period we had a different format for visibility
-    // when importing we convert to the new format so it keeps working with later UI iterations
-    it(
-      'migrates old visibility format when importing JSON',
-      editorTest(function () {
-        const node = NodeWithVisibility.importJSON({
-          visibility: {
-            showOnWeb: false,
-            showOnEmail: true,
-            segment: 'status:free',
-          },
-        })
-
-        // old values are kept, new values are added
-        expect(node.visibility).toEqual({
-          showOnWeb: false,
-          showOnEmail: true,
-          segment: 'status:free',
-          web: {
-            nonMember: false,
-            memberSegment: '',
-          },
-          email: {
-            memberSegment: 'status:free',
-          },
-        })
-      }),
-    )
-
-    it(
-      'can set visibility via constructor',
-      editorTest(function () {
-        const node = $createNodeWithVisibility({
-          visibility: {
-            web: {
-              nonMember: false,
-              memberSegment: 'status:free',
-            },
-            email: {
-              memberSegment: 'status:free',
-            },
-          },
-        })
-
-        expect(node.visibility).toEqual({
-          web: {
-            nonMember: false,
-            memberSegment: 'status:free',
-          },
-          email: {
-            memberSegment: 'status:free',
-          },
-        })
       }),
     )
   })

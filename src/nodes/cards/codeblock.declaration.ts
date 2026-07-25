@@ -38,12 +38,7 @@ export const codeBlockDeclaration = {
   // diverges from the node type: the toolbar label is a live e2e selector
   // contract ("code-block"), not a transform of "codeblock"
   toolbarLabel: 'code-block',
-  surfaces: {
-    default: true,
-    emailEditor: false,
-    emailRenderer: false,
-    // Markdown-eligible with no card transformer: the code fence is handled
-    // by DEFAULT_TRANSFORMERS (`CODE_BLOCK` in `@/markdown/transformers`).
-    markdown: true,
-  },
+  // Markdown-eligible with no card transformer: the code fence is handled
+  // by DEFAULT_TRANSFORMERS (`CODE_BLOCK` in `@/markdown/transformers`).
+  markdown: true,
 } satisfies CardDeclaration<'codeblock'>

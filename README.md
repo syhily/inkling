@@ -63,7 +63,6 @@ Everything below is exported from the package entry point.
 - `InklingComposableEditor` — editor shell for composing your own plugin set.
 - `InklingComposer` — low-level Lexical composer (theme, nodes, error handling, optional multiplayer via `enableMultiplayer`).
 - `InklingNestedComposer` — composer for nested editors inside cards.
-- `EmailEditor` — preconfigured editor variant for email content.
 
 ### Plugins
 
@@ -91,15 +90,12 @@ Most map to a card or an obvious editor feature. The less obvious ones:
 - `DEFAULT_NODES` — full node set for the standard editor (all cards plus extended text/heading/quote nodes).
 - `BASIC_NODES` — lists, links, and TK nodes.
 - `MINIMAL_NODES` — extended text, links, and TK nodes; the smallest viable set.
-- `EMAIL_NODES` — text-formatting nodes for email (headings, quotes, lists, links, horizontal rules).
-- `EMAIL_EDITOR_NODES` — node set for `EmailEditor`: the default nodes minus cards unsuitable for email.
 
 ### Transformers
 
 Markdown shortcut transformer sets for the different editor variants:
 
 - `DEFAULT_TRANSFORMERS` — full set used by the standard editor.
-- `EMAIL_TRANSFORMERS` — the `EmailEditor` set.
 - `BASIC_TRANSFORMERS` — lists plus inline formatting.
 - `MINIMAL_TRANSFORMERS` — inline formatting only.
 - `ELEMENT_TRANSFORMERS` — block-level transformers (headings, quotes, lists, horizontal rules, code blocks).
@@ -107,8 +103,6 @@ Markdown shortcut transformer sets for the different editor variants:
 
 ### Config and utilities
 
-- `EMAIL_EDITOR_CARD_CONFIG` — default card configuration for `EmailEditor`.
-- `getEmailEditorCardConfig` — merges a caller-provided card config with the email defaults.
 - `version` — the package version string (`development` outside built bundles).
 - Utilities — the utils barrel exposes `slugify`, `countWords`, `Color` / `textColorForBackgroundColor`, `debounce` / `throttle`, `escapeRegExp` / `kebabCase` / `pick`, and the selection helpers `$isAtStartOfDocument`, `$selectDecoratorNode`, `$isAtTopOfNode`, and `getTopLevelNativeElement`.
 

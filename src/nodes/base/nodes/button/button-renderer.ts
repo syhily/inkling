@@ -1,8 +1,6 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
-import { renderEmailButton } from '@/nodes/base/utils/render-helpers/email-button'
-import { html } from '@/nodes/base/utils/tagged-template-fns'
 
 interface ButtonNodeData {
   buttonUrl: string
@@ -17,11 +15,7 @@ export function renderButtonNode(node: ButtonNodeData, context: RenderContext) {
     return renderEmptyContainer(document)
   }
 
-  if (context.variant({ web: false, email: true })) {
-    return emailTemplate(node, document, context)
-  } else {
-    return frontendTemplate(node, document, context)
-  }
+  return frontendTemplate(node, document, context)
 }
 
 function frontendTemplate(node: ButtonNodeData, document: Document, context: RenderContext) {
@@ -38,63 +32,6 @@ function frontendTemplate(node: ButtonNodeData, document: Document, context: Ren
 
   cardDiv.appendChild(button)
   return { element: cardDiv, type: 'outer' as const }
-}
-
-function emailTemplate(node: ButtonNodeData, document: Document, context: RenderContext) {
-  const safeButtonUrl = context.safeUrl('navigation', node.buttonUrl)
-  const buttonText = node.buttonText || 'Button Title'
-
-  if (context.usesModernEmailButton()) {
-    const buttonHtml = renderEmailButton(
-      {
-        alignment: node.alignment,
-        color: 'accent',
-        style: context.design?.buttonStyle,
-        text: buttonText,
-        url: safeButtonUrl,
-      },
-      context,
-    )
-
-    const cardHtml = html`
-      <table border="0" cellpadding="0" cellspacing="0">
-        <tbody>
-          <tr>
-            <td>${buttonHtml}</td>
-          </tr>
-        </tbody>
-      </table>
-    `
-
-    if (context.feature?.emailCustomizationAlpha) {
-      const element = document.createElement('div')
-      element.innerHTML = cardHtml
-      return { element, type: 'inner' as const }
-    }
-
-    const element = document.createElement('p')
-    element.innerHTML = cardHtml
-    return { element, type: 'outer' as const }
-  }
-
-  // Legacy branch preserved byte-for-byte when no customization/design option
-  // is supplied.
-  const escapedButtonText = context.escapeText(buttonText)
-  const cardHtml = html`
-    <div class="btn btn-accent">
-      <table border="0" cellspacing="0" cellpadding="0" align="${node.alignment}">
-        <tr>
-          <td align="center">
-            <a href="${context.escapeText(safeButtonUrl)}">${escapedButtonText}</a>
-          </td>
-        </tr>
-      </table>
-    </div>
-  `
-
-  const element = document.createElement('p')
-  element.innerHTML = cardHtml
-  return { element, type: 'outer' as const }
 }
 
 function getCardClasses(node: ButtonNodeData) {

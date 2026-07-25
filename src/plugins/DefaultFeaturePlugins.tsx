@@ -20,9 +20,7 @@ export interface FeaturePluginEntry {
 // The feature plugin entries InklingEditor adds on top of the core plugins
 // InklingComposableEditor always mounts (behaviour, toolbar, markdown,
 // drag-drop, history), as data and in render order. This is deliberately not
-// "all defaults": the core set lives in InklingComposableEditor, and other
-// surfaces derive their set from this list via `deriveFeaturePlugins` (see
-// EmailEditor) instead of hand-enumerating plugin JSX.
+// "all defaults": the core set lives in InklingComposableEditor.
 export const DEFAULT_FEATURE_PLUGINS: readonly FeaturePluginEntry[] = [
   // Lexical
   { key: 'list', Component: ListPlugin }, // adds indent/outdent/remove etc support
@@ -38,23 +36,6 @@ export const DEFAULT_FEATURE_PLUGINS: readonly FeaturePluginEntry[] = [
   { key: 'card-insert', Component: CardInsertPlugin },
   { key: 'horizontal-rule', Component: HorizontalRulePlugin },
 ]
-
-// A surface's declared difference from the default feature plugin set:
-// default entries to drop (by component reference) and extra entries to append.
-export interface FeaturePluginDelta {
-  exclude?: readonly React.ComponentType[]
-  include?: readonly FeaturePluginEntry[]
-}
-
-// Derives a surface's feature plugin set: the default entries minus the
-// excluded components, with the included entries appended after them.
-export function deriveFeaturePlugins({
-  exclude = [],
-  include = [],
-}: FeaturePluginDelta): readonly FeaturePluginEntry[] {
-  const excluded = new Set<React.ComponentType>(exclude)
-  return [...DEFAULT_FEATURE_PLUGINS.filter((entry) => !excluded.has(entry.Component)), ...include]
-}
 
 // Renders a feature plugin set. Surfaces mount their derived set through this
 // single place so key assignment stays with the data.

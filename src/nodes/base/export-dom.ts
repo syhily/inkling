@@ -15,22 +15,12 @@ export type ExportDOMOutput<TType extends ExportDOMOutputType = ExportDOMOutputT
  * known ones.
  */
 export interface ExportDOMFeatureOptions {
-  /** button/toggle email customization (modern email button predicate) */
-  emailCustomization?: boolean
-  /** alpha-stage variant of the email customization flag */
-  emailCustomizationAlpha?: boolean
   /** image renderer: emit `<picture>` sources for modern formats */
   pictureImageFormats?: boolean
-  /** html renderer: wrap `{uniqueid}` replacement strings for email processing */
-  emailUniqueid?: boolean
 }
 
 export interface ExportDOMDom {
   window: { document: Document }
-}
-
-export interface ExportDOMDesignOptions {
-  buttonStyle?: 'fill' | 'outline'
 }
 
 /**
@@ -59,10 +49,7 @@ export interface ImageOptimizationOptions {
 export interface ExportDOMOptions {
   createDocument?: () => Document
   dom?: ExportDOMDom
-  target?: string
-  postUrl?: string
   siteUrl?: string
-  siteUuid?: string
   imageBaseUrl?: string
   canTransformImage?: (src: string) => boolean
   canTransformImageToFormat?: (format: string) => boolean
@@ -73,5 +60,4 @@ export interface ExportDOMOptions {
    */
   inklingVersion?: string
   feature?: ExportDOMFeatureOptions
-  design?: ExportDOMDesignOptions
 }

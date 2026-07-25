@@ -25,7 +25,6 @@ ReactDOM.createRoot(rootElement).render(
         <Route element={<DemoApp />} path="/" />
         <Route element={<DemoApp editorType="basic" />} path="/basic" />
         <Route element={<DemoApp editorType="minimal" />} path="/minimal" />
-        <Route element={<DemoApp editorType="email" />} path="/email" />
         <Route element={<DemoApp isMultiplayer={true} />} path="/multiplayer" />
       </Routes>
     </Router>

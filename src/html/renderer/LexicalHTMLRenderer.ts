@@ -9,9 +9,8 @@ import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
 import { registerRemoveAtLinkNodesTransform } from '@/transforms'
 
 // Every key of the bag is forwarded through Object.assign into
-// ExportDOMOptions, so the options are the public export-options shape with
-// the target narrowed to the two supported render targets.
-type RenderOptions = ExportDOMOptions & { target?: 'html' | 'email' }
+// ExportDOMOptions, so the options are the public export-options shape.
+type RenderOptions = ExportDOMOptions
 
 function defaultOnError(error: Error) {
   void error
@@ -35,7 +34,6 @@ export default class LexicalHTMLRenderer {
 
   async render(lexicalState: SerializedEditorState | string, userOptions: RenderOptions = {}) {
     const defaultOptions: ExportDOMOptions = {
-      target: 'html',
       dom: await this._getDefaultDom(userOptions.dom),
     }
     const options: ExportDOMOptions = Object.assign({}, defaultOptions, userOptions)

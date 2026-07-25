@@ -44,10 +44,5 @@ export const toggleDeclaration = {
   ],
   insert: { command: INSERT_TOGGLE_COMMAND, openInEditMode: true },
   toolbarLabel: 'toggle',
-  surfaces: {
-    default: true,
-    emailEditor: false,
-    emailRenderer: false,
-    markdown: true,
-  },
+  markdown: true,
 } satisfies CardDeclaration<'toggle'>

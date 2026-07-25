@@ -17,15 +17,12 @@ import {
   extendedTextNodeReplacement,
 } from '@/nodes/base'
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
-import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
 
 // Cards join the set from their declarations; declaration order reproduces
 // the pre-refactor card run below LinkNode.
-const CARDS = deriveCardNodes(CARD_WRAPPER_NODES, 'default')
+const CARDS = CARD_WRAPPER_NODES
 
-// The non-card base run every editor surface starts from. Each surface's node
-// set extends this single constant (the email renderer filters it) instead of
-// duplicating the run.
+// The non-card base run the editor's node set starts from.
 export const EDITOR_BASE_NODES = [
   ExtendedTextNode,
   extendedTextNodeReplacement,

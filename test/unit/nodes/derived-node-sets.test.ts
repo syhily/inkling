@@ -11,8 +11,6 @@ import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import { CARD_TRANSFORMERS, MARKDOWN_NODES } from '@/markdown/round-trip'
 import { DEFAULT_NODES as BASE_DEFAULT_NODES } from '@/nodes/base'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
-import EMAIL_EDITOR_NODES from '@/nodes/EmailEditorNodes'
-import EMAIL_NODES from '@/nodes/EmailNodes'
 
 // Node-set entries are either node classes or Lexical replacement descriptors
 // ({ replace, with }). Pin both, marking replacements so the two forms can
@@ -152,44 +150,6 @@ describe('derived node sets match the pre-refactor registries', () => {
       'at-link',
       'at-link-search',
       'zwnj',
-    ])
-  })
-
-  it('@/nodes/EmailNodes (email renderer node set)', () => {
-    expect(nodeSetSnapshot(EMAIL_NODES)).toEqual([
-      'extended-text',
-      'replace:text',
-      'heading',
-      'extended-heading',
-      'replace:heading',
-      'quote',
-      'list',
-      'listitem',
-      'link',
-      'horizontalrule',
-    ])
-  })
-
-  it('@/nodes/EmailEditorNodes (email editor node set)', () => {
-    expect(nodeSetSnapshot(EMAIL_EDITOR_NODES)).toEqual([
-      'extended-text',
-      'replace:text',
-      'heading',
-      'extended-heading',
-      'replace:heading',
-      'quote',
-      'extended-quote',
-      'replace:quote',
-      'list',
-      'listitem',
-      'aside',
-      'link',
-      'horizontalrule',
-      'image',
-      'callout',
-      'html',
-      'button',
-      'bookmark',
     ])
   })
 

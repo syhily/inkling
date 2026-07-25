@@ -9,7 +9,7 @@ import React from 'react'
  *
  * Composition rule (previously unwritten convention):
  * - The provider wraps the **top-level** editor tree exactly once — it lives
- *   in InklingEditor/EmailEditor, never inside InklingComposableEditor, which
+ *   in InklingEditor, never inside InklingComposableEditor, which
  *   also renders inside nested card composers and must not re-provide.
  * - Every InklingComposableEditor instance — top-level or nested — mounts
  *   HistoryPlugin with this externalHistoryState, so nested card edits join

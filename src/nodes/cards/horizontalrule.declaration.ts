@@ -23,12 +23,7 @@ export const horizontalRuleDeclaration = {
   ],
   // no toolbar renders for the divider today; the label matches the node type
   toolbarLabel: 'horizontalrule',
-  surfaces: {
-    default: true,
-    emailEditor: true,
-    emailRenderer: true,
-    // Markdown-eligible with no card transformer: `---` is handled by
-    // DEFAULT_TRANSFORMERS (`HR` in `@/markdown/transformers`).
-    markdown: true,
-  },
+  // Markdown-eligible with no card transformer: `---` is handled by
+  // DEFAULT_TRANSFORMERS (`HR` in `@/markdown/transformers`).
+  markdown: true,
 } satisfies CardDeclaration<'horizontalrule'>

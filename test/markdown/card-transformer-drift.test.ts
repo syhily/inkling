@@ -12,8 +12,9 @@ import { CARD_MARKDOWN_DECLARATIONS, MARKDOWN_EXEMPT } from '@/nodes/cards/card-
  * documented intentional subset — are pinned byte-for-byte by
  * `round-trip-cards.test.ts`):
  *
- * - exhaustiveness leg: every markdown-eligible card (`surfaces.markdown`)
- *   carries a card transformer or names an exemption in `MARKDOWN_EXEMPT`.
+ * - exhaustiveness leg: every markdown-eligible card (the declaration's
+ *   `markdown` flag) carries a card transformer or names an exemption in
+ *   `MARKDOWN_EXEMPT`.
  *   The projection already throws at module init on a violation; this leg
  *   pins the contract explicitly.
  * - export leg: every node field a transformer's `getData` reads must be a
@@ -90,7 +91,7 @@ const cardsWithTransformers = CARD_MARKDOWN_DECLARATIONS.filter((card) => card.m
 
 describe('card markdown transformer field vocabulary', function () {
   it('every markdown-eligible card has a transformer or a named exemption', function () {
-    CARD_MARKDOWN_DECLARATIONS.filter((card) => card.surfaces.markdown).forEach((card) => {
+    CARD_MARKDOWN_DECLARATIONS.filter((card) => card.markdown).forEach((card) => {
       expect(
         card.markdownTransformer !== undefined || MARKDOWN_EXEMPT.has(card.nodeType),
         `${card.nodeType} is markdown-eligible but has neither a card transformer nor a named exemption`,

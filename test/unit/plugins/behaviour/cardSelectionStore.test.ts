@@ -11,10 +11,10 @@ import { createCardSelectionStore } from '@/plugins/behaviour/cardSelectionStore
 // own state shape and its per-composer provider behaviour.
 
 describe('createCardSelectionStore', () => {
-  it('starts with no selection, no editing card, and hidden visibility settings', () => {
+  it('starts with no selection and no editing card', () => {
     const store = createCardSelectionStore()
 
-    expect(store.getState()).toEqual({ selectedCardKey: null, isEditingCard: false, showVisibilitySettings: false })
+    expect(store.getState()).toEqual({ selectedCardKey: null, isEditingCard: false })
   })
 })
 
@@ -27,7 +27,7 @@ describe('CardSelectionStoreContext', () => {
     rerender()
 
     expect(result.current).toBe(store)
-    expect(store.getState()).toEqual({ selectedCardKey: null, isEditingCard: false, showVisibilitySettings: false })
+    expect(store.getState()).toEqual({ selectedCardKey: null, isEditingCard: false })
   })
 
   it('creates a separate store per composer provider', () => {
@@ -46,7 +46,6 @@ describe('CardSelectionStoreContext', () => {
     expect(result.current.getState()).toEqual({
       selectedCardKey: null,
       isEditingCard: false,
-      showVisibilitySettings: false,
     })
   })
 })

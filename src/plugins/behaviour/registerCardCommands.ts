@@ -79,8 +79,6 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
 
         if (selectedCardKey && selectedCardKey !== cardKey) {
           $deselectCard(editor, selectedCardKey)
-          // Hide visibility settings when switching to a different card
-          store.setState({ showVisibilitySettings: false })
         }
 
         $selectCard(editor, cardKey)
@@ -115,8 +113,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
       ({ cardKey }) => {
         $deselectCard(editor, cardKey)
 
-        // Hide visibility settings when deselecting a card
-        store.setState({ selectedCardKey: null, isEditingCard: false, showVisibilitySettings: false })
+        store.setState({ selectedCardKey: null, isEditingCard: false })
         return true
       },
       COMMAND_PRIORITY_LOW,
@@ -164,7 +161,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
           rootElement.focus()
         }
 
-        store.setState({ selectedCardKey: null, isEditingCard: false, showVisibilitySettings: false })
+        store.setState({ selectedCardKey: null, isEditingCard: false })
         return true
       },
       COMMAND_PRIORITY_LOW,

@@ -58,62 +58,6 @@ describe('HorizontalNode', function () {
         await expectPrettifiedHtml((element as HTMLElement).outerHTML, html` <hr /> `)
       }),
     )
-
-    it(
-      'creates an Outlook-compatible table with hidden hr when target is email',
-      editorTest(async function () {
-        const hrNode = $createBaseHorizontalRuleNode()
-        const { element } = hrNode.exportDOM(editor, { ...exportOptions, target: 'email' })
-        const output = (element as HTMLElement).outerHTML
-
-        expect(output).toContain('class="inkling-card inkling-hr-card"')
-        expect(output).toContain('role="presentation"')
-        expect(output).toContain('class="inkling-hr"')
-        // hr is kept (hidden) for html-to-plaintext conversion
-        expect(output).toContain('<hr style="display: none;">')
-      }),
-    )
-
-    it(
-      'pins the full email output byte-for-byte',
-      editorTest(async function () {
-        const hrNode = $createBaseHorizontalRuleNode()
-        const { element } = hrNode.exportDOM(editor, { ...exportOptions, target: 'email' })
-
-        await expectPrettifiedHtml(
-          (element as HTMLElement).outerHTML,
-          html`
-            <div>
-              <table
-                class="inkling-card inkling-hr-card"
-                role="presentation"
-                width="100%"
-                border="0"
-                cellpadding="0"
-                cellspacing="0"
-              >
-                <tbody>
-                  <tr>
-                    <td>
-                      <!--[if !mso]><!-- -->
-                      <hr style="display: none;" />
-                      <!--<![endif]-->
-                      <table class="inkling-hr" role="presentation" border="0" cellpadding="0" cellspacing="0">
-                        <tbody>
-                          <tr>
-                            <td>&nbsp;</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          `,
-        )
-      }),
-    )
   })
 
   describe('importDOM', function () {
@@ -183,16 +127,6 @@ describe('HorizontalNode', function () {
       editorTest(async function () {
         const node = $createBaseHorizontalRuleNode()
         expect(node.getTextContent()).toBe('---\n\n')
-      }),
-    )
-  })
-
-  describe('getIsVisibilityActive', function () {
-    it(
-      'returns false (has no visibility property)',
-      editorTest(async function () {
-        const node = $createBaseHorizontalRuleNode()
-        expect(node.getIsVisibilityActive()).toBe(false)
       }),
     )
   })

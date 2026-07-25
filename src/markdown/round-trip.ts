@@ -54,7 +54,7 @@ const MARKDOWN_CARD_ORDER = [
   'callout',
 ]
 
-const MARKDOWN_CARDS = deriveCardNodes(CARD_MARKDOWN_DECLARATIONS, 'markdown', MARKDOWN_CARD_ORDER)
+const MARKDOWN_CARDS = deriveCardNodes(CARD_MARKDOWN_DECLARATIONS, MARKDOWN_CARD_ORDER)
 
 // Exported (not part of the public `@/markdown` barrel) so the node-set diff
 // test can pin the derived arrays against the pre-refactor literals.

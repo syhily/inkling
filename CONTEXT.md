@@ -17,31 +17,27 @@ The declarative definition of a card — its properties, card menu, nested edito
 _Avoid_: card config, card definition
 
 **Card declaration**:
-The single per-card source of truth naming everything the editor must know about a card: its card spec, which editor surfaces it joins (node sets, markdown, email), its insert-command registration (command, edit-mode flag, media claiming), its toolbar label (`toolbarLabel` — the `data-inkling-card-toolbar` selector contract), and, for the four media cards, its `uploadType`. Every registry is a derived view over the card declarations — the node sets (`getEditorCardNodes`), the menus, the decorate targets, the insert registrar (`CardInsertPlugin`), the toolbar labels (src/nodes/cards/card-toolbar-labels.ts), and the markdown fence payloads (src/nodes/cards/card-markdown-transformers.ts).
+The single per-card source of truth naming everything the editor must know about a card: its card spec, whether it joins the markdown round-trip (the `markdown` flag), its insert-command registration (command, edit-mode flag, media claiming), its toolbar label (`toolbarLabel` — the `data-inkling-card-toolbar` selector contract), and, for the four media cards, its `uploadType`. Every registry is a derived view over the card declarations — the node sets (`getEditorCardNodes`), the menus, the decorate targets, the insert registrar (`CardInsertPlugin`), the toolbar labels (src/nodes/cards/card-toolbar-labels.ts), and the markdown fence payloads (src/nodes/cards/card-markdown-transformers.ts).
 _Avoid_: card registration, card manifest
 
 **Editor surface**:
-One of the shipped top-level editor compositions — the default editor (`InklingEditor`), the email editor (`EmailEditor`), the email renderer, the markdown round-trip. Each is a preset over the shared composer: its own node set (derived from `EDITOR_BASE_NODES`), its feature plugins (a declared delta off `DEFAULT_FEATURE_PLUGINS` via `deriveFeaturePlugins`), its markdown transformers. A card declaration's `surfaces` field names which surfaces the card joins; there is no runtime surface query — a card is present on a surface because that surface composed its node in. `InklingSurface` (src/components/InklingSurface.tsx) is the composition rule made exportable: a custom host surface wraps its top-level editor tree in exactly one (inside an `InklingComposer`), so nested card editors share the top-level undo stack and `onChange`.
-_Avoid_: environment, platform — that is the render target
+One of the shipped top-level editor compositions — the default editor (`InklingEditor`) and the markdown round-trip. Each is a preset over the shared composer: its own node set (derived from `EDITOR_BASE_NODES`), its feature plugins (`DEFAULT_FEATURE_PLUGINS`), its markdown transformers. A card declaration's `markdown` flag names whether the card joins the round-trip; there is no runtime surface query — a card is present on a surface because that surface composed its node in. `InklingSurface` (src/components/InklingSurface.tsx) is the composition rule made exportable: a custom host surface wraps its top-level editor tree in exactly one (inside an `InklingComposer`), so nested card editors share the top-level undo stack and `onChange`.
+_Avoid_: environment, platform
 
 **Import spec**:
 The card declaration's DOM-import knowledge — how the card's markup reads back into node state on HTML import/paste: declarative conversion entries (tag, priority, guard, per-property reads) defined beside the card's `properties` in its base node module, from which the generated node machinery derives `importDOM`. The generator throws at class-creation time when a read names an unknown property. Cards whose parsing is structural (collection payloads, sibling walking, DOM mutation, derived payloads) keep hand-written parsers.
 _Avoid_: import parser, DOM conversion config
 
-**Render target**:
-Where a card's exported markup is going: **web** (the editor's own frontend) or **email** (email clients, with Outlook-grade markup constraints). A card can have structurally different output per target.
-_Avoid_: environment, platform
-
 **Render context**:
-The read-only, per-render-pass view of export-time policy and data that is the sole export-time view a card renderer receives besides the node: URL safety, sanitization, render-target branching, feature/design flags, color checks, document resolution, heading-id tracking, image/markdown data options. The public entry points (`exportDOM(editor, options)`, `$convertToHtmlString`, `LexicalHTMLRenderer.render`) still accept the export options and build the context from them. Card sources must not import the policy modules directly — an import guard enforces the seam.
+The read-only, per-render-pass view of export-time policy and data that is the sole export-time view a card renderer receives besides the node: URL safety, sanitization, feature flags, color checks, document resolution, heading-id tracking, image/markdown data options. The public entry points (`exportDOM(editor, options)`, `$convertToHtmlString`, `LexicalHTMLRenderer.render`) still accept the export options and build the context from them. Card sources must not import the policy modules directly — an import guard enforces the seam.
 _Avoid_: options bag, policy object
 
 **Card write seam**:
-The typed write path for card-node fields: `$updateCardNode(nodeKey, guard, update)` (src/nodes/base/update-card-node.ts), called inside `editor.update()`. The card's own `$is*` guard narrows the node, so every field the mutator writes is checked against the card's node type. One sanctioned exception: `useVisibilityToggle` keeps the old cast idiom because its test suite doubles the node structurally (plan 044 execution notes).
+The typed write path for card-node fields: `$updateCardNode(nodeKey, guard, update)` (src/nodes/base/update-card-node.ts), called inside `editor.update()`. The card's own `$is*` guard narrows the node, so every field the mutator writes is checked against the card's node type.
 _Avoid_: `$getNodeByKey` + `as GeneratedDecoratorNodeBase`
 
 **Card selection store**:
-The per-top-level-composer, editor-side store owning card-selection truth for non-React code: the selected card key, the edit-mode flag, and the visibility-settings panel flag (global, not per card — the visibility command handlers set it and the HTML card, the sole indicator-icon card, reads it gated by its own selected state). Built on the composer handle factory; fed by registerCardSelection and the card/visibility command handlers, read synchronously by command handlers, subscribed to render-only by React via useCardSelection. There is no per-feature selection context — the former `InklingSelectedCardContext` folded into this store.
+The per-top-level-composer, editor-side store owning card-selection truth for non-React code: the selected card key and the edit-mode flag. Built on the composer handle factory; fed by registerCardSelection and the card command handlers, read synchronously by command handlers, subscribed to render-only by React via useCardSelection. There is no per-feature selection context — the former `InklingSelectedCardContext` folded into this store.
 _Avoid_: selection context, selection mirror, selected-card state
 
 **Composer handle**:
@@ -65,7 +61,7 @@ The owned lifetime of a blob object URL used as an in-editor preview: created by
 _Avoid_: preview URL ref, object-URL ref
 
 **Host config**:
-The closed, per-area-sliced config a host hands `<InklingComposer cardConfig={...}>` — the exported `CardConfig` composed from `GifSettings`, `SnippetSettings`, `LinkingSettings`, `VisibilitySettings`, `UploadSettings` (src/context/InklingHostIntegrationContext.tsx): gif provider keys, snippet storage callbacks, link search/embed/autocomplete hooks, visibility gating, and image upload constraints. Every key the editor reads is declared; unknown keys are compile errors. Where a host boundary receives untyped legacy input (EmailEditor), one normalizing adapter `normalizeCardConfig(input: unknown, { visibilityClamp? })` — co-located with the closed type, mirroring `readFileTypes` — validates known slices and drops unknown keys, so the closed promise holds at runtime too. The exported name stays `CardConfig` — the host-facing name the demo, docs, and internal readers already use — even though the glossary forbids "card config" as a term for card spec: this bag configures the host environment the cards run in, never an individual card's definition.
+The closed, per-area-sliced config a host hands `<InklingComposer cardConfig={...}>` — the exported `CardConfig` composed from `GifSettings`, `SnippetSettings`, `LinkingSettings`, `UploadSettings` (src/context/InklingHostIntegrationContext.tsx): gif provider keys, snippet storage callbacks, link search/embed/autocomplete hooks, and image upload constraints. Every key the editor reads is declared; unknown keys are compile errors. The exported name stays `CardConfig` — the host-facing name the demo, docs, and internal readers already use — even though the glossary forbids "card config" as a term for card spec: this bag configures the host environment the cards run in, never an individual card's definition.
 _Avoid_: options bag, card settings
 
 **Clipboard protocol**:

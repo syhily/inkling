@@ -5,27 +5,6 @@ import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-
 import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
 /**
- * The editor surfaces a card can join (CONTEXT.md: "card declaration" names
- * "which editor surfaces it joins (node sets, markdown, email)"):
- * - `default`: the web editor node set (`@/nodes/DefaultNodes`) and the base
- *   `DEFAULT_NODES` in `@/nodes/base`.
- * - `emailEditor`: the email composer node set (`@/nodes/EmailEditorNodes`).
- * - `emailRenderer`: the email render node set (`@/nodes/EmailNodes`).
- * - `markdown`: the markdown round-trip node set (`MARKDOWN_NODES` in
- *   `@/markdown/round-trip`). CodeBlock and HorizontalRule are
- *   markdown-eligible with no card transformer (their markdown forms are
- *   handled by `DEFAULT_TRANSFORMERS`); the transformers themselves attach
- *   one layer up (`@/nodes/cards/card-markdown-transformers`) because they
- *   must construct the wrapper node classes the round-trip editor registers.
- */
-export interface CardSurfaces {
-  default: boolean
-  emailEditor: boolean
-  emailRenderer: boolean
-  markdown: boolean
-}
-
-/**
  * The card's decorate-target wrapper props (CONTEXT.md: "card spec") — the
  * React-free half of what a card's `decorate()` passes to
  * `InklingCardWrapper`. The component render and the `IndicatorIcon`
@@ -214,5 +193,13 @@ export interface CardDeclaration<NodeType extends string = string> {
    * transform of `nodeType`.
    */
   toolbarLabel: string
-  surfaces: CardSurfaces
+  /**
+   * Whether the card joins the markdown round-trip node set (`MARKDOWN_NODES`
+   * in `@/markdown/round-trip`). CodeBlock and HorizontalRule are
+   * markdown-eligible with no card transformer (their markdown forms are
+   * handled by `DEFAULT_TRANSFORMERS`); the transformers themselves attach
+   * one layer up (`@/nodes/cards/card-markdown-transformers`) because they
+   * must construct the wrapper node classes the round-trip editor registers.
+   */
+  markdown: boolean
 }

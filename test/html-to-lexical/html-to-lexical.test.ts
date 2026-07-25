@@ -673,7 +673,7 @@ describe('HTMLtoLexical', function () {
   })
 
   describe('HTML from Lexical cards', function () {
-    // note: some cards are not intended to convert from html: markdown and email-only cards
+    // note: some cards are not intended to convert from html: markdown and other web-only cards
     //  this test is to make sure our parser methods do not intercept the cards they are not intended to handle
     it('can convert a post containing one of each card type', function () {
       const html = `

@@ -42,10 +42,5 @@ export const bookmarkDeclaration = {
   ],
   insert: { command: INSERT_BOOKMARK_COMMAND, requiresRangeSelection: true, insertCommandPriority: 'high' },
   toolbarLabel: 'bookmark',
-  surfaces: {
-    default: true,
-    emailEditor: true,
-    emailRenderer: false,
-    markdown: true,
-  },
+  markdown: true,
 } satisfies CardDeclaration<'bookmark'>

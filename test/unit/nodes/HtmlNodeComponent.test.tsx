@@ -8,7 +8,6 @@ import InklingHostIntegrationContext from '@/context/InklingHostIntegrationConte
 import { HtmlNode } from '@/nodes/HtmlNode'
 import { HtmlNodeComponent } from '@/nodes/HtmlNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
-import { VISIBILITY_SETTINGS } from '@/utils/visibility'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -118,39 +117,20 @@ describe('HtmlNodeComponent', () => {
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('renders edit, visibility, and snippet items when visibility settings are enabled', async () => {
-      // visibility settings default to WEB_AND_EMAIL, so the visibility item
-      // renders between edit and the snippet pair
+    it('renders the edit and snippet items when createSnippet is configured', async () => {
       const nodeKey = await addHtmlNode(editor)
       const { container } = renderWithToolbar(nodeKey, { selected: true }, { createSnippet: vi.fn() })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
       const toolbar = toolbars[0]
-      expect(toolbar.querySelectorAll('li')).toHaveLength(5)
-
-      const labels = Array.from(toolbar.querySelectorAll('button')).map((button) => button.getAttribute('aria-label'))
-      expect(labels).toEqual(['Edit', 'Visibility', 'Save as snippet'])
-      expect(toolbar.querySelectorAll('button svg')).toHaveLength(3)
-      expect(screen.getByTestId('edit-html')).toBeTruthy()
-      expect(screen.getByTestId('show-visibility')).toBeTruthy()
-      expect(screen.getByTestId('show-visibility').getAttribute('data-inkling-active')).toBe('false')
-      expect(screen.getByTestId('create-snippet')).toBeTruthy()
-    })
-
-    it('omits the visibility item and its separator when visibility settings are disabled', async () => {
-      const nodeKey = await addHtmlNode(editor)
-      const { container } = renderWithToolbar(
-        nodeKey,
-        { selected: true },
-        { createSnippet: vi.fn(), visibilitySettings: VISIBILITY_SETTINGS.NONE },
-      )
-
-      const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(3)
+
       const labels = Array.from(toolbar.querySelectorAll('button')).map((button) => button.getAttribute('aria-label'))
       expect(labels).toEqual(['Edit', 'Save as snippet'])
-      expect(screen.queryByTestId('show-visibility')).toBeNull()
+      expect(toolbar.querySelectorAll('button svg')).toHaveLength(2)
+      expect(screen.getByTestId('edit-html')).toBeTruthy()
+      expect(screen.getByTestId('create-snippet')).toBeTruthy()
     })
 
     it('hides the snippet item and its separator when createSnippet is not configured', async () => {
@@ -158,7 +138,7 @@ describe('HtmlNodeComponent', () => {
       const { container } = renderWithToolbar(nodeKey, { selected: true })
 
       const toolbar = getToolbars(container)[0]
-      expect(toolbar.querySelectorAll('li')).toHaveLength(3)
+      expect(toolbar.querySelectorAll('li')).toHaveLength(1)
       expect(screen.queryByTestId('create-snippet')).toBeNull()
     })
 

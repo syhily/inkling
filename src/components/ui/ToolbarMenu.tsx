@@ -1,7 +1,6 @@
 import AddIcon from '@/assets/icons/inkling-add.svg?react'
 import BoldIcon from '@/assets/icons/inkling-bold.svg?react'
 import EditIcon from '@/assets/icons/inkling-edit.svg?react'
-import EyeIcon from '@/assets/icons/inkling-eye.svg?react'
 import HeadingTwoIcon from '@/assets/icons/inkling-heading-2.svg?react'
 import HeadingThreeIcon from '@/assets/icons/inkling-heading-3.svg?react'
 import ImgFullIcon from '@/assets/icons/inkling-img-full.svg?react'
@@ -34,7 +33,6 @@ export const TOOLBAR_ICONS = {
   add: AddIcon,
   edit: EditIcon,
   wand: WandIcon,
-  visibility: EyeIcon,
   snippet: SnippetIcon,
   remove: TrashIcon,
 } satisfies Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>>

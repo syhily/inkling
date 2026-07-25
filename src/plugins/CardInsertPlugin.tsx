@@ -71,8 +71,8 @@ function registerCardInsert(editor: LexicalEditor, { nodeType, node, command, in
  * claiming, priority, bookmark's selection quirk) comes from the card
  * declarations via the `@/nodes/cards/card-insert-commands` projection. The
  * per-card `hasNodes` guard against the wrapper class reproduces the
- * mounting matrix: the web editor registers all eleven cards, the email
- * editor exactly its five, nested composers none.
+ * mounting matrix: the web editor registers all eleven cards, nested
+ * composers none.
  */
 export const CardInsertPlugin = () => {
   const [editor] = useLexicalComposerContext()

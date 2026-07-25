@@ -1,11 +1,6 @@
 import DOMPurify, { type Config as DOMPurifyConfig } from 'dompurify'
 
-import type {
-  ExportDOMDesignOptions,
-  ExportDOMFeatureOptions,
-  ExportDOMOptions,
-  ImageOptimizationOptions,
-} from '@/nodes/base/export-dom'
+import type { ExportDOMFeatureOptions, ExportDOMOptions, ImageOptimizationOptions } from '@/nodes/base/export-dom'
 
 import { cleanDOM } from '@/nodes/base/utils/clean-dom'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
@@ -17,9 +12,9 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  * The render-context seam (plan 040; the fold completed in plan 042): the
  * single read-only view of export-time policy and data, and the ONLY thing
  * card renderers receive besides the node. Before the seam, renderers
- * re-implemented URL allow-lists, sanitization, and render-target branching
- * ad hoc; this context is the one interface those policies converge behind.
- * The migration was incremental, one step per commit:
+ * re-implemented URL allow-lists and sanitization ad hoc; this context is
+ * the one interface those policies converge behind. The migration was
+ * incremental, one step per commit:
  *
  * - `safeUrl` is the URL policy (Step 3 migrates the hand-rolled
  *   `isSafeUrl`/`isSafeMediaUrl` call sites; `is-safe-url.ts` stays as the
@@ -30,17 +25,11 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  *   (Step 4; named configs such as callout's land here). Two recorded STOP
  *   fallbacks from the Step-4 corpus diff live behind the seam too:
  *   `escapeText` (DOMPurify cannot reproduce `escapeHtml` for the video
- *   caption / audio email title corpus) and `CALLOUT_HTML_CONFIG` (DOMPurify
- *   cannot reproduce cleanDOM's per-tag attribute policy), each documented
- *   at its definition. `sanitizeBasicHtml` is the same default-config
- *   sanitize under a content-neutral name, for non-caption HTML such as the
- *   markdown card's rendered body; `sanitizeCaption` stays as the
- *   caption-call-site alias.
- * - `variant`/`requirePostUrl` unify the email/web branch idioms (Step 5;
- *   `requirePostUrl` preserves the pinned missing-postUrl error messages).
- *   `usesModernEmailButton` and the `isSafeColorValue`/`isEmailButtonColorValue`
- *   color predicates single-source the feature/design-flag and color checks
- *   that button and header previously duplicated inline.
+ *   caption corpus) and `CALLOUT_HTML_CONFIG` (DOMPurify cannot reproduce
+ *   cleanDOM's per-tag attribute policy), each documented at its definition.
+ *   `sanitizeBasicHtml` is the same default-config sanitize under a
+ *   content-neutral name, for non-caption HTML such as the markdown card's
+ *   rendered body; `sanitizeCaption` stays as the caption-call-site alias.
  * - `createDocument` resolution absorbed the deleted `addCreateDocumentOption`
  *   helper (Step 6), and `trackIdAttribute` owns the heading-id dedup map the
  *   options bag's `usedIdAttributes` used to carry.
@@ -49,16 +38,16 @@ import { sanitizeHtml } from '@/utils/sanitize-html'
  *   (a frozen snapshot), the `canTransformImage*` callbacks (by reference),
  *   and `inklingVersion` — are documented at their declarations.
  *
- * The context is read-only: scalar fields are copied, `feature`/`design` are
- * frozen snapshots, and the object itself is frozen. The freeze is shallow —
- * nested values inside `feature`/`design` stay shared references and must not
- * carry mutable state. `trackIdAttribute` is the one exception to the
- * read-only surface: it mutates the id-dedup map, which is internal
- * per-render state the seam owns, not exposed policy. The context is cheap to
- * build, so callers construct it once per render pass (per `exportDOM` call
- * in the card dispatch, per `$convertToHtmlString` run in the string layer)
- * and never share it across renders — which is exactly why the per-render id
- * map is safe.
+ * The context is read-only: scalar fields are copied, `feature` is a frozen
+ * snapshot, and the object itself is frozen. The freeze is shallow — nested
+ * values inside `feature` stay shared references and must not carry mutable
+ * state. `trackIdAttribute` is the one exception to the read-only surface:
+ * it mutates the id-dedup map, which is internal per-render state the seam
+ * owns, not exposed policy. The context is cheap to build, so callers
+ * construct it once per render pass (per `exportDOM` call in the card
+ * dispatch, per `$convertToHtmlString` run in the string layer) and never
+ * share it across renders — which is exactly why the per-render id map is
+ * safe.
  *
  * Card sources must not import the policy modules (`is-safe-url`,
  * `escape-html`, `clean-dom`, `sanitize-html`) directly — the guard in
@@ -117,15 +106,12 @@ function isUnwrapAllowlistConfig(config: CardHtmlConfig): config is UnwrapAllowl
 }
 
 /**
- * Color validation, single-sourced here (plan 040 Step 5): one regex shared
- * by two documented predicates. Accepts hex, rgb/rgba, and CSS named colors;
- * rejects arbitrary strings to keep style values safe in email clients.
- *
- * `isSafeColorValue` is the general check. `isEmailButtonColorValue`
- * additionally rejects `'transparent'` — that rejection is email-button-only
- * on purpose: the header renderer uses `'transparent'` as a legitimate
- * fallback value (header/renderers/header-renderer.ts), so it must not move
- * into the shared regex.
+ * Color validation, single-sourced here (plan 040 Step 5). Accepts hex,
+ * rgb/rgba, and CSS named colors; rejects arbitrary strings to keep
+ * interpolated style values safe. The header renderer's `safeColor` fallback
+ * helper is the consumer — note header legitimately falls back to
+ * `'transparent'`, which the named-color arm accepts, so it must not be
+ * rejected here.
  */
 const COLOR_VALUE_REGEX =
   /^#[0-9a-fA-F]{3,8}$|^rgba?\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*(?:,\s*[\d.]+\s*)?\)$|^[a-zA-Z]+$/
@@ -133,11 +119,6 @@ const COLOR_VALUE_REGEX =
 /** The general color-value check (header's `safeColor` fallback helper). */
 export function isSafeColorValue(value: string): boolean {
   return COLOR_VALUE_REGEX.test(value)
-}
-
-/** The email-button check: the general predicate plus a `'transparent'` rejection. */
-export function isEmailButtonColorValue(value: string): boolean {
-  return COLOR_VALUE_REGEX.test(value) && value !== 'transparent'
 }
 
 function isContentImageSizes(value: unknown): value is Record<string, { width: number }> {
@@ -172,20 +153,16 @@ function readImageOptimization(bag: ImageOptimizationOptions): ImageOptimization
 }
 
 export interface RenderContext {
-  /** The render target exactly as passed via `options.target` (e.g. `'email'`) — never normalized. */
-  readonly target: string | undefined
   readonly imageBaseUrl: string | undefined
   readonly siteUrl: string | undefined
-  readonly postUrl: string | undefined
   /** Frozen snapshot of the image-optimization bag (absent when not passed). */
   readonly imageOptimization: ImageOptimizationOptions | undefined
   readonly canTransformImage: ((src: string) => boolean) | undefined
   readonly canTransformImageToFormat: ((format: string) => boolean) | undefined
   /** The markdown card's slug-policy input, consumed by `@/markdown/paste-dialect`. */
   readonly inklingVersion: string | undefined
-  /** Frozen snapshots of the feature/design option bags (absent when not passed). */
+  /** Frozen snapshot of the feature option bag (absent when not passed). */
   readonly feature: Readonly<ExportDOMFeatureOptions> | undefined
-  readonly design: Readonly<ExportDOMDesignOptions> | undefined
   /** Resolved once: `options.createDocument` / `options.dom` / the browser global, in that order. */
   readonly createDocument: () => Document
   /** URL policy: returns `value` when it is safe for `kind`, `''` otherwise. */
@@ -208,8 +185,8 @@ export interface RenderContext {
   /**
    * Plain-text template escaping — the single escaping path behind the seam.
    * Introduced for the fields whose pinned output is `escapeHtml`'s (video
-   * captions, the audio email title); plan 041 routed every card renderer's
-   * template escaping through it. Recorded divergence (plan 040
+   * captions); plan 041 routed every card renderer's template escaping
+   * through it. Recorded divergence (plan 040
    * Step 4 STOP condition): the DOMPurify caption path cannot reproduce
    * `escapeHtml` on the pinned corpus — it preserves benign inline markup
    * (`This is a <b>caption</b>` keeps `<b>` instead of escaping it), strips
@@ -224,17 +201,6 @@ export interface RenderContext {
    * cleanDOM fallback (see `CALLOUT_HTML_CONFIG`).
    */
   sanitizeCardHtml(html: string, config: CardHtmlConfig): string
-  /** The one render-target branch helper: picks `email` when `target === 'email'`, `web` otherwise. */
-  variant<T>(branches: { web: T; email: T }): T
-  /** Returns `postUrl`, or throws the pinned missing-postUrl error naming `caller`. */
-  requirePostUrl(caller: string): string
-  /**
-   * The modern email-button predicate, single-sourced here (plan 040 Step 5)
-   * from the copies button-renderer and header-renderer previously kept
-   * inline: true when the `emailCustomization`/`emailCustomizationAlpha`
-   * feature flags or a `design.buttonStyle` are set.
-   */
-  usesModernEmailButton(): boolean
   /**
    * Heading-id deduplication, folded in from the options bag's
    * `usedIdAttributes` (plan 040 Step 6): records one use of the slugified
@@ -290,27 +256,21 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
   const createDocument = resolveCreateDocument(options)
   const usedIdAttributes: Record<string, number> = {}
 
-  const target = options.target
-  const postUrl = options.postUrl
   const siteUrl = options.siteUrl
   const imageBaseUrl = options.imageBaseUrl
   const feature = options.feature ? Object.freeze({ ...options.feature }) : undefined
-  const design = options.design ? Object.freeze({ ...options.design }) : undefined
   const imageOptimization = options.imageOptimization
     ? Object.freeze(readImageOptimization(options.imageOptimization))
     : undefined
 
   const context: RenderContext = {
-    target,
     imageBaseUrl,
     siteUrl,
-    postUrl,
     imageOptimization,
     canTransformImage: options.canTransformImage,
     canTransformImageToFormat: options.canTransformImageToFormat,
     inklingVersion: options.inklingVersion,
     feature,
-    design,
     createDocument,
     safeUrl(kind, value) {
       return (kind === 'media' ? isSafeMediaUrl(value) : isSafeUrl(value)) ? value : ''
@@ -337,21 +297,6 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
         return container.innerHTML
       }
       return DOMPurify.sanitize(html, config)
-    },
-    variant<T>({ web, email }: { web: T; email: T }): T {
-      return target === 'email' ? email : web
-    },
-    requirePostUrl(caller) {
-      // Predicate matches the video/audio renderer guards this absorbs in
-      // Step 5 (`typeof postUrl === 'string' && postUrl.trim() !== ''`) — a
-      // whitespace-only postUrl must throw, not pass through.
-      if (!postUrl || postUrl.trim() === '') {
-        throw new Error(`${caller} requires options.postUrl when options.target is "email"`)
-      }
-      return postUrl
-    },
-    usesModernEmailButton() {
-      return Boolean(feature?.emailCustomization || feature?.emailCustomizationAlpha || design?.buttonStyle)
     },
     trackIdAttribute(id) {
       const seen = usedIdAttributes[id]

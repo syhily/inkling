@@ -8,7 +8,6 @@ import {
   BASIC_NODES,
   BASIC_TRANSFORMERS,
   type CardConfig,
-  EmailEditor,
   type ExternalControlAPI,
   type FileUploader,
   InklingComposableEditor,
@@ -26,7 +25,6 @@ import EarthIcon from '@/assets/icons/inkling-earth.svg?react'
 import DollarIcon from './assets/icons/inkling-dollar.svg?react'
 import LockIcon from './assets/icons/inkling-lock.svg?react'
 import DarkModeToggle from './components/DarkModeToggle'
-import EmailEditorWrapper from './components/EmailEditorWrapper'
 import FloatingButton from './components/FloatingButton'
 import InitialContentToggle from './components/InitialContentToggle'
 import Sidebar from './components/Sidebar'
@@ -35,7 +33,6 @@ import Watermark from './components/Watermark'
 import WordCount from './components/WordCount'
 import basicContent from './content/basic-content.json'
 import content from './content/content.json'
-import emailContent from './content/email-content.json'
 import minimalContent from './content/minimal-content.json'
 import { fetchEmbed } from './utils/fetchEmbed'
 import { klipyConfig, tenorConfig } from './utils/gifConfig'
@@ -66,7 +63,6 @@ const defaultCardConfig: CardConfig = {
       },
     ]),
   siteUrl: window.location.origin,
-  stripeEnabled: true,
   // this enables the internal linking feature, can be disabled with `/#/?searchLinks=false`
   searchLinks: async (term?: string): Promise<SearchResult[]> => {
     // default to showing latest posts when search is empty
@@ -162,8 +158,6 @@ function getDefaultContent({ editorType }: { editorType?: string }) {
     return basicContent
   } else if (editorType === 'minimal') {
     return minimalContent
-  } else if (editorType === 'email') {
-    return emailContent
   }
   return content
 }
@@ -390,8 +384,7 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
     }
   }, [editorAPI])
 
-  const showTitle = !isMultiplayer && !['basic', 'minimal', 'email'].includes(editorType || '')
-  const isEmailEditor = editorType === 'email'
+  const showTitle = !isMultiplayer && !['basic', 'minimal'].includes(editorType || '')
 
   const cardConfig: CardConfig = {
     ...defaultCardConfig,
@@ -399,23 +392,18 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
     createSnippet,
     deleteSnippet,
     searchLinks: searchParams.get('searchLinks') === 'false' ? undefined : defaultCardConfig.searchLinks,
-    stripeEnabled: searchParams.get('stripe') === 'false' ? false : defaultCardConfig.stripeEnabled,
   }
 
   const fileUploader: FileUploader = { useFileUpload: useFileUpload({ isMultiplayer }), fileTypes }
 
   // Sidebar uses useLexicalComposerContext so it must be inside a InklingComposer.
-  // The email editor manages its own composer, so the sidebar is only available
-  // for non-email editor types.
   const demoChrome = (
     <>
       <Watermark editorType={editorType || 'full'} />
-      {!isEmailEditor && (
-        <div className="absolute z-20 flex h-full flex-col items-end sm:relative">
-          <Sidebar isOpen={isSidebarOpen} saveContent={saveContent} view={sidebarView} />
-          <FloatingButton isOpen={isSidebarOpen} onClick={openSidebar} />
-        </div>
-      )}
+      <div className="absolute z-20 flex h-full flex-col items-end sm:relative">
+        <Sidebar isOpen={isSidebarOpen} saveContent={saveContent} view={sidebarView} />
+        <FloatingButton isOpen={isSidebarOpen} onClick={openSidebar} />
+      </div>
     </>
   )
 
@@ -424,7 +412,7 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
       className={`inkling-demo relative h-full grow ${darkMode ? 'dark' : ''}`}
       style={isSidebarOpen ? { '--inkling-breakout-adjustment': '440px' } : {}}
     >
-      {!isMultiplayer && !isEmailEditor && contentParam !== 'false' ? (
+      {!isMultiplayer && contentParam !== 'false' ? (
         <InitialContentToggle
           defaultContent={defaultContent}
           searchParams={searchParams}
@@ -446,29 +434,6 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
       </div>
     </div>
   )
-
-  // Email editor includes its own InklingComposer, so it renders outside the shared one
-  if (isEmailEditor) {
-    return (
-      <>
-        {demoLayout(
-          <EmailEditorWrapper>
-            <EmailEditor
-              cardConfig={cardConfig}
-              cursorDidExitAtTop={focusTitle}
-              darkMode={darkMode}
-              fileUploader={fileUploader}
-              initialEditorState={initialContent}
-              registerAPI={handleRegisterAPI}
-            >
-              <WordCountPlugin onChange={setWordCount} />
-            </EmailEditor>
-          </EmailEditorWrapper>,
-        )}
-        {demoChrome}
-      </>
-    )
-  }
 
   return (
     <InklingComposer

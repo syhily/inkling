@@ -21,17 +21,7 @@ export function renderAudioNode(node: AudioNodeData, context: RenderContext): Ex
   const thumbnailCls = getThumbnailCls(safeThumbnailSrc)
   const emptyThumbnailCls = getEmptyThumbnailCls(safeThumbnailSrc)
 
-  if (context.variant({ web: false, email: true })) {
-    // Throws the pinned missing-postUrl error when postUrl is absent/blank.
-    // Note the email template interpolates the escaped postUrl verbatim —
-    // routing it through context.safeUrl would drop unsafe postUrls to '',
-    // changing pinned output (deliberate divergence, kept by plan 040 Step 5).
-    const postUrl = context.requirePostUrl('renderAudioNode')
-
-    return emailTemplate(node, document, postUrl, thumbnailCls, emptyThumbnailCls, safeThumbnailSrc, context)
-  } else {
-    return frontendTemplate(node, document, thumbnailCls, emptyThumbnailCls, safeThumbnailSrc)
-  }
+  return frontendTemplate(node, document, thumbnailCls, emptyThumbnailCls, safeThumbnailSrc)
 }
 
 function frontendTemplate(
@@ -205,70 +195,6 @@ function frontendTemplate(
   return { element, type: 'outer' as const }
 }
 
-function emailTemplate(
-  node: AudioNodeData,
-  document: Document,
-  postUrl: string,
-  thumbnailCls: string,
-  emptyThumbnailCls: string,
-  safeThumbnailSrc: string,
-  context: RenderContext,
-) {
-  const html = `
-        <table cellspacing="0" cellpadding="0" border="0" class="inkling-audio-card">
-                <tr>
-                    <td>
-                        <table cellspacing="0" cellpadding="0" border="0" width="100%">
-                            <tr>
-                                <td width="60">
-                                    <a href="${context.escapeText(postUrl)}" style="display: block; width: 60px; height: 60px; padding-top: 4px; padding-right: 16px; padding-bottom: 4px; padding-left: 4px; border-radius: 2px;">
-                                        ${
-                                          safeThumbnailSrc
-                                            ? `
-                                        <img src="${context.escapeText(safeThumbnailSrc)}" class="${thumbnailCls}" style="width: 60px; height: 60px; object-fit: cover; border: 0; border-radius: 2px;">
-                                        `
-                                            : `
-                                        <img src="https://static.inkling.local/v4.0.0/images/audio-file-icon.png" class="${emptyThumbnailCls}" style="width: 24px; height: 24px; padding: 18px; border-radius: 2px;">
-                                        `
-                                        }
-                                    </a>
-                                </td>
-                                <td style="position: relative; vertical-align: center;" valign="middle">
-                                    <a href="${context.escapeText(postUrl)}" style="position: absolute; display: block; top: 0; right: 0; bottom: 0; left: 0;"></a>
-                                    <table cellspacing="0" cellpadding="0" border="0" width="100%">
-                                        <tr>
-                                            <td>
-                                                <a href="${context.escapeText(postUrl)}" class="inkling-audio-title">${context.escapeText(node.title)}</a>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <table cellspacing="0" cellpadding="0" border="0" width="100%">
-                                                    <tr>
-                                                        <td width="24" style="vertical-align: middle;" valign="middle">
-                                                            <a href="${context.escapeText(postUrl)}" class="inkling-audio-play-button"></a>
-                                                        </td>
-                                                        <td style="vertical-align: middle;" valign="middle">
-                                                            <a href="${context.escapeText(postUrl)}" class="inkling-audio-duration">${getFormattedDuration(node.duration)}<span class="inkling-audio-link"> • Click to play audio</span></a>
-                                                        </td>
-                                                    </tr>
-                                                </table>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-            `
-
-  const container = document.createElement('div')
-  container.innerHTML = html.trim()
-  return { element: container.firstElementChild as HTMLTableElement, type: 'outer' as const }
-}
-
 function getThumbnailCls(thumbnailSrc: string) {
   let thumbnailCls = 'inkling-audio-thumbnail'
 
@@ -287,12 +213,4 @@ function getEmptyThumbnailCls(thumbnailSrc: string) {
   }
 
   return emptyThumbnailCls
-}
-
-function getFormattedDuration(duration: number) {
-  const minutes = Math.floor(duration / 60)
-  const seconds = Math.floor(duration - minutes * 60)
-  const paddedSeconds = String(seconds).padStart(2, '0')
-  const formattedDuration = `${minutes}:${paddedSeconds}`
-  return formattedDuration
 }

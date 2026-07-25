@@ -203,29 +203,4 @@ test.describe('Html card', async () => {
       `,
     )
   })
-
-  test('has working visibility icon in toolbar', async function () {
-    await focusEditor(page)
-    await page.keyboard.type('/html')
-    await page.waitForSelector('[data-inkling-card-menu-item="HTML"][data-inkling-cardmenu-selected="true"]')
-    await page.keyboard.press('Enter')
-    await expect(page.locator('.cm-content[contenteditable="true"]')).toBeVisible()
-    await page.keyboard.type('Testing')
-    await page.keyboard.press('Meta+Enter')
-
-    await expect(page.locator('[data-inkling-card-toolbar="html"]')).toBeVisible()
-    await expect(page.locator('[data-inkling-card-toolbar="html"] [data-testid="show-visibility"]')).toBeVisible()
-
-    await page.click('[data-testid="show-visibility"]')
-
-    await expect(page.locator('[data-testid="tab-contents-visibility"]')).toBeVisible()
-  })
-
-  test('does not show visibility settings panel by default in edit mode', async function () {
-    await focusEditor(page)
-    await page.keyboard.type('/html')
-    await page.waitForSelector('[data-inkling-card-menu-item="HTML"][data-inkling-cardmenu-selected="true"]')
-    await page.keyboard.press('Enter')
-    await expect(page.locator('[data-testid="tab-contents-visibility"]')).not.toBeVisible()
-  })
 })

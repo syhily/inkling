@@ -225,131 +225,6 @@ describe('BaseBookmarkNode', function () {
     )
 
     it(
-      'renders email target',
-      editorTest(async function () {
-        const options = {
-          target: 'email',
-        }
-        const bookmarkNode = $createBaseBookmarkNode(dataset)
-        const result = bookmarkNode.exportDOM(editor, { ...exportOptions, ...options })
-        const element = result.element as HTMLElement
-
-        expect(element.innerHTML).toContain('<!--[if !mso !vml]-->')
-        expect(element.innerHTML).toContain('<figure class="inkling-card inkling-bookmark-card')
-        expect(element.innerHTML).toContain('<!--[if vml]>')
-        expect(element.innerHTML).toContain('<table class="inkling-card inkling-bookmark-card--outlook"')
-      }),
-    )
-
-    it(
-      'pins the full email output',
-      editorTest(async function () {
-        const bookmarkNode = $createBaseBookmarkNode(dataset)
-        const result = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
-        const element = result.element as HTMLElement
-
-        await expectPrettifiedHtml(
-          element.outerHTML,
-          html`
-            <div>
-              <!--[if !mso !vml]-->
-              <figure class="inkling-card inkling-bookmark-card inkling-card-hascaption">
-                <a class="inkling-bookmark-container" href="https://inkling.local/">
-                  <div class="inkling-bookmark-content">
-                    <div class="inkling-bookmark-title">Inkling: The Creator Economy Platform</div>
-                    <div class="inkling-bookmark-description">doing kewl stuff</div>
-                    <div class="inkling-bookmark-metadata">
-                      <img class="inkling-bookmark-icon" src="https://inkling.local/favicon.ico" alt="" /><span
-                        class="inkling-bookmark-author"
-                        src="Inkling - The Professional Publishing Platform"
-                        >Inkling - The Professional Publishing Platform</span
-                      ><span class="inkling-bookmark-publisher" src="inkling">inkling</span>
-                    </div>
-                  </div>
-                  <div
-                    class="inkling-bookmark-thumbnail"
-                    style="background-image: url('https://inkling.local/images/meta/inkling.png')"
-                  >
-                    <img
-                      src="https://inkling.local/images/meta/inkling.png"
-                      alt=""
-                      onerror="this.style.display='none'"
-                    />
-                  </div>
-                </a>
-                <figcaption>caption here</figcaption>
-              </figure>
-              <!--[endif]-->
-              <!--[if vml]>
-                <table
-                  class="inkling-card inkling-bookmark-card--outlook"
-                  style="margin: 0; padding: 0; width: 100%; border: 1px solid #e5eff5; background: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; border-collapse: collapse; border-spacing: 0;"
-                  width="100%"
-                >
-                  <tr>
-                    <td width="100%" style="padding: 20px;">
-                      <table style="margin: 0; padding: 0; border-collapse: collapse; border-spacing: 0;">
-                        <tr>
-                          <td class="inkling-bookmark-title--outlook">
-                            <a
-                              href="https://inkling.local/"
-                              style="text-decoration: none; color: #15212A; font-size: 15px; line-height: 1.5em; font-weight: 600;"
-                            >
-                              Inkling: The Creator Economy Platform
-                            </a>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="inkling-bookmark-description--outlook">
-                              <a
-                                href="https://inkling.local/"
-                                style="text-decoration: none; margin-top: 12px; color: #738A94; font-size: 13px; line-height: 1.5em; font-weight: 400;"
-                              >
-                                doing kewl stuff
-                              </a>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="inkling-bookmark-metadata--outlook"
-                            style="padding-top: 14px; color: #15212A; font-size: 13px; font-weight: 400; line-height: 1.5em;"
-                          >
-                            <table style="margin: 0; padding: 0; border-collapse: collapse; border-spacing: 0;">
-                              <tr>
-                                <td
-                                  valign="middle"
-                                  class="inkling-bookmark-icon--outlook"
-                                  style="padding-right: 8px; font-size: 0; line-height: 1.5em;"
-                                >
-                                  <a href="https://inkling.local/" style="text-decoration: none; color: #15212A;">
-                                    <img src="https://inkling.local/favicon.ico" width="22" height="22" alt=" " />
-                                  </a>
-                                </td>
-
-                                <td valign="middle" class="inkling-bookmark-byline--outlook">
-                                  <a href="https://inkling.local/" style="text-decoration: none; color: #15212A;">
-                                    Inkling - The Professional Publishing Platform &nbsp;&#x2022;&nbsp; inkling
-                                  </a>
-                                </td>
-                              </tr>
-                            </table>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-                <div class="inkling-bookmark-spacer--outlook" style="height: 1.5em;">&nbsp;</div>
-              <![endif]-->
-            </div>
-          `,
-        )
-      }),
-    )
-
-    it(
       'renders an empty span with a missing src',
       editorTest(async function () {
         const bookmarkNode = $createBaseBookmarkNode()
@@ -391,47 +266,6 @@ describe('BaseBookmarkNode', function () {
         // Check that caption is sanitized before insertion
         expect(element.innerHTML).toContain(
           '<p><span style="white-space: pre-wrap;">This is a </span><b><strong style="white-space: pre-wrap;">caption</strong></b></p>',
-        )
-      }),
-    )
-
-    it(
-      'escapes HTML for text fields in email',
-      editorTest(async function () {
-        const options = {
-          target: 'email',
-        }
-        dataset = {
-          url: 'https://www.fake.org/',
-          metadata: {
-            icon: 'https://www.fake.org/favicon.ico',
-            title: 'Inkling: Independent technology <script>alert("XSS")</script> for modern publishing.',
-            description: 'doing "kewl" stuff',
-            author: "fa'ker",
-            publisher: 'Fake <script>alert("XSS")</script>',
-            thumbnail: 'https://fake.org/image.png',
-          },
-          caption:
-            '<p dir="ltr"><span style="white-space: pre-wrap;">This is a </span><b><strong style="white-space: pre-wrap;">caption</strong></b></p>',
-        }
-        const bookmarkNode = $createBaseBookmarkNode(dataset)
-        const result = bookmarkNode.exportDOM(editor, { ...exportOptions, ...options })
-        const element = result.element as HTMLElement
-
-        // Check that email template is used
-        expect(element.innerHTML).toContain('<!--[if !mso !vml]-->')
-
-        // Check that text fields are escaped
-        expect(element.innerHTML).toContain(
-          'Inkling: Independent technology &lt;script&gt;alert("XSS")&lt;/script&gt; for modern publishing.',
-        )
-        expect(element.innerHTML).toContain('doing "kewl" stuff')
-        expect(element.innerHTML).toContain("fa'ker")
-        expect(element.innerHTML).toContain('Fake &lt;script&gt;alert("XSS")&lt;/script&gt;')
-
-        // Check that caption is escaped
-        expect(element.innerHTML).toContain(
-          '&lt;p dir="ltr"&gt;&lt;span style="white-space: pre-wrap;"&gt;This is a &lt;/span&gt;&lt;b&gt;&lt;strong style="white-space: pre-wrap;"&gt;caption&lt;/strong&gt;&lt;/b&gt;&lt;/p&gt;',
         )
       }),
     )
@@ -505,29 +339,10 @@ describe('BaseBookmarkNode', function () {
           expect(el.querySelector('a.inkling-bookmark-container')!.getAttribute('href')).toBe('https://inkling.local/')
         }),
       )
-
-      it(
-        'omits unsupported optional media in email output',
-        editorTest(async function () {
-          const bookmarkNode = $createBaseBookmarkNode({
-            ...dataset,
-            metadata: {
-              ...(dataset.metadata as Record<string, unknown>),
-              icon: 'unsupported-scheme:payload',
-              thumbnail: 'unsupported-scheme:payload',
-            },
-          })
-          const { element } = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
-          const el = element as HTMLElement
-
-          expect(el.innerHTML).not.toContain('unsupported-scheme:payload')
-          expect(el.innerHTML).toContain('inkling-bookmark-title')
-        }),
-      )
     })
 
     it(
-      'sanitizes a malicious caption in web and email',
+      'sanitizes a malicious caption',
       editorTest(function () {
         const maliciousCaption = '<img src=x onerror=alert(1)>'
         const bookmarkNode = $createBaseBookmarkNode({
@@ -547,61 +362,6 @@ describe('BaseBookmarkNode', function () {
         const webHtml = (webResult.element as HTMLElement).outerHTML
         expect(webHtml).not.toContain('<img src=x onerror=alert(1)>')
         expect(webHtml).not.toContain('onerror=alert(1)')
-
-        const emailResult = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
-        const emailHtml = (emailResult.element as HTMLElement).innerHTML
-        expect(emailHtml).toContain('&lt;img src=x onerror=alert(1)&gt;')
-        expect(emailHtml).not.toContain('<img src=x onerror=alert(1)>')
-      }),
-    )
-
-    it(
-      'does not double-escape the description in email',
-      editorTest(function () {
-        const bookmarkNode = $createBaseBookmarkNode({
-          url: 'https://www.fake.org/',
-          metadata: {
-            icon: '',
-            title: '',
-            description: 'Fish & Chips <3',
-            author: '',
-            publisher: '',
-            thumbnail: '',
-          },
-          caption: '',
-        })
-        const result = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
-        const element = result.element as HTMLElement
-
-        expect(element.innerHTML).toContain('Fish &amp; Chips &lt;3')
-        expect(element.innerHTML).not.toContain('&amp;amp;')
-        expect(element.innerHTML).not.toContain('&amp;lt;')
-      }),
-    )
-
-    it(
-      'escapes a quote-containing URL in email templates',
-      editorTest(function () {
-        const bookmarkNode = $createBaseBookmarkNode({
-          url: '/x"><svg/onload=alert(1)>',
-          metadata: {
-            icon: '',
-            title: 'title',
-            description: '',
-            author: '',
-            publisher: '',
-            thumbnail: '',
-          },
-          caption: '',
-        })
-        const result = bookmarkNode.exportDOM(editor, { ...exportOptions, target: 'email' })
-        const element = result.element as HTMLElement
-
-        expect(element.innerHTML).toContain('href="/x&quot;')
-        expect(element.querySelector('svg') === null).toBe(true)
-        element.querySelectorAll('a').forEach((anchor) => {
-          expect(anchor.getAttribute('href')!).toBe('/x"><svg/onload=alert(1)>')
-        })
       }),
     )
   })

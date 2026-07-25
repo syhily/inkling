@@ -6,7 +6,6 @@ export type { Transformer } from '@lexical/markdown'
 export type { EditorState, LexicalEditor, SerializedEditorState } from 'lexical'
 
 /* Components */
-import EmailEditor, { EMAIL_EDITOR_CARD_CONFIG, getEmailEditorCardConfig } from '@/components/EmailEditor'
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingComposer from '@/components/InklingComposer'
 import InklingEditor from '@/components/InklingEditor'
@@ -18,15 +17,12 @@ import {
   CODE_BLOCK as CODE_BLOCK_TRANSFORMER,
   DEFAULT_TRANSFORMERS,
   ELEMENT_TRANSFORMERS,
-  EMAIL_TRANSFORMERS,
   HR as HR_TRANSFORMER,
   MINIMAL_TRANSFORMERS,
 } from '@/markdown/transformers'
 /* Nodes */
 import BASIC_NODES from '@/nodes/BasicNodes'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
-import EMAIL_EDITOR_NODES from '@/nodes/EmailEditorNodes'
-import EMAIL_NODES from '@/nodes/EmailNodes'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 /* Plugins */
 import CardInsertPlugin from '@/plugins/CardInsertPlugin'
@@ -53,7 +49,6 @@ import WordCountPlugin from '@/plugins/WordCountPlugin'
 
 /* Exports ------------------------------------------------------------------ */
 
-export type { EmailEditorProps } from '@/components/EmailEditor'
 export type { InklingComposableEditorProps } from '@/components/InklingComposableEditor'
 export type { InklingComposerProps, InklingInitialEditorState } from '@/components/InklingComposer'
 export type { InklingEditorProps } from '@/components/InklingEditor'
@@ -74,7 +69,6 @@ export type {
   SnippetItem,
   SnippetSettings,
   UploadSettings,
-  VisibilitySettings,
 } from '@/context/InklingHostIntegrationContext'
 export type { ListOptionItem, SearchResult } from '@/hooks/useSearchLinks'
 export type { PinturaConfig } from '@/hooks/usePinturaEditor'
@@ -91,7 +85,6 @@ export * from '@/utils'
 export { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown'
 
 export {
-  EmailEditor,
   InklingComposableEditor,
   InklingComposer,
   InklingEditor,
@@ -121,18 +114,13 @@ export {
   WordCountPlugin,
   DEFAULT_NODES,
   BASIC_NODES,
-  EMAIL_EDITOR_NODES,
-  EMAIL_NODES,
   MINIMAL_NODES,
-  EMAIL_EDITOR_CARD_CONFIG,
   ELEMENT_TRANSFORMERS,
   HR_TRANSFORMER,
   CODE_BLOCK_TRANSFORMER,
   DEFAULT_TRANSFORMERS,
   BASIC_TRANSFORMERS,
-  EMAIL_TRANSFORMERS,
   MINIMAL_TRANSFORMERS,
-  getEmailEditorCardConfig,
 }
 
 export const version = __APP_VERSION__

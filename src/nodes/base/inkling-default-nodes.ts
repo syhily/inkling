@@ -15,7 +15,7 @@ import { ZWNJNode } from '@/nodes/base/nodes/zwnj/ZWNJNode'
 import linebreakSerializers from '@/nodes/base/serializers/linebreak'
 import paragraphSerializers from '@/nodes/base/serializers/paragraph'
 import { CARD_DECLARATIONS } from '@/nodes/cards'
-import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
+import { orderCardNodes } from '@/nodes/cards/derive-card-nodes'
 
 // re-export everything for easier importing
 export * from '@/nodes/base/InklingDecoratorNode'
@@ -45,35 +45,11 @@ import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
 import { rgbToHex } from '@/nodes/base/utils/rgb-to-hex'
 import { html, oneline } from '@/nodes/base/utils/tagged-template-fns'
 // export utility functions that are useful in other packages or tests
-import {
-  ALL_MEMBERS_SEGMENT,
-  FREE_MEMBERS_SEGMENT,
-  NO_MEMBERS_SEGMENT,
-  PAID_MEMBERS_SEGMENT,
-  buildDefaultVisibility,
-  isOldVisibilityFormat,
-  isVisibilityRestricted,
-  migrateOldVisibilityFormat,
-  renderWithVisibility,
-  type Visibility,
-} from '@/nodes/base/utils/visibility'
 export const utils = {
   generateDecoratorNode,
-  visibility: {
-    ALL_MEMBERS_SEGMENT,
-    FREE_MEMBERS_SEGMENT,
-    NO_MEMBERS_SEGMENT,
-    PAID_MEMBERS_SEGMENT,
-    buildDefaultVisibility,
-    isOldVisibilityFormat,
-    isVisibilityRestricted,
-    migrateOldVisibilityFormat,
-    renderWithVisibility,
-  },
   rgbToHex,
   taggedTemplateFns: { oneline, html },
 }
-export type { Visibility }
 
 export const serializers = {
   linebreak: linebreakSerializers,
@@ -123,7 +99,7 @@ const [
   bookmarkCardNode,
   galleryCardNode,
   ...additionalCardNodes
-] = deriveCardNodes(CARD_DECLARATIONS, 'default', LEGACY_DEFAULT_CARD_ORDER).map((card) => card.baseNode)
+] = orderCardNodes(CARD_DECLARATIONS, LEGACY_DEFAULT_CARD_ORDER).map((card) => card.baseNode)
 
 // export convenience objects for use elsewhere
 export const DEFAULT_NODES = [

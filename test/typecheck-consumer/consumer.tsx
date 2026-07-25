@@ -31,7 +31,6 @@ import {
   type SnippetItem,
   type SnippetSettings,
   type UploadSettings,
-  type VisibilitySettings,
   type AudioNodeDataset,
 } from '@inkling/editor'
 
@@ -119,7 +118,6 @@ const linkingSettings: LinkingSettings = {
   searchLinks: (term) => Promise.resolve(term ? [] : undefined),
   siteUrl: 'https://example.com',
 }
-const visibilitySettings: VisibilitySettings = { stripeEnabled: true, visibilitySettings: 'web' }
 const uploadSettings: UploadSettings = { image: { allowedWidths: ['regular'] }, pinturaConfig: {} }
 
 const searchResult: SearchResult = { label: 'Pages', items: [{ title: 'Home', url: 'https://example.com' }] }
@@ -143,7 +141,6 @@ const cardConfig: CardConfig = {
   ...linkingSettings,
   ...snippetSettings,
   ...uploadSettings,
-  ...visibilitySettings,
 }
 const composerWithConfig = (
   <InklingComposer cardConfig={cardConfig} fileUploader={fileUploader}>

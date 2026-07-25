@@ -4,20 +4,16 @@ import type { ElementNode } from 'lexical'
 import { $isQuoteNode } from '@lexical/rich-text'
 
 import type { ExportChildren } from '@/html/renderer/transformers/index'
-import type { RenderContext } from '@/nodes/base/render-context'
 /* c8 ignore stop */
 
 export default {
-  export(node: ElementNode, exportChildren: ExportChildren, context: RenderContext) {
+  export(node: ElementNode, exportChildren: ExportChildren) {
     if (!$isQuoteNode(node)) {
       return null
     }
 
     const children = exportChildren(node)
 
-    return context.variant({
-      web: `<blockquote>${children}</blockquote>`,
-      email: `<blockquote>${children.startsWith('<p>') ? children : `<p>${children}</p>`}</blockquote>`,
-    })
+    return `<blockquote>${children}</blockquote>`
   },
 }

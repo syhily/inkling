@@ -4,10 +4,9 @@ import { $getRoot, type LexicalEditor } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
-import { BaseHtmlNode, $createBaseHtmlNode, $isHtmlNode, type ExportDOMOptions, utils } from '@/nodes/base/index'
+import { BaseHtmlNode, $createBaseHtmlNode, $isHtmlNode, type ExportDOMOptions } from '@/nodes/base/index'
 
 const editorNodes = [BaseHtmlNode]
-const { ALL_MEMBERS_SEGMENT, NO_MEMBERS_SEGMENT } = utils.visibility
 
 describe('BaseHtmlNode', function () {
   let editor: LexicalEditor
@@ -81,18 +80,7 @@ describe('BaseHtmlNode', function () {
         const htmlNode = $createBaseHtmlNode(dataset)
         const htmlNodeDataset = htmlNode.getDataset()
 
-        expect(htmlNodeDataset).toEqual({
-          ...dataset,
-          visibility: {
-            web: {
-              nonMember: true,
-              memberSegment: 'status:free,status:-free',
-            },
-            email: {
-              memberSegment: 'status:free,status:-free',
-            },
-          },
-        })
+        expect(htmlNodeDataset).toEqual({ ...dataset })
       }),
     )
 
@@ -138,15 +126,6 @@ describe('BaseHtmlNode', function () {
 
         expect(defaults).toEqual({
           html: '',
-          visibility: {
-            web: {
-              nonMember: true,
-              memberSegment: 'status:free,status:-free',
-            },
-            email: {
-              memberSegment: 'status:free,status:-free',
-            },
-          },
         })
       }),
     )
@@ -266,254 +245,6 @@ describe('BaseHtmlNode', function () {
         )
       }),
     )
-
-    it(
-      'wraps uniqueid replacement strings when emailUniqueid feature is enabled',
-      editorTest(async function () {
-        const htmlNode = $createBaseHtmlNode({
-          html: '<img src="https://ads.example.com/banner.jpg?id={uniqueid}" alt="Ad">',
-        })
-        const result = htmlNode.exportDOM(editor, { ...exportOptions, feature: { emailUniqueid: true } })
-        expect(result.type).toBe('value')
-        const element = result.element as HTMLTextAreaElement
-
-        expect(element.value).toBe(
-          '\n<!--inkling-card-begin: html-->\n<img src="https://ads.example.com/banner.jpg?id=%%{uniqueid}%%" alt="Ad">\n<!--inkling-card-end: html-->\n',
-        )
-      }),
-    )
-
-    it(
-      'does not wrap uniqueid replacement strings when emailUniqueid feature is disabled',
-      editorTest(async function () {
-        const htmlNode = $createBaseHtmlNode({
-          html: '<img src="https://ads.example.com/banner.jpg?id={uniqueid}" alt="Ad">',
-        })
-        const result = htmlNode.exportDOM(editor, { ...exportOptions, feature: { emailUniqueid: false } })
-        expect(result.type).toBe('value')
-        const element = result.element as HTMLTextAreaElement
-
-        expect(element.value).toBe(
-          '\n<!--inkling-card-begin: html-->\n<img src="https://ads.example.com/banner.jpg?id={uniqueid}" alt="Ad">\n<!--inkling-card-end: html-->\n',
-        )
-      }),
-    )
-
-    describe('visibility rendering', function () {
-      describe('with old visibility settings', function () {
-        function testWebRender(visibility: Record<string, unknown>) {
-          const htmlNode = $createBaseHtmlNode({ html: '<div>Test</div>', visibility })
-          const result = htmlNode.exportDOM(editor, exportOptions)
-          expect(result.type).toBe('value')
-          const element = result.element as HTMLTextAreaElement
-          expect(element.value).toBe(
-            '\n<!--inkling-card-begin: html-->\n<div>Test</div>\n<!--inkling-card-end: html-->\n',
-          )
-        }
-
-        function testEmailRender(visibility: Record<string, unknown>) {
-          const htmlNode = $createBaseHtmlNode({ html: '<div>Test</div>', visibility })
-          const result = htmlNode.exportDOM(editor, { ...exportOptions, target: 'email' })
-          const expectedContents = '<!--inkling-card-begin: html-->\n<div>Test</div>\n<!--inkling-card-end: html-->'
-
-          expect(result.type).toBe('value')
-          const element = result.element as HTMLTextAreaElement
-          expect(element.value).toBe(`\n${expectedContents}\n`)
-        }
-
-        function testBlankRender(visibility: Record<string, unknown>, target: string) {
-          const htmlNode = $createBaseHtmlNode({ html: '<div>Test</div>', visibility })
-          const result = htmlNode.exportDOM(editor, { ...exportOptions, target })
-          expect(result.type).toBe('inner')
-          const element = result.element as HTMLElement
-          expect(element.innerHTML).toBe('')
-        }
-
-        it(
-          'renders on web but not email if showOnWeb is true and showOnEmail is false',
-          editorTest(async function () {
-            const visibility = { showOnEmail: false, showOnWeb: true, segment: '' }
-            testWebRender(visibility)
-            testBlankRender(visibility, 'email')
-          }),
-        )
-
-        it(
-          'renders on email and not web if showOnEmail is true and showOnWeb is false',
-          editorTest(async function () {
-            const visibility = { showOnEmail: true, showOnWeb: false, segment: '' }
-            testEmailRender(visibility)
-            testBlankRender(visibility, 'web')
-          }),
-        )
-
-        it(
-          'renders both on web and email if showOnEmail and showOnWeb are true',
-          editorTest(async function () {
-            const visibility = { showOnEmail: true, showOnWeb: true, segment: '' }
-            testWebRender(visibility)
-            testEmailRender(visibility)
-          }),
-        )
-      })
-
-      describe('with new visibility settings', function () {
-        function testWebRender(visibility: Record<string, unknown>, expectedGateParams?: string | null) {
-          const htmlNode = $createBaseHtmlNode({ html: '<div>Test</div>', visibility })
-          const result = htmlNode.exportDOM(editor, exportOptions)
-          expect(result.type).toBe('value')
-          const element = result.element as HTMLTextAreaElement
-          const baseExpectedContents =
-            '\n<!--inkling-card-begin: html-->\n<div>Test</div>\n<!--inkling-card-end: html-->\n'
-          expect(element.value).toBe(
-            expectedGateParams
-              ? `\n<!--inkling-gated-block:begin ${expectedGateParams} -->${baseExpectedContents}<!--inkling-gated-block:end-->\n`
-              : baseExpectedContents,
-          )
-        }
-
-        function testEmailRender(visibility: Record<string, unknown>, expectedSegment: string) {
-          const htmlNode = $createBaseHtmlNode({ html: '<div>Test</div>', visibility })
-          const result = htmlNode.exportDOM(editor, { ...exportOptions, target: 'email' })
-          const expectedContents = '<!--inkling-card-begin: html-->\n<div>Test</div>\n<!--inkling-card-end: html-->'
-
-          if (!expectedSegment) {
-            expect(result.type).toBe('value')
-            const element = result.element as HTMLTextAreaElement
-            expect(element.value).toBe(`\n${expectedContents}\n`)
-          } else {
-            expect(result.type).toBe('outer')
-            const element = result.element as HTMLElement
-            expect(element.outerHTML).toBe(
-              `<div data-gh-segment="${expectedSegment}" class="inkling-visibility-wrapper">\n${expectedContents}\n</div>`,
-            )
-          }
-        }
-
-        function testBlankRender(visibility: Record<string, unknown>, target: string) {
-          const htmlNode = $createBaseHtmlNode({ html: '<div>Test</div>', visibility })
-          const result = htmlNode.exportDOM(editor, { ...exportOptions, target })
-          expect(result.type).toBe('inner')
-          const element = result.element as HTMLElement
-          expect(element.innerHTML).toBe('')
-        }
-
-        it(
-          'web: excludes gated wrapper when shown to everyone',
-          editorTest(async function () {
-            const visibility = {
-              web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
-              email: { memberSegment: ALL_MEMBERS_SEGMENT },
-            }
-            testWebRender(visibility, null)
-          }),
-        )
-
-        it(
-          'web: includes gated wrapper with member-only params',
-          editorTest(async function () {
-            const visibility = {
-              web: { nonMember: false, memberSegment: ALL_MEMBERS_SEGMENT },
-              email: { memberSegment: ALL_MEMBERS_SEGMENT },
-            }
-            testWebRender(visibility, 'nonMember:false memberSegment:"status:free,status:-free"')
-          }),
-        )
-
-        it(
-          'web: includes gated wrapper with anonymous-only params',
-          editorTest(async function () {
-            const visibility = {
-              web: { nonMember: true, memberSegment: '' },
-              email: { memberSegment: ALL_MEMBERS_SEGMENT },
-            }
-            testWebRender(visibility, 'nonMember:true memberSegment:""')
-          }),
-        )
-
-        it(
-          'email: excludes content when hidden from all members',
-          editorTest(async function () {
-            const visibility = {
-              web: { nonMember: true, memberSegment: NO_MEMBERS_SEGMENT },
-              email: { memberSegment: '' },
-            }
-            testBlankRender(visibility, 'email')
-          }),
-        )
-
-        it(
-          'email: skips segment wrapper when sent to all members',
-          editorTest(async function () {
-            const visibility = {
-              web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
-              email: { memberSegment: ALL_MEMBERS_SEGMENT },
-            }
-            testWebRender(visibility)
-            testEmailRender(visibility, '')
-          }),
-        )
-
-        it(
-          'email: includes content with member segment wrapper',
-          editorTest(async function () {
-            const visibility = {
-              web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
-              email: { memberSegment: 'status:free' },
-            }
-            testEmailRender(visibility, 'status:free')
-          }),
-        )
-
-        it(
-          'handles web-only (everyone)',
-          editorTest(async function () {
-            const visibility = {
-              web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
-              email: { memberSegment: NO_MEMBERS_SEGMENT },
-            }
-            testWebRender(visibility)
-            testBlankRender(visibility, 'email')
-          }),
-        )
-
-        it(
-          'handles web-only (members-only)',
-          editorTest(async function () {
-            const visibility = {
-              web: { nonMember: false, memberSegment: ALL_MEMBERS_SEGMENT },
-              email: { memberSegment: NO_MEMBERS_SEGMENT },
-            }
-            testWebRender(visibility, 'nonMember:false memberSegment:"status:free,status:-free"')
-            testBlankRender(visibility, 'email')
-          }),
-        )
-
-        it(
-          'handles email-only (free members)',
-          editorTest(async function () {
-            const visibility = {
-              web: { nonMember: false, memberSegment: NO_MEMBERS_SEGMENT },
-              email: { memberSegment: 'status:free' },
-            }
-            testBlankRender(visibility, 'web')
-            testEmailRender(visibility, 'status:free')
-          }),
-        )
-
-        it(
-          'handles visibility for no-one',
-          editorTest(async function () {
-            const visibility = {
-              web: { nonMember: false, memberSegment: NO_MEMBERS_SEGMENT },
-              email: { memberSegment: NO_MEMBERS_SEGMENT },
-            }
-            testBlankRender(visibility, 'web')
-            testBlankRender(visibility, 'email')
-          }),
-        )
-      })
-    })
   })
 
   describe('importDOM', function () {
@@ -648,15 +379,6 @@ describe('BaseHtmlNode', function () {
           type: 'html',
           version: 1,
           html: '<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>',
-          visibility: {
-            web: {
-              nonMember: true,
-              memberSegment: 'status:free,status:-free',
-            },
-            email: {
-              memberSegment: 'status:free,status:-free',
-            },
-          },
         })
       }),
     )
@@ -696,54 +418,6 @@ describe('BaseHtmlNode', function () {
           }
         })
       }))
-
-    it('updates old visibility format to new format', () =>
-      new Promise<void>((resolve, reject) => {
-        const serializedState = JSON.stringify({
-          root: {
-            children: [
-              {
-                type: 'html',
-                html: '<p>Paragraph with:</p><ul><li>list</li><li>items</li></ul>',
-                visibility: {
-                  showOnEmail: true,
-                  showOnWeb: true,
-                },
-              },
-            ],
-            direction: null,
-            format: '',
-            indent: 0,
-            type: 'root',
-            version: 1,
-          },
-        })
-
-        const editorState = editor.parseEditorState(serializedState)
-        editor.setEditorState(editorState)
-
-        editor.getEditorState().read(() => {
-          try {
-            const [htmlNode] = $getRoot().getChildren() as BaseHtmlNode[]
-
-            expect(htmlNode.visibility as Record<string, unknown>).toEqual({
-              showOnWeb: true,
-              showOnEmail: true,
-              web: {
-                nonMember: true,
-                memberSegment: 'status:free,status:-free',
-              },
-              email: {
-                memberSegment: 'status:free,status:-free',
-              },
-            })
-
-            resolve()
-          } catch (e) {
-            reject(e)
-          }
-        })
-      }))
   })
 
   describe('getTextContent', function () {
@@ -758,95 +432,5 @@ describe('BaseHtmlNode', function () {
         expect(node.getTextContent()).toBe('<script>const test = true;</script>\n\n')
       }),
     )
-  })
-
-  describe('getIsVisibilityActive', function () {
-    function testIsVisibilityActive(expected: boolean, visibility: Record<string, unknown>) {
-      const node = $createBaseHtmlNode()
-      node.visibility = visibility
-      expect(node.getIsVisibilityActive()).toBe(expected)
-    }
-
-    describe('with old visibility format', function () {
-      it(
-        'returns false when both showOnEmail and showOnWeb are true and segment is blank',
-        editorTest(async function () {
-          testIsVisibilityActive(false, { showOnEmail: true, showOnWeb: true, segment: '' })
-        }),
-      )
-
-      it(
-        'returns true when showOnEmail is false',
-        editorTest(async function () {
-          testIsVisibilityActive(true, { showOnEmail: false, showOnWeb: true, segment: '' })
-        }),
-      )
-
-      it(
-        'returns true when showOnWeb is false',
-        editorTest(async function () {
-          testIsVisibilityActive(true, { showOnEmail: true, showOnWeb: false, segment: '' })
-        }),
-      )
-
-      it(
-        'returns true when segment is not empty',
-        editorTest(async function () {
-          testIsVisibilityActive(true, { showOnEmail: true, showOnWeb: true, segment: 'status:-free' })
-        }),
-      )
-    })
-
-    describe('with new visibility format', function () {
-      it(
-        'returns false when shown to everyone',
-        editorTest(async function () {
-          testIsVisibilityActive(false, {
-            web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
-            email: { memberSegment: ALL_MEMBERS_SEGMENT },
-          })
-        }),
-      )
-
-      it(
-        'returns true when hidden on web for non-members',
-        editorTest(async function () {
-          testIsVisibilityActive(true, {
-            web: { nonMember: false, memberSegment: ALL_MEMBERS_SEGMENT },
-            email: { memberSegment: ALL_MEMBERS_SEGMENT },
-          })
-        }),
-      )
-
-      it(
-        'returns true when hidden on web for members',
-        editorTest(async function () {
-          testIsVisibilityActive(true, {
-            web: { nonMember: true, memberSegment: 'status:free' },
-            email: { memberSegment: ALL_MEMBERS_SEGMENT },
-          })
-        }),
-      )
-
-      it(
-        'returns true when hidden on email for all members',
-        editorTest(async function () {
-          testIsVisibilityActive(true, {
-            web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
-            email: { memberSegment: '' },
-          })
-        }),
-      )
-
-      it(
-        'returns true when hidden on email for some members',
-        editorTest(async function () {
-          testIsVisibilityActive(true, {
-            web: { nonMember: true, memberSegment: ALL_MEMBERS_SEGMENT },
-            email: { memberSegment: 'status:free' },
-          })
-        }),
-      )
-    })
   })
 })

@@ -299,7 +299,7 @@ export const MARKDOWN_EXEMPT: ReadonlySet<CardNodeType> = new Set<CardNodeType>(
  */
 export const CARD_MARKDOWN_DECLARATIONS = CARD_WRAPPER_NODES.map((card) => {
   const payload = CARD_FENCE_PAYLOADS[card.nodeType]
-  if (card.surfaces.markdown && !payload && !MARKDOWN_EXEMPT.has(card.nodeType)) {
+  if (card.markdown && !payload && !MARKDOWN_EXEMPT.has(card.nodeType)) {
     throw new Error(
       `[card-markdown-transformers] '${card.nodeType}' is markdown-eligible but has no fence payload or named exemption`,
     )

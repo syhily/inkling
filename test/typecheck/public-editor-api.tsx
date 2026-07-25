@@ -16,8 +16,6 @@ import {
   // @ts-expect-error - DesignSandbox was removed from the public barrel in 2.0.0
   DesignSandbox,
   DefaultFeaturePlugins,
-  EmailEditor,
-  type EmailEditorProps,
   type ExternalControlAPI,
   type FileUploader,
   type FileUploaderInput,
@@ -41,7 +39,6 @@ import {
   type SnippetItem,
   type SnippetSettings,
   type UploadSettings,
-  type VisibilitySettings,
 } from '@/index'
 
 declare const nestedEditor: LexicalEditor
@@ -116,17 +113,6 @@ const nestedComposer = (
 )
 void nestedComposer
 
-const emailEditorProps: EmailEditorProps = {
-  initialEditorState: serializedState,
-  markdownTransformers: BASIC_TRANSFORMERS,
-  onChange: handleChange,
-  registerAPI: handleApi,
-}
-void emailEditorProps
-
-const emailEditor = <EmailEditor initialEditorState={serializedState} onChange={handleChange} placeholderText="Write" />
-void emailEditor
-
 const surfaceProps: InklingSurfaceProps = { onChange: handleChange, readOnly: true }
 void surfaceProps
 
@@ -181,7 +167,6 @@ const linkingSettings: LinkingSettings = {
   searchLinks: (term) => Promise.resolve(term ? [] : undefined),
   siteUrl: 'https://example.com',
 }
-const visibilitySettings: VisibilitySettings = { stripeEnabled: true, visibilitySettings: 'web' }
 const uploadSettings: UploadSettings = { image: { allowedWidths: ['regular'] }, pinturaConfig: {} }
 
 const searchResult: SearchResult = { label: 'Pages', items: [{ title: 'Home', url: 'https://example.com' }] }
@@ -205,7 +190,6 @@ const cardConfig: CardConfig = {
   ...linkingSettings,
   ...snippetSettings,
   ...uploadSettings,
-  ...visibilitySettings,
 }
 const composerWithConfig = (
   <InklingComposer cardConfig={cardConfig} fileUploader={fileUploader}>

@@ -3,7 +3,6 @@ import type { RenderContext } from '@/nodes/base/render-context'
 import { formatVideoDuration } from '@/nodes/base/nodes/video/format-video-duration'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
-import { EMAIL_TEMPLATE_MAX_WIDTH } from '@/nodes/base/utils/render-helpers/email-image'
 
 interface VideoNodeData {
   src: string
@@ -16,8 +15,6 @@ interface VideoNodeData {
   customThumbnailSrc: string
   cardWidth: string
 }
-
-const DEFAULT_EMAIL_ASPECT_RATIO = 16 / 9
 
 function hasVideoDimensions(node: VideoNodeData): node is VideoNodeData & { width: number; height: number } {
   return node.width !== null && node.height !== null && node.width > 0 && node.height > 0
@@ -36,11 +33,7 @@ export function renderVideoNode(node: VideoNodeData, context: RenderContext) {
 
   const cardClasses = getCardClasses(node).join(' ')
 
-  // The email branch throws the pinned missing-postUrl error via the seam
-  // when postUrl is absent/blank.
-  const htmlString = context.variant({ web: false, email: true })
-    ? emailCardTemplate({ node, postUrl: context.requirePostUrl('renderVideoNode'), cardClasses, context })
-    : cardTemplate({ node, cardClasses, context })
+  const htmlString = cardTemplate({ node, cardClasses, context })
 
   const element = document.createElement('div')
   element.innerHTML = htmlString.trim()
@@ -123,73 +116,6 @@ export function cardTemplate({
             ${escapedCaption ? `<figcaption>${escapedCaption}</figcaption>` : ''}
         </figure>
     `
-}
-
-export function emailCardTemplate({
-  node,
-  postUrl,
-  cardClasses,
-  context,
-}: {
-  node: VideoNodeData
-  postUrl: string
-  cardClasses: string
-  context: RenderContext
-}) {
-  const safeThumbnailSrc = context.safeUrl('media', node.thumbnailSrc)
-  const safeCustomThumbnailSrc = context.safeUrl('media', node.customThumbnailSrc)
-  const thumbnailSrc = safeCustomThumbnailSrc || safeThumbnailSrc
-  const safePostUrl = context.safeUrl('navigation', postUrl)
-  const escapedCaption = node.caption ? context.escapeText(node.caption) : ''
-  // the email preview table spans the template's content column — the same
-  // 600px policy the email image-sizing pipeline clamps to
-  const emailTemplateMaxWidth = EMAIL_TEMPLATE_MAX_WIDTH
-  const aspectRatio = hasVideoDimensions(node) ? node.width / node.height : DEFAULT_EMAIL_ASPECT_RATIO
-  const emailSpacerWidth = Math.round(emailTemplateMaxWidth / 4)
-  const emailSpacerHeight = Math.round(emailTemplateMaxWidth / aspectRatio)
-  const posterSpacerSrc = getPosterSpacerSrc(emailSpacerWidth, emailSpacerHeight)
-  const outlookCircleLeft = Math.round(emailTemplateMaxWidth / 2 - 39)
-  const outlookCircleTop = Math.round(emailSpacerHeight / 2 - 39)
-  const outlookPlayLeft = Math.round(emailTemplateMaxWidth / 2 - 11)
-  const outlookPlayTop = Math.round(emailSpacerHeight / 2 - 17)
-
-  return `
-         <figure class="${cardClasses}">
-            <!--[if !mso !vml]-->
-            <a class="inkling-video-preview" href="${safePostUrl}" aria-label="Play video" style="mso-hide: all">
-                <table
-                    cellpadding="0"
-                    cellspacing="0"
-                    border="0"
-                    width="100%"
-                    background="${thumbnailSrc}"
-                    role="presentation"
-                    style="background: url('${thumbnailSrc}') left top / cover; mso-hide: all"
-                >
-                    <tr style="mso-hide: all">
-                        <td width="25%" style="visibility: hidden; mso-hide: all">
-                            <img src="${posterSpacerSrc}" alt="" width="100%" border="0" style="display:block; height: auto; opacity: 0; visibility: hidden; mso-hide: all;">
-                        </td>
-                        <td width="50%" align="center" valign="middle" style="vertical-align: middle; mso-hide: all;">
-                            <div class="inkling-video-play-button" style="mso-hide: all"><div style="mso-hide: all"></div></div>
-                        </td>
-                        <td width="25%" style="mso-hide: all">&nbsp;</td>
-                    </tr>
-                </table>
-            </a>
-            <!--[endif]-->
-
-            <!--[if vml]>
-            <v:group xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" coordsize="${emailTemplateMaxWidth},${emailSpacerHeight}" coordorigin="0,0" href="${safePostUrl}" style="width:${emailTemplateMaxWidth}px;height:${emailSpacerHeight}px;">
-                <v:rect fill="t" stroked="f" style="position:absolute;width:${emailTemplateMaxWidth};height:${emailSpacerHeight};"><v:fill src="${thumbnailSrc}" type="frame"/></v:rect>
-                <v:oval fill="t" strokecolor="white" strokeweight="4px" style="position:absolute;left:${outlookCircleLeft};top:${outlookCircleTop};width:78;height:78"><v:fill color="black" opacity="30%" /></v:oval>
-                <v:shape coordsize="24,32" path="m,l,32,24,16,xe" fillcolor="white" stroked="f" style="position:absolute;left:${outlookPlayLeft};top:${outlookPlayTop};width:30;height:34;" />
-            </v:group>
-            <![endif]-->
-
-            ${escapedCaption ? `<figcaption>${escapedCaption}</figcaption>` : ''}
-        </figure>
-        `
 }
 
 export function getCardClasses(node: VideoNodeData) {

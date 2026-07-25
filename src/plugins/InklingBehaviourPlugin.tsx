@@ -12,11 +12,9 @@ import {
   DELETE_CARD_COMMAND,
   DESELECT_CARD_COMMAND,
   EDIT_CARD_COMMAND,
-  HIDE_CARD_VISIBILITY_SETTINGS_COMMAND,
   INSERT_CARD_COMMAND,
   PASTE_LINK_COMMAND,
   SELECT_CARD_COMMAND,
-  SHOW_CARD_VISIBILITY_SETTINGS_COMMAND,
 } from './behaviour/commands'
 import { registerCardCommands } from './behaviour/registerCardCommands'
 import { registerCardSelection } from './behaviour/registerCardSelection'
@@ -25,17 +23,14 @@ import { registerKeyboardNavigation } from './behaviour/registerKeyboardNavigati
 import { registerLinkMatching } from './behaviour/registerLinkMatching'
 import { registerMouseEvents } from './behaviour/registerMouseEvents'
 import { registerPasteHandler } from './behaviour/registerPasteHandler'
-import { registerVisibilityHandler } from './behaviour/registerVisibilityHandler'
 
 export {
   DELETE_CARD_COMMAND,
   DESELECT_CARD_COMMAND,
   EDIT_CARD_COMMAND,
-  HIDE_CARD_VISIBILITY_SETTINGS_COMMAND,
   INSERT_CARD_COMMAND,
   PASTE_LINK_COMMAND,
   SELECT_CARD_COMMAND,
-  SHOW_CARD_VISIBILITY_SETTINGS_COMMAND,
 }
 
 interface InklingBehaviourPluginProps {
@@ -83,9 +78,6 @@ function useInklingBehaviour({
       registerPasteHandler(editor, { isNested }),
       registerLinkMatching(editor, { isShiftPressed }),
       registerClickAndCut(editor),
-      registerVisibilityHandler(editor, {
-        store: cardSelectionStore,
-      }),
     )
   }, [editor, cardSelectionStore, isNested, cursorDidExitAtTop, isShiftPressed])
 

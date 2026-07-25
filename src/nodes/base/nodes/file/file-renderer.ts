@@ -1,6 +1,5 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { bytesToSize } from '@/nodes/base/utils/size-byte-converter'
 
@@ -19,88 +18,7 @@ export function renderFileNode(node: FileNodeData, context: RenderContext) {
     return renderEmptyContainer(document)
   }
 
-  if (context.variant({ web: false, email: true })) {
-    return emailTemplate(node, document, context)
-  } else {
-    return cardTemplate(node, document, context)
-  }
-}
-
-function wrapWithAnchor(
-  content: string,
-  href: string | undefined,
-  cls: string,
-  context: RenderContext,
-  style?: string,
-) {
-  if (href) {
-    const styleAttr = style ? ` style="${style}"` : ''
-    return `<a href="${context.escapeText(href)}" class="${cls}"${styleAttr}>${content}</a>`
-  }
-  return `<span class="${cls}">${content}</span>`
-}
-
-function emailTemplate(node: FileNodeData, document: Document, context: RenderContext) {
-  let iconCls
-  if (!node.fileTitle && !node.fileCaption) {
-    iconCls = 'margin-top: 6px; height: 20px; width: 20px; max-width: 20px; padding-top: 4px; padding-bottom: 4px;'
-  } else {
-    iconCls = 'margin-top: 6px; height: 24px; width: 24px; max-width: 24px;'
-  }
-
-  const href = context.postUrl || node.src || undefined
-  // safeUrl's '' sentinel maps back to the undefined sentinel this template branches on
-  const safeHref = context.safeUrl('navigation', href ?? '') || undefined
-
-  const html = `
-        <table cellspacing="0" cellpadding="4" border="0" class="inkling-file-card" width="100%">
-            <tr>
-                <td>
-                    <table cellspacing="0" cellpadding="0" border="0" width="100%">
-                        <tr>
-                            <td valign="middle" style="vertical-align: middle;">
-                                ${
-                                  node.fileTitle
-                                    ? `
-                                <table cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td>
-                                    ${wrapWithAnchor(context.escapeText(node.fileTitle), safeHref, 'inkling-file-title', context)}
-                                </td></tr></table>
-                                `
-                                    : ``
-                                }
-                                ${
-                                  node.fileCaption
-                                    ? `
-                                <table cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td>
-                                    ${wrapWithAnchor(context.escapeText(node.fileCaption), safeHref, 'inkling-file-description', context)}
-                                </td></tr></table>
-                                `
-                                    : ``
-                                }
-                                <table cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td>
-                                    ${wrapWithAnchor(`<span class="inkling-file-name">${context.escapeText(node.fileName)}</span> &bull; ${bytesToSize(node.fileSize)}`, safeHref, 'inkling-file-meta', context)}
-                                </td></tr></table>
-                            </td>
-                            <td width="80" valign="middle" class="inkling-file-thumbnail">
-                                ${
-                                  href && safeHref
-                                    ? `<a href="${context.escapeText(safeHref)}" style="display: block; top: 0; right: 0; bottom: 0; left: 0;">
-                                    <img src="https://static.inkling.local/v4.0.0/images/download-icon-darkmode.png" style="${context.escapeText(iconCls)}">
-                                </a>`
-                                    : `<img src="https://static.inkling.local/v4.0.0/images/download-icon-darkmode.png" style="${context.escapeText(iconCls)}">`
-                                }
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    `
-
-  const container = document.createElement('div')
-  container.innerHTML = html.trim()
-
-  return { element: getFirstHtmlElement(container, 'renderFileNode emailTemplate'), type: 'outer' as const }
+  return cardTemplate(node, document, context)
 }
 
 function cardTemplate(node: FileNodeData, document: Document, context: RenderContext) {

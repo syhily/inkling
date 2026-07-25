@@ -4,7 +4,6 @@ import type { GalleryImage } from '@/types/gallery'
 import { buildGalleryRows } from '@/nodes/base/nodes/gallery/gallery-rows'
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
-import { applyEmailImageAttributes } from '@/nodes/base/utils/render-helpers/email-image'
 import { setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 
 // the renderer can only lay out images that carry these fields; isValidImage
@@ -108,24 +107,15 @@ export function renderGalleryNode(node: GalleryNodeData, context: RenderContext)
         img.setAttribute('height', String(height))
       }
 
-      // add srcset+sizes except for email clients which do not have good support for either
-      if (context.variant({ web: true, email: false })) {
-        setSrcsetAttribute(img, image, context)
+      // add srcset+sizes
+      setSrcsetAttribute(img, image, context)
 
-        if (img.getAttribute('srcset') && image.width >= 720) {
-          if (rows.length === 1 && row.length === 1 && image.width >= 1200) {
-            img.setAttribute('sizes', '(min-width: 1200px) 1200px')
-          } else {
-            img.setAttribute('sizes', '(min-width: 720px) 720px')
-          }
+      if (img.getAttribute('srcset') && image.width >= 720) {
+        if (rows.length === 1 && row.length === 1 && image.width >= 1200) {
+          img.setAttribute('sizes', '(min-width: 1200px) 1200px')
+        } else {
+          img.setAttribute('sizes', '(min-width: 720px) 720px')
         }
-      }
-
-      // Outlook is unable to properly resize images without a width/height
-      // so we modify those to fit the email template column and use
-      // appropriately resized images if available
-      if (context.variant({ web: false, email: true })) {
-        applyEmailImageAttributes(img, image, context)
       }
 
       const safeHref = context.safeUrl('navigation', image.href || '')

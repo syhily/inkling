@@ -12,14 +12,7 @@ import { join, sep } from 'node:path'
 
 const POLICY_MODULES = new Set(['is-safe-url', 'escape-html', 'clean-dom', 'sanitize-html'])
 
-// is-safe-url has exactly one documented importer besides the seam:
-// render-helpers/email-button.ts keeps the legacy isSafeUrl fallback for
-// direct callers outside a render pass (commit 58711c3; pinned by
-// test/nodes-base/utils/email-button.test.ts).
-const ALLOWED_IS_SAFE_URL_IMPORTERS = [
-  'src/nodes/base/render-context.ts',
-  'src/nodes/base/utils/render-helpers/email-button.ts',
-]
+const ALLOWED_IS_SAFE_URL_IMPORTERS = ['src/nodes/base/render-context.ts']
 
 // cleanDOM runs only behind the seam's CALLOUT_HTML_CONFIG unwrap-allowlist
 // fallback (plan 040 Step 4 STOP condition).
@@ -60,7 +53,7 @@ describe('render policy import guard', () => {
     expect(offenders).toEqual({})
   })
 
-  it('the seam and the documented email-button fallback are the only is-safe-url importers', () => {
+  it('the seam is the only is-safe-url importer', () => {
     const importers = listSourceFiles('src')
       .map((name) => `src/${name.split(sep).join('/')}`)
       .filter((file) => policyImportsOf(file).includes('is-safe-url'))

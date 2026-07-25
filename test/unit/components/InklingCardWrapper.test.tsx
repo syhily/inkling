@@ -10,9 +10,7 @@ import { mockComposerContext } from '#/utils/composer-context'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { buildDefaultVisibility } from '@/nodes/base/utils/visibility'
 import { HtmlNode } from '@/nodes/HtmlNode'
-import { VISIBILITY_SETTINGS } from '@/utils/visibility'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -121,16 +119,6 @@ describe('InklingCardWrapper', () => {
 
     expect(card).toHaveAttribute('data-inkling-card-selected', 'true')
     expect(card).toHaveClass('z-20')
-  })
-
-  it('shows the visibility indicator when the node visibility is restricted', async () => {
-    const visibility = buildDefaultVisibility()
-    visibility.web.nonMember = false
-    const nodeKey = await addHtmlNode(editor, { visibility })
-
-    renderWrapper(nodeKey, { cardConfig: { visibilitySettings: VISIBILITY_SETTINGS.WEB_ONLY } })
-
-    expect(screen.getByTestId('visibility-indicator')).toBeInTheDocument()
   })
 
   it('keys the decorator parent data attribute off the width prop', async () => {

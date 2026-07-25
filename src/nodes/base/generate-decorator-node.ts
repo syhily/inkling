@@ -11,23 +11,17 @@ import { $generateHtmlFromNodes } from '@lexical/html'
 
 import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
-import type { Visibility } from '@/nodes/base/utils/visibility'
 
 import { cleanBasicHtml, type CleanBasicHtmlOptions } from '@/html/clean-basic-html'
 import { buildImportConversions, validateImportSpec, type CardImportSpec } from '@/nodes/base/import-spec'
 import { InklingDecoratorNode } from '@/nodes/base/InklingDecoratorNode'
 import { createRenderContext } from '@/nodes/base/render-context'
 import readTextContent from '@/nodes/base/utils/read-text-content'
-import {
-  buildDefaultVisibility,
-  isVisibilityRestricted,
-  migrateOldVisibilityFormat,
-} from '@/nodes/base/utils/visibility'
 import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
 
 // The render context is the ONLY export-time view a render fn receives
-// besides the node: render policy (target, URL, sanitization, feature/design
-// flags) and the image/markdown data options all live behind it
+// besides the node: render policy (URL, sanitization, feature flags) and the
+// image/markdown data options all live behind it
 // (plans 040/042). The public `exportDOM(editor, options)` entry point
 // builds the context from the options bag; the bag itself never reaches the
 // render fn. The node parameter is typed as the generated instance itself
@@ -175,17 +169,11 @@ function getTransientPropPrivateName(spec: TransientPropSpec): string {
   return spec.privateName ?? `__${spec.name}`
 }
 
-export type DecoratorNodeValueMap<
-  Props extends readonly DecoratorNodeProperty[],
-  HasVisibility extends boolean = false,
-> = {
+export type DecoratorNodeValueMap<Props extends readonly DecoratorNodeProperty[]> = {
   [Prop in Props[number] as Prop['name']]: WidenLiteral<Prop['default']>
-} & (HasVisibility extends true ? { visibility: Visibility } : {})
+}
 
-export type DecoratorNodeData<
-  Props extends readonly DecoratorNodeProperty[],
-  HasVisibility extends boolean = false,
-> = Partial<DecoratorNodeValueMap<Props, HasVisibility>>
+export type DecoratorNodeData<Props extends readonly DecoratorNodeProperty[]> = Partial<DecoratorNodeValueMap<Props>>
 
 type GeneratedDecoratorNodeInstance<
   TDataset extends Record<string, unknown>,
@@ -265,19 +253,16 @@ export interface GeneratedDecoratorNodeBase extends InklingDecoratorNode {
   exportJSON(): { type: string; version: number; [key: string]: unknown }
   isInklingCard(): true
   hasEditMode(): boolean
-  getIsVisibilityActive(): boolean
 }
 
 export function generateDecoratorNode<
   Props extends readonly DecoratorNodeProperty[] = readonly [],
-  HasVisibility extends boolean = false,
   TOutput extends ExportDOMOutput = ExportDOMOutput,
 >({
   nodeType,
   properties,
   defaultRenderFn,
   version = 1,
-  hasVisibility,
   importSpec,
 }: {
   nodeType: string
@@ -285,15 +270,11 @@ export function generateDecoratorNode<
   // The render fn's declared node type is checked against the generated
   // instance shape: it must accept the instance, so every key it reads must
   // exist on the node's dataset at the dataset's true (widened) type.
-  defaultRenderFn?: RenderFn<
-    GeneratedDecoratorNodeInstance<DecoratorNodeValueMap<Props, HasVisibility>, TOutput>,
-    TOutput
-  >
+  defaultRenderFn?: RenderFn<GeneratedDecoratorNodeInstance<DecoratorNodeValueMap<Props>, TOutput>, TOutput>
   version?: number
-  hasVisibility?: HasVisibility
   importSpec?: CardImportSpec
-}): GeneratedDecoratorNodeClass<DecoratorNodeValueMap<Props, HasVisibility>, TOutput> {
-  type GeneratedDataset = DecoratorNodeValueMap<Props, HasVisibility>
+}): GeneratedDecoratorNodeClass<DecoratorNodeValueMap<Props>, TOutput> {
+  type GeneratedDataset = DecoratorNodeValueMap<Props>
 
   const nodeProperties = properties ?? []
 
@@ -305,18 +286,6 @@ export function generateDecoratorNode<
     ...prop,
     privateName: `__${prop.name}`,
   }))
-
-  // Adds `visibility` property to the properties array if `hasVisibility` is true
-  // uses a getter for `default` to avoid problems with mutation of nested objects
-  if (hasVisibility) {
-    internalProps.push({
-      name: 'visibility',
-      get default() {
-        return buildDefaultVisibility()
-      },
-      privateName: '__visibility',
-    })
-  }
 
   // The import spec names the card's DOM-import knowledge (CONTEXT.md:
   // "import spec"); validate it against the property list at class-creation
@@ -374,10 +343,7 @@ export function generateDecoratorNode<
     // The import-conversion boundary constructs nodes from a plain payload
     // record (import-spec.ts); the union admits both that record and the
     // typed partial dataset without either side asserting the other.
-    constructor(
-      data: Partial<DecoratorNodeValueMap<Props, HasVisibility>> | Record<string, unknown> = {},
-      key?: string,
-    ) {
+    constructor(data: Partial<DecoratorNodeValueMap<Props>> | Record<string, unknown> = {}, key?: string) {
       super(key)
       const dataset = data as Record<string, unknown>
       internalProps.forEach((prop) => {
@@ -430,7 +396,7 @@ export function generateDecoratorNode<
      * @extends DecoratorNode
      * @see https://lexical.dev/docs/concepts/nodes#extending-decoratornode
      */
-    static clone(node: GeneratedDecoratorNodeInstance<DecoratorNodeValueMap<Props, HasVisibility>, TOutput>) {
+    static clone(node: GeneratedDecoratorNodeInstance<DecoratorNodeValueMap<Props>, TOutput>) {
       return new this(node.getDataset(), node.__key)
     }
 
@@ -442,7 +408,7 @@ export function generateDecoratorNode<
       return internalProps.reduce((obj: Record<string, unknown>, prop) => {
         obj[prop.name] = prop.default
         return obj
-      }, {}) as DecoratorNodeValueMap<Props, HasVisibility>
+      }, {}) as DecoratorNodeValueMap<Props>
     }
 
     /**
@@ -537,9 +503,6 @@ export function generateDecoratorNode<
     static importJSON(serializedNode: Record<string, unknown>) {
       const data: Record<string, unknown> = {}
 
-      // migrate older nodes that were saved with an earlier version of the visibility format
-      serializedNode.visibility = migrateOldVisibilityFormat(serializedNode.visibility as Visibility | undefined)
-
       internalProps.forEach((prop) => {
         data[prop.name] = serializedNode[prop.name]
       })
@@ -548,7 +511,7 @@ export function generateDecoratorNode<
       // (same model as Lexical's own importJSON and upstream koenig). Only
       // BookmarkNode validates its payload; a corrupt payload lands wrong-typed
       // values in `__` fields and fails later at read/export time.
-      return new this(data as Partial<DecoratorNodeValueMap<Props, HasVisibility>>)
+      return new this(data as Partial<DecoratorNodeValueMap<Props>>)
     }
 
     /**
@@ -657,22 +620,6 @@ export function generateDecoratorNode<
 
       return text ? `${text}\n\n` : ''
     }
-
-    /**
-     * Returns true/false for whether the node's visibility property
-     * is active or not. Always false if a node has no visibility property
-     * @returns {boolean}
-     */
-    getIsVisibilityActive() {
-      if (!internalProps.some((prop) => prop.name === 'visibility')) {
-        return false
-      }
-
-      const self = this.getLatest()
-      const visibility = self.__visibility
-
-      return isVisibilityRestricted(visibility as Visibility)
-    }
   }
 
   /**
@@ -706,8 +653,5 @@ export function generateDecoratorNode<
     })
   })
 
-  return GeneratedDecoratorNode as unknown as GeneratedDecoratorNodeClass<
-    DecoratorNodeValueMap<Props, HasVisibility>,
-    TOutput
-  >
+  return GeneratedDecoratorNode as unknown as GeneratedDecoratorNodeClass<DecoratorNodeValueMap<Props>, TOutput>
 }

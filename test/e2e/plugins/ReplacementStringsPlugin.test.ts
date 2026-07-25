@@ -1,17 +1,55 @@
-import { test, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
-import { assertHTML, focusEditor, html, initialize } from '#/utils/e2e'
+import { assertHTML, html, initialize } from '#/utils/e2e'
+
+// ReplacementStringsPlugin ships inside InklingNestedComposer, so every nested
+// editor gets the {placeholder} → code rewrite. These specs drive it through
+// an image card's caption editor (ExtendedTextNode, the top-level theme).
+const CAPTION_EDITOR = '[data-testid="image-caption-editor"] div[contenteditable="true"]'
+
+async function focusImageCaption(page: Page) {
+  const contentParam = encodeURIComponent(
+    JSON.stringify({
+      root: {
+        children: [
+          {
+            type: 'image',
+            // a file the demo dev server actually serves (public/) — a 404
+            // image never loads, stays zero-sized, and can't be clicked
+            src: '/inkling-editor-1.png',
+            width: 3840,
+            height: 2160,
+            caption: '',
+            cardWidth: 'regular',
+          },
+        ],
+        direction: null,
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1,
+      },
+    }),
+  )
+
+  await initialize({ page, uri: `/#/?content=${contentParam}` })
+
+  // clicking the image selects the card; the caption editor only renders
+  // once the card is selected (an empty caption renders nothing otherwise)
+  await page.click('[data-inkling-card="image"] img')
+  await expect(page.locator('[data-inkling-card="image"]')).toHaveAttribute('data-inkling-card-selected', 'true')
+  await page.click(CAPTION_EDITOR)
+}
 
 test.describe('ReplacementStringsPlugin', async function () {
-  test.describe('In email editor (ExtendedTextNode)', function () {
+  test.describe('In a card caption (nested editor)', function () {
     let page: Page
     test.beforeAll(async ({ browser }) => {
       page = await browser.newPage()
     })
 
     test.beforeEach(async () => {
-      // full editor doesn't use the plugin directly; it's part of specific email cards
-      await initialize({ page, uri: '/#/email?content=false' })
+      await focusImageCaption(page)
     })
 
     test.afterAll(async () => {
@@ -19,7 +57,6 @@ test.describe('ReplacementStringsPlugin', async function () {
     })
 
     test('formats {first_name} as code', async function () {
-      await focusEditor(page)
       await page.keyboard.type('Hello {first_name}!')
 
       await assertHTML(
@@ -31,11 +68,11 @@ test.describe('ReplacementStringsPlugin', async function () {
             <span data-lexical-text="true">!</span>
           </p>
         `,
+        { selector: CAPTION_EDITOR },
       )
     })
 
     test('formats {first_name, "fallback"} as code', async function () {
-      await focusEditor(page)
       await page.keyboard.type('Hello {first_name, "there"}!')
 
       await assertHTML(
@@ -47,11 +84,11 @@ test.describe('ReplacementStringsPlugin', async function () {
             <span data-lexical-text="true">!</span>
           </p>
         `,
+        { selector: CAPTION_EDITOR },
       )
     })
 
     test('formats {email} as code', async function () {
-      await focusEditor(page)
       await page.keyboard.type('Your email is {email}')
 
       await assertHTML(
@@ -62,11 +99,11 @@ test.describe('ReplacementStringsPlugin', async function () {
             <code spellcheck="false" data-lexical-text="true"><span>{email}</span></code>
           </p>
         `,
+        { selector: CAPTION_EDITOR },
       )
     })
 
     test('handles multiple replacement strings in same paragraph', async function () {
-      await focusEditor(page)
       await page.keyboard.type('Hi {first_name}, your email is {email}')
 
       await assertHTML(
@@ -79,11 +116,11 @@ test.describe('ReplacementStringsPlugin', async function () {
             <code spellcheck="false" data-lexical-text="true"><span>{email}</span></code>
           </p>
         `,
+        { selector: CAPTION_EDITOR },
       )
     })
 
     test('formats replacement string at start of paragraph', async function () {
-      await focusEditor(page)
       await page.keyboard.type('{first_name} is here')
 
       await assertHTML(
@@ -94,11 +131,11 @@ test.describe('ReplacementStringsPlugin', async function () {
             <span data-lexical-text="true"> is here</span>
           </p>
         `,
+        { selector: CAPTION_EDITOR },
       )
     })
 
     test('formats replacement string at end of paragraph', async function () {
-      await focusEditor(page)
       await page.keyboard.type('Name: {first_name}')
 
       await assertHTML(
@@ -109,11 +146,11 @@ test.describe('ReplacementStringsPlugin', async function () {
             <code spellcheck="false" data-lexical-text="true"><span>{first_name}</span></code>
           </p>
         `,
+        { selector: CAPTION_EDITOR },
       )
     })
 
     test('formats standalone replacement string', async function () {
-      await focusEditor(page)
       await page.keyboard.type('{first_name}')
 
       await assertHTML(
@@ -123,11 +160,11 @@ test.describe('ReplacementStringsPlugin', async function () {
             <code spellcheck="false" data-lexical-text="true"><span>{first_name}</span></code>
           </p>
         `,
+        { selector: CAPTION_EDITOR },
       )
     })
 
     test('handles adjacent replacement strings', async function () {
-      await focusEditor(page)
       await page.keyboard.type('{first_name}{last_name}')
 
       await assertHTML(
@@ -137,11 +174,11 @@ test.describe('ReplacementStringsPlugin', async function () {
             <code spellcheck="false" data-lexical-text="true"><span>{first_name}{last_name}</span></code>
           </p>
         `,
+        { selector: CAPTION_EDITOR },
       )
     })
 
     test('does not format incomplete braces', async function () {
-      await focusEditor(page)
       await page.keyboard.type('This {is incomplete')
 
       await assertHTML(
@@ -151,11 +188,11 @@ test.describe('ReplacementStringsPlugin', async function () {
             <span data-lexical-text="true">This {is incomplete</span>
           </p>
         `,
+        { selector: CAPTION_EDITOR },
       )
     })
 
     test('formats empty braces as replacement string', async function () {
-      await focusEditor(page)
       await page.keyboard.type('Empty {} braces')
 
       await assertHTML(
@@ -167,6 +204,7 @@ test.describe('ReplacementStringsPlugin', async function () {
             <span data-lexical-text="true">braces</span>
           </p>
         `,
+        { selector: CAPTION_EDITOR },
       )
     })
   })

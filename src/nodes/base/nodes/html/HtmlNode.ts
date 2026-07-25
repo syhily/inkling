@@ -11,13 +11,12 @@ const htmlProperties = [
   { name: 'html', default: '', urlType: 'html', wordCount: true },
 ] as const satisfies readonly DecoratorNodeProperty[]
 
-export type HtmlData = DecoratorNodeData<typeof htmlProperties, true>
+export type HtmlData = DecoratorNodeData<typeof htmlProperties>
 
-export interface BaseHtmlNode extends DecoratorNodeValueMap<typeof htmlProperties, true> {}
+export interface BaseHtmlNode extends DecoratorNodeValueMap<typeof htmlProperties> {}
 
 export class BaseHtmlNode extends generateDecoratorNode({
   nodeType: 'html',
-  hasVisibility: true,
   properties: htmlProperties,
   defaultRenderFn: renderHtmlNode,
 }) {

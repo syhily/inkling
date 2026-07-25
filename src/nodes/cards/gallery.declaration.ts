@@ -38,10 +38,5 @@ export const galleryDeclaration = {
   ],
   insert: { command: INSERT_GALLERY_COMMAND },
   toolbarLabel: 'gallery',
-  surfaces: {
-    default: true,
-    emailEditor: false,
-    emailRenderer: false,
-    markdown: true,
-  },
+  markdown: true,
 } satisfies CardDeclaration<'gallery'>
