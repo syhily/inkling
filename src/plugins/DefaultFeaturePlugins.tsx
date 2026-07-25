@@ -37,20 +37,14 @@ export const DEFAULT_FEATURE_PLUGINS: readonly FeaturePluginEntry[] = [
   { key: 'horizontal-rule', Component: HorizontalRulePlugin },
 ]
 
-// Renders a feature plugin set. Surfaces mount their derived set through this
-// single place so key assignment stays with the data.
-export const FeaturePlugins = ({ plugins }: { plugins: readonly FeaturePluginEntry[] }) => {
+export const DefaultFeaturePlugins = () => {
   return (
     <>
-      {plugins.map(({ key, Component }) => (
+      {DEFAULT_FEATURE_PLUGINS.map(({ key, Component }) => (
         <Component key={key} />
       ))}
     </>
   )
-}
-
-export const DefaultFeaturePlugins = () => {
-  return <FeaturePlugins plugins={DEFAULT_FEATURE_PLUGINS} />
 }
 
 export default DefaultFeaturePlugins
