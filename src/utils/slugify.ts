@@ -3,17 +3,20 @@ interface SlugifyOptions {
   type?: string
 }
 
+/** The slug policy version callers get when they don't pass one. */
+export const DEFAULT_INKLING_VERSION = '4.0'
+
 // Only the `<4.x` vs `>=4.x` distinction matters (pre-4.0 slug formats).
 // Versions that don't parse as `major.minor` are treated as latest, matching
 // the old null-coercion fallthrough.
-function isLegacyVersion(inklingVersion: string): boolean {
+export function isLegacyVersion(inklingVersion: string): boolean {
   const major = Number.parseInt(inklingVersion, 10)
   return !Number.isNaN(major) && major < 4
 }
 
 export default function slugify(
   inputString: unknown = '',
-  { inklingVersion = '4.0', type = 'mobiledoc' }: SlugifyOptions = {},
+  { inklingVersion = DEFAULT_INKLING_VERSION, type = 'mobiledoc' }: SlugifyOptions = {},
 ): string {
   if (typeof inputString !== 'string' || inputString.trim() === '') {
     return ''

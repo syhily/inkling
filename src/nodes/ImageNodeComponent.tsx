@@ -13,7 +13,7 @@ import type { GalleryImage } from '@/types/gallery'
 import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
-import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
+import { CardActionToolbar, useCardToolbarLabel } from '@/components/ui/CardActionToolbar'
 import { ImageCard } from '@/components/ui/cards/ImageCard'
 import { ImageUploadForm } from '@/components/ui/ImageUploadForm'
 import { LinkInput } from '@/components/ui/LinkInput'
@@ -307,6 +307,10 @@ export function ImageNodeComponent({
     // no-op: ImageNodeComponent does not need the figure ref
   }, [])
 
+  // the link-input toolbar is a raw ActionToolbar (not a CardActionToolbar),
+  // so it resolves the declaration's toolbar label itself
+  const toolbarLabel = useCardToolbarLabel(nodeKey)
+
   return (
     <>
       <ImageCard
@@ -328,7 +332,7 @@ export function ImageNodeComponent({
         onFileChange={onFileChange}
       />
 
-      <ActionToolbar data-inkling-card-toolbar="image" isVisible={showLink}>
+      <ActionToolbar data-inkling-card-toolbar={toolbarLabel} isVisible={showLink}>
         <LinkInput
           cancel={cancelLinkAndReselect}
           href={href}
@@ -347,7 +351,6 @@ export function ImageNodeComponent({
             onFileChange={onFileChange}
           />
         }
-        card="image"
         hideWhileEditing={false}
         items={[
           {

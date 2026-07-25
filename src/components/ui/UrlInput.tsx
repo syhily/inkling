@@ -10,7 +10,7 @@ export interface UrlInputProps {
   handlePasteAsLink?: (href: string) => void
   handleRetry?: () => void
   handleUrlChange?: (value: string) => void
-  handleUrlSubmit?: (event: React.KeyboardEvent<HTMLInputElement> | KeyboardEvent | null) => void
+  handleUrlSubmit?: (url: string) => void
   hasError?: boolean
   isLoading?: boolean
   placeholder?: string
@@ -19,7 +19,7 @@ export interface UrlInputProps {
 
 // submits the URL on Enter even when focus is in the main editor rather
 // than the input (e.g. right after pasting a URL into the editor)
-function UrlInputPlugin({ onEnter }: { onEnter?: (event: KeyboardEvent | null) => void }) {
+function UrlInputPlugin({ onEnter }: { onEnter?: () => void }) {
   const composerContext = React.useContext(LexicalComposerContext)
   const editor = composerContext?.[0]
 
@@ -30,8 +30,8 @@ function UrlInputPlugin({ onEnter }: { onEnter?: (event: KeyboardEvent | null) =
 
     return editor.registerCommand(
       KEY_ENTER_COMMAND,
-      (event) => {
-        onEnter(event)
+      () => {
+        onEnter()
         return false
       },
       COMMAND_PRIORITY_LOW,
@@ -61,7 +61,7 @@ export function UrlInput({
     if (event.key === 'Enter') {
       event.preventDefault()
       event.stopPropagation()
-      handleUrlSubmit?.(event)
+      handleUrlSubmit?.(value)
     }
 
     if (event.key === 'Escape') {
@@ -147,7 +147,7 @@ export function UrlInput({
 
   return (
     <div className="flex w-full items-center rounded-md border border-grey-300 px-3 py-2 text-sm leading-snug font-normal text-grey-900 focus-within:border-green focus-within:bg-white focus-within:shadow-[0_0_0_2px_rgba(48,207,67,.25)] focus-visible:outline-none dark:border-grey-800 dark:bg-grey-900 dark:placeholder:text-grey-800">
-      <UrlInputPlugin onEnter={handleUrlSubmit} />
+      <UrlInputPlugin onEnter={handleUrlSubmit ? () => handleUrlSubmit(value) : undefined} />
       <input
         autoFocus
         className="w-full bg-transparent text-sm outline-none"

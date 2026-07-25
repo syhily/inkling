@@ -24,12 +24,7 @@ export class TKNode extends TextNode {
   }
 
   static importJSON(serializedNode: SerializedTextNode): TKNode {
-    const node = new TKNode(serializedNode.text)
-    node.setFormat(serializedNode.format)
-    node.setDetail(serializedNode.detail)
-    node.setMode(serializedNode.mode)
-    node.setStyle(serializedNode.style)
-    return node
+    return new TKNode(serializedNode.text).updateFromJSON(serializedNode)
   }
 
   exportJSON() {

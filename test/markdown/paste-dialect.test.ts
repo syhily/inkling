@@ -29,7 +29,7 @@ describe('Paste dialect markdown-it engine', function () {
 
     it('outputs `loading="lazy"` on images', function () {
       const markdown = `![](https://mysite.com/content/images/lazy.png)`
-      const result = render(markdown, { inklingVersion: '3.0' })
+      const result = render(markdown, { inklingVersion: '4.0' })
       expect(result).toContain('loading="lazy"')
     })
   })

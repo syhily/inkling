@@ -50,6 +50,8 @@ export const videoDeclaration = {
     },
   ],
   insert: { command: INSERT_VIDEO_COMMAND, claimsMediaInsert: true },
+  uploadType: 'video',
+  toolbarLabel: 'video',
   surfaces: {
     default: true,
     emailEditor: false,

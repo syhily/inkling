@@ -4,18 +4,16 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { ListOptionItem } from '@/hooks/useSearchLinks'
 
+import { SettingDescription, SettingLabel } from '@/components/ui/SettingLabel'
 import {
   ButtonGroupSetting,
   ColorOptionSetting,
   ColorPickerSetting,
-  DropdownSetting,
   InputListSetting,
   InputSetting,
   InputUrlSetting,
   MediaUploadSetting,
-  MultiSelectDropdownSetting,
   SettingsPanel,
-  SliderSetting,
   ToggleSetting,
 } from '@/components/ui/SettingsPanel'
 
@@ -87,21 +85,9 @@ describe('SettingsPanel', function () {
       expect(screen.getByText('Enable feature')).toBeInTheDocument()
     })
 
-    it('renders SliderSetting with the current value', function () {
-      render(<SliderSetting dataTestId="volume" label="Volume" max={100} min={0} value={42} onChange={() => {}} />)
-      expect(screen.getByTestId('volume-value')).toHaveTextContent('42')
-    })
-
     it('renders InputSetting', function () {
       render(<InputSetting label="Name" value="Inkling" onChange={() => {}} />)
       expect(screen.getByDisplayValue('Inkling')).toBeInTheDocument()
-    })
-
-    it('renders DropdownSetting', function () {
-      render(
-        <DropdownSetting label="Size" menu={[{ label: 'Small', name: 'small' }]} value="small" onChange={() => {}} />,
-      )
-      expect(screen.getByText('Size')).toBeInTheDocument()
     })
 
     it('renders ButtonGroupSetting', function () {
@@ -132,15 +118,36 @@ describe('SettingsPanel', function () {
       expect(screen.getByText('URL')).toBeInTheDocument()
     })
 
-    it('renders MultiSelectDropdownSetting', function () {
-      render(<MultiSelectDropdownSetting availableItems={['a', 'b']} items={['a']} label="Tags" onChange={() => {}} />)
-      expect(screen.getByText('Tags')).toBeInTheDocument()
-    })
-
     it('renders MediaUploadSetting', function () {
       render(<MediaUploadSetting label="Cover" onFileChange={() => {}} onRemoveMedia={() => {}} />)
       expect(screen.getByText('Cover')).toBeInTheDocument()
       expect(screen.getByTestId('media-upload-setting')).toBeInTheDocument()
+    })
+  })
+
+  describe('settings chrome', function () {
+    it('renders SettingLabel with the shared label styling', function () {
+      render(<SettingLabel>My label</SettingLabel>)
+
+      const label = screen.getByText('My label')
+      expect(label.tagName).toBe('DIV')
+      expect(label).toHaveClass('text-sm', 'font-medium', 'tracking-normal', 'text-grey-900', 'dark:text-grey-300')
+    })
+
+    it('renders SettingDescription with the shared styling, merged with extra classes', function () {
+      render(<SettingDescription className="mt-1 w-11/12">Help text</SettingDescription>)
+
+      const description = screen.getByText('Help text')
+      expect(description.tagName).toBe('P')
+      expect(description).toHaveClass(
+        'mt-1',
+        'w-11/12',
+        'text-xs',
+        'leading-snug',
+        'font-normal',
+        'text-grey-700',
+        'dark:text-grey-600',
+      )
     })
   })
 

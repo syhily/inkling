@@ -10,10 +10,8 @@ import {
   ButtonGroupSetting,
   ColorOptionSetting,
   ColorPickerSetting,
-  DropdownSetting,
   InputSetting,
   MediaUploadSetting,
-  MultiSelectDropdownSetting,
   SettingsPanel,
   ToggleSetting,
 } from '@/components/ui/SettingsPanel'
@@ -90,13 +88,6 @@ export const SignupCard: Story = {
           { title: 'Transparent', transparent: true },
         ]}
         value="#777777"
-      />,
-      <MultiSelectDropdownSetting
-        availableItems={['Free members', 'Paid members']}
-        description="These labels will be applied to members who sign up via this form."
-        items={['Free members']}
-        label="Labels"
-        onChange={() => {}}
       />,
     ],
   },
@@ -246,23 +237,6 @@ export const HeaderCard: Story = {
         onChange={() => {}}
         placeholder="https://yoursite.com/#/portal/signup/"
         value=""
-      />,
-    ],
-  },
-}
-
-export const VisibilityDropdown: Story = {
-  args: {
-    children: [
-      <DropdownSetting
-        description="Visible for this audience when delivered by email."
-        label="Visibility"
-        menu={[
-          { label: 'Free members', name: 'status:free' },
-          { label: 'Paid members', name: 'status:-free' },
-        ]}
-        value="status:free"
-        onChange={() => {}}
       />,
     ],
   },

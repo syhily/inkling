@@ -84,6 +84,36 @@ describe('BookmarkCard', () => {
     expect(screen.getByTestId('bookmark-url')).toBeInTheDocument()
   })
 
+  it('submits the input value as a plain string on Enter in the UrlInput branch', () => {
+    const handleUrlSubmit = vi.fn()
+    render(<BookmarkCard {...defaultProps} handleUrlSubmit={handleUrlSubmit} urlInputValue="https://example.com" />)
+
+    fireEvent.keyDown(screen.getByTestId('bookmark-url'), { key: 'Enter' })
+
+    expect(handleUrlSubmit).toHaveBeenCalledTimes(1)
+    expect(handleUrlSubmit).toHaveBeenCalledWith('https://example.com')
+  })
+
+  it('submits the input value as a plain string on Enter in the UrlSearchInput branch', () => {
+    const handleUrlSubmit = vi.fn()
+    const searchLinks = vi.fn().mockResolvedValue([])
+    render(
+      <BookmarkCard
+        {...defaultProps}
+        handleUrlSubmit={handleUrlSubmit}
+        searchLinks={searchLinks}
+        urlInputValue="https://example.com"
+      />,
+    )
+
+    fireEvent.keyDown(screen.getByTestId('bookmark-url'), { key: 'Enter' })
+
+    expect(handleUrlSubmit).toHaveBeenCalledTimes(1)
+    // a bare URL query short-circuits the dropdown to a 'url'-typed option,
+    // which Enter selects — the submit is still a plain string pair
+    expect(handleUrlSubmit).toHaveBeenCalledWith('https://example.com', 'url')
+  })
+
   it('renders loading state when urlError is true', () => {
     render(<BookmarkCard {...defaultProps} urlInputValue="test" urlError={true} isLoading={true} />)
 

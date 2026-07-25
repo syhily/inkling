@@ -1,5 +1,4 @@
 import type { CardConfig, SnippetItem } from '@/context/InklingHostIntegrationContext'
-import type { CardMenuNodeClass } from '@/utils/inkling-node-class'
 
 import SnippetCardIcon from '@/assets/icons/inkling-card-type-snippet.svg?react'
 import { INSERT_SNIPPET_COMMAND } from '@/nodes/cards/card-commands'
@@ -28,6 +27,20 @@ interface MenuItemBase {
 
 export interface MenuItem extends MenuItemBase {
   insertParams?: Record<string, unknown> | (() => Record<string, unknown>)
+}
+
+/** The menu data one card contributes — historically the node class's static
+ * `cardMenu`; now declaration-derived data (see `getEditorCardNodes`). The
+ * card declarations normalize menus to arrays; a bare object is still
+ * tolerated as a single entry — the shape is part of the buildCardMenu
+ * contract (pinned by test/unit/buildCardMenu.test.ts). */
+export type CardMenu = MenuItem | MenuItem[]
+
+/** What buildCardMenu reads from each registered card: its menu entries.
+ * Menu-less cards (CodeBlock is the only one) carry no `cardMenu` and
+ * contribute no items. */
+export interface CardMenuSource {
+  cardMenu?: CardMenu
 }
 
 /** A `MenuItem` after `buildCardMenu` has resolved function-valued `insertParams`
@@ -60,7 +73,7 @@ export interface BuildCardMenuResult {
 }
 
 export function buildCardMenu(
-  nodes: Map<string, CardMenuNodeClass> | Iterable<[string, CardMenuNodeClass]>,
+  nodes: Map<string, CardMenuSource> | Iterable<[string, CardMenuSource]>,
   { query, config }: { query?: string; config?: CardConfig } = {},
 ): BuildCardMenuResult {
   let menu = new Map<string, ResolvedMenuItem[]>()
@@ -104,11 +117,12 @@ export function buildCardMenu(
     }
   }
 
-  for (const [nodeType, nodeClass] of nodes) {
-    // The card declarations normalize menus to arrays; a bare object is still
-    // tolerated as a single entry — the shape is part of the public
-    // buildCardMenu contract (pinned by test/unit/buildCardMenu.test.ts).
-    const cardMenuItems = Array.isArray(nodeClass.cardMenu) ? nodeClass.cardMenu : [nodeClass.cardMenu]
+  for (const [nodeType, source] of nodes) {
+    // menu-less cards (CodeBlock is the only one) contribute no items
+    if (!source.cardMenu) {
+      continue
+    }
+    const cardMenuItems = Array.isArray(source.cardMenu) ? source.cardMenu : [source.cardMenu]
     cardMenuItems.forEach((item) => addMenuItem({ nodeType, ...item }))
   }
 

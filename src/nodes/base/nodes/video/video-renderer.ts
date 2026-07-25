@@ -3,6 +3,7 @@ import type { RenderContext } from '@/nodes/base/render-context'
 import { formatVideoDuration } from '@/nodes/base/nodes/video/format-video-duration'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { EMAIL_TEMPLATE_MAX_WIDTH } from '@/nodes/base/utils/render-helpers/email-image'
 
 interface VideoNodeData {
   src: string
@@ -140,7 +141,9 @@ export function emailCardTemplate({
   const thumbnailSrc = safeCustomThumbnailSrc || safeThumbnailSrc
   const safePostUrl = context.safeUrl('navigation', postUrl)
   const escapedCaption = node.caption ? context.escapeText(node.caption) : ''
-  const emailTemplateMaxWidth = 600
+  // the email preview table spans the template's content column — the same
+  // 600px policy the email image-sizing pipeline clamps to
+  const emailTemplateMaxWidth = EMAIL_TEMPLATE_MAX_WIDTH
   const aspectRatio = hasVideoDimensions(node) ? node.width / node.height : DEFAULT_EMAIL_ASPECT_RATIO
   const emailSpacerWidth = Math.round(emailTemplateMaxWidth / 4)
   const emailSpacerHeight = Math.round(emailTemplateMaxWidth / aspectRatio)

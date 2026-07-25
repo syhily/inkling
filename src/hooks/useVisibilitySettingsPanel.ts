@@ -8,13 +8,16 @@ import InklingHostIntegrationContext from '@/context/InklingHostIntegrationConte
 import { SHOW_CARD_VISIBILITY_SETTINGS_COMMAND } from '@/plugins/behaviour/commands'
 import { VISIBILITY_SETTINGS } from '@/utils/visibility'
 
-// The single owner of the visibility-panel gate: an unset visibilitySettings
-// config defaults to WEB_AND_EMAIL (enabled), matching useVisibilityToggle.
-// The wrapper's indicator, the html toolbar item, and useVisibilityToggle all
-// read the gate from here.
+// The single owner of the visibility-setting default: an unset
+// visibilitySettings config resolves to WEB_AND_EMAIL. The panel gate, the
+// wrapper's indicator, the html toolbar item, and useVisibilityToggle all
+// resolve through here instead of re-spelling the default.
+export function resolveVisibilitySetting(cardConfig: CardConfig | undefined): string {
+  return cardConfig?.visibilitySettings ?? VISIBILITY_SETTINGS.WEB_AND_EMAIL
+}
+
 export function isVisibilitySettingsEnabled(cardConfig: CardConfig | undefined): boolean {
-  const visibilitySetting = cardConfig?.visibilitySettings ?? VISIBILITY_SETTINGS.WEB_AND_EMAIL
-  return visibilitySetting !== VISIBILITY_SETTINGS.NONE
+  return resolveVisibilitySetting(cardConfig) !== VISIBILITY_SETTINGS.NONE
 }
 
 // The visibility-settings panel affordance: the gate plus the one click

@@ -1,6 +1,6 @@
 import type { Klass, LexicalCommand, LexicalNode } from 'lexical'
 
-import type { CardConfig } from '@/context/InklingHostIntegrationContext'
+import type { CardConfig, FileUploader } from '@/context/InklingHostIntegrationContext'
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
@@ -122,6 +122,16 @@ export interface CardMenuEntrySpec {
 }
 
 /**
+ * The card's upload-claiming key — one of the media keys of the host
+ * uploader's `fileTypes` (`FileUploader` in
+ * `@/context/InklingHostIntegrationContext`). `DragDropPastePlugin` looks the
+ * key up to learn which mime types claim a drag/drop or paste insert for the
+ * card's node type. Only the four media cards (Audio, File, Image, Video)
+ * carry one.
+ */
+export type CardUploadType = keyof NonNullable<FileUploader['fileTypes']>
+
+/**
  * The single per-card source of truth (CONTEXT.md: "card declaration"). Every
  * card registry is a derived view over these declarations: the menus
  * (`@/nodes/cards/card-menus`), the decorate renders
@@ -184,5 +194,25 @@ export interface CardDeclaration<NodeType extends string = string> {
    * icon; see `getCardDragIcon` in `@/nodes/cards/card-menus`.
    */
   dragIcon?: CardIconId
+  /**
+   * The card's upload-claiming key (CONTEXT.md: "card declaration") — see
+   * `CardUploadType`. Historically a static on the base node classes read off
+   * the registered class by `DragDropPastePlugin`; the declaration is its
+   * single home now. Only the four media cards (Audio, File, Image, Video)
+   * declare it; every other card omits the entry.
+   */
+  uploadType?: CardUploadType
+  /**
+   * The card's toolbar label — the `data-inkling-card-toolbar` value
+   * `CardActionToolbar` renders on both of its toolbars (a live CSS/e2e
+   * selector contract). It is resolved from the declaration by the node's own
+   * type — the same path `data-inkling-card` takes — so the label cannot
+   * drift from the card it annotates (the historical "signup" header label;
+   * see `getCardToolbarLabel` in `@/nodes/cards/card-toolbar-labels`). Most
+   * cards label by node type; CodeBlock ("code-block") and File
+   * ("file-upload") deliberately diverge — the divergence is data here, not a
+   * transform of `nodeType`.
+   */
+  toolbarLabel: string
   surfaces: CardSurfaces
 }

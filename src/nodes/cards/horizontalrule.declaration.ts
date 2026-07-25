@@ -21,6 +21,8 @@ export const horizontalRuleDeclaration = {
       shortcut: '/hr',
     },
   ],
+  // no toolbar renders for the divider today; the label matches the node type
+  toolbarLabel: 'horizontalrule',
   surfaces: {
     default: true,
     emailEditor: true,

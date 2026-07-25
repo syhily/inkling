@@ -11,6 +11,7 @@ import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingComposer from '@/components/InklingComposer'
 import InklingEditor from '@/components/InklingEditor'
 import InklingNestedComposer from '@/components/InklingNestedComposer'
+import InklingSurface from '@/components/InklingSurface'
 /* Transformers */
 import {
   BASIC_TRANSFORMERS,
@@ -57,6 +58,7 @@ export type { InklingComposableEditorProps } from '@/components/InklingComposabl
 export type { InklingComposerProps, InklingInitialEditorState } from '@/components/InklingComposer'
 export type { InklingEditorProps } from '@/components/InklingEditor'
 export type { InklingNestedComposerProps } from '@/components/InklingNestedComposer'
+export type { InklingSurfaceProps } from '@/components/InklingSurface'
 export type { ExternalControlAPI } from '@/plugins/ExternalControlPlugin'
 
 /* Host-facing config types: the shapes a host names when wiring
@@ -94,6 +96,7 @@ export {
   InklingComposer,
   InklingEditor,
   InklingNestedComposer,
+  InklingSurface,
   DefaultFeaturePlugins,
   CardInsertPlugin,
   CardMenuPlugin,

@@ -116,7 +116,7 @@ export function AudioNodeComponent({
         onAudioFileChange={onAudioFileChange}
         onThumbnailFileChange={onThumbnailFileChange}
       />
-      <CardActionToolbar card="audio" nodeKey={nodeKey} visibleWhen={!!src} />
+      <CardActionToolbar nodeKey={nodeKey} visibleWhen={!!src} />
     </>
   )
 }

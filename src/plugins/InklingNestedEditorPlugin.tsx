@@ -12,7 +12,11 @@ import React from 'react'
 
 import CardContext from '@/context/CardContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
-import { isTypeaheadMenuOpen, markEventFromNested } from '@/plugins/behaviour/nested-editor-protocol'
+import {
+  isTypeaheadMenuOpen,
+  markEventFromNested,
+  registerNestedEnterHandoff,
+} from '@/plugins/behaviour/nested-editor-protocol'
 import { getParentEditor } from '@/utils/lexical-internals'
 
 // the nested editor the Enter key hands focus to (Header subheader, Toggle
@@ -110,30 +114,19 @@ function InklingNestedEditorPlugin({
             return true
           }
 
-          if (defaultInklingEnterBehaviour) {
-            // allow shift+enter to create a line break
-            if (event?.shiftKey) {
-              return false
-            }
-
-            // otherwise, let the parent editor handle the enter key
-            // - with ctrl/cmd+enter toggles edit mode
-            // - or creates paragraph after card and moves cursor
-            if (!parentEditor) {
-              return false
-            }
-            if (event) {
-              markEventFromNested(event)
-            }
-            parentEditor.dispatchCommand(KEY_ENTER_COMMAND, event)
-
-            // prevent normal/InklingBehaviourPlugin enter key behaviour
-            return true
-          }
+          // anything the plugin-specific branches above didn't claim falls
+          // through to the shared Enter hand-off below (registered only when
+          // defaultInklingEnterBehaviour is on)
           return false
         },
         COMMAND_PRIORITY_LOW,
       ),
+      // The shared Enter choreography (shift/null pass-through, mark +
+      // re-dispatch + swallow) lives in the nested-editor protocol. It must
+      // be registered AFTER the listener above: Lexical fires same-priority
+      // listeners in registration order, so the plugin-specific branches get
+      // first refusal and the hand-off only sees what they decline.
+      ...(defaultInklingEnterBehaviour ? [registerNestedEnterHandoff(editor, () => getParentEditor(editor))] : []),
       editor.registerCommand(
         BLUR_COMMAND,
         () => {

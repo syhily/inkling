@@ -1,6 +1,5 @@
-import type { NodeKey } from 'lexical'
-
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import { $getNodeByKey, type NodeKey } from 'lexical'
 import React from 'react'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
@@ -8,6 +7,7 @@ import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator, type ToolbarIconName } from '@/components/ui/ToolbarMenu'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
+import { getCardToolbarLabel } from '@/nodes/cards/card-toolbar-labels'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 export type CardToolbarItem =
@@ -25,9 +25,6 @@ export type CardToolbarItem =
     }
 
 export interface CardActionToolbarProps {
-  // the card's toolbar name — both blocks render
-  // data-inkling-card-toolbar={card} (a live CSS/e2e selector contract)
-  card: string
   nodeKey: NodeKey
   // extra per-card gate on the menu toolbar (populated checks, drag states);
   // defaults to true
@@ -44,8 +41,22 @@ export interface CardActionToolbarProps {
 
 const DEFAULT_ITEMS: CardToolbarItem[] = [{ kind: 'edit' }, { kind: 'separator' }, { kind: 'snippet' }]
 
+// the card's toolbar name — both blocks render
+// data-inkling-card-toolbar={label} (a live CSS/e2e selector contract). The
+// label is resolved from the card declaration by the node's own type — the
+// same path data-inkling-card takes — so it cannot drift from the card it
+// annotates (the historical "signup" header label).
+export function useCardToolbarLabel(nodeKey: NodeKey): string | undefined {
+  const [editor] = useLexicalComposerContext()
+
+  let label: string | undefined
+  editor.getEditorState().read(() => {
+    label = getCardToolbarLabel($getNodeByKey(nodeKey)?.getType() ?? '')
+  })
+  return label
+}
+
 export function CardActionToolbar({
-  card,
   nodeKey,
   visibleWhen = true,
   hideWhileEditing = true,
@@ -57,6 +68,7 @@ export function CardActionToolbar({
   const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
   const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
   const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
+  const toolbarLabel = useCardToolbarLabel(nodeKey)
 
   const handleEdit = (event: React.MouseEvent): void => {
     event.preventDefault()
@@ -114,12 +126,12 @@ export function CardActionToolbar({
 
   return (
     <>
-      <ActionToolbar data-inkling-card-toolbar={card} isVisible={showSnippetToolbar}>
+      <ActionToolbar data-inkling-card-toolbar={toolbarLabel} isVisible={showSnippetToolbar}>
         <SnippetCreateToolbar nodeKey={nodeKey} onClose={() => setShowSnippetToolbar(false)} />
       </ActionToolbar>
 
       <ActionToolbar
-        data-inkling-card-toolbar={card}
+        data-inkling-card-toolbar={toolbarLabel}
         isVisible={isSelected && !(hideWhileEditing && isEditing) && !showSnippetToolbar && visibleWhen}
       >
         {beforeMenu}

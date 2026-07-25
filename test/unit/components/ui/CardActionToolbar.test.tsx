@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { createEditor, type LexicalEditor } from 'lexical'
+import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -7,6 +7,7 @@ import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import { CardActionToolbar, type CardToolbarItem } from '@/components/ui/CardActionToolbar'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { ButtonNode } from '@/nodes/ButtonNode'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -31,16 +32,32 @@ function createComposerContext(cardConfig: Record<string, unknown> = {}) {
   }
 }
 
-function getToolbars(container: HTMLElement, card = 'test-card') {
+function getToolbars(container: HTMLElement, card = 'button') {
   return container.querySelectorAll(`[data-inkling-card-toolbar="${card}"]`)
 }
 
 describe('CardActionToolbar', () => {
   let editor: LexicalEditor
+  let nodeKey: NodeKey
 
   beforeEach(async () => {
-    editor = createEditor({ namespace: 'test', onError: () => {} })
+    editor = createEditor({ namespace: 'test', nodes: [ButtonNode], onError: () => {} })
     mockComposerContext(editor)
+    // the toolbar label resolves from the node's own type via the card
+    // declaration, so the toolbar renders against a real card node
+    nodeKey = await new Promise<NodeKey>((resolve) => {
+      editor.update(
+        () => {
+          const node = new ButtonNode({
+            buttonText: 'Subscribe',
+            buttonUrl: 'https://example.com',
+            alignment: 'center',
+          })
+          $getRoot().append(node)
+        },
+        { onUpdate: () => resolve(editor.getEditorState().read(() => $getRoot().getFirstChildOrThrow().getKey())) },
+      )
+    })
   })
 
   function renderToolbar({
@@ -56,12 +73,12 @@ describe('CardActionToolbar', () => {
   } = {}) {
     const composerValue = createComposerContext(cardConfig)
     const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper({
-      initialState: { selectedCardKey: selected ? 'card-1' : null, isEditingCard: editing },
+      initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
     })
     return render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardSelectionStoreProvider>
-          <CardActionToolbar card="test-card" nodeKey="card-1" {...props} />
+          <CardActionToolbar nodeKey={nodeKey} {...props} />
         </CardSelectionStoreProvider>
       </InklingHostIntegrationContext.Provider>,
     )
@@ -135,7 +152,7 @@ describe('CardActionToolbar', () => {
 
       fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
 
-      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: 'card-1' })
+      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: nodeKey })
     })
   })
 

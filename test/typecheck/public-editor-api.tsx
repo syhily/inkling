@@ -15,6 +15,7 @@ import {
   type CardConfig,
   // @ts-expect-error - DesignSandbox was removed from the public barrel in 2.0.0
   DesignSandbox,
+  DefaultFeaturePlugins,
   EmailEditor,
   type EmailEditorProps,
   type ExternalControlAPI,
@@ -32,6 +33,8 @@ import {
   type InklingInitialEditorState,
   InklingNestedComposer,
   type InklingNestedComposerProps,
+  InklingSurface,
+  type InklingSurfaceProps,
   type LinkingSettings,
   type ListOptionItem,
   type SearchResult,
@@ -124,6 +127,20 @@ void emailEditorProps
 const emailEditor = <EmailEditor initialEditorState={serializedState} onChange={handleChange} placeholderText="Write" />
 void emailEditor
 
+const surfaceProps: InklingSurfaceProps = { onChange: handleChange, readOnly: true }
+void surfaceProps
+
+// a host-composed custom surface through InklingSurface: shared-state wiring
+// (one undo stack, top-level onChange routing) comes from the surface itself
+const customSurface = (
+  <InklingComposer initialEditorState={serializedState} nodes={BASIC_NODES} onError={(error) => void error}>
+    <InklingSurface onChange={handleChange} placeholderText="Start writing">
+      <DefaultFeaturePlugins />
+    </InklingSurface>
+  </InklingComposer>
+)
+void customSurface
+
 // --- negative cases ---------------------------------------------------------
 
 // @ts-expect-error - node lists must contain Lexical node classes or replacements
@@ -137,6 +154,10 @@ void invalidTransformer
 // @ts-expect-error - onChange receives a SerializedEditorState, not a string
 const wrongCallback = <InklingEditor onChange={(state: string) => void state} />
 void wrongCallback
+
+// @ts-expect-error - InklingSurface onChange receives a SerializedEditorState, not a string
+const wrongSurfaceCallback = <InklingSurface onChange={(state: string) => void state} />
+void wrongSurfaceCallback
 
 // --- host-config type family (2.0.0) -----------------------------------------
 

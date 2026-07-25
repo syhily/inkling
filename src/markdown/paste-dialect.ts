@@ -31,15 +31,7 @@ import markdownItSup from 'markdown-it-sup'
 
 import type { MarkdownDialect } from '@/markdown/dialects'
 
-import { slugify } from '@/utils'
-
-// Only the `<4.x` vs `>=4.x` distinction matters (pre-4.0 slug formats).
-// Versions that don't parse as `major.minor` are treated as latest, matching
-// the old null-coercion fallthrough.
-function isLegacyVersion(inklingVersion: string): boolean {
-  const major = Number.parseInt(inklingVersion, 10)
-  return !Number.isNaN(major) && major < 4
-}
+import { DEFAULT_INKLING_VERSION, isLegacyVersion, slugify } from '@/utils'
 
 const renderers: Partial<Record<'<4.x' | 'latest', MarkdownIt>> = {}
 
@@ -106,7 +98,7 @@ const namedHeaders = function ({ inklingVersion }: RenderOptions = {}) {
 }
 
 const selectRenderer = function (options: RenderOptions): MarkdownIt {
-  if (isLegacyVersion(options.inklingVersion || '4.0')) {
+  if (isLegacyVersion(options.inklingVersion || DEFAULT_INKLING_VERSION)) {
     if (renderers['<4.x']) {
       return renderers['<4.x']
     }

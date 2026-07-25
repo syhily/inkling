@@ -1,8 +1,8 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { applyEmailImageAttributes } from '@/nodes/base/utils/render-helpers/email-image'
 import { getSrcsetAttribute, setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 
 const MODERN_IMAGE_FORMATS = ['avif', 'webp']
@@ -168,35 +168,10 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
   }
 
   // Outlook is unable to properly resize images without a width/height
-  // so we add that at the expected size in emails (600px) and use a higher
+  // so we add that at the expected size in emails and use a higher
   // resolution image to keep images looking good on retina screens
   if (context.variant({ web: false, email: true }) && node.width && node.height) {
-    let imageDimensions = {
-      width: node.width,
-      height: node.height,
-    }
-    if (node.width >= 600) {
-      imageDimensions = getResizedImageDimensions(imageDimensions, { width: 600 })
-    }
-    img.setAttribute('width', String(imageDimensions.width))
-    img.setAttribute('height', String(imageDimensions.height))
-
-    const contentImageSizes = context.imageOptimization?.contentImageSizes
-    if (contentImageSizes && context.isLocalContentImage(node.src) && context.canTransformImage?.(node.src)) {
-      // find available image size next up from 2x600 so we can use it for the "retina" src
-      const availableImageWidths = getAvailableImageWidths({ width: node.width }, contentImageSizes)
-      const srcWidth = availableImageWidths.find((width) => width >= 1200)
-
-      if (!srcWidth || srcWidth === node.width) {
-        // do nothing, width is smaller than retina or matches the original node src
-      } else {
-        const match = node.src.match(/(.*\/content\/images)\/(.*)/)
-        if (match) {
-          const [, imagesPath, filename] = match
-          img.setAttribute('src', `${imagesPath}/size/w${srcWidth}/${filename}`)
-        }
-      }
-    }
+    applyEmailImageAttributes(img, { src: node.src, width: node.width, height: node.height }, context)
   }
 
   const href = context.safeUrl('navigation', node.href)

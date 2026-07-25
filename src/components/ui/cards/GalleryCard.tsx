@@ -8,6 +8,7 @@ import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
 import { IconButton } from '@/components/ui/IconButton'
 import { MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
 import { ProgressBar } from '@/components/ui/ProgressBar'
+import { MAX_IMAGES, buildGalleryRows } from '@/nodes/base/nodes/gallery/gallery-rows'
 
 interface GalleryRowProps {
   index: number
@@ -108,26 +109,7 @@ interface PopulatedGalleryCardProps {
 }
 
 function PopulatedGalleryCard({ images, deleteImage, reorderHandler, isDragging }: PopulatedGalleryCardProps) {
-  const rows: GalleryImage[][] = []
-  const noOfImages = images.length
-
-  const maxImagesInRow = (idx: number): boolean => {
-    return noOfImages > 1 && noOfImages % 3 === 1 && idx === noOfImages - 2
-  }
-
-  images.forEach((image, idx) => {
-    let row = image.row || 0
-
-    if (maxImagesInRow(idx)) {
-      row = row + 1
-    }
-
-    if (!rows[row]) {
-      rows[row] = []
-    }
-
-    rows[row].push(image)
-  })
+  const rows = buildGalleryRows(images)
 
   const GalleryRows = rows.map((rowImages, idx) => {
     return (
@@ -157,7 +139,7 @@ interface EmptyGalleryCardProps {
 function EmptyGalleryCard({ openFilePicker, isDraggedOver, reorderHandler }: EmptyGalleryCardProps) {
   return (
     <MediaPlaceholder
-      desc="Click to select up to 9 images"
+      desc={`Click to select up to ${MAX_IMAGES} images`}
       filePicker={openFilePicker}
       icon="gallery"
       isDraggedOver={isDraggedOver}
@@ -195,7 +177,7 @@ function FileDragOverlay() {
       data-inkling-card-drag-text
     >
       <span className="sans-serif fw7 f7 block w-full text-center font-bold text-white">
-        Drop to add up to 9 images
+        Drop to add up to {MAX_IMAGES} images
       </span>
     </div>
   )

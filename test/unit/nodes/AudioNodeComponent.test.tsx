@@ -215,18 +215,19 @@ describe('AudioNodeComponent', () => {
 
   describe('action toolbar', () => {
     function renderWithToolbar(
+      nodeKey: NodeKey,
       selection: { selected?: boolean; editing?: boolean } = {},
       { src = '/audio.mp3', cardConfig = {} } = {},
     ) {
       const composerValue = createComposerContext({ cardConfig })
-      const { wrapper: CardSelectionStoreProvider } = createSelection('audio-1', selection)
+      const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
           <CardSelectionStoreProvider>
             <AudioNodeComponent
               duration={125}
               initialFile={undefined}
-              nodeKey="audio-1"
+              nodeKey={nodeKey}
               src={src}
               thumbnailSrc=""
               title="Episode 1"
@@ -241,26 +242,30 @@ describe('AudioNodeComponent', () => {
       return container.querySelectorAll('[data-inkling-card-toolbar="audio"]')
     }
 
-    it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar({ selected: false })
+    it('hides the toolbar when the card is not selected', async () => {
+      const nodeKey = await addAudioNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('hides the toolbar while the card is editing', () => {
-      const { container } = renderWithToolbar({ selected: true, editing: true })
+    it('hides the toolbar while the card is editing', async () => {
+      const nodeKey = await addAudioNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('hides the toolbar when the card has no src', () => {
-      const { container } = renderWithToolbar({ selected: true }, { src: '' })
+    it('hides the toolbar when the card has no src', async () => {
+      const nodeKey = await addAudioNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { src: '' })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('renders edit, separator, and snippet items when selected and populated', () => {
-      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
+    it('renders edit, separator, and snippet items when selected and populated', async () => {
+      const nodeKey = await addAudioNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -276,25 +281,28 @@ describe('AudioNodeComponent', () => {
       expect(screen.getByTestId('create-snippet')).toBeTruthy()
     })
 
-    it('hides the snippet item and its separator when createSnippet is not configured', () => {
-      const { container } = renderWithToolbar({ selected: true })
+    it('hides the snippet item and its separator when createSnippet is not configured', async () => {
+      const nodeKey = await addAudioNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
       expect(screen.queryByTestId('create-snippet')).toBeNull()
     })
 
-    it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', () => {
+    it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', async () => {
+      const nodeKey = await addAudioNode(editor)
       const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
-      renderWithToolbar({ selected: true })
+      renderWithToolbar(nodeKey, { selected: true })
 
       fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
 
-      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: 'audio-1' })
+      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: nodeKey })
     })
 
-    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
+    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', async () => {
+      const nodeKey = await addAudioNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

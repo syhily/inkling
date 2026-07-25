@@ -47,6 +47,7 @@ export const headerDeclaration = {
       shortcut: '/header',
     },
   ],
+  toolbarLabel: 'header',
   surfaces: {
     default: true,
     emailEditor: false,

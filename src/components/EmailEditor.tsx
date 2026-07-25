@@ -1,24 +1,17 @@
 import '@/styles/index.css'
-import { ListPlugin } from '@lexical/react/LexicalListPlugin'
 import React from 'react'
 
 import type { InklingComposableEditorProps } from '@/components/InklingComposableEditor'
 import type { InklingComposerProps } from '@/components/InklingComposer'
 import type { CardConfig } from '@/context/InklingHostIntegrationContext'
 
-import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingComposer from '@/components/InklingComposer'
+import InklingSurface from '@/components/InklingSurface'
 import { normalizeCardConfig } from '@/context/InklingHostIntegrationContext'
-import { SharedEditorStateContext } from '@/context/SharedEditorStateContext'
 import { EMAIL_TRANSFORMERS } from '@/markdown/transformers'
 import EMAIL_EDITOR_NODES from '@/nodes/EmailEditorNodes'
-import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
-import CardMenuPlugin from '@/plugins/CardMenuPlugin'
-import EmEnDashPlugin from '@/plugins/EmEnDashPlugin'
-import EmojiPickerPlugin from '@/plugins/EmojiPickerPlugin'
-import HorizontalRulePlugin from '@/plugins/HorizontalRulePlugin'
-import InklingSelectorPlugin from '@/plugins/InklingSelectorPlugin'
-import InklingSnippetPlugin from '@/plugins/InklingSnippetPlugin'
+import AtLinkPlugin from '@/plugins/AtLinkPlugin'
+import { deriveFeaturePlugins, FeaturePlugins } from '@/plugins/DefaultFeaturePlugins'
 import ReplacementStringsPlugin from '@/plugins/ReplacementStringsPlugin'
 import { VISIBILITY_SETTINGS } from '@/utils/visibility'
 
@@ -28,6 +21,14 @@ export const EMAIL_EDITOR_CARD_CONFIG = {
   },
   visibilitySettings: VISIBILITY_SETTINGS.EMAIL_ONLY,
 }
+
+// The email feature plugin set is a derived view over the default set
+// (src/plugins/DefaultFeaturePlugins.tsx): at-linking is swapped for
+// replacement strings — email has no @-mention surface.
+export const EMAIL_FEATURE_PLUGINS = deriveFeaturePlugins({
+  exclude: [AtLinkPlugin],
+  include: [{ key: 'replacement-strings', Component: ReplacementStringsPlugin }],
+})
 
 const ALLOWED_EMAIL_EDITOR_VISIBILITY: ReadonlySet<string> = new Set([
   VISIBILITY_SETTINGS.EMAIL_ONLY,
@@ -95,24 +96,15 @@ const EmailEditor = ({
       nodes={EMAIL_EDITOR_NODES}
       onError={onError}
     >
-      <SharedEditorStateContext onChange={onChange}>
-        <InklingComposableEditor
-          {...editorProps}
-          markdownTransformers={markdownTransformers}
-          placeholderText={placeholderText}
-        >
-          <CardInsertPlugin />
-          <CardMenuPlugin />
-          <EmEnDashPlugin />
-          <EmojiPickerPlugin />
-          <HorizontalRulePlugin />
-          <InklingSelectorPlugin />
-          <InklingSnippetPlugin />
-          <ListPlugin />
-          <ReplacementStringsPlugin />
-          {children}
-        </InklingComposableEditor>
-      </SharedEditorStateContext>
+      <InklingSurface
+        {...editorProps}
+        markdownTransformers={markdownTransformers}
+        onChange={onChange}
+        placeholderText={placeholderText}
+      >
+        <FeaturePlugins plugins={EMAIL_FEATURE_PLUGINS} />
+        {children}
+      </InklingSurface>
     </InklingComposer>
   )
 }

@@ -329,7 +329,7 @@ function HeaderNodeComponent({
           onFileChange,
         }}
       />
-      <CardActionToolbar card="header" nodeKey={nodeKey} />
+      <CardActionToolbar nodeKey={nodeKey} />
     </>
   )
 }

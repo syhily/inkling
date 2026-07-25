@@ -35,6 +35,9 @@ export const codeBlockDeclaration = {
   // No menu entry — the code block is inserted by its markdown code fence —
   // so the drag-preview icon is named explicitly instead.
   dragIcon: 'codeblock',
+  // diverges from the node type: the toolbar label is a live e2e selector
+  // contract ("code-block"), not a transform of "codeblock"
+  toolbarLabel: 'code-block',
   surfaces: {
     default: true,
     emailEditor: false,

@@ -1,22 +1,19 @@
 import '@/styles/index.css'
 import React from 'react'
 
-import type { InklingComposableEditorProps } from '@/components/InklingComposableEditor'
+import type { InklingSurfaceProps } from '@/components/InklingSurface'
 
-import InklingComposableEditor from '@/components/InklingComposableEditor'
-import { SharedEditorStateContext } from '@/context/SharedEditorStateContext'
+import InklingSurface from '@/components/InklingSurface'
 import { DefaultFeaturePlugins } from '@/plugins/DefaultFeaturePlugins'
 
-export type InklingEditorProps = InklingComposableEditorProps
+export type InklingEditorProps = InklingSurfaceProps
 
-const InklingEditor = ({ onChange, children, ...props }: InklingEditorProps) => {
+const InklingEditor = ({ children, ...props }: InklingEditorProps) => {
   return (
-    <SharedEditorStateContext onChange={onChange}>
-      <InklingComposableEditor {...props}>
-        <DefaultFeaturePlugins />
-        {children}
-      </InklingComposableEditor>
-    </SharedEditorStateContext>
+    <InklingSurface {...props}>
+      <DefaultFeaturePlugins />
+      {children}
+    </InklingSurface>
   )
 }
 

@@ -36,6 +36,7 @@ describe('UrlInput', () => {
     fireEvent.keyDown(screen.getByTestId('url-input'), { key: 'Enter' })
 
     expect(handleUrlSubmit).toHaveBeenCalledTimes(1)
+    expect(handleUrlSubmit).toHaveBeenCalledWith('https://example.com')
   })
 
   it('submits on Enter dispatched from the main editor', () => {
@@ -49,7 +50,9 @@ describe('UrlInput', () => {
     editor.dispatchCommand(KEY_ENTER_COMMAND, new KeyboardEvent('keydown', { key: 'Enter' }))
 
     expect(handleUrlSubmit).toHaveBeenCalledTimes(1)
-    expect(handleUrlSubmit).toHaveBeenCalledWith(expect.objectContaining({ key: 'Enter' }))
+    // the editor-level event's target is the editor root, so the submitted
+    // value is the controlled input value — a plain string, not the event
+    expect(handleUrlSubmit).toHaveBeenCalledWith('https://example.com')
   })
 
   it('closes on Escape', () => {

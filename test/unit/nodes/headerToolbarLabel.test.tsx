@@ -1,16 +1,19 @@
 import { CollaborationContext } from '@lexical/react/LexicalCollaborationContext'
 import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { createEditor, type LexicalEditor } from 'lexical'
+import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { CARD_DECLARATIONS } from '@/nodes/cards'
+import { getCardToolbarLabel } from '@/nodes/cards/card-toolbar-labels'
 import HeaderNodeComponent from '@/nodes/header/HeaderNodeComponent'
+import { $createHeaderNode, HeaderNode } from '@/nodes/HeaderNode'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', onError: () => {} })
+  return createEditor({ namespace: 'test', nodes: [HeaderNode], onError: () => {} })
 }
 
 function createLexicalComposerContext(editor: LexicalEditor): [LexicalEditor, { getTheme: () => undefined }] {
@@ -39,18 +42,44 @@ function createComposerContext(cardConfig: Record<string, unknown> = {}) {
   }
 }
 
-describe('headerToolbarLabel', () => {
-  // The toolbar label is a live e2e selector contract; a copy-paste from
-  // SignupNodeComponent once labeled it "signup" on both sides. Pinned
-  // against rendered DOM (plan 046 moved the JSX into CardActionToolbar;
-  // the attribute contract is unchanged).
-  it('labels header card toolbars as "header", not "signup"', () => {
+function addHeaderNode(editor: LexicalEditor) {
+  return new Promise<NodeKey>((resolve) => {
+    editor.update(
+      () => {
+        const headerNode = $createHeaderNode({})
+        $getRoot().append(headerNode)
+      },
+      { onUpdate: () => resolve(editor.getEditorState().read(() => $getRoot().getFirstChildOrThrow().getKey())) },
+    )
+  })
+}
+
+// The toolbar label (data-inkling-card-toolbar) is a live e2e selector
+// contract and declaration data: CardActionToolbar resolves it from the
+// declaration by the node's own type, so a hardcoded per-component literal
+// can never ship the wrong label again — a copy-paste from
+// SignupNodeComponent once labeled the header card "signup" on both toolbars.
+describe('card toolbar labels as a derived view over the declarations', () => {
+  it('gives every declaration a non-empty toolbar label', () => {
+    for (const declaration of CARD_DECLARATIONS) {
+      expect(declaration.toolbarLabel).toBeTruthy()
+      expect(getCardToolbarLabel(declaration.nodeType)).toBe(declaration.toolbarLabel)
+    }
+  })
+
+  it('keeps the divergent labels as declaration data — they are e2e contracts, not node types', () => {
+    expect(getCardToolbarLabel('codeblock')).toBe('code-block')
+    expect(getCardToolbarLabel('file')).toBe('file-upload')
+  })
+
+  it('renders the declaration label on the card toolbars ("header", not "signup")', async () => {
     const editor = createTestEditor()
+    const nodeKey = await addHeaderNode(editor)
     const collaborationValue = createCollaborationContext()
     const composerValue = createLexicalComposerContext(editor)
     const inklingComposerValue = createComposerContext({ createSnippet: vi.fn() })
     const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper({
-      initialState: { selectedCardKey: 'header-1' },
+      initialState: { selectedCardKey: nodeKey },
     })
 
     const { container } = render(
@@ -73,7 +102,7 @@ describe('headerToolbarLabel', () => {
                 headerTextEditor={createEditor({ namespace: 'header-text', nodes: MINIMAL_NODES, onError: () => {} })}
                 isSwapped={false}
                 layout="regular"
-                nodeKey="header-1"
+                nodeKey={nodeKey}
                 subheaderTextEditor={createEditor({
                   namespace: 'subheader-text',
                   nodes: MINIMAL_NODES,

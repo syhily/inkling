@@ -3,9 +3,9 @@
 // SQS branch's DOM mutation are structural, not flat per-property reads.
 import type { LexicalNode } from 'lexical'
 
-// MAX_PER_ROW is only read inside function bodies, so the BaseGalleryNode ↔
-// parser cycle stays TDZ-safe (same pattern as gallery-renderer.ts)
-import { MAX_PER_ROW } from '@/nodes/base/nodes/gallery/GalleryNode'
+// MAX_PER_ROW comes straight from its canonical home — importing it via
+// GalleryNode would close a GalleryNode → parser → GalleryNode import cycle
+import { MAX_PER_ROW } from '@/nodes/base/nodes/gallery/gallery-rows'
 import { readCaptionFromElement } from '@/nodes/base/utils/read-caption-from-element'
 import { readImageAttributesFromElement } from '@/nodes/base/utils/read-image-attributes-from-element'
 

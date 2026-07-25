@@ -24,6 +24,7 @@ export const buttonDeclaration = {
     },
   ],
   insert: { command: INSERT_BUTTON_COMMAND, openInEditMode: true },
+  toolbarLabel: 'button',
   surfaces: {
     default: true,
     emailEditor: true,

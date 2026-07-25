@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import type { SnippetItem } from '@/context/InklingHostIntegrationContext'
-import type { CardMenuNodeClass } from '@/utils/inkling-node-class'
+import type { CardMenuSource } from '@/utils/buildCardMenu'
 
 import { buildCardMenu } from '@/utils/buildCardMenu'
 
 const Icon = () => null
-type NodeEntries = Array<[string, CardMenuNodeClass]>
+type NodeEntries = Array<[string, CardMenuSource]>
 
 describe('buildCardMenu', function () {
   it('adds to Primary section by default', async function () {

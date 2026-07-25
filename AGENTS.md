@@ -29,7 +29,7 @@ pnpm bump           # taze: write latest dep versions to package.json + install
 
 - Formatter/linter: `oxfmt` and `oxlint`.
 - Single quotes, no semicolons, trailing commas, print width 120.
-- Tailwind classes scoped under `.lexical`.
+- Tailwind classes scoped under `.inkling-lexical`.
 - Import sorting is handled by `oxfmt`.
 
 ## Architecture notes
@@ -37,6 +37,7 @@ pnpm bump           # taze: write latest dep versions to package.json + install
 - `CONTEXT.md` is the domain glossary (card, card adjacency, card spec, card declaration, render target). Keep it current as terms crystallize.
 - `src/index.ts` is the public barrel. Do **not** import from `@/index` inside `src/nodes/*Node.ts` shim files; import shared primitives directly (`@/components/InklingCardWrapper`, `@/nodes/MinimalNodes`).
 - Every card is collapsed to its declaration (`src/nodes/cards/*.declaration.ts`): the registered class is assembled exactly once per card by the memoized `assembleCardNodeOnce` in `src/nodes/assemble-card-node.ts`, and `CARD_WRAPPER_NODES` in `src/nodes/cards/card-wrappers.ts` is derived from `CARD_DECLARATIONS`. The `src/nodes/*Node.ts` paths are type-only shims re-exporting the assembled class (via `assembleCardNodeOnce`) and the base-canonical `$is*`. Base node classes are named `Base*Node` (e.g. `BaseAudioNode`) with a `$createBase*Node` factory; the public `*Node` name / `$create*Node` factory belong to the shim and construct the assembled class. Card-specific behaviour lives on the declaration (e.g. transient props) or the base class (e.g. `isEmpty`); nested-editor/transient specs are adopted via class statics only — the generator's options bag has no `nestedEditors` entry. Each card declaration also carries its insert command, card-menu entry, and drag icon — `src/nodes/cards/card-commands.ts`, the menu/drag-icon registries, and the `src/nodes/cards/decorate/*.tsx` targets are derived views over the declarations, so adding a card means writing a declaration plus one decorate module.
+- Top-level editor surfaces (`InklingEditor`, `EmailEditor`, the renderers) are presets over one composition rule: node sets derive from `EDITOR_BASE_NODES` (src/nodes/DefaultNodes.ts), feature-plugin sets are declared deltas off `DEFAULT_FEATURE_PLUGINS` via `deriveFeaturePlugins` (src/plugins/DefaultFeaturePlugins.tsx), and a custom host surface wraps its top-level tree in exactly one `InklingSurface` (exported from `src/index.ts`) so nested card editors share the top-level undo stack and `onChange`.
 - Each card has a renderer under `src/nodes/base/nodes/<card>/`.
 
 ## Documented tradeoffs

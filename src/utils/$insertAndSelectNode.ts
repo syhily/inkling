@@ -1,4 +1,6 @@
-import { $createNodeSelection, $createParagraphNode, $isParagraphNode, $setSelection, type LexicalNode } from 'lexical'
+import { $createNodeSelection, $isParagraphNode, $setSelection, type LexicalNode } from 'lexical'
+
+import { $ensureParagraphAfterCard } from '@/utils/$ensureParagraphAfterCard'
 
 export const $insertAndSelectNode = ({
   selectedNode,
@@ -20,9 +22,6 @@ export const $insertAndSelectNode = ({
   nodeSelection.add(newNode.getKey())
   $setSelection(nodeSelection)
 
-  // always follow the inserted card with a blank paragraph when inserting at end of document
-  if (!newNode.getNextSibling()) {
-    const paragraph = $createParagraphNode()
-    newNode.insertAfter(paragraph)
-  }
+  // an inserted card at the end of the document still needs a trailing paragraph
+  $ensureParagraphAfterCard(newNode)
 }

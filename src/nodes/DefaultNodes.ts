@@ -23,7 +23,10 @@ import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
 // the pre-refactor card run below LinkNode.
 const CARDS = deriveCardNodes(CARD_WRAPPER_NODES, 'default')
 
-const RAW_NODES = [
+// The non-card base run every editor surface starts from. Each surface's node
+// set extends this single constant (the email renderer filters it) instead of
+// duplicating the run.
+export const EDITOR_BASE_NODES = [
   ExtendedTextNode,
   extendedTextNodeReplacement,
   HeadingNode,
@@ -36,17 +39,19 @@ const RAW_NODES = [
   ListItemNode,
   AsideNode,
   LinkNode,
-  ...CARDS.map((card) => card.node),
-  TKNode,
-  AtLinkNode,
-  AtLinkSearchNode,
-  ZWNJNode,
 ]
 
 // Every card class is assembled via `assembleCardNode`, which runs this same
 // own-method pass at assembly time; only AsideNode needs it here.
 ensureLexicalNodeOwnMethods(AsideNode)
 
-const DEFAULT_NODES = RAW_NODES
+const DEFAULT_NODES = [
+  ...EDITOR_BASE_NODES,
+  ...CARDS.map((card) => card.node),
+  TKNode,
+  AtLinkNode,
+  AtLinkSearchNode,
+  ZWNJNode,
+]
 
 export default DEFAULT_NODES

@@ -1,7 +1,6 @@
 import type { LexicalEditor } from 'lexical'
 
 import {
-  $createParagraphNode,
   $getSelection,
   $isNodeSelection,
   $isRangeSelection,
@@ -14,6 +13,7 @@ import {
 
 import { $isInklingCard } from '@/nodes/base'
 import { $isAtStartOfDocument, $selectDecoratorNode } from '@/utils'
+import { $ensureParagraphAfterCard } from '@/utils/$ensureParagraphAfterCard'
 
 import type { KeyboardNavigationDeps } from './types'
 
@@ -131,9 +131,7 @@ export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNa
 
         // create a new paragraph and select it if selected card is at end of document
         if (!nextSibling) {
-          const paragraph = $createParagraphNode()
-          currentNode.insertAfter(paragraph)
-          paragraph.select()
+          $ensureParagraphAfterCard(currentNode, { select: true })
           return true
         }
 

@@ -175,11 +175,12 @@ describe('FileNodeComponent', () => {
     }
 
     function renderWithToolbar(
+      nodeKey: NodeKey,
       selection: { selected?: boolean; editing?: boolean } = {},
       { populated = true, cardConfig = {} }: { populated?: boolean; cardConfig?: Record<string, unknown> } = {},
     ) {
       const composerValue = createComposerContext(undefined, cardConfig)
-      const { wrapper: CardSelectionStoreProvider } = createSelection('file-1', selection)
+      const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       const fileProps = populated ? populatedProps : { fileName: '', fileSize: '', fileSrc: '' }
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
@@ -192,7 +193,7 @@ describe('FileNodeComponent', () => {
               fileSrc={fileProps.fileSrc}
               fileTitle="Report"
               fileTitlePlaceholder="Add a title"
-              nodeKey="file-1"
+              nodeKey={nodeKey}
               triggerFileDialog={false}
             />
           </CardSelectionStoreProvider>
@@ -204,26 +205,31 @@ describe('FileNodeComponent', () => {
       return container.querySelectorAll('[data-inkling-card-toolbar="file-upload"]')
     }
 
-    it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar({ selected: false })
+    it('hides the toolbar when the card is not selected', async () => {
+      const nodeKey = await addFileNode(editor, { src: '/report.pdf' })
+      const { container } = renderWithToolbar(nodeKey, { selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('hides the toolbar while the card is editing', () => {
-      const { container } = renderWithToolbar({ selected: true, editing: true })
+    it('hides the toolbar while the card is editing', async () => {
+      const nodeKey = await addFileNode(editor, { src: '/report.pdf' })
+      const { container } = renderWithToolbar(nodeKey, { selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('hides the toolbar until the card is populated', () => {
-      const { container } = renderWithToolbar({ selected: true }, { populated: false })
+    it('hides the toolbar until the card is populated', async () => {
+      const nodeKey = await addFileNode(editor, { src: '/report.pdf' })
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { populated: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('renders edit, separator, and snippet items when selected and populated', () => {
+    it('renders edit, separator, and snippet items when selected and populated', async () => {
+      const nodeKey = await addFileNode(editor, { src: '/report.pdf' })
       const { container } = renderWithToolbar(
+        nodeKey,
         { selected: true },
         {
           cardConfig: { createSnippet: vi.fn() },
@@ -241,12 +247,13 @@ describe('FileNodeComponent', () => {
       expect(screen.getByTestId('edit-file-upload-card')).toBeTruthy()
     })
 
-    it('hides the snippet item and its separator when createSnippet is not configured', () => {
+    it('hides the snippet item and its separator when createSnippet is not configured', async () => {
       // plan 046 step 4 deliberate change: file was the only card that did
       // not gate the snippet item (or its separator) on
       // cardConfig.createSnippet — the item opened an input whose creation
       // silently no-oped. It now matches the other ten cards
-      const { container } = renderWithToolbar({ selected: true })
+      const nodeKey = await addFileNode(editor, { src: '/report.pdf' })
+      const { container } = renderWithToolbar(nodeKey, { selected: true })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
@@ -254,20 +261,23 @@ describe('FileNodeComponent', () => {
       expect(screen.queryByTestId('create-snippet')).toBeNull()
     })
 
-    it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', () => {
+    it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', async () => {
       // plan 046 step 4 deliberate change: file's edit item was wired to an
       // inert no-op (preventDefault/stopPropagation only); it now enters the
       // edit mode FileCard already implements, like every other card
-      renderWithToolbar({ selected: true })
+      const nodeKey = await addFileNode(editor, { src: '/report.pdf' })
+      renderWithToolbar(nodeKey, { selected: true })
       const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
 
       fireEvent.click(screen.getByTestId('edit-file-upload-card'))
 
-      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: 'file-1' })
+      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: nodeKey })
     })
 
-    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
+    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', async () => {
+      const nodeKey = await addFileNode(editor, { src: '/report.pdf' })
       const { container } = renderWithToolbar(
+        nodeKey,
         { selected: true },
         {
           cardConfig: { createSnippet: vi.fn() },

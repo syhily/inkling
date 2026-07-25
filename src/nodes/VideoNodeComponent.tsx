@@ -212,7 +212,6 @@ export function VideoNodeComponent({
         onVideoFileChange={onVideoFileChange}
       />
       <CardActionToolbar
-        card="video"
         items={[{ kind: 'edit', dataTestId: 'edit-video-card' }, { kind: 'separator' }, { kind: 'snippet' }]}
         nodeKey={nodeKey}
         visibleWhen={!!isCardPopulated}

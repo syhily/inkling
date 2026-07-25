@@ -1,17 +1,18 @@
 import { CollaborationContext } from '@lexical/react/LexicalCollaborationContext'
 import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { createEditor, type LexicalEditor } from 'lexical'
+import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
+import { ToggleNode, $createToggleNode } from '@/nodes/ToggleNode'
 import { ToggleNodeComponent } from '@/nodes/ToggleNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', onError: () => {} })
+  return createEditor({ namespace: 'test', nodes: [ToggleNode], onError: () => {} })
 }
 
 function createLexicalComposerContext(editor: LexicalEditor): [LexicalEditor, { getTheme: () => undefined }] {
@@ -24,9 +25,12 @@ function createCollaborationContext() {
 
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected and not editing unless a test says otherwise
-function createSelection({ selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {}) {
+function createSelection(
+  nodeKey: NodeKey | string,
+  { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
+) {
   return createCardSelectionStoreWrapper({
-    initialState: { selectedCardKey: selected ? 'toggle-1' : null, isEditingCard: editing },
+    initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
   })
 }
 
@@ -63,20 +67,33 @@ describe('ToggleNodeComponent', () => {
     contentEditor = createEditor({ namespace: 'toggle-content', nodes: MINIMAL_NODES, onError: () => {} })
   })
 
+  function addToggleNode(editor: LexicalEditor) {
+    return new Promise<NodeKey>((resolve) => {
+      editor.update(
+        () => {
+          const toggleNode = $createToggleNode()
+          $getRoot().append(toggleNode)
+        },
+        { onUpdate: () => resolve(editor.getEditorState().read(() => $getRoot().getFirstChildOrThrow().getKey())) },
+      )
+    })
+  }
+
   function renderComponent(
+    nodeKey: NodeKey,
     selection: { selected?: boolean; editing?: boolean } = {},
     cardConfig: Record<string, unknown> = {},
   ) {
     const collaborationValue = createCollaborationContext()
     const composerValue = createLexicalComposerContext(editor)
     const inklingComposerValue = createComposerContext(cardConfig)
-    const { wrapper: CardSelectionStoreProvider } = createSelection(selection)
+    const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
     return render(
       <CollaborationContext.Provider value={collaborationValue}>
         <LexicalComposerContext.Provider value={composerValue}>
           <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
             <CardSelectionStoreProvider>
-              <ToggleNodeComponent contentEditor={contentEditor} headingEditor={headingEditor} nodeKey="toggle-1" />
+              <ToggleNodeComponent contentEditor={contentEditor} headingEditor={headingEditor} nodeKey={nodeKey} />
             </CardSelectionStoreProvider>
           </InklingHostIntegrationContext.Provider>
         </LexicalComposerContext.Provider>
@@ -85,20 +102,23 @@ describe('ToggleNodeComponent', () => {
   }
 
   describe('action toolbar', () => {
-    it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderComponent({ selected: false })
+    it('hides the toolbar when the card is not selected', async () => {
+      const nodeKey = await addToggleNode(editor)
+      const { container } = renderComponent(nodeKey, { selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('hides the toolbar while the card is editing', () => {
-      const { container } = renderComponent({ selected: true, editing: true })
+    it('hides the toolbar while the card is editing', async () => {
+      const nodeKey = await addToggleNode(editor)
+      const { container } = renderComponent(nodeKey, { selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('renders edit, separator, and snippet items when selected', () => {
-      const { container } = renderComponent({ selected: true }, { createSnippet: vi.fn() })
+    it('renders edit, separator, and snippet items when selected', async () => {
+      const nodeKey = await addToggleNode(editor)
+      const { container } = renderComponent(nodeKey, { selected: true }, { createSnippet: vi.fn() })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -111,25 +131,28 @@ describe('ToggleNodeComponent', () => {
       expect(screen.getByTestId('create-snippet')).toBeTruthy()
     })
 
-    it('hides the snippet item and its separator when createSnippet is not configured', () => {
-      const { container } = renderComponent({ selected: true })
+    it('hides the snippet item and its separator when createSnippet is not configured', async () => {
+      const nodeKey = await addToggleNode(editor)
+      const { container } = renderComponent(nodeKey, { selected: true })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
       expect(screen.queryByTestId('create-snippet')).toBeNull()
     })
 
-    it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', () => {
+    it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', async () => {
+      const nodeKey = await addToggleNode(editor)
       const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
-      renderComponent({ selected: true })
+      renderComponent(nodeKey, { selected: true })
 
       fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
 
-      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: 'toggle-1' })
+      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: nodeKey })
     })
 
-    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderComponent({ selected: true }, { createSnippet: vi.fn() })
+    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', async () => {
+      const nodeKey = await addToggleNode(editor)
+      const { container } = renderComponent(nodeKey, { selected: true }, { createSnippet: vi.fn() })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

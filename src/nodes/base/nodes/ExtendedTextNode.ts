@@ -39,12 +39,7 @@ export class ExtendedTextNode extends TextNode {
   }
 
   static importJSON(serializedNode: SerializedTextNode): ExtendedTextNode {
-    const node = new ExtendedTextNode(serializedNode.text)
-    node.setFormat(serializedNode.format)
-    node.setDetail(serializedNode.detail)
-    node.setMode(serializedNode.mode)
-    node.setStyle(serializedNode.style)
-    return node
+    return new ExtendedTextNode(serializedNode.text).updateFromJSON(serializedNode)
   }
 
   exportJSON() {

@@ -73,6 +73,8 @@ export const imageDeclaration = {
     },
   ],
   insert: { command: INSERT_IMAGE_COMMAND, claimsMediaInsert: true },
+  uploadType: 'image',
+  toolbarLabel: 'image',
   surfaces: {
     default: true,
     emailEditor: true,

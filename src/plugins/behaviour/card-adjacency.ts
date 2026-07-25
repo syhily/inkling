@@ -2,7 +2,6 @@ import type { DecoratorNode, LexicalEditor, LexicalNode } from 'lexical'
 
 import {
   $createNodeSelection,
-  $createParagraphNode,
   $getNodeByKey,
   $getRoot,
   $getSelection,
@@ -15,6 +14,7 @@ import {
 import type { CardNode } from '@/types/lexical-internals'
 
 import { $isAtTopOfNode, $selectDecoratorNode, getTopLevelNativeElement } from '@/utils'
+import { $ensureParagraphAfterCard } from '@/utils/$ensureParagraphAfterCard'
 
 export const RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX = 10
 
@@ -217,9 +217,7 @@ export function $deselectCard(editor: LexicalEditor, nodeKey: string) {
 
 export function $removeOrReplaceNodeWithParagraph(editor: LexicalEditor, node: CardNode) {
   if ($getRoot().getLastChild()?.is(node)) {
-    const paragraph = $createParagraphNode()
-    $getRoot().append(paragraph)
-    paragraph.select()
+    $ensureParagraphAfterCard(node, { select: true })
   } else {
     const nextNode = node.getNextSibling()
     if (nextNode && $isDecoratorNode(nextNode)) {

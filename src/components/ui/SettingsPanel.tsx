@@ -6,12 +6,10 @@ import type { DragHandlerLike, FileChangeEvent } from '@/components/ui/cards/car
 import { ButtonGroup, type ButtonGroupButton } from '@/components/ui/ButtonGroup'
 import { ColorOptionButtons } from '@/components/ui/ColorOptionButtons'
 import { ColorIndicator, type ColorSwatchData } from '@/components/ui/ColorPicker'
-import { Dropdown } from '@/components/ui/Dropdown'
 import { Input } from '@/components/ui/Input'
 import { InputList, InputListItem } from '@/components/ui/InputList'
 import { MediaUploader } from '@/components/ui/MediaUploader'
-import { MultiSelectDropdown } from '@/components/ui/MultiSelectDropdown'
-import { Slider } from '@/components/ui/Slider'
+import { SettingDescription, SettingLabel } from '@/components/ui/SettingLabel'
 import { TabView } from '@/components/ui/TabView'
 import { Toggle } from '@/components/ui/Toggle'
 import CardContext from '@/context/CardContext'
@@ -84,61 +82,13 @@ export function ToggleSetting({ label, description, isChecked, onChange, dataTes
   return (
     <label className="flex w-full cursor-pointer items-center justify-between">
       <div>
-        <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
-        {description && (
-          <p className="mt-1 w-11/12 text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">
-            {description}
-          </p>
-        )}
+        <SettingLabel>{label}</SettingLabel>
+        {description && <SettingDescription className="mt-1 w-11/12">{description}</SettingDescription>}
       </div>
       <div className="flex shrink-0 pl-2">
         <Toggle dataTestId={dataTestId} isChecked={isChecked} onChange={onChange} />
       </div>
     </label>
-  )
-}
-
-interface SliderSettingProps {
-  label?: string
-  onChange: (value: number) => void
-  max: number
-  min: number
-  value: number
-  defaultValue?: number
-  description?: string
-  dataTestId?: string
-}
-
-export function SliderSetting({
-  label,
-  onChange,
-  max,
-  min,
-  value,
-  defaultValue,
-  description,
-  dataTestId,
-}: SliderSettingProps) {
-  return (
-    <div className="my-2 flex w-full flex-col gap-1">
-      <div className="flex items-center justify-between font-sans text-[1.3rem] font-normal">
-        <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
-        <div className="text-grey-900 dark:text-grey-100" data-testid={`${dataTestId}-value`}>
-          {value}
-        </div>
-      </div>
-      <Slider
-        dataTestId={dataTestId}
-        defaultValue={defaultValue}
-        max={max}
-        min={min}
-        value={value}
-        onChange={onChange}
-      />
-      {description && (
-        <p className="mt-1 text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">{description}</p>
-      )}
-    </div>
   )
 }
 
@@ -165,17 +115,9 @@ export function InputSetting({
 }: InputSettingProps) {
   return (
     <div className="flex w-full flex-col justify-between">
-      <div
-        className={
-          hideLabel ? 'sr-only' : 'mb-1.5 text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300'
-        }
-      >
-        {label}
-      </div>
+      {hideLabel ? <div className="sr-only">{label}</div> : <SettingLabel className="mb-1.5">{label}</SettingLabel>}
       <Input dataTestId={dataTestId} placeholder={placeholder} value={value} onBlur={onBlur} onChange={onChange} />
-      {description && (
-        <p className="text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">{description}</p>
-      )}
+      {description && <SettingDescription>{description}</SettingDescription>}
     </div>
   )
 }
@@ -307,7 +249,7 @@ export function InputListSetting({
 
   return (
     <div className="flex w-full flex-col justify-between">
-      <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
+      <SettingLabel>{label}</SettingLabel>
       <InputList
         dataTestId={dataTestId ?? ''}
         getItem={getItem}
@@ -316,82 +258,7 @@ export function InputListSetting({
         value={value}
         onChange={onChange}
       />
-      {description && (
-        <p className="text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">{description}</p>
-      )}
-    </div>
-  )
-}
-
-interface DropdownSettingProps {
-  label?: string
-  description?: string
-  value: string
-  menu: Array<{ label: string; name: string }>
-  onChange: (name: string) => void
-  dataTestId?: string
-}
-
-export function DropdownSetting({ label, description, value, menu, onChange, dataTestId }: DropdownSettingProps) {
-  return (
-    <div className="flex w-full flex-col justify-between gap-1">
-      <div
-        className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300"
-        data-testid={`${dataTestId}-label`}
-      >
-        {label}
-      </div>
-      <Dropdown dataTestId={dataTestId} menu={menu} value={value} onChange={onChange} />
-      {description && (
-        <p className="text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">{description}</p>
-      )}
-    </div>
-  )
-}
-
-interface MultiSelectDropdownSettingProps {
-  label?: string
-  description?: string
-  placeholder?: string
-  items: string[]
-  availableItems: string[]
-  onChange: (items: string[]) => void
-  dataTestId?: string
-  allowAdd?: boolean
-}
-
-/**
- *
- * @param {object} options
- * @param {string[]} options.items The currently selected items
- * @param {string[]} options.availableItems The items available for selection
- * @param {boolean} options.allowAdd Whether to allow adding new items
- * @returns
- */
-export function MultiSelectDropdownSetting({
-  label,
-  description,
-  placeholder = '',
-  items,
-  availableItems,
-  onChange,
-  dataTestId,
-  allowAdd = true,
-}: MultiSelectDropdownSettingProps) {
-  return (
-    <div className="flex w-full flex-col justify-between gap-1">
-      <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
-      <MultiSelectDropdown
-        allowAdd={allowAdd}
-        availableItems={availableItems}
-        dataTestId={dataTestId}
-        items={items}
-        placeholder={placeholder}
-        onChange={onChange}
-      />
-      {description && (
-        <p className="text-xs leading-snug font-normal text-grey-700 dark:text-grey-600">{description}</p>
-      )}
+      {description && <SettingDescription>{description}</SettingDescription>}
     </div>
   )
 }
@@ -407,7 +274,7 @@ interface ButtonGroupSettingProps {
 export function ButtonGroupSetting({ label, onClick, selectedName, buttons, hasTooltip }: ButtonGroupSettingProps) {
   return (
     <div className="flex w-full items-center justify-between text-[1.3rem]">
-      <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
+      <SettingLabel>{label}</SettingLabel>
 
       <div className="shrink-0 pl-2">
         <ButtonGroup buttons={buttons} hasTooltip={hasTooltip} selectedName={selectedName} onClick={onClick} />
@@ -438,7 +305,7 @@ export function ColorOptionSetting({
       className={`flex w-full text-[1.3rem] ${layout === 'stacked' ? 'flex-col' : 'items-center justify-between'}`}
       data-testid={dataTestId}
     >
-      <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
+      <SettingLabel>{label}</SettingLabel>
 
       <div className={`shrink-0 ${layout === 'stacked' ? '-mx-1 pt-[.6rem]' : 'pl-2'}`}>
         <ColorOptionButtons buttons={buttons} selectedName={selectedName} onClick={onClick} />
@@ -483,7 +350,7 @@ export function ColorPickerSetting({
   return (
     <div className="flex-col" data-testid={dataTestId} onClick={markClickedInside}>
       <div className="flex w-full items-center justify-between text-[1.3rem]">
-        <div className="text-sm font-medium tracking-normal text-grey-900 dark:text-grey-300">{label}</div>
+        <SettingLabel>{label}</SettingLabel>
 
         <div className="shrink-0 pl-2">
           <ColorIndicator

@@ -32,6 +32,7 @@ export const calloutDeclaration = {
     },
   ],
   insert: { command: INSERT_CALLOUT_COMMAND, openInEditMode: true },
+  toolbarLabel: 'callout',
   surfaces: {
     default: true,
     emailEditor: true,

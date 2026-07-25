@@ -120,7 +120,6 @@ function FileNodeComponent({
         onFileChange={onFileChange}
       />
       <CardActionToolbar
-        card="file-upload"
         items={[{ kind: 'edit', dataTestId: 'edit-file-upload-card' }, { kind: 'separator' }, { kind: 'snippet' }]}
         nodeKey={nodeKey}
         visibleWhen={isPopulated}

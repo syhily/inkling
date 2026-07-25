@@ -22,11 +22,7 @@ export class AsideNode extends ElementNode {
   }
 
   static importJSON(serializedNode: SerializedElementNode) {
-    const node = new this()
-    node.setFormat(serializedNode.format)
-    node.setIndent(serializedNode.indent)
-    node.setDirection(serializedNode.direction)
-    return node
+    return new this().updateFromJSON(serializedNode)
   }
 
   exportJSON() {

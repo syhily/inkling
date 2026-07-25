@@ -98,11 +98,6 @@ export class BaseImageNode extends generateDecoratorNode({
     })
   }
 
-  // Editor-side upload behaviour the card spec doesn't cover lives on the
-  // base node (plan 039, Batch 5): the registered card class is assembled
-  // from the declaration and inherits it; renderer surfaces never invoke it.
-  static uploadType = 'image'
-
   // The transient-prop spec (image.declaration.ts) initializes this only on
   // spec-adopting assembled classes; a raw `new BaseImageNode()` leaves it unset,
   // so `undefined` is part of the honest type for spec-less base instances

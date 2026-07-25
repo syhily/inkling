@@ -75,7 +75,6 @@ export function CodeBlockNodeComponent({
         onEscape={exitEditMode}
       />
       <CardActionToolbar
-        card="code-block"
         items={[{ kind: 'edit', dataTestId: 'edit-code-block-card' }, { kind: 'separator' }, { kind: 'snippet' }]}
         nodeKey={nodeKey}
       />

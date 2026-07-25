@@ -38,7 +38,7 @@ export function ToggleNodeComponent({
         isEditing={isEditing}
       />
 
-      <CardActionToolbar card="toggle" nodeKey={nodeKey} />
+      <CardActionToolbar nodeKey={nodeKey} />
     </>
   )
 }

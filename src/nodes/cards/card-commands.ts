@@ -12,6 +12,7 @@ import type { HtmlNodeDataset } from '@/nodes/HtmlNode'
 import type { ImageNodeDataset } from '@/nodes/ImageNode'
 import type { ToggleNodeDataset } from '@/nodes/ToggleNode'
 import type { VideoNodeDataset } from '@/nodes/VideoNode'
+import type { SnippetDataset } from '@/plugins/behaviour/snippet-insertion'
 
 /**
  * The card insert commands — one React-free home every card declaration can
@@ -27,7 +28,8 @@ import type { VideoNodeDataset } from '@/nodes/VideoNode'
  * `INSERT_SNIPPET_COMMAND` shares the home: the snippet menu entry built by
  * `@/utils/buildCardMenu` dispatches it through the same type-erased menu
  * insert path, while `@/plugins/InklingSnippetPlugin` keeps only the
- * registration and insertion surgery.
+ * registration and `@/plugins/behaviour/snippet-insertion` owns the
+ * `SnippetDataset` payload type and the insertion surgery.
  */
 export const INSERT_AUDIO_COMMAND = createCommand<AudioNodeDataset>()
 export const INSERT_BOOKMARK_COMMAND = createCommand<BookmarkNodeDataset>()
@@ -40,7 +42,7 @@ export const INSERT_HEADER_COMMAND = createCommand<HeaderNodeDataset>()
 export const INSERT_HORIZONTAL_RULE_COMMAND = createCommand<void>()
 export const INSERT_HTML_COMMAND = createCommand<HtmlNodeDataset>()
 export const INSERT_IMAGE_COMMAND = createCommand<ImageNodeDataset>()
-export const INSERT_SNIPPET_COMMAND = createCommand('INSERT_SNIPPET_COMMAND')
+export const INSERT_SNIPPET_COMMAND = createCommand<SnippetDataset>('INSERT_SNIPPET_COMMAND')
 export const INSERT_TOGGLE_COMMAND = createCommand<ToggleNodeDataset>('INSERT_TOGGLE_COMMAND')
 export const INSERT_VIDEO_COMMAND = createCommand<VideoNodeDataset>()
 export const OPEN_GIF_SELECTOR_COMMAND = createCommand<ImageNodeDataset>()

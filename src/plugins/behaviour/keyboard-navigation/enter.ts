@@ -12,6 +12,7 @@ import {
 import { $fireFenceKeyboardShortcut } from '@/markdown/card-shortcuts'
 import { $isInklingCard } from '@/nodes/base'
 import { $selectDecoratorNode } from '@/utils'
+import { $ensureParagraphAfterCard } from '@/utils/$ensureParagraphAfterCard'
 
 import type { KeyboardNavigationDeps } from './types'
 
@@ -45,9 +46,7 @@ export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNaviga
               const lastChild = $getRoot().getLastChild()
               if (lastChild && lastChild.is(cardNode)) {
                 // we don't have anything to select after the card, so create a new paragraph
-                const paragraph = $createParagraphNode()
-                $getRoot().append(paragraph)
-                paragraph.select()
+                $ensureParagraphAfterCard(cardNode, { select: true })
               } else {
                 // select the next paragraph or card directly rather than
                 // dispatching KEY_ARROW_DOWN_COMMAND, which can bail out

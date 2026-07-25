@@ -122,7 +122,6 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
       />
 
       <CardActionToolbar
-        card="gallery"
         hideWhileEditing={false}
         items={[
           {

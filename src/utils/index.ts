@@ -1,6 +1,6 @@
 // publicly exported util functions
 // merged from @inkling/utils
-export { default as slugify } from '@/utils/slugify'
+export { DEFAULT_INKLING_VERSION, default as slugify, isLegacyVersion } from '@/utils/slugify'
 export { default as countWords } from '@/utils/countWords'
 export { Color, textColorForBackgroundColor } from '@/utils/colorUtils'
 export { debounce, throttle } from '@/utils/timing'

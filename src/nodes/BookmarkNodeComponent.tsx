@@ -11,13 +11,11 @@ import {
 } from 'lexical'
 import React, { useCallback } from 'react'
 
-import type { BookmarkEmbedResponse } from '@/context/InklingHostIntegrationContext'
-
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useBookmarkMetadata } from '@/hooks/useBookmarkMetadata'
 import { useCardSelection } from '@/hooks/useCardSelection'
-import { $isBookmarkNode, $updateCardNode } from '@/nodes/base'
 import trackEvent from '@/utils/analytics'
 import { isInternalUrl } from '@/utils/isInternalUrl'
 
@@ -33,38 +31,6 @@ interface BookmarkNodeComponentProps {
   captionEditor: LexicalEditor | null
   captionEditorInitialState: EditorState | undefined
   createdWithUrl?: boolean
-}
-
-// Keep the runtime boundary defensive for untyped JavaScript hosts even though
-// TypeScript hosts now receive the closed bookmark response contract.
-function isEmbedResponse(value: unknown): value is BookmarkEmbedResponse {
-  if (typeof value !== 'object' || value === null) {
-    return false
-  }
-  if (!('url' in value) || typeof value.url !== 'string') {
-    return false
-  }
-  if (!('metadata' in value)) {
-    return false
-  }
-  const { metadata } = value
-  if (typeof metadata !== 'object' || metadata === null) {
-    return false
-  }
-  return (
-    'author' in metadata &&
-    typeof metadata.author === 'string' &&
-    'icon' in metadata &&
-    typeof metadata.icon === 'string' &&
-    'title' in metadata &&
-    typeof metadata.title === 'string' &&
-    'description' in metadata &&
-    typeof metadata.description === 'string' &&
-    'publisher' in metadata &&
-    typeof metadata.publisher === 'string' &&
-    'thumbnail' in metadata &&
-    typeof metadata.thumbnail === 'string'
-  )
 }
 
 export function BookmarkNodeComponent({
@@ -85,48 +51,33 @@ export function BookmarkNodeComponent({
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
   const [urlInputValue, setUrlInputValue] = React.useState<string>(url)
-  const [loading, setLoading] = React.useState<boolean>(false)
-  const [urlError, setUrlError] = React.useState<boolean>(false)
+  const { loading, urlError, clearUrlError, submitUrl, fetchInitialMetadata } = useBookmarkMetadata({
+    editor,
+    nodeKey,
+    fetchEmbed: cardConfig.fetchEmbed,
+  })
 
   const handleUrlChange = (value: string): void => {
     setUrlInputValue(value)
   }
 
-  const handleUrlSubmit = async (
-    eventOrUrl: React.KeyboardEvent<HTMLInputElement> | KeyboardEvent | string | null,
-    type?: string,
-  ): Promise<void> => {
-    if (!eventOrUrl) {
-      return
+  const handleUrlSubmit = (href: string, type?: string): void => {
+    if (type === 'internal' || type === 'default') {
+      trackEvent('Link dropdown: Internal link chosen', {
+        context: 'bookmark',
+        fromLatest: type === 'default',
+      })
+    }
+    if (type === 'url') {
+      const target = isInternalUrl(href, cardConfig.siteUrl ?? '') ? 'internal' : 'external'
+      trackEvent('Link dropdown: URL entered', { context: 'bookmark', target })
     }
 
-    // TODO: change this so we only get given URL strings - child components should handle their own events
-    if (typeof eventOrUrl === 'string') {
-      if (type === 'internal' || type === 'default') {
-        trackEvent('Link dropdown: Internal link chosen', {
-          context: 'bookmark',
-          fromLatest: type === 'default',
-        })
-      }
-      if (type === 'url') {
-        const target = isInternalUrl(eventOrUrl, cardConfig.siteUrl ?? '') ? 'internal' : 'external'
-        trackEvent('Link dropdown: URL entered', { context: 'bookmark', target })
-      }
-
-      fetchMetadata(eventOrUrl)
-    }
-
-    if (typeof eventOrUrl === 'object' && 'key' in eventOrUrl && eventOrUrl.key === 'Enter') {
-      // when Enter is pressed with focus in the main editor (UrlInputPlugin)
-      // the event target is the editor root, so fall back to the input value
-      const { target } = eventOrUrl
-      const targetValue = target instanceof HTMLInputElement ? target.value : undefined
-      fetchMetadata(targetValue ?? urlInputValue)
-    }
+    void submitUrl(href)
   }
 
-  const handleRetry = async (): Promise<void> => {
-    setUrlError(false)
+  const handleRetry = (): void => {
+    clearUrlError()
   }
 
   const handlePasteAsLink = useCallback(() => {
@@ -161,74 +112,6 @@ export function BookmarkNodeComponent({
     })
   }, [editor, nodeKey])
 
-  const fetchMetadata = async (href: string): Promise<void> => {
-    editor.getRootElement()?.focus({ preventScroll: true }) // focus editor before causing the input element to dismount
-    setLoading(true)
-    let response: BookmarkEmbedResponse | undefined
-    try {
-      // set the test data return values in fetchEmbed.js
-      response = await cardConfig.fetchEmbed?.(href, { type: 'bookmark' })
-    } catch (e) {
-      setLoading(false)
-      setUrlError(true)
-      return
-    }
-    if (!isEmbedResponse(response)) {
-      setLoading(false)
-      setUrlError(true)
-      return
-    }
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isBookmarkNode, (node) => {
-        node.url = href
-        node.author = response.metadata.author
-        node.icon = response.metadata.icon
-        node.title = response.metadata.title
-        node.description = response.metadata.description
-        node.publisher = response.metadata.publisher
-        node.thumbnail = response.metadata.thumbnail
-      })
-    })
-    setLoading(false)
-  }
-
-  const fetchMetadataEffect = useCallback(async () => {
-    setLoading(true)
-    let response: BookmarkEmbedResponse | undefined
-    try {
-      // set the test data return values in fetchEmbed.js
-      response = await cardConfig.fetchEmbed?.(url, { type: 'bookmark' })
-    } catch (e) {
-      setLoading(false)
-      setUrlError(true)
-      throw e
-    }
-    if (!isEmbedResponse(response)) {
-      setLoading(false)
-      setUrlError(true)
-      return
-    }
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isBookmarkNode, (node) => {
-        node.url = response.url
-        node.author = response.metadata.author
-        node.icon = response.metadata.icon
-        node.title = response.metadata.title
-        node.description = response.metadata.description
-        node.publisher = response.metadata.publisher
-        node.thumbnail = response.metadata.thumbnail
-
-        if (createdWithUrl) {
-          node.selectNext()
-        }
-      })
-    })
-    setLoading(false)
-    // We only do this for init
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // TODO: this needs to be a custom hook
   // if we create the node with a url
   //  fetch the metadata
   //  if it fails, paste as a link
@@ -236,7 +119,7 @@ export function BookmarkNodeComponent({
     // only run this once
     if (createdWithUrl) {
       setUrlInputValue(url)
-      fetchMetadataEffect().catch(() => {
+      fetchInitialMetadata(url).catch(() => {
         handlePasteAsLink()
       })
     }
@@ -274,7 +157,6 @@ export function BookmarkNodeComponent({
       />
 
       <CardActionToolbar
-        card="bookmark"
         hideWhileEditing={false}
         items={[{ kind: 'snippet' }]}
         nodeKey={nodeKey}

@@ -9,7 +9,6 @@ import {
   FOCUS_COMMAND,
   KEY_ARROW_DOWN_COMMAND,
   KEY_ARROW_UP_COMMAND,
-  KEY_ENTER_COMMAND,
   type LexicalEditor,
 } from 'lexical'
 import React, { useCallback, useContext } from 'react'
@@ -23,7 +22,7 @@ import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import {
   isTypeaheadMenuOpen,
   markEventFromCaptionEditor,
-  markEventFromNested,
+  registerNestedEnterHandoff,
 } from '@/plugins/behaviour/nested-editor-protocol'
 import { EmojiPickerPlugin } from '@/plugins/EmojiPickerPlugin'
 import RestrictContentPlugin from '@/plugins/RestrictContentPlugin'
@@ -89,36 +88,7 @@ function CaptionPlugin({ parentEditor }: { parentEditor: LexicalEditor }) {
         },
         COMMAND_PRIORITY_LOW,
       ),
-      editor.registerCommand(
-        KEY_ENTER_COMMAND,
-        (event) => {
-          // bail out when a typeahead menu is open so the menu can handle
-          // Enter itself — see nested-editor-protocol for why this can't be
-          // priority-based yet
-          if (isTypeaheadMenuOpen()) {
-            return false
-          }
-
-          // allow shift+enter to create a line break
-          if (event?.shiftKey) {
-            return false
-          }
-
-          // the IME/mobile Enter path dispatches a null event
-          if (!event) {
-            return false
-          }
-
-          // otherwise, let the parent editor handle the enter key
-          // - with ctrl/cmd+enter toggles edit mode
-          // - or creates paragraph after card and moves cursor
-          parentEditor.dispatchCommand(KEY_ENTER_COMMAND, markEventFromNested(event))
-
-          // prevent normal/InklingBehaviourPlugin enter key behaviour
-          return true
-        },
-        COMMAND_PRIORITY_LOW,
-      ),
+      registerNestedEnterHandoff(editor, parentEditor),
       editor.registerCommand(
         KEY_ARROW_DOWN_COMMAND,
         (event) => {

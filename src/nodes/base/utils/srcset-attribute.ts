@@ -4,6 +4,11 @@ import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-
 
 // default content sizes: [600, 1000, 1600, 2400]
 
+// The content-images URL shape, capturing the path up to and including
+// `/content/images` and the filename after it. Single-sourced here: the email
+// retina-src rewrite (render-helpers/email-image.ts) matches the same URLs.
+export const CONTENT_IMAGE_PATH_REGEX = /(.*\/content\/images)\/(.*)/
+
 export const getSrcsetAttribute = function ({
   src,
   width,
@@ -30,7 +35,7 @@ export const getSrcsetAttribute = function ({
 
   // apply srcset if this is a relative image that matches Inkling's image url structure
   if (context.isLocalContentImage(src)) {
-    const match = src.match(/(.*\/content\/images)\/(.*)/)
+    const match = src.match(CONTENT_IMAGE_PATH_REGEX)
     if (!match) {
       return
     }

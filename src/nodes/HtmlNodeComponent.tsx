@@ -44,7 +44,6 @@ export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: s
       <HtmlCard darkMode={darkMode} html={html} isEditing={isEditing} updateHtml={updateHtml} />
 
       <CardActionToolbar
-        card="html"
         items={[
           { kind: 'edit', dataTestId: 'edit-html' },
           { kind: 'separator', hide: !isVisibilityEnabled },

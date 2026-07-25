@@ -115,11 +115,6 @@ export class BaseVideoNode extends generateDecoratorNode({
     return json
   }
 
-  // Editor-side upload behaviour the card spec doesn't cover lives on the
-  // base node (plan 039, Batch 5): the registered card class is assembled
-  // from the declaration and inherits it; renderer surfaces never invoke it.
-  static uploadType = 'video'
-
   // The transient-prop spec (video.declaration.ts) initializes this only on
   // spec-adopting assembled classes; a raw `new BaseVideoNode()` leaves it
   // unset, so `undefined` is part of the honest type for spec-less instances

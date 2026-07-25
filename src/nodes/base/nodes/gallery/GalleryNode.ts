@@ -8,6 +8,7 @@ import {
 } from '@/nodes/base/generate-decorator-node'
 import { parseGalleryNode } from '@/nodes/base/nodes/gallery/gallery-parser'
 import { renderGalleryNode } from '@/nodes/base/nodes/gallery/gallery-renderer'
+import { MAX_IMAGES, MAX_PER_ROW } from '@/nodes/base/nodes/gallery/gallery-rows'
 import { pick } from '@/utils/objects'
 
 const galleryProperties = [
@@ -26,8 +27,9 @@ export type GalleryData = DecoratorNodeData<typeof galleryProperties>
 
 export interface BaseGalleryNode extends DecoratorNodeValueMap<typeof galleryProperties> {}
 
-export const MAX_IMAGES = 9
-export const MAX_PER_ROW = 3
+// canonical homes are gallery-rows.ts (the row-layout module); re-exported
+// here so the node shim, parser, and `@/nodes/base` importers keep working
+export { MAX_IMAGES, MAX_PER_ROW }
 
 // ensure we don't save client-side only properties such as preview blob urls to the server
 export const ALLOWED_IMAGE_PROPS = ['row', 'src', 'width', 'height', 'alt', 'caption', 'fileName']

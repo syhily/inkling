@@ -1,10 +1,10 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 import type { GalleryImage } from '@/types/gallery'
 
-import { MAX_PER_ROW } from '@/nodes/base/nodes/gallery/GalleryNode'
-import { getAvailableImageWidths } from '@/nodes/base/utils/get-available-image-widths'
+import { buildGalleryRows } from '@/nodes/base/nodes/gallery/gallery-rows'
 import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { applyEmailImageAttributes } from '@/nodes/base/utils/render-helpers/email-image'
 import { setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 
 // the renderer can only lay out images that carry these fields; isValidImage
@@ -56,26 +56,6 @@ function isValidImage(image: unknown, context: RenderContext): image is ValidGal
   )
 }
 
-function buildStructure(images: ValidGalleryImage[]) {
-  const rows: ValidGalleryImage[][] = []
-  const noOfImages = images.length
-
-  images.forEach((image: ValidGalleryImage, idx: number) => {
-    let row = image.row
-
-    if (noOfImages > 1 && noOfImages % MAX_PER_ROW === 1 && idx === noOfImages - 2) {
-      row = row + 1
-    }
-    if (!rows[row]) {
-      rows[row] = []
-    }
-
-    rows[row].push(image)
-  })
-
-  return rows
-}
-
 export function renderGalleryNode(node: GalleryNodeData, context: RenderContext) {
   const document = context.createDocument()
 
@@ -91,7 +71,7 @@ export function renderGalleryNode(node: GalleryNodeData, context: RenderContext)
   container.setAttribute('class', 'inkling-gallery-container')
   figure.appendChild(container)
 
-  const rows = buildStructure(validImages)
+  const rows = buildGalleryRows(validImages)
 
   rows.forEach((row) => {
     const rowDiv = document.createElement('div')
@@ -142,32 +122,10 @@ export function renderGalleryNode(node: GalleryNodeData, context: RenderContext)
       }
 
       // Outlook is unable to properly resize images without a width/height
-      // so we modify those to fit max width (600px) and use appropriately
-      // resized images if available
+      // so we modify those to fit the email template column and use
+      // appropriately resized images if available
       if (context.variant({ web: false, email: true })) {
-        // only resize if needed, width/height always exists for gallery image unline image cards
-        if (image.width > 600) {
-          const newImageDimensions = getResizedImageDimensions(image, { width: 600 })
-          img.setAttribute('width', String(newImageDimensions.width))
-          img.setAttribute('height', String(newImageDimensions.height))
-        }
-
-        const contentImageSizes = context.imageOptimization?.contentImageSizes
-        if (contentImageSizes && context.isLocalContentImage(image.src) && context.canTransformImage?.(image.src)) {
-          // find available image size next up from 2x600 so we can use it for the "retina" src
-          const availableImageWidths = getAvailableImageWidths(image, contentImageSizes)
-          const srcWidth = availableImageWidths.find((width) => width >= 1200)
-
-          if (!srcWidth || srcWidth === image.width) {
-            // do nothing, width is smaller than retina or matches the original payload src
-          } else {
-            const match = image.src.match(/(.*\/content\/images)\/(.*)/)
-            if (match) {
-              const [, imagesPath, filename] = match
-              img.setAttribute('src', `${imagesPath}/size/w${srcWidth}/${filename}`)
-            }
-          }
-        }
+        applyEmailImageAttributes(img, image, context)
       }
 
       const safeHref = context.safeUrl('navigation', image.href || '')

@@ -15,12 +15,7 @@ export class ZWNJNode extends TextNode {
   }
 
   static importJSON(serializedNode: SerializedTextNode): ZWNJNode {
-    const node = new ZWNJNode(serializedNode.text)
-    node.setFormat(serializedNode.format)
-    node.setDetail(serializedNode.detail)
-    node.setMode(serializedNode.mode)
-    node.setStyle(serializedNode.style)
-    return node
+    return new ZWNJNode(serializedNode.text).updateFromJSON(serializedNode)
   }
 
   createDOM(config: EditorConfig) {

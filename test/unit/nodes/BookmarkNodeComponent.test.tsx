@@ -1,14 +1,28 @@
 import { LinkNode } from '@lexical/link'
+import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { $isParagraphNode, createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
+import {
+  $isParagraphNode,
+  createEditor,
+  $getNodeByKey,
+  $getRoot,
+  KEY_ENTER_COMMAND,
+  type LexicalEditor,
+  type NodeKey,
+} from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { BookmarkNode, $createBookmarkNode } from '@/nodes/BookmarkNode'
+import { BookmarkNode, $createBookmarkNode, $isBookmarkNode } from '@/nodes/BookmarkNode'
 import { BookmarkNodeComponent } from '@/nodes/BookmarkNodeComponent'
+import trackEvent from '@/utils/analytics'
+
+vi.mock('@/utils/analytics', () => ({
+  default: vi.fn(),
+}))
 
 vi.mock('@lexical/react/LexicalComposerContext', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@lexical/react/LexicalComposerContext')>()
@@ -27,6 +41,17 @@ function createTestEditor(): LexicalEditor {
   const rootElement = document.createElement('div')
   editor.setRootElement(rootElement)
   return editor
+}
+
+// UrlInputPlugin reads the real composer context (not the mocked hook) to
+// register its editor-level Enter handler, so tests that dispatch Enter from
+// the editor wrap the component in the real provider
+function EditorComposerProvider({ editor, children }: { editor: LexicalEditor; children: React.ReactNode }) {
+  const value = React.useMemo<React.ContextType<typeof LexicalComposerContext>>(
+    () => [editor, { getTheme: () => null }],
+    [editor],
+  )
+  return <LexicalComposerContext.Provider value={value}>{children}</LexicalComposerContext.Provider>
 }
 
 // the store equivalent of the old per-test CardContext factory: the card is
@@ -117,18 +142,19 @@ describe('BookmarkNodeComponent', () => {
 
   describe('action toolbar', () => {
     function renderWithToolbar(
+      nodeKey: NodeKey,
       selection: { selected?: boolean; editing?: boolean } = {},
       { title = 'Example title', cardConfig = {} }: { title?: string; cardConfig?: Record<string, unknown> } = {},
     ) {
       const composerValue = createComposerContext(cardConfig)
-      const { wrapper: CardSelectionStoreProvider } = createSelection('bookmark-1', selection)
+      const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
           <CardSelectionStoreProvider>
             <BookmarkNodeComponent
               captionEditor={null}
               captionEditorInitialState={undefined}
-              nodeKey="bookmark-1"
+              nodeKey={nodeKey}
               title={title}
               url="https://example.com"
             />
@@ -141,15 +167,18 @@ describe('BookmarkNodeComponent', () => {
       return container.querySelectorAll('[data-inkling-card-toolbar="bookmark"]')
     }
 
-    it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar({ selected: false }, { cardConfig: { createSnippet: vi.fn() } })
+    it('hides the toolbar when the card is not selected', async () => {
+      const nodeKey = await addBookmarkNode(editor, 'https://example.com')
+      const { container } = renderWithToolbar(nodeKey, { selected: false }, { cardConfig: { createSnippet: vi.fn() } })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('keeps the toolbar visible while the card is editing', () => {
+    it('keeps the toolbar visible while the card is editing', async () => {
       // bookmark's menu toolbar has no !isEditing factor
+      const nodeKey = await addBookmarkNode(editor, 'https://example.com')
       const { container } = renderWithToolbar(
+        nodeKey,
         { selected: true, editing: true },
         { cardConfig: { createSnippet: vi.fn() } },
       )
@@ -157,22 +186,29 @@ describe('BookmarkNodeComponent', () => {
       expect(getToolbars(container)).toHaveLength(1)
     })
 
-    it('hides the toolbar until the card has a title', () => {
-      const { container } = renderWithToolbar({ selected: true }, { title: '', cardConfig: { createSnippet: vi.fn() } })
+    it('hides the toolbar until the card has a title', async () => {
+      const nodeKey = await addBookmarkNode(editor, 'https://example.com')
+      const { container } = renderWithToolbar(
+        nodeKey,
+        { selected: true },
+        { title: '', cardConfig: { createSnippet: vi.fn() } },
+      )
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('hides the toolbar when createSnippet is not configured, even with a title', () => {
+    it('hides the toolbar when createSnippet is not configured, even with a title', async () => {
       // bookmark is the one card whose toolbar visibility itself gates on
       // createSnippet — it exists solely to offer snippet creation
-      const { container } = renderWithToolbar({ selected: true })
+      const nodeKey = await addBookmarkNode(editor, 'https://example.com')
+      const { container } = renderWithToolbar(nodeKey, { selected: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('renders only the snippet item when selected with a title', () => {
-      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
+    it('renders only the snippet item when selected with a title', async () => {
+      const nodeKey = await addBookmarkNode(editor, 'https://example.com')
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -185,8 +221,9 @@ describe('BookmarkNodeComponent', () => {
       expect(screen.getByTestId('create-snippet')).toBeTruthy()
     })
 
-    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
+    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', async () => {
+      const nodeKey = await addBookmarkNode(editor, 'https://example.com')
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 
@@ -194,6 +231,108 @@ describe('BookmarkNodeComponent', () => {
       expect(toolbars).toHaveLength(1)
       expect(toolbars[0].querySelector('ul')).toBeNull()
       expect(toolbars[0].querySelector('[data-testid="snippet-name"]')).toBeTruthy()
+    })
+  })
+
+  describe('url submit', () => {
+    const embedResponse = {
+      url: 'https://example.com/canonical',
+      metadata: {
+        author: 'Author',
+        icon: 'https://example.com/icon.ico',
+        title: 'Fetched title',
+        description: 'Fetched description',
+        publisher: 'Publisher',
+        thumbnail: 'https://example.com/thumb.png',
+      },
+    }
+
+    function renderUrlInput(nodeKey: NodeKey, cardConfig: Record<string, unknown>, { withComposer = false } = {}) {
+      const composerValue = createComposerContext(cardConfig)
+      const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
+      const component = (
+        <InklingHostIntegrationContext.Provider value={composerValue}>
+          <CardSelectionStoreProvider>
+            <BookmarkNodeComponent
+              captionEditor={null}
+              captionEditorInitialState={undefined}
+              nodeKey={nodeKey}
+              url=""
+            />
+          </CardSelectionStoreProvider>
+        </InklingHostIntegrationContext.Provider>
+      )
+      // UrlInputPlugin reads the real composer context (not the mocked hook)
+      // to register its editor-level Enter handler
+      if (withComposer) {
+        return render(<EditorComposerProvider editor={editor}>{component}</EditorComposerProvider>)
+      }
+      return render(component)
+    }
+
+    function readAppliedBookmark(nodeKey: NodeKey) {
+      return editor.getEditorState().read(() => {
+        const node = $getNodeByKey(nodeKey)
+        return $isBookmarkNode(node) ? { title: node.title, url: node.url } : null
+      })
+    }
+
+    it('submits the typed URL as a plain string on Enter in the input', async () => {
+      const fetchEmbed = vi.fn().mockResolvedValue(embedResponse)
+      const nodeKey = await addBookmarkNode(editor, '')
+      renderUrlInput(nodeKey, { fetchEmbed })
+
+      fireEvent.change(screen.getByTestId('bookmark-url'), { target: { value: 'https://example.com/page' } })
+      fireEvent.keyDown(screen.getByTestId('bookmark-url'), { key: 'Enter' })
+
+      expect(fetchEmbed).toHaveBeenCalledTimes(1)
+      expect(fetchEmbed).toHaveBeenCalledWith('https://example.com/page', { type: 'bookmark' })
+
+      await waitFor(() => {
+        // the submit path applies the submitted href, not the response's canonical url
+        expect(readAppliedBookmark(nodeKey)).toEqual({ title: 'Fetched title', url: 'https://example.com/page' })
+      })
+    })
+
+    it('submits the input value on Enter dispatched from the main editor', async () => {
+      const fetchEmbed = vi.fn().mockResolvedValue(embedResponse)
+      const nodeKey = await addBookmarkNode(editor, '')
+      renderUrlInput(nodeKey, { fetchEmbed }, { withComposer: true })
+
+      fireEvent.change(screen.getByTestId('bookmark-url'), { target: { value: 'https://example.com/page' } })
+      editor.dispatchCommand(KEY_ENTER_COMMAND, new KeyboardEvent('keydown', { key: 'Enter' }))
+
+      expect(fetchEmbed).toHaveBeenCalledTimes(1)
+      expect(fetchEmbed).toHaveBeenCalledWith('https://example.com/page', { type: 'bookmark' })
+
+      await waitFor(() => {
+        expect(readAppliedBookmark(nodeKey)).toEqual({ title: 'Fetched title', url: 'https://example.com/page' })
+      })
+    })
+
+    it('submits a dropdown selection with its type', async () => {
+      const fetchEmbed = vi.fn().mockResolvedValue(embedResponse)
+      const searchLinks = vi
+        .fn()
+        .mockResolvedValue([{ label: 'Pages', items: [{ title: 'About us', url: 'https://example.com/about' }] }])
+      const nodeKey = await addBookmarkNode(editor, '')
+      renderUrlInput(nodeKey, { fetchEmbed, searchLinks })
+
+      const input = screen.getByTestId('bookmark-url')
+      input.focus()
+      await waitFor(() => {
+        expect(screen.getByTestId('bookmark-url-listOption')).toBeTruthy()
+      })
+      // keyboard-select the suggestion: InputList forwards the option's type
+      fireEvent.keyDown(input, { key: 'Enter' })
+
+      await waitFor(() => {
+        expect(fetchEmbed).toHaveBeenCalledWith('https://example.com/about', { type: 'bookmark' })
+      })
+      expect(trackEvent).toHaveBeenCalledWith('Link dropdown: Internal link chosen', {
+        context: 'bookmark',
+        fromLatest: true,
+      })
     })
   })
 })

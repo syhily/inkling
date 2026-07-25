@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { createEditor, type LexicalEditor } from 'lexical'
+import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
@@ -9,6 +9,7 @@ import InklingHostIntegrationContext, {
   type FileUploader,
   type InklingHostIntegrationContextValue,
 } from '@/context/InklingHostIntegrationContext'
+import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import { openFileSelection } from '@/utils/openFileSelection'
@@ -30,7 +31,7 @@ vi.mock('../../../src/components/ui/CardCaptionEditor', () => ({
 }))
 
 function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', onError: () => {} })
+  return createEditor({ namespace: 'test', nodes: [ImageNode], onError: () => {} })
 }
 
 function flushMacrotask(): Promise<void> {
@@ -41,9 +42,12 @@ function flushMacrotask(): Promise<void> {
 
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected (its toolbar renders) and not editing unless a test says otherwise
-function createSelection({ selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {}) {
+function createSelection(
+  nodeKey: NodeKey | string = 'img-1',
+  { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
+) {
   return createCardSelectionStoreWrapper({
-    initialState: { selectedCardKey: selected ? 'img-1' : null, isEditingCard: editing },
+    initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
   })
 }
 
@@ -168,7 +172,20 @@ describe('ImageNodeComponent', () => {
   })
 
   describe('action toolbar', () => {
+    function addImageNode(editor: LexicalEditor, dataset: { src?: string } = { src: '/image.png' }) {
+      return new Promise<NodeKey>((resolve) => {
+        editor.update(
+          () => {
+            const imageNode = $createImageNode(dataset)
+            $getRoot().append(imageNode)
+          },
+          { onUpdate: () => resolve(editor.getEditorState().read(() => $getRoot().getFirstChildOrThrow().getKey())) },
+        )
+      })
+    }
+
     function renderWithToolbar(
+      nodeKey: NodeKey,
       selection: { selected?: boolean; editing?: boolean } = {},
       {
         src = '/image.png',
@@ -177,11 +194,11 @@ describe('ImageNodeComponent', () => {
       }: { src?: string; href?: string; cardConfig?: Record<string, unknown> } = {},
     ) {
       const composerValue = createComposerContext({ image: { mimeTypes: ['image/png'] } }, undefined, cardConfig)
-      const { wrapper: CardSelectionStoreProvider } = createSelection(selection)
+      const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
           <CardSelectionStoreProvider>
-            <ImageNodeComponent cardWidth="regular" href={href} nodeKey="img-1" src={src} />
+            <ImageNodeComponent cardWidth="regular" href={href} nodeKey={nodeKey} src={src} />
           </CardSelectionStoreProvider>
         </InklingHostIntegrationContext.Provider>,
       )
@@ -191,28 +208,32 @@ describe('ImageNodeComponent', () => {
       return container.querySelectorAll('[data-inkling-card-toolbar="image"]')
     }
 
-    it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar({ selected: false })
+    it('hides the toolbar when the card is not selected', async () => {
+      const nodeKey = await addImageNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('hides the toolbar when the card has no src', () => {
-      const { container } = renderWithToolbar({ selected: true }, { src: '' })
+    it('hides the toolbar when the card has no src', async () => {
+      const nodeKey = await addImageNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { src: '' })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('keeps the toolbar visible while the card is editing', () => {
+    it('keeps the toolbar visible while the card is editing', async () => {
       // image's menu toolbar has no !isEditing factor — unlike the other
       // edit-mode cards it stays up while editing
-      const { container } = renderWithToolbar({ selected: true, editing: true })
+      const nodeKey = await addImageNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(1)
     })
 
-    it('renders width, link, and snippet items with the upload form before the menu', () => {
-      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
+    it('renders width, link, and snippet items with the upload form before the menu', async () => {
+      const nodeKey = await addImageNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -241,14 +262,16 @@ describe('ImageNodeComponent', () => {
       expect(screen.getByTestId('create-snippet')).toBeTruthy()
     })
 
-    it('marks the link item active when the image has an href', () => {
-      renderWithToolbar({ selected: true }, { href: 'https://example.com' })
+    it('marks the link item active when the image has an href', async () => {
+      const nodeKey = await addImageNode(editor)
+      renderWithToolbar(nodeKey, { selected: true }, { href: 'https://example.com' })
 
       expect(screen.getByRole('button', { name: 'Link' }).getAttribute('data-inkling-active')).toBe('true')
     })
 
-    it('hides the width items and their separator for gif images', () => {
-      const { container } = renderWithToolbar({ selected: true }, { src: '/image.gif' })
+    it('hides the width items and their separator for gif images', async () => {
+      const nodeKey = await addImageNode(editor, { src: '/image.gif' })
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { src: '/image.gif' })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
@@ -256,16 +279,18 @@ describe('ImageNodeComponent', () => {
       expect(labels).toEqual(['Link'])
     })
 
-    it('hides the snippet item and its separator when createSnippet is not configured', () => {
-      const { container } = renderWithToolbar({ selected: true })
+    it('hides the snippet item and its separator when createSnippet is not configured', async () => {
+      const nodeKey = await addImageNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(5)
       expect(screen.queryByTestId('create-snippet')).toBeNull()
     })
 
-    it('swaps the menu toolbar for the link input when the link item is clicked', () => {
-      const { container } = renderWithToolbar({ selected: true })
+    it('swaps the menu toolbar for the link input when the link item is clicked', async () => {
+      const nodeKey = await addImageNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true })
 
       fireEvent.click(screen.getByRole('button', { name: 'Link' }))
 
@@ -275,8 +300,9 @@ describe('ImageNodeComponent', () => {
       expect(toolbars[0].querySelector('[data-testid="link-input"]')).toBeTruthy()
     })
 
-    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
+    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', async () => {
+      const nodeKey = await addImageNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

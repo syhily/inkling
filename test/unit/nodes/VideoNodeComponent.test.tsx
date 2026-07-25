@@ -421,13 +421,14 @@ describe('VideoNodeComponent', () => {
 
   describe('action toolbar', () => {
     function renderWithToolbar(
+      nodeKey: NodeKey,
       selection: { selected?: boolean; editing?: boolean } = {},
       { thumbnail = 'https://example.com/thumb.jpg', customThumbnail = '', cardConfig = {} } = {},
     ) {
       const collaborationValue = createCollaborationContext()
       const composerValue = createLexicalComposerContext(editor)
       const inklingComposerValue = createComposerContext({}, cardConfig)
-      const { wrapper: CardSelectionStoreProvider } = createSelection('video-1', { editing: false, ...selection })
+      const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, { editing: false, ...selection })
 
       return render(
         <CollaborationContext.Provider value={collaborationValue}>
@@ -441,7 +442,7 @@ describe('VideoNodeComponent', () => {
                   customThumbnail={customThumbnail}
                   initialFile={null}
                   isLoopChecked={false}
-                  nodeKey="video-1"
+                  nodeKey={nodeKey}
                   thumbnail={thumbnail}
                   totalDuration="1:23"
                   triggerFileDialog={false}
@@ -457,26 +458,31 @@ describe('VideoNodeComponent', () => {
       return container.querySelectorAll('[data-inkling-card-toolbar="video"]')
     }
 
-    it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar({ selected: false })
+    it('hides the toolbar when the card is not selected', async () => {
+      const nodeKey = await addVideoNode(editor, false)
+      const { container } = renderWithToolbar(nodeKey, { selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('hides the toolbar while the card is editing', () => {
-      const { container } = renderWithToolbar({ selected: true, editing: true })
+    it('hides the toolbar while the card is editing', async () => {
+      const nodeKey = await addVideoNode(editor, false)
+      const { container } = renderWithToolbar(nodeKey, { selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('hides the toolbar when the card has no thumbnail', () => {
-      const { container } = renderWithToolbar({ selected: true }, { thumbnail: '' })
+    it('hides the toolbar when the card has no thumbnail', async () => {
+      const nodeKey = await addVideoNode(editor, false)
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { thumbnail: '' })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('shows the toolbar when only a custom thumbnail is set', () => {
+    it('shows the toolbar when only a custom thumbnail is set', async () => {
+      const nodeKey = await addVideoNode(editor, false)
       const { container } = renderWithToolbar(
+        nodeKey,
         { selected: true },
         { thumbnail: '', customThumbnail: 'https://example.com/custom.jpg' },
       )
@@ -484,8 +490,9 @@ describe('VideoNodeComponent', () => {
       expect(getToolbars(container)).toHaveLength(1)
     })
 
-    it('renders edit, separator, and snippet items when selected and populated', () => {
-      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
+    it('renders edit, separator, and snippet items when selected and populated', async () => {
+      const nodeKey = await addVideoNode(editor, false)
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -499,8 +506,9 @@ describe('VideoNodeComponent', () => {
       expect(screen.getByTestId('create-snippet')).toBeTruthy()
     })
 
-    it('hides the snippet item and its separator when createSnippet is not configured', () => {
-      const { container } = renderWithToolbar({ selected: true })
+    it('hides the snippet item and its separator when createSnippet is not configured', async () => {
+      const nodeKey = await addVideoNode(editor, false)
+      const { container } = renderWithToolbar(nodeKey, { selected: true })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
@@ -508,17 +516,19 @@ describe('VideoNodeComponent', () => {
       expect(screen.queryByTestId('create-snippet')).toBeNull()
     })
 
-    it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', () => {
+    it('dispatches EDIT_CARD_COMMAND for the card when the edit item is clicked', async () => {
+      const nodeKey = await addVideoNode(editor, false)
       const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
-      renderWithToolbar({ selected: true })
+      renderWithToolbar(nodeKey, { selected: true })
 
       fireEvent.click(screen.getByTestId('edit-video-card'))
 
-      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: 'video-1' })
+      expect(dispatchSpy).toHaveBeenCalledWith(EDIT_CARD_COMMAND, { cardKey: nodeKey })
     })
 
-    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderWithToolbar({ selected: true }, { cardConfig: { createSnippet: vi.fn() } })
+    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', async () => {
+      const nodeKey = await addVideoNode(editor, false)
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

@@ -38,12 +38,10 @@ function getListOfAcceptableMimeTypes(
   editor: LexicalEditor,
   uploadFileTypes: FileUploader['fileTypes'],
 ): { acceptableMimeTypes: Record<string, string[]> } {
-  const nodes = getEditorCardNodes(editor)
   const acceptableMimeTypes: Record<string, string[]> = {}
-  const uploadTypes = uploadFileTypes as Record<string, { mimeTypes: string[] } | undefined> | undefined
-  for (const [nodeType, nodeClass] of nodes) {
-    if (nodeType && nodeClass.uploadType) {
-      acceptableMimeTypes[nodeType] = uploadTypes?.[nodeClass.uploadType]?.mimeTypes ?? []
+  for (const [nodeType, card] of getEditorCardNodes(editor)) {
+    if (card.uploadType) {
+      acceptableMimeTypes[nodeType] = uploadFileTypes?.[card.uploadType]?.mimeTypes ?? []
     }
   }
   return {

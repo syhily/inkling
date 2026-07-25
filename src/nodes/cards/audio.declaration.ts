@@ -34,6 +34,8 @@ export const audioDeclaration = {
     },
   ],
   insert: { command: INSERT_AUDIO_COMMAND, claimsMediaInsert: true },
+  uploadType: 'audio',
+  toolbarLabel: 'audio',
   surfaces: {
     default: true,
     emailEditor: false,

@@ -4,7 +4,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $getRoot, type Klass, type LexicalEditor, type LexicalNode } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
-import { CARD_MARKDOWN_DECLARATIONS } from '@/nodes/cards/card-markdown-transformers'
+import { CARD_MARKDOWN_DECLARATIONS, MARKDOWN_EXEMPT } from '@/nodes/cards/card-markdown-transformers'
 
 /**
  * Drift guard tying the card markdown transformers' field vocabulary to each
@@ -12,13 +12,20 @@ import { CARD_MARKDOWN_DECLARATIONS } from '@/nodes/cards/card-markdown-transfor
  * documented intentional subset — are pinned byte-for-byte by
  * `round-trip-cards.test.ts`):
  *
+ * - exhaustiveness leg: every markdown-eligible card (`surfaces.markdown`)
+ *   carries a card transformer or names an exemption in `MARKDOWN_EXEMPT`.
+ *   The projection already throws at module init on a violation; this leg
+ *   pins the contract explicitly.
  * - export leg: every node field a transformer's `getData` reads must be a
  *   declared property of the card's node class. A renamed/typo'd read
  *   (`node.titel`) would otherwise export `undefined` silently.
  * - import leg: every field in the fence payload must survive
  *   `createNode` into the created node's `exportJSON`. A write to an
  *   undeclared property is silently dropped by the generated constructor, so
- *   the sentinel never lands and this fails.
+ *   the sentinel never lands and this fails. The created node must also hold
+ *   no live `__*Editor` nested-editor instance — detachment is by
+ *   construction (`$detachNestedEditorsForRoundTrip` in the transformer's
+ *   `replace`), driven by the class's adopted `nestedEditors` spec.
  *
  * Fence keys themselves need NOT be property names — deliberate renames
  * (audio's `caption` → `title`, callout's `text` → `calloutText`, bookmark's
@@ -82,6 +89,15 @@ function parseFenceBody(exported: string): Record<string, unknown> {
 const cardsWithTransformers = CARD_MARKDOWN_DECLARATIONS.filter((card) => card.markdownTransformer)
 
 describe('card markdown transformer field vocabulary', function () {
+  it('every markdown-eligible card has a transformer or a named exemption', function () {
+    CARD_MARKDOWN_DECLARATIONS.filter((card) => card.surfaces.markdown).forEach((card) => {
+      expect(
+        card.markdownTransformer !== undefined || MARKDOWN_EXEMPT.has(card.nodeType),
+        `${card.nodeType} is markdown-eligible but has neither a card transformer nor a named exemption`,
+      ).toBe(true)
+    })
+  })
+
   cardsWithTransformers.forEach((card) => {
     const nodeClass = card.node as unknown as WrapperClass
     const transformer = card.markdownTransformer as ElementTransformer
@@ -137,6 +153,37 @@ describe('card markdown transformer field vocabulary', function () {
             collectStrings(json),
             `${card.nodeType} fence field '${field}' did not survive into the node's exportJSON`,
           ).toContain(sentinel)
+        })
+      })
+
+      it('import leaves no live nested editor on the created node', function () {
+        const { editor, node } = createEditorWithNode(nodeClass)
+        const exported = editor.read(() => fenceTransformer.export(node, () => ''))
+        expect(exported).not.toBeNull()
+        const defaultData = parseFenceBody(exported as string)
+
+        editor.update(() => {
+          fenceTransformer.replace(
+            $getRoot(),
+            [],
+            [] as unknown as RegExpMatchArray,
+            [] as unknown as RegExpMatchArray,
+            [JSON.stringify(defaultData)],
+            false,
+          )
+        })
+
+        const created = editor.read(() => $getRoot().getLastChild())
+        expect(created, `${card.nodeType} fence import did not append a node`).not.toBeNull()
+        // the class's adopted nestedEditors spec names every __<name> editor
+        // field; a fence-created node must hold none of them live
+        const specs =
+          ((created as LexicalNode).constructor as { nestedEditors?: readonly { name: string }[] }).nestedEditors ?? []
+        specs.forEach((spec) => {
+          expect(
+            (created as unknown as Record<string, unknown>)[`__${spec.name}`],
+            `${card.nodeType} fence import left a live '__${spec.name}' nested editor on the created node`,
+          ).toBeNull()
         })
       })
     })

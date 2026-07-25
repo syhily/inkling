@@ -34,6 +34,10 @@ export const fileDeclaration = {
     },
   ],
   insert: { command: INSERT_FILE_COMMAND },
+  uploadType: 'file',
+  // diverges from the node type: the toolbar label is a live e2e selector
+  // contract ("file-upload"), not a transform of "file"
+  toolbarLabel: 'file-upload',
   surfaces: {
     default: true,
     emailEditor: false,

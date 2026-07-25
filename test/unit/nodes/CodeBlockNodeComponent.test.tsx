@@ -114,16 +114,17 @@ describe('CodeBlockNodeComponent', () => {
 
   describe('action toolbar', () => {
     function renderWithToolbar(
+      nodeKey: NodeKey,
       selection: { selected?: boolean; editing?: boolean } = {},
       cardConfig: Record<string, unknown> = {},
     ) {
       const composerValue = createComposerContext(false, cardConfig)
-      const { wrapper: CardSelectionStoreProvider } = createSelection('code-1', selection)
+      const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
           <InklingUiPrefsContext.Provider value={composerValue}>
             <CardSelectionStoreProvider>
-              <CodeBlockNodeComponent code="const a = 1" language="javascript" nodeKey="code-1" />
+              <CodeBlockNodeComponent code="const a = 1" language="javascript" nodeKey={nodeKey} />
             </CardSelectionStoreProvider>
           </InklingUiPrefsContext.Provider>
         </InklingHostIntegrationContext.Provider>,
@@ -134,20 +135,23 @@ describe('CodeBlockNodeComponent', () => {
       return container.querySelectorAll('[data-inkling-card-toolbar="code-block"]')
     }
 
-    it('hides the toolbar when the card is not selected', () => {
-      const { container } = renderWithToolbar({ selected: false })
+    it('hides the toolbar when the card is not selected', async () => {
+      const nodeKey = await addCodeBlockNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: false })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('hides the toolbar while the card is editing', () => {
-      const { container } = renderWithToolbar({ selected: true, editing: true })
+    it('hides the toolbar while the card is editing', async () => {
+      const nodeKey = await addCodeBlockNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true, editing: true })
 
       expect(getToolbars(container)).toHaveLength(0)
     })
 
-    it('renders edit, separator, and snippet items when selected', () => {
-      const { container } = renderWithToolbar({ selected: true }, { createSnippet: vi.fn() })
+    it('renders edit, separator, and snippet items when selected', async () => {
+      const nodeKey = await addCodeBlockNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { createSnippet: vi.fn() })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
@@ -161,8 +165,9 @@ describe('CodeBlockNodeComponent', () => {
       expect(screen.getByTestId('create-snippet')).toBeTruthy()
     })
 
-    it('hides the snippet item and its separator when createSnippet is not configured', () => {
-      const { container } = renderWithToolbar({ selected: true })
+    it('hides the snippet item and its separator when createSnippet is not configured', async () => {
+      const nodeKey = await addCodeBlockNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true })
 
       const toolbar = getToolbars(container)[0]
       expect(toolbar.querySelectorAll('li')).toHaveLength(1)
@@ -170,8 +175,9 @@ describe('CodeBlockNodeComponent', () => {
       expect(screen.queryByTestId('create-snippet')).toBeNull()
     })
 
-    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', () => {
-      const { container } = renderWithToolbar({ selected: true }, { createSnippet: vi.fn() })
+    it('swaps the menu toolbar for the snippet input when the snippet item is clicked', async () => {
+      const nodeKey = await addCodeBlockNode(editor)
+      const { container } = renderWithToolbar(nodeKey, { selected: true }, { createSnippet: vi.fn() })
 
       fireEvent.click(screen.getByTestId('create-snippet'))
 

@@ -3,9 +3,7 @@ import type { LexicalEditor, LexicalNode } from 'lexical'
 import { mergeRegister } from '@lexical/utils'
 import {
   $createNodeSelection,
-  $createParagraphNode,
   $getNodeByKey,
-  $getRoot,
   $getSelection,
   $isNodeSelection,
   $isRangeSelection,
@@ -15,6 +13,7 @@ import {
 
 import type { CardNode } from '@/types/lexical-internals'
 
+import { $ensureParagraphAfterCard } from '@/utils/$ensureParagraphAfterCard'
 import { $insertAndSelectNode } from '@/utils/$insertAndSelectNode'
 
 import type { CardSelectionStore } from './cardSelectionStore'
@@ -154,9 +153,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
           }
         } else {
           // ensure we still have a paragraph if the deleted card was the only node
-          const paragraph = $createParagraphNode()
-          $getRoot().append(paragraph)
-          paragraph.select()
+          $ensureParagraphAfterCard(cardNode, { select: true })
         }
 
         cardNode.remove()

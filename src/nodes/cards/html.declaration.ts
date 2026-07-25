@@ -24,6 +24,7 @@ export const htmlDeclaration = {
     },
   ],
   insert: { command: INSERT_HTML_COMMAND, openInEditMode: true },
+  toolbarLabel: 'html',
   surfaces: {
     default: true,
     emailEditor: true,

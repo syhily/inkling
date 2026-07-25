@@ -1,31 +1,40 @@
-import type { ElementTransformer, MultilineElementTransformer, Transformer } from '@lexical/markdown'
+import type { ElementTransformer, MultilineElementTransformer } from '@lexical/markdown'
 import type { Klass, LexicalNode } from 'lexical'
 
+import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
 import type { GalleryImage } from '@/types/gallery'
 
-import { $createAudioNode, AudioNode } from '@/nodes/AudioNode'
-import { $createBookmarkNode, BookmarkNode } from '@/nodes/BookmarkNode'
-import { $createButtonNode, ButtonNode } from '@/nodes/ButtonNode'
-import { $createCalloutNode, CalloutNode } from '@/nodes/CalloutNode'
+import { $createAudioNode, type AudioNode } from '@/nodes/AudioNode'
+import { $createBookmarkNode, type BookmarkNode } from '@/nodes/BookmarkNode'
+import { $createButtonNode, type ButtonNode } from '@/nodes/ButtonNode'
+import { $createCalloutNode, type CalloutNode } from '@/nodes/CalloutNode'
 import { type CardNodeType } from '@/nodes/cards'
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
-import { $createFileNode, FileNode } from '@/nodes/FileNode'
-import { $createGalleryNode, GalleryNode } from '@/nodes/GalleryNode'
-import { $createHtmlNode, HtmlNode } from '@/nodes/HtmlNode'
+import { $createFileNode, type FileNode } from '@/nodes/FileNode'
+import { $createGalleryNode, type GalleryNode } from '@/nodes/GalleryNode'
+import { $createHtmlNode, type HtmlNode } from '@/nodes/HtmlNode'
 import { $createImageNode, $isImageNode, ImageNode } from '@/nodes/ImageNode'
-import { $createToggleNode, ToggleNode } from '@/nodes/ToggleNode'
-import { $createVideoNode, VideoNode } from '@/nodes/VideoNode'
+import { $createToggleNode, type ToggleNode } from '@/nodes/ToggleNode'
+import { $createVideoNode, type VideoNode } from '@/nodes/VideoNode'
 
 /**
- * The per-card markdown transformers, attached to their card declarations
- * one layer up (mirroring `@/nodes/cards/card-wrappers`).
+ * The per-card markdown transformer vocabulary, attached to the card
+ * declarations one layer up (mirroring `@/nodes/cards/card-wrappers`): a
+ * payload table keyed by card node type, projected into the card transformers
+ * by `CARD_MARKDOWN_DECLARATIONS` below.
  *
- * They cannot live in the declaration modules: the markdown round-trip
+ * It cannot live in the declaration modules: the markdown round-trip
  * editor registers the wrapper node classes — `DEFAULT_TRANSFORMERS`' `HR`
  * and `CODE_BLOCK` construct wrapper instances, and Lexical requires every
  * node constructed inside an editor to match the registered class exactly —
  * so each transformer's `createNode`/`replace` must construct the wrapper
  * class. Declarations are React-free and must never import wrappers.
+ */
+
+/**
+ * The named fence exception: image speaks standard `![alt](src)` markdown, so
+ * its transformer is a hand-written element transformer, not a projected
+ * `inkling:image` fence transformer.
  */
 export const IMAGE_CARD_TRANSFORMER: ElementTransformer = {
   dependencies: [ImageNode],
@@ -44,16 +53,41 @@ export const IMAGE_CARD_TRANSFORMER: ElementTransformer = {
   type: 'element',
 }
 
-function createCardTransformer<T extends LexicalNode>({
+/**
+ * One card's ` ```inkling:<card>``` ` fence vocabulary — the only per-card
+ * knowledge the payload table carries: which node fields the fence body holds
+ * (`getData`) and how to rebuild the node from the parsed body (`createNode`).
+ * The fence tag and the constructed class are deliberately NOT part of the
+ * vocabulary: the projection derives them from the declaration's own
+ * `nodeType` and wrapper class, so they can never drift from the registry.
+ *
+ * The method-shorthand signatures keep each table entry's `getData` parameter
+ * at the card's own node type (method parameters are bivariant under
+ * `strictFunctionTypes`); the projection consumes the widened `LexicalNode`
+ * signature.
+ */
+interface CardFencePayload {
+  getData(node: LexicalNode): Record<string, unknown>
+  createNode(data: Record<string, unknown>): LexicalNode
+}
+
+/**
+ * Builds one card's fence transformer from the declaration-derived fence tag
+ * (`card`) and wrapper class (`nodeClass`) plus the card's payload vocabulary.
+ * Every node the transformer constructs gets its declared nested editors
+ * detached (`$detachNestedEditorsForRoundTrip`), so a fence-imported card
+ * keeps the payload's plain-text fields verbatim.
+ */
+function createCardTransformer({
   card,
   nodeClass,
   getData,
   createNode,
 }: {
   card: string
-  nodeClass: Klass<T>
-  getData: (node: T) => Record<string, unknown>
-  createNode: (data: Record<string, unknown>) => T
+  nodeClass: Klass<LexicalNode>
+  getData: (node: LexicalNode) => Record<string, unknown>
+  createNode: (data: Record<string, unknown>) => LexicalNode
 }): MultilineElementTransformer {
   return {
     dependencies: [nodeClass],
@@ -61,7 +95,7 @@ function createCardTransformer<T extends LexicalNode>({
       if (!(node instanceof nodeClass)) {
         return null
       }
-      const data = getData(node as T)
+      const data = getData(node)
       return '```inkling:' + card + '\n' + JSON.stringify(data) + '\n```'
     },
     regExpEnd: /^```\s*$/,
@@ -69,10 +103,37 @@ function createCardTransformer<T extends LexicalNode>({
     replace: (rootNode, _children, _startMatch, _endMatch, linesInBetween, _isImport) => {
       const raw = linesInBetween?.join('\n') ?? ''
       const data: Record<string, unknown> = raw.trim() ? JSON.parse(raw) : {}
-      rootNode.append(createNode(data))
+      const node = createNode(data)
+      $detachNestedEditorsForRoundTrip(node)
+      rootNode.append(node)
     },
     type: 'multiline-element',
   }
+}
+
+const NO_NESTED_EDITOR_SPECS: readonly NestedEditorSpec[] = []
+
+// Mirrors `getNestedEditorSpecs` in `@/nodes/base/generate-decorator-node`
+// (module-private there, so not importable): reads the adopted
+// `static nestedEditors` spec off the node's actual class; spec-less classes
+// yield no entries.
+function getNestedEditorSpecs(node: LexicalNode): readonly NestedEditorSpec[] {
+  return (node.constructor as { nestedEditors?: readonly NestedEditorSpec[] }).nestedEditors ?? NO_NESTED_EDITOR_SPECS
+}
+
+/**
+ * Detaches a markdown-imported card's nested editors: nulls every `__<name>`
+ * field the class's adopted `nestedEditors` spec declares. The fence payload
+ * carries the card's text as plain data properties; a live nested editor
+ * would re-serialize its HTML over those properties on `exportJSON`
+ * (`serializeNestedEditorHtml`). Runs on the freshly constructed node inside
+ * the transformer's `replace`, before it is appended.
+ */
+function $detachNestedEditorsForRoundTrip(node: LexicalNode): void {
+  const target = node as unknown as Record<string, unknown>
+  getNestedEditorSpecs(node).forEach((spec) => {
+    target[`__${spec.name}`] = null
+  })
 }
 
 // `createNode` receives JSON.parse output from the card fence body: validate
@@ -105,163 +166,122 @@ function galleryImages(value: unknown, field: string): GalleryImage[] {
   })
 }
 
-export const HTML_CARD_TRANSFORMER = createCardTransformer({
-  card: 'html',
-  nodeClass: HtmlNode,
-  getData: (node) => ({ html: node.html }),
-  createNode: (data) => $createHtmlNode({ html: str(data.html, 'html.html') }),
-})
-
-export const FILE_CARD_TRANSFORMER = createCardTransformer({
-  card: 'file',
-  nodeClass: FileNode,
-  getData: (node) => ({
-    src: node.src,
-    fileName: node.fileName,
-    fileCaption: node.fileCaption,
-  }),
-  createNode: (data) =>
-    $createFileNode({
-      src: str(data.src, 'file.src'),
-      fileName: str(data.fileName, 'file.fileName'),
-      fileCaption: str(data.fileCaption, 'file.fileCaption'),
+const CARD_FENCE_PAYLOADS: Partial<Record<CardNodeType, CardFencePayload>> = {
+  audio: {
+    getData: (node: AudioNode) => ({
+      src: node.src,
+      caption: node.title,
     }),
-})
-
-export const BUTTON_CARD_TRANSFORMER = createCardTransformer({
-  card: 'button',
-  nodeClass: ButtonNode,
-  getData: (node) => ({
-    buttonUrl: node.buttonUrl,
-    buttonText: node.buttonText,
-  }),
-  createNode: (data) =>
-    $createButtonNode({
-      buttonUrl: str(data.buttonUrl, 'button.buttonUrl'),
-      buttonText: str(data.buttonText, 'button.buttonText'),
+    createNode: (data) =>
+      $createAudioNode({
+        src: str(data.src, 'audio.src'),
+        title: str(data.caption, 'audio.caption'),
+      }),
+  },
+  bookmark: {
+    getData: (node: BookmarkNode) => ({
+      url: node.url,
+      title: node.title,
+      description: node.description,
     }),
-})
-
-export const AUDIO_CARD_TRANSFORMER = createCardTransformer({
-  card: 'audio',
-  nodeClass: AudioNode,
-  getData: (node) => ({
-    src: node.src,
-    caption: node.title,
-  }),
-  createNode: (data) =>
-    $createAudioNode({
-      src: str(data.src, 'audio.src'),
-      title: str(data.caption, 'audio.caption'),
+    createNode: (data) =>
+      $createBookmarkNode({
+        url: str(data.url, 'bookmark.url'),
+        metadata: {
+          title: str(data.title, 'bookmark.title'),
+          description: str(data.description, 'bookmark.description'),
+        },
+      }),
+  },
+  button: {
+    getData: (node: ButtonNode) => ({
+      buttonUrl: node.buttonUrl,
+      buttonText: node.buttonText,
     }),
-})
-
-export const VIDEO_CARD_TRANSFORMER = createCardTransformer({
-  card: 'video',
-  nodeClass: VideoNode,
-  getData: (node) => ({
-    src: node.src,
-    caption: node.caption,
-    thumbnailSrc: node.thumbnailSrc,
-  }),
-  createNode: (data) => {
-    const node = $createVideoNode({
-      src: str(data.src, 'video.src'),
-      caption: str(data.caption, 'video.caption'),
-      thumbnailSrc: str(data.thumbnailSrc, 'video.thumbnailSrc'),
-    })
-    // Keep caption as plain text for round-trip; don't serialise the nested editor HTML.
-    node.__captionEditor = null
-    return node
+    createNode: (data) =>
+      $createButtonNode({
+        buttonUrl: str(data.buttonUrl, 'button.buttonUrl'),
+        buttonText: str(data.buttonText, 'button.buttonText'),
+      }),
   },
-})
-
-export const GALLERY_CARD_TRANSFORMER = createCardTransformer({
-  card: 'gallery',
-  nodeClass: GalleryNode,
-  getData: (node) => ({
-    // mid-upload images carry no `src` yet; skip them rather than export `undefined`
-    images: node.images.flatMap((image) => (typeof image.src === 'string' ? [{ src: image.src }] : [])),
-    caption: node.caption,
-  }),
-  createNode: (data) => {
-    const node = $createGalleryNode({
-      images: galleryImages(data.images, 'gallery.images'),
-      caption: str(data.caption, 'gallery.caption'),
-    })
-    // Keep caption as plain text for round-trip; don't serialise the nested editor HTML.
-    node.__captionEditor = null
-    return node
-  },
-})
-
-export const BOOKMARK_CARD_TRANSFORMER = createCardTransformer({
-  card: 'bookmark',
-  nodeClass: BookmarkNode,
-  getData: (node) => ({
-    url: node.url,
-    title: node.title,
-    description: node.description,
-  }),
-  createNode: (data) =>
-    $createBookmarkNode({
-      url: str(data.url, 'bookmark.url'),
-      metadata: {
-        title: str(data.title, 'bookmark.title'),
-        description: str(data.description, 'bookmark.description'),
-      },
+  callout: {
+    getData: (node: CalloutNode) => ({
+      text: node.calloutText,
+      backgroundColor: node.backgroundColor,
     }),
-})
-
-export const TOGGLE_CARD_TRANSFORMER = createCardTransformer({
-  card: 'toggle',
-  nodeClass: ToggleNode,
-  getData: (node) => ({
-    heading: node.heading,
-    content: node.content,
-  }),
-  createNode: (data) => {
-    const node = $createToggleNode({
-      heading: str(data.heading, 'toggle.heading'),
-      content: str(data.content, 'toggle.content'),
-    })
-    // Keep heading/content as plain text for round-trip; nested markdown is deferred.
-    node.__titleEditor = null
-    node.__contentEditor = null
-    return node
+    createNode: (data) =>
+      $createCalloutNode({
+        calloutText: str(data.text, 'callout.text'),
+        backgroundColor: str(data.backgroundColor, 'callout.backgroundColor'),
+      }),
   },
-})
-
-export const CALLOUT_CARD_TRANSFORMER = createCardTransformer({
-  card: 'callout',
-  nodeClass: CalloutNode,
-  getData: (node) => ({
-    text: node.calloutText,
-    backgroundColor: node.backgroundColor,
-  }),
-  createNode: (data) => {
-    const node = $createCalloutNode({
-      calloutText: str(data.text, 'callout.text'),
-      backgroundColor: str(data.backgroundColor, 'callout.backgroundColor'),
-    })
-    // Keep callout text as plain text for round-trip; nested markdown is deferred.
-    node.__calloutTextEditor = null
-    return node
+  file: {
+    getData: (node: FileNode) => ({
+      src: node.src,
+      fileName: node.fileName,
+      fileCaption: node.fileCaption,
+    }),
+    createNode: (data) =>
+      $createFileNode({
+        src: str(data.src, 'file.src'),
+        fileName: str(data.fileName, 'file.fileName'),
+        fileCaption: str(data.fileCaption, 'file.fileCaption'),
+      }),
   },
-})
-
-const CARD_TRANSFORMERS_BY_TYPE: Partial<Record<CardNodeType, Transformer>> = {
-  audio: AUDIO_CARD_TRANSFORMER,
-  bookmark: BOOKMARK_CARD_TRANSFORMER,
-  button: BUTTON_CARD_TRANSFORMER,
-  callout: CALLOUT_CARD_TRANSFORMER,
-  file: FILE_CARD_TRANSFORMER,
-  gallery: GALLERY_CARD_TRANSFORMER,
-  html: HTML_CARD_TRANSFORMER,
-  image: IMAGE_CARD_TRANSFORMER,
-  toggle: TOGGLE_CARD_TRANSFORMER,
-  video: VIDEO_CARD_TRANSFORMER,
+  gallery: {
+    getData: (node: GalleryNode) => ({
+      // mid-upload images carry no `src` yet; skip them rather than export `undefined`
+      images: node.images.flatMap((image) => (typeof image.src === 'string' ? [{ src: image.src }] : [])),
+      caption: node.caption,
+    }),
+    createNode: (data) =>
+      $createGalleryNode({
+        images: galleryImages(data.images, 'gallery.images'),
+        caption: str(data.caption, 'gallery.caption'),
+      }),
+  },
+  html: {
+    getData: (node: HtmlNode) => ({ html: node.html }),
+    createNode: (data) => $createHtmlNode({ html: str(data.html, 'html.html') }),
+  },
+  toggle: {
+    getData: (node: ToggleNode) => ({
+      heading: node.heading,
+      content: node.content,
+    }),
+    createNode: (data) =>
+      $createToggleNode({
+        heading: str(data.heading, 'toggle.heading'),
+        content: str(data.content, 'toggle.content'),
+      }),
+  },
+  video: {
+    getData: (node: VideoNode) => ({
+      src: node.src,
+      caption: node.caption,
+      thumbnailSrc: node.thumbnailSrc,
+    }),
+    createNode: (data) =>
+      $createVideoNode({
+        src: str(data.src, 'video.src'),
+        caption: str(data.caption, 'video.caption'),
+        thumbnailSrc: str(data.thumbnailSrc, 'video.thumbnailSrc'),
+      }),
+  },
 }
+
+/**
+ * The markdown-eligible cards with no `inkling:<card>` fence payload:
+ * `codeblock` and `horizontalrule` speak plain markdown (the dialect's own
+ * CODE_FENCE in `@/markdown/round-trip`; `HR` in `@/markdown/transformers`),
+ * and `image` speaks standard `![alt](src)` syntax via the hand-written
+ * IMAGE_CARD_TRANSFORMER above.
+ */
+export const MARKDOWN_EXEMPT: ReadonlySet<CardNodeType> = new Set<CardNodeType>([
+  'codeblock',
+  'horizontalrule',
+  'image',
+])
 
 /**
  * Wrapper-layer projection of the card declarations: each declaration paired
@@ -269,8 +289,25 @@ const CARD_TRANSFORMERS_BY_TYPE: Partial<Record<CardNodeType, Transformer>> = {
  * form is not covered by `DEFAULT_TRANSFORMERS`) its card transformer.
  * `@/markdown/round-trip` derives `MARKDOWN_NODES` and `CARD_TRANSFORMERS`
  * from this list.
+ *
+ * The fence tag and node class are derived by construction — the projection
+ * passes the declaration's own `nodeType` and wrapper class to
+ * `createCardTransformer`, so the table above states only the per-card
+ * payload vocabulary. A markdown-eligible card with neither a fence payload
+ * nor a named exemption throws here at module init rather than drifting
+ * silently.
  */
-export const CARD_MARKDOWN_DECLARATIONS = CARD_WRAPPER_NODES.map((card) => ({
-  ...card,
-  markdownTransformer: CARD_TRANSFORMERS_BY_TYPE[card.nodeType],
-}))
+export const CARD_MARKDOWN_DECLARATIONS = CARD_WRAPPER_NODES.map((card) => {
+  const payload = CARD_FENCE_PAYLOADS[card.nodeType]
+  if (card.surfaces.markdown && !payload && !MARKDOWN_EXEMPT.has(card.nodeType)) {
+    throw new Error(
+      `[card-markdown-transformers] '${card.nodeType}' is markdown-eligible but has no fence payload or named exemption`,
+    )
+  }
+  const markdownTransformer = payload
+    ? createCardTransformer({ card: card.nodeType, nodeClass: card.node, ...payload })
+    : card.nodeType === 'image'
+      ? IMAGE_CARD_TRANSFORMER
+      : undefined
+  return { ...card, markdownTransformer }
+})

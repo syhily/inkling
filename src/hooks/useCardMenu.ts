@@ -58,8 +58,8 @@ export function useCardMenu(editor: LexicalEditor, query?: string, options: UseC
       }
 
       // deliberate boundary: the card menu is a heterogeneous registry of
-      // command/payload pairs built from each node's static `cardMenu`, so
-      // the specific payload type is erased here. Each plugin handler
+      // command/payload pairs built from each card's declaration-derived menu
+      // data, so the specific payload type is erased here. Each plugin handler
       // re-narrows the payload with its own dataset type guard.
       const dispatch = () => editor.dispatchCommand(insertCommand as LexicalCommand<unknown>, dataset)
 
