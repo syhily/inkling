@@ -1,4 +1,4 @@
-import type { BaseSelection, LexicalEditor } from 'lexical'
+import type { BaseSelection } from 'lexical'
 
 import { $insertDataTransferForRichText } from '@lexical/clipboard'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
@@ -6,48 +6,9 @@ import { DRAG_DROP_PASTE } from '@lexical/rich-text'
 import { $getRoot, $getSelection, COMMAND_PRIORITY_HIGH, COMMAND_PRIORITY_LOW, DROP_COMMAND } from 'lexical'
 import React from 'react'
 
-import type { FileUploader } from '@/context/InklingHostIntegrationContext'
-
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { INSERT_MEDIA_COMMAND, MIME_TEXT_HTML } from '@/plugins/behaviour/clipboard-protocol'
-import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
-
-interface ProcessedFile {
-  type: string | undefined
-  file: File
-}
-
-function isMimeType(file: File, acceptableMimeTypes: Record<string, string[]>): string | undefined {
-  const mimeType = file.type
-  const key = Object.keys(acceptableMimeTypes).find((k) => acceptableMimeTypes[k].includes(mimeType))
-  return key
-}
-
-function processMediaFiles(files: File[], acceptableMimeTypes: Record<string, string[]>): ProcessedFile[] {
-  const processed: ProcessedFile[] = []
-  for (const file of files) {
-    const type = isMimeType(file, acceptableMimeTypes)
-    if (type) {
-      processed.push({ type, file })
-    }
-  }
-  return processed
-}
-
-function getListOfAcceptableMimeTypes(
-  editor: LexicalEditor,
-  uploadFileTypes: FileUploader['fileTypes'],
-): { acceptableMimeTypes: Record<string, string[]> } {
-  const acceptableMimeTypes: Record<string, string[]> = {}
-  for (const [nodeType, card] of getEditorCardNodes(editor)) {
-    if (card.uploadType) {
-      acceptableMimeTypes[nodeType] = uploadFileTypes?.[card.uploadType]?.mimeTypes ?? []
-    }
-  }
-  return {
-    acceptableMimeTypes,
-  }
-}
+import { claimDroppedFiles, getEditorAcceptableMimeTypes } from '@/plugins/behaviour/file-drop-routing'
 
 function DragDropPastePlugin() {
   const [editor] = useLexicalComposerContext()
@@ -59,9 +20,9 @@ function DragDropPastePlugin() {
         return
       }
 
-      const { acceptableMimeTypes } = getListOfAcceptableMimeTypes(editor, fileUploader.fileTypes)
-      const processed = processMediaFiles(files, acceptableMimeTypes)
-      processed.forEach((item) => {
+      const acceptableMimeTypes = getEditorAcceptableMimeTypes(editor, fileUploader.fileTypes)
+      const claimed = claimDroppedFiles(files, acceptableMimeTypes)
+      claimed.forEach((item) => {
         editor.dispatchCommand(INSERT_MEDIA_COMMAND, item)
       })
     },
