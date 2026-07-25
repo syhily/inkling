@@ -1,6 +1,6 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
+import { getExportImageDimensions } from '@/nodes/base/utils/export-image-sizing'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { getSrcsetAttribute, setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 
@@ -60,27 +60,15 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
     img.setAttribute('height', String(node.height))
   }
 
-  // images can be resized to max width, if that's the case output
-  // the resized width/height attrs to ensure 3rd party gallery plugins
-  // aren't affected by differing sizes
-  const { canTransformImage } = context
-  const { defaultMaxWidth } = context.imageOptimization || {}
-  if (
-    defaultMaxWidth &&
-    node.width !== null &&
-    node.height !== null &&
-    node.width > defaultMaxWidth &&
-    context.isLocalContentImage(node.src) &&
-    canTransformImage &&
-    canTransformImage(node.src)
-  ) {
-    const imageDimensions = {
-      width: node.width,
-      height: node.height,
-    }
-    const { width, height } = getResizedImageDimensions(imageDimensions, { width: defaultMaxWidth })
-    img.setAttribute('width', String(width))
-    img.setAttribute('height', String(height))
+  const resizedDimensions = getExportImageDimensions({
+    src: node.src,
+    width: node.width,
+    height: node.height,
+    context,
+  })
+  if (resizedDimensions) {
+    img.setAttribute('width', String(resizedDimensions.width))
+    img.setAttribute('height', String(resizedDimensions.height))
   }
 
   let picture: HTMLPictureElement | null = null

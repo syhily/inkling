@@ -32,6 +32,10 @@ _Avoid_: import parser, DOM conversion config
 The read-only, per-render-pass view of export-time policy and data that is the sole export-time view a card renderer receives besides the node: URL safety, sanitization, feature flags, color checks, document resolution, heading-id tracking, image/markdown data options. The public entry points (`exportDOM(editor, options)`, `$convertToHtmlString`, `LexicalHTMLRenderer.render`) still accept the export options and build the context from them. Card sources must not import the policy modules directly — an import guard enforces the seam.
 _Avoid_: options bag, policy object
 
+**Export-time image sizing**:
+The one module owning export-time img dimension policy (src/nodes/base/utils/export-image-sizing.ts): `getExportImageDimensions` returns the resized width/height when the shrink policy applies (`defaultMaxWidth` set, the intrinsic width exceeds it, and the image is local and transformable) or `null` to keep intrinsic dims. The image and gallery renderers are the two adapters; their `sizes`-attribute rules stay per-card data.
+_Avoid_: resize helper, sizing logic
+
 **Card write seam**:
 The typed write path for card-node fields: `$updateCardNode(nodeKey, guard, update)` (src/nodes/base/update-card-node.ts), called inside `editor.update()`. The card's own `$is*` guard narrows the node, so every field the mutator writes is checked against the card's node type.
 _Avoid_: `$getNodeByKey` + `as GeneratedDecoratorNodeBase`

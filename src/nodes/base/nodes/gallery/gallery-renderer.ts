@@ -2,7 +2,7 @@ import type { RenderContext } from '@/nodes/base/render-context'
 import type { GalleryImage } from '@/types/gallery'
 
 import { buildGalleryRows } from '@/nodes/base/nodes/gallery/gallery-rows'
-import { getResizedImageDimensions } from '@/nodes/base/utils/get-resized-image-dimensions'
+import { getExportImageDimensions } from '@/nodes/base/utils/export-image-sizing'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 
@@ -90,21 +90,15 @@ export function renderGalleryNode(node: GalleryNodeData, context: RenderContext)
         img.setAttribute('title', image.title)
       }
 
-      // images can be resized to max width, if that's the case output
-      // the resized width/height attrs to ensure 3rd party gallery plugins
-      // aren't affected by differing sizes
-      const { canTransformImage } = context
-      const { defaultMaxWidth } = context.imageOptimization || {}
-      if (
-        defaultMaxWidth &&
-        image.width > defaultMaxWidth &&
-        context.isLocalContentImage(image.src) &&
-        canTransformImage &&
-        canTransformImage(image.src)
-      ) {
-        const { width, height } = getResizedImageDimensions(image, { width: defaultMaxWidth })
-        img.setAttribute('width', String(width))
-        img.setAttribute('height', String(height))
+      const resizedDimensions = getExportImageDimensions({
+        src: image.src,
+        width: image.width,
+        height: image.height,
+        context,
+      })
+      if (resizedDimensions) {
+        img.setAttribute('width', String(resizedDimensions.width))
+        img.setAttribute('height', String(resizedDimensions.height))
       }
 
       // add srcset+sizes
