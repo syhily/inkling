@@ -8,6 +8,7 @@ import {
   HorizontalRuleNode,
   INSERT_HORIZONTAL_RULE_COMMAND,
 } from '@/nodes/HorizontalRuleNode'
+import { registerUpdateScan } from '@/plugins/behaviour/update-scan'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
 export const HorizontalRulePlugin = () => {
@@ -45,35 +46,16 @@ export const HorizontalRulePlugin = () => {
   }, [editor])
 
   // divider card shortcut — per-update scan trigger only; the regex and
-  // replace-and-select live in the card-shortcut seam (@/markdown/card-shortcuts)
+  // replace-and-select live in the card-shortcut seam (@/markdown/card-shortcuts),
+  // the registration policy (history-tag / composing / empty-dirty skips,
+  // nested scan commit) in the update-scan seam (@/plugins/behaviour/update-scan)
   useEffect(() => {
     if (!editor.hasNodes([HorizontalRuleNode])) {
       return
     }
-    return editor.registerUpdateListener(({ dirtyElements, dirtyLeaves, tags }) => {
-      // Skip undo/redo and coalesced history updates: the restored '---'
-      // paragraph matches the divider regex, so without this gate the scan
-      // re-fires on undo and resurrects the card (pinned in
-      // test/unit/plugins/HorizontalRulePlugin.test.tsx). Same idiom as
-      // EmEnDashPlugin.
-      if (tags.has('historic') || tags.has('history-push') || tags.has('history-merge')) {
-        return
-      }
-
-      // Selection-only updates cannot have produced a matching paragraph.
-      // Corner this changes: a '---' paragraph that already matched before
-      // this listener registered (pre-loaded content, late mount) no longer
-      // converts on a mere click into it — it converts after the next edit.
-      if (dirtyLeaves.size === 0 && dirtyElements.size === 0) {
-        return
-      }
-
-      editor.update(() => {
-        // don't do anything when using IME input
-        if (editor.isComposing()) {
-          return
-        }
-
+    return registerUpdateScan(editor, {
+      dirty: 'leaves-or-elements',
+      scan: () => {
         const selection = $getSelection()
         if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
           return
@@ -96,7 +78,7 @@ export const HorizontalRulePlugin = () => {
         }
 
         $insertHorizontalRuleForUpdateScanTrigger(node)
-      })
+      },
     })
   }, [editor])
 

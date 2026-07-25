@@ -2,6 +2,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getNodeByKey, $getSelection, $isRangeSelection, $isTextNode } from 'lexical'
 import { useEffect } from 'react'
 
+import { registerUpdateScan } from '@/plugins/behaviour/update-scan'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
 const DASH = '-'
@@ -94,25 +95,15 @@ export const EmEnDashPlugin = () => {
       ({ klass }) => klass.getType() === 'horizontalrule',
     )
 
-    return editor.registerUpdateListener(({ dirtyLeaves, tags }) => {
-      if (editor.isComposing()) {
-        return
-      }
-
-      // Skip historic/undo updates and our own replacement updates so we don't
-      // re-trigger while undoing or replace immediately after a replacement.
-      if (tags.has('historic') || tags.has('history-push') || tags.has('history-merge')) {
-        return
-      }
-
-      if (dirtyLeaves.size === 0) {
-        return
-      }
-
-      // Perform the replacement synchronously in a tagged update so it becomes a
-      // separate history entry from the keystroke that triggered it. This keeps
-      // undo able to restore the raw typed dashes.
-      editor.update(() => $replaceDashes(dirtyLeaves, supportsHrShortcut), { tag: 'history-push' })
+    // Registration policy (history-tag / composing / empty-dirty skips,
+    // nested scan commit) lives in the update-scan seam
+    // (@/plugins/behaviour/update-scan). The 'history-push' tag keeps the
+    // replacement a separate history entry from the keystroke that
+    // triggered it, so undo restores the raw typed dashes.
+    return registerUpdateScan(editor, {
+      dirty: 'leaves',
+      tag: 'history-push',
+      scan: (dirtyLeaves) => $replaceDashes(dirtyLeaves, supportsHrShortcut),
     })
   }, [editor])
 
