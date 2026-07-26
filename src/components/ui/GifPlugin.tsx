@@ -5,9 +5,10 @@ import React from 'react'
 
 import GifSelector from '@/components/ui/GifSelector'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useGifBrowser } from '@/hooks/useGifBrowser'
 import { DELETE_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { INSERT_FROM_GIF_COMMAND } from '@/plugins/InklingSelectorPlugin'
-import { getGifProviderConfig, useGif, type GifProviderConfig } from '@/utils/services/gif'
+import { getGifProviderConfig, type GifProviderConfig } from '@/utils/services/gif'
 
 interface GifPluginProps {
   nodeKey: NodeKey
@@ -27,7 +28,7 @@ const GifPlugin = ({ nodeKey }: GifPluginProps) => {
 }
 
 const GifPluginSelector = ({ nodeKey, providerConfig }: { nodeKey: NodeKey; providerConfig: GifProviderConfig }) => {
-  const gifHook = useGif({ config: providerConfig })
+  const browser = useGifBrowser({ config: providerConfig })
   const [editor] = useLexicalComposerContext()
 
   React.useEffect(() => {
@@ -57,10 +58,10 @@ const GifPluginSelector = ({ nodeKey, providerConfig }: { nodeKey: NodeKey; prov
 
   return (
     <GifSelector
+      browser={browser}
       provider={providerConfig.provider}
       onClickOutside={onClickOutside}
       onGifInsert={insertImageToNode}
-      {...gifHook}
     />
   )
 }

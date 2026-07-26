@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 
-import type { GifData } from '@/utils/services/gif'
+import type { GifBrowser, GifBrowserEffect, GifGeometry, GifKeyTarget } from '@/utils/services/gif-browser'
 
 import SearchIcon from '@/assets/icons/inkling-search.svg?react'
 import { Error } from '@/components/ui/file-selectors/Gif/Error'
@@ -12,43 +12,42 @@ const TWO_COLUMN_WIDTH = 540
 const THREE_COLUMN_WIDTH = 940
 
 export interface GifSelectorProps {
+  browser: GifBrowser
   onGifInsert: (image: { src: string; width: number; height: number }) => void
   onClickOutside: () => void
-  updateSearch: (term?: string) => void
-  columns: GifData[][]
-  isLoading: boolean
-  isLazyLoading: boolean
-  error: string | null
-  changeColumnCount: (count: number) => void
-  loadNextPage: () => void
-  gifs: GifData[]
   provider?: string
 }
 
-const GifSelector = ({
-  onGifInsert,
-  onClickOutside,
-  updateSearch,
-  columns,
-  isLoading,
-  isLazyLoading,
-  error,
-  changeColumnCount,
-  loadNextPage,
-  gifs,
-  provider,
-}: GifSelectorProps) => {
+// Render adapter over the headless gif browser: snapshot in, JSX out, DOM
+// events translated to intents. It owns only what is inherently DOM — the
+// geometry port (elementFromPoint probing), the focus-request latch the Gif
+// tiles consume, the resize/scroll/click-outside listeners, and executing the
+// effects the browser returns for key intents.
+const GifSelector = ({ browser, onGifInsert, onClickOutside, provider }: GifSelectorProps) => {
   const selectorRef = useRef<HTMLDivElement | null>(null)
   const searchRef = useRef<HTMLInputElement | null>(null)
   const focusRequestRef = useRef<string | null>(null)
-  const [highlightedGif, setHighlightedGif] = useState<GifData | undefined>(undefined)
+  const snapshot = React.useSyncExternalStore(browser.subscribe, browser.getSnapshot)
+  const { columns, isLoading, isLazyLoading, error, highlightedId } = snapshot
 
   useEffect(() => {
-    updateSearch()
+    browser.dispatch({ type: 'search', term: '' })
+  }, [browser])
 
-    // We only do this for init
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // A highlight transition is also a focus request for the target tile — the
+  // Gif component consumes and clears the ref when it focuses its button. The
+  // latch must land before the re-render reaches the tile, so it subscribes
+  // to the browser directly (emit is synchronous with the dispatch).
+  useEffect(() => {
+    let previous = browser.getSnapshot().highlightedId
+    return browser.subscribe(() => {
+      const id = browser.getSnapshot().highlightedId
+      if (id && id !== previous) {
+        focusRequestRef.current = id
+      }
+      previous = id
+    })
+  }, [browser])
 
   useEffect(() => {
     if (!selectorRef.current) {
@@ -71,33 +70,16 @@ const GifSelector = ({
         columnsCount = 3
       }
 
-      changeColumnCount(columnsCount)
+      browser.dispatch({ type: 'set-column-count', count: columnsCount })
     })
     resizeObserver.observe(selectorRef.current)
 
     return () => {
       resizeObserver.disconnect()
     }
-
-    // We only do this for init
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [browser])
 
   useEffect(() => {
-    if (!highlightedGif) {
-      return
-    }
-    const match = gifs.find((gif) => gif.id === highlightedGif.id)
-    if (!match) {
-      setHighlightedGif(undefined)
-    } else if (match !== highlightedGif) {
-      setHighlightedGif(match)
-    }
-    // Keep highlightedGif in sync with the current gifs array by stable id.
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [gifs, highlightedGif])
-
-  React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target
       if (selectorRef.current && target instanceof Node && !selectorRef.current.contains(target)) {
@@ -110,210 +92,41 @@ const GifSelector = ({
     }
   }, [onClickOutside])
 
-  function requestHighlight(gif: GifData | undefined) {
-    if (gif) {
-      focusRequestRef.current = gif.id
-    }
-    setHighlightedGif(gif)
+  // The real probing implementation behind the navigation machine's geometry
+  // port: tile rects by data-gif-index, and elementFromPoint hits constrained
+  // to tiles contained in the selector.
+  const geometry: GifGeometry = {
+    tileRect(index) {
+      const elem = selectorRef.current?.querySelector(`[data-gif-index="${index}"]`)
+      if (!elem) {
+        return null
+      }
+      const rect = elem.getBoundingClientRect()
+      return { left: rect.left, right: rect.right, top: rect.top, width: rect.width, height: rect.height }
+    },
+    gifIndexAtPoint(x, y) {
+      const selector = selectorRef.current
+      if (!selector) {
+        return null
+      }
+      const match = selector.ownerDocument.elementFromPoint(x, y)?.closest('[data-gif-index]')
+      if (match instanceof HTMLElement && selector.contains(match) && match.dataset.gifIndex !== undefined) {
+        return Number(match.dataset.gifIndex)
+      }
+      return null
+    },
   }
 
-  function hasUsableMedia(gif: GifData | undefined) {
-    if (!gif) {
-      return false
-    }
-    const media = gif.media_formats?.gif || gif.media_formats?.tinygif
-    return !!media?.url && !!media.dims
-  }
-
-  function findNextValidGif(startIndex: number): GifData | undefined {
-    for (let i = startIndex; i < gifs.length; i += 1) {
-      if (hasUsableMedia(gifs[i])) {
-        return gifs[i]
+  function runEffects(effects: GifBrowserEffect[], event?: React.KeyboardEvent<HTMLDivElement>) {
+    for (const effect of effects) {
+      if (effect.type === 'prevent-default') {
+        event?.preventDefault()
+      } else if (effect.type === 'focus-search') {
+        searchRef.current?.focus()
+      } else {
+        onGifInsert(effect.image)
       }
     }
-    return undefined
-  }
-
-  function findPrevValidGif(startIndex: number): GifData | undefined {
-    for (let i = startIndex; i >= 0; i -= 1) {
-      if (hasUsableMedia(gifs[i])) {
-        return gifs[i]
-      }
-    }
-    return undefined
-  }
-
-  function handleGifSelect(selectedGif: GifData) {
-    const gif = selectedGif.media_formats.gif
-    if (!gif?.url || !gif.dims) {
-      return
-    }
-    const data = {
-      src: gif.url,
-      width: gif.dims[0],
-      height: gif.dims[1],
-    }
-    onGifInsert(data)
-  }
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateSearch(e.target.value)
-  }
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const container = e.currentTarget
-    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 1000) {
-      loadNextPage()
-    }
-  }
-
-  function focusSearch() {
-    searchRef.current?.focus()
-  }
-
-  function highlightFirst() {
-    requestHighlight(findNextValidGif(0))
-  }
-
-  function highlightNext() {
-    if (highlightedGif?.index === undefined) {
-      return
-    }
-    const next = findNextValidGif(highlightedGif.index + 1)
-    if (next) {
-      requestHighlight(next)
-    }
-  }
-
-  function highlightPrev() {
-    if (!highlightedGif || highlightedGif.index === undefined || highlightedGif.index === 0) {
-      focusSearch()
-      return
-    }
-    const prev = findPrevValidGif(highlightedGif.index - 1)
-    if (prev) {
-      requestHighlight(prev)
-    } else {
-      focusSearch()
-    }
-  }
-
-  function moveHighlightDown() {
-    if (!highlightedGif || highlightedGif.columnIndex === undefined || highlightedGif.columnRowIndex === undefined) {
-      return
-    }
-    const column = columns[highlightedGif.columnIndex]
-    if (!column) {
-      return
-    }
-    for (let row = highlightedGif.columnRowIndex + 1; row < column.length; row += 1) {
-      const nextGif = column[row]
-      if (nextGif && hasUsableMedia(nextGif)) {
-        requestHighlight(nextGif)
-        return
-      }
-    }
-  }
-
-  function moveHighlightUp() {
-    if (!highlightedGif || highlightedGif.columnIndex === undefined || highlightedGif.columnRowIndex === undefined) {
-      return
-    }
-    const column = columns[highlightedGif.columnIndex]
-    if (!column) {
-      return
-    }
-    for (let row = highlightedGif.columnRowIndex - 1; row >= 0; row -= 1) {
-      const nextGif = column[row]
-      if (nextGif && hasUsableMedia(nextGif)) {
-        requestHighlight(nextGif)
-        return
-      }
-    }
-    focusSearch()
-  }
-
-  function moveToNextHorizontalGif(direction: 'left' | 'right') {
-    if (!highlightedGif || !selectorRef.current) {
-      return
-    }
-    const highlightedElem = selectorRef.current.querySelector(`[data-gif-index="${highlightedGif.index}"]`)
-    if (!highlightedElem) {
-      return
-    }
-    const highlightedElemRect = highlightedElem.getBoundingClientRect()
-
-    let x
-    if (direction === 'left') {
-      x = highlightedElemRect.left - highlightedElemRect.width / 2
-    } else {
-      x = highlightedElemRect.right + highlightedElemRect.width / 2
-    }
-
-    let y = highlightedElemRect.top + highlightedElemRect.height / 3
-
-    let foundGifElem: HTMLElement | null = null
-    let jumps = 0
-
-    const doc = selectorRef.current.ownerDocument
-
-    // we might hit spacing between gifs, keep moving up 5 px until we get a match
-    while (!foundGifElem) {
-      const possibleMatch = doc.elementFromPoint(x, y)?.closest('[data-gif-index]')
-
-      if (
-        possibleMatch instanceof HTMLElement &&
-        selectorRef.current.contains(possibleMatch) &&
-        possibleMatch.dataset.gifIndex !== undefined
-      ) {
-        foundGifElem = possibleMatch
-        break
-      }
-
-      jumps += 1
-      y -= 5
-
-      if (jumps > 10) {
-        // give up to avoid infinite loop
-        break
-      }
-    }
-
-    if (foundGifElem) {
-      const nextGif = gifs[Number(foundGifElem.dataset.gifIndex)]
-      if (nextGif && hasUsableMedia(nextGif)) {
-        requestHighlight(nextGif)
-      }
-    }
-  }
-
-  function moveHighlightRight() {
-    if (!highlightedGif || highlightedGif.columnIndex === undefined) {
-      return
-    }
-    if (highlightedGif.columnIndex >= columns.length - 1) {
-      // we don't wrap and we're on the last column, do nothing
-      return
-    }
-
-    moveToNextHorizontalGif('right')
-  }
-
-  function moveHighlightLeft() {
-    if (!highlightedGif || highlightedGif.index === undefined) {
-      return
-    }
-    if (highlightedGif.index === 0) {
-      // on the first Gif, focus the search bar
-      return focusSearch()
-    }
-
-    if (highlightedGif.columnIndex === 0) {
-      // we don't wrap and we're on the first column, do nothing
-      return
-    }
-
-    moveToNextHorizontalGif('left')
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
@@ -330,92 +143,20 @@ const GifSelector = ({
       return
     }
 
-    switch (event.key) {
-      case 'Tab':
-        return handleTab(event)
-      case 'ArrowLeft':
-        return handleLeft(event)
-      case 'ArrowRight':
-        return handleRight(event)
-      case 'ArrowUp':
-        return handleUp(event)
-      case 'ArrowDown':
-        return handleDown(event)
-      case 'Enter':
-        return handleEnter(event)
-      default:
-        return null
-    }
+    const tagName = (event.target as HTMLElement).tagName
+    const target: GifKeyTarget = tagName === 'INPUT' ? 'input' : tagName === 'BUTTON' ? 'button' : 'other'
+    const effects = browser.dispatch({ type: 'key', key: event.key, shiftKey: event.shiftKey, target }, geometry)
+    runEffects(effects, event)
   }
 
-  function handleTab(event: React.KeyboardEvent<HTMLDivElement>) {
-    if (event.shiftKey) {
-      if (highlightedGif) {
-        event.preventDefault()
-        return highlightPrev()
-      }
-    } else {
-      if ((event.target as HTMLElement).tagName === 'INPUT') {
-        event.preventDefault()
-        return highlightFirst()
-      }
-
-      if (highlightedGif) {
-        event.preventDefault()
-        return highlightNext()
-      }
-    }
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    browser.dispatch({ type: 'search', term: e.target.value })
   }
 
-  function handleLeft(event: React.KeyboardEvent<HTMLDivElement>) {
-    if (highlightedGif) {
-      event.preventDefault()
-      moveHighlightLeft()
-    }
-  }
-
-  function handleRight(event: React.KeyboardEvent<HTMLDivElement>) {
-    if (highlightedGif) {
-      event.preventDefault()
-      moveHighlightRight()
-    }
-  }
-
-  function handleUp(event: React.KeyboardEvent<HTMLDivElement>) {
-    if (highlightedGif) {
-      event.preventDefault()
-      moveHighlightUp()
-    }
-  }
-
-  function handleDown(event: React.KeyboardEvent<HTMLDivElement>) {
-    if ((event.target as HTMLElement).tagName === 'INPUT') {
-      event.preventDefault()
-      return highlightFirst()
-    }
-
-    if (highlightedGif) {
-      event.preventDefault()
-      moveHighlightDown()
-    }
-  }
-
-  function handleEnter(event: React.KeyboardEvent<HTMLDivElement>) {
-    const target = event.target as HTMLElement
-
-    if (target.tagName === 'BUTTON') {
-      // let the native button activation (Enter/Space -> click) insert the GIF
-      return
-    }
-
-    if (target.tagName === 'INPUT') {
-      event.preventDefault()
-      return highlightFirst()
-    }
-
-    if (highlightedGif) {
-      event.preventDefault()
-      handleGifSelect(highlightedGif)
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget
+    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 1000) {
+      browser.dispatch({ type: 'load-more' })
     }
   }
 
@@ -455,10 +196,10 @@ const GifSelector = ({
                       key={gif.id}
                       data={gif}
                       focusRequestRef={focusRequestRef}
-                      isHighlighted={highlightedGif?.id === gif.id}
-                      onClick={() => handleGifSelect(gif)}
-                      onFocus={() => requestHighlight(gif)}
-                      onMouseEnter={() => requestHighlight(gif)}
+                      isHighlighted={highlightedId === gif.id}
+                      onClick={() => runEffects(browser.dispatch({ type: 'select', id: gif.id }))}
+                      onFocus={() => browser.dispatch({ type: 'highlight', id: gif.id })}
+                      onMouseEnter={() => browser.dispatch({ type: 'highlight', id: gif.id })}
                     />
                   ))}
                 </section>
