@@ -12,11 +12,9 @@ import type {
 import WandIcon from '@/assets/icons/inkling-wand.svg?react'
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
 import { IconButton } from '@/components/ui/IconButton'
-import ImageUploadForm from '@/components/ui/ImageUploadForm'
-import { CardText, MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
-import { ProgressBar } from '@/components/ui/ProgressBar'
+import { CardText } from '@/components/ui/MediaPlaceholder'
+import { UploadingOverlay, UploadPlaceholder } from '@/components/ui/UploadChrome'
 import { isGif } from '@/utils/isGif'
-import { openFileSelection } from '@/utils/openFileSelection'
 
 interface PopulatedImageCardProps {
   src: string
@@ -32,7 +30,7 @@ interface PopulatedImageCardProps {
 
 interface EmptyImageCardProps {
   onFileChange: (e: FileChangeEvent) => void
-  setFileInputRef: (ref: FileInputRef) => void
+  fileInputRef?: FileInputRef
   imageFileDragHandler?: DragHandlerLike
   errors?: Error[] | { message?: string }[]
 }
@@ -67,10 +65,6 @@ function PopulatedImageCard({
   openImageEditor,
   onFileChange,
 }: PopulatedImageCardProps) {
-  const progressStyle = {
-    width: `${imageUploader.progress?.toFixed(0)}%`,
-  }
-
   const progressAlt =
     imageUploader.progress !== undefined && Math.round(imageUploader.progress) < 100
       ? `upload in progress, ${imageUploader.progress}`
@@ -95,12 +89,7 @@ function PopulatedImageCard({
         src={previewSrc ? previewSrc : src}
       />
       {imageUploader.isLoading ? (
-        <div
-          className="absolute inset-0 flex min-w-full items-center justify-center overflow-hidden bg-white/50"
-          data-testid="upload-progress"
-        >
-          <ProgressBar style={progressStyle} />
-        </div>
+        <UploadingOverlay dataTestId="upload-progress" progress={imageUploader.progress} />
       ) : (
         <></>
       )}
@@ -151,27 +140,20 @@ function PopulatedImageCard({
   )
 }
 
-function EmptyImageCard({ onFileChange, setFileInputRef, imageFileDragHandler, errors }: EmptyImageCardProps) {
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
-
-  const onFileInputRef = (element: HTMLInputElement | null) => {
-    fileInputRef.current = element
-    setFileInputRef(fileInputRef)
-  }
-
+function EmptyImageCard({ onFileChange, fileInputRef, imageFileDragHandler, errors }: EmptyImageCardProps) {
   return (
-    <>
-      <MediaPlaceholder
-        desc="Click to select an image"
-        errors={errors}
-        filePicker={() => openFileSelection({ fileInputRef })}
-        icon="image"
-        isDraggedOver={imageFileDragHandler?.isDraggedOver}
-        placeholderRef={imageFileDragHandler?.setRef}
-        size="small"
-      />
-      <ImageUploadForm fileInputRef={onFileInputRef} onFileChange={onFileChange} />
-    </>
+    <UploadPlaceholder
+      desc="Click to select an image"
+      dragHandler={imageFileDragHandler}
+      errors={errors}
+      fileInputRef={fileInputRef}
+      icon="image"
+      inputName="image-input"
+      mimeTypes={['image/*']}
+      size="small"
+      stopClickPropagation={true}
+      onFileChange={onFileChange}
+    />
   )
 }
 
@@ -201,11 +183,6 @@ export function ImageCard({
     }
   }, [figureRef, setFigureRef])
 
-  const setFileInputRef = (ref: FileInputRef) => {
-    if (fileInputRef) {
-      fileInputRef.current = ref.current
-    }
-  }
   return (
     <>
       <figure ref={figureRef} data-inkling-card-width={cardWidth}>
@@ -224,8 +201,8 @@ export function ImageCard({
         ) : (
           <EmptyImageCard
             errors={imageUploader.errors}
+            fileInputRef={fileInputRef}
             imageFileDragHandler={imageFileDragHandler}
-            setFileInputRef={setFileInputRef}
             onFileChange={onFileChange}
           />
         )}

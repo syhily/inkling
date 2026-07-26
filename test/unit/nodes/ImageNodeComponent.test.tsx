@@ -239,7 +239,7 @@ describe('ImageNodeComponent', () => {
       expect(toolbars).toHaveLength(1)
       const toolbar = toolbars[0]
 
-      // the ImageUploadForm renders inside the toolbar before the menu
+      // the UploadFileInput renders inside the toolbar before the menu
       expect(toolbar.firstElementChild?.tagName).toBe('FORM')
       expect(toolbar.querySelector('form input[type="file"]')).toBeTruthy()
 

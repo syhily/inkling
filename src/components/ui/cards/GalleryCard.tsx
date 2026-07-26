@@ -7,7 +7,7 @@ import DeleteIcon from '@/assets/icons/inkling-trash.svg?react'
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
 import { IconButton } from '@/components/ui/IconButton'
 import { MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
-import { ProgressBar } from '@/components/ui/ProgressBar'
+import { UploadFileInput, UploadingOverlay } from '@/components/ui/UploadChrome'
 import { MAX_IMAGES, buildGalleryRows } from '@/nodes/base/nodes/gallery/gallery-rows'
 
 interface GalleryRowProps {
@@ -151,25 +151,6 @@ function EmptyGalleryCard({ openFilePicker, isDraggedOver, reorderHandler }: Emp
   )
 }
 
-interface UploadOverlayProps {
-  progress?: number
-}
-
-function UploadOverlay({ progress }: UploadOverlayProps) {
-  const progressStyle = {
-    width: `${progress?.toFixed(0) ?? '0'}%`,
-  }
-
-  return (
-    <div
-      className="absolute inset-0 flex min-w-full items-center justify-center overflow-hidden bg-white/50"
-      data-testid="gallery-progress"
-    >
-      <ProgressBar bgStyle="transparent" style={progressStyle} />
-    </div>
-  )
-}
-
 function FileDragOverlay() {
   return (
     <div
@@ -241,7 +222,9 @@ export function GalleryCard({
           />
         )}
 
-        {isLoading ? <UploadOverlay progress={progress} /> : null}
+        {isLoading ? (
+          <UploadingOverlay bgStyle="transparent" dataTestId="gallery-progress" progress={progress} />
+        ) : null}
         {images.length && filesDraggedOver ? <FileDragOverlay /> : null}
 
         {errorMessage && !isDragging ? (
@@ -260,17 +243,13 @@ export function GalleryCard({
           </div>
         ) : null}
 
-        <form>
-          <input
-            ref={fileInputRef}
-            accept={imageMimeTypes.join(',')}
-            hidden={true}
-            multiple={true}
-            name="image-input"
-            type="file"
-            onChange={onFileChange}
-          />
-        </form>
+        <UploadFileInput
+          fileInputRef={fileInputRef}
+          mimeTypes={imageMimeTypes}
+          multiple={true}
+          name="image-input"
+          onFileChange={onFileChange}
+        />
       </div>
 
       <CardCaptionEditor

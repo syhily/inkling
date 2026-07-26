@@ -1,16 +1,15 @@
 import type { MutableRefObject } from 'react'
 
 import clsx from 'clsx'
-import React, { useRef } from 'react'
+import React from 'react'
 
 import type { DragHandlerLike, FileChangeEvent } from '@/components/ui/cards/card-ui-types'
 
 import DeleteIcon from '@/assets/icons/inkling-trash.svg?react'
 import WandIcon from '@/assets/icons/inkling-wand.svg?react'
 import { IconButton } from '@/components/ui/IconButton'
-import ImageUploadForm from '@/components/ui/ImageUploadForm'
 import { MediaPlaceholder, isPlaceholderIconName } from '@/components/ui/MediaPlaceholder'
-import { ProgressBar } from '@/components/ui/ProgressBar'
+import { UploadFileInput, UploadingOverlay, useFileInputRefTunnel } from '@/components/ui/UploadChrome'
 import { openFileSelection } from '@/utils/openFileSelection'
 
 export interface MediaUploaderProps {
@@ -62,16 +61,7 @@ export function MediaUploader({
   additionalActions,
   setFileInputRef,
 }: MediaUploaderProps) {
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-
-  const onFileInputRef = (element: HTMLInputElement | null) => {
-    fileInputRef.current = element
-    setFileInputRef?.(fileInputRef)
-  }
-
-  const progressStyle = {
-    width: `${progress?.toFixed(0) ?? '0'}%`,
-  }
+  const { fileInputRef, onFileInputRef } = useFileInputRefTunnel(setFileInputRef)
 
   const onRemove = (e: React.MouseEvent) => {
     e.stopPropagation() // prevents card from losing selected state
@@ -79,10 +69,6 @@ export function MediaUploader({
   }
 
   const isEmpty = !isLoading && !src
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFileChange(e)
-  }
 
   const handleImageEditorSave = (editedImage: Blob) => {
     const file =
@@ -112,7 +98,13 @@ export function MediaUploader({
           size={size ?? 'small'}
           type={type}
         />
-        <ImageUploadForm fileInputRef={onFileInputRef} mimeTypes={mimeTypes} onFileChange={handleFileChange} />
+        <UploadFileInput
+          fileInputRef={onFileInputRef}
+          mimeTypes={mimeTypes ?? ['image/*']}
+          name="image-input"
+          stopClickPropagation={true}
+          onFileChange={onFileChange}
+        />
       </div>
     )
   }
@@ -163,15 +155,11 @@ export function MediaUploader({
       )}
 
       {isLoading && (
-        <div
-          className={clsx(
-            'absolute inset-0 flex min-w-full items-center justify-center overflow-hidden bg-grey-100',
-            borderStyle === 'rounded' && 'rounded-lg',
-          )}
-          data-testid="custom-thumbnail-progress"
-        >
-          <ProgressBar style={progressStyle} />
-        </div>
+        <UploadingOverlay
+          className={clsx('bg-grey-100', borderStyle === 'rounded' && 'rounded-lg')}
+          dataTestId="custom-thumbnail-progress"
+          progress={progress}
+        />
       )}
     </div>
   )

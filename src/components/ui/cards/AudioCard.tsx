@@ -5,27 +5,18 @@ import type { DragHandlerLike, FileInputRef, FileUploaderLike } from '@/componen
 import AudioFileIcon from '@/assets/icons/inkling-audio-file.svg?react'
 import FilePlaceholderIcon from '@/assets/icons/inkling-file-placeholder.svg?react'
 import DeleteIcon from '@/assets/icons/inkling-trash.svg?react'
-import { AudioUploadForm } from '@/components/ui/AudioUploadForm'
 import { IconButton } from '@/components/ui/IconButton'
-import { ImageUploadForm } from '@/components/ui/ImageUploadForm'
-import { MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
 import { MediaPlayer } from '@/components/ui/MediaPlayer'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { ReadOnlyOverlay } from '@/components/ui/ReadOnlyOverlay'
 import { TextInput } from '@/components/ui/TextInput'
+import {
+  UploadFileInput,
+  UploadPlaceholder,
+  uploadProgressStyle,
+  useFileInputRefTunnel,
+} from '@/components/ui/UploadChrome'
 import { openFileSelection } from '@/utils/openFileSelection'
-
-interface AudioUploadingProps {
-  progress?: number
-}
-
-interface EmptyAudioCardProps {
-  audioUploader: FileUploaderLike
-  audioMimeTypes?: string[]
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  setFileInputRef: (ref: FileInputRef) => void
-  audioDragHandler?: DragHandlerLike
-}
 
 interface AudioThumbnailProps {
   mimeTypes?: string[]
@@ -33,7 +24,7 @@ interface AudioThumbnailProps {
   progress?: number
   isUploading?: boolean
   isEditing?: boolean
-  setFileInputRef: (ref: FileInputRef) => void
+  fileInputRef?: FileInputRef
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   removeThumbnail?: () => void
   isDraggedOver?: boolean
@@ -49,7 +40,7 @@ interface PopulatedAudioCardProps {
   duration?: number
   updateTitle: (value: string) => void
   thumbnailSrc?: string
-  setFileInputRef: (ref: FileInputRef) => void
+  fileInputRef?: FileInputRef
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   removeThumbnail?: () => void
   thumbnailDragHandler?: DragHandlerLike
@@ -75,88 +66,19 @@ export interface AudioCardProps {
   thumbnailDragHandler?: DragHandlerLike
 }
 
-function AudioUploading({ progress }: AudioUploadingProps) {
-  const progressStyle = {
-    width: `${progress?.toFixed(0)}%`,
-  }
-
-  return (
-    <div className="h-full border border-transparent">
-      <div className="relative flex h-full items-center justify-center border border-grey/20 bg-grey-50 before:pb-[12.5%]">
-        <div className="flex w-full items-center justify-center overflow-hidden">
-          <ProgressBar style={progressStyle} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function EmptyAudioCard({
-  audioUploader,
-  audioMimeTypes,
-  onFileChange,
-  setFileInputRef,
-  audioDragHandler,
-}: EmptyAudioCardProps) {
-  const { isLoading: isUploading, progress, errors } = audioUploader
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
-
-  const onFileInputRef = (element: HTMLInputElement | null) => {
-    fileInputRef.current = element
-    setFileInputRef(fileInputRef)
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFileChange(e)
-  }
-
-  if (isUploading) {
-    return <AudioUploading progress={progress} />
-  } else {
-    return (
-      <>
-        <MediaPlaceholder
-          desc="Click to upload an audio file"
-          errorDataTestId="audio-upload-errors"
-          errors={errors}
-          filePicker={() => openFileSelection({ fileInputRef: fileInputRef })}
-          icon="audio"
-          isDraggedOver={audioDragHandler?.isDraggedOver}
-          placeholderRef={audioDragHandler?.setRef}
-          size="xsmall"
-        />
-        <AudioUploadForm fileInputRef={onFileInputRef} mimeTypes={audioMimeTypes} onFileChange={handleFileChange} />
-      </>
-    )
-  }
-}
-
 function AudioThumbnail({
   mimeTypes,
   src,
   progress,
   isUploading,
   isEditing,
-  setFileInputRef,
+  fileInputRef: parentFileInputRef,
   onFileChange,
   removeThumbnail,
   isDraggedOver,
   errors,
 }: AudioThumbnailProps) {
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
-
-  const onFileInputRef = (element: HTMLInputElement | null) => {
-    fileInputRef.current = element
-    setFileInputRef(fileInputRef)
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFileChange(e)
-  }
-
-  const progressStyle = {
-    width: `${progress?.toFixed(0)}%`,
-  }
+  const { fileInputRef, onFileInputRef } = useFileInputRefTunnel(parentFileInputRef)
 
   if (isDraggedOver) {
     return (
@@ -195,7 +117,7 @@ function AudioThumbnail({
   } else if (isUploading) {
     return (
       <div className="group flex aspect-square h-20 items-center justify-center rounded-md bg-purple">
-        <ProgressBar bgStyle="transparent" style={progressStyle} />
+        <ProgressBar bgStyle="transparent" style={uploadProgressStyle(progress)} />
       </div>
     )
   } else {
@@ -205,17 +127,19 @@ function AudioThumbnail({
           className="flex size-20 cursor-pointer items-center justify-center"
           data-testid="upload-thumbnail"
           type="button"
-          onClick={() => openFileSelection({ fileInputRef: fileInputRef })}
+          onClick={() => openFileSelection({ fileInputRef })}
         >
           {(isEditing && (
             <FilePlaceholderIcon className="ease-inx size-6 text-white transition-all duration-75 group-hover:scale-105" />
           )) || <AudioFileIcon className="size-6 text-white" />}
         </button>
-        <ImageUploadForm
+        <UploadFileInput
           disabled={!isEditing}
           fileInputRef={onFileInputRef}
-          mimeTypes={mimeTypes}
-          onFileChange={handleFileChange}
+          mimeTypes={mimeTypes ?? ['image/*']}
+          name="image-input"
+          stopClickPropagation={true}
+          onFileChange={onFileChange}
         />
       </div>
     )
@@ -231,7 +155,7 @@ function PopulatedAudioCard({
   duration,
   updateTitle,
   thumbnailSrc,
-  setFileInputRef,
+  fileInputRef,
   onFileChange,
   removeThumbnail,
   thumbnailDragHandler,
@@ -258,13 +182,13 @@ function PopulatedAudioCard({
       >
         <AudioThumbnail
           errors={errors}
+          fileInputRef={fileInputRef}
           isDraggedOver={thumbnailDragHandler?.isDraggedOver}
           isEditing={isEditing}
           isUploading={isUploading}
           mimeTypes={thumbnailMimeTypes}
           progress={progress}
           removeThumbnail={removeThumbnail}
-          setFileInputRef={setFileInputRef}
           src={thumbnailSrc}
           onFileChange={onFileChange}
         />
@@ -307,27 +231,15 @@ export function AudioCard({
   removeThumbnail,
   thumbnailDragHandler,
 }: AudioCardProps) {
-  const setAudioFileInputRef = (ref: FileInputRef) => {
-    if (audioFileInputRef) {
-      audioFileInputRef.current = ref.current
-    }
-  }
-
-  const setThumbnailFileInputRef = (ref: FileInputRef) => {
-    if (thumbnailFileInputRef) {
-      thumbnailFileInputRef.current = ref.current
-    }
-  }
-
   if (src) {
     return (
       <div className="not-inkling-prose">
         <PopulatedAudioCard
           duration={duration}
+          fileInputRef={thumbnailFileInputRef}
           isEditing={isEditing}
           placeholder="Add a title..."
           removeThumbnail={removeThumbnail}
-          setFileInputRef={setThumbnailFileInputRef}
           thumbnailDragHandler={thumbnailDragHandler}
           thumbnailMimeTypes={thumbnailMimeTypes}
           thumbnailSrc={thumbnailSrc}
@@ -341,11 +253,18 @@ export function AudioCard({
   } else {
     return (
       <div className="not-inkling-prose">
-        <EmptyAudioCard
-          audioDragHandler={audioDragHandler}
-          audioMimeTypes={audioMimeTypes}
-          audioUploader={audioUploader}
-          setFileInputRef={setAudioFileInputRef}
+        <UploadPlaceholder
+          desc="Click to upload an audio file"
+          dragHandler={audioDragHandler}
+          errorDataTestId="audio-upload-errors"
+          errors={audioUploader.errors}
+          fileInputRef={audioFileInputRef}
+          icon="audio"
+          inputName="audio-input"
+          isUploading={audioUploader.isLoading}
+          mimeTypes={audioMimeTypes ?? ['audio/*']}
+          progress={audioUploader.progress}
+          size="xsmall"
           onFileChange={onAudioFileChange}
         />
       </div>

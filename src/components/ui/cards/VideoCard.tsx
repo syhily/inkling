@@ -8,12 +8,10 @@ import ImgRegularIcon from '@/assets/icons/inkling-img-regular.svg?react'
 import ImgWideIcon from '@/assets/icons/inkling-img-wide.svg?react'
 import PlayIcon from '@/assets/icons/inkling-play.svg?react'
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
-import { MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
 import { MediaPlayer } from '@/components/ui/MediaPlayer'
-import { ProgressBar } from '@/components/ui/ProgressBar'
 import { ReadOnlyOverlay } from '@/components/ui/ReadOnlyOverlay'
 import { ButtonGroupSetting, MediaUploadSetting, SettingsPanel, ToggleSetting } from '@/components/ui/SettingsPanel'
-import { openFileSelection } from '@/utils/openFileSelection'
+import { UploadingOverlay, UploadPlaceholder } from '@/components/ui/UploadChrome'
 
 interface PopulatedVideoCardProps {
   thumbnail: string
@@ -48,10 +46,6 @@ function PopulatedVideoCard({
   thumbnailMimeTypes,
   thumbnailDragHandler,
 }: PopulatedVideoCardProps) {
-  const progressStyle = {
-    width: `${videoUploader?.progress?.toFixed(0) ?? '0'}%`,
-  }
-
   const buttonGroupChildren = [
     {
       label: 'Regular',
@@ -99,12 +93,7 @@ function PopulatedVideoCard({
         <ReadOnlyOverlay />
       </div>
       {videoUploader?.isLoading && (
-        <div
-          className="absolute inset-0 flex min-w-full items-center justify-center overflow-hidden bg-white/50"
-          data-testid="video-progress"
-        >
-          <ProgressBar bgStyle="transparent" style={progressStyle} />
-        </div>
+        <UploadingOverlay bgStyle="transparent" dataTestId="video-progress" progress={videoUploader?.progress} />
       )}
 
       {!!thumbnail && !videoUploader?.isLoading && isEditing && (
@@ -141,46 +130,6 @@ function PopulatedVideoCard({
           />
         </SettingsPanel>
       )}
-    </>
-  )
-}
-
-interface EmptyVideoCardProps {
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  fileInputRef: RefObject<HTMLInputElement | null>
-  errors?: Array<{ message?: string }>
-  videoMimeTypes?: string[]
-  videoDragHandler?: DragHandlerLike
-}
-
-function EmptyVideoCard({
-  onFileChange,
-  fileInputRef,
-  errors,
-  videoMimeTypes = [],
-  videoDragHandler,
-}: EmptyVideoCardProps) {
-  return (
-    <>
-      <MediaPlaceholder
-        desc="Click to select a video"
-        errors={errors}
-        filePicker={() => openFileSelection({ fileInputRef })}
-        icon="video"
-        size="small"
-        isDraggedOver={videoDragHandler?.isDraggedOver}
-        placeholderRef={videoDragHandler?.setRef}
-      />
-      <form>
-        <input
-          ref={fileInputRef}
-          accept={videoMimeTypes.join(',')}
-          hidden={true}
-          name="image-input"
-          type="file"
-          onChange={onFileChange}
-        />
-      </form>
     </>
   )
 }
@@ -230,11 +179,15 @@ export function VideoCard({
       {showPopulatedCard ? (
         <PopulatedVideoCard {...props} isEditing={isEditing} videoUploader={videoUploader} />
       ) : (
-        <EmptyVideoCard
+        <UploadPlaceholder
+          desc="Click to select a video"
+          dragHandler={videoDragHandler}
           errors={videoUploadErrors}
           fileInputRef={fileInputRef}
-          videoDragHandler={videoDragHandler}
-          videoMimeTypes={videoMimeTypes}
+          icon="video"
+          inputName="video-input"
+          mimeTypes={videoMimeTypes}
+          size="small"
           onFileChange={onVideoFileChange}
         />
       )}

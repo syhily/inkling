@@ -35,7 +35,7 @@ export interface CardActionToolbarProps {
   // defaults to [edit, separator, snippet]
   items?: CardToolbarItem[]
   // extra content rendered inside the menu toolbar before the menu itself
-  // (image's ImageUploadForm)
+  // (image's UploadFileInput)
   beforeMenu?: React.ReactNode
 }
 

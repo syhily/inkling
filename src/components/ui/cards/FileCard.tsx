@@ -1,21 +1,8 @@
 import type { DragHandlerLike, FileInputRef, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
 
 import FileUploadIcon from '@/assets/icons/inkling-file-upload.svg?react'
-import FileUploadForm from '@/components/ui/FileUploadForm'
-import { MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
-import { ProgressBar } from '@/components/ui/ProgressBar'
 import { TextInput } from '@/components/ui/TextInput'
-import { openFileSelection } from '@/utils/openFileSelection'
-
-interface FileUploadingProps {
-  progress?: number
-}
-
-interface EmptyFileCardProps {
-  handleSelectorClick: () => void
-  fileDragHandler: DragHandlerLike
-  errors?: Error[] | { message?: string }[]
-}
+import { UploadingPanel, UploadPlaceholder } from '@/components/ui/UploadChrome'
 
 interface PopulatedFileCardProps {
   isEditing?: boolean
@@ -44,36 +31,6 @@ export interface FileCardProps {
   handleFileTitle: (e: React.ChangeEvent<HTMLInputElement>) => void
   handleFileDesc: (e: React.ChangeEvent<HTMLInputElement>) => void
   fileUploader?: FileUploaderLike
-}
-
-function FileUploading({ progress }: FileUploadingProps) {
-  const progressStyle = {
-    width: `${progress?.toFixed(0)}%`,
-  }
-
-  return (
-    <div className="h-full border border-transparent">
-      <div className="relative flex h-full items-center justify-center border border-grey/20 bg-grey-50 before:pb-[12.5%] dark:bg-grey-900">
-        <div className="flex w-full items-center justify-center overflow-hidden">
-          <ProgressBar style={progressStyle} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function EmptyFileCard({ handleSelectorClick, fileDragHandler, errors }: EmptyFileCardProps) {
-  return (
-    <MediaPlaceholder
-      desc="Click to upload a file"
-      errors={errors}
-      filePicker={() => handleSelectorClick()}
-      icon="file"
-      isDraggedOver={fileDragHandler.isDraggedOver}
-      placeholderRef={fileDragHandler.setRef}
-      size="xsmall"
-    />
-  )
 }
 
 function PopulatedFileCard({
@@ -155,21 +112,9 @@ export function FileCard({
   fileUploader,
 }: FileCardProps) {
   const { isLoading: isUploading, progress, errors } = fileUploader || {}
-  const onFileInputRef = (element: HTMLInputElement | null) => {
-    if (fileInputRef) {
-      fileInputRef.current = element
-    }
-  }
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFileChange(e)
-  }
-  const handleOpenFileSelection = () => {
-    if (fileInputRef) {
-      openFileSelection({ fileInputRef })
-    }
-  }
+
   if (isUploading) {
-    return <FileUploading progress={progress} />
+    return <UploadingPanel progress={progress} />
   }
   if (isPopulated) {
     return (
@@ -188,9 +133,15 @@ export function FileCard({
   }
 
   return (
-    <>
-      <EmptyFileCard errors={errors} fileDragHandler={fileDragHandler} handleSelectorClick={handleOpenFileSelection} />
-      <FileUploadForm fileInputRef={onFileInputRef} onFileChange={handleFileChange} />
-    </>
+    <UploadPlaceholder
+      desc="Click to upload a file"
+      dragHandler={fileDragHandler}
+      errors={errors}
+      fileInputRef={fileInputRef}
+      icon="file"
+      inputName="file-input"
+      onFileChange={onFileChange}
+      size="xsmall"
+    />
   )
 }

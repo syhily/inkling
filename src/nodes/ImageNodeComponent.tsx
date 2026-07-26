@@ -15,8 +15,8 @@ import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { CardActionToolbar, useCardToolbarLabel } from '@/components/ui/CardActionToolbar'
 import { ImageCard } from '@/components/ui/cards/ImageCard'
-import { ImageUploadForm } from '@/components/ui/ImageUploadForm'
 import { LinkInput } from '@/components/ui/LinkInput'
+import { UploadFileInput } from '@/components/ui/UploadChrome'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
 import { useCardWriter } from '@/hooks/useCardWriter'
@@ -338,9 +338,11 @@ export function ImageNodeComponent({
 
       <CardActionToolbar
         beforeMenu={
-          <ImageUploadForm
+          <UploadFileInput
             fileInputRef={toolbarFileInputRef}
             mimeTypes={fileUploader.fileTypes?.image?.mimeTypes ?? []}
+            name="image-input"
+            stopClickPropagation={true}
             onFileChange={onFileChange}
           />
         }
