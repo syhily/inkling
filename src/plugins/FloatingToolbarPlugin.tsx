@@ -14,7 +14,14 @@ import React from 'react'
 import { FloatingFormatToolbar } from '@/components/ui/FloatingFormatToolbar'
 import { FloatingLinkToolbar } from '@/components/ui/FloatingLinkToolbar'
 import { $isAtLinkSearchNode } from '@/nodes/base'
-import { $getLinkHrefAtSelection, createToolbarSession, type ToolbarSession } from '@/plugins/behaviour/link-editing'
+import {
+  $getLinkHrefAtSelection,
+  createLinkHoverFeed,
+  createToolbarSession,
+  LINK_HOVER_DEBOUNCE_MS,
+  type ToolbarSession,
+} from '@/plugins/behaviour/link-editing'
+import { debounce } from '@/utils'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
 export default function FloatingToolbarPlugin({
@@ -36,15 +43,31 @@ function useFloatingFormatToolbar(
   isSnippetsEnabled?: boolean,
   hiddenFormats: string[] = [],
 ) {
-  // the toolbar session (hidden | text | link | snippet) lives in the headless
-  // link-editing module; this hook only feeds it selection/DOM events and
-  // renders its state
+  // the toolbar session (hidden | text | link | snippet, plus the hovered-link
+  // slot) lives in the headless link-editing module; this hook only feeds it
+  // selection/DOM events and renders its state
   const sessionRef = React.useRef<ToolbarSession | null>(null)
   if (!sessionRef.current) {
     sessionRef.current = createToolbarSession()
   }
   const session = sessionRef.current
-  const { type, href } = React.useSyncExternalStore(session.handle.subscribe, session.handle.getState)
+  const { type, href, hoveredLink } = React.useSyncExternalStore(session.handle.subscribe, session.handle.getState)
+
+  // the hover toolbar's element, so the hover feed can ignore mousemoves over
+  // the toolbar itself (they must not clear the hovered link)
+  const linkToolbarRef = React.useRef<HTMLDivElement | null>(null)
+
+  // the hover feed: debounced document mousemoves in, hovered-link truth out
+  // into the session (suppressed by the session while any toolbar is open)
+  React.useEffect(() => {
+    const hoverFeed = createLinkHoverFeed(editor, session, { getToolbarElement: () => linkToolbarRef.current })
+    const onMouseMove = debounce((event: MouseEvent) => hoverFeed.hover(event.target), LINK_HOVER_DEBOUNCE_MS)
+    document.addEventListener('mousemove', onMouseMove)
+    return () => {
+      onMouseMove.cancel()
+      document.removeEventListener('mousemove', onMouseMove)
+    }
+  }, [editor, session])
 
   const syncToolbarToSelection = React.useCallback(() => {
     editor.getEditorState().read(() => {
@@ -149,8 +172,10 @@ function useFloatingFormatToolbar(
 
       <FloatingLinkToolbar
         anchorElem={anchorElem}
-        disabled={type !== 'hidden'} // don't show link toolbar on hover when format toolbar is active
+        hoveredLink={hoveredLink}
+        toolbarRef={linkToolbarRef}
         onEditLink={({ href: editHref }) => session.openLink(editHref)}
+        onRemoveLink={() => session.syncHover(null)}
       />
     </>
   )

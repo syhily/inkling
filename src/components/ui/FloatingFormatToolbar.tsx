@@ -1,6 +1,5 @@
 import type { LexicalEditor } from 'lexical'
 
-import { $getSelection, $isRangeSelection } from 'lexical'
 import React from 'react'
 
 import FloatingToolbar from '@/components/ui/FloatingToolbar'
@@ -9,12 +8,8 @@ import { LinkActionToolbarWithSearch } from '@/components/ui/LinkActionToolbarWi
 import { LinkInput } from '@/components/ui/LinkInput'
 import { SnippetActionToolbar } from '@/components/ui/SnippetActionToolbar'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { $applyLinkToSelection } from '@/plugins/behaviour/link-editing'
+import { $applyLinkToSelection, createToolbarRevealFeed } from '@/plugins/behaviour/link-editing'
 import { debounce } from '@/utils'
-
-// don't show the toolbar until the mouse has moved a certain distance,
-// avoids accidental toolbar display when clicking buttons that select content
-const MOUSE_MOVE_THRESHOLD = 5
 
 export const toolbarItemTypes = {
   snippet: 'snippet',
@@ -50,83 +45,36 @@ export function FloatingFormatToolbar({
 
   const isLinkSearchToolbarVisible = toolbarItemType === toolbarItemTypes.link && isLinkSearchEnabled
 
-  // toolbar opacity is 0 by default
-  // shouldn't display until selection via mouse is complete to avoid toolbar re-positioning while dragging
-  const showToolbarIfHidden = React.useCallback(() => {
+  // toolbar opacity is 0 by default; the reveal feed flips it once the
+  // selection gesture completes (mouseup inside the selection, or a threshold
+  // mousemove) so the toolbar does not re-position while dragging
+  const reveal = React.useCallback(() => {
     if (toolbarItemType && toolbarRef.current?.style.opacity === '0') {
       toolbarRef.current.style.opacity = '1'
     }
   }, [toolbarItemType])
 
   React.useEffect(() => {
-    const toggle = (e: Event) => {
-      editor.getEditorState().read(() => {
-        const selection = $getSelection()
-        if ($isRangeSelection(selection)) {
-          const target = e.target
-          const selectedNodeMatchesTarget = selection.getNodes().find((node) => {
-            const element = editor.getElementByKey(node.getKey())
-            return element && target instanceof Node && (element.contains(target) || target.contains(element))
-          })
+    const revealFeed = createToolbarRevealFeed(editor, { reveal })
+    const onRelease = (event: Event) => revealFeed.release(event.target)
+    const onMouseMove = debounce(
+      (event: MouseEvent) => revealFeed.move({ x: event.clientX, y: event.clientY }, event.buttons),
+      10,
+    )
 
-          if (selectedNodeMatchesTarget) {
-            showToolbarIfHidden()
-          }
-        }
-      })
-    }
-
-    document.addEventListener('mouseup', toggle) // desktop
-    document.addEventListener('touchend', toggle) // mobile
+    document.addEventListener('mouseup', onRelease) // desktop
+    document.addEventListener('touchend', onRelease) // mobile
+    document.addEventListener('mousemove', onMouseMove)
 
     return () => {
-      document.removeEventListener('mouseup', toggle) // desktop
-      document.removeEventListener('touchend', toggle) // mobile
+      onMouseMove.cancel()
+      document.removeEventListener('mouseup', onRelease) // desktop
+      document.removeEventListener('touchend', onRelease) // mobile
+      document.removeEventListener('mousemove', onMouseMove)
     }
-  }, [editor, showToolbarIfHidden])
+  }, [editor, reveal])
 
   const handleActionToolbarClose = onClose
-
-  React.useEffect(() => {
-    let initialPosition: { x: number; y: number } | null = null
-
-    const onMouseMove = (e: MouseEvent) => {
-      // ignore drag events
-      if (e.buttons > 0) {
-        return
-      }
-
-      // avoid toggling toolbar until mouse has moved a certain distance
-      if (!initialPosition) {
-        initialPosition = { x: e.clientX, y: e.clientY }
-      }
-
-      const distanceMoved = Math.sqrt(
-        Math.pow(e.clientX - initialPosition.x, 2) + Math.pow(e.clientY - initialPosition.y, 2),
-      )
-
-      if (distanceMoved < MOUSE_MOVE_THRESHOLD) {
-        return
-      }
-
-      // reset initial position after threshold is met
-      initialPosition = null
-
-      // should not show floating toolbar when we don't have a text selection
-      editor.getEditorState().read(() => {
-        const selection = $getSelection()
-        if (selection === null || !$isRangeSelection(selection)) {
-          return
-        }
-        showToolbarIfHidden()
-      })
-    }
-    const debouncedOnMouseMove = debounce(onMouseMove, 10)
-    document.addEventListener('mousemove', debouncedOnMouseMove)
-    return () => {
-      document.removeEventListener('mousemove', debouncedOnMouseMove)
-    }
-  }, [editor, showToolbarIfHidden])
 
   const isSnippetToolbar = toolbarItemTypes.snippet === toolbarItemType
   const isLinkToolbar = toolbarItemTypes.link === toolbarItemType
