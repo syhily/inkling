@@ -3,9 +3,6 @@ import type { LexicalEditor } from 'lexical'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
   mergeRegister,
-  $getSelection,
-  $isParagraphNode,
-  $isRangeSelection,
   COMMAND_PRIORITY_HIGH,
   KEY_ARROW_DOWN_COMMAND,
   KEY_ARROW_LEFT_COMMAND,
@@ -20,12 +17,14 @@ import { SlashMenu } from '@/components/ui/SlashMenu'
 import { createMenuNavigator, type MenuNavigator } from '@/hooks/card-menu-navigation'
 import { useCardMenu } from '@/hooks/useCardMenu'
 import { useCardMenuSession } from '@/hooks/useCardMenuSession'
+import { isSlashTriggerPress, registerSlashCardMenuTrigger } from '@/plugins/behaviour/card-menu-trigger'
 import trackEvent from '@/utils/analytics'
-import { getSelectedNode } from '@/utils/getSelectedNode'
 
 function useSlashCardMenu(editor: LexicalEditor) {
-  // the popup session (cursor lease, close policy) lives in useCardMenuSession;
-  // this plugin keeps the slash trigger, the query state, and the anchoring
+  // the popup session (cursor lease, close policy) lives in useCardMenuSession
+  // and the trigger policy (valid-press grammar, query extraction, close
+  // verdicts) in @/plugins/behaviour/card-menu-trigger; this plugin keeps the
+  // keypress wiring, the query state, and the anchoring
   const {
     containerRef,
     isOpen: isShowingMenu,
@@ -50,6 +49,12 @@ function useSlashCardMenu(editor: LexicalEditor) {
     menuNavigator.getSnapshot,
   )
 
+  // positioning stays plugin-side on purpose: the selection-anchored popup
+  // seam (src/utils/selection-anchored-popup.ts) positions fixed, spans the
+  // container's full width, and flips on a scroll-container overflow budget —
+  // this menu is absolutely positioned at natural width under the trigger
+  // paragraph and flips on measured viewport overflow (only when it also fits
+  // above), so routing through the seam would move the menu.
   const setMenuPosition = React.useCallback(
     (elem: HTMLElement | null) => {
       if (!elem) {
@@ -115,108 +120,35 @@ function useSlashCardMenu(editor: LexicalEditor) {
     [insertCardItem, closeSessionMenu],
   )
 
-  // close menu if selection moves out of the slash command
-  // update the search query when typing
+  // apply the trigger's update verdicts: close the menu, or lease the cursor
+  // range to the session (Escape restores it — Escape always blurs the
+  // contenteditable, which we don't want) and track the typed query
   React.useEffect(() => {
-    return editor.registerUpdateListener(() => {
-      editor.getEditorState().read(() => {
-        // don't do anything when using IME input
-        if (editor.isComposing()) {
-          return
-        }
-
-        const selection = $getSelection()
-
-        if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
-          const nativeSelection = window.getSelection()
-          const anchorParent = nativeSelection?.anchorNode?.parentNode
-          const isMenuSection = anchorParent instanceof HTMLElement ? anchorParent.dataset.cardMenuSection : undefined
-
-          // don't close the menu if the selection inside the card section
-          if (isMenuSection) {
-            return
-          }
-
+    return registerSlashCardMenuTrigger(editor, {
+      onVerdict: (verdict) => {
+        if (verdict.type === 'close') {
           closeSessionMenu()
           return
         }
 
-        const node = getSelectedNode(selection).getTopLevelElement()
-
-        if (!node || !$isParagraphNode(node) || !node.getTextContent().startsWith('/')) {
-          closeSessionMenu()
-          return
-        }
-
-        const nativeSelection = window.getSelection()
-        const anchorNode = nativeSelection?.anchorNode
-        const rootElement = editor.getRootElement()
-
-        if (anchorNode?.nodeType !== Node.TEXT_NODE || !rootElement?.contains(anchorNode)) {
-          closeSessionMenu()
-          return
-        }
-
-        // lease the cursor range to the session so Escape can restore it —
-        // Escape always blurs the contenteditable, which we don't want
-        if (nativeSelection) {
-          saveCursor(nativeSelection.getRangeAt(0))
-        }
-
-        // capture text after the / as a query for filtering cards
-        const command = node.getTextContent().slice(1)
-        const [q, ...cps] = command.split(' ')
-        setQuery(q)
-        setCommandParams(cps)
-      })
+        saveCursor(verdict.cursorRange)
+        setQuery(verdict.query)
+        setCommandParams(verdict.commandParams)
+      },
     })
-  }, [editor, isShowingMenu, closeSessionMenu, saveCursor])
+  }, [editor, closeSessionMenu, saveCursor])
 
-  // open the menu when / is pressed on a blank paragraph
+  // open the menu when / is pressed on a blank paragraph — the valid-press
+  // grammar lives in the trigger module; this is only the keypress wiring
   React.useEffect(() => {
     if (isShowingMenu) {
       return
     }
 
     const triggerMenu = (event: KeyboardEvent) => {
-      const { key, isComposing, ctrlKey, metaKey } = event
-
-      // we only care about / presses when not composing or pressed with modifiers
-      if (key !== '/' || isComposing || ctrlKey || metaKey) {
-        return
+      if (isSlashTriggerPress(editor, event)) {
+        openMenu()
       }
-
-      // ignore if editor doesn't have focus
-      const rootElement = editor.getRootElement()
-      if (!rootElement?.matches(':focus')) {
-        return
-      }
-
-      // potentially valid / press
-      editor.getEditorState().read(() => {
-        const selection = $getSelection()
-        if (!$isRangeSelection(selection)) {
-          return
-        }
-        const node = getSelectedNode(selection).getTopLevelElement()
-
-        // ignore if selection is not on a top-level paragraph
-        if (!node || !$isParagraphNode(node)) {
-          return
-        }
-
-        const paragraphSize = node.getTextContentSize()
-        const isEmptyParagraph = selection.isCollapsed() && node.getTextContent() === ''
-        // if full paragraph is selected, pressing / will replace it so that's a valid press
-        const isFullParagraphSelection =
-          !selection.isCollapsed() &&
-          ((selection.anchor.offset === 0 && selection.focus.offset === paragraphSize) ||
-            (selection.anchor.offset === paragraphSize && selection.focus.offset === 0))
-
-        if (isEmptyParagraph || isFullParagraphSelection) {
-          openMenu()
-        }
-      })
     }
 
     window.addEventListener('keypress', triggerMenu)

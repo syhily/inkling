@@ -1,19 +1,26 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getSelection, $isParagraphNode, $isRangeSelection, $setSelection, type LexicalEditor } from 'lexical'
+import { $setSelection, type LexicalEditor } from 'lexical'
 import React from 'react'
 
 import { CardMenu } from '@/components/ui/CardMenu'
 import { PlusButton, PlusMenu } from '@/components/ui/PlusMenu'
 import { useCardMenu } from '@/hooks/useCardMenu'
 import { useCardMenuSession } from '@/hooks/useCardMenuSession'
-import { getSelectedNode } from '@/utils/getSelectedNode'
+import {
+  registerPlusCardMenuTrigger,
+  resolvePlusHoverButtonVerdict,
+  shouldHidePlusButtonOnSelectionChange,
+  type PlusButtonVerdict,
+} from '@/plugins/behaviour/card-menu-trigger'
 
 function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
   // the popup session (cursor lease, close policy, Escape/outside-mousedown)
-  // lives in useCardMenuSession; this plugin keeps the plus-button trigger and
-  // its anchoring. cachedRange here is the button's anchor — a copy is leased
-  // to the session when the menu opens so closes can release it without
-  // losing the button's position.
+  // lives in useCardMenuSession and the trigger policy (caret/hover verdicts,
+  // the selectionchange hide rule) in @/plugins/behaviour/card-menu-trigger;
+  // this plugin keeps the mousemove/selectionchange wiring and the button's
+  // anchoring. cachedRange here is the button's anchor — a copy is leased to
+  // the session when the menu opens so closes can release it without losing
+  // the button's position.
   const {
     containerRef,
     isOpen: isShowingMenu,
@@ -76,39 +83,20 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
     [editor, cachedRange, saveCursor, restoreCursor, openSessionMenu],
   )
 
-  const updateButton = React.useCallback(() => {
-    editor.getEditorState().read(() => {
-      if (editor.isComposing()) {
-        return
-      }
-
-      const selection = $getSelection()
-
-      if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
+  // apply a trigger verdict: anchor the button to the verdict's paragraph or
+  // hide it (a null verdict — composing, hover outside the editor — is
+  // filtered before this runs)
+  const applyButtonVerdict = React.useCallback(
+    (verdict: PlusButtonVerdict) => {
+      if (verdict.type === 'show') {
+        setTopPosition(getTopPosition(verdict.paragraph))
+        showButton(verdict.paragraph)
+      } else {
         hideButton()
-        return
       }
-
-      const node = getSelectedNode(selection)
-
-      if (!$isParagraphNode(node) || node.getTextContent() !== '') {
-        hideButton()
-        return
-      }
-
-      const nativeSelection = window.getSelection()
-      const p = nativeSelection?.anchorNode
-      const rootElement = editor.getRootElement()
-
-      if (!p || !(p instanceof Element) || p.tagName !== 'P' || !rootElement?.contains(p)) {
-        hideButton()
-        return
-      }
-
-      setTopPosition(getTopPosition(p))
-      showButton(p)
-    })
-  }, [editor, showButton, hideButton])
+    },
+    [showButton, hideButton],
+  )
 
   const { cardMenu, insert: insertCardItem } = useCardMenu(editor)
 
@@ -120,26 +108,24 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
     [insertCardItem, closeMenu],
   )
 
+  // the caret-based button verdicts arrive through the trigger registration
   React.useEffect(() => {
-    return editor.registerUpdateListener(() => {
-      updateButton()
-    })
-  }, [editor, updateButton])
+    return registerPlusCardMenuTrigger(editor, { onVerdict: applyButtonVerdict })
+  }, [editor, applyButtonVerdict])
 
   const hideButtonOnOutsideSelection = React.useCallback(() => {
-    if (isShowingButton) {
-      const nativeSelection = window.getSelection()
+    if (!isShowingButton) {
+      return
+    }
 
-      if (isShowingMenu && containerRef.current?.contains(nativeSelection?.anchorNode ?? null)) {
-        return
-      }
+    const shouldHide = shouldHidePlusButtonOnSelectionChange(
+      window.getSelection()?.anchorNode ?? null,
+      editor.getRootElement(),
+      isShowingMenu ? containerRef.current : null,
+    )
 
-      const rootElement = editor.getRootElement()
-      const anchorNode = nativeSelection?.anchorNode
-
-      if (!anchorNode || !rootElement?.contains(anchorNode)) {
-        hideButton()
-      }
+    if (shouldHide) {
+      hideButton()
     }
   }, [editor, isShowingButton, isShowingMenu, hideButton, containerRef])
 
@@ -150,35 +136,21 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
     }
   }, [hideButtonOnOutsideSelection])
 
+  // the hover policy (elementFromPoint hit-testing, the left-gutter fudge)
+  // lives in the trigger module; this is only the mousemove wiring
   const updateButtonOnMousemove = React.useCallback(
     (event: MouseEvent) => {
       if (isShowingMenu) {
         return
       }
 
-      const rootElement = editor.getRootElement()
-      if (!rootElement) {
-        return
-      }
-      let { pageX, pageY } = event
+      const verdict = resolvePlusHoverButtonVerdict(editor, event.pageX, event.pageY)
 
-      const containerRect = rootElement.getBoundingClientRect()
-      if (pageX < containerRect.left) {
-        pageX = pageX + 40
-      }
-
-      const hoveredElem = document.elementFromPoint(pageX, pageY)
-
-      if (hoveredElem && rootElement.contains(hoveredElem) && !hoveredElem.closest('[data-inkling-card]')) {
-        if (hoveredElem.tagName === 'P' && hoveredElem.textContent === '') {
-          setTopPosition(getTopPosition(hoveredElem))
-          showButton(hoveredElem)
-        } else {
-          updateButton()
-        }
+      if (verdict) {
+        applyButtonVerdict(verdict)
       }
     },
-    [editor, isShowingMenu, setTopPosition, showButton, updateButton],
+    [editor, isShowingMenu, applyButtonVerdict],
   )
 
   React.useEffect(() => {
