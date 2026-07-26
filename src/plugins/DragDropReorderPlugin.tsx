@@ -1,23 +1,22 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import {
-  $createNodeSelection,
-  $getNearestNodeFromDOMNode,
-  $getNodeByKey,
-  $getRoot,
-  $setSelection,
-  type LexicalEditor,
-} from 'lexical'
+import { $getNearestNodeFromDOMNode, $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import React from 'react'
 import { flushSync } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 
+import type { ImageNodeDataset } from '@/nodes/ImageNode'
 import type { CardNode } from '@/types/lexical-internals'
 
 import { useDragDropHandle } from '@/context/DragDropHandleContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
 import { useDragDropState } from '@/hooks/useDragDropState'
 import { getCardDragIcon } from '@/nodes/cards/card-menus'
-import { $createImageNode } from '@/nodes/ImageNode'
+import {
+  $insertDraggedImage,
+  $relocateCard,
+  $removeDropSource,
+  shouldRemoveDropSource,
+} from '@/plugins/behaviour/drop-surgery'
 import {
   type DraggableInfo,
   type DroppablePosition,
@@ -177,47 +176,17 @@ function useDragDropReorder(editor: LexicalEditor): void {
         editor.update(() => {
           // change card order on card drops
           if (draggableInfo.type === 'card') {
-            const draggedNode = draggableInfo.nodeKey ? $getNodeByKey(draggableInfo.nodeKey) : null
-            if (!draggedNode) {
-              return
+            if ($relocateCard(draggableInfo.nodeKey, droppables, insertIndex)) {
+              // the card was re-ordered in place, not moved inside another
+              // card — onDropEnd must not remove the source
+              result = { success: true, sourceHandled: true }
             }
-
-            if (insertIndex >= droppables.length) {
-              // drop at end of document
-              const targetNode = $getNearestNodeFromDOMNode(droppables[droppables.length - 1])
-              if (targetNode) {
-                targetNode.insertAfter(draggedNode)
-              }
-            } else {
-              const targetNode = $getNearestNodeFromDOMNode(droppables[insertIndex])
-              if (targetNode) {
-                targetNode.insertBefore(draggedNode)
-              }
-            }
-
-            // clear selection so we don't show any toolbars immediately and the
-            // cursor isn't left stranded somewhere else in the document
-            $setSelection(null)
-
-            // the card was re-ordered in place, not moved inside another
-            // card — onDropEnd must not remove the source
-            result = { success: true, sourceHandled: true }
             return
           }
 
           // insert new image node on image drops
           if (draggableInfo.type === 'image') {
-            const targetNode = $getNearestNodeFromDOMNode(droppables[insertIndex])
-            if (targetNode) {
-              const imageNode = $createImageNode(draggableInfo.dataset as Parameters<typeof $createImageNode>[0])
-              targetNode.insertBefore(imageNode)
-
-              // select the newly inserted image card
-              const nodeSelection = $createNodeSelection()
-              nodeSelection.add(imageNode.getKey())
-              $setSelection(nodeSelection)
-            }
-
+            $insertDraggedImage(draggableInfo.dataset as ImageNodeDataset, droppables, insertIndex)
             result = true
           }
         })
@@ -236,15 +205,12 @@ function useDragDropReorder(editor: LexicalEditor): void {
       // a card can be dropped into another card which means we need to remove the original
       onDropEnd: (draggableInfo: DraggableInfo, success: boolean, sourceHandled: boolean): void => {
         // avoid removing the card if it's just a re-order or no move occurred
-        if (sourceHandled || !success || draggableInfo.type !== 'card') {
+        if (!shouldRemoveDropSource(draggableInfo.type, success, sourceHandled)) {
           return
         }
 
         editor.update(() => {
-          const cardNode = draggableInfo.nodeKey ? $getNodeByKey(draggableInfo.nodeKey) : null
-          if (cardNode) {
-            cardNode.remove(false)
-          }
+          $removeDropSource(draggableInfo.nodeKey)
         })
       },
     },
