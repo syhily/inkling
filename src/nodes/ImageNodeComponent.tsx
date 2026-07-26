@@ -19,12 +19,12 @@ import { ImageUploadForm } from '@/components/ui/ImageUploadForm'
 import { LinkInput } from '@/components/ui/LinkInput'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
+import { useCardWriter } from '@/hooks/useCardWriter'
 import useDropTarget from '@/hooks/useDropTarget'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
-import { $updateCardNode } from '@/nodes/base'
 import { isCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 import { $createGalleryNode } from '@/nodes/GalleryNode'
 import { $isImageNode } from '@/nodes/ImageNode'
@@ -77,6 +77,7 @@ export function ImageNodeComponent({
   cardWidth,
 }: ImageNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
+  const write = useCardWriter(nodeKey, $isImageNode)
   const [showLink, setShowLink] = React.useState(false)
   const { fileUploader, cardConfig, onError } = React.useContext(InklingHostIntegrationContext)
   const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
@@ -207,11 +208,9 @@ export function ImageNodeComponent({
     const populateImageDimensions = async () => {
       if (src && !initialFile && !triggerFileDialog) {
         const { width, height } = await getImageDimensions(src)
-        editor.update(() => {
-          $updateCardNode(nodeKey, $isImageNode, (node) => {
-            node.width = width
-            node.height = height
-          })
+        write((node) => {
+          node.width = width
+          node.height = height
         })
       }
     }
@@ -246,18 +245,14 @@ export function ImageNodeComponent({
   }
 
   const setHref = (newHref: string) => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isImageNode, (node) => {
-        node.href = newHref
-      })
+    write((node) => {
+      node.href = newHref
     })
   }
 
   const setAltText = (newAltText: string) => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isImageNode, (node) => {
-        node.alt = newAltText
-      })
+    write((node) => {
+      node.alt = newAltText
     })
   }
 
@@ -271,13 +266,11 @@ export function ImageNodeComponent({
 
       // the node write is enough: decorate() re-reads cardWidth on the commit
       // and the new width arrives as the cardWidth prop
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isImageNode, (node) => {
-          node.cardWidth = newWidth // this is a property on the node, not the card
-        })
+      write((node) => {
+        node.cardWidth = newWidth // this is a property on the node, not the card
       })
     },
-    [allowedImageCardWidths, editor, nodeKey],
+    [allowedImageCardWidths, write],
   )
 
   React.useEffect(() => {

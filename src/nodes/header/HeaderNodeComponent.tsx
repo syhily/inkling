@@ -1,4 +1,3 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import { useContext, useEffect, useRef, useState } from 'react'
 
@@ -8,9 +7,9 @@ import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
+import { useCardWriter } from '@/hooks/useCardWriter'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
-import { $updateCardNode } from '@/nodes/base'
 import { $isHeaderNode } from '@/nodes/HeaderNode'
 import { getAccentColor } from '@/utils/getAccentColor'
 import { openFileSelection } from '@/utils/openFileSelection'
@@ -65,7 +64,7 @@ function HeaderNodeComponent({
   isSwapped,
   accentColor,
 }: HeaderNodeComponentProps) {
-  const [editor] = useLexicalComposerContext()
+  const write = useCardWriter(nodeKey, $isHeaderNode)
   const { cardConfig, fileUploader } = useContext(InklingHostIntegrationContext)
   const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
   const [showBackgroundImage, setShowBackgroundImage] = useState<boolean>(Boolean(backgroundImageSrc))
@@ -95,27 +94,21 @@ function HeaderNodeComponent({
     const accent = getAccentColor()
 
     if (accent) {
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-          node.accentColor = accent
-        })
+      write((node) => {
+        node.accentColor = accent
       })
     }
-  }, [editor, nodeKey])
+  }, [write])
 
   const handleAlignment = (a: string): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.alignment = a
-      })
+    write((node) => {
+      node.alignment = a
     })
   }
 
   const handleBackgroundSize = (a: string): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.backgroundSize = a
-      })
+    write((node) => {
+      node.backgroundSize = a
     })
   }
 
@@ -123,10 +116,8 @@ function HeaderNodeComponent({
 
   const handleImageChange = async (files: FileList | File[] | null): Promise<void> => {
     // reset original src so it can be replaced with preview and upload progress
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.backgroundImageSrc = ''
-      })
+    write((node) => {
+      node.backgroundImageSrc = ''
     })
 
     const bgResult = await backgroundImageUploadHandler(files, imageUploader.upload)
@@ -134,12 +125,10 @@ function HeaderNodeComponent({
     const width = bgResult?.width ?? 0
     const height = bgResult?.height ?? 0
 
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.backgroundImageSrc = imageSrc ?? ''
-        node.backgroundImageWidth = width
-        node.backgroundImageHeight = height
-      })
+    write((node) => {
+      node.backgroundImageSrc = imageSrc ?? ''
+      node.backgroundImageWidth = width
+      node.backgroundImageHeight = height
     })
 
     setLastBackgroundImage(imageSrc ?? '')
@@ -153,36 +142,28 @@ function HeaderNodeComponent({
   const imageDragHandler = useFileDragAndDrop({ handleDrop: handleImageChange })
 
   const handleLayout = (l: string): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.layout = l
-      })
+    write((node) => {
+      node.layout = l
     })
   }
 
   const handleButtonText = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.buttonText = event.target.value
-      })
+    write((node) => {
+      node.buttonText = event.target.value
     })
   }
 
   const handleButtonTextBlur = (event: React.FocusEvent<HTMLInputElement>): void => {
     if (!event.target.value) {
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-          node.buttonText = ''
-        })
+      write((node) => {
+        node.buttonText = ''
       })
     }
   }
 
   const handleClearBackgroundImage = (): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.backgroundImageSrc = ''
-      })
+    write((node) => {
+      node.backgroundImageSrc = ''
     })
     setImageRemoved(true)
   }
@@ -191,10 +172,8 @@ function HeaderNodeComponent({
     setShowBackgroundImage(true)
 
     if (lastBackgroundImage && !imageRemoved) {
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-          node.backgroundImageSrc = lastBackgroundImage
-        })
+      write((node) => {
+        node.backgroundImageSrc = lastBackgroundImage
       })
     } else {
       openFileSelection({ fileInputRef })
@@ -203,73 +182,57 @@ function HeaderNodeComponent({
 
   const handleHideBackgroundImage = (): void => {
     setShowBackgroundImage(false)
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.backgroundImageSrc = ''
-      })
+    write((node) => {
+      node.backgroundImageSrc = ''
     })
   }
 
   const handleBackgroundColor = (color: string, matchingTextColor: string): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.backgroundColor = color
-        node.textColor = matchingTextColor
+    write((node) => {
+      node.backgroundColor = color
+      node.textColor = matchingTextColor
 
-        if (layout !== 'split') {
-          handleHideBackgroundImage()
-        }
-      })
+      if (layout !== 'split') {
+        handleHideBackgroundImage()
+      }
     })
   }
 
   const handleTextColor = (color: string): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.textColor = color
-      })
+    write((node) => {
+      node.textColor = color
     })
   }
 
   const handleButtonColor = (color: string, matchingTextColor: string): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.buttonColor = color
-        node.buttonTextColor = matchingTextColor
-      })
+    write((node) => {
+      node.buttonColor = color
+      node.buttonTextColor = matchingTextColor
     })
   }
 
   const handleSwapLayout = (): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.swapped = !isSwapped
-      })
+    write((node) => {
+      node.swapped = !isSwapped
     })
   }
 
   const handleButtonEnabled = (): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.buttonEnabled = !buttonEnabled
-      })
+    write((node) => {
+      node.buttonEnabled = !buttonEnabled
     })
   }
 
   const handleButtonUrl = (val: string): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-        node.buttonUrl = val
-      })
+    write((node) => {
+      node.buttonUrl = val
     })
   }
 
   const handleButtonUrlBlur = (event: React.FocusEvent<HTMLInputElement>): void => {
     if (!event.target.value) {
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isHeaderNode, (node) => {
-          node.buttonUrl = 'https://'
-        })
+      write((node) => {
+        node.buttonUrl = 'https://'
       })
     }
   }

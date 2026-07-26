@@ -1,11 +1,11 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CALLOUT_COLORS, CalloutCard, type CalloutColorName } from '@/components/ui/cards/CalloutCard'
 import { useCardSelection } from '@/hooks/useCardSelection'
-import { $isCalloutNode, $updateCardNode } from '@/nodes/base'
+import { useCardWriter } from '@/hooks/useCardWriter'
+import { $isCalloutNode } from '@/nodes/base'
 
 // backgroundColor is a free string on the node — HTML import captures any
 // `inkling-callout-card-*` class word — so narrow it to the known palette at
@@ -39,19 +39,17 @@ export function CalloutNodeComponent({
   calloutTextEditor,
   calloutTextEditorInitialState,
 }: CalloutNodeComponentProps) {
-  const [editor] = useLexicalComposerContext()
+  const write = useCardWriter(nodeKey, $isCalloutNode)
   const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
   const [showEmojiPicker, setShowEmojiPicker] = React.useState<boolean>(false)
 
   const handleEmojiChange = React.useCallback(
     (newEmoji: string): void => {
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isCalloutNode, (node) => {
-          node.calloutEmoji = newEmoji
-        })
+      write((node) => {
+        node.calloutEmoji = newEmoji
       })
     },
-    [editor, nodeKey],
+    [write],
   )
 
   const handleEmojiSelect = React.useCallback(
@@ -81,10 +79,8 @@ export function CalloutNodeComponent({
     if (!color) {
       return
     }
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isCalloutNode, (node) => {
-        node.backgroundColor = color
-      })
+    write((node) => {
+      node.backgroundColor = color
     })
   }
 

@@ -8,11 +8,12 @@ import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { VideoCard } from '@/components/ui/cards/VideoCard'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
+import { useCardWriter } from '@/hooks/useCardWriter'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import { usePreviewLease } from '@/hooks/usePreviewLease'
 import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
-import { $isVideoNode, $updateCardNode } from '@/nodes/base'
+import { $isVideoNode } from '@/nodes/base'
 import { isCardWidth } from '@/nodes/base/utils/card-widths'
 import extractVideoMetadata, { type VideoMetadata } from '@/utils/extractVideoMetadata'
 import { customThumbnailUploadIntent, videoThumbnailUploadIntent, videoUploadIntent } from '@/utils/upload-intent'
@@ -48,6 +49,7 @@ export function VideoNodeComponent({
   initialFile,
 }: VideoNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
+  const write = useCardWriter(nodeKey, $isVideoNode)
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
   const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
   const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
@@ -142,20 +144,16 @@ export function VideoNodeComponent({
   }
 
   const onRemoveCustomThumbnail = () => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isVideoNode, (node) => {
-        node.customThumbnailSrc = ''
-        node.thumbnailHeight = node.height
-        node.thumbnailWidth = node.width
-      })
+    write((node) => {
+      node.customThumbnailSrc = ''
+      node.thumbnailHeight = node.height
+      node.thumbnailWidth = node.width
     })
   }
 
   const onLoopChange = (checked: boolean) => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isVideoNode, (node) => {
-        node.loop = checked
-      })
+    write((node) => {
+      node.loop = checked
     })
   }
 
@@ -164,10 +162,8 @@ export function VideoNodeComponent({
       return
     }
 
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isVideoNode, (node) => {
-        node.cardWidth = width
-      })
+    write((node) => {
+      node.cardWidth = width
     })
   }
 

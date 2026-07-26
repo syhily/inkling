@@ -6,7 +6,7 @@ import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CodeBlockCard } from '@/components/ui/cards/CodeBlockCard'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
-import { $updateCardNode } from '@/nodes/base'
+import { useCardWriter } from '@/hooks/useCardWriter'
 import { $isCodeBlockNode } from '@/nodes/CodeBlockNode'
 import { SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
@@ -26,6 +26,7 @@ export function CodeBlockNodeComponent({
   captionEditorInitialState,
 }: CodeBlockNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
+  const write = useCardWriter(nodeKey, $isCodeBlockNode)
   const { darkMode } = React.useContext(InklingUiPrefsContext)
   const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
   const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
@@ -40,24 +41,20 @@ export function CodeBlockNodeComponent({
 
   const updateCode = React.useCallback(
     (value: string) => {
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isCodeBlockNode, (node) => {
-          node.code = value
-        })
+      write((node) => {
+        node.code = value
       })
     },
-    [editor, nodeKey],
+    [write],
   )
 
   const updateLanguage = React.useCallback(
     (value: string) => {
-      editor.update(() => {
-        $updateCardNode(nodeKey, $isCodeBlockNode, (node) => {
-          node.language = value
-        })
+      write((node) => {
+        node.language = value
       })
     },
-    [editor, nodeKey],
+    [write],
   )
 
   return (

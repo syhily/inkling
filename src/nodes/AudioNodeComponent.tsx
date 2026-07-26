@@ -6,10 +6,11 @@ import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { AudioCard } from '@/components/ui/cards/AudioCard'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
+import { useCardWriter } from '@/hooks/useCardWriter'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
-import { $isAudioNode, $updateCardNode } from '@/nodes/base'
+import { $isAudioNode } from '@/nodes/base'
 import { audioThumbnailUploadIntent, audioUploadIntent } from '@/utils/upload-intent'
 
 interface AudioNodeComponentProps {
@@ -32,6 +33,7 @@ export function AudioNodeComponent({
   triggerFileDialog,
 }: AudioNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
+  const write = useCardWriter(nodeKey, $isAudioNode)
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
   const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
   const audioFileInputRef = React.useRef<HTMLInputElement>(null)
@@ -64,18 +66,14 @@ export function AudioNodeComponent({
   }
 
   const setTitle = (newTitle: string) => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isAudioNode, (node) => {
-        node.title = newTitle
-      })
+    write((node) => {
+      node.title = newTitle
     })
   }
 
   const removeThumbnail = () => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isAudioNode, (node) => {
-        node.thumbnailSrc = ''
-      })
+    write((node) => {
+      node.thumbnailSrc = ''
     })
   }
 

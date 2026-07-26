@@ -1,11 +1,11 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { type NodeKey } from 'lexical'
 import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { ButtonCard } from '@/components/ui/cards/ButtonCard'
 import { useCardSelection } from '@/hooks/useCardSelection'
-import { $isButtonNode, $updateCardNode } from '@/nodes/base'
+import { useCardWriter } from '@/hooks/useCardWriter'
+import { $isButtonNode } from '@/nodes/base'
 
 export interface ButtonNodeComponentProps {
   alignment?: string
@@ -22,30 +22,24 @@ export function ButtonNodeComponent({
   buttonUrl,
   nodeKey,
 }: ButtonNodeComponentProps) {
-  const [editor] = useLexicalComposerContext()
+  const write = useCardWriter(nodeKey, $isButtonNode)
   const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
 
   const handleButtonTextChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isButtonNode, (node) => {
-        node.buttonText = event.target.value
-      })
+    write((node) => {
+      node.buttonText = event.target.value
     })
   }
 
   const handleButtonUrlChange = (value: string): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isButtonNode, (node) => {
-        node.buttonUrl = value
-      })
+    write((node) => {
+      node.buttonUrl = value
     })
   }
 
   const handleAlignmentChange = (name: string): void => {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isButtonNode, (node) => {
-        node.alignment = name
-      })
+    write((node) => {
+      node.alignment = name
     })
   }
 

@@ -6,10 +6,11 @@ import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { FileCard } from '@/components/ui/cards/FileCard'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
+import { useCardWriter } from '@/hooks/useCardWriter'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
-import { $isFileNode, $updateCardNode } from '@/nodes/base'
+import { $isFileNode } from '@/nodes/base'
 import { fileUploadIntent } from '@/utils/upload-intent'
 
 export interface FileNodeComponentProps {
@@ -38,6 +39,7 @@ function FileNodeComponent({
   initialFile,
 }: FileNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
+  const write = useCardWriter(nodeKey, $isFileNode)
   const [isPopulated, setIsPopulated] = React.useState<boolean>(false)
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
   const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
@@ -82,20 +84,16 @@ function FileNodeComponent({
   const handleFileTitle = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const title = e.target.value
 
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isFileNode, (node) => {
-        node.fileTitle = title
-      })
+    write((node) => {
+      node.fileTitle = title
     })
   }
 
   const handleFileDesc = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const desc = e.target.value
 
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isFileNode, (node) => {
-        node.fileCaption = desc
-      })
+    write((node) => {
+      node.fileCaption = desc
     })
   }
 
