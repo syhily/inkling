@@ -1,6 +1,10 @@
-import EventEmitter from 'eventemitter3'
-
 import { ActiveDrag } from '@/utils/draggable/ActiveDrag'
+import {
+  createDragStartSession,
+  DRAG_START_THRESHOLD,
+  type DragSessionPoint,
+  type DragStartSession,
+} from '@/utils/draggable/drag-session'
 import { DragDropContainer, type DraggableInfo, type DroppablePosition } from '@/utils/draggable/DragDropContainer'
 import {
   CONTAINER_SELECTOR,
@@ -34,7 +38,6 @@ export interface DragDropHandlerOptions {
 }
 
 export class DragDropHandler {
-  eventEmitter: EventEmitter
   editorContainerElement: HTMLElement | null = null
   containers: DragDropContainer[] = []
   // grab-phase state: set on mousedown, consumed (or discarded) when the drag
@@ -49,7 +52,7 @@ export class DragDropHandler {
   _eventHandlers: Record<string, EventHandlerEntry> = {}
   _dragPreviewContainerElement: HTMLElement | null = null
   _rafUpdateDragPreviewElementPosition: () => void
-  _waitForDragStartPromise: Promise<void> | null = null
+  _dragStartSession: DragStartSession | null = null
 
   isDragging: boolean = false
 
@@ -62,8 +65,7 @@ export class DragDropHandler {
   // lifecycle ---------------------------------------------------------------
 
   constructor({ editorContainerElement, scrollHandlerOptions }: DragDropHandlerOptions = {}) {
-    this.editorContainerElement =
-      editorContainerElement ?? document.querySelector('[data-inkling="editor"] [data-lexical-editor]')
+    this.editorContainerElement = editorContainerElement ?? null
     this.containers = []
     this.scrollHandler = new ScrollHandler(scrollHandlerOptions)
     this.dropIndicator = new DropIndicator({ editorContainerElement: this.editorContainerElement })
@@ -76,8 +78,6 @@ export class DragDropHandler {
 
     // append body elements
     this._appendDragPreviewContainerElement()
-
-    this.eventEmitter = new EventEmitter()
   }
 
   destroy() {
@@ -134,24 +134,15 @@ export class DragDropHandler {
   }
 
   // test seam: runs the grab → drag-start choreography synchronously so unit
-  // tests don't re-create it with real mousedown/mousemove sequences and
-  // wall-clock sleeps. Dispatches a real mousedown (the grab path runs
-  // end-to-end), then resolves the drag-start wait immediately. Resolves once
-  // the drag has been initiated — or immediately when the grab never started
-  // a wait (right click, drag-disabled target, drag already in progress)
-  async simulateDrag(element: HTMLElement, start: { x: number; y: number } = { x: 10, y: 10 }): Promise<void> {
+  // tests don't re-create it with real mousemove sequences and wall-clock
+  // sleeps. Dispatches a real mousedown (the grab path runs end-to-end), then
+  // drives the pending drag-start session past its threshold — drag
+  // initiation is synchronous, so the drag has been initiated (or never
+  // started: right click, drag-disabled target, drag already in progress)
+  // when this returns
+  simulateDrag(element: HTMLElement, start: DragSessionPoint = { x: 10, y: 10 }): void {
     element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: start.x, clientY: start.y, button: 0 }))
-
-    const pending = this._waitForDragStartPromise
-    if (!pending) {
-      return
-    }
-
-    this.eventEmitter.emit('drag-start-conditions-met')
-    // the _onMouseDown continuation that calls _initiateDrag is attached to
-    // this promise before our await, so initiation has completed by the time
-    // simulateDrag resolves
-    await pending.catch(() => {})
+    this._dragStartSession?.move({ x: start.x + DRAG_START_THRESHOLD + 1, y: start.y })
   }
 
   // event handlers ----------------------------------------------------------
@@ -178,18 +169,7 @@ export class DragDropHandler {
         this.sourceContainer = container ?? null
 
         if (container?.isDragEnabled) {
-          this._waitForDragStart(event)
-            .then(() => {
-              // stop the drag creating a selection
-              window.getSelection()?.removeAllRanges()
-              // set up the drag details
-              this._initiateDrag(event)
-            })
-            .catch((reason: { isCanceled?: boolean }) => {
-              if (!reason.isCanceled) {
-                throw reason
-              }
-            })
+          this._beginDragStartSession(event)
         }
       }
     }
@@ -243,71 +223,37 @@ export class DragDropHandler {
 
   // private -----------------------------------------------------------------
 
-  // called when we detect a mousedown event on a draggable element. Sets
-  // up temporary event handlers for mousemove, mouseup, and drag. If
-  // sufficient movement is detected before the mouse is released and we don't
-  // detect a native drag event then the promise will resolve. Mouseup or drag
-  // events will cancel the promise which will result in a rejection with {isCanceled: true}
-  async _waitForDragStart(startEvent: MouseEvent) {
-    const moveThreshold = 1
-
-    // if we somehow already have a waiting promise, cancel it and keep the new one
-    if (this._waitForDragStartPromise) {
-      this.eventEmitter.emit('drag-start-canceled')
-      this._waitForDragStartPromise = null
-    }
-
-    const onMove = (event: MouseEvent) => {
-      const currentX = event.clientX
-      const currentY = event.clientY
-
-      if (
-        Math.abs(startEvent.clientX - currentX) > moveThreshold ||
-        Math.abs(startEvent.clientY - currentY) > moveThreshold
-      ) {
-        this.eventEmitter.emit('drag-start-conditions-met')
-      }
-    }
-
-    const onUp = () => {
-      this.eventEmitter.emit('drag-start-canceled')
-    }
-
-    const onHtmlDrag = () => {
-      this.eventEmitter.emit('drag-start-canceled')
-    }
-
-    const waitForDragStart = () => {
-      document.addEventListener('mousemove', onMove, { passive: false })
-      document.addEventListener('mouseup', onUp, { passive: false })
-      document.addEventListener('drag', onHtmlDrag, { passive: false })
-
-      return new Promise<void>((resolve, reject) => {
-        const conditionsMet = () => {
-          this.eventEmitter.removeListener('drag-start-canceled', canceled)
-          resolve()
-        }
-
-        const canceled = () => {
-          this.eventEmitter.removeListener('drag-start-conditions-met', conditionsMet)
-          reject({ isCanceled: true })
-        }
-
-        this.eventEmitter.once('drag-start-conditions-met', conditionsMet)
-        this.eventEmitter.once('drag-start-canceled', canceled)
-      })
-    }
-
-    const promise = waitForDragStart()
-    this._waitForDragStartPromise = promise.finally(() => {
-      this._waitForDragStartPromise = null
-
-      document.removeEventListener('mousemove', onMove)
-      document.removeEventListener('mouseup', onUp)
-      document.removeEventListener('drag', onHtmlDrag)
-    })
-
-    return this._waitForDragStartPromise
+  // called when we detect a mousedown event on a draggable element: begins a
+  // drag-start session whose temporary document listeners (move/release/
+  // native drag) decide whether the press becomes a drag (movement past the
+  // start threshold) or is discarded. The threshold policy lives in
+  // @/utils/draggable/drag-session; the session's listeners and resolution
+  // are the ports declared here
+  _beginDragStartSession(startEvent: MouseEvent) {
+    // a new grab replaces any still-pending session
+    this._dragStartSession?.cancel()
+    this._dragStartSession = createDragStartSession(
+      { x: startEvent.clientX, y: startEvent.clientY },
+      {
+        listen: ({ move, release, nativeDrag }) => {
+          const onMove = (event: MouseEvent) => move({ x: event.clientX, y: event.clientY })
+          document.addEventListener('mousemove', onMove, { passive: false })
+          document.addEventListener('mouseup', release, { passive: false })
+          document.addEventListener('drag', nativeDrag, { passive: false })
+          return () => {
+            document.removeEventListener('mousemove', onMove)
+            document.removeEventListener('mouseup', release)
+            document.removeEventListener('drag', nativeDrag)
+          }
+        },
+        onStart: () => {
+          // stop the drag creating a selection
+          window.getSelection()?.removeAllRanges()
+          // set up the drag details
+          this._initiateDrag(startEvent)
+        },
+      },
+    )
   }
 
   // called once drag start conditions have been met, `startEvent` is the initial mousedown event
@@ -327,9 +273,8 @@ export class DragDropHandler {
       return
     }
 
-    // append the drop indicator if it doesn't already exist - we append to
-    // the editor's element rather than body so it needs to be re-appended
-    // each time a drag is initiated in a new editor instance
+    // append this handler's drop indicator to the editor's element rather
+    // than body — the element is per-handler, attach is idempotent
     this.dropIndicator.attach()
 
     const draggableInfo: DraggableInfo = {
@@ -386,9 +331,7 @@ export class DragDropHandler {
     this.scrollHandler.dragStart(draggableInfo)
 
     // prevent the pointer showing the text caret over text content whilst dragging
-    document.querySelectorAll<HTMLElement>('[data-inkling="editor"] [data-lexical-editor]').forEach((el) => {
-      el.style.setProperty('cursor', 'default', 'important')
-    })
+    this._setCursorSuppression(true)
 
     // prevent hover effects showing whilst dragging
     this._setHoverSuppression(true)
@@ -396,10 +339,28 @@ export class DragDropHandler {
     this._handleDrag()
   }
 
+  // cursor suppression is scoped to this handler's own editor container —
+  // with several editors on one page a drag in one must not touch the others
+  _setCursorSuppression(suppress: boolean) {
+    this.editorContainerElement
+      ?.querySelectorAll<HTMLElement>('[data-inkling="editor"] [data-lexical-editor]')
+      .forEach((el) => {
+        if (suppress) {
+          el.style.setProperty('cursor', 'default', 'important')
+        } else {
+          el.style.cursor = ''
+        }
+      })
+  }
+
   _setHoverSuppression(suppress: boolean) {
+    // this handler's own editor root only: the container may sit inside the
+    // [data-inkling="editor"] root or wrap it — never the first editor in
+    // the document
+    const container = this.editorContainerElement
     const editorRoot =
-      this.editorContainerElement?.closest('[data-inkling="editor"]') ||
-      document.querySelector('[data-inkling="editor"]')
+      container?.closest<HTMLElement>('[data-inkling="editor"]') ??
+      container?.querySelector<HTMLElement>('[data-inkling="editor"]')
     if (editorRoot) {
       if (suppress) {
         editorRoot.setAttribute('data-inkling-dragging', 'true')
@@ -508,7 +469,9 @@ export class DragDropHandler {
   }
 
   _resetDrag() {
-    this.eventEmitter.emit('drag-start-canceled')
+    // cancel a grab still waiting for its start threshold (e.g. destroyed mid-grab)
+    this._dragStartSession?.cancel()
+    this._dragStartSession = null
     this.dropIndicator.hide({ draggableInfo: this._activeDrag?.draggableInfo ?? null })
 
     this.scrollHandler.dragStop()
@@ -534,9 +497,7 @@ export class DragDropHandler {
     this._setHoverSuppression(false)
 
     applyUserSelect(document.body, '')
-    document.querySelectorAll<HTMLElement>('[data-inkling="editor"] [data-lexical-editor]').forEach((el) => {
-      el.style.cursor = ''
-    })
+    this._setCursorSuppression(false)
   }
 
   _appendDragPreviewContainerElement() {

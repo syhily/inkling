@@ -276,7 +276,7 @@ test.describe('Drag Drop Reorder Plugin', async function () {
       { ignoreCardContents: true },
     )
 
-    const indicator = await page.locator('#inkling-drag-drop-indicator')
+    const indicator = await page.locator('[data-inkling-drag-drop-indicator]')
     await expect(await indicator).toBeVisible()
 
     // Release the mouse to clean up drag state

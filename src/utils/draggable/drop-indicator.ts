@@ -1,6 +1,6 @@
 import type { DraggableInfo, DroppablePosition } from '@/utils/draggable/DragDropContainer'
 
-import { DROP_INDICATOR_ID, DROP_INDICATOR_ZINDEX } from '@/utils/draggable/draggable-constants'
+import { DROP_INDICATOR_DATA_ATTR, DROP_INDICATOR_ZINDEX } from '@/utils/draggable/draggable-constants'
 
 // The drop indicator: the green line marking where a dragged element would
 // land, extracted from DragDropHandler so the handler only orchestrates
@@ -60,14 +60,14 @@ export class DropIndicator {
     this._geometry = geometry ?? createDropIndicatorGeometry()
   }
 
-  // append the indicator if it doesn't already exist - we append to the
-  // editor's element rather than body so it needs to be re-appended each time
-  // a drag is initiated in a new editor instance
+  // the indicator element belongs to this DropIndicator — created here, never
+  // adopted by global id, so two editors on one page each show their own. We
+  // append to the editor's element rather than body, so it is re-appended
+  // when the container's subtree was rebuilt since the last drag
   attach() {
-    let element = document.querySelector<HTMLElement>(`#${DROP_INDICATOR_ID}`)
-    if (!element) {
-      element = document.createElement('div')
-      element.id = DROP_INDICATOR_ID
+    if (!this.element) {
+      const element = document.createElement('div')
+      element.dataset[DROP_INDICATOR_DATA_ATTR] = 'true'
       // "rounded-full bg-green" kept as classes so Tailwind picks up usage
       element.className = 'rounded-full bg-green'
       element.style.position = 'absolute'
@@ -76,11 +76,12 @@ export class DropIndicator {
       element.style.height = '0'
       element.style.zIndex = String(DROP_INDICATOR_ZINDEX)
       element.style.pointerEvents = 'none'
-
-      this._editorContainerElement?.appendChild(element)
+      this.element = element
     }
 
-    this.element = element
+    if (!this.element.isConnected) {
+      this._editorContainerElement?.appendChild(this.element)
+    }
   }
 
   // position the indicator relative to a droppable: just above its top edge

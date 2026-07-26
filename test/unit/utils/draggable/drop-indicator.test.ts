@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
-import { DROP_INDICATOR_ID } from '@/utils/draggable/draggable-constants'
+import { DROP_INDICATOR_SELECTOR } from '@/utils/draggable/draggable-constants'
 import { DropIndicator, type DropIndicatorGeometry } from '@/utils/draggable/drop-indicator'
 
 // a droppable at (20, 100), 200x50, inside an offset parent whose viewport
@@ -22,7 +22,7 @@ function createIndicator() {
   const indicator = new DropIndicator({ editorContainerElement: editorContainer, geometry })
   indicator.attach()
 
-  const element = document.getElementById(DROP_INDICATOR_ID)
+  const element = editorContainer.querySelector<HTMLElement>(DROP_INDICATOR_SELECTOR)
   if (!element) {
     throw new Error('expected the indicator to be attached')
   }
@@ -58,6 +58,36 @@ describe('DropIndicator', () => {
     expect(editorContainer.contains(element)).toBe(true)
     expect(element.style.opacity).toBe('0')
     expect(element.style.pointerEvents).toBe('none')
+  })
+
+  it('keeps its own element across attaches while it is connected', () => {
+    const { indicator, element } = createIndicator()
+
+    indicator.attach()
+
+    expect(indicator.element).toBe(element)
+    expect(document.querySelectorAll(DROP_INDICATOR_SELECTOR)).toHaveLength(1)
+  })
+
+  it('gives each indicator its own element inside its own container', () => {
+    const first = createIndicator()
+    const second = createIndicator()
+
+    // two editors on one page: neither adopts the other's element
+    expect(first.element).not.toBe(second.element)
+    expect(first.editorContainer.contains(first.element)).toBe(true)
+    expect(second.editorContainer.contains(second.element)).toBe(true)
+    expect(document.querySelectorAll(DROP_INDICATOR_SELECTOR)).toHaveLength(2)
+  })
+
+  it('re-appends its own element when it was removed from the container', () => {
+    const { indicator, element, editorContainer } = createIndicator()
+
+    element.remove()
+    indicator.attach()
+
+    expect(indicator.element).toBe(element)
+    expect(editorContainer.contains(element)).toBe(true)
   })
 
   it('positions the indicator above the droppable for a top position', () => {

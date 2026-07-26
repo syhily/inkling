@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DragDropHandler } from '@/utils/draggable/DragDropHandler'
-import { CONTAINER_DATA_ATTR, DROP_INDICATOR_ID, INKLING_CONTAINER_ID } from '@/utils/draggable/draggable-constants'
+import {
+  CONTAINER_DATA_ATTR,
+  DROP_INDICATOR_SELECTOR,
+  INKLING_CONTAINER_ID,
+} from '@/utils/draggable/draggable-constants'
 
 function createContainer(name = 'container') {
   const element = document.createElement('div')
@@ -65,23 +69,9 @@ describe('DragDropHandler', () => {
     document.body.innerHTML = ''
   })
 
-  it('constructs with default editor container selector', () => {
+  it('constructs without an editor container element', () => {
     const h = new DragDropHandler()
     expect(h.editorContainerElement).toBeNull()
-    h.destroy()
-  })
-
-  it('finds the default editor container through the real Inkling root attribute', () => {
-    const inklingRoot = document.createElement('div')
-    inklingRoot.dataset.inkling = 'editor'
-    const lexicalRoot = document.createElement('div')
-    lexicalRoot.setAttribute('data-lexical-editor', 'true')
-    inklingRoot.appendChild(lexicalRoot)
-    document.body.appendChild(inklingRoot)
-
-    const h = new DragDropHandler()
-
-    expect(h.editorContainerElement).toBe(lexicalRoot)
     h.destroy()
   })
 
@@ -152,10 +142,10 @@ describe('DragDropHandler', () => {
     expect(document.getElementById(INKLING_CONTAINER_ID)).not.toBeInTheDocument()
   })
 
-  // the handler's test seam: performs the mousedown grab and resolves the
-  // drag-start wait synchronously — no real mousemove choreography, no
-  // wall-clock sleeps
-  async function initiateDrag(containerName: string) {
+  // the handler's test seam: performs the mousedown grab and drives the
+  // drag-start session past its threshold — synchronous, so no real
+  // mousemove choreography and no wall-clock sleeps
+  function initiateDrag(containerName: string) {
     const containerElement = createContainer(containerName)
     handler.registerContainer(containerElement, createHandlers())
     const draggable = containerElement.querySelector('.draggable') as HTMLElement
@@ -165,13 +155,13 @@ describe('DragDropHandler', () => {
     img.height = 100
     draggable.appendChild(img)
 
-    await handler.simulateDrag(draggable)
+    handler.simulateDrag(draggable)
 
     return { containerElement, draggable }
   }
 
-  it('initiates drag on mouse down and move', async () => {
-    await initiateDrag('drag')
+  it('initiates drag on mouse down and move', () => {
+    initiateDrag('drag')
 
     expect(handler.isDragging).toBe(true)
 
@@ -181,8 +171,8 @@ describe('DragDropHandler', () => {
     expect(handler.isDragging).toBe(false)
   })
 
-  it('clears drag information when a drag resets', async () => {
-    await initiateDrag('reset-info')
+  it('clears drag information when a drag resets', () => {
+    initiateDrag('reset-info')
 
     expect(handler.draggableInfo).not.toBeNull()
 
@@ -191,7 +181,7 @@ describe('DragDropHandler', () => {
     expect(handler.draggableInfo).toBeNull()
   })
 
-  it('recomputes the indicator when consecutive drags cross the same droppable quadrant', async () => {
+  it('recomputes the indicator when consecutive drags cross the same droppable quadrant', () => {
     const editorContainer = document.createElement('div')
     document.body.appendChild(editorContainer)
     handler.destroy()
@@ -215,18 +205,18 @@ describe('DragDropHandler', () => {
     handler.registerContainer(containerElement, handlers)
     document.elementFromPoint = vi.fn(() => droppable)
 
-    await handler.simulateDrag(draggable)
+    handler.simulateDrag(draggable)
     expect(handler.draggableInfo?.insertIndex).toBe(1)
     document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
 
-    await handler.simulateDrag(draggable)
+    handler.simulateDrag(draggable)
 
     expect(handlers.droppable.getIndicatorPosition).toHaveBeenCalledTimes(2)
     expect(handler.draggableInfo?.insertIndex).toBe(2)
   })
 
-  it('cancels drag on escape key', async () => {
-    await initiateDrag('escape')
+  it('cancels drag on escape key', () => {
+    initiateDrag('escape')
 
     expect(handler.isDragging).toBe(true)
 
@@ -236,10 +226,10 @@ describe('DragDropHandler', () => {
     expect(handler.isDragging).toBe(false)
   })
 
-  it('removes the temporary keydown listener when a drag resets', async () => {
+  it('removes the temporary keydown listener when a drag resets', () => {
     const removeSpy = vi.spyOn(document, 'removeEventListener')
 
-    await initiateDrag('keydown-reset')
+    initiateDrag('keydown-reset')
     expect(handler.isDragging).toBe(true)
 
     document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
@@ -248,10 +238,10 @@ describe('DragDropHandler', () => {
     removeSpy.mockRestore()
   })
 
-  it('removes the keydown listener when destroyed mid-drag', async () => {
+  it('removes the keydown listener when destroyed mid-drag', () => {
     const removeSpy = vi.spyOn(document, 'removeEventListener')
 
-    await initiateDrag('keydown-destroy')
+    initiateDrag('keydown-destroy')
     expect(handler.isDragging).toBe(true)
 
     handler.destroy()
@@ -277,11 +267,13 @@ describe('DragDropHandler', () => {
   })
 
   it('ignores non-Element mouse targets', () => {
-    const event = new MouseEvent('mousedown', { button: 0 })
-    Object.defineProperty(event, 'target', { value: document.createTextNode('text') })
+    // a mousedown whose target is a text node bubbles to the handler's
+    // document listener with a non-Element target
+    const textNode = document.createTextNode('text')
+    document.body.appendChild(textNode)
 
-    expect(() => handler._onMouseDown(event)).not.toThrow()
-    expect(handler.grabbedElement).toBeNull()
+    expect(() => textNode.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))).not.toThrow()
+    expect(handler.isDragging).toBe(false)
   })
 
   it('does not initiate drag when drag disabled element is target', () => {
@@ -304,7 +296,7 @@ describe('DragDropHandler', () => {
     expect(handler.isDragging).toBe(false)
   })
 
-  it('appends drop indicator when drag starts', async () => {
+  it('appends drop indicator when drag starts', () => {
     const containerElement = createContainer('indicator')
     const editorContainer = document.createElement('div')
     editorContainer.dataset.inklingEditor = 'true'
@@ -323,15 +315,46 @@ describe('DragDropHandler', () => {
     img.height = 100
     draggable.appendChild(img)
 
-    await handler.simulateDrag(draggable)
+    handler.simulateDrag(draggable)
 
-    expect(document.getElementById(DROP_INDICATOR_ID)).toBeInTheDocument()
+    expect(document.querySelector(DROP_INDICATOR_SELECTOR)).toBeInTheDocument()
 
     const mouseUp = new MouseEvent('mouseup', { bubbles: true })
     document.dispatchEvent(mouseUp)
   })
 
-  it('toggles hover suppression attribute on the editor root during drag', async () => {
+  it('gives each handler its own drop indicator inside its own container', () => {
+    const firstEditorContainer = document.createElement('div')
+    const ownEditorContainer = document.createElement('div')
+    document.body.append(firstEditorContainer, ownEditorContainer)
+
+    handler.destroy()
+    const firstHandler = new DragDropHandler({ editorContainerElement: firstEditorContainer })
+    const ownHandler = new DragDropHandler({ editorContainerElement: ownEditorContainer })
+
+    const containerElement = createContainer('indicator-scope')
+    ownHandler.registerContainer(containerElement, createHandlers())
+    const draggable = containerElement.querySelector('.draggable') as HTMLElement
+    const img = document.createElement('img')
+    img.width = 100
+    img.height = 100
+    draggable.appendChild(img)
+
+    // a drag in the second editor shows that editor's own indicator — never
+    // one adopted from the first editor
+    ownHandler.simulateDrag(draggable)
+
+    const ownIndicator = ownEditorContainer.querySelector(DROP_INDICATOR_SELECTOR)
+    expect(ownIndicator).not.toBeNull()
+    expect(ownHandler.dropIndicator.element).toBe(ownIndicator)
+    expect(firstEditorContainer.querySelector(DROP_INDICATOR_SELECTOR)).toBeNull()
+
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+    firstHandler.destroy()
+    ownHandler.destroy()
+  })
+
+  it('toggles hover suppression attribute on the editor root during drag', () => {
     const containerElement = createContainer('hover-suppression')
     const editorRoot = document.createElement('div')
     editorRoot.dataset.inkling = 'editor'
@@ -350,7 +373,7 @@ describe('DragDropHandler', () => {
     img.height = 100
     draggable.appendChild(img)
 
-    await handler.simulateDrag(draggable)
+    handler.simulateDrag(draggable)
 
     expect(editorRoot.dataset.inklingDragging).toBe('true')
 
@@ -358,5 +381,64 @@ describe('DragDropHandler', () => {
     document.dispatchEvent(mouseUp)
 
     expect(editorRoot.dataset.inklingDragging).toBeUndefined()
+  })
+
+  // the production shape: the handler's container is the editor wrapper,
+  // which holds its own [data-inkling="editor"] root
+  function createEditorWrapper() {
+    const wrapper = document.createElement('div')
+    const editorRoot = document.createElement('div')
+    editorRoot.dataset.inkling = 'editor'
+    const lexicalEditor = document.createElement('div')
+    lexicalEditor.dataset.lexicalEditor = 'true'
+    editorRoot.appendChild(lexicalEditor)
+    wrapper.appendChild(editorRoot)
+    document.body.appendChild(wrapper)
+    return { wrapper, editorRoot, lexicalEditor }
+  }
+
+  function dragIn(handler: DragDropHandler, containerName: string) {
+    const containerElement = createContainer(containerName)
+    handler.registerContainer(containerElement, createHandlers())
+    const draggable = containerElement.querySelector('.draggable') as HTMLElement
+    const img = document.createElement('img')
+    img.width = 100
+    img.height = 100
+    draggable.appendChild(img)
+    handler.simulateDrag(draggable)
+  }
+
+  it('scopes hover suppression to its own editor when another editor exists', () => {
+    const first = createEditorWrapper()
+    const own = createEditorWrapper()
+
+    handler.destroy()
+    handler = new DragDropHandler({ editorContainerElement: own.wrapper })
+    dragIn(handler, 'hover-scope')
+
+    // the handler's own root is found through the container (never the
+    // document), so the first editor in the document is left alone
+    expect(own.editorRoot.dataset.inklingDragging).toBe('true')
+    expect(first.editorRoot.dataset.inklingDragging).toBeUndefined()
+
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+
+    expect(own.editorRoot.dataset.inklingDragging).toBeUndefined()
+  })
+
+  it('scopes cursor suppression to its own editor when another editor exists', () => {
+    const first = createEditorWrapper()
+    const own = createEditorWrapper()
+
+    handler.destroy()
+    handler = new DragDropHandler({ editorContainerElement: own.wrapper })
+    dragIn(handler, 'cursor-scope')
+
+    expect(own.lexicalEditor.style.getPropertyValue('cursor')).toBe('default')
+    expect(first.lexicalEditor.style.getPropertyValue('cursor')).toBe('')
+
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+
+    expect(own.lexicalEditor.style.getPropertyValue('cursor')).toBe('')
   })
 })
