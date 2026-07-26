@@ -5,7 +5,6 @@ import type { GalleryImage } from '@/types/gallery'
 import {
   $isAudioNode,
   $isFileNode,
-  $isGalleryNode,
   $isImageNode,
   $isVideoNode,
   $updateCardNode,
@@ -556,25 +555,26 @@ export const backgroundImageUploadHandler = async (
 
 /* ------------------------------------------------------------------------ */
 /* Gallery's multi-file adapter. The single-intent runner cannot express     */
-/* this flow without distortion: previews are per-file, publish to LOCAL     */
-/* React state (never the node) before the batched upload, results merge     */
-/* back by fileName, and the failure path cleans up in-flow instead of       */
-/* propagating. The adapter keeps the pinned ordering — previews to local    */
-/* state first, node write (through 044's seam) only after the upload        */
-/* resolves — so in-flight uploads stay reorderable by previewSrc with       */
-/* stable image identity (useGalleryReorder).                                */
+/* this flow without distortion: previews are per-file, publish to the       */
+/* gallery images mirror's LOCAL overlay (never the node) before the batched */
+/* upload, results merge back by fileName, and the failure path cleans up    */
+/* in-flow instead of propagating. The adapter keeps the pinned ordering —   */
+/* previews to the overlay first, the node write (the mirror's setImages,    */
+/* through 044's seam) only after the upload resolves — so in-flight         */
+/* uploads stay reorderable by previewSrc with stable image identity         */
+/* (useGalleryReorder).                                                      */
 /* ------------------------------------------------------------------------ */
 
 export interface GalleryUploadIntentDeps {
-  editor: LexicalEditor
-  nodeKey: NodeKey
   upload: UploadFn
   files: FileList | File[]
-  /** The card's current local images. */
+  /** The card's current rendered images (the gallery images mirror's snapshot). */
   images: GalleryImage[]
   /** The component's preview pool — per-file previews lease from the one owner. */
   previews: PreviewLeasePool
-  /** Local-state setter: preview publication and the result merge land here FIRST. */
+  /** Preview publication lands here FIRST — the mirror's local overlay, never the node. */
+  setPreviewImages: (images: GalleryImage[]) => void
+  /** The result merge lands here — the mirror's local-and-node setter (044's seam). */
   setImages: (images: GalleryImage[]) => void
   setErrorMessage: (message: string) => void
 }
@@ -585,21 +585,14 @@ function withoutPreviewSrc(image: GalleryImage): GalleryImage {
 }
 
 export async function galleryUploadIntent({
-  editor,
-  nodeKey,
   upload,
   files,
   images,
   previews,
+  setPreviewImages,
   setImages,
   setErrorMessage,
 }: GalleryUploadIntentDeps): Promise<void> {
-  const setNodeImages = async (newImages: GalleryImage[]): Promise<void> => {
-    await editor.update(() => {
-      $updateCardNode(nodeKey, $isGalleryNode, (node) => node.setImages(newImages))
-    })
-  }
-
   const currentCount = images.length
   const allowedCount = MAX_IMAGES - currentCount
 
@@ -630,7 +623,7 @@ export async function galleryUploadIntent({
   recalculateImageRows(newImages)
 
   // show preview images immediately
-  setImages(newImages)
+  setPreviewImages(newImages)
 
   // start uploads
   const uploadResult = await upload(strippedFiles)
@@ -642,7 +635,6 @@ export async function galleryUploadIntent({
     })
     recalculateImageRows(cleanedImages)
     setImages(cleanedImages)
-    await setNodeImages(cleanedImages)
     setErrorMessage('Something went wrong while uploading images. Please refresh the page and try again')
     return
   }
@@ -666,7 +658,6 @@ export async function galleryUploadIntent({
     }
   })
 
-  // update local state
+  // merge the results into the rendered list and write the node
   setImages(uploadedImages)
-  await setNodeImages(uploadedImages)
 }

@@ -1,5 +1,4 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getNodeByKey, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
+import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 
 import type { GalleryImage } from '@/types/gallery'
@@ -9,8 +8,8 @@ import { GalleryCard } from '@/components/ui/cards/GalleryCard'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
+import { useGalleryImages } from '@/hooks/useGalleryImages'
 import useGalleryReorder from '@/hooks/useGalleryReorder'
-import { $isGalleryNode, $updateCardNode } from '@/nodes/base'
 import { recalculateImageRows } from '@/nodes/GalleryNode'
 import { createPreviewLeasePool, galleryUploadIntent } from '@/utils/upload-intent'
 
@@ -21,18 +20,11 @@ export interface GalleryNodeComponentProps {
 }
 
 export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInitialState }: GalleryNodeComponentProps) {
-  const [editor] = useLexicalComposerContext()
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
   const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
-  const [images, setImages] = React.useState<GalleryImage[]>(() => {
-    const existingImages = editor.getEditorState().read(() => {
-      const node = $getNodeByKey(nodeKey)
-      return $isGalleryNode(node) ? node.images : undefined
-    })
-    return existingImages ?? []
-  })
+  const { images, setImages, setPreviewImages } = useGalleryImages(nodeKey)
   const [previewPool] = React.useState(() => createPreviewLeasePool())
 
   const galleryReorder = useGalleryReorder({ images, updateImages: reorderImages, isSelected })
@@ -47,13 +39,6 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
   function reorderImages(newImages: GalleryImage[]): void {
     recalculateImageRows(newImages)
     setImages(newImages)
-    setNodeImages(newImages)
-  }
-
-  function setNodeImages(newImages: GalleryImage[]): void {
-    editor.update(() => {
-      $updateCardNode(nodeKey, $isGalleryNode, (node) => node.setImages(newImages))
-    })
   }
 
   const deleteImage = (imageToDelete: GalleryImage): void => {
@@ -62,7 +47,6 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
     const newImages = images.filter((image) => image.fileName !== imageToDelete.fileName)
     recalculateImageRows(newImages)
     setImages(newImages)
-    setNodeImages(newImages)
   }
 
   React.useEffect(() => {
@@ -73,13 +57,12 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
 
   const handleImageUploads = async (files: FileList | File[]): Promise<void> => {
     await galleryUploadIntent({
-      editor,
-      nodeKey,
       upload: imageUploader.upload,
       files,
       images,
       previews: previewPool,
       setImages,
+      setPreviewImages,
       setErrorMessage,
     })
   }

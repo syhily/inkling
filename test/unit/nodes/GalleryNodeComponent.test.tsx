@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -11,6 +11,7 @@ import InklingHostIntegrationContext, {
   type FileUploader,
   type InklingHostIntegrationContextValue,
 } from '@/context/InklingHostIntegrationContext'
+import { $isGalleryNode } from '@/nodes/base'
 import { GalleryNode } from '@/nodes/GalleryNode'
 import { GalleryNodeComponent } from '@/nodes/GalleryNodeComponent'
 import { getImageDimensions } from '@/utils/getImageDimensions'
@@ -210,6 +211,48 @@ describe('GalleryNodeComponent', () => {
     expect(images[2].src).toBeUndefined()
     expect(images[2].previewSrc).toBeUndefined()
     expect(images[3].fileName).toBe('b.png')
+  })
+
+  it('resyncs the rendered images when the node changes while the card stays mounted', async () => {
+    const nodeKey = await addGalleryNode(editor)
+    renderComponent(nodeKey)
+
+    expect(screen.getAllByTestId('gallery-image')).toHaveLength(2)
+
+    // an external change to node.images (undo of a within-card delete, collab)
+    // must be reflected without a remount
+    await act(async () => {
+      editor.update(() => {
+        const node = $getNodeByKey(nodeKey)
+        if ($isGalleryNode(node)) {
+          node.setImages([{ src: '/three.png', fileName: 'three.png', width: 100, height: 100 }])
+        }
+      })
+    })
+
+    expect(screen.getAllByTestId('gallery-image')).toHaveLength(1)
+    expect(screen.getByTestId('gallery-image').querySelector('img')).toHaveAttribute('src', '/three.png')
+  })
+
+  it('writes back the resynced list after an external node change (no stale write-back)', async () => {
+    const nodeKey = await addGalleryNode(editor)
+    renderComponent(nodeKey)
+
+    await act(async () => {
+      editor.update(() => {
+        const node = $getNodeByKey(nodeKey)
+        if ($isGalleryNode(node)) {
+          node.setImages([{ src: '/two.png', fileName: 'two.png', width: 100, height: 100 }])
+        }
+      })
+    })
+    expect(screen.getAllByTestId('gallery-image')).toHaveLength(1)
+
+    // deleting from the resynced list must not resurrect the stale images
+    fireEvent.click(screen.getByTestId('delete-image'))
+    await act(async () => {})
+
+    expect(readNodeImages(nodeKey)).toHaveLength(0)
   })
 
   it('revokes all tracked previews on unmount', async () => {

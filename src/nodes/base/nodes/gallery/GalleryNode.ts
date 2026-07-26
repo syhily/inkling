@@ -32,7 +32,15 @@ export interface BaseGalleryNode extends DecoratorNodeValueMap<typeof galleryPro
 export { MAX_IMAGES, MAX_PER_ROW }
 
 // ensure we don't save client-side only properties such as preview blob urls to the server
-export const ALLOWED_IMAGE_PROPS = ['row', 'src', 'width', 'height', 'alt', 'caption', 'fileName']
+export const ALLOWED_IMAGE_PROPS = [
+  'row',
+  'src',
+  'width',
+  'height',
+  'alt',
+  'caption',
+  'fileName',
+] as const satisfies readonly (keyof GalleryImage)[]
 
 export function recalculateImageRows(images: GalleryImage[]) {
   images.forEach((image: GalleryImage, idx: number) => {
