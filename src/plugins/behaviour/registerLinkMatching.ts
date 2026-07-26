@@ -3,7 +3,7 @@ import type { LexicalEditor } from 'lexical'
 import { $createLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
 import { $createTextNode, $getSelection, $insertNodes, $isRangeSelection, COMMAND_PRIORITY_LOW } from 'lexical'
 
-import { $createBookmarkNode } from '@/nodes/BookmarkNode'
+import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
 import { INSERT_CARD_COMMAND, PASTE_LINK_COMMAND } from './commands'
 
@@ -33,8 +33,31 @@ export function registerLinkMatching(editor: LexicalEditor, deps: LinkMatchingDe
         return true
       }
 
+      // The bookmark class is resolved from the registered-node map, not
+      // imported from the shim — this module is on the card-free core path.
+      // When the editor doesn't register the bookmark card, a bare-URL paste
+      // degrades to the plain-link branch below.
+      const BookmarkNodeClass = getRegisteredNodeMap(editor).get('bookmark')?.klass
+
+      // if a link is pasted in a blank text node, insert a bookmark card
+      // (Shift-paste always takes the plain-link branch below)
+      if (
+        selectionContent.length === 0 &&
+        nodeContent.length === 0 &&
+        isShiftPressed.current !== true &&
+        BookmarkNodeClass
+      ) {
+        const url = linkMatch[1]
+        if (!url) {
+          return false
+        }
+        const bookmarkNode = new BookmarkNodeClass({ url })
+        editor.dispatchCommand(INSERT_CARD_COMMAND, { cardNode: bookmarkNode })
+        return true
+      }
+
       // if a link is pasted in a populated text node or pasted with Shift pressed, insert a link
-      if (nodeContent.length > 0 || isShiftPressed.current === true) {
+      if (nodeContent.length > 0 || isShiftPressed.current === true || !BookmarkNodeClass) {
         const link = linkMatch[1]
         if (!link) {
           return false
@@ -53,19 +76,6 @@ export function registerLinkMatching(editor: LexicalEditor, deps: LinkMatchingDe
         $insertNodes([linkNode, spaceTextNode])
         spaceTextNode.remove()
 
-        return true
-      }
-
-      // if a link is pasted in a blank text node, insert an embed card (may turn into bookmark)
-      if (selectionContent.length === 0 && nodeContent.length === 0) {
-        const url = linkMatch[1]
-        if (!url) {
-          return false
-        }
-        // $createEmbedNode does not exist in this codebase; the embed path is dead code.
-        // Insert a bookmark node as the closest available replacement.
-        const bookmarkNode = $createBookmarkNode({ url })
-        editor.dispatchCommand(INSERT_CARD_COMMAND, { cardNode: bookmarkNode })
         return true
       }
 

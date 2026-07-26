@@ -2,6 +2,7 @@ import clsx from 'clsx'
 
 import ImgBgIcon from '@/assets/icons/inkling-img-bg.svg?react'
 import { Tooltip } from '@/components/ui/Tooltip'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 export const ImageUploadSwatch = ({
   showBackgroundImage,
@@ -12,6 +13,8 @@ export const ImageUploadSwatch = ({
   onClickHandler?: () => void
   dataTestId?: string
 }) => {
+  const labels = useInklingLabels()
+
   return (
     <button
       className={clsx(
@@ -19,12 +22,12 @@ export const ImageUploadSwatch = ({
         showBackgroundImage && 'outline outline-2 outline-green',
       )}
       data-testid={dataTestId}
-      title="Image"
+      title={labels['color.image']}
       type="button"
       onClick={onClickHandler}
     >
       <ImgBgIcon className="size-[1.4rem]" />
-      <Tooltip label="Image" />
+      <Tooltip label={labels['color.image']} />
     </button>
   )
 }

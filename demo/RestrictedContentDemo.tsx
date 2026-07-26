@@ -1,5 +1,6 @@
 import type { MouseEvent as ReactMouseEvent } from 'react'
 
+import { ListItemNode, ListNode } from '@lexical/list'
 import { $getRoot, $isDecoratorNode } from 'lexical'
 import React, { useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -9,8 +10,9 @@ import {
   type ExternalControlAPI,
   InklingComposableEditor,
   InklingComposer,
+  MINIMAL_NODES,
   RestrictContentPlugin,
-} from '@/'
+} from '@/core'
 
 import FloatingButton from './components/FloatingButton'
 import Sidebar from './components/Sidebar'
@@ -18,6 +20,10 @@ import Watermark from './components/Watermark'
 import { klipyConfig, tenorConfig } from './utils/gifConfig'
 import { fileTypes, useFileUpload } from './utils/useFileUpload'
 import { useSnippets } from './utils/useSnippets'
+
+// The core entry requires the host to name its node set. MINIMAL_NODES alone
+// would reject pasted list JSON, so the list pair joins explicitly.
+const RESTRICTED_DEMO_NODES = [...MINIMAL_NODES, ListNode, ListItemNode]
 
 const cardConfig: CardConfig = {
   tenor: tenorConfig ?? undefined,
@@ -109,6 +115,7 @@ function RestrictedContentDemo({ paragraphs: propParagraphs }: RestrictedContent
   return (
     <div className="inkling-lexical top">
       <InklingComposer
+        nodes={RESTRICTED_DEMO_NODES}
         cardConfig={{ ...cardConfig, snippets, createSnippet, deleteSnippet }}
         fileUploader={{ useFileUpload: useFileUpload(), fileTypes }}
       >

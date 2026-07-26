@@ -3,6 +3,7 @@ import React from 'react'
 import CloseIcon from '@/assets/icons/inkling-close.svg?react'
 import { InputList } from '@/components/ui/InputList'
 import { LinkInputSearchItem } from '@/components/ui/LinkInputSearchItem'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { useSearchLinks, type ListOptionItem, type SearchLinksFn } from '@/hooks/useSearchLinks'
 import trackEvent from '@/utils/analytics'
 
@@ -33,6 +34,7 @@ export function UrlSearchInput({
   isLoading,
   searchLinks,
 }: UrlSearchInputProps) {
+  const labels = useInklingLabels()
   const { isSearching, listOptions } = useSearchLinks(value || '', searchLinks)
 
   React.useEffect(() => {
@@ -75,16 +77,16 @@ export function UrlSearchInput({
       >
         <div>
           <span className="mr-3" data-testid={`${dataTestId}-error-message`}>
-            Oops, that link didn&apos;t work.
+            {labels['url.error.message']}
           </span>
           <button className="mr-3 cursor-pointer" data-testid={`${dataTestId}-error-retry`} type="button">
             <span className="font-semibold underline" onClick={handleRetry}>
-              Retry
+              {labels['action.retry']}
             </span>
           </button>
           <button className="mr-3 cursor-pointer" data-testid={`${dataTestId}-error-pasteAsLink`} type="button">
             <span className="font-semibold underline" onClick={() => handlePasteAsLink(value || '')}>
-              Paste URL as link
+              {labels['url.error.pasteAsLink']}
             </span>
           </button>
         </div>

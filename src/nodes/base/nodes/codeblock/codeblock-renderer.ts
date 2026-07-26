@@ -1,11 +1,13 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
+import { SHIKI_HTML_CONFIG } from '@/nodes/base/render-context'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface CodeBlockNodeData {
   code: string
   language: string
   caption: string
+  highlightedHtml: string
 }
 
 export function renderCodeBlockNode(node: CodeBlockNodeData, context: RenderContext) {
@@ -22,7 +24,18 @@ export function renderCodeBlockNode(node: CodeBlockNodeData, context: RenderCont
     code.setAttribute('class', `language-${node.language}`)
   }
 
-  code.appendChild(document.createTextNode(node.code))
+  if (node.highlightedHtml) {
+    // Server-prerendered artifact: emitted verbatim modulo sanitization, with
+    // the raw source on `data-code` as the host's copy-button hook.
+    if (node.language) {
+      code.setAttribute('data-language', node.language)
+    }
+    code.setAttribute('data-code', node.code)
+    code.innerHTML = context.sanitizeCardHtml(node.highlightedHtml, SHIKI_HTML_CONFIG)
+  } else {
+    code.appendChild(document.createTextNode(node.code))
+  }
+
   pre.appendChild(code)
 
   if (node.caption) {

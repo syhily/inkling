@@ -6,8 +6,8 @@ import { ParagraphNode } from 'lexical'
 
 import type { ExportDOMOptions } from '@/nodes/base'
 
+import { htmlToLexical } from '#/utils/html-to-lexical-with-dom'
 import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
-import { htmlToLexical } from '@/html/html-to-lexical/index'
 import { LexicalHTMLRenderer as Renderer } from '@/html/renderer/index'
 import { BaseImageNode } from '@/nodes/base'
 

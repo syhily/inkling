@@ -18,7 +18,8 @@
         /* -------------------------------------------------------------------- */
 
     :where(h1, h2, h3, h4, h5, h6):not(:where(.not-inkling-prose, [class~='not-inkling-prose'] *)) {
-      font-family:
+      font-family: var(
+        --font-sans,
         'Inter',
         -apple-system,
         BlinkMacSystemFont,
@@ -31,7 +32,8 @@
         noto,
         segoe ui,
         arial,
-        sans-serif;
+        sans-serif
+      );
       font-weight: 700;
       color: var(--black);
     }
@@ -231,7 +233,7 @@
         /* -------------------------------------------------------------------- */
 
     :where(p, blockquote, aside, ul, ol):not(:where(.not-inkling-prose, [class~='not-inkling-prose'] *)) {
-      font-family: georgia, Times, serif;
+      font-family: var(--font-serif, georgia, Times, serif);
       font-weight: 400;
       line-height: 1.6em;
       font-size: 2rem;
@@ -505,12 +507,7 @@
         /* -------------------------------------------------------------------- */
 
     :where(code):not(:where(.not-inkling-prose, [class~='not-inkling-prose'] *)) {
-      font-family:
-        Consolas,
-        Liberation Mono,
-        Menlo,
-        Courier,
-        monospace;
+      font-family: var(--font-mono, Consolas, Liberation Mono, Menlo, Courier, monospace);
       background: var(--grey-100);
       border: 1px solid var(--grey-200);
       border-radius: 2px;
@@ -526,12 +523,7 @@
         /* -------------------------------------------------------------------- */
 
     :where(pre):not(:where(.not-inkling-prose, [class~='not-inkling-prose'] *)) {
-      font-family:
-        Consolas,
-        Liberation Mono,
-        Menlo,
-        Courier,
-        monospace;
+      font-family: var(--font-mono, Consolas, Liberation Mono, Menlo, Courier, monospace);
       background: var(--grey-100);
       border: 1px solid var(--grey-200);
       border-radius: 2px;

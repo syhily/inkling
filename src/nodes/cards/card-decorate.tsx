@@ -4,6 +4,7 @@ import type { ComponentType, ReactNode, SVGProps } from 'react'
 import type { DecorateTargetSpec } from '@/nodes/cards/card-declaration'
 
 import { CARD_DECLARATIONS, type CardNodeType } from '@/nodes/cards'
+import { getHostCard } from '@/nodes/cards/host-card-registry'
 
 import { render as renderAudioCard } from './decorate/audio'
 import { render as renderBookmarkCard } from './decorate/bookmark'
@@ -11,11 +12,13 @@ import { render as renderButtonCard } from './decorate/button'
 import { render as renderCalloutCard } from './decorate/callout'
 import { render as renderCodeBlockCard } from './decorate/codeblock'
 import { render as renderFileCard } from './decorate/file'
+import { render as renderFootnoteDefinitionCard } from './decorate/footnotedefinition'
 import { render as renderGalleryCard } from './decorate/gallery'
 import { render as renderHeaderCard } from './decorate/header'
 import { render as renderHorizontalRuleCard } from './decorate/horizontalrule'
 import { IndicatorIcon as HtmlIndicatorIcon, render as renderHtmlCard } from './decorate/html'
 import { render as renderImageCard } from './decorate/image'
+import { render as renderMathCard } from './decorate/math'
 import { render as renderToggleCard } from './decorate/toggle'
 import { render as renderVideoCard } from './decorate/video'
 
@@ -45,11 +48,13 @@ const CARD_DECORATE_MODULES: Record<CardNodeType, CardDecorateModule> = {
   callout: { render: renderCalloutCard },
   codeblock: { render: renderCodeBlockCard },
   file: { render: renderFileCard },
+  footnotedefinition: { render: renderFootnoteDefinitionCard },
   gallery: { render: renderGalleryCard },
   header: { render: renderHeaderCard },
   horizontalrule: { render: renderHorizontalRuleCard },
   html: { render: renderHtmlCard, IndicatorIcon: HtmlIndicatorIcon },
   image: { render: renderImageCard },
+  math: { render: renderMathCard },
   toggle: { render: renderToggleCard },
   video: { render: renderVideoCard },
 }
@@ -78,6 +83,21 @@ const CARD_DECORATE_TARGETS_BY_TYPE = new Map(
   CARD_DECORATE_TARGETS.map((target): [string, (typeof CARD_DECORATE_TARGETS)[number]] => [target.nodeType, target]),
 )
 
-export function getCardDecorateTarget(nodeType: string): (typeof CARD_DECORATE_TARGETS)[number] | undefined {
-  return CARD_DECORATE_TARGETS_BY_TYPE.get(nodeType)
+/**
+ * The structural decorate-target type `getCardDecorateTarget` returns. The
+ * built-in targets keep their precise per-card types in
+ * `CARD_DECORATE_TARGETS` (the exhaustive `Record<CardNodeType, …>` guard
+ * above is unchanged); the widened return type admits the host card registry
+ * records (CONTEXT.md: "host card"), which carry the same facts resolved at
+ * registration.
+ */
+export interface CardDecorateTarget {
+  nodeType: string
+  decorateTarget: DecorateTargetSpec | undefined
+  render(node: LexicalNode): ReactNode
+  IndicatorIcon?: ComponentType<SVGProps<SVGSVGElement>>
+}
+
+export function getCardDecorateTarget(nodeType: string): CardDecorateTarget | undefined {
+  return CARD_DECORATE_TARGETS_BY_TYPE.get(nodeType) ?? getHostCard(nodeType)
 }

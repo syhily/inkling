@@ -7,6 +7,7 @@ import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator, type ToolbarIconName } from '@/components/ui/ToolbarMenu'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { getCardToolbarLabel } from '@/nodes/cards/card-toolbar-labels'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
@@ -65,6 +66,7 @@ export function CardActionToolbar({
 }: CardActionToolbarProps) {
   const [editor] = useLexicalComposerContext()
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
+  const labels = useInklingLabels()
   const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
   const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
   const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
@@ -88,7 +90,7 @@ export function CardActionToolbar({
             dataTestId={item.dataTestId}
             icon="edit"
             isActive={false}
-            label="Edit"
+            label={labels['toolbar.edit']}
             onClick={handleEdit}
           />
         )
@@ -100,7 +102,7 @@ export function CardActionToolbar({
             hide={!cardConfig.createSnippet}
             icon="snippet"
             isActive={false}
-            label="Save as snippet"
+            label={labels['toolbar.saveAsSnippet']}
             onClick={() => setShowSnippetToolbar(true)}
           />
         )

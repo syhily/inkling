@@ -3,22 +3,27 @@ import type { CreateEditorArgs, SerializedEditorState } from 'lexical'
 import { $insertGeneratedNodes } from '@lexical/clipboard'
 import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
-import { JSDOM } from 'jsdom'
 /* c8 ignore start -- V8 creates phantom branches for ESM imports */
 import { $createParagraphNode, $getRoot } from 'lexical'
 
+import type { ExportDOMDom } from '@/nodes/base'
+
 import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import { DEFAULT_CONFIG } from '@/nodes/base'
-import { registerDefaultTransforms } from '@/transforms'
+import { registerDefaultTransforms, type DefaultTransformsOptions } from '@/transforms'
 import { MINIMAL_DOCUMENT } from '@/utils/initial-document'
 /* c8 ignore stop */
 
 export interface htmlToLexicalOptions {
-  editorConfig: CreateEditorArgs
+  /** Required DOM port — parse goes through `dom.window.document`, so the module itself never touches a global or jsdom. */
+  dom: ExportDOMDom
+  editorConfig?: CreateEditorArgs
+  /** Import-time alignment handling, passed through to the default transforms; 'strip' (default) resets `format`, 'keep' preserves imported text-align. */
+  alignment?: DefaultTransformsOptions['alignment']
 }
 
 /* c8 ignore next -- V8 creates a phantom branch for the export */
-export function htmlToLexical(html: string, options?: htmlToLexicalOptions): SerializedEditorState {
+export function htmlToLexical(html: string, options: htmlToLexicalOptions): SerializedEditorState {
   if (!html) {
     return MINIMAL_DOCUMENT
   }
@@ -30,14 +35,17 @@ export function htmlToLexical(html: string, options?: htmlToLexicalOptions): Ser
     nodes: [...DEFAULT_HTML_NODES],
     html: DEFAULT_CONFIG.html,
   }
-  const editorConfig = Object.assign({}, defaultEditorConfig, options?.editorConfig)
+  const editorConfig = Object.assign({}, defaultEditorConfig, options.editorConfig)
 
-  const dom = new JSDOM(`<body>${html.trim()}</body>`)
+  // Standard parser entry — jsdom and browsers both support it, so the
+  // injected dom's provenance stays out of this module.
+  const doc = options.dom.window.document.implementation.createHTMLDocument('')
+  doc.body.innerHTML = html.trim()
   const editor = createHeadlessEditor(editorConfig)
 
   // one-shot headless editor, so the default transforms only normalize this
   // import — see the transform-policy note in src/utils/initial-document.ts
-  registerDefaultTransforms(editor)
+  registerDefaultTransforms(editor, { alignment: options.alignment })
 
   editor.update(
     () => {
@@ -45,7 +53,7 @@ export function htmlToLexical(html: string, options?: htmlToLexicalOptions): Ser
       const paragraph = $createParagraphNode()
       $getRoot().append(paragraph)
 
-      const nodes = $generateNodesFromDOM(editor, dom.window.document)
+      const nodes = $generateNodesFromDOM(editor, doc)
 
       // use @lexical/clipboard as it has additional logic for normalizing nodes
       const selection = $getRoot().select()

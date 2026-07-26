@@ -31,10 +31,8 @@ export function ToggleNodeComponent({
       <ToggleCard
         contentEditor={contentEditor}
         contentEditorInitialState={contentEditorInitialState}
-        contentPlaceholder={'Collapsible content'}
         headingEditor={headingEditor}
         headingEditorInitialState={headingEditorInitialState}
-        headingPlaceholder={'Toggle header'}
         isEditing={isEditing}
       />
 

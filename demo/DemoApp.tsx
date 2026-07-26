@@ -8,6 +8,7 @@ import {
   BASIC_NODES,
   BASIC_TRANSFORMERS,
   type CardConfig,
+  DEFAULT_NODES,
   type ExternalControlAPI,
   type FileUploader,
   InklingComposableEditor,
@@ -27,6 +28,7 @@ import LockIcon from './assets/icons/inkling-lock.svg?react'
 import DarkModeToggle from './components/DarkModeToggle'
 import FloatingButton from './components/FloatingButton'
 import InitialContentToggle from './components/InitialContentToggle'
+import { musicPlayer } from './components/MusicPlayerCard'
 import Sidebar from './components/Sidebar'
 import TitleTextBox from './components/TitleTextBox'
 import Watermark from './components/Watermark'
@@ -36,6 +38,8 @@ import content from './content/content.json'
 import minimalContent from './content/minimal-content.json'
 import { fetchEmbed } from './utils/fetchEmbed'
 import { klipyConfig, tenorConfig } from './utils/gifConfig'
+import { getDemoImageLibrary } from './utils/imageLibrary'
+import { ZH_LABELS } from './utils/labels'
 import { fileTypes, useFileUpload } from './utils/useFileUpload'
 import { useSnippets } from './utils/useSnippets'
 
@@ -43,6 +47,15 @@ const url = new URL(window.location.href)
 const params = new URLSearchParams(url.search)
 const WEBSOCKET_ENDPOINT = params.get('multiplayerEndpoint') || 'ws://localhost:1234'
 const WEBSOCKET_ID = params.get('multiplayerId') || '0'
+
+// e2e seam: `?renderMath=stub` installs a deterministic stand-in for the
+// host's server-side KaTeX channel, so the math card's preview flow is
+// exercised without a real backend. The default demo host deliberately has
+// no renderMath — its preview shows the TeX source.
+const stubRenderMath: NonNullable<CardConfig['renderMath']> = () =>
+  Promise.resolve({
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 16" width="40" height="16" data-math-stub="true"><rect width="40" height="16" fill="currentColor"/></svg>',
+  })
 
 const defaultCardConfig: CardConfig = {
   fetchEmbed: async (href, options) => {
@@ -168,7 +181,9 @@ function getAllowedNodes({ editorType }: { editorType?: string }) {
   } else if (editorType === 'minimal') {
     return MINIMAL_NODES
   }
-  return undefined
+  // the full surface composes the demo host card (CONTEXT.md: "host card")
+  // alongside the built-in set instead of forking DEFAULT_NODES
+  return [...DEFAULT_NODES, musicPlayer.node]
 }
 
 interface DemoEditorProps {
@@ -229,6 +244,7 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
 
   const darkMode = searchParams.get('darkMode') === 'true'
   const contentParam = searchParams.get('content')
+  const labels = searchParams.get('labels') === 'zh' ? ZH_LABELS : undefined
 
   const defaultContent = React.useMemo(() => {
     return JSON.stringify(getDefaultContent({ editorType }))
@@ -392,6 +408,10 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
     createSnippet,
     deleteSnippet,
     searchLinks: searchParams.get('searchLinks') === 'false' ? undefined : defaultCardConfig.searchLinks,
+    renderMath: searchParams.get('renderMath') === 'stub' ? stubRenderMath : undefined,
+    // e2e seam: `?imageLibrary=fixture[-upload]` installs the fixture adapter
+    // (demo/utils/imageLibrary.ts); absent = no library menu entry
+    imageLibrary: getDemoImageLibrary(searchParams.get('imageLibrary')),
   }
 
   const fileUploader: FileUploader = { useFileUpload: useFileUpload({ isMultiplayer }), fileTypes }
@@ -443,6 +463,7 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
       fileUploader={fileUploader}
       initialEditorState={initialContent}
       isTKEnabled={true}
+      labels={labels}
       multiplayerDocId={`demo/${WEBSOCKET_ID}`}
       multiplayerEndpoint={WEBSOCKET_ENDPOINT}
       nodes={getAllowedNodes({ editorType })}

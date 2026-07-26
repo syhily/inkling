@@ -13,9 +13,11 @@ import GIFIcon from '@/assets/icons/inkling-card-type-gif.svg?react'
 import HeaderCardIcon from '@/assets/icons/inkling-card-type-header.svg?react'
 import HtmlCardIcon from '@/assets/icons/inkling-card-type-html.svg?react'
 import ImageCardIcon from '@/assets/icons/inkling-card-type-image.svg?react'
+import MathCardIcon from '@/assets/icons/inkling-card-type-math.svg?react'
 import ToggleIcon from '@/assets/icons/inkling-card-type-toggle.svg?react'
 import VideoCardIcon from '@/assets/icons/inkling-card-type-video.svg?react'
 import { CARD_DECLARATIONS } from '@/nodes/cards'
+import { getHostCard } from '@/nodes/cards/host-card-registry'
 
 /**
  * The menu/drag icons the declarations name by `CardIconId`. This is the one
@@ -36,9 +38,20 @@ const CARD_ICONS = {
   header: HeaderCardIcon,
   html: HtmlCardIcon,
   image: ImageCardIcon,
+  math: MathCardIcon,
   toggle: ToggleIcon,
   video: VideoCardIcon,
 } satisfies Record<CardIconId, NonNullable<MenuItem['Icon']>>
+
+/**
+ * Resolves a menu/drag icon named by `CardIconId` to its SVGR component —
+ * the same table the built-in menu projection reads. Exported for
+ * `defineCard` (`@/nodes/cards/host-cards`): host menu entries may name a
+ * built-in icon by id instead of passing a component.
+ */
+export function resolveCardIcon(id: CardIconId): NonNullable<MenuItem['Icon']> {
+  return CARD_ICONS[id]
+}
 
 /**
  * Wrapper-layer derived view over the card declarations: each declaration's
@@ -58,7 +71,7 @@ const CARD_MENUS: Partial<Record<string, MenuItem[]>> = Object.fromEntries(
         declaration.nodeType,
         menu.map(({ icon, command, ...item }) => ({
           ...item,
-          Icon: CARD_ICONS[icon],
+          Icon: resolveCardIcon(icon),
           insertCommand: command,
         })),
       ],
@@ -69,24 +82,27 @@ const CARD_MENUS: Partial<Record<string, MenuItem[]>> = Object.fromEntries(
 /**
  * Resolves a card's slash/plus menu entries — what the hand-written
  * `CARD_MENUS` map keyed by node type used to hold, now derived from the
- * declarations. Consumed by `assembleCardNode` (the assembled class's static
- * `cardMenu`).
+ * declarations, with a fallback to the host card registry (CONTEXT.md:
+ * "host card"). Consumed by `assembleCardNode` (the assembled class's
+ * static `cardMenu`) and by `getEditorCardNodes`.
  */
 export function getCardMenu(nodeType: string): MenuItem[] | undefined {
-  return CARD_MENUS[nodeType]
+  return CARD_MENUS[nodeType] ?? getHostCard(nodeType)?.cardMenu
 }
 
 /**
  * Resolves a card's drag-preview icon — what the thirteen `getIcon()` copies
  * returned. Menu-bearing cards use their first menu entry's icon (Image's
- * two-entry menu keeps the Image icon, not the GIF one); menu-less cards name
- * theirs explicitly as the declaration's `dragIcon` (CodeBlock is the only
- * one).
+ * two-entry menu keeps the Image icon, not the GIF one); user-draggable
+ * menu-less cards name theirs explicitly as the declaration's `dragIcon`
+ * (CodeBlock). The menu-less footnote definition resolves no icon — it lives
+ * in the doc-end run and the run-invariant transform re-parks it anyway.
+ * Host cards resolve theirs at registration (`defineCard`).
  */
 export function getCardDragIcon(nodeType: string): MenuItem['Icon'] {
   const declaration = CARD_DECLARATIONS.find((entry) => entry.nodeType === nodeType)
   if (!declaration) {
-    return undefined
+    return getHostCard(nodeType)?.dragIcon
   }
   const dragIcon = 'dragIcon' in declaration ? declaration.dragIcon : undefined
   const menuIcon = 'menu' in declaration ? declaration.menu?.[0]?.icon : undefined

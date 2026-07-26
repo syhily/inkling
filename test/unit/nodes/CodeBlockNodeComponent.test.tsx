@@ -6,6 +6,7 @@ import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
+import { DEFAULT_LABELS } from '@/labels/inkling-labels'
 import { CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { CodeBlockNodeComponent } from '@/nodes/CodeBlockNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
@@ -45,6 +46,7 @@ function createComposerContext(darkMode: boolean, cardConfig: Record<string, unk
     },
     cardConfig,
     darkMode,
+    labels: DEFAULT_LABELS,
     enableMultiplayer: false,
     createWebsocketProvider: vi.fn(),
     onError: vi.fn(),

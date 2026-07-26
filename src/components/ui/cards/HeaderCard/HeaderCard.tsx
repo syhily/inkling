@@ -31,6 +31,7 @@ import {
   ToggleSetting,
 } from '@/components/ui/SettingsPanel'
 import { Tooltip } from '@/components/ui/Tooltip'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { Color, textColorForBackgroundColor } from '@/utils'
 import trackEvent from '@/utils/analytics'
 import { getAccentColor } from '@/utils/getAccentColor'
@@ -119,6 +120,7 @@ export function HeaderCard({
   handleButtonUrl,
   setFileInputRef,
 }: HeaderCardProps) {
+  const labels = useInklingLabels()
   const [backgroundColorPickerExpanded, setBackgroundColorPickerExpanded] = useState(false)
   const [buttonColorPickerExpanded, setButtonColorPickerExpanded] = useState(false)
 
@@ -184,25 +186,25 @@ export function HeaderCard({
 
   const layoutChildren = [
     {
-      label: 'Regular',
+      label: labels['settings.layout.regular'],
       name: 'regular',
       Icon: ImgRegularIcon,
       dataTestId: 'header-layout-regular',
     },
     {
-      label: 'Wide',
+      label: labels['settings.layout.wide'],
       name: 'wide',
       Icon: ImgWideIcon,
       dataTestId: 'header-layout-wide',
     },
     {
-      label: 'Full',
+      label: labels['settings.layout.full'],
       name: 'full',
       Icon: ImgFullIcon,
       dataTestId: 'header-layout-full',
     },
     {
-      label: 'Split',
+      label: labels['settings.layout.split'],
       name: 'split',
       Icon: LayoutSplitIcon,
       dataTestId: 'header-layout-split',
@@ -211,13 +213,13 @@ export function HeaderCard({
 
   const alignmentChildren = [
     {
-      label: 'Left',
+      label: labels['settings.alignment.left'],
       name: 'left',
       Icon: LeftAlignIcon,
       dataTestId: 'header-alignment-left',
     },
     {
-      label: 'Center',
+      label: labels['settings.alignment.center'],
       name: 'center',
       Icon: CenterAlignIcon,
       dataTestId: 'header-alignment-center',
@@ -226,8 +228,10 @@ export function HeaderCard({
 
   const { isLoading, progress } = fileUploader || {}
 
-  const headerPlaceholder = layout === 'split' ? 'Heading' : 'Enter heading text'
-  const subheaderPlaceholder = layout === 'split' ? 'Subheading text' : 'Enter subheading text'
+  const headerPlaceholder =
+    layout === 'split' ? labels['header.heading.placeholder.split'] : labels['header.heading.placeholder']
+  const subheaderPlaceholder =
+    layout === 'split' ? labels['header.subheading.placeholder.split'] : labels['header.subheading.placeholder']
 
   const hexColorValue = (color: string) => {
     if (color === 'accent') {
@@ -326,12 +330,16 @@ export function HeaderCard({
                   <IconButton
                     dataTestId="media-upload-size"
                     Icon={backgroundSize === 'cover' ? ShrinkIcon : ExpandIcon}
-                    label={backgroundSize === 'cover' ? 'Contain' : 'Cover'}
+                    label={
+                      backgroundSize === 'cover'
+                        ? labels['header.backgroundSize.contain']
+                        : labels['header.backgroundSize.cover']
+                    }
                     onClick={toggleBackgroundSize}
                   />
                 </>
               }
-              alt="Background image"
+              alt={labels['alt.backgroundImage']}
               backgroundSize={backgroundSize}
               className={clsx(
                 'sm:w-1/2',
@@ -343,7 +351,7 @@ export function HeaderCard({
                   correctedBackgroundSize === 'contain' &&
                   'mb-10 px-[calc(32px-(4rem/2))] xs:px-[calc(92px-(8rem/2))] sm:pr-[calc(92px-(12rem/2))] sm:pl-0 md:pr-[calc(92px-(12rem/2))] lg:pr-0',
               )}
-              desc="Click to select an image"
+              desc={labels['upload.header.desc']}
               dragHandler={imageDragHandler}
               errors={fileUploader?.errors}
               icon="image"
@@ -449,7 +457,7 @@ export function HeaderCard({
                 <Button
                   dataTestId="header-card-button"
                   disabled={true}
-                  placeholder="Add button text"
+                  placeholder={labels['button.text.placeholder']}
                   size={getButtonSize(layout || 'regular')}
                   style={
                     buttonColor
@@ -472,20 +480,25 @@ export function HeaderCard({
 
       {isEditing && (
         <SettingsPanel cardWidth={layout} className="mt-0">
-          <ButtonGroupSetting buttons={layoutChildren} label="Layout" selectedName={layout} onClick={handleLayout} />
+          <ButtonGroupSetting
+            buttons={layoutChildren}
+            label={labels['settings.layout']}
+            selectedName={layout}
+            onClick={handleLayout}
+          />
 
           {layout === 'split' && (
             <ToggleSetting
               dataTestId="header-swapped"
               isChecked={!!isSwapped}
-              label="Flip Layout"
+              label={labels['settings.flipLayout']}
               onChange={toggleSwapped}
             />
           )}
 
           <ButtonGroupSetting
             buttons={alignmentChildren}
-            label="Alignment"
+            label={labels['settings.alignment']}
             selectedName={alignment}
             onClick={handleAlignment}
           />
@@ -495,12 +508,12 @@ export function HeaderCard({
             eyedropper={layout === 'split'}
             hasTransparentOption={true}
             isExpanded={backgroundColorPickerExpanded}
-            label="Background"
+            label={labels['settings.background']}
             swatches={[
               ...(layout !== 'split'
                 ? [
                     {
-                      title: 'Image',
+                      title: labels['color.image'],
                       customContent: (
                         <button
                           className={clsx(
@@ -508,7 +521,7 @@ export function HeaderCard({
                             showBackgroundImage && 'outline outline-2 outline-green',
                           )}
                           data-testid="header-background-image-toggle"
-                          title="Image"
+                          title={labels['color.image']}
                           type="button"
                           onClick={() => {
                             handleShowBackgroundImage()
@@ -517,15 +530,15 @@ export function HeaderCard({
                           }}
                         >
                           <ImgBgIcon className="size-[1.4rem]" />
-                          <Tooltip label="Image" />
+                          <Tooltip label={labels['color.image']} />
                         </button>
                       ),
                     },
                   ]
                 : []),
-              { title: 'Black', hex: '#000000' },
-              { title: 'Grey', hex: '#F0F0F0' },
-              { title: 'Brand color', accent: true },
+              { title: labels['color.black'], hex: '#000000' },
+              { title: labels['color.grey'], hex: '#F0F0F0' },
+              { title: labels['color.brandColor'], accent: true },
             ]}
             value={showBackgroundImage && layout !== 'split' ? 'image' : backgroundColor || ''}
             onPickerChange={(color) => handleBackgroundColor(color, matchingTextColor(color))}
@@ -551,7 +564,7 @@ export function HeaderCard({
             }}
           >
             <MediaUploadSetting
-              alt="Background image"
+              alt={labels['alt.backgroundImage']}
               borderStyle="rounded"
               className={clsx('min-w-[296px]', (!showBackgroundImage || layout === 'split') && 'hidden')}
               errors={fileUploader?.errors}
@@ -561,7 +574,7 @@ export function HeaderCard({
               isDraggedOver={imageDragHandler?.isDraggedOver}
               isLoading={isLoading}
               isPinturaEnabled={isPinturaEnabled}
-              label="Image"
+              label={labels['settings.backgroundImage']}
               mimeTypes={['image/*']}
               openImageEditor={openImageEditor}
               placeholderRef={imageDragHandler?.setRef ?? undefined}
@@ -582,7 +595,7 @@ export function HeaderCard({
           <ToggleSetting
             dataTestId="header-button-toggle"
             isChecked={!!buttonEnabled}
-            label="Button"
+            label={labels['settings.button']}
             onChange={toggleButton}
           />
           {buttonEnabled && (
@@ -591,11 +604,11 @@ export function HeaderCard({
                 dataTestId="header-button-color"
                 eyedropper={layout === 'split'}
                 isExpanded={buttonColorPickerExpanded}
-                label="Button Color"
+                label={labels['settings.buttonColor']}
                 swatches={[
-                  { title: 'White', hex: '#ffffff' },
-                  { title: 'Black', hex: '#000000' },
-                  { title: 'Brand color', accent: true },
+                  { title: labels['color.white'], hex: '#ffffff' },
+                  { title: labels['color.black'], hex: '#000000' },
+                  { title: labels['color.brandColor'], accent: true },
                 ]}
                 value={buttonColor || ''}
                 onPickerChange={(color) => handleButtonColor(color, matchingTextColor(color))}
@@ -612,15 +625,15 @@ export function HeaderCard({
               />
               <InputSetting
                 dataTestId="header-button-text"
-                label="Button text"
-                placeholder="Add button text"
+                label={labels['settings.buttonText']}
+                placeholder={labels['button.text.placeholder']}
                 value={buttonText || ''}
                 onBlur={handleButtonTextBlur}
                 onChange={handleButtonText}
               />
               <InputUrlSetting
                 dataTestId="header-button-url"
-                label="Button URL"
+                label={labels['settings.buttonUrl']}
                 value={buttonUrl || ''}
                 onChange={handleButtonUrl}
               />

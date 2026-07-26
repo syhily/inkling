@@ -20,6 +20,7 @@ import React from 'react'
 
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator, type ToolbarIconName } from '@/components/ui/ToolbarMenu'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { $createAsideNode } from '@/nodes/AsideNode'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 import { isNestedEditor } from '@/utils/lexical-internals'
@@ -77,6 +78,7 @@ export default function FormatToolbar({
   const {
     cardConfig: { createSnippet },
   } = React.useContext(InklingHostIntegrationContext)
+  const labels = useInklingLabels()
 
   let hideHeading = false
   if (!editor.hasNodes([HeadingNode])) {
@@ -189,7 +191,7 @@ export default function FormatToolbar({
         hide={hideBold}
         icon="bold"
         isActive={isBold}
-        label="Bold"
+        label={labels['toolbar.bold']}
         shortcutKeys={[ctrlOrCmdSymbol(), 'B']}
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')}
       />
@@ -197,7 +199,7 @@ export default function FormatToolbar({
         data-inkling-toolbar-button="italic"
         icon="italic"
         isActive={isItalic}
-        label="Emphasize"
+        label={labels['toolbar.emphasize']}
         shortcutKeys={[ctrlOrCmdSymbol(), 'I']}
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic')}
       />
@@ -206,7 +208,7 @@ export default function FormatToolbar({
         hide={hideHeading}
         icon="headingTwo"
         isActive={blockType === 'h2'}
-        label="Heading 2"
+        label={labels['toolbar.heading2']}
         shortcutKeys={[ctrlOrSymbol(), altOrOption(), '2']}
         onClick={() => (blockType === 'h2' ? formatParagraph() : formatHeading('h2'))}
       />
@@ -215,7 +217,7 @@ export default function FormatToolbar({
         hide={hideHeading}
         icon="headingThree"
         isActive={blockType === 'h3'}
-        label="Heading 3"
+        label={labels['toolbar.heading3']}
         shortcutKeys={[ctrlOrSymbol(), altOrOption(), '3']}
         onClick={() => (blockType === 'h3' ? formatParagraph() : formatHeading('h3'))}
       />
@@ -225,7 +227,7 @@ export default function FormatToolbar({
         hide={hideQuotes}
         icon={quoteIcon(blockType)}
         isActive={blockType.endsWith('quote') || blockType.endsWith('aside')}
-        label="Quote"
+        label={labels['toolbar.quote']}
         shortcutKeys={[ctrlOrSymbol(), 'Q']}
         onClick={formatQuote}
       />
@@ -234,7 +236,7 @@ export default function FormatToolbar({
         data-inkling-toolbar-button="link"
         icon="link"
         isActive={!!isLinkSelected}
-        label="Link"
+        label={labels['toolbar.link']}
         shortcutKeys={[ctrlOrCmdSymbol(), 'K']}
         onClick={onLinkClick}
       />
@@ -245,7 +247,7 @@ export default function FormatToolbar({
         hide={hideSnippets}
         icon="snippet"
         isActive={false}
-        label="Save as snippet"
+        label={labels['toolbar.saveAsSnippet']}
         onClick={onSnippetClick}
       />
     </ToolbarMenu>

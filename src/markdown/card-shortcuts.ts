@@ -40,13 +40,42 @@
 // fresh-key side is key-pinned in
 // test/unit/plugins/HorizontalRulePlugin.test.tsx; the kept-paragraph side is
 // covered by the import pin and typing e2e, not by key.)
+//
+// The card classes are resolved through the editor's registered-node map at
+// call time (`$registeredCardClass`), not imported from the card shims: this
+// module is reachable from the card-free core path (keyboard navigation is
+// mounted by every InklingComposableEditor), and the shims drag in the
+// decorate tree. An editor that doesn't register the card simply gets no
+// shortcut — `$fireFenceKeyboardShortcut` returns false, the `$insert*`
+// bodies no-op.
 
-import type { ElementNode } from 'lexical'
+import {
+  $createNodeSelection,
+  $createParagraphNode,
+  $getEditor,
+  $getSelection,
+  $isTextNode,
+  $setSelection,
+  type ElementNode,
+  type Klass,
+  type LexicalNode,
+} from 'lexical'
 
-import { $createNodeSelection, $createParagraphNode, $getSelection, $isTextNode, $setSelection } from 'lexical'
+import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
-import { $createCodeBlockNode } from '@/nodes/CodeBlockNode'
-import { $createHorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
+/**
+ * The registered class for a card node type, looked up on the active editor
+ * at call time. The shims' `$create*Node` factories statically import the
+ * assembled card classes, which would drag the whole decorate tree into this
+ * module — and this module sits on the core path via the keyboard-navigation
+ * seam. The editor's registered-node map is the cycle-free source of the
+ * same class (the registered class IS the assembled one). `undefined` when
+ * the editor doesn't register the card — every caller treats that as
+ * "shortcut unavailable".
+ */
+function $registeredCardClass(nodeType: string): Klass<LexicalNode> | undefined {
+  return getRegisteredNodeMap($getEditor()).get(nodeType)?.klass
+}
 
 /** enter/tab trigger: fires on the key regardless of trailing space. NOT
  * end-anchored, so the `(\w{1,10})` group does not cap the language length
@@ -61,15 +90,22 @@ export const FENCE_TRANSFORMER_REGEXP = /^```(\w{1,10})?\s/
 /**
  * Replace the fence paragraph with a code block card and put a NodeSelection
  * on it so the card immediately renders in edit mode. Shared by the enter,
- * tab, and markdown-transformer triggers.
+ * tab, and markdown-transformer triggers. Returns false — leaving the tree
+ * untouched — when the editor doesn't register the code card.
  */
-export function $insertCodeBlockForShortcut(topLevelElement: ElementNode, language: string | undefined): void {
-  const replacementNode = topLevelElement.replace($createCodeBlockNode({ language, _openInEditMode: true }))
+export function $insertCodeBlockForShortcut(topLevelElement: ElementNode, language: string | undefined): boolean {
+  const CodeBlockNodeClass = $registeredCardClass('codeblock')
+  if (!CodeBlockNodeClass) {
+    return false
+  }
+
+  const replacementNode = topLevelElement.replace(new CodeBlockNodeClass({ language, _openInEditMode: true }))
 
   // select node when replacing so it immediately renders in editing mode
   const replacementSelection = $createNodeSelection()
   replacementSelection.add(replacementNode.getKey())
   $setSelection(replacementSelection)
+  return true
 }
 
 /**
@@ -78,8 +114,8 @@ export function $insertCodeBlockForShortcut(topLevelElement: ElementNode, langua
  * the keyboard trigger's language extraction — the FULL rest of the line
  * (`replace(/^```/, '')`, 'js extra' and all) — where the transformer trigger
  * keeps its `match[1]` capture. Returns true when the shortcut fired (event
- * consumed); false when the caret isn't on a fence line, so the caller falls
- * through to its other key handling.
+ * consumed); false when the caret isn't on a fence line or the code card
+ * isn't registered, so the caller falls through to its other key handling.
  */
 export function $fireFenceKeyboardShortcut(event: KeyboardEvent): boolean {
   const selection = $getSelection()
@@ -91,12 +127,14 @@ export function $fireFenceKeyboardShortcut(event: KeyboardEvent): boolean {
   if (!textContent.match(FENCE_KEYBOARD_REGEXP)) {
     return false
   }
-  event.preventDefault()
   const topLevelElement = currentNode.getTopLevelElement()
   if (!topLevelElement) {
     return false
   }
-  $insertCodeBlockForShortcut(topLevelElement, textContent.replace(/^```/, ''))
+  if (!$insertCodeBlockForShortcut(topLevelElement, textContent.replace(/^```/, ''))) {
+    return false
+  }
+  event.preventDefault()
   return true
 }
 
@@ -118,10 +156,15 @@ export type MarkdownTriggerPhase = 'import' | 'typing'
  * markdown transformer trigger (typing + import). On import, or when a next
  * sibling exists, the paragraph is replaced outright; at the document end on
  * a typing keystroke the (framework-emptied) paragraph is KEPT after the
- * rule so the caret has somewhere to land.
+ * rule so the caret has somewhere to land. A no-op when the editor doesn't
+ * register the horizontal-rule card.
  */
 export function $insertHorizontalRuleForMarkdownTrigger(parentNode: ElementNode, phase: MarkdownTriggerPhase): void {
-  const line = $createHorizontalRuleNode()
+  const HorizontalRuleNodeClass = $registeredCardClass('horizontalrule')
+  if (!HorizontalRuleNodeClass) {
+    return
+  }
+  const line = new HorizontalRuleNodeClass()
 
   if (phase === 'import' || parentNode.getNextSibling() !== null) {
     parentNode.replace(line)
@@ -136,10 +179,15 @@ export function $insertHorizontalRuleForMarkdownTrigger(parentNode: ElementNode,
  * per-update scan trigger (HorizontalRulePlugin). Same sibling branch as the
  * markdown trigger, but at the document end it creates a FRESH paragraph
  * after the rule (the emptied one is discarded) — the observable divergence
- * that keeps these bodies per-trigger.
+ * that keeps these bodies per-trigger. A no-op when the editor doesn't
+ * register the horizontal-rule card.
  */
 export function $insertHorizontalRuleForUpdateScanTrigger(parentNode: ElementNode): void {
-  const line = $createHorizontalRuleNode()
+  const HorizontalRuleNodeClass = $registeredCardClass('horizontalrule')
+  if (!HorizontalRuleNodeClass) {
+    return
+  }
+  const line = new HorizontalRuleNodeClass()
 
   if (parentNode.getNextSibling()) {
     parentNode.replace(line)

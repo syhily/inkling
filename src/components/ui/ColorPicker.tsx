@@ -7,6 +7,7 @@ import ImgBgIcon from '@/assets/icons/inkling-img-bg.svg?react'
 import { Button } from '@/components/ui/Button'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { useClickOutside } from '@/hooks/useClickOutside'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { getAccentColor } from '@/utils/getAccentColor'
 
 interface ColorPickerProps {
@@ -24,6 +25,7 @@ declare global {
 }
 
 export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange, children }: ColorPickerProps) {
+  const labels = useInklingLabels()
   // HexColorInput doesn't support adding a ref on the input itself
   const inputWrapperRef = useRef<HTMLDivElement | null>(null)
 
@@ -117,7 +119,7 @@ export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange,
         >
           <span className="mr-2 ml-1 text-grey-700">#</span>
           <HexColorInput
-            aria-label="Color value"
+            aria-label={labels['aria.colorValue']}
             className="z-50 w-full bg-transparent"
             color={hexValue}
             onChange={onChange}
@@ -133,7 +135,9 @@ export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange,
           )}
         </div>
 
-        {hasTransparentOption && <Button color="grey" value="Clear" onClick={() => onChange('transparent')} />}
+        {hasTransparentOption && (
+          <Button color="grey" value={labels['action.clear']} onClick={() => onChange('transparent')} />
+        )}
         {children}
       </div>
     </div>
@@ -220,6 +224,7 @@ export function ColorIndicator({
   children,
   showChildren,
 }: ColorIndicatorProps) {
+  const labels = useInklingLabels()
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const popoverRef = useRef<HTMLDivElement | null>(null)
 
@@ -328,7 +333,7 @@ export function ColorIndicator({
               )}
             </div>
             <button
-              aria-label="Pick color"
+              aria-label={labels['aria.pickColor']}
               className={`group relative size-6 rounded-full ${!selectedSwatch ? 'p-[2px]' : 'border border-grey-200 dark:border-grey-800'}`}
               data-testid="color-picker-toggle"
               type="button"
@@ -361,7 +366,7 @@ export function ColorIndicator({
               ) : (
                 <div className="absolute inset-0 rounded-full bg-[conic-gradient(hsl(360,100%,50%),hsl(315,100%,50%),hsl(270,100%,50%),hsl(225,100%,50%),hsl(180,100%,50%),hsl(135,100%,50%),hsl(90,100%,50%),hsl(45,100%,50%),hsl(0,100%,50%))]" />
               )}
-              <Tooltip label="Pick color" />
+              <Tooltip label={labels['aria.pickColor']} />
             </button>
           </div>
         </div>

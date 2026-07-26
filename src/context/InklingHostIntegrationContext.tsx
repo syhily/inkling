@@ -71,10 +71,65 @@ export interface UploadSettings {
   pinturaConfig?: PinturaConfig
 }
 
+export interface LibraryImageItem {
+  /** Card `src`. kobato: AdminImageDto.publicUrl */
+  src: string
+  /** Card `alt`. kobato: AdminImageDto.note ?? '' */
+  alt?: string
+  width?: number | null
+  height?: number | null
+  /* Host-schema pass-through keys: carried on the insert dataset, ignored by
+     the stock image declaration, persisted only when the host's own card
+     declaration declares them as properties (CONTEXT.md: "host card"). */
+  thumbhash?: string
+  storagePath?: string
+  imageId?: string
+}
+
+export interface ImageLibrarySettings {
+  /**
+   * Empty query = the default (unfiltered) listing, fetched immediately on
+   * picker open; non-empty queries are debounced. Resolving `undefined`
+   * means "transient failure / cancelled" — the picker keeps its last items
+   * (same convention as LinkingSettings.searchLinks).
+   */
+  search: (query: string) => Promise<LibraryImageItem[] | undefined>
+  /**
+   * Optional in-picker upload entry. The host owns the whole upload UX
+   * (e.g. kobato's UploadImageDialog, which creates the library row) and
+   * resolves with the uploaded item — treated as the selection — or
+   * `undefined` when cancelled. Absent = no upload button.
+   */
+  upload?: () => Promise<LibraryImageItem | undefined>
+}
+
+export interface LibrarySettings {
+  /**
+   * The host's image media library (docs/kobato-fit-plan.md C8). Present =
+   * the image card's menu gains an "Image library" entry opening the picker.
+   * The three host-schema keys (`thumbhash`/`storagePath`/`imageId`) ride the
+   * insert dataset and are silently ignored by the stock image declaration —
+   * they persist only when the host declares them as properties on its own
+   * card declaration.
+   */
+  imageLibrary?: ImageLibrarySettings
+}
+
+export interface MathSettings {
+  /**
+   * The host's server-side render channel (kobato: oRPC admin.renderMath;
+   * the 200ms debounce stays host-owned). Used for in-editor previews only —
+   * the artifacts persisted on the node are filled by the host's save
+   * pipeline, never written back by the editor.
+   */
+  renderMath?: (args: { tex: string; display: boolean }) => Promise<{ mathml?: string; svg?: string; error?: string }>
+}
+
 // The host's card-behaviour contract, closed (plan 048): every key the editor
 // reads is declared on a per-area slice and nothing else is accepted, so
 // renaming or tightening a key breaks host code loudly at compile time.
-export interface CardConfig extends GifSettings, LinkingSettings, SnippetSettings, UploadSettings {}
+export interface CardConfig
+  extends GifSettings, LinkingSettings, SnippetSettings, UploadSettings, MathSettings, LibrarySettings {}
 
 // Host-integration lifecycle (plan 047): the values the host application
 // hands the editor — uploads, card behaviour flags, and the error sink.

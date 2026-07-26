@@ -2,6 +2,8 @@ import React from 'react'
 
 import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
+import { useInklingLabels } from '@/hooks/useInklingLabels'
+
 const CARD_WIDTH_CLASSES: Partial<Record<CardWidth, string>> = {
   wide: [
     'w-[calc(75vw-var(--inkling-breakout-adjustment-with-fallback)+2px)] mx-[calc(50%-(50vw-var(--inkling-breakout-adjustment-with-fallback))-.8rem)] min-w-[calc(100%+3.6rem)] translate-x-[calc(50vw-50%+.8rem-var(--inkling-breakout-adjustment-with-fallback))]',
@@ -27,6 +29,8 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
     { cardType, cardWidth = 'regular', IndicatorIcon, isDragging, isEditing, isSelected, wrapperStyle, children },
     ref,
   ) => {
+    const labels = useInklingLabels()
+
     const wrapperClass = () => {
       if (wrapperStyle === 'wide' && (isEditing || isSelected)) {
         return '!-mx-3 !px-3'
@@ -53,7 +57,7 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
       indicatorIcon = (
         <div className="sticky top-0 lg:top-8">
           <IndicatorIcon
-            aria-label={`${cardType} indicator`}
+            aria-label={labels['aria.indicator'].replace('{cardType}', cardType ?? '')}
             className="absolute left-[-6rem] size-5 text-grey"
             style={{ top: '.6rem' }}
           />

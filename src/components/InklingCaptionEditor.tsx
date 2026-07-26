@@ -17,7 +17,7 @@ import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingNestedComposer from '@/components/InklingNestedComposer'
 import CardContext from '@/context/CardContext'
 import { useCardSelection } from '@/hooks/useCardSelection'
-import { MINIMAL_TRANSFORMERS } from '@/markdown/transformers'
+import { MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import {
   isTypeaheadMenuOpen,

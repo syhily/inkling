@@ -16,6 +16,8 @@ import linebreakSerializers from '@/nodes/base/serializers/linebreak'
 import paragraphSerializers from '@/nodes/base/serializers/paragraph'
 import { CARD_DECLARATIONS } from '@/nodes/cards'
 import { orderCardNodes } from '@/nodes/cards/derive-card-nodes'
+import { FootnoteRefNode } from '@/nodes/footnote/FootnoteRefNode'
+import { MathInlineNode } from '@/nodes/math/MathInlineNode'
 
 // re-export everything for easier importing
 export * from '@/nodes/base/InklingDecoratorNode'
@@ -34,12 +36,14 @@ export * from '@/nodes/base/nodes/bookmark/BookmarkNode'
 export * from '@/nodes/base/nodes/file/FileNode'
 export * from '@/nodes/base/nodes/header/HeaderNode'
 export * from '@/nodes/base/nodes/gallery/GalleryNode'
+export * from '@/nodes/base/nodes/math/MathNode'
 export * from '@/nodes/base/nodes/ExtendedTextNode'
 export * from '@/nodes/base/nodes/ExtendedHeadingNode'
 export * from '@/nodes/base/nodes/ExtendedQuoteNode'
 export * from '@/nodes/base/nodes/TKNode'
 export * from '@/nodes/base/nodes/at-link/index'
 export * from '@/nodes/base/nodes/zwnj/ZWNJNode'
+export * from '@/nodes/base/nodes/footnotedefinition/FootnoteDefinitionNode'
 
 import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
 import { rgbToHex } from '@/nodes/base/utils/rgb-to-hex'
@@ -130,4 +134,6 @@ export const DEFAULT_NODES = [
   AtLinkNode,
   AtLinkSearchNode,
   ZWNJNode,
+  MathInlineNode,
+  FootnoteRefNode,
 ]

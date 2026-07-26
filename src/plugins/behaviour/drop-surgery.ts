@@ -1,6 +1,15 @@
-import { $createNodeSelection, $getNearestNodeFromDOMNode, $getNodeByKey, $setSelection, type NodeKey } from 'lexical'
+import {
+  $createNodeSelection,
+  $getEditor,
+  $getNearestNodeFromDOMNode,
+  $getNodeByKey,
+  $setSelection,
+  type NodeKey,
+} from 'lexical'
 
-import { $createImageNode, type ImageNode, type ImageNodeDataset } from '@/nodes/ImageNode'
+import type { ImageNode, ImageNodeDataset } from '@/nodes/ImageNode'
+
+import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
 // Drop surgery — the headless $-surgeries behind DragDropReorderPlugin. The
 // reorder rules (@/utils/draggable/reorder-rules) own the drop decisions
@@ -50,19 +59,27 @@ export function $relocateCard(nodeKey: NodeKey | undefined, droppables: HTMLElem
  * droppable at `insertIndex` and selects it (images can be dragged out of a
  * gallery). Returns the created node, or null when the slot does not resolve
  * to a node — the drop still counts as handled, so the caller's result
- * mapping does not branch on this.
+ * mapping does not branch on this. Also null when the editor doesn't
+ * register the image card (the class comes from the registered-node map, not
+ * the shim, so this module stays off the decorate tree; unreachable there in
+ * practice — only gallery drags reach this path, and core has no gallery).
  */
 export function $insertDraggedImage(
   dataset: ImageNodeDataset,
   droppables: HTMLElement[],
   insertIndex: number,
 ): ImageNode | null {
+  const ImageNodeClass = getRegisteredNodeMap($getEditor()).get('image')?.klass
+  if (!ImageNodeClass) {
+    return null
+  }
+
   const targetNode = $getNearestNodeFromDOMNode(droppables[insertIndex])
   if (!targetNode) {
     return null
   }
 
-  const imageNode = $createImageNode(dataset)
+  const imageNode = new ImageNodeClass(dataset) as ImageNode
   targetNode.insertBefore(imageNode)
 
   // select the newly inserted image card

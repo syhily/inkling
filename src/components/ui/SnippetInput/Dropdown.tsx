@@ -1,6 +1,7 @@
 import ReplaceIcon from '@/assets/icons/inkling-sync.svg?react'
 import PlusIcon from '@/assets/icons/plus.svg?react'
 import { type SnippetItem } from '@/context/InklingHostIntegrationContext'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 export const Dropdown = ({
   snippets,
@@ -17,6 +18,8 @@ export const Dropdown = ({
   isCreateButtonActive?: boolean
   activeMenuItem?: number
 }) => {
+  const labels = useInklingLabels()
+
   return (
     <ul
       className="absolute mt-[-1px] w-full max-w-[240px] rounded-b border border-grey-200 bg-white shadow-md dark:border-grey-900 dark:bg-grey-950"
@@ -28,7 +31,7 @@ export const Dropdown = ({
           type="button"
           onClick={onCreateSnippet}
         >
-          <span>Create &quot;{value}&quot;</span>
+          <span>{labels['snippet.create'].replace('{name}', value ?? '')}</span>
           <PlusIcon className="size-3 stroke-green-600 stroke-[3px]" />
         </button>
       </li>
@@ -49,10 +52,12 @@ const DropdownSection = ({
   onClick?: (name: string) => void
   activeMenuItem?: number
 }) => {
+  const labels = useInklingLabels()
+
   return (
     <li role="separator">
       <span className="block border-t border-grey-200 px-3 pt-3 pb-2 text-[1.1rem] font-semibold tracking-wide text-grey-600 uppercase dark:border-grey-900 dark:text-grey-800">
-        Replace existing
+        {labels['snippet.replaceExisting']}
       </span>
       <ul role="menu">
         {list.map((item: SnippetItem, index: number) => (

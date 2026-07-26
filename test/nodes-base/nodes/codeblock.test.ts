@@ -128,6 +128,7 @@ describe('BaseCodeBlockNode', function () {
             code: '<script></script>',
             language: 'javascript',
             caption: 'A code block',
+            highlightedHtml: '',
           },
         ])
         resolve()
@@ -175,9 +176,111 @@ describe('BaseCodeBlockNode', function () {
           code: '<script></script>',
           language: 'javascript',
           caption: 'A code block',
+          highlightedHtml: '',
         })
       }),
     )
+  })
+
+  describe('highlightedHtml artifact slot', function () {
+    const artifact = '<span style="--shiki-light:#657b83">const a = 1</span>'
+
+    it(
+      'keeps a construction-filled artifact',
+      editorTest(async function () {
+        const codeBlockNode = $createBaseCodeBlockNode({
+          code: 'const a = 1',
+          language: 'javascript',
+          highlightedHtml: artifact,
+        })
+
+        expect(codeBlockNode.highlightedHtml).toBe(artifact)
+      }),
+    )
+
+    it(
+      'clears the artifact when code changes',
+      editorTest(async function () {
+        const codeBlockNode = $createBaseCodeBlockNode({
+          code: 'const a = 1',
+          language: 'javascript',
+          highlightedHtml: artifact,
+        })
+
+        codeBlockNode.code = 'const b = 2'
+
+        expect(codeBlockNode.code).toBe('const b = 2')
+        expect(codeBlockNode.highlightedHtml).toBe('')
+      }),
+    )
+
+    it(
+      'clears the artifact when language changes',
+      editorTest(async function () {
+        const codeBlockNode = $createBaseCodeBlockNode({
+          code: 'const a = 1',
+          language: 'javascript',
+          highlightedHtml: artifact,
+        })
+
+        codeBlockNode.language = 'typescript'
+
+        expect(codeBlockNode.language).toBe('typescript')
+        expect(codeBlockNode.highlightedHtml).toBe('')
+      }),
+    )
+
+    it(
+      'keeps the artifact when the same value is reassigned',
+      editorTest(async function () {
+        const codeBlockNode = $createBaseCodeBlockNode({
+          code: 'const a = 1',
+          language: 'javascript',
+          highlightedHtml: artifact,
+        })
+
+        codeBlockNode.code = 'const a = 1'
+        codeBlockNode.language = 'javascript'
+
+        expect(codeBlockNode.highlightedHtml).toBe(artifact)
+      }),
+    )
+
+    it('round-trips the artifact through serialization', () =>
+      new Promise<void>((resolve, reject) => {
+        editor.update(
+          () => {
+            try {
+              const codeBlockNode = $createBaseCodeBlockNode({
+                code: 'const a = 1',
+                language: 'javascript',
+                highlightedHtml: artifact,
+              })
+              $getRoot().append(codeBlockNode)
+            } catch (e) {
+              reject(e)
+            }
+          },
+          { discrete: true },
+        )
+
+        const parsedExport = JSON.parse(JSON.stringify(editor.getEditorState()))
+        expect(parsedExport.root.children[0].highlightedHtml).toBe(artifact)
+
+        const roundTrippedEditor = createHeadlessEditor({ nodes: editorNodes })
+        const roundTrippedState = roundTrippedEditor.parseEditorState(JSON.stringify(parsedExport))
+        roundTrippedState.read(() => {
+          try {
+            const codeBlockNode = $getRoot().getChildren()[0] as BaseCodeBlockNode
+            expect(codeBlockNode.code).toBe('const a = 1')
+            expect(codeBlockNode.language).toBe('javascript')
+            expect(codeBlockNode.highlightedHtml).toBe(artifact)
+            resolve()
+          } catch (e) {
+            reject(e)
+          }
+        })
+      }))
   })
 
   describe('isEmpty()', function () {
@@ -222,6 +325,7 @@ describe('BaseCodeBlockNode', function () {
       editorTest(async function () {
         expect(BaseCodeBlockNode.urlTransformMap).toEqual({
           caption: 'html',
+          highlightedHtml: 'html',
         })
       }),
     )
@@ -290,6 +394,70 @@ describe('BaseCodeBlockNode', function () {
             </figure>
           `,
         )
+      }),
+    )
+
+    it(
+      'renders the prerendered artifact verbatim when provided',
+      editorTest(async function () {
+        const codeBlockNode = $createBaseCodeBlockNode({
+          code: 'const a = 1',
+          language: 'javascript',
+          highlightedHtml:
+            '<span style="--shiki-light:#657b83">const</span> <span style="--shiki-light:#859900">a</span>',
+        })
+        const { element } = codeBlockNode.exportDOM(editor, exportOptions)
+        const el = element as HTMLElement
+
+        await expectPrettifiedHtml(
+          el.outerHTML,
+          html`
+            <pre><code class="language-javascript" data-language="javascript" data-code="const a = 1"><span style="--shiki-light:#657b83">const</span> <span style="--shiki-light:#859900">a</span></code></pre>
+          `,
+        )
+      }),
+    )
+
+    it(
+      'renders the artifact inside a figure when a caption is provided',
+      editorTest(async function () {
+        const codeBlockNode = $createBaseCodeBlockNode({
+          code: 'const a = 1',
+          language: 'javascript',
+          caption,
+          highlightedHtml: '<span style="--shiki-light:#657b83">const</span>',
+        })
+        const { element } = codeBlockNode.exportDOM(editor, exportOptions)
+        const el = element as HTMLElement
+
+        await expectPrettifiedHtml(
+          el.outerHTML,
+          html`
+            <figure class="inkling-card inkling-code-card">
+              <pre><code class="language-javascript" data-language="javascript" data-code="const a = 1"><span style="--shiki-light:#657b83">const</span></code></pre>
+              <figcaption>A code block</figcaption>
+            </figure>
+          `,
+        )
+      }),
+    )
+
+    it(
+      'sanitizes the artifact but keeps span styles',
+      editorTest(async function () {
+        const codeBlockNode = $createBaseCodeBlockNode({
+          code: 'alert(1)',
+          language: 'javascript',
+          highlightedHtml:
+            '<span style="--shiki-light:#657b83">alert(1)</span><script>alert(2)</script><span style="color:#859900" onclick="alert(3)">x</span>',
+        })
+        const { element } = codeBlockNode.exportDOM(editor, exportOptions)
+        const el = element as HTMLElement
+
+        expect(el.outerHTML).not.toContain('<script')
+        expect(el.outerHTML).not.toContain('onclick')
+        expect(el.outerHTML).toContain('<span style="--shiki-light:#657b83">alert(1)</span>')
+        expect(el.outerHTML).toContain('<span style="color:#859900">x</span>')
       }),
     )
   })

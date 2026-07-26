@@ -42,7 +42,7 @@ function getWordCountState(topLevelEditor: LexicalEditor): WordCountState {
   return state
 }
 
-function getNodeWordCount(node: LexicalNode): number {
+function getNodeWordCount(node: LexicalNode, language?: string): number {
   if ($isElementNode(node)) {
     let textContent = ''
     const children = node.getChildren()
@@ -54,10 +54,10 @@ function getNodeWordCount(node: LexicalNode): number {
         textContent += '\n\n'
       }
     }
-    return countWords(textContent)
+    return countWords(textContent, language)
   }
 
-  return countWords(node.getTextContent())
+  return countWords(node.getTextContent(), language)
 }
 
 function findRootChild(node: LexicalNode): LexicalNode | null {
@@ -71,6 +71,7 @@ function findRootChild(node: LexicalNode): LexicalNode | null {
 interface CreateWordCounterOptions {
   editor: LexicalEditor
   onChange: (count: number) => void
+  language?: string
   throttleMs?: number
   throttleFn?: WordCounterThrottle
 }
@@ -78,6 +79,7 @@ interface CreateWordCounterOptions {
 export function createWordCounter({
   editor,
   onChange,
+  language,
   throttleMs = WORD_COUNT_THROTTLE_MS,
   throttleFn = defaultThrottle,
 }: CreateWordCounterOptions) {
@@ -108,7 +110,7 @@ export function createWordCounter({
 
       state.nodeWordCounts.clear()
       for (const child of children) {
-        const childCount = getNodeWordCount(child)
+        const childCount = getNodeWordCount(child, language)
         state.nodeWordCounts.set(child.getKey(), childCount)
         wordCount += childCount
       }
@@ -157,7 +159,7 @@ export function createWordCounter({
         const key = child.getKey()
         if (keysToRecompute.has(key) || !state.nodeWordCounts.has(key)) {
           wordCount -= state.nodeWordCounts.get(key) ?? 0
-          const childCount = getNodeWordCount(child)
+          const childCount = getNodeWordCount(child, language)
           state.nodeWordCounts.set(key, childCount)
           wordCount += childCount
         }

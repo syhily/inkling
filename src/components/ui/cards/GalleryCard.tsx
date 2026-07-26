@@ -8,6 +8,7 @@ import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
 import { IconButton } from '@/components/ui/IconButton'
 import { MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
 import { UploadFileInput, UploadingOverlay } from '@/components/ui/UploadChrome'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { MAX_IMAGES, buildGalleryRows } from '@/nodes/base/nodes/gallery/gallery-rows'
 
 interface GalleryRowProps {
@@ -48,6 +49,7 @@ interface GalleryImageProps {
 }
 
 function GalleryImage({ image, deleteImage, position, isDragging }: GalleryImageProps) {
+  const labels = useInklingLabels()
   const aspectRatio = (image.width || 1) / (image.height || 1)
   const style: React.CSSProperties = {
     flex: `${aspectRatio} 1 0%`,
@@ -91,7 +93,7 @@ function GalleryImage({ image, deleteImage, position, isDragging }: GalleryImage
               className={undefined}
               dataTestId={'delete-image'}
               Icon={DeleteIcon}
-              label="Delete"
+              label={labels['action.delete']}
               onClick={() => deleteImage(image)}
             />
           </div>
@@ -137,9 +139,11 @@ interface EmptyGalleryCardProps {
 }
 
 function EmptyGalleryCard({ openFilePicker, isDraggedOver, reorderHandler }: EmptyGalleryCardProps) {
+  const labels = useInklingLabels()
+
   return (
     <MediaPlaceholder
-      desc={`Click to select up to ${MAX_IMAGES} images`}
+      desc={labels['upload.gallery.desc'].replace('{max}', `${MAX_IMAGES}`)}
       filePicker={openFilePicker}
       icon="gallery"
       isDraggedOver={isDraggedOver}
@@ -152,13 +156,15 @@ function EmptyGalleryCard({ openFilePicker, isDraggedOver, reorderHandler }: Emp
 }
 
 function FileDragOverlay() {
+  const labels = useInklingLabels()
+
   return (
     <div
       className="bg-black-60 pointer-events-none absolute inset-0 flex items-center bg-black/60"
       data-inkling-card-drag-text
     >
       <span className="sans-serif fw7 f7 block w-full text-center font-bold text-white">
-        Drop to add up to {MAX_IMAGES} images
+        {labels['media.dragText.addToGallery'].replace('{max}', `${MAX_IMAGES}`)}
       </span>
     </div>
   )
@@ -195,6 +201,8 @@ export function GalleryCard({
   uploader,
   reorderHandler,
 }: GalleryCardProps) {
+  const labels = useInklingLabels()
+
   const openFilePicker = (): void => {
     fileInputRef.current?.click()
   }
@@ -237,7 +245,7 @@ export function GalleryCard({
                 type="button"
                 onClick={clearErrorMessage}
               >
-                Dismiss
+                {labels['action.dismiss']}
               </button>
             </span>
           </div>
@@ -257,7 +265,7 @@ export function GalleryCard({
         altTextPlaceholder=""
         captionEditor={captionEditor}
         captionEditorInitialState={captionEditorInitialState}
-        captionPlaceholder="Type caption for gallery (optional)"
+        captionPlaceholder={labels['caption.gallery.placeholder']}
         dataTestId="gallery-card-caption"
         isSelected={isSelected ?? false}
         readOnly={!isSelected}

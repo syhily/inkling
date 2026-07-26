@@ -3,6 +3,7 @@ import type { DragHandlerLike, FileInputRef, FileUploaderLike } from '@/componen
 import FileUploadIcon from '@/assets/icons/inkling-file-upload.svg?react'
 import { TextInput } from '@/components/ui/TextInput'
 import { UploadingPanel, UploadPlaceholder } from '@/components/ui/UploadChrome'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 interface PopulatedFileCardProps {
   isEditing?: boolean
@@ -111,6 +112,7 @@ export function FileCard({
   handleFileDesc,
   fileUploader,
 }: FileCardProps) {
+  const labels = useInklingLabels()
   const { isLoading: isUploading, progress, errors } = fileUploader || {}
 
   if (isUploading) {
@@ -134,7 +136,7 @@ export function FileCard({
 
   return (
     <UploadPlaceholder
-      desc="Click to upload a file"
+      desc={labels['upload.file.desc']}
       dragHandler={fileDragHandler}
       errors={errors}
       fileInputRef={fileInputRef}

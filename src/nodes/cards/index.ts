@@ -4,11 +4,13 @@ import { buttonDeclaration } from './button.declaration'
 import { calloutDeclaration } from './callout.declaration'
 import { codeBlockDeclaration } from './codeblock.declaration'
 import { fileDeclaration } from './file.declaration'
+import { footnoteDefinitionDeclaration } from './footnotedefinition.declaration'
 import { galleryDeclaration } from './gallery.declaration'
 import { headerDeclaration } from './header.declaration'
 import { horizontalRuleDeclaration } from './horizontalrule.declaration'
 import { htmlDeclaration } from './html.declaration'
 import { imageDeclaration } from './image.declaration'
+import { mathDeclaration } from './math.declaration'
 import { toggleDeclaration } from './toggle.declaration'
 import { videoDeclaration } from './video.declaration'
 
@@ -37,6 +39,8 @@ export const CARD_DECLARATIONS = [
   headerDeclaration,
   bookmarkDeclaration,
   galleryDeclaration,
+  mathDeclaration,
+  footnoteDefinitionDeclaration,
 ]
 
 export type CardNodeType = (typeof CARD_DECLARATIONS)[number]['nodeType']

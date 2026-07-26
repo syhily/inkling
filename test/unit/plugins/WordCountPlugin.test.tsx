@@ -43,11 +43,11 @@ describe('WordCountPlugin', () => {
     editor = createTestEditor()
   })
 
-  function renderPlugin(onChange?: (count: number) => void, pluginEditor = editor) {
+  function renderPlugin(onChange?: (count: number) => void, pluginEditor = editor, language?: string) {
     mockComposerContext(pluginEditor)
 
     const wordCountHandle = createWordCountHandle()
-    const result = renderHook(() => WordCountPlugin({ onChange }), {
+    const result = renderHook(() => WordCountPlugin({ onChange, language }), {
       wrapper: ({ children }) => (
         <WordCountHandleContext.Provider value={wordCountHandle}>{children}</WordCountHandleContext.Provider>
       ),
@@ -88,6 +88,26 @@ describe('WordCountPlugin', () => {
     unmount()
 
     expect(wordCountHandle.getState().onChange).toBeNull()
+  })
+
+  it('publishes the language on the word-count handle and clears it on unmount (C7)', () => {
+    const onChange = vi.fn()
+    const { unmount, wordCountHandle } = renderPlugin(onChange, editor, 'zh')
+
+    // nested composers read this so their own WordCountPlugin counts with the
+    // top-level plugin's language
+    expect(wordCountHandle.getState().language).toBe('zh')
+
+    unmount()
+
+    expect(wordCountHandle.getState().language).toBeNull()
+  })
+
+  it('defaults the published language to en', () => {
+    const onChange = vi.fn()
+    const { wordCountHandle } = renderPlugin(onChange)
+
+    expect(wordCountHandle.getState().language).toBe('en')
   })
 
   it('does nothing without an onChange callback', () => {

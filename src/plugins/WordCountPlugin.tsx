@@ -5,9 +5,10 @@ import { useWordCountHandle } from '@/context/WordCountHandleContext'
 import { createWordCounter } from '@/plugins/behaviour/word-counter'
 import { isNestedEditor } from '@/utils/lexical-internals'
 
-// TODO: language is not currently used but in future we should switch to using
-// Intl.Segmenter to get more accurate word counts for non-latin languages. For
-// now we're using Inkling's existing countWords util which is regex based
+// `language` selects the Intl.Segmenter word-granularity path in countWords
+// (docs/kobato-fit-plan.md C7 §3.4); without Segmenter the counter falls back
+// to the regex path. It is published on the composer handle alongside
+// onChange so nested composers count with the same language.
 export const WordCountPlugin = ({
   onChange,
   language = 'en',
@@ -24,20 +25,20 @@ export const WordCountPlugin = ({
     // can mount a nested <WordCountPlugin /> with it reactively, without
     // needing to pass onChange down
     if (!isNestedEditor(editor)) {
-      wordCountHandle.setState({ onChange })
+      wordCountHandle.setState({ onChange, language })
     }
 
-    const counter = createWordCounter({ editor, onChange })
+    const counter = createWordCounter({ editor, onChange, language })
     counter.attach()
 
     return () => {
       counter.detach()
 
       if (!isNestedEditor(editor)) {
-        wordCountHandle.setState({ onChange: null })
+        wordCountHandle.setState({ onChange: null, language: null })
       }
     }
-  }, [editor, onChange, wordCountHandle])
+  }, [editor, onChange, language, wordCountHandle])
   return null
 }
 

@@ -16,6 +16,7 @@ import {
   uploadProgressStyle,
   useFileInputRefTunnel,
 } from '@/components/ui/UploadChrome'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { openFileSelection } from '@/utils/openFileSelection'
 
 interface AudioThumbnailProps {
@@ -79,6 +80,7 @@ function AudioThumbnail({
   errors,
 }: AudioThumbnailProps) {
   const { fileInputRef, onFileInputRef } = useFileInputRefTunnel(parentFileInputRef)
+  const labels = useInklingLabels()
 
   if (isDraggedOver) {
     return (
@@ -86,7 +88,7 @@ function AudioThumbnail({
         className="group relative flex aspect-square h-20 items-center justify-center rounded-md bg-purple"
         data-testid="audio-thumbnail-dragover"
       >
-        <p className="font-sans text-sm font-semibold text-white">Drop it 🔥</p>
+        <p className="font-sans text-sm font-semibold text-white">{labels['media.dragText.compact']}</p>
       </div>
     )
   } else if (errors && errors.length > 0) {
@@ -102,14 +104,19 @@ function AudioThumbnail({
     return (
       <div className="group/image relative flex aspect-square h-20 items-center justify-center rounded-md bg-purple">
         <img
-          alt="Audio thumbnail"
+          alt={labels['alt.audioThumbnail']}
           className="size-full rounded-md object-cover transition ease-in"
           data-testid="audio-thumbnail"
           src={src}
         />
         {isEditing && (
           <div className="absolute top-2 right-2 flex opacity-0 transition-all group-hover/image:opacity-100">
-            <IconButton dataTestId="remove-thumbnail" Icon={DeleteIcon} label="Delete" onClick={removeThumbnail} />
+            <IconButton
+              dataTestId="remove-thumbnail"
+              Icon={DeleteIcon}
+              label={labels['action.delete']}
+              onClick={removeThumbnail}
+            />
           </div>
         )}
       </div>
@@ -231,6 +238,8 @@ export function AudioCard({
   removeThumbnail,
   thumbnailDragHandler,
 }: AudioCardProps) {
+  const labels = useInklingLabels()
+
   if (src) {
     return (
       <div className="not-inkling-prose">
@@ -238,7 +247,7 @@ export function AudioCard({
           duration={duration}
           fileInputRef={thumbnailFileInputRef}
           isEditing={isEditing}
-          placeholder="Add a title..."
+          placeholder={labels['audio.title.placeholder']}
           removeThumbnail={removeThumbnail}
           thumbnailDragHandler={thumbnailDragHandler}
           thumbnailMimeTypes={thumbnailMimeTypes}
@@ -254,7 +263,7 @@ export function AudioCard({
     return (
       <div className="not-inkling-prose">
         <UploadPlaceholder
-          desc="Click to upload an audio file"
+          desc={labels['upload.audio.desc']}
           dragHandler={audioDragHandler}
           errorDataTestId="audio-upload-errors"
           errors={audioUploader.errors}

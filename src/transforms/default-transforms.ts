@@ -5,6 +5,7 @@ import { $createHeadingNode, $createQuoteNode, HeadingNode, QuoteNode } from '@l
 import { mergeRegister, $createParagraphNode, ParagraphNode } from 'lexical'
 
 import { ExtendedHeadingNode } from '@/nodes/base'
+import { registerTableCellGuard } from '@/nodes/table/table-cell-guard'
 /* c8 ignore start */
 import { registerDenestTransform } from '@/transforms/transforms/denest'
 import { registerMergeListNodesTransform } from '@/transforms/transforms/merge-list-nodes'
@@ -18,16 +19,31 @@ export * from '@/transforms/transforms/remove-alignment'
 export * from '@/transforms/transforms/remove-at-link-nodes'
 /* c8 ignore stop */
 
+export interface DefaultTransformsOptions {
+  /**
+   * 'strip' (default) resets element `format` (text-align) so imported or
+   * pasted alignment can't linger invisible on surfaces without alignment
+   * UI; 'keep' preserves it for surfaces that expose alignment controls.
+   */
+  alignment?: 'strip' | 'keep'
+}
+
 /* c8 ignore next */
-export function registerDefaultTransforms(editor: LexicalEditor) {
+export function registerDefaultTransforms(editor: LexicalEditor, options?: DefaultTransformsOptions) {
+  const alignment = options?.alignment ?? 'strip'
+
   return mergeRegister(
     // strip unwanted alignment formats
-    registerRemoveAlignmentTransform(editor, ParagraphNode),
-    registerRemoveAlignmentTransform(editor, HeadingNode),
-    registerRemoveAlignmentTransform(editor, ExtendedHeadingNode),
-    registerRemoveAlignmentTransform(editor, QuoteNode),
-    // Lexical 0.46 added format support to list items; strip alignment from them too
-    registerRemoveAlignmentTransform(editor, ListItemNode),
+    ...(alignment === 'strip'
+      ? [
+          registerRemoveAlignmentTransform(editor, ParagraphNode),
+          registerRemoveAlignmentTransform(editor, HeadingNode),
+          registerRemoveAlignmentTransform(editor, ExtendedHeadingNode),
+          registerRemoveAlignmentTransform(editor, QuoteNode),
+          // Lexical 0.46 added format support to list items; strip alignment from them too
+          registerRemoveAlignmentTransform(editor, ListItemNode),
+        ]
+      : []),
 
     // fix invalid nesting of nodes
     registerDenestTransform(editor, ParagraphNode, () => $createParagraphNode()),
@@ -39,5 +55,8 @@ export function registerDefaultTransforms(editor: LexicalEditor) {
 
     // merge adjacent lists of the same type
     registerMergeListNodesTransform(editor),
+
+    // keep table cells inline-only (no-op when the table family isn't registered)
+    registerTableCellGuard(editor),
   )
 }

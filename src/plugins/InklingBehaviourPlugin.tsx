@@ -37,6 +37,8 @@ interface InklingBehaviourPluginProps {
   containerElem?: React.RefObject<HTMLElement | null>
   cursorDidExitAtTop?: () => void
   isNested?: boolean
+  /** True on surfaces that expose alignment controls: imported/typed `format` is kept instead of stripped. */
+  alignment?: boolean
 }
 
 function useInklingBehaviour({
@@ -44,11 +46,13 @@ function useInklingBehaviour({
   containerElem,
   cursorDidExitAtTop,
   isNested,
+  alignment,
 }: {
   editor: LexicalEditor
   containerElem: React.RefObject<HTMLElement | null>
   cursorDidExitAtTop?: () => void
   isNested?: boolean
+  alignment?: boolean
 }) {
   const cardSelectionStore = useCardSelectionStore()
 
@@ -81,12 +85,12 @@ function useInklingBehaviour({
     )
   }, [editor, cardSelectionStore, isNested, cursorDidExitAtTop, isShiftPressed])
 
-  // remove alignment formats,
+  // remove alignment formats (unless the surface keeps alignment),
   // denest invalid node nesting,
   // merge list nodes of same type
   React.useEffect(() => {
-    return registerDefaultTransforms(editor)
-  }, [editor])
+    return registerDefaultTransforms(editor, { alignment: alignment ? 'keep' : 'strip' })
+  }, [editor, alignment])
 
   return null
 }
@@ -95,6 +99,7 @@ export default function InklingBehaviourPlugin({
   containerElem,
   cursorDidExitAtTop,
   isNested,
+  alignment,
 }: InklingBehaviourPluginProps) {
   const [editor] = useLexicalComposerContext()
   // Fallback container for the outside-click deselect: this editor's own root
@@ -114,5 +119,6 @@ export default function InklingBehaviourPlugin({
     containerElem: containerElem ?? fallbackRef,
     cursorDidExitAtTop,
     isNested,
+    alignment,
   })
 }

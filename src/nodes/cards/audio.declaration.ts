@@ -22,6 +22,7 @@ export const audioDeclaration = {
   menu: [
     {
       label: 'Audio',
+      labelKey: 'audio',
       desc: 'Upload and play an audio file',
       icon: 'audio',
       command: INSERT_AUDIO_COMMAND,

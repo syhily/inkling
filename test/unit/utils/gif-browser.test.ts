@@ -292,6 +292,16 @@ describe('reduceGifKey: horizontal moves via the geometry port', () => {
     expect(fake.probes).toEqual([])
   })
 
+  it.each(['ArrowLeft', 'ArrowRight'])('%s on the search input is a no-op, even with a highlight', (key) => {
+    const state = { ...horizontalFixture(), highlightedId: 'left' }
+    const fake = createFakeGeometry({ rect, probes: [1] })
+    const { state: next, effects } = reduceGifKey(state, keyEvent(key, { target: 'input' }), fake.geometry)
+
+    expect(next).toBe(state)
+    expect(effects).toEqual([])
+    expect(fake.probes).toEqual([])
+  })
+
   it('ArrowLeft on the first gif focuses the search input', () => {
     const state = { ...horizontalFixture(), highlightedId: 'left' }
     const fake = createFakeGeometry({ rect, probes: [1] })

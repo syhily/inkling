@@ -12,7 +12,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useCardMenu } from '@/hooks/useCardMenu'
+import { resolveLabels, type InklingLabelsInput } from '@/labels/inkling-labels'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 
 const INSERT_TEST_COMMAND = createCommand('INSERT_TEST_COMMAND')
@@ -30,6 +32,20 @@ function createWrapper(cardConfig = {}) {
   const value = createHostIntegrationValue({ cardConfig })
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return <InklingHostIntegrationContext.Provider value={value}>{children}</InklingHostIntegrationContext.Provider>
+  }
+}
+
+// the labels seam (docs/kobato-fit-plan.md C7): prefs context carries the
+// composer's merged table; useCardMenu is the single menu-build injection point
+function createLabelsWrapper(labels: InklingLabelsInput) {
+  const hostValue = createHostIntegrationValue({ cardConfig: {} })
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    const prefsValue = React.useMemo(() => ({ darkMode: false, labels: resolveLabels(labels) }), [])
+    return (
+      <InklingHostIntegrationContext.Provider value={hostValue}>
+        <InklingUiPrefsContext.Provider value={prefsValue}>{children}</InklingUiPrefsContext.Provider>
+      </InklingHostIntegrationContext.Provider>
+    )
   }
 }
 
@@ -55,6 +71,55 @@ describe('useCardMenu', () => {
     const { result } = renderHook(() => useCardMenu(editor, 'html'), { wrapper: createWrapper() })
 
     expect(result.current.cardMenu.items.map((item) => item.label)).toEqual(['HTML'])
+  })
+
+  it('adds the Table pseudo entry when the editor registers the table family', () => {
+    const editor = createTestEditor()
+    const { result } = renderHook(() => useCardMenu(editor, 'table'), { wrapper: createWrapper() })
+
+    expect(result.current.cardMenu.items.map((item) => item.label)).toEqual(['Table'])
+  })
+
+  it('omits the Table entry when the table family is not registered', () => {
+    const editor = createEditor({
+      namespace: 'test',
+      nodes: DEFAULT_NODES.filter(
+        (entry) =>
+          typeof entry !== 'function' ||
+          !['table', 'tablerow', 'tablecell'].includes((entry as { getType: () => string }).getType()),
+      ),
+      onError: () => {},
+      theme: {},
+    })
+    const { result } = renderHook(() => useCardMenu(editor, 'table'), { wrapper: createWrapper() })
+
+    expect(result.current.cardMenu.items.map((item) => item.label)).toEqual([])
+  })
+
+  it('resolves menu labels, descs, and section names through the labels table', () => {
+    const editor = createTestEditor()
+    const { result } = renderHook(() => useCardMenu(editor, 'html'), {
+      wrapper: createLabelsWrapper({
+        'menu.html.label': '网页',
+        'menu.html.desc': '插入 HTML 卡片',
+        'menu.section.primary': '主要',
+      }),
+    })
+
+    expect(result.current.cardMenu.items.map((item) => item.label)).toEqual(['网页'])
+    expect(result.current.cardMenu.items[0].desc).toBe('插入 HTML 卡片')
+    expect(result.current.cardMenu.sections[0].label).toBe('主要')
+  })
+
+  it('keeps the declared aliases for query matching under a labels override', () => {
+    const editor = createTestEditor()
+    // the override localized the label, but the declared English matches
+    // array still drives slash-query matching
+    const { result } = renderHook(() => useCardMenu(editor, 'html'), {
+      wrapper: createLabelsWrapper({ 'menu.html.label': '网页' }),
+    })
+
+    expect(result.current.cardMenu.items.map((item) => item.label)).toEqual(['网页'])
   })
 
   it('dispatches the insert command with the resolved insertParams as dataset', () => {

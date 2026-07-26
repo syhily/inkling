@@ -6,6 +6,7 @@ import GalleryPlaceholderIcon from '@/assets/icons/inkling-gallery-placeholder.s
 import ImgPlaceholderIcon from '@/assets/icons/inkling-img-placeholder.svg?react'
 import ProductPlaceholderIcon from '@/assets/icons/inkling-product-placeholder.svg?react'
 import VideoPlaceholderIcon from '@/assets/icons/inkling-video-placeholder.svg?react'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 export const PLACEHOLDER_ICONS = {
   image: ImgPlaceholderIcon,
@@ -111,6 +112,8 @@ export function MediaPlaceholder({
   errorDataTestId?: string
   multiple?: boolean
 }) {
+  const labels = useInklingLabels()
+
   const containerClasses = clsx(
     'relative flex h-full items-center justify-center',
     type === 'button' ? 'rounded-lg bg-grey-100' : 'border bg-grey-50',
@@ -142,7 +145,7 @@ export function MediaPlaceholder({
     <div ref={placeholderRef} className="not-inkling-prose size-full" {...props} data-testid={dataTestId}>
       <div className={containerClasses}>
         {isDraggedOver ? (
-          <CardText text={`Drop ${multiple ? "'em" : 'it'} like it's hot 🔥`} type={type} />
+          <CardText text={multiple ? labels['media.dragText.multiple'] : labels['media.dragText.single']} type={type} />
         ) : (
           <button className={buttonClasses} name="placeholder-button" type="button" onClick={filePicker}>
             {type === 'button' ? (

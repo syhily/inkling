@@ -11,6 +11,7 @@ import React from 'react'
 
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { darkBaseExtensions, lightBaseExtensions } from '@/utils/codemirror-config'
 
 const languageMap = new Map<string, () => LanguageSupport>([
@@ -31,6 +32,7 @@ interface CodeEditorProps {
 export function CodeEditor({ code, language, updateCode, updateLanguage, onEscape }: CodeEditorProps) {
   const [showLanguage, setShowLanguage] = React.useState(true)
   const { darkMode } = React.useContext(InklingUiPrefsContext)
+  const labels = useInklingLabels()
   const viewRef = React.useRef<EditorView | null>(null)
   const codeRef = React.useRef(code)
 
@@ -114,10 +116,10 @@ export function CodeEditor({ code, language, updateCode, updateLanguage, onEscap
         onCreateEditor={onCreateEditor}
       />
       <input
-        aria-label="Code card language"
+        aria-label={labels['aria.codeblockLanguage']}
         className={`absolute top-1.5 right-1.5 z-999 w-1/5 rounded-md border border-grey-300 px-2 py-1 font-sans text-[1.3rem] leading-4 text-grey-900 transition-opacity focus-visible:outline-none dark:border-grey-900 dark:text-grey-400 ${showLanguage ? 'opacity-100' : 'opacity-0'}`}
         data-testid="code-card-language"
-        placeholder="Language..."
+        placeholder={labels['codeblock.language.placeholder']}
         type="text"
         value={language}
         onChange={onLanguageChange}
@@ -173,6 +175,8 @@ export function CodeBlockCard({
   updateLanguage,
   onEscape,
 }: CodeBlockCardProps) {
+  const labels = useInklingLabels()
+
   if (isEditing) {
     return (
       <CodeEditor
@@ -190,7 +194,7 @@ export function CodeBlockCard({
         <CardCaptionEditor
           captionEditor={captionEditor ?? null}
           captionEditorInitialState={captionEditorInitialState}
-          captionPlaceholder="Type caption for code block (optional)"
+          captionPlaceholder={labels['caption.codeblock.placeholder']}
           dataTestId="codeblock-caption"
           isSelected={isSelected}
         />

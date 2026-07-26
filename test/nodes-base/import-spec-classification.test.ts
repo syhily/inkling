@@ -14,7 +14,7 @@ import { CARD_DECLARATIONS, type CardDeclaration } from '@/nodes/cards'
 
 const DERIVABLE_CARDS = ['audio', 'button', 'callout', 'file', 'horizontalrule', 'image', 'toggle', 'video']
 
-const STRUCTURAL_CARDS = ['bookmark', 'codeblock', 'gallery', 'header', 'html']
+const STRUCTURAL_CARDS = ['bookmark', 'codeblock', 'footnotedefinition', 'gallery', 'header', 'html', 'math']
 
 type BaseNodeStatics = {
   importSpec?: CardImportSpec

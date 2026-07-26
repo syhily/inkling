@@ -8,6 +8,8 @@ import EmojiPickerPortal from '@/components/ui/EmojiPickerPortal'
 import { ReadOnlyOverlay } from '@/components/ui/ReadOnlyOverlay'
 import { ColorOptionSetting, SettingsPanel, ToggleSetting } from '@/components/ui/SettingsPanel'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { lookupLabel } from '@/labels/inkling-labels'
 
 export type CalloutColorName = 'white' | 'grey' | 'blue' | 'green' | 'yellow' | 'red' | 'pink' | 'purple' | 'accent'
 
@@ -121,6 +123,14 @@ export function CalloutCard({
 }: CalloutCardProps) {
   const emojiButtonRef = React.useRef<HTMLButtonElement | null>(null)
   const { darkMode } = React.useContext(InklingUiPrefsContext)
+  const labels = useInklingLabels()
+
+  // The picker table keeps its English labels as defaults; the host's label
+  // table overrides each entry by its color name.
+  const colorButtons = calloutColorPicker.map((entry) => ({
+    ...entry,
+    label: lookupLabel(labels, `color.${entry.name}`, entry.label),
+  }))
 
   React.useEffect(() => {
     if (!isEditing) {
@@ -160,18 +170,23 @@ export function CalloutCard({
           initialEditorState={textEditorInitialState}
           nodes="minimal"
           placeholderClassName={`font-serif text-xl font-normal tracking-wide text-grey-500 !dark:text-white opacity-30`}
-          placeholderText={'Callout text...'}
+          placeholderText={labels['callout.text.placeholder']}
           singleParagraph={true}
           textClassName={`!my-0 w-full whitespace-normal bg-transparent font-serif text-xl font-normal ${CALLOUT_TEXT_COLORS[color]}`}
         />
       </div>
       {isEditing ? (
         <SettingsPanel darkMode={darkMode}>
-          <ToggleSetting dataTestId="emoji-toggle" isChecked={!!calloutEmoji} label="Emoji" onChange={toggleEmoji} />
+          <ToggleSetting
+            dataTestId="emoji-toggle"
+            isChecked={!!calloutEmoji}
+            label={labels['settings.emoji']}
+            onChange={toggleEmoji}
+          />
           <ColorOptionSetting
-            buttons={calloutColorPicker}
+            buttons={colorButtons}
             dataTestId="callout-color-picker"
-            label="Background"
+            label={labels['settings.background']}
             selectedName={color}
             onClick={handleColorChange}
           />

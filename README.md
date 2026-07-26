@@ -32,9 +32,33 @@ The package exposes both ESM and CommonJS entry conditions:
 - `require('@inkling/editor')` resolves to `dist/editor.umd.cjs` (CommonJS).
 - `dist/editor.umd.js` remains as a legacy browser/direct-path artifact with a runtime body identical to the `.cjs` file (only its sourcemap trailer differs); Node's `require` condition resolves the `.cjs` file.
 
+## The `./core` entry
+
+`@inkling/editor/core` is a second, card-free entry for comment-level compositions — a surface that wants the editor chrome and inline formatting without paying for the card runtimes (CodeMirror, emoji data, the card UIs) or `yjs` in its bundle. It is ESM-only; CommonJS consumers keep using the root entry.
+
+```tsx
+import { InklingComposer, InklingSurface, MINIMAL_NODES, MINIMAL_TRANSFORMERS } from '@inkling/editor/core'
+import '@inkling/editor/core.css'
+;<InklingComposer nodes={MINIMAL_NODES} initialEditorState={state}>
+  <InklingSurface
+    onChange={onChange}
+    singleParagraph
+    markdownTransformers={MINIMAL_TRANSFORMERS}
+    isDragEnabled={false}
+  />
+</InklingComposer>
+```
+
+Two composition defaults differ from the root entry:
+
+- `nodes` is **required** on `InklingComposer` — the host names its node set (`MINIMAL_NODES`, `BASIC_NODES`, or its own array) instead of defaulting to the full card set.
+- `MarkdownShortcutPlugin`'s default transformer set is `MINIMAL_TRANSFORMERS` everywhere, so a bare `InklingSurface` gets no heading/list/code-fence shortcuts unless the host passes transformers explicitly.
+
+The entry exports only the card-free surface: `InklingComposer`, `InklingSurface`, `InklingComposableEditor`, `RestrictContentPlugin`, the `MINIMAL`/`BASIC` node and transformer sets, and the host-config and Lexical types those props name. `DEFAULT_NODES`, the card shims, the feature plugins, and the markdown/HTML conversion APIs stay on the root entry. `core.css` carries the same stylesheet as `style.css` today (CSS is not layered yet). Collaboration (`enableMultiplayer`) still works from either entry — the `yjs`/`y-websocket` runtime loads as a lazy chunk at runtime.
+
 ## TypeScript
 
-The package publishes a single bundled declaration file at `dist/editor.d.ts`, wired through both the top-level `types` field and the `exports["."].types` condition, so it resolves under `moduleResolution: "Bundler"` and `"NodeNext"` alike.
+The package publishes a bundled declaration file per entry — `dist/editor.d.ts` for the root and `dist/core.d.ts` for `./core` — wired through each entry's `types` export condition (and the top-level `types` field for the root), so both resolve under `moduleResolution: "Bundler"` and `"NodeNext"` alike.
 
 Types for every bundled runtime (Lexical, markdown-it, CodeMirror, emoji-mart, etc.) are **inlined** into the declaration, so consumers only need their own React types — no second Lexical or card-runtime install for the type checker:
 
@@ -152,12 +176,18 @@ Used for developing/demoing the editor. Renders a blank editor with all features
 
 Styling should be done using Tailwind classes where possible.
 
-All styles are scoped under `.lexical` class to avoid clashes and keep styling as isolated as possible. PostCSS nesting support is present to make this easier.
+All editor styles are scoped under the `.inkling-lexical` class to avoid clashes and keep styling as isolated as possible. CSS nesting is supported throughout (Tailwind CSS v4 compiles it).
 
 - Styles located in `src/styles/` are included in the final built module.
 - Styles located in `demo/*.css` are only used in the demo and will not be included in the built module.
 
-When packaging the module, styles are included inside the JS file rather than being separate to allow for a single import of the module in the consuming app.
+The build emits the stylesheet as a separate artifact — `dist/style.css`, published under the `@inkling/editor/style.css` export subpath (`@inkling/editor/core.css` for the `./core` entry):
+
+```tsx
+import '@inkling/editor/style.css'
+```
+
+The UMD artifact additionally injects the same styles at runtime, so direct-browser consumers need no CSS import. Theme token defaults are scoped to `.inkling-lexical` — the sheet never claims the host page's `:root`. The overridable variables and the dark-mode contract are documented in `docs/theming.md`.
 
 **SVGs**
 

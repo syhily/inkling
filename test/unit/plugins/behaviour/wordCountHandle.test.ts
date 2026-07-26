@@ -10,10 +10,10 @@ import { createWordCountHandle } from '@/plugins/behaviour/wordCountHandle'
 // state shape and its context wiring.
 
 describe('createWordCountHandle', () => {
-  it('starts with no callback', () => {
+  it('starts with no callback and no language', () => {
     const handle = createWordCountHandle()
 
-    expect(handle.getState()).toEqual({ onChange: null })
+    expect(handle.getState()).toEqual({ onChange: null, language: null })
   })
 })
 
@@ -21,6 +21,6 @@ describe('WordCountHandleContext', () => {
   it('falls back to a default handle outside any provider', () => {
     const { result } = renderHook(() => useWordCountHandle())
 
-    expect(result.current.getState()).toEqual({ onChange: null })
+    expect(result.current.getState()).toEqual({ onChange: null, language: null })
   })
 })

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { GifBrowser, GifBrowserEffect, GifGeometry, GifKeyTarget } from '@/utils/services/gif-browser'
 
@@ -6,6 +6,7 @@ import SearchIcon from '@/assets/icons/inkling-search.svg?react'
 import { Error } from '@/components/ui/file-selectors/Gif/Error'
 import { Gif } from '@/components/ui/file-selectors/Gif/Gif'
 import { Loader } from '@/components/ui/file-selectors/Gif/Loader'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 // number of columns based on selector container width
 const TWO_COLUMN_WIDTH = 540
@@ -20,33 +21,25 @@ export interface GifSelectorProps {
 
 // Render adapter over the headless gif browser: snapshot in, JSX out, DOM
 // events translated to intents. It owns only what is inherently DOM — the
-// geometry port (elementFromPoint probing), the focus-request latch the Gif
+// geometry port (elementFromPoint probing), the keyboard focus request the Gif
 // tiles consume, the resize/scroll/click-outside listeners, and executing the
 // effects the browser returns for key intents.
 const GifSelector = ({ browser, onGifInsert, onClickOutside, provider }: GifSelectorProps) => {
+  const labels = useInklingLabels()
   const selectorRef = useRef<HTMLDivElement | null>(null)
   const searchRef = useRef<HTMLInputElement | null>(null)
-  const focusRequestRef = useRef<string | null>(null)
+  // Keyboard-driven focus request for the highlighted tile, as state: the Gif
+  // tile's effect only re-runs on observable change, so a request must render
+  // through props — a hover-set highlight produces no transition for a ref
+  // latch to ride on. Hover itself never requests focus: a resting cursor
+  // must not yank focus out of the search input.
+  const [focusRequestId, setFocusRequestId] = useState<string | null>(null)
+  const clearFocusRequest = useCallback(() => setFocusRequestId(null), [])
   const snapshot = React.useSyncExternalStore(browser.subscribe, browser.getSnapshot)
   const { columns, isLoading, isLazyLoading, error, highlightedId } = snapshot
 
   useEffect(() => {
     browser.dispatch({ type: 'search', term: '' })
-  }, [browser])
-
-  // A highlight transition is also a focus request for the target tile — the
-  // Gif component consumes and clears the ref when it focuses its button. The
-  // latch must land before the re-render reaches the tile, so it subscribes
-  // to the browser directly (emit is synchronous with the dispatch).
-  useEffect(() => {
-    let previous = browser.getSnapshot().highlightedId
-    return browser.subscribe(() => {
-      const id = browser.getSnapshot().highlightedId
-      if (id && id !== previous) {
-        focusRequestRef.current = id
-      }
-      previous = id
-    })
   }, [browser])
 
   useEffect(() => {
@@ -146,6 +139,18 @@ const GifSelector = ({ browser, onGifInsert, onClickOutside, provider }: GifSele
     const tagName = (event.target as HTMLElement).tagName
     const target: GifKeyTarget = tagName === 'INPUT' ? 'input' : tagName === 'BUTTON' ? 'button' : 'other'
     const effects = browser.dispatch({ type: 'key', key: event.key, shiftKey: event.shiftKey, target }, geometry)
+    // A keyboard-resolved highlight doubles as a focus request for its tile —
+    // including the no-transition case, where hover had already put the
+    // highlight on the grid-entry target. The reducer decides which keys are
+    // navigation: any returned effect means "this key navigated", so focus
+    // follows the highlight; an empty effect list (typing into the search
+    // input, caret keys) leaves focus alone. A focus-search effect (arrowing
+    // out of the grid back into the input) always wins instead.
+    const nextHighlight = browser.getSnapshot().highlightedId
+    const navigated = effects.length > 0 && !effects.some((effect) => effect.type === 'focus-search')
+    if (nextHighlight && navigated) {
+      setFocusRequestId(nextHighlight)
+    }
     runEffects(effects, event)
   }
 
@@ -177,7 +182,9 @@ const GifSelector = ({ browser, onGifInsert, onClickOutside, provider }: GifSele
           <input
             ref={searchRef}
             className="h-10 w-full rounded-full border border-grey-300 pr-8 pl-10 font-sans text-md font-normal text-black focus:border-green focus:shadow-insetgreen dark:border-grey-800 dark:bg-grey-950 dark:text-white dark:placeholder:text-grey-800 dark:focus:border-green"
-            placeholder={provider === 'klipy' ? 'Search KLIPY' : 'Search Tenor for GIFs'}
+            placeholder={
+              provider === 'klipy' ? labels['gif.searchPlaceholder.klipy'] : labels['gif.searchPlaceholder.tenor']
+            }
             autoFocus
             onChange={handleSearch}
           />
@@ -195,10 +202,11 @@ const GifSelector = ({ browser, onGifInsert, onClickOutside, provider }: GifSele
                     <Gif
                       key={gif.id}
                       data={gif}
-                      focusRequestRef={focusRequestRef}
+                      focusRequestId={focusRequestId}
                       isHighlighted={highlightedId === gif.id}
                       onClick={() => runEffects(browser.dispatch({ type: 'select', id: gif.id }))}
                       onFocus={() => browser.dispatch({ type: 'highlight', id: gif.id })}
+                      onFocusRequestHandled={clearFocusRequest}
                       onMouseEnter={() => browser.dispatch({ type: 'highlight', id: gif.id })}
                     />
                   ))}

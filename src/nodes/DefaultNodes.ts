@@ -17,12 +17,16 @@ import {
   extendedTextNodeReplacement,
 } from '@/nodes/base'
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
+import { FootnoteRefNode } from '@/nodes/footnote/FootnoteRefNode'
+import { MathInlineNode } from '@/nodes/math/MathInlineNode'
+import { INKLING_TABLE_NODES } from '@/nodes/table/TableNodes'
 
 // Cards join the set from their declarations; declaration order reproduces
 // the pre-refactor card run below LinkNode.
 const CARDS = CARD_WRAPPER_NODES
 
-// The non-card base run the editor's node set starts from.
+// The non-card base run the editor's node set starts from. The table
+// element family (CONTEXT.md — not cards) closes the run, after LinkNode.
 export const EDITOR_BASE_NODES = [
   ExtendedTextNode,
   extendedTextNodeReplacement,
@@ -36,6 +40,7 @@ export const EDITOR_BASE_NODES = [
   ListItemNode,
   AsideNode,
   LinkNode,
+  ...INKLING_TABLE_NODES,
 ]
 
 // Every card class is assembled via `assembleCardNode`, which runs this same
@@ -49,6 +54,8 @@ const DEFAULT_NODES = [
   AtLinkNode,
   AtLinkSearchNode,
   ZWNJNode,
+  MathInlineNode,
+  FootnoteRefNode,
 ]
 
 export default DEFAULT_NODES

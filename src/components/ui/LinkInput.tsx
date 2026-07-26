@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 
 import CloseIcon from '@/assets/icons/inkling-close.svg?react'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 interface LinkInputProps {
   href?: string
@@ -9,6 +10,7 @@ interface LinkInputProps {
 }
 
 export function LinkInput({ href, update, cancel }: LinkInputProps) {
+  const labels = useInklingLabels()
   const [_href, setHref] = React.useState<string | undefined>(href)
 
   // add refs for input and container
@@ -71,7 +73,7 @@ export function LinkInput({ href, update, cancel }: LinkInputProps) {
         className="mb-[1px] h-8 w-full pl-3 leading-loose text-grey-900 selection:bg-grey/40 dark:bg-grey-950 dark:text-grey-300 dark:selection:bg-grey-800/40 dark:selection:text-grey-100"
         data-testid="link-input"
         name="link-input"
-        placeholder="Enter url"
+        placeholder={labels['link.input.placeholder']}
         value={_href}
         data-inkling-link-input
         onInput={(e: React.InputEvent<HTMLInputElement>) => {
@@ -92,7 +94,7 @@ export function LinkInput({ href, update, cancel }: LinkInputProps) {
 
       {!!_href && (
         <button
-          aria-label="Close"
+          aria-label={labels['aria.close']}
           className="absolute right-3 cursor-pointer"
           type="button"
           onClick={(e: React.MouseEvent) => {

@@ -2,7 +2,7 @@ import type { SerializedEditorState, SerializedElementNode } from 'lexical'
 
 import assert from 'node:assert/strict'
 
-import { htmlToLexical as _htmlToLexical } from '@/html/html-to-lexical/index'
+import { htmlToLexical as importWithDom } from '#/utils/html-to-lexical-with-dom'
 
 const options = {
   editorConfig: {
@@ -19,8 +19,8 @@ interface NodeJSON extends SerializedElementNode<NodeJSON> {
   [key: string]: unknown
 }
 
-function htmlToLexical(html: string, opts?: typeof options): SerializedEditorState<NodeJSON> {
-  return _htmlToLexical(html, opts) as SerializedEditorState<NodeJSON>
+function htmlToLexical(html: string, opts?: Parameters<typeof importWithDom>[1]): SerializedEditorState<NodeJSON> {
+  return importWithDom(html, opts) as SerializedEditorState<NodeJSON>
 }
 
 describe('HTMLtoLexical', function () {
@@ -203,6 +203,58 @@ describe('HTMLtoLexical', function () {
           version: 1,
         },
       })
+    })
+  })
+
+  describe('Alignment', function () {
+    const alignedParagraph = (format: string) => ({
+      root: {
+        children: [
+          {
+            children: [
+              {
+                detail: 0,
+                format: 0,
+                mode: 'normal',
+                style: '',
+                text: 'Hello World',
+                type: 'extended-text',
+                version: 1,
+              },
+            ],
+            direction: null,
+            format,
+            indent: 0,
+            textFormat: 0,
+            textStyle: '',
+            type: 'paragraph',
+            version: 1,
+          },
+        ],
+        direction: null,
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1,
+      },
+    })
+
+    it('strips imported text-align by default', function () {
+      const lexical = htmlToLexical('<p style="text-align: center">Hello World</p>', options)
+
+      assert.deepEqual(lexical, alignedParagraph(''))
+    })
+
+    it('strips imported text-align with explicit alignment: strip', function () {
+      const lexical = htmlToLexical('<p style="text-align: center">Hello World</p>', { ...options, alignment: 'strip' })
+
+      assert.deepEqual(lexical, alignedParagraph(''))
+    })
+
+    it('keeps imported text-align with alignment: keep', function () {
+      const lexical = htmlToLexical('<p style="text-align: center">Hello World</p>', { ...options, alignment: 'keep' })
+
+      assert.deepEqual(lexical, alignedParagraph('center'))
     })
   })
 

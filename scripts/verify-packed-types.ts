@@ -2,7 +2,8 @@
 /* oxlint-disable no-console -- CLI script: stdout is its output channel */
 // Packed-type verifier: installs the packed @inkling/editor tarball into an
 // isolated temp project with only documented peers and type packages, then
-// type-checks a clean consumer under both "Bundler" and "NodeNext" module
+// type-checks clean consumers — one fixture per published entry (`.` and
+// `./core`, plan C5) — under both "Bundler" and "NodeNext" module
 // resolution. Feature runtimes (Lexical, CodeMirror, emoji-mart, markdown-it,
 // Yjs, etc.) are deliberately NOT installed — the published declaration must
 // own its own type graph.
@@ -13,7 +14,32 @@ import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const CONSUMER_SOURCE = join(REPO_ROOT, 'test', 'typecheck-consumer', 'consumer.tsx')
+
+interface ConsumerFixture {
+  // fixture file under test/typecheck-consumer, copied into the consumer
+  // project under `localName`
+  source: string
+  localName: string
+  // the published declaration this fixture exercises — the negative check
+  // deletes it to prove the fixture reads package types
+  declaration: string
+}
+
+// One fixture per published entry (plan C5): the root declaration and the
+// `./core` subpath declaration each get the Bundler + NodeNext pair and the
+// broken-declaration negative check.
+const CONSUMER_FIXTURES: ConsumerFixture[] = [
+  {
+    source: join(REPO_ROOT, 'test', 'typecheck-consumer', 'consumer.tsx'),
+    localName: 'consumer.tsx',
+    declaration: 'editor.d.ts',
+  },
+  {
+    source: join(REPO_ROOT, 'test', 'typecheck-consumer', 'consumer-core.tsx'),
+    localName: 'consumer-core.tsx',
+    declaration: 'core.d.ts',
+  },
+]
 
 interface CommandFailure {
   stdout?: string | Buffer
@@ -88,7 +114,7 @@ function runExpectingFailure(
   }
 }
 
-function makeTsconfig(module: string, moduleResolution: string): string {
+function makeTsconfig(module: string, moduleResolution: string, include: string[]): string {
   return JSON.stringify(
     {
       compilerOptions: {
@@ -104,7 +130,7 @@ function makeTsconfig(module: string, moduleResolution: string): string {
         forceConsistentCasingInFileNames: true,
         types: ['react', 'react-dom'],
       },
-      include: ['consumer.tsx'],
+      include,
     },
     null,
     2,
@@ -128,14 +154,20 @@ const CONSUMER_DEV_DEPENDENCIES = {
   '@types/react-dom': '19.2.3',
 }
 
-function checkConsumer(label: string, consumerDir: string, module: string, moduleResolution: string): boolean {
+function checkConsumer(
+  label: string,
+  consumerDir: string,
+  module: string,
+  moduleResolution: string,
+  fixture: ConsumerFixture,
+): boolean {
   phase(label)
   mkdirSync(consumerDir, { recursive: true })
   writeFileSync(
     join(consumerDir, 'package.json'),
     JSON.stringify(
       {
-        name: `verify-types-${module.toLowerCase()}`,
+        name: `verify-types-${label.replaceAll(' ', '-')}`,
         private: true,
         type: 'module',
         dependencies: {
@@ -148,8 +180,8 @@ function checkConsumer(label: string, consumerDir: string, module: string, modul
       2,
     ),
   )
-  copyFileSync(CONSUMER_SOURCE, join(consumerDir, 'consumer.tsx'))
-  writeFileSync(join(consumerDir, 'tsconfig.json'), makeTsconfig(module, moduleResolution))
+  copyFileSync(fixture.source, join(consumerDir, fixture.localName))
+  writeFileSync(join(consumerDir, 'tsconfig.json'), makeTsconfig(module, moduleResolution, [fixture.localName]))
 
   if (!run(`${label} install`, 'pnpm', ['install', '--no-frozen-lockfile'], { cwd: consumerDir })) {
     return false
@@ -181,20 +213,41 @@ try {
   tarballPath = isAbsolute(packJson.filename) ? packJson.filename : join(tempRoot, packJson.filename)
   console.log(`tarball: ${packJson.filename}`)
 
-  const bundlerOk = checkConsumer('bundler consumer', join(tempRoot, 'consumer-bundler'), 'ESNext', 'Bundler')
-  const nodenextOk = checkConsumer('nodenext consumer', join(tempRoot, 'consumer-nodenext'), 'NodeNext', 'NodeNext')
+  const phaseResults: { fixture: ConsumerFixture; ok: boolean }[] = []
+  for (const fixture of CONSUMER_FIXTURES) {
+    const fixtureName = fixture === CONSUMER_FIXTURES[0] ? 'root' : 'core'
+    const bundlerOk = checkConsumer(
+      `${fixtureName} bundler consumer`,
+      join(tempRoot, `consumer-${fixtureName}-bundler`),
+      'ESNext',
+      'Bundler',
+      fixture,
+    )
+    const nodenextOk = checkConsumer(
+      `${fixtureName} nodenext consumer`,
+      join(tempRoot, `consumer-${fixtureName}-nodenext`),
+      'NodeNext',
+      'NodeNext',
+      fixture,
+    )
+    phaseResults.push({ fixture, ok: bundlerOk && nodenextOk })
+  }
 
-  if (bundlerOk && nodenextOk) {
-    phase('negative check')
-    const brokenDir = join(tempRoot, 'consumer-broken-decl')
+  for (const { fixture, ok } of phaseResults) {
+    if (!ok) {
+      continue
+    }
+    const fixtureName = fixture === CONSUMER_FIXTURES[0] ? 'root' : 'core'
+    phase(`negative check (${fixtureName})`)
+    const brokenDir = join(tempRoot, `consumer-${fixtureName}-broken-decl`)
     mkdirSync(brokenDir, { recursive: true })
-    // Copy the Bundler consumer, then delete the emitted root declaration to
+    // Copy the Bundler consumer, then delete the emitted declaration to
     // prove the fixture is actually reading the package types and not the repo.
     writeFileSync(
       join(brokenDir, 'package.json'),
       JSON.stringify(
         {
-          name: 'verify-types-broken-decl',
+          name: `verify-types-${fixtureName}-broken-decl`,
           private: true,
           type: 'module',
           dependencies: {
@@ -207,11 +260,11 @@ try {
         2,
       ),
     )
-    copyFileSync(CONSUMER_SOURCE, join(brokenDir, 'consumer.tsx'))
-    writeFileSync(join(brokenDir, 'tsconfig.json'), makeTsconfig('ESNext', 'Bundler'))
+    copyFileSync(fixture.source, join(brokenDir, fixture.localName))
+    writeFileSync(join(brokenDir, 'tsconfig.json'), makeTsconfig('ESNext', 'Bundler', [fixture.localName]))
 
-    if (run('broken-decl install', 'pnpm', ['install', '--no-frozen-lockfile'], { cwd: brokenDir })) {
-      const typesPath = join(brokenDir, 'node_modules', '@inkling', 'editor', 'dist', 'editor.d.ts')
+    if (run(`broken-decl install (${fixtureName})`, 'pnpm', ['install', '--no-frozen-lockfile'], { cwd: brokenDir })) {
+      const typesPath = join(brokenDir, 'node_modules', '@inkling', 'editor', 'dist', fixture.declaration)
       rmSync(typesPath, { force: true })
       console.log(`removed ${typesPath}`)
       // tsc MUST fail here — run it off the failure log so the expected
@@ -220,11 +273,11 @@ try {
         cwd: brokenDir,
       })
       if (!broken.failed) {
-        recordFailure('negative check', {
+        recordFailure(`negative check (${fixtureName})`, {
           message: 'broken declaration file was removed but tsc still succeeded',
         })
       } else {
-        console.log('negative check OK: missing declaration causes expected failure')
+        console.log(`negative check OK (${fixtureName}): missing declaration causes expected failure`)
       }
     }
   }
@@ -241,5 +294,5 @@ if (failures.length > 0) {
 }
 
 console.log(
-  '\nverify:types OK — packed declaration entry compiles under Bundler and NodeNext with only peers installed',
+  '\nverify:types OK — packed declaration entries compile under Bundler and NodeNext with only peers installed',
 )

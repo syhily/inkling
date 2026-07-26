@@ -1,6 +1,10 @@
+import type { LexicalNode } from 'lexical'
+
 import { describe, expect, it } from 'vitest'
 
 import { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown/round-trip'
+import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
+import { defineCard, type HostCard } from '@/nodes/cards/host-cards'
 
 function inklingCard(card: string, data: Record<string, unknown>) {
   return '```inkling:' + card + '\n' + JSON.stringify(data) + '\n```'
@@ -227,5 +231,46 @@ describe('Markdown round-trip for decorator cards', function () {
 
     const exported = lexicalStateToMarkdown(state)
     expect(exported.trim()).toBe(markdown)
+  })
+})
+
+describe('Markdown round-trip for host cards', function () {
+  // A host card (CONTEXT.md: "host card") joins the round-trip through the
+  // `cards` option: its node class registers on the conversion editor and its
+  // fence transformer joins the card run.
+  const musicPlayer: HostCard<'musicPlayer'> = defineCard({
+    nodeType: 'musicPlayer',
+    baseNode: generateDecoratorNode({
+      nodeType: 'musicPlayer',
+      properties: [{ name: 'src', default: '' }] as const,
+    }),
+    toolbarLabel: 'music-player',
+    render: () => null,
+    markdownFence: {
+      getData: (node) => ({ src: (node as unknown as { src: string }).src }),
+      // the closure resolves the assembled class lazily — defineCard has
+      // returned by the time an import runs
+      createNode: (data): LexicalNode => new musicPlayer.node({ src: data.src }),
+    },
+  })
+
+  it('round-trips a host card fence through the cards option', function () {
+    const markdown = inklingCard('musicPlayer', { src: 'https://example.com/song.mp3' })
+    const state = markdownToLexicalState(markdown, { cards: [musicPlayer] })
+
+    const node = state.root.children[0] as unknown as { type: string; src: string }
+    expect(node.type).toBe('musicPlayer')
+    expect(node.src).toBe('https://example.com/song.mp3')
+
+    const exported = lexicalStateToMarkdown(state, { cards: [musicPlayer] })
+    expect(exported.trim()).toBe(markdown)
+  })
+
+  it('does not speak the host fence without the cards option', function () {
+    const markdown = inklingCard('musicPlayer', { src: 'https://example.com/song.mp3' })
+    const state = markdownToLexicalState(markdown)
+
+    const node = state.root.children[0] as unknown as { type: string }
+    expect(node.type).not.toBe('musicPlayer')
   })
 })

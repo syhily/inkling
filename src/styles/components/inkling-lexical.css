@@ -1,16 +1,10 @@
 .inkling-lexical {
   position: relative;
-  --cta-link-color-text: var(--grey-900);
 }
 
 /* Suppress hover effects while dragging cards */
 [data-inkling='editor'][data-inkling-dragging] [class*='hover:'] {
   pointer-events: none !important;
-}
-
-/* Link color */
-.inkling-lexical .cta-link-color {
-  color: var(--cta-link-color) !important;
 }
 
 /* everything is nested here to keep it scoped to our container */
@@ -60,8 +54,6 @@
 .inkling-lexical > .dark,
 .inkling-lexical.dark,
 .dark .inkling-lexical {
-  --cta-link-color-text: var(--grey-200);
-
   &:not(.inkling-inherit-styles) {
     /* background-color: var(--black); */
 
@@ -181,6 +173,13 @@ em-emoji-picker .search input[type='search'] {
 /* tailwind `hidden` class conflicts with inkling styles */
 .inkling-cardmenu-card-hover button {
   display: none;
+}
+
+/* Footnote reference */
+.inkling-lexical .inkling-footnote-ref {
+  vertical-align: super;
+  font-size: 0.75em;
+  line-height: 0;
 }
 
 /* Table */

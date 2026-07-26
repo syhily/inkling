@@ -289,8 +289,16 @@ export function reduceGifKey(state: GifNavState, event: GifKeyEventData, geometr
       }
       return highlighted ? highlightNext() : stay()
     case 'ArrowLeft':
+      // On the search input, left/right move the text caret — the highlight
+      // (possibly hover-set) must not hijack them.
+      if (event.target === 'input') {
+        return stay()
+      }
       return highlighted ? moveLeft() : stay()
     case 'ArrowRight':
+      if (event.target === 'input') {
+        return stay()
+      }
       return highlighted ? moveRight() : stay()
     case 'ArrowUp':
       return highlighted ? moveUp() : stay()

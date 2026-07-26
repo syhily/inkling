@@ -38,6 +38,7 @@ export const videoDeclaration = {
   menu: [
     {
       label: 'Video',
+      labelKey: 'video',
       desc: 'Upload and play a video file',
       icon: 'video',
       command: INSERT_VIDEO_COMMAND,

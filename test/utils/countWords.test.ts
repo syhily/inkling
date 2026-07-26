@@ -45,3 +45,37 @@ describe('countWords', function () {
     expect(countWords({ string: 'one two three' })).toBe(3)
   })
 })
+
+describe('countWords with a language (C7 — Intl.Segmenter)', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('counts Chinese by word, not by character', function () {
+    const text = '我今天在家吃了好多好多好吃的，现在的我非常开心非常满足'
+    // the legacy regex path counts every CJK character (26); the segmenter
+    // path counts dictionary words
+    expect(countWords(text)).toBe(26)
+    expect(countWords(text, 'zh')).toBe(15)
+  })
+
+  it('counts Japanese by word', function () {
+    expect(countWords('私は今日家でたくさんのおいしいものを食べました', 'ja')).toBe(14)
+  })
+
+  it('pins the English segmenter semantics (contractions stay one word)', function () {
+    // the regex path splits "don't" into "don" + "t"; the segmenter keeps it
+    expect(countWords("don't stop")).toBe(3)
+    expect(countWords("don't stop", 'en')).toBe(2)
+  })
+
+  it('still strips HTML before segmenting', function () {
+    expect(countWords('<p>你好世界</p>', 'zh')).toBe(2)
+  })
+
+  it('falls back to the regex path when Intl.Segmenter is unavailable', function () {
+    vi.stubGlobal('Intl', { ...Intl, Segmenter: undefined })
+    const text = '我今天在家吃了好多好多好吃的，现在的我非常开心非常满足'
+    expect(countWords(text, 'zh')).toBe(26)
+  })
+})

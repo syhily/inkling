@@ -1,3 +1,9 @@
+// The card-bearing transformer sets: HR and CODE_BLOCK construct card nodes
+// (their trigger bodies live in `@/markdown/card-shortcuts`), so this module
+// statically imports the card shims and is excluded from the `./core` entry.
+// The card-free sets (SUBSCRIPT/SUPERSCRIPT/MINIMAL/BASIC) live in
+// `@/markdown/transformers-core`.
+
 import type { ElementNode, LexicalNode } from 'lexical'
 
 import {
@@ -16,6 +22,7 @@ import {
   DIVIDER_REGEXP,
   FENCE_TRANSFORMER_REGEXP,
 } from '@/markdown/card-shortcuts'
+import { CUSTOM_TEXT_FORMAT_TRANSFORMERS } from '@/markdown/transformers-core'
 import { $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $isHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 
@@ -51,39 +58,10 @@ export const CODE_BLOCK = {
   type: 'element' as const,
 }
 
-// custom text format transformers
-export const SUBSCRIPT = {
-  format: ['subscript'] as const,
-  tag: '~',
-  type: 'text-format' as const,
-}
-
-export const SUPERSCRIPT = {
-  format: ['superscript'] as const,
-  tag: '^',
-  type: 'text-format' as const,
-}
-
 export const ELEMENT_TRANSFORMERS: Transformer[] = [HEADING, QUOTE, UNORDERED_LIST, ORDERED_LIST, HR, CODE_BLOCK]
-
-export const CUSTOM_TEXT_FORMAT_TRANSFORMERS = [SUBSCRIPT, SUPERSCRIPT]
 
 export const DEFAULT_TRANSFORMERS: Transformer[] = [
   ...ELEMENT_TRANSFORMERS,
-  ...TEXT_FORMAT_TRANSFORMERS,
-  ...CUSTOM_TEXT_FORMAT_TRANSFORMERS,
-  ...TEXT_MATCH_TRANSFORMERS,
-]
-
-export const MINIMAL_TRANSFORMERS: Transformer[] = [
-  ...TEXT_FORMAT_TRANSFORMERS,
-  ...CUSTOM_TEXT_FORMAT_TRANSFORMERS,
-  ...TEXT_MATCH_TRANSFORMERS,
-]
-
-export const BASIC_TRANSFORMERS: Transformer[] = [
-  UNORDERED_LIST,
-  ORDERED_LIST,
   ...TEXT_FORMAT_TRANSFORMERS,
   ...CUSTOM_TEXT_FORMAT_TRANSFORMERS,
   ...TEXT_MATCH_TRANSFORMERS,

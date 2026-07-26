@@ -1,6 +1,6 @@
-import DOMPurify, { type Config as DOMPurifyConfig } from 'dompurify'
+import DOMPurify, { type Config as DOMPurifyConfig, type WindowLike } from 'dompurify'
 
-import type { ExportDOMOptions, ImageOptimizationOptions } from '@/nodes/base/export-dom'
+import type { ExportDOMDom, ExportDOMOptions, ImageOptimizationOptions } from '@/nodes/base/export-dom'
 
 import { cleanDOM } from '@/nodes/base/utils/clean-dom'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
@@ -101,6 +101,33 @@ export const CALLOUT_HTML_CONFIG: UnwrapAllowlistConfig = {
   allowedTags: ['A', 'STRONG', 'EM', 'B', 'I', 'BR', 'CODE', 'MARK', 'S', 'DEL', 'U', 'SUP', 'SUB'],
 }
 
+/**
+ * The code card's server-prerendered artifact (Shiki). Shiki's dual-theme
+ * output carries both themes on every token span's inline `style` as CSS
+ * custom properties (`--shiki-light`/`--shiki-dark`), so the sanitize must
+ * keep `SPAN[style]` or the highlight collapses to plain text. The tag set
+ * covers Shiki's own wrapper (`pre.shiki > code > span.line`) for artifacts
+ * that include it; DOMPurify's default `ALLOW_DATA_ATTR` already passes the
+ * `data-*` hooks hosts attach. Inkling never runs Shiki — the artifact is
+ * filled host-side (CSP: no wasm in the browser) and only carried here.
+ */
+export const SHIKI_HTML_CONFIG: SanitizeToStringConfig = {
+  ALLOWED_TAGS: ['pre', 'code', 'span'],
+  ALLOWED_ATTR: ['class', 'style'],
+}
+
+/**
+ * The math family's server-prerendered artifacts (KaTeX). A render is either
+ * a MathML tree or an SVG tree — two vocabularies with their own element and
+ * attribute sets (`annotation[encoding]`, `path[d]`, …) that a hand-rolled
+ * allowlist would drift from, so the sanitize uses DOMPurify's built-in
+ * profiles. Inkling never runs KaTeX — the artifact is filled host-side (CSP:
+ * no wasm in the browser) and only carried here.
+ */
+export const MATH_HTML_CONFIG: SanitizeToStringConfig = {
+  USE_PROFILES: { mathMl: true, svg: true },
+}
+
 function isUnwrapAllowlistConfig(config: CardHtmlConfig): config is UnwrapAllowlistConfig {
   return 'implementation' in config && config.implementation === 'unwrap-allowlist'
 }
@@ -161,6 +188,12 @@ export interface RenderContext {
   readonly inklingVersion: string | undefined
   /** image renderer: emit `<picture>` sources for modern formats (absent when not passed). */
   readonly pictureImageFormats: boolean | undefined
+  /**
+   * Request-scoped render-time meta resolver, carried by reference (absent
+   * when not passed). Synchronous by contract — see the option's declaration
+   * in `@/nodes/base/export-dom`.
+   */
+  readonly resolveRenderMeta: ((kind: string, id: string) => unknown | undefined) | undefined
   /** Resolved once: `options.createDocument` / `options.dom` / the browser global, in that order. */
   readonly createDocument: () => Document
   /** URL policy: returns `value` when it is safe for `kind`, `''` otherwise. */
@@ -260,12 +293,35 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
     ? Object.freeze(readImageOptimization(options.imageOptimization))
     : undefined
 
+  // Sanitization binds to this render's own window instead of the browser
+  // global, resolved lazily so renders that never sanitize (plain text,
+  // headings) pay nothing and a DOM-less environment throws only on first
+  // use — the same non-browser error resolveCreateDocument throws eagerly.
+  // A createHTMLDocument()'s defaultView is always null, so the window can
+  // only come from options.dom, a windowed document, or the global.
+  const browserWindow = typeof window !== 'undefined' && window.document ? window : undefined
+  let resolvedWindow: ExportDOMDom['window'] | undefined
+  const resolveWindow = (): ExportDOMDom['window'] => {
+    if (resolvedWindow) {
+      return resolvedWindow
+    }
+    const candidate: ExportDOMDom['window'] | undefined =
+      options.dom?.window ?? createDocument().defaultView ?? browserWindow
+    if (!candidate) {
+      throw new Error('Must be passed a `createDocument` function as an option when used in a non-browser environment')
+    }
+    resolvedWindow = candidate
+    return candidate
+  }
+  let boundDOMPurify: ReturnType<typeof DOMPurify> | undefined
+
   const context: RenderContext = {
     imageOptimization,
     canTransformImage: options.canTransformImage,
     canTransformImageToFormat: options.canTransformImageToFormat,
     inklingVersion: options.inklingVersion,
     pictureImageFormats: options.pictureImageFormats,
+    resolveRenderMeta: options.resolveRenderMeta,
     createDocument,
     safeUrl(kind, value) {
       return (kind === 'media' ? isSafeMediaUrl(value) : isSafeUrl(value)) ? value : ''
@@ -276,7 +332,7 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
       return isLocalContentImageImpl(url, siteUrl, imageBaseUrl)
     },
     sanitizeBasicHtml(html) {
-      return sanitizeHtml(html)
+      return sanitizeHtml(html, undefined, resolveWindow())
     },
     escapeText(value) {
       return escapeHtml(value)
@@ -288,7 +344,10 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
         cleanDOM(container, config.allowedTags, context)
         return container.innerHTML
       }
-      return DOMPurify.sanitize(html, config)
+      // The ExportDOMDom window is structural; the WindowLike assertion stays
+      // inside the seam. One bound instance per context.
+      boundDOMPurify ??= DOMPurify(resolveWindow() as unknown as WindowLike)
+      return boundDOMPurify.sanitize(html, config)
     },
     trackIdAttribute(id) {
       const seen = usedIdAttributes[id]

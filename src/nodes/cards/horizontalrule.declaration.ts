@@ -13,6 +13,7 @@ export const horizontalRuleDeclaration = {
   menu: [
     {
       label: 'Divider',
+      labelKey: 'divider',
       desc: 'Insert a dividing line',
       icon: 'divider',
       command: INSERT_HORIZONTAL_RULE_COMMAND,

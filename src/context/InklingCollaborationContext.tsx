@@ -15,21 +15,27 @@ export interface InklingCollaborationContextValue {
   createWebsocketProvider: LexicalProviderFactory
 }
 
-const InklingCollaborationContext = React.createContext<InklingCollaborationContextValue>({
-  createWebsocketProvider: () => ({
-    awareness: {
-      getLocalState: () => null,
-      getStates: () => new Map(),
-      off: () => {},
-      on: () => {},
-      setLocalState: () => {},
-      setLocalStateField: () => {},
-    },
-    connect: () => {},
-    disconnect: () => {},
+// The inert factory provided while multiplayer is off — and, with the lazy
+// collaboration chunk (plan C5), for the first async tick after it turns on.
+// CollaborationPlugin only mounts once the real factory has loaded, so this
+// stub is never asked to connect.
+export const noopWebsocketProviderFactory: LexicalProviderFactory = () => ({
+  awareness: {
+    getLocalState: () => null,
+    getStates: () => new Map(),
     off: () => {},
     on: () => {},
-  }),
+    setLocalState: () => {},
+    setLocalStateField: () => {},
+  },
+  connect: () => {},
+  disconnect: () => {},
+  off: () => {},
+  on: () => {},
+})
+
+const InklingCollaborationContext = React.createContext<InklingCollaborationContextValue>({
+  createWebsocketProvider: noopWebsocketProviderFactory,
 })
 
 export default InklingCollaborationContext

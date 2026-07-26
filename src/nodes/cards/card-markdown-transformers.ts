@@ -60,13 +60,15 @@ export const IMAGE_CARD_TRANSFORMER: ElementTransformer = {
  * The fence tag and the constructed class are deliberately NOT part of the
  * vocabulary: the projection derives them from the declaration's own
  * `nodeType` and wrapper class, so they can never drift from the registry.
+ * Exported for `defineCard` (`@/nodes/cards/host-cards`): a host card's
+ * `markdownFence` speaks the same vocabulary.
  *
  * The method-shorthand signatures keep each table entry's `getData` parameter
  * at the card's own node type (method parameters are bivariant under
  * `strictFunctionTypes`); the projection consumes the widened `LexicalNode`
  * signature.
  */
-interface CardFencePayload {
+export interface CardFencePayload {
   getData(node: LexicalNode): Record<string, unknown>
   createNode(data: Record<string, unknown>): LexicalNode
 }
@@ -76,9 +78,11 @@ interface CardFencePayload {
  * (`card`) and wrapper class (`nodeClass`) plus the card's payload vocabulary.
  * Every node the transformer constructs gets its declared nested editors
  * detached (`$detachNestedEditorsForRoundTrip`), so a fence-imported card
- * keeps the payload's plain-text fields verbatim.
+ * keeps the payload's plain-text fields verbatim. Exported for `defineCard`
+ * (`@/nodes/cards/host-cards`), which builds host fence transformers through
+ * the same path with the assembled host class as `nodeClass`.
  */
-function createCardTransformer({
+export function createCardTransformer({
   card,
   nodeClass,
   getData,

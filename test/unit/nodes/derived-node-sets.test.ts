@@ -68,6 +68,9 @@ describe('derived node sets match the pre-refactor registries', () => {
       'listitem',
       'aside',
       'link',
+      'table',
+      'tablerow',
+      'tablecell',
       'codeblock',
       'horizontalrule',
       'image',
@@ -81,10 +84,14 @@ describe('derived node sets match the pre-refactor registries', () => {
       'header',
       'bookmark',
       'gallery',
+      'math',
+      'footnotedefinition',
       'tk',
       'at-link',
       'at-link-search',
       'zwnj',
+      'math-inline',
+      'footnote-ref',
     ])
   })
 
@@ -111,10 +118,14 @@ describe('derived node sets match the pre-refactor registries', () => {
       'header',
       'bookmark',
       'gallery',
+      'math',
+      'footnotedefinition',
       'tk',
       'at-link',
       'at-link-search',
       'zwnj',
+      'math-inline',
+      'footnote-ref',
     ])
   })
 
@@ -146,10 +157,17 @@ describe('derived node sets match the pre-refactor registries', () => {
       'header',
       'bookmark',
       'gallery',
+      'math',
+      'footnotedefinition',
       'tk',
       'at-link',
       'at-link-search',
       'zwnj',
+      'math-inline',
+      'footnote-ref',
+      'table',
+      'tablerow',
+      'tablecell',
     ])
   })
 
@@ -160,6 +178,9 @@ describe('derived node sets match the pre-refactor registries', () => {
       'list',
       'listitem',
       'link',
+      'table',
+      'tablerow',
+      'tablecell',
       'codeblock',
       'horizontalrule',
       'image',

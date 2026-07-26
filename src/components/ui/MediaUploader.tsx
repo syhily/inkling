@@ -10,6 +10,7 @@ import WandIcon from '@/assets/icons/inkling-wand.svg?react'
 import { IconButton } from '@/components/ui/IconButton'
 import { MediaPlaceholder, isPlaceholderIconName } from '@/components/ui/MediaPlaceholder'
 import { UploadFileInput, UploadingOverlay, useFileInputRefTunnel } from '@/components/ui/UploadChrome'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { openFileSelection } from '@/utils/openFileSelection'
 
 export interface MediaUploaderProps {
@@ -62,6 +63,7 @@ export function MediaUploader({
   setFileInputRef,
 }: MediaUploaderProps) {
   const { fileInputRef, onFileInputRef } = useFileInputRefTunnel(setFileInputRef)
+  const labels = useInklingLabels()
 
   const onRemove = (e: React.MouseEvent) => {
     e.stopPropagation() // prevents card from losing selected state
@@ -146,11 +148,16 @@ export function MediaUploader({
           {isPinturaEnabled && openImageEditor && src && (
             <IconButton
               Icon={WandIcon}
-              label="Edit"
+              label={labels['action.edit']}
               onClick={() => openImageEditor({ image: src, handleSave: handleImageEditorSave })}
             />
           )}
-          <IconButton dataTestId="media-upload-remove" Icon={DeleteIcon} label="Delete" onClick={onRemove} />
+          <IconButton
+            dataTestId="media-upload-remove"
+            Icon={DeleteIcon}
+            label={labels['action.delete']}
+            onClick={onRemove}
+          />
         </div>
       )}
 

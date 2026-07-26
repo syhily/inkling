@@ -15,6 +15,7 @@ import { Toggle } from '@/components/ui/Toggle'
 import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import useFloatingPanel from '@/hooks/useFloatingPanel'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 export type SettingsPanelProps = {
   darkMode?: boolean
@@ -139,6 +140,7 @@ interface InputUrlSettingProps {
 
 export function InputUrlSetting({ dataTestId, label, value, onChange }: InputUrlSettingProps) {
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
+  const labels = useInklingLabels()
   const [listOptions, setListOptions] = React.useState<ListOption[]>([])
 
   React.useEffect(() => {
@@ -179,7 +181,7 @@ export function InputUrlSetting({ dataTestId, label, value, onChange }: InputUrl
       dataTestId={dataTestId}
       label={label}
       listOptions={filteredSuggestedUrls}
-      placeholder="https://yoursite.com/#/portal/signup/"
+      placeholder={labels['settings.url.placeholder']}
       value={value}
       onChange={onChange}
     />

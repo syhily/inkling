@@ -8,28 +8,50 @@
 import {
   BASIC_TRANSFORMERS,
   type CardConfig,
+  type CardNodeClass,
+  DEFAULT_HTML_NODES,
+  DEFAULT_NODES,
+  defineCard,
+  type DecoratorNodeProperty,
   // @ts-expect-error - DesignSandbox was removed from the public barrel in 2.0.0
   DesignSandbox,
+  EDITOR_BASE_NODES,
+  type ExportDOMDom,
   type ExternalControlAPI,
   type FileUploader,
   type FileUploaderInput,
+  generateDecoratorNode,
   type GifSettings,
+  type HostCard,
+  type HostCardMenuEntrySpec,
+  type HostCardSpec,
+  type HtmlToLexicalStateOptions,
+  htmlToLexicalState,
   // @ts-expect-error - InklingCardWrapper was removed from the public barrel in 2.0.0
   InklingCardWrapper,
   InklingComposer,
   InklingComposableEditor,
   type InklingComposableEditorProps,
+  InklingDecoratorNode,
   InklingEditor,
   type InklingEditorProps,
   type InklingInitialEditorState,
   INSERT_AUDIO_COMMAND,
   type LexicalEditor,
+  type LexicalStateToHtmlOptions,
+  lexicalStateToHtml,
+  type LexicalStateToPlainTextOptions,
+  lexicalStateToPlainText,
   type LinkingSettings,
   type ListOptionItem,
+  type MarkdownRoundTripOptions,
+  markdownToLexicalState,
+  type NestedEditorSpec,
   type SearchResult,
   type SerializedEditorState,
   type SnippetItem,
   type SnippetSettings,
+  type TransientPropSpec,
   type UploadSettings,
   type AudioNodeDataset,
 } from '@inkling/editor'
@@ -157,3 +179,82 @@ void InklingCardWrapper
 // @ts-expect-error - unknown cardConfig keys are rejected by the closed type
 const composerWithUnknownKey = <InklingComposer cardConfig={{ membersEnabled: true }} />
 void composerWithUnknownKey
+
+// --- headless HTML API (C1) --------------------------------------------------
+
+const htmlOptions: LexicalStateToHtmlOptions = {
+  nodes: [...DEFAULT_HTML_NODES],
+  onError: (error) => void error,
+  siteUrl: 'https://example.com',
+}
+const renderedHtml: Promise<string> = lexicalStateToHtml(serializedState, htmlOptions)
+void renderedHtml
+
+const importOptions: HtmlToLexicalStateOptions = { dom: { window: { document } } }
+const importedState: Promise<SerializedEditorState> = htmlToLexicalState('<p>hi</p>', importOptions)
+void importedState
+
+const plainTextOptions: LexicalStateToPlainTextOptions = { onError: (error) => void error }
+const plainText: string = lexicalStateToPlainText(serializedState, plainTextOptions)
+void plainText
+
+// the structural DOM shape every headless option bag accepts
+const structuralDom: ExportDOMDom = { window: { document } }
+void structuralDom
+
+// @ts-expect-error - LexicalStateToHtmlOptions is a closed type: unknown keys are rejected
+const badHtmlOptions: LexicalStateToHtmlOptions = { unknownKey: true }
+void badHtmlOptions
+
+// --- host card pipeline (C3) -------------------------------------------------
+
+// generateDecoratorNode builds the base node a host card declaration names;
+// the spec language (properties, nested editors, transient props) is exported
+const musicPlayerProperties = [{ name: 'src', default: '' }] as const satisfies readonly DecoratorNodeProperty[]
+const nestedEditorSpec: NestedEditorSpec = { name: 'caption', serializedKey: 'caption', nodes: [] }
+const transientPropSpec: TransientPropSpec = { name: 'initialFile' }
+void nestedEditorSpec
+void transientPropSpec
+
+const musicPlayerMenuEntry: HostCardMenuEntrySpec = {
+  label: 'Music',
+  labelKey: 'music',
+  // a built-in CardIconId names the icon; a component is accepted too
+  icon: 'audio',
+  command: INSERT_AUDIO_COMMAND,
+  matches: ['music'],
+}
+
+const musicPlayerSpec: HostCardSpec<'musicPlayer'> = {
+  nodeType: 'musicPlayer',
+  baseNode: generateDecoratorNode({ nodeType: 'musicPlayer', properties: musicPlayerProperties }),
+  insert: { command: INSERT_AUDIO_COMMAND },
+  menu: [musicPlayerMenuEntry],
+  toolbarLabel: 'music-player',
+  render: () => null,
+}
+const musicPlayer: HostCard<'musicPlayer'> = defineCard(musicPlayerSpec)
+
+// the assembled class composes into the composer node set — full set or a
+// subset over EDITOR_BASE_NODES
+const composerWithHostCard = <InklingComposer nodes={[...DEFAULT_NODES, musicPlayer.node]}>{null}</InklingComposer>
+void composerWithHostCard
+const subsetNodes = [...EDITOR_BASE_NODES, musicPlayer.node]
+void subsetNodes
+
+// the assembled class satisfies the public class type and the
+// InklingDecoratorNode contract
+declare const someCardClass: CardNodeClass<InklingDecoratorNode>
+void someCardClass
+const isInklingDecorator = (node: unknown) => node instanceof InklingDecoratorNode
+void isInklingDecorator
+
+// a host card carrying a fence payload joins the markdown round-trip through
+// the cards option
+const roundTripOptions: MarkdownRoundTripOptions = { cards: [musicPlayer] }
+const hostMarkdownState: SerializedEditorState = markdownToLexicalState('# hi', roundTripOptions)
+void hostMarkdownState
+
+// @ts-expect-error - a host card spec without its toolbarLabel is rejected
+const badHostCardSpec: HostCardSpec = { nodeType: 'bad', baseNode: musicPlayerSpec.baseNode, render: () => null }
+void badHostCardSpec

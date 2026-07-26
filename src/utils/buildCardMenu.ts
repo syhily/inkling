@@ -6,6 +6,10 @@ import { INSERT_SNIPPET_COMMAND } from '@/nodes/cards/card-commands'
 interface MenuItemBase {
   nodeType?: string
   label: string
+  /** labels-table stem for menu-build-time resolution (`menu.${labelKey}.label`
+   * / `.desc`) — carried from the card declaration; absent on snippet items and
+   * ad-hoc menu data, which render their `label` as-is. */
+  labelKey?: string
   desc?: string
   Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
   insertCommand?: unknown
@@ -53,6 +57,17 @@ export interface BuildCardMenuConfig {
   config?: CardConfig
 }
 
+/** Label resolver injected at menu-build time (docs/kobato-fit-plan.md C7):
+ * receives a labels-table key and the entry's declared English fallback. */
+export type ResolveMenuLabel = (key: string, fallback: string) => string
+
+// Section-name resolution: only the two built-in section names go through the
+// labels table; a custom section string (host menu data) renders as-is.
+const SECTION_LABEL_KEYS: Record<string, string> = {
+  Primary: 'menu.section.primary',
+  Snippets: 'menu.section.snippets',
+}
+
 /** One ordered menu section — the menu's primary view: CardMenu renders
  * sections directly, and `BuildCardMenuResult.items` is derived from them. */
 export interface MenuSection {
@@ -74,7 +89,7 @@ export interface BuildCardMenuResult {
 
 export function buildCardMenu(
   nodes: Map<string, CardMenuSource> | Iterable<[string, CardMenuSource]>,
-  { query, config }: { query?: string; config?: CardConfig } = {},
+  { query, config, resolveLabel }: { query?: string; config?: CardConfig; resolveLabel?: ResolveMenuLabel } = {},
 ): BuildCardMenuResult {
   let menu = new Map<string, ResolvedMenuItem[]>()
 
@@ -86,9 +101,15 @@ export function buildCardMenu(
       return
     }
 
+    // labels resolve at build time (C7): the declaration's English text is the
+    // fallback, so the default path (no resolver) is byte-identical. Function-
+    // form `matches` receives the RESOLVED label; array-form `matches` stays
+    // as declared (English aliases).
+    const label = item.labelKey ? (resolveLabel?.(`menu.${item.labelKey}.label`, item.label) ?? item.label) : item.label
+
     const matches =
       typeof item.matches === 'function'
-        ? item.matches(lowerQuery ?? '', item.label)
+        ? item.matches(lowerQuery ?? '', label)
         : item.matches?.find((match) => match.startsWith(lowerQuery ?? ''))
 
     if (lowerQuery && !matches) {
@@ -99,6 +120,7 @@ export function buildCardMenu(
     // Header's version stamp) so the menu always carries plain data
     const resolvedItem: ResolvedMenuItem = {
       ...item,
+      label,
       insertParams: typeof item.insertParams === 'function' ? item.insertParams() : item.insertParams,
     }
     if (resolvedItem.insertParams === undefined) {
@@ -107,7 +129,13 @@ export function buildCardMenu(
       // in test/unit/buildCardMenu.test.ts pins key absence)
       delete resolvedItem.insertParams
     }
+    if (resolvedItem.desc !== undefined && item.labelKey) {
+      resolvedItem.desc = resolveLabel?.(`menu.${item.labelKey}.desc`, resolvedItem.desc) ?? resolvedItem.desc
+    }
 
+    // sections group by the DECLARED name so a localized label can't fork the
+    // grouping or break the primary-first sort below; the label resolves at
+    // the sections-mapping stage
     const section = resolvedItem.section || 'Primary'
 
     if (!menu.has(section)) {
@@ -162,7 +190,13 @@ export function buildCardMenu(
     }),
   )
 
-  const sections: MenuSection[] = [...menu.entries()].map(([label, sectionItems]) => ({ label, items: sectionItems }))
+  const sections: MenuSection[] = [...menu.entries()].map(([label, sectionItems]) => {
+    const sectionLabelKey = SECTION_LABEL_KEYS[label]
+    return {
+      label: sectionLabelKey ? (resolveLabel?.(sectionLabelKey, label) ?? label) : label,
+      items: sectionItems,
+    }
+  })
   const items = sections.flatMap((section) => section.items)
 
   return { sections, items, maxItemIndex: items.length - 1 }

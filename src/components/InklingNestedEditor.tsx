@@ -1,6 +1,6 @@
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingNestedComposer from '@/components/InklingNestedComposer'
-import { BASIC_TRANSFORMERS, MINIMAL_TRANSFORMERS } from '@/markdown/transformers'
+import { BASIC_TRANSFORMERS, MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
 import BASIC_NODES from '@/nodes/BasicNodes'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { EmojiPickerPlugin } from '@/plugins/EmojiPickerPlugin'

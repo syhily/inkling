@@ -128,6 +128,27 @@ describe('createWordCounter', () => {
     counter.detach()
   })
 
+  it('passes language through to countWords (C7)', async () => {
+    const editor = createTestEditor()
+    await updateEditor(editor, () => {
+      const root = $getRoot()
+      root.clear()
+      root.append(
+        $createParagraphNode().append($createTextNode('我今天在家吃了好多好多好吃的，现在的我非常开心非常满足')),
+      )
+    })
+
+    const onChange = vi.fn()
+    const counter = createWordCounter({ editor, onChange, language: 'zh', throttleFn: synchronousThrottle })
+    counter.attach()
+
+    // word-level via Intl.Segmenter (15), not the legacy char-level (26), and
+    // the language reached the counting util
+    expect(onChange).toHaveBeenCalledWith(15)
+    expect(vi.mocked(countWords)).toHaveBeenCalledWith(expect.any(String), 'zh')
+    counter.detach()
+  })
+
   it('recounts incrementally after edits', async () => {
     const editor = createTestEditor()
     const onChange = vi.fn()

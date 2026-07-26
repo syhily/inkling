@@ -8,3 +8,10 @@ import { useWordCountHandleState } from '@/context/WordCountHandleContext'
 export function useWordCountCallback(): ((count: number) => void) | null {
   return useWordCountHandleState((state) => state.onChange)
 }
+
+// The top-level plugin's language, published alongside onChange (C7 §3.4) —
+// null until the plugin mounts; nested composers pass it to their own
+// WordCountPlugin so nested editors count with the same language.
+export function useWordCountLanguage(): string | null {
+  return useWordCountHandleState((state) => state.language)
+}

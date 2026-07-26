@@ -14,6 +14,7 @@ export const buttonDeclaration = {
   menu: [
     {
       label: 'Button',
+      labelKey: 'button',
       desc: 'Call-to-action button',
       icon: 'button',
       command: INSERT_BUTTON_COMMAND,

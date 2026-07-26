@@ -77,3 +77,7 @@ jobs:
       - run: pnpm build
 
       - run: pnpm verify:package
+
+      - run: pnpm verify:types
+
+      - run: pnpm verify:sizes

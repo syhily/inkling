@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input'
 import { KeyboardSelection } from '@/components/ui/KeyboardSelection'
 import { KeyboardSelectionWithGroups } from '@/components/ui/KeyboardSelectionWithGroups'
 import { Spinner } from '@/components/ui/Spinner'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 export interface InputListItemData {
   value: string | null
@@ -27,10 +28,14 @@ function isGroupList<T extends InputListItemData>(
 }
 
 export function InputListLoadingItem({ dataTestId }: { dataTestId: string }) {
+  const labels = useInklingLabels()
+
   return (
     <Delayed>
       <li className={`mb-0 px-4 py-2 text-left`} data-testid={`${dataTestId}-loading`}>
-        <span className="block text-sm leading-tight font-medium text-grey-900 dark:text-white">Searching...</span>
+        <span className="block text-sm leading-tight font-medium text-grey-900 dark:text-white">
+          {labels['search.loading']}
+        </span>
       </li>
     </Delayed>
   )

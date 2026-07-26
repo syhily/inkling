@@ -1,11 +1,15 @@
 import type { LexicalCommand, LexicalEditor } from 'lexical'
 
+import { TableNode } from '@lexical/table'
 import { $createParagraphNode, $getSelection, $isRangeSelection } from 'lexical'
 import React from 'react'
 
-import type { BuildCardMenuResult, ResolvedMenuItem } from '@/utils/buildCardMenu'
+import type { BuildCardMenuResult, CardMenuSource, ResolvedMenuItem } from '@/utils/buildCardMenu'
 
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
+import { lookupLabel } from '@/labels/inkling-labels'
+import { TABLE_MENU_SOURCE } from '@/nodes/table/table-menu'
 import { buildCardMenu } from '@/utils/buildCardMenu'
 import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
 
@@ -36,14 +40,24 @@ export interface UseCardMenu {
 export function useCardMenu(editor: LexicalEditor, query?: string, options: UseCardMenuOptions = {}): UseCardMenu {
   const { commandParams = [], replaceTriggerParagraph = false } = options
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
+  const { labels } = React.useContext(InklingUiPrefsContext)
 
-  // rebuild the menu when the registered nodes, query, or host config change —
-  // buildCardMenu is pure, so the menu is computed during render (no empty
-  // first-render frame)
+  // rebuild the menu when the registered nodes, query, host config, or labels
+  // change — buildCardMenu is pure, so the menu is computed during render (no
+  // empty first-render frame). The label resolver is the single injection
+  // point for labels (C7): declaration labelKeys resolve through the table,
+  // snippet/custom items render as declared.
   const cardMenu = React.useMemo<BuildCardMenuResult>(() => {
     const cardNodes = getEditorCardNodes(editor)
-    return buildCardMenu(cardNodes, { query, config: cardConfig })
-  }, [editor, query, cardConfig])
+    // the table entry is a pseudo CardMenuSource (snippet precedent) — the
+    // table family is not a card, so it joins the menu here instead of
+    // through the declarations, and only when the editor registers TableNode
+    const nodes: Iterable<[string, CardMenuSource]> = editor.hasNode(TableNode)
+      ? [...cardNodes, TABLE_MENU_SOURCE]
+      : cardNodes
+    const resolveLabel = (key: string, fallback: string) => lookupLabel(labels, key, fallback)
+    return buildCardMenu(nodes, { query, config: cardConfig, resolveLabel })
+  }, [editor, query, cardConfig, labels])
 
   const insert = React.useCallback<CardMenuInsert>(
     (insertCommand, { insertParams = {}, queryParams = [] } = {}) => {

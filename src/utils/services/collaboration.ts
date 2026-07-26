@@ -3,12 +3,9 @@ import { Doc } from 'yjs'
 
 import type { LexicalProviderFactory } from '@/context/InklingCollaborationContext'
 
-export function requireMultiplayerConfig(multiplayerEndpoint?: string, multiplayerDocId?: string) {
-  if (!multiplayerEndpoint || !multiplayerDocId) {
-    throw new Error('<InklingComposer> enableMultiplayer requires both multiplayerEndpoint and multiplayerDocId')
-  }
-  return { multiplayerEndpoint, multiplayerDocId }
-}
+import { requireMultiplayerConfig } from './multiplayer-config'
+
+export { requireMultiplayerConfig }
 
 // The events Lexical's Provider interface registers handlers for. Of these,
 // y-websocket's WebsocketProvider only ever emits 'sync' and 'status' — its

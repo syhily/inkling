@@ -1,11 +1,63 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
+import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
+import { resolveLabels, type InklingLabelsInput } from '@/labels/inkling-labels'
 
 vi.mock('@/utils/analytics', () => ({
   default: vi.fn(),
 }))
+
+class MockPinturaEditor {
+  on(): void {
+    // no-op — the locale tests only capture the openDefaultEditor options
+  }
+}
+
+/** Opens the editor against a mocked window.pintura and returns the options
+ * `openDefaultEditor` received. */
+async function captureOpenOptions({
+  config = {},
+  labels: labelsInput,
+}: { config?: Record<string, unknown>; labels?: InklingLabelsInput } = {}) {
+  const openDefaultEditor = vi.fn((_options: Record<string, unknown>) => new MockPinturaEditor())
+  window.pintura = { openDefaultEditor } as unknown as typeof window.pintura
+
+  function Wrapper({ children }: { children: React.ReactNode }) {
+    const prefsValue = React.useMemo(() => ({ darkMode: false, labels: resolveLabels(labelsInput) }), [])
+    return React.createElement(InklingUiPrefsContext.Provider, { value: prefsValue }, children)
+  }
+
+  const { result } = renderHook(
+    () =>
+      usePinturaEditor({
+        config: {
+          jsUrl: 'https://example.com/pintura.js',
+          cssUrl: 'https://example.com/pintura.css',
+          ...config,
+        },
+      }),
+    { wrapper: Wrapper },
+  )
+
+  const link = document.querySelector('link[href="https://example.com/pintura.css"]')
+  act(() => {
+    ;(link as HTMLLinkElement).onload?.(new Event('load'))
+  })
+
+  await waitFor(() => {
+    expect(result.current.isEnabled).toBe(true)
+  })
+
+  act(() => {
+    result.current.openEditor({ image: 'https://example.com/image.jpg', handleSave: vi.fn() })
+  })
+
+  expect(openDefaultEditor).toHaveBeenCalledTimes(1)
+  return openDefaultEditor.mock.calls[0][0]
+}
 
 describe('usePinturaEditor', () => {
   beforeEach(() => {
@@ -111,6 +163,39 @@ describe('usePinturaEditor', () => {
     await waitFor(() => {
       expect(result.current.error).toBe(loadError)
     })
+  })
+
+  it('feeds the labels table into the Pintura locale (C7)', async () => {
+    const options = await captureOpenOptions()
+
+    expect((options.locale as Record<string, string>).labelButtonExport).toBe('Save and close')
+    expect(options.cropSelectPresetOptions).toContainEqual([undefined, 'Custom'])
+    expect(options.cropSelectPresetOptions).toContainEqual([1, 'Square'])
+  })
+
+  it('resolves pintura.* keys from the composer labels overrides', async () => {
+    const options = await captureOpenOptions({
+      labels: {
+        'pintura.export': '保存并关闭',
+        'pintura.cropPreset.custom': '自定义',
+      },
+    })
+
+    expect((options.locale as Record<string, string>).labelButtonExport).toBe('保存并关闭')
+    expect(options.cropSelectPresetOptions).toContainEqual([undefined, '自定义'])
+  })
+
+  it('merges pinturaConfig.locale on top of the labels table', async () => {
+    const options = await captureOpenOptions({
+      labels: { 'pintura.export': '保存并关闭' },
+      config: {
+        locale: { labelButtonExport: 'Export now', labelCancel: 'Cancel' },
+      },
+    })
+
+    // the config locale wins on conflict and patches keys the table has no
+    // entry for
+    expect(options.locale).toEqual({ labelButtonExport: 'Export now', labelCancel: 'Cancel' })
   })
 
   it('removes the capture-phase click listener on unmount', () => {

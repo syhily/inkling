@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import type { SnippetItem } from '@/context/InklingHostIntegrationContext'
+import type { CardConfig, SnippetItem } from '@/context/InklingHostIntegrationContext'
 import type { CardMenuSource } from '@/utils/buildCardMenu'
 
+import { getCardMenu } from '@/nodes/cards/card-menus'
 import { buildCardMenu } from '@/utils/buildCardMenu'
 
 const Icon = () => null
@@ -260,6 +261,21 @@ describe('buildCardMenu', function () {
     expect(
       buildCardMenu(nodes, { config: { klipy: { apiKey: 'key' } } }).items.map((item) => item.label),
     ).to.deep.equal(['One', 'Two'])
+  })
+
+  it('gates the image declaration’s library entry on the host imageLibrary config (plan C8)', async function () {
+    // the declaration-derived image menu: 'Image' is ungated, 'GIF' is gated
+    // on tenor/klipy, 'Image library' on imageLibrary
+    const imageMenu = getCardMenu('image')
+    expect(imageMenu?.map((item) => item.label)).to.deep.equal(['Image', 'GIF', 'Image library'])
+    const nodes: NodeEntries = [['image', { cardMenu: imageMenu }]]
+
+    // no library config → no menu entry, zero UI trace (the GIF entry is
+    // hidden too — no provider keys either)
+    expect(buildCardMenu(nodes).items.map((item) => item.label)).to.deep.equal(['Image'])
+
+    const config: CardConfig = { imageLibrary: { search: () => Promise.resolve([]) } }
+    expect(buildCardMenu(nodes, { config }).items.map((item) => item.label)).to.deep.equal(['Image', 'Image library'])
   })
 
   it('resolves function-valued insertParams to plain data', async function () {
@@ -800,6 +816,123 @@ describe('buildCardMenu', function () {
           ],
         },
       ])
+    })
+  })
+
+  // Label resolution (docs/kobato-fit-plan.md C7 §3.3): the resolver is
+  // optional, so every test above also pins the default path — no resolver,
+  // output byte-identical to the pre-C7 builder.
+  describe('label resolution', function () {
+    it('resolves label, desc, and the built-in section names through the resolver', async function () {
+      const nodes: NodeEntries = [
+        [
+          'image',
+          {
+            cardMenu: {
+              label: 'Image',
+              labelKey: 'image',
+              desc: 'Upload, or embed with /image [url]',
+              Icon,
+              insertCommand: 'insert_image',
+            },
+          },
+        ],
+      ]
+      const snippets: SnippetItem[] = [{ name: 'One snippet', value: '<p>One</p>' }]
+      const resolveLabel = (key: string, fallback: string) => `zh(${key})${fallback}`
+
+      const cardMenu = buildCardMenu(nodes, { config: { snippets }, resolveLabel })
+
+      expect(cardMenu.sections.map((section) => section.label)).to.deep.equal([
+        'zh(menu.section.primary)Primary',
+        'zh(menu.section.snippets)Snippets',
+      ])
+      const imageItem = cardMenu.sections[0].items[0]
+      expect(imageItem.label).to.equal('zh(menu.image.label)Image')
+      expect(imageItem.desc).to.equal('zh(menu.image.desc)Upload, or embed with /image [url]')
+      // snippet names are host data — never resolved
+      expect(cardMenu.sections[1].items[0].label).to.equal('One snippet')
+    })
+
+    it('keeps custom section names and matches arrays as declared', async function () {
+      const nodes: NodeEntries = [
+        [
+          'one',
+          {
+            cardMenu: {
+              label: 'One',
+              labelKey: 'one',
+              desc: 'Card test one',
+              section: 'Embed',
+              Icon,
+              insertCommand: 'insert_card_one',
+              matches: ['one'],
+            },
+          },
+        ],
+      ]
+      const resolveLabel = (key: string, fallback: string) => `zh(${key})${fallback}`
+
+      const cardMenu = buildCardMenu(nodes, { query: 'one', resolveLabel })
+
+      // the array-form matches aliases matched the query as declared, the
+      // resolved item keeps the declared array, and a custom section name
+      // never goes through the resolver
+      expect(cardMenu.sections).to.have.lengthOf(1)
+      expect(cardMenu.sections[0].label).to.equal('Embed')
+      expect(cardMenu.sections[0].items[0].matches).to.deep.equal(['one'])
+      expect(cardMenu.sections[0].items[0].label).to.equal('zh(menu.one.label)One')
+    })
+
+    it('passes the RESOLVED label to function-form matches', async function () {
+      const matchFn = (query: string, label: string) => label.includes(query)
+      const nodes: NodeEntries = [
+        [
+          'one',
+          {
+            cardMenu: {
+              label: 'One',
+              labelKey: 'one',
+              Icon,
+              insertCommand: 'insert_card_one',
+              matches: matchFn,
+            },
+          },
+        ],
+      ]
+      const resolveLabel = (key: string, fallback: string) => (key === 'menu.one.label' ? '图片' : fallback)
+
+      // the declared English label does not contain the query; the resolved
+      // one does — proof the function received the resolved label
+      expect(buildCardMenu(nodes, { query: '图片', resolveLabel }).items.map((item) => item.label)).to.deep.equal([
+        '图片',
+      ])
+      expect(buildCardMenu(nodes, { query: 'One', resolveLabel }).items).to.deep.equal([])
+    })
+
+    it('falls back to the declared text when the resolver misses a key', async function () {
+      const nodes: NodeEntries = [
+        [
+          'one',
+          {
+            cardMenu: {
+              label: 'One',
+              labelKey: 'one',
+              desc: 'Card test one',
+              Icon,
+              insertCommand: 'insert_card_one',
+            },
+          },
+        ],
+      ]
+      // a resolver without a fallback of its own (e.g. a partial table the
+      // merge in resolveLabels didn't cover) leaves the declared text alone
+      const resolveLabel = () => undefined as unknown as string
+
+      const cardMenu = buildCardMenu(nodes, { resolveLabel })
+
+      expect(cardMenu.sections[0].items[0].label).to.equal('One')
+      expect(cardMenu.sections[0].items[0].desc).to.equal('Card test one')
     })
   })
 })

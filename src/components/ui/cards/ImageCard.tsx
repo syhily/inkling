@@ -14,6 +14,7 @@ import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
 import { IconButton } from '@/components/ui/IconButton'
 import { CardText } from '@/components/ui/MediaPlaceholder'
 import { UploadingOverlay, UploadPlaceholder } from '@/components/ui/UploadChrome'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { isGif } from '@/utils/isGif'
 
 interface PopulatedImageCardProps {
@@ -65,9 +66,10 @@ function PopulatedImageCard({
   openImageEditor,
   onFileChange,
 }: PopulatedImageCardProps) {
+  const labels = useInklingLabels()
   const progressAlt =
     imageUploader.progress !== undefined && Math.round(imageUploader.progress) < 100
-      ? `upload in progress, ${imageUploader.progress}`
+      ? labels['alt.imageUploadProgress'].replace('{progress}', `${imageUploader.progress}`)
       : ''
 
   const setRef = React.useCallback(
@@ -97,7 +99,7 @@ function PopulatedImageCard({
         <div
           className={`absolute inset-0 flex items-center justify-center border border-grey/20 bg-black/80 dark:border-grey/10 dark:bg-grey-950`}
         >
-          <CardText text="Drop to convert to a gallery" />
+          <CardText text={labels['media.dragText.toGallery']} />
         </div>
       ) : null}
       {imageFileDragHandler?.isDraggedOver ? (
@@ -105,7 +107,7 @@ function PopulatedImageCard({
           className={`absolute inset-0 flex items-center justify-center border border-grey/20 bg-black/80 dark:border-grey/10 dark:bg-grey-950`}
           data-testid="drag-overlay"
         >
-          <CardText text="Drop to replace image" />
+          <CardText text={labels['media.dragText.replaceImage']} />
         </div>
       ) : null}
       {isPinturaEnabled && !isGif(src) && (
@@ -115,7 +117,7 @@ function PopulatedImageCard({
           <div className="flex flex-row-reverse">
             <IconButton
               Icon={WandIcon}
-              label="Edit"
+              label={labels['action.edit']}
               onClick={() =>
                 openImageEditor?.({
                   image: src,
@@ -141,9 +143,11 @@ function PopulatedImageCard({
 }
 
 function EmptyImageCard({ onFileChange, fileInputRef, imageFileDragHandler, errors }: EmptyImageCardProps) {
+  const labels = useInklingLabels()
+
   return (
     <UploadPlaceholder
-      desc="Click to select an image"
+      desc={labels['upload.image.desc']}
       dragHandler={imageFileDragHandler}
       errors={errors}
       fileInputRef={fileInputRef}
@@ -175,6 +179,7 @@ export function ImageCard({
   isPinturaEnabled,
   openImageEditor,
 }: ImageCardProps) {
+  const labels = useInklingLabels()
   const figureRef = React.useRef<HTMLElement | null>(null)
 
   React.useEffect(() => {
@@ -208,10 +213,10 @@ export function ImageCard({
         )}
         <CardCaptionEditor
           altText={altText || ''}
-          altTextPlaceholder="Type alt text for image (optional)"
+          altTextPlaceholder={labels['image.altText.placeholder']}
           captionEditor={captionEditor}
           captionEditorInitialState={captionEditorInitialState}
-          captionPlaceholder="Type caption for image (optional)"
+          captionPlaceholder={labels['caption.image.placeholder']}
           dataTestId="image-caption-editor"
           isSelected={isSelected}
           readOnly={!isSelected}

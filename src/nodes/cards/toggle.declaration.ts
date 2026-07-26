@@ -33,6 +33,7 @@ export const toggleDeclaration = {
   menu: [
     {
       label: 'Toggle',
+      labelKey: 'toggle',
       desc: 'Collapsible content block',
       icon: 'toggle',
       command: INSERT_TOGGLE_COMMAND,

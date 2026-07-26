@@ -1,13 +1,16 @@
 import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin'
 import { ContentEditable } from '@lexical/react/LexicalContentEditable'
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
-import { render } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import InklingComposer from '@/components/InklingComposer'
 import InklingErrorBoundary from '@/components/InklingErrorBoundary'
-import InklingCollaborationContext, { type LexicalProviderFactory } from '@/context/InklingCollaborationContext'
+import InklingCollaborationContext, {
+  noopWebsocketProviderFactory,
+  type LexicalProviderFactory,
+} from '@/context/InklingCollaborationContext'
 import InklingHostIntegrationContext, { type FileUploader } from '@/context/InklingHostIntegrationContext'
 import { normalizeInitialEditorState } from '@/utils/initial-document'
 
@@ -123,7 +126,7 @@ describe('InklingComposer', function () {
     expect('useFileUpload' in fileUploader).toBe(false)
   })
 
-  it('passes the normalized bootstrap state to the collaboration plugin in multiplayer', () => {
+  it('passes the normalized bootstrap state to the collaboration plugin in multiplayer', async () => {
     render(
       <InklingComposer
         enableMultiplayer
@@ -135,7 +138,9 @@ describe('InklingComposer', function () {
       </InklingComposer>,
     )
 
-    expect(CollaborationPlugin).toHaveBeenCalled()
+    // the collaboration chunk loads lazily (dynamic import in an effect), so
+    // the plugin mounts one async tick after the composer
+    await waitFor(() => expect(CollaborationPlugin).toHaveBeenCalled())
     const pluginProps = vi.mocked(CollaborationPlugin).mock.calls[0][0]
     expect(typeof pluginProps.initialEditorState).toBe('string')
     const bootstrapState = JSON.parse(pluginProps.initialEditorState as string)
@@ -143,7 +148,7 @@ describe('InklingComposer', function () {
     expect(bootstrapState.root.children[0].type).toBe('paragraph')
   })
 
-  it('exposes a websocket provider factory returning the methods Lexical requires', () => {
+  it('exposes a websocket provider factory returning the methods Lexical requires', async () => {
     let factory: LexicalProviderFactory | undefined
 
     function FactoryConsumer() {
@@ -153,12 +158,22 @@ describe('InklingComposer', function () {
     }
 
     render(
-      <InklingComposer multiplayerDebug={false} multiplayerDocId="doc" multiplayerEndpoint="ws://localhost:1234">
+      <InklingComposer
+        enableMultiplayer
+        multiplayerDebug={false}
+        multiplayerDocId="doc"
+        multiplayerEndpoint="ws://localhost:1234"
+      >
         <FactoryConsumer />
       </InklingComposer>,
     )
 
-    expect(factory).toBeDefined()
+    // the real factory replaces the inert default once the lazy collaboration
+    // chunk resolves
+    await waitFor(() => {
+      expect(factory).toBeDefined()
+      expect(factory).not.toBe(noopWebsocketProviderFactory)
+    })
     if (!factory) {
       throw new Error('Expected InklingComposer to provide a websocket factory')
     }
@@ -185,7 +200,7 @@ describe('InklingComposer', function () {
     },
   )
 
-  it('rejects incomplete multiplayer configuration from the provider factory', () => {
+  it('serves the inert provider factory while multiplayer is disabled', () => {
     let factory: LexicalProviderFactory | undefined
 
     function FactoryConsumer() {
@@ -199,14 +214,16 @@ describe('InklingComposer', function () {
       </InklingComposer>,
     )
 
-    expect(factory).toBeDefined()
+    // no collaboration chunk is loaded without enableMultiplayer: the context
+    // keeps the inert factory, and calling it is a no-op (never a network
+    // attempt, never a config error)
+    expect(factory).toBe(noopWebsocketProviderFactory)
     if (!factory) {
       throw new Error('Expected InklingComposer to provide a websocket factory')
     }
-    const createProvider = factory
-    expect(() => createProvider('card-1', new Map())).toThrow(
-      '<InklingComposer> enableMultiplayer requires both multiplayerEndpoint and multiplayerDocId',
-    )
+    const provider = factory('card-1', new Map())
+    expect(provider.awareness.getLocalState()).toBeNull()
+    expect(() => provider.disconnect()).not.toThrow()
   })
 
   it('drops fileTypes entries whose shape consumers cannot read', () => {

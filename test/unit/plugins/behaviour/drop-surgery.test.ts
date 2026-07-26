@@ -277,3 +277,23 @@ describe('$removeDropSource', () => {
     expect(readTopLevelKeys(editor)).toContain(keys.imageAKey)
   })
 })
+
+describe('$insertDraggedImage without the image card registered', () => {
+  // plan C5: the class comes from the editor's registered-node map, so a
+  // card-free composition (the ./core entry — no gallery card, so this path
+  // is unreachable there in practice) resolves to null instead of importing
+  // the shim
+  it('returns null and leaves the tree untouched', async () => {
+    const editor = createEditor({ namespace: 'test', nodes: [], onError: () => {} })
+
+    let result: unknown = 'unset'
+    await updateEditor(editor, () => {
+      result = $insertDraggedImage({ src: '/a.png' }, [], 0)
+    })
+
+    expect(result).toBeNull()
+    editor.getEditorState().read(() => {
+      expect($getRoot().getChildrenSize()).toBe(0)
+    })
+  })
+})

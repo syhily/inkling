@@ -6,18 +6,35 @@ import { ListItemNode, ListNode } from '@lexical/list'
 import {
   $convertFromMarkdownString,
   $convertToMarkdownString,
+  isTableRowDivider,
   type MultilineElementTransformer,
   type Transformer,
 } from '@lexical/markdown'
 import { HeadingNode, QuoteNode } from '@lexical/rich-text'
+import { $createParagraphNode } from 'lexical'
 
 import type { MarkdownDialect } from '@/markdown/dialects'
+import type { HostCard } from '@/nodes/cards/host-cards'
 
 import { DEFAULT_TRANSFORMERS } from '@/markdown/transformers'
+import { MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
 import { $createMarkdownNode, $isMarkdownNode, MarkdownNode } from '@/nodes/base/nodes/markdown/MarkdownNode'
 import { CARD_MARKDOWN_DECLARATIONS } from '@/nodes/cards/card-markdown-transformers'
 import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
 import { $createCodeBlockNode, $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
+import {
+  $createTableCellNode,
+  $createTableNode,
+  $createTableRowNode,
+  $isTableCellNode,
+  $isTableNode,
+  $isTableRowNode,
+  TableCellHeaderStates,
+  TableCellNode,
+  TableNode,
+  TableRowNode,
+  type TableCellHeaderState,
+} from '@/nodes/table/TableNodes'
 
 /**
  * The card-aware round-trip dialect — one of Inkling's two markdown dialects
@@ -64,6 +81,9 @@ export const MARKDOWN_NODES = [
   ListNode,
   ListItemNode,
   LinkNode,
+  TableNode,
+  TableRowNode,
+  TableCellNode,
   ...MARKDOWN_CARDS.map((card) => card.node),
   MarkdownNode,
 ]
@@ -125,15 +145,117 @@ const CODE_FENCE: MultilineElementTransformer = {
   type: 'multiline-element',
 }
 
-const TRANSFORMERS: Transformer[] = [...CARD_TRANSFORMERS, CODE_FENCE, ...DEFAULT_TRANSFORMERS]
+// GFM pipe-table transformer, hand-written: @lexical/markdown 0.46 ships no
+// upstream TABLE transformer — only the row/divider regexes that
+// normalizeMarkdown uses. Import claims a header row only when a divider
+// line follows it (otherwise the line stays a literal paragraph); cell
+// markdown converts through the dialect's minimal inline-only set, so a
+// cell can never grow block content. Export escapes pipes and always emits
+// row 0 as the GFM header — GFM has no headerless tables.
+const TABLE_ROW_REG_EXP = /^\|(.+)\|\s*$/
 
-function createMarkdownEditor() {
+function splitTableRow(line: string): string[] {
+  const match = line.match(TABLE_ROW_REG_EXP)
+  if (!match) {
+    return []
+  }
+  // split on unescaped pipes only, then unescape `\|`
+  return match[1].split(/(?<!\\)\|/).map((cell) => cell.trim().replace(/\\\|/g, '|'))
+}
+
+const GFM_TABLE: MultilineElementTransformer = {
+  dependencies: [TableNode],
+  regExpStart: TABLE_ROW_REG_EXP,
+  handleImportAfterStartMatch: ({ lines, rootNode, startLineIndex }) => {
+    const divider = lines[startLineIndex + 1]
+    if (divider === undefined || !isTableRowDivider(divider)) {
+      return null
+    }
+
+    const headerCells = splitTableRow(lines[startLineIndex])
+    const bodyRows: string[][] = []
+    let endLineIndex = startLineIndex + 1
+    while (endLineIndex + 1 < lines.length && TABLE_ROW_REG_EXP.test(lines[endLineIndex + 1])) {
+      bodyRows.push(splitTableRow(lines[endLineIndex + 1]))
+      endLineIndex += 1
+    }
+
+    const table = $createTableNode()
+    const appendRow = (cells: string[], headerState: TableCellHeaderState) => {
+      const row = $createTableRowNode()
+      for (const cellText of cells) {
+        const cell = $createTableCellNode(headerState)
+        const paragraph = $createParagraphNode()
+        $convertFromMarkdownString(cellText, MINIMAL_TRANSFORMERS, paragraph)
+        cell.append(...paragraph.getChildren())
+        row.append(cell)
+      }
+      table.append(row)
+    }
+    appendRow(headerCells, TableCellHeaderStates.ROW)
+    bodyRows.forEach((cells) => appendRow(cells, TableCellHeaderStates.NO_STATUS))
+
+    rootNode.append(table)
+    return [true, endLineIndex]
+  },
+  // unreachable: handleImportAfterStartMatch always claims or declines
+  replace: () => false,
+  export: (node, exportChildren) => {
+    if (!$isTableNode(node)) {
+      return null
+    }
+    const rows = node.getChildren().filter($isTableRowNode)
+    if (rows.length === 0) {
+      return null
+    }
+
+    const lines = rows.map((row) => {
+      const cells = row
+        .getChildren()
+        .map((cell) =>
+          $isTableCellNode(cell) ? exportChildren(cell).replace(/\n/g, ' ').replace(/\|/g, '\\|').trim() : '',
+        )
+      return '| ' + cells.join(' | ') + ' |'
+    })
+    const columnCount = Math.max(...rows.map((row) => row.getChildrenSize()))
+    const divider = '| ' + Array.from({ length: columnCount }, () => '---').join(' | ') + ' |'
+    return [lines[0], divider, ...lines.slice(1)].join('\n')
+  },
+  type: 'multiline-element',
+}
+
+const TRANSFORMERS: Transformer[] = [...CARD_TRANSFORMERS, GFM_TABLE, CODE_FENCE, ...DEFAULT_TRANSFORMERS]
+
+/**
+ * The options the round-trip pair accepts: `cards` composes host cards
+ * (CONTEXT.md: "host card") into the conversion — their assembled node
+ * classes join the editor's node set and their fence transformers join the
+ * card transformer run, ordered before CODE_FENCE so `inkling:<card>` fences
+ * match their card transformer first (the same precedence the built-in cards
+ * get).
+ */
+export interface MarkdownRoundTripOptions {
+  cards?: readonly HostCard[]
+}
+
+function createMarkdownEditor(cards: readonly HostCard[]) {
   return createHeadlessEditor({
-    nodes: MARKDOWN_NODES,
+    nodes: [...MARKDOWN_NODES, ...cards.map((card) => card.node)],
     onError(error) {
       throw error
     },
   })
+}
+
+// Host card fences join the card run — ahead of CODE_FENCE. With no host
+// cards the shared constant is reused, so the default conversion is
+// byte-identical to the pre-options behavior.
+function resolveTransformers(cards: readonly HostCard[]): Transformer[] {
+  if (cards.length === 0) {
+    return TRANSFORMERS
+  }
+  const hostTransformers = cards.flatMap((card) => (card.markdownTransformer ? [card.markdownTransformer] : []))
+  return [...CARD_TRANSFORMERS, ...hostTransformers, GFM_TABLE, CODE_FENCE, ...DEFAULT_TRANSFORMERS]
 }
 
 /**
@@ -143,12 +265,16 @@ function createMarkdownEditor() {
  * existing Inkling shortcut transformers (headings, lists, quotes, links, code
  * blocks, horizontal rules, sub/superscript, etc.).
  */
-export function markdownToLexicalState(markdown: string): SerializedEditorState {
-  const editor = createMarkdownEditor()
+export function markdownToLexicalState(
+  markdown: string,
+  options: MarkdownRoundTripOptions = {},
+): SerializedEditorState {
+  const cards = options.cards ?? []
+  const editor = createMarkdownEditor(cards)
 
   editor.update(
     () => {
-      $convertFromMarkdownString(markdown, TRANSFORMERS)
+      $convertFromMarkdownString(markdown, resolveTransformers(cards))
     },
     { discrete: true },
   )
@@ -162,13 +288,14 @@ export function markdownToLexicalState(markdown: string): SerializedEditorState 
  * Uses `@lexical/markdown`'s `$convertToMarkdownString` with the same
  * transformer set used by `markdownToLexicalState`.
  */
-export function lexicalStateToMarkdown(state: SerializedEditorState): string {
-  const editor = createMarkdownEditor()
+export function lexicalStateToMarkdown(state: SerializedEditorState, options: MarkdownRoundTripOptions = {}): string {
+  const cards = options.cards ?? []
+  const editor = createMarkdownEditor(cards)
 
   editor.setEditorState(editor.parseEditorState(state))
 
   return editor.getEditorState().read(() => {
-    return $convertToMarkdownString(TRANSFORMERS)
+    return $convertToMarkdownString(resolveTransformers(cards))
   })
 }
 

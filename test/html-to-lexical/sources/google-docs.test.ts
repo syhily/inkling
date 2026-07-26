@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 
-import { htmlToLexical } from '@/html/html-to-lexical/index'
+import { htmlToLexical } from '#/utils/html-to-lexical-with-dom'
 
 const options = {
   editorConfig: {

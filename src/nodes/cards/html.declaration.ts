@@ -15,6 +15,7 @@ export const htmlDeclaration = {
   menu: [
     {
       label: 'HTML',
+      labelKey: 'html',
       desc: 'Insert a HTML editor card',
       icon: 'html',
       command: INSERT_HTML_COMMAND,

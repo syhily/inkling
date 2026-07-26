@@ -7,6 +7,7 @@ import type { SearchLinksFn } from '@/hooks/useSearchLinks'
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
 import { UrlInput } from '@/components/ui/UrlInput'
 import { UrlSearchInput } from '@/components/ui/UrlSearchInput'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 interface BookmarkCardProps {
   author?: string
@@ -53,6 +54,7 @@ export function BookmarkCard({
   urlError,
   searchLinks,
 }: BookmarkCardProps) {
+  const labels = useInklingLabels()
   // State to manage thumbnail visibility
   const [thumbnailVisible, setThumbnailVisible] = React.useState(true)
 
@@ -117,7 +119,7 @@ export function BookmarkCard({
         <CardCaptionEditor
           captionEditor={captionEditor}
           captionEditorInitialState={captionEditorInitialState}
-          captionPlaceholder="Type caption for bookmark (optional)"
+          captionPlaceholder={labels['caption.bookmark.placeholder']}
           dataTestId="bookmark-caption"
           isSelected={isSelected}
         />

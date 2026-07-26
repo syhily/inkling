@@ -192,13 +192,20 @@ test.describe('Markdown', async () => {
     await expect(await page.locator('[data-inkling-card="horizontalrule"]')).toHaveCount(0)
   })
 
-  test('converts table to html card', async function () {
+  test('converts table to a native table', async function () {
     await focusEditor(page)
     await pasteText(
       page,
       '<table><tr><th>Month</th><th>Savings</th></tr><tr><td>January</td><td>$100</td></tr><tr><td>February</td><td>$80</td></tr></table>',
     )
 
-    await expect(page.locator('[data-inkling-card="html"]')).toBeVisible()
+    // the native table family claims the pasted <table>: header cells land in
+    // th, body cells in td — the html card no longer sees it
+    const table = page.locator('.inkling-lexical table')
+    await expect(table).toBeVisible()
+    await expect(table.locator('tr')).toHaveCount(3)
+    await expect(table.locator('th')).toHaveText(['Month', 'Savings'])
+    await expect(table.locator('td')).toHaveText(['January', '$100', 'February', '$80'])
+    await expect(page.locator('[data-inkling-card="html"]')).toHaveCount(0)
   })
 })

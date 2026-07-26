@@ -20,12 +20,8 @@ import {
 } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
-import {
-  BASIC_TRANSFORMERS,
-  DEFAULT_TRANSFORMERS,
-  ELEMENT_TRANSFORMERS,
-  MINIMAL_TRANSFORMERS,
-} from '@/markdown/transformers'
+import { DEFAULT_TRANSFORMERS, ELEMENT_TRANSFORMERS } from '@/markdown/transformers'
+import { BASIC_TRANSFORMERS, MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
 import { $createCodeBlockNode, $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $isHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 

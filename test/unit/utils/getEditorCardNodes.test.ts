@@ -53,6 +53,8 @@ describe('getEditorCardNodes', () => {
       'header',
       'bookmark',
       'gallery',
+      'math',
+      'footnotedefinition',
     ])
   })
 

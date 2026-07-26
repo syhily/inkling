@@ -13,6 +13,14 @@ const require = createRequire(import.meta.url)
 
 const outputFileName = pkg.name[0] === '@' ? pkg.name.slice(pkg.name.indexOf('/') + 1) : pkg.name
 
+// Dual-entry build (plan C5): INKLING_ENTRY selects the published entry.
+// The default `editor` pass emits the full `.` bundle (ES + UMD, style.css);
+// the `core` pass emits the card-free `./core` subpath (ES only, core.css).
+// Both passes emit the lazy collaboration chunk, so chunk names carry the
+// entry prefix to keep the two passes from overwriting each other.
+const inklingEntry = process.env.INKLING_ENTRY === 'core' ? 'core' : 'editor'
+const isCoreEntry = inklingEntry === 'core'
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
@@ -64,10 +72,19 @@ export default defineConfig(({ mode }) => {
       minify: true,
       sourcemap: true,
       cssCodeSplit: true,
+      // the first (editor) pass owns the dist cleanup; the core pass must not
+      // wipe the artifacts the editor pass just emitted
+      emptyOutDir: !isCoreEntry,
       lib: {
-        entry: resolve(import.meta.dirname, 'src/index.ts'),
+        entry: resolve(import.meta.dirname, isCoreEntry ? 'src/core.ts' : 'src/index.ts'),
         name: pkg.name,
+        // the `./core` subpath is ESM-only (plan C5) — CJS consumers keep the
+        // root UMD
+        ...(isCoreEntry ? { formats: ['es' as const] } : {}),
         fileName(format: string) {
+          if (isCoreEntry) {
+            return 'core.js'
+          }
           if (format === 'umd') {
             return `${outputFileName}.umd.cjs`
           }
@@ -90,8 +107,15 @@ export default defineConfig(({ mode }) => {
         // react/react-dom are the only true runtime peers and stay external
         // (including their jsx-runtime/client entry points). Do NOT add
         // feature packages back to this list without a packed-consumer test.
-        external: [/^react($|\/)/, /^react-dom($|\/)/],
+        // jsdom is the one optional peer externalized with them (plan C1):
+        // headless HTML conversion lazy-loads it through the DOM port
+        // (src/html/headless-dom.ts), and the with-jsdom packed-consumer
+        // phases in scripts/verify-packed-package.ts gate the pairing.
+        external: [/^react($|\/)/, /^react-dom($|\/)/, /^jsdom($|\/)/],
         output: {
+          // both passes emit the lazy collaboration chunk; prefix chunk names
+          // with the entry so the two passes don't overwrite each other
+          chunkFileNames: `chunks/${inklingEntry}-[name].js`,
           globals: function (id: string) {
             // Global names for the externalized React peer dependencies in
             // the UMD build.
@@ -111,9 +135,11 @@ export default defineConfig(({ mode }) => {
           assetFileNames: (assetInfo: { names?: string[] }) => {
             // Vite 6 changed CSS output naming in lib mode from
             // 'style.css' to deriving from the entry filename.
-            // Preserve 'style.css' for backwards compatibility.
+            // Preserve 'style.css' for backwards compatibility ('core.css'
+            // for the core pass — same source sheet, not yet layered; C6
+            // owns CSS layering).
             if (assetInfo.names?.[0]?.endsWith('.css')) {
-              return 'style.css'
+              return isCoreEntry ? 'core.css' : 'style.css'
             }
             return assetInfo.names?.[0] ?? '[name][extname]'
           },

@@ -10,7 +10,7 @@ import {
 } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
-import { $fireFenceKeyboardShortcut } from '@/markdown/card-shortcuts'
+import { $fireFenceKeyboardShortcut, $insertCodeBlockForShortcut } from '@/markdown/card-shortcuts'
 import { $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
 
 // Direct pins for the enter/tab fence trigger body (the card-shortcut seam).
@@ -130,5 +130,54 @@ describe('$fireFenceKeyboardShortcut', () => {
 
     expect(result).toBe(false)
     expect(event.defaultPrevented).toBe(false)
+  })
+})
+
+describe('$fireFenceKeyboardShortcut without the code card registered', () => {
+  // plan C5: the class comes from the editor's registered-node map, so a
+  // card-free composition (the ./core entry) gets no fence shortcut — the
+  // paragraph stays untouched and the event is NOT consumed, letting the
+  // caller fall through to its other key handling.
+  function createCardlessEditor(): LexicalEditor {
+    return createEditor({
+      namespace: 'test',
+      nodes: [],
+      onError: () => {},
+    })
+  }
+
+  it('returns false and leaves the fence paragraph in place', async () => {
+    const editor = createCardlessEditor()
+    await setupParagraph(editor, '```js')
+    const event = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true })
+
+    const result = await fireShortcut(editor, event)
+
+    expect(result).toBe(false)
+    expect(event.defaultPrevented).toBe(false)
+    editor.getEditorState().read(() => {
+      const paragraph = $getRoot().getFirstChild()
+      expect($isParagraphNode(paragraph)).toBe(true)
+      expect(paragraph?.getTextContent()).toBe('```js')
+    })
+  })
+
+  it('$insertCodeBlockForShortcut returns false and leaves the tree untouched', async () => {
+    const editor = createCardlessEditor()
+    await setupParagraph(editor, '```js')
+
+    let inserted: boolean | undefined
+    await updateEditor(editor, () => {
+      const paragraph = $getRoot().getFirstChild()
+      if ($isParagraphNode(paragraph)) {
+        inserted = $insertCodeBlockForShortcut(paragraph, 'js')
+      }
+    })
+
+    expect(inserted).toBe(false)
+    editor.getEditorState().read(() => {
+      expect($getRoot().getChildrenSize()).toBe(1)
+      expect($isParagraphNode($getRoot().getFirstChild())).toBe(true)
+    })
   })
 })

@@ -10,12 +10,10 @@ export function render(node: FileNode) {
   return (
     <FileNodeComponent
       fileDesc={node.fileCaption}
-      fileDescPlaceholder={'Enter a description'}
       fileName={node.fileName}
       fileSize={node.formattedFileSize}
       fileSrc={node.src}
       fileTitle={node.fileTitle}
-      fileTitlePlaceholder={'Enter a title'}
       initialFile={node.__initialFile}
       nodeKey={node.getKey()}
       triggerFileDialog={node.__triggerFileDialog}

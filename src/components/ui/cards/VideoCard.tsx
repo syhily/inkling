@@ -12,6 +12,7 @@ import { MediaPlayer } from '@/components/ui/MediaPlayer'
 import { ReadOnlyOverlay } from '@/components/ui/ReadOnlyOverlay'
 import { ButtonGroupSetting, MediaUploadSetting, SettingsPanel, ToggleSetting } from '@/components/ui/SettingsPanel'
 import { UploadingOverlay, UploadPlaceholder } from '@/components/ui/UploadChrome'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 interface PopulatedVideoCardProps {
   thumbnail: string
@@ -46,19 +47,21 @@ function PopulatedVideoCard({
   thumbnailMimeTypes,
   thumbnailDragHandler,
 }: PopulatedVideoCardProps) {
+  const labels = useInklingLabels()
+
   const buttonGroupChildren = [
     {
-      label: 'Regular',
+      label: labels['settings.layout.regular'],
       name: 'regular',
       Icon: ImgRegularIcon,
     },
     {
-      label: 'Wide',
+      label: labels['settings.layout.wide'],
       name: 'wide',
       Icon: ImgWideIcon,
     },
     {
-      label: 'Full',
+      label: labels['settings.layout.full'],
       name: 'full',
       Icon: ImgFullIcon,
     },
@@ -68,10 +71,10 @@ function PopulatedVideoCard({
     <>
       <div className="not-inkling-prose relative" data-testid="video-card-populated">
         <div>
-          <img alt="Video thumbnail" className="mx-auto" src={thumbnail} />
+          <img alt={labels['alt.videoThumbnail']} className="mx-auto" src={thumbnail} />
           {customThumbnail && (
             <img
-              alt="Video custom thumbnail"
+              alt={labels['alt.videoCustomThumbnail']}
               className="absolute inset-0 size-full bg-white object-cover"
               src={customThumbnail}
             />
@@ -100,26 +103,26 @@ function PopulatedVideoCard({
         <SettingsPanel>
           <ButtonGroupSetting
             buttons={buttonGroupChildren}
-            label="Video width"
+            label={labels['settings.videoWidth']}
             selectedName={cardWidth}
             onClick={onCardWidthChange}
           />
           <ToggleSetting
             dataTestId="loop-video"
-            description="Autoplay your video on a loop without sound."
+            description={labels['settings.loop.description']}
             isChecked={isLoopChecked}
-            label="Loop"
+            label={labels['settings.loop']}
             onChange={onLoopChange}
           />
           <MediaUploadSetting
-            alt="Custom thumbnail"
+            alt={labels['alt.customThumbnail']}
             borderStyle={'simple'}
             dataTestId="custom-thumbnail-replace"
             errors={customThumbnailUploader?.errors}
             icon="file"
             isDraggedOver={thumbnailDragHandler?.isDraggedOver}
             isLoading={customThumbnailUploader?.isLoading}
-            label="Custom thumbnail"
+            label={labels['settings.customThumbnail']}
             mimeTypes={thumbnailMimeTypes}
             placeholderRef={thumbnailDragHandler?.setRef}
             progress={customThumbnailUploader?.progress}
@@ -172,6 +175,7 @@ export function VideoCard({
   videoMimeTypes,
   ...props
 }: VideoCardProps) {
+  const labels = useInklingLabels()
   const showPopulatedCard = props.customThumbnail || props.thumbnail || videoUploader?.isLoading
 
   return (
@@ -180,7 +184,7 @@ export function VideoCard({
         <PopulatedVideoCard {...props} isEditing={isEditing} videoUploader={videoUploader} />
       ) : (
         <UploadPlaceholder
-          desc="Click to select a video"
+          desc={labels['upload.video.desc']}
           dragHandler={videoDragHandler}
           errors={videoUploadErrors}
           fileInputRef={fileInputRef}
@@ -194,7 +198,7 @@ export function VideoCard({
       <CardCaptionEditor
         captionEditor={captionEditor}
         captionEditorInitialState={captionEditorInitialState}
-        captionPlaceholder="Type caption for video (optional)"
+        captionPlaceholder={labels['caption.video.placeholder']}
         dataTestId="video-card-caption"
         isSelected={isSelected}
       />

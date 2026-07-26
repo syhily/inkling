@@ -19,6 +19,7 @@ import {
   insertCard,
   isMac,
   pasteHtml,
+  waitForCardContentSynced,
 } from '#/utils/e2e'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -372,8 +373,10 @@ test.describe('Image card', async () => {
       page,
       'This is link <a href="https://inkling.local/changelog/markdown/">inkling.local/changelog/markdown/</a>',
     )
-    // wait for the paste to land before the one-shot snapshot assert below
-    await expect(await page.locator('text="This is link"')).toBeVisible()
+    // wait for the paste to land and the nested editor's React flush (which
+    // unmounts the empty-caption placeholder) before the one-shot snapshot
+    // assert below
+    await waitForCardContentSynced(page, 'image', 'This is link')
 
     await assertHTML(
       page,
@@ -854,6 +857,36 @@ test.describe('Image card', async () => {
     await focusEditor(page)
     await page.keyboard.type('hello')
     await expect(page.locator('.inkling-lexical > [data-inkling="editor"] > div > p span')).toHaveText('hello')
+  })
+
+  test('ArrowLeft/ArrowRight in the gif search input move the text caret, not the highlight', async () => {
+    await mockTenorApi(page)
+    await focusEditor(page)
+    await page.click('[data-inkling-plus-button]')
+
+    await page.click('button[data-inkling-card-menu-item="GIF"]')
+
+    await expect(page.locator('[data-testid="gif-item"]')).toHaveCount(3)
+
+    const searchInput = page.locator('[data-testid="gif-selector"] input')
+    await expect(searchInput).toBeFocused()
+    await searchInput.fill('cat')
+
+    // A resting cursor pre-sets the highlight without taking focus — it must
+    // not turn the caret keys into grid navigation.
+    await page.hover('[data-gif-index="1"]')
+    await expect(searchInput).toBeFocused()
+
+    await page.keyboard.press('ArrowLeft')
+    await expect(searchInput).toBeFocused()
+    await page.keyboard.type('s')
+    await expect(searchInput).toHaveValue('cast')
+
+    await page.keyboard.press('Home')
+    await page.keyboard.press('ArrowRight')
+    await expect(searchInput).toBeFocused()
+    await page.keyboard.type('u')
+    await expect(searchInput).toHaveValue('cuast')
   })
 
   test('can close the gif selector on Esc', async () => {

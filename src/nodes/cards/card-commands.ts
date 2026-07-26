@@ -10,6 +10,7 @@ import type { GalleryNodeDataset } from '@/nodes/GalleryNode'
 import type { HeaderNodeDataset } from '@/nodes/HeaderNode'
 import type { HtmlNodeDataset } from '@/nodes/HtmlNode'
 import type { ImageNodeDataset } from '@/nodes/ImageNode'
+import type { MathNodeDataset } from '@/nodes/MathNode'
 import type { ToggleNodeDataset } from '@/nodes/ToggleNode'
 import type { VideoNodeDataset } from '@/nodes/VideoNode'
 import type { SnippetDataset } from '@/plugins/behaviour/snippet-insertion'
@@ -25,6 +26,8 @@ import type { SnippetDataset } from '@/plugins/behaviour/snippet-insertion'
  * fence), so all card commands share one home.
  * `OPEN_GIF_SELECTOR_COMMAND` is likewise kept here for the Image card's GIF
  * menu entry; `@/plugins/InklingSelectorPlugin` re-exports it.
+ * `OPEN_IMAGE_LIBRARY_COMMAND` shares the home for the Image card's media
+ * library menu entry (docs/kobato-fit-plan.md C8).
  * `INSERT_SNIPPET_COMMAND` shares the home: the snippet menu entry built by
  * `@/utils/buildCardMenu` dispatches it through the same type-erased menu
  * insert path, while `@/plugins/InklingSnippetPlugin` keeps only the
@@ -42,7 +45,9 @@ export const INSERT_HEADER_COMMAND = createCommand<HeaderNodeDataset>()
 export const INSERT_HORIZONTAL_RULE_COMMAND = createCommand<void>()
 export const INSERT_HTML_COMMAND = createCommand<HtmlNodeDataset>()
 export const INSERT_IMAGE_COMMAND = createCommand<ImageNodeDataset>()
+export const INSERT_MATH_COMMAND = createCommand<MathNodeDataset>()
 export const INSERT_SNIPPET_COMMAND = createCommand<SnippetDataset>('INSERT_SNIPPET_COMMAND')
 export const INSERT_TOGGLE_COMMAND = createCommand<ToggleNodeDataset>('INSERT_TOGGLE_COMMAND')
 export const INSERT_VIDEO_COMMAND = createCommand<VideoNodeDataset>()
 export const OPEN_GIF_SELECTOR_COMMAND = createCommand<ImageNodeDataset>()
+export const OPEN_IMAGE_LIBRARY_COMMAND = createCommand<ImageNodeDataset>()

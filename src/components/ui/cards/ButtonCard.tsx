@@ -3,6 +3,7 @@ import LeftAlignIcon from '@/assets/icons/inkling-align-left.svg?react'
 import { Button } from '@/components/ui/Button'
 import { ReadOnlyOverlay } from '@/components/ui/ReadOnlyOverlay'
 import { ButtonGroupSetting, InputSetting, InputUrlSetting, SettingsPanel } from '@/components/ui/SettingsPanel'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 export function ButtonCard({
   alignment,
@@ -24,15 +25,17 @@ export function ButtonCard({
   handleButtonUrlChange?: (value: string) => void
   isEditing?: boolean
 }) {
+  const labels = useInklingLabels()
+
   const buttonGroupChildren = [
     {
-      label: 'Left',
+      label: labels['settings.alignment.left'],
       name: 'left',
       Icon: LeftAlignIcon,
       dataTestId: 'button-align-left',
     },
     {
-      label: 'Center',
+      label: labels['settings.alignment.center'],
       name: 'center',
       Icon: CenterAlignIcon,
       dataTestId: 'button-align-center',
@@ -56,20 +59,20 @@ export function ButtonCard({
         <SettingsPanel>
           <ButtonGroupSetting
             buttons={buttonGroupChildren}
-            label="Content alignment"
+            label={labels['settings.contentAlignment']}
             selectedName={alignment}
             onClick={handleAlignmentChange}
           />
           <InputSetting
             dataTestId="button-input-text"
-            label="Button text"
-            placeholder="Add button text"
+            label={labels['settings.buttonText']}
+            placeholder={labels['button.text.placeholder']}
             value={buttonText ?? ''}
             onChange={handleButtonTextChange}
           />
           <InputUrlSetting
             dataTestId="button-input-url"
-            label="Button URL"
+            label={labels['settings.buttonUrl']}
             value={buttonUrl ?? ''}
             onChange={handleButtonUrlChange}
           />

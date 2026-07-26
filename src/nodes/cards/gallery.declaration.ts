@@ -25,6 +25,7 @@ export const galleryDeclaration = {
   menu: [
     {
       label: 'Gallery',
+      labelKey: 'gallery',
       desc: 'Create an image gallery',
       icon: 'gallery',
       command: INSERT_GALLERY_COMMAND,

@@ -8,7 +8,7 @@ import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
 
-import { INSERT_IMAGE_COMMAND, OPEN_GIF_SELECTOR_COMMAND } from './card-commands'
+import { INSERT_IMAGE_COMMAND, OPEN_GIF_SELECTOR_COMMAND, OPEN_IMAGE_LIBRARY_COMMAND } from './card-commands'
 
 const nestedEditors: readonly NestedEditorSpec[] = [
   {
@@ -46,6 +46,7 @@ export const imageDeclaration = {
   menu: [
     {
       label: 'Image',
+      labelKey: 'image',
       desc: 'Upload, or embed with /image [url]',
       icon: 'image',
       command: INSERT_IMAGE_COMMAND,
@@ -59,6 +60,7 @@ export const imageDeclaration = {
     },
     {
       label: 'GIF',
+      labelKey: 'gif',
       desc: 'Search and embed gifs',
       icon: 'gif',
       command: OPEN_GIF_SELECTOR_COMMAND,
@@ -70,6 +72,20 @@ export const imageDeclaration = {
       queryParams: ['src'],
       isHidden: ({ config }) => !config?.tenor && !config?.klipy,
       shortcut: '/gif',
+    },
+    {
+      label: 'Image library',
+      labelKey: 'imageLibrary',
+      desc: 'Pick from your media library',
+      icon: 'image',
+      command: OPEN_IMAGE_LIBRARY_COMMAND,
+      insertParams: {
+        triggerFileDialog: false,
+      },
+      matches: ['library', 'media'],
+      priority: 18,
+      isHidden: ({ config }) => !config?.imageLibrary,
+      shortcut: '/library',
     },
   ],
   insert: { command: INSERT_IMAGE_COMMAND, claimsMediaInsert: true },

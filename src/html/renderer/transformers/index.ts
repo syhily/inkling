@@ -8,6 +8,7 @@ import blockquoteTransformer from '@/html/renderer/transformers/element/blockquo
 import headingTransformer from '@/html/renderer/transformers/element/heading'
 import listTransformer from '@/html/renderer/transformers/element/list'
 import paragraphTransformer from '@/html/renderer/transformers/element/paragraph'
+import tableTransformer from '@/html/renderer/transformers/element/table'
 /* c8 ignore stop */
 
 export type ExportChildren = (node: ElementNode) => string
@@ -21,6 +22,7 @@ const elementTransformers: ElementTransformer[] = [
   listTransformer,
   blockquoteTransformer,
   asideTransformer,
+  tableTransformer,
 ]
 
 export default elementTransformers

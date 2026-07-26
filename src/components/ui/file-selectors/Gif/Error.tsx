@@ -1,12 +1,15 @@
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { ERROR_TYPE } from '@/utils/services/gif'
 
 export function Error({ error }: { error?: string }) {
+  const labels = useInklingLabels()
+
   if (error === ERROR_TYPE.COMMON) {
-    return <p>Uh-oh! Trouble reaching the GIF service, please check your connection</p>
+    return <p>{labels['gif.error.common']}</p>
   }
 
   if (error === ERROR_TYPE.INVALID_API_KEY) {
-    return <p>The GIF API key is not valid. Please check your configuration.</p>
+    return <p>{labels['gif.error.invalidApiKey']}</p>
   }
   return <p>{error}</p>
 }

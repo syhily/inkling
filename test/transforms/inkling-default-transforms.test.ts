@@ -274,4 +274,170 @@ describe('Default transforms', function () {
 
     assertTransform(editor, registerDefaultTransforms, before, after)
   })
+
+  // one heading + one paragraph carrying imported alignment formats
+  const alignedBefore = {
+    root: {
+      children: [
+        {
+          children: [
+            {
+              detail: 0,
+              format: 0,
+              mode: 'normal',
+              style: '',
+              text: 'Aligned header',
+              type: 'extended-text',
+              version: 1,
+            },
+          ],
+          direction: 'ltr',
+          format: 'center',
+          indent: 0,
+          type: 'heading',
+          version: 1,
+          tag: 'h1',
+        },
+        {
+          children: [
+            {
+              detail: 0,
+              format: 0,
+              mode: 'normal',
+              style: '',
+              text: 'Aligned paragraph',
+              type: 'extended-text',
+              version: 1,
+            },
+          ],
+          direction: 'ltr',
+          format: 'right',
+          indent: 0,
+          textFormat: 0,
+          textStyle: '',
+          type: 'paragraph',
+          version: 1,
+        },
+      ],
+      direction: 'ltr',
+      format: '',
+      indent: 0,
+      type: 'root',
+      version: 1,
+    },
+  }
+
+  it('registerDefaultTransforms({ alignment: "strip" }) resets imported formats, like the default', function () {
+    const editor = createEditor()
+
+    const after = {
+      root: {
+        children: [
+          {
+            children: [
+              {
+                detail: 0,
+                format: 0,
+                mode: 'normal',
+                style: '',
+                text: 'Aligned header',
+                type: 'extended-text',
+                version: 1,
+              },
+            ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            type: 'extended-heading',
+            version: 1,
+            tag: 'h1',
+          },
+          {
+            children: [
+              {
+                detail: 0,
+                format: 0,
+                mode: 'normal',
+                style: '',
+                text: 'Aligned paragraph',
+                type: 'extended-text',
+                version: 1,
+              },
+            ],
+            direction: 'ltr',
+            format: '',
+            indent: 0,
+            textFormat: 0,
+            textStyle: '',
+            type: 'paragraph',
+            version: 1,
+          },
+        ],
+        direction: 'ltr',
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1,
+      },
+    }
+
+    assertTransform(editor, (e) => registerDefaultTransforms(e, { alignment: 'strip' }), alignedBefore, after)
+  })
+
+  it('registerDefaultTransforms({ alignment: "keep" }) preserves imported formats', function () {
+    const editor = createEditor()
+
+    const after = {
+      root: {
+        children: [
+          {
+            children: [
+              {
+                detail: 0,
+                format: 0,
+                mode: 'normal',
+                style: '',
+                text: 'Aligned header',
+                type: 'extended-text',
+                version: 1,
+              },
+            ],
+            direction: 'ltr',
+            format: 'center',
+            indent: 0,
+            type: 'extended-heading',
+            version: 1,
+            tag: 'h1',
+          },
+          {
+            children: [
+              {
+                detail: 0,
+                format: 0,
+                mode: 'normal',
+                style: '',
+                text: 'Aligned paragraph',
+                type: 'extended-text',
+                version: 1,
+              },
+            ],
+            direction: 'ltr',
+            format: 'right',
+            indent: 0,
+            textFormat: 0,
+            textStyle: '',
+            type: 'paragraph',
+            version: 1,
+          },
+        ],
+        direction: 'ltr',
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1,
+      },
+    }
+
+    assertTransform(editor, (e) => registerDefaultTransforms(e, { alignment: 'keep' }), alignedBefore, after)
+  })
 })

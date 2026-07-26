@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import trackEvent from '@/utils/analytics'
 
 export interface PinturaConfig {
   jsUrl?: string
   cssUrl?: string
+  /** Pintura `locale` overrides — merged ON TOP of the labels table's
+   * `pintura.*` entries, so a host can patch any Pintura string the labels
+   * table does not cover (docs/kobato-fit-plan.md C7). */
+  locale?: Record<string, string>
 }
 
 interface UsePinturaEditorOptions {
@@ -39,6 +44,7 @@ export default function usePinturaEditor({
   config,
   disabled = false,
 }: UsePinturaEditorOptions = {}): UsePinturaEditorResult {
+  const labels = useInklingLabels()
   const [scriptLoaded, setScriptLoaded] = useState<boolean>(false)
   const [cssLoaded, setCssLoaded] = useState<boolean>(false)
   const [error, setError] = useState<Error | null>(null)
@@ -144,8 +150,8 @@ export default function usePinturaEditor({
           ],
           cropSelectPresetFilter: 'landscape',
           cropSelectPresetOptions: [
-            [undefined, 'Custom'],
-            [1, 'Square'],
+            [undefined, labels['pintura.cropPreset.custom']],
+            [1, labels['pintura.cropPreset.square']],
             // shown when cropSelectPresetFilter is set to 'landscape'
             [2 / 1, '2:1'],
             [3 / 2, '3:2'],
@@ -160,7 +166,10 @@ export default function usePinturaEditor({
             [9 / 16, '9:16'],
           ],
           locale: {
-            labelButtonExport: 'Save and close',
+            labelButtonExport: labels['pintura.export'],
+            // the host's pinturaConfig.locale patches any Pintura string on
+            // top of the labels table (higher priority)
+            ...config?.locale,
           },
           previewPad: true,
           willClose: () => allowClose.current, // prevent closing on escape, only allow on close button clicks
@@ -177,7 +186,7 @@ export default function usePinturaEditor({
         })
       }
     },
-    [isEnabled],
+    [isEnabled, labels, config?.locale],
   )
 
   useEffect(() => {

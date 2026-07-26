@@ -16,6 +16,7 @@ import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useBookmarkMetadata } from '@/hooks/useBookmarkMetadata'
 import { useCardSelection } from '@/hooks/useCardSelection'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import trackEvent from '@/utils/analytics'
 import { isInternalUrl } from '@/utils/isInternalUrl'
 
@@ -47,6 +48,7 @@ export function BookmarkNodeComponent({
   createdWithUrl,
 }: BookmarkNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
+  const labels = useInklingLabels()
 
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
@@ -151,9 +153,7 @@ export function BookmarkNodeComponent({
         url={url}
         urlError={urlError}
         urlInputValue={urlInputValue}
-        urlPlaceholder={
-          searchEnabled ? `Paste URL or search posts and pages...` : `Paste URL to add bookmark content...`
-        }
+        urlPlaceholder={searchEnabled ? labels['bookmark.url.placeholder.search'] : labels['bookmark.url.placeholder']}
       />
 
       <CardActionToolbar

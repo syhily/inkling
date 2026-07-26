@@ -4,7 +4,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_HIGH, COMMAND_PRIORITY_LOW, mergeRegister } from 'lexical'
 import React from 'react'
 
-import { CARD_INSERT_COMMANDS, type CardInsertRegistration } from '@/nodes/cards/card-insert-commands'
+import { getCardInsertRegistrations, type CardInsertRegistration } from '@/nodes/cards/card-insert-commands'
 import { INSERT_MEDIA_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
 import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
@@ -69,9 +69,10 @@ function registerCardInsert(editor: LexicalEditor, { nodeType, node, command, in
  * registrar replacing the eleven hand-written card insert plugins. Every
  * registration fact (command, payload guard, `openInEditMode`, media
  * claiming, priority, bookmark's selection quirk) comes from the card
- * declarations via the `@/nodes/cards/card-insert-commands` projection. The
- * per-card `hasNodes` guard against the wrapper class reproduces the
- * mounting matrix: the web editor registers all eleven cards, nested
+ * declarations via the `@/nodes/cards/card-insert-commands` projection, which
+ * also carries the host cards' insert registrations (CONTEXT.md: "host
+ * card"). The per-card `hasNodes` guard against the wrapper class reproduces
+ * the mounting matrix: the web editor registers all eleven cards, nested
  * composers none.
  */
 export const CardInsertPlugin = () => {
@@ -79,9 +80,9 @@ export const CardInsertPlugin = () => {
 
   React.useEffect(() => {
     return mergeRegister(
-      ...CARD_INSERT_COMMANDS.filter(({ node }) => editor.hasNodes([node])).map((registration) =>
-        registerCardInsert(editor, registration),
-      ),
+      ...getCardInsertRegistrations()
+        .filter(({ node }) => editor.hasNodes([node]))
+        .map((registration) => registerCardInsert(editor, registration)),
     )
   }, [editor])
 

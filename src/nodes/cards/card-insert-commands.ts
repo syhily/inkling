@@ -3,6 +3,7 @@ import type { Klass, LexicalCommand, LexicalNode } from 'lexical'
 import type { CardInsertSpec } from '@/nodes/cards/card-declaration'
 
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
+import { getHostCards } from '@/nodes/cards/host-card-registry'
 
 export interface CardInsertRegistration {
   nodeType: string
@@ -36,3 +37,31 @@ export const CARD_INSERT_COMMANDS: CardInsertRegistration[] = CARD_WRAPPER_NODES
     },
   ]
 })
+
+/**
+ * The full insert-registration view the registrar (`@/plugins/CardInsertPlugin`)
+ * reads: the built-in projection above plus the host cards' insert projection
+ * (CONTEXT.md: "host card"). A function rather than a constant so host cards
+ * defined after module init still join — the per-card `hasNodes` guard at the
+ * registration site keeps a surface that did not compose the card's node from
+ * registering its command.
+ */
+export function getCardInsertRegistrations(): CardInsertRegistration[] {
+  return [
+    ...CARD_INSERT_COMMANDS,
+    ...getHostCards().flatMap((host) => {
+      const insert = host.insert
+      if (insert === undefined) {
+        return []
+      }
+      return [
+        {
+          nodeType: host.nodeType,
+          node: host.node,
+          command: insert.command,
+          insert,
+        },
+      ]
+    }),
+  ]
+}

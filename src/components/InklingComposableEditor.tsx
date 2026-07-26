@@ -51,6 +51,8 @@ export interface InklingComposableEditorProps {
   hiddenFormats?: string[]
   useDefaultClasses?: boolean
   dataTestId?: string
+  /** Keep text alignment (`format`) instead of stripping it; set on surfaces that expose alignment controls. */
+  alignment?: boolean
 }
 
 const InklingComposableEditor = ({
@@ -73,6 +75,7 @@ const InklingComposableEditor = ({
   hiddenFormats = [],
   useDefaultClasses = true,
   dataTestId,
+  alignment,
 }: InklingComposableEditorProps) => {
   const { historyState, onChange: sharedOnChange } = useSharedEditorStateContext()
   const [editor] = useLexicalComposerContext()
@@ -153,6 +156,7 @@ const InklingComposableEditor = ({
         containerElem={editorContainerRef}
         cursorDidExitAtTop={cursorDidExitAtTop}
         isNested={isNested}
+        alignment={alignment}
       />
       <MarkdownShortcutPlugin transformers={markdownTransformers} />
       {floatingAnchorElem && (

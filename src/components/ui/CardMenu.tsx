@@ -3,6 +3,7 @@ import React from 'react'
 import type { MenuSection, ResolvedMenuItem } from '@/utils/buildCardMenu'
 
 import TrashCardIcon from '@/assets/icons/inkling-trash.svg?react'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import trackEvent from '@/utils/analytics'
 
 export type CardMenuItemData = ResolvedMenuItem
@@ -39,6 +40,7 @@ export const CardMenuItem = ({
   ...props
 }: CardMenuItemProps) => {
   const buttonRef = React.useRef<HTMLButtonElement | null>(null)
+  const labels = useInklingLabels()
 
   React.useEffect(() => {
     if (scrollToItem && buttonRef.current) {
@@ -106,7 +108,7 @@ export const CardMenuItem = ({
             onRemove()
           }}
         >
-          Remove
+          {labels['action.remove']}
         </button>
       )}
     </li>
@@ -162,6 +164,7 @@ export const CardSnippetItem = ({
   closeMenu,
 }: CardSnippetItemProps) => {
   const itemRef = React.useRef<HTMLDivElement | null>(null)
+  const labels = useInklingLabels()
 
   React.useEffect(() => {
     if (scrollToItem && itemRef.current) {
@@ -203,12 +206,12 @@ export const CardSnippetItem = ({
         {onRemove && (
           <button
             className="ml-auto shrink-0 cursor-pointer rounded-md p-[4px] group-hover:block hover:bg-grey-200 dark:hover:bg-grey-950"
-            title="Remove snippet"
+            title={labels['snippet.remove']}
             type="button"
             onClick={handleSnippetRemove}
           >
             <TrashCardIcon className="size-[1.8rem] stroke-red stroke-[1.5] text-red" />
-            <span className="sr-only">Remove</span>
+            <span className="sr-only">{labels['action.remove']}</span>
           </button>
         )}
       </div>

@@ -33,6 +33,19 @@ export type CardNodeClass<TNode extends LexicalNode> = {
 }
 
 /**
+ * The declaration facts assembly actually reads: the node type (the menu
+ * lookup key), the React-free base class, and the two spec statics adopted
+ * on the assembled class. The menu/dragIcon/markdown declaration entries
+ * feed the derived views, not assembly — host card specs
+ * (`@/nodes/cards/host-cards`) satisfy this shape too, so `defineCard`
+ * assembles through the same memoized path.
+ */
+export type CardAssemblyDeclaration = Pick<
+  CardDeclaration,
+  'nodeType' | 'baseNode' | 'nestedEditors' | 'transientProps'
+>
+
+/**
  * The one wrapper-layer assembly helper (plan 039, Batch 5): builds the
  * registered node class for a card from its declaration. The assembled class
  * subclasses the declaration's React-free base node and adopts the spec
@@ -51,7 +64,7 @@ export type CardNodeClass<TNode extends LexicalNode> = {
  */
 export function assembleCardNode<TNode extends LexicalNode>(
   // oxlint-disable-next-line typescript/no-explicit-any
-  declaration: CardDeclaration & { baseNode: new (...args: any[]) => TNode },
+  declaration: CardAssemblyDeclaration & { baseNode: new (...args: any[]) => TNode },
 ): CardNodeClass<TNode> {
   // oxlint-disable-next-line typescript/no-explicit-any
   const baseNode = declaration.baseNode as new (...args: any[]) => LexicalNode
@@ -61,6 +74,14 @@ export function assembleCardNode<TNode extends LexicalNode>(
     static transientProps = declaration.transientProps
     // undefined for CodeBlock, the one card with no menu entry
     static cardMenu: MenuItem[] | undefined = getCardMenu(declaration.nodeType)
+
+    // Stamped at assembly, not inherited from the generated base: every card
+    // built through the declaration pipeline — built-in or host-defined,
+    // generated or hand-written base — passes the $isInklingCard gate
+    // (registerCardSelection, InklingCardWrapper) with no per-class ceremony.
+    isInklingCard(): true {
+      return true
+    }
 
     decorate(): ReactNode {
       return decorateCard(this)
@@ -82,13 +103,14 @@ var assembledCardNodeCache: WeakMap<object, CardNodeClass<LexicalNode>> | undefi
 
 /**
  * The single-site card assembler (plan 039, Batch 5): every caller — the
- * wrapper-layer projection (`@/nodes/cards/card-wrappers`) and the shim
- * modules (`@/nodes/AudioNode` and friends) — assembles a card's registered
- * class through this memoized helper, so exactly one class object exists per
- * declaration and importDOM/clone identity is coherent across every consumer.
- * Keyed on the declaration object itself: the declarations are the per-card
- * source of truth and never import the wrapper layer, so the same object
- * reaches every caller.
+ * wrapper-layer projection (`@/nodes/cards/card-wrappers`), the shim
+ * modules (`@/nodes/AudioNode` and friends), and `defineCard`
+ * (`@/nodes/cards/host-cards`) for host cards — assembles a card's
+ * registered class through this memoized helper, so exactly one class object
+ * exists per declaration and importDOM/clone identity is coherent across
+ * every consumer. Keyed on the declaration object itself: the declarations
+ * are the per-card source of truth and never import the wrapper layer, so
+ * the same object reaches every caller.
  *
  * Memoization must live behind a hoisted function (never a module-level
  * `const` map read): the wrapper layer's import closure contains the React
@@ -98,7 +120,7 @@ var assembledCardNodeCache: WeakMap<object, CardNodeClass<LexicalNode>> | undefi
  */
 export function assembleCardNodeOnce<TNode extends LexicalNode>(
   // oxlint-disable-next-line typescript/no-explicit-any
-  declaration: CardDeclaration & { baseNode: new (...args: any[]) => TNode },
+  declaration: CardAssemblyDeclaration & { baseNode: new (...args: any[]) => TNode },
 ): CardNodeClass<TNode> {
   assembledCardNodeCache ??= new WeakMap()
   const cached = assembledCardNodeCache.get(declaration)

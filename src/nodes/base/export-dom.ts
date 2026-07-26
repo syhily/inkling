@@ -49,4 +49,19 @@ export interface ExportDOMOptions {
   inklingVersion?: string
   /** image renderer: emit `<picture>` sources for modern formats */
   pictureImageFormats?: boolean
+  /**
+   * The visible `<h3>` of the exported footnotes section (the host's
+   * counterpart of kobato's `footnotes-section-title` content setting);
+   * consumed by the string layer's section wrap. Defaults to 'Footnotes'.
+   */
+  footnotesSectionTitle?: string
+  /**
+   * Request-scoped render-time meta (CONTEXT.md): a card renderer resolves
+   * host enrichment data by (kind, id); an unresolved pair returns undefined
+   * and the card falls back to its placeholder. Synchronous by contract —
+   * exportDOM is a sync pipeline, so the host resolves before rendering
+   * (kobato prerenders music-player meta, then renders); the data is
+   * request-scoped and never persisted on the node.
+   */
+  resolveRenderMeta?: (kind: string, id: string) => unknown | undefined
 }

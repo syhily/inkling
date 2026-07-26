@@ -22,6 +22,7 @@ export const fileDeclaration = {
   menu: [
     {
       label: 'File',
+      labelKey: 'file',
       desc: 'Upload a downloadable file',
       icon: 'file',
       command: INSERT_FILE_COMMAND,

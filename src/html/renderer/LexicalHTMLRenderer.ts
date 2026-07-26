@@ -5,6 +5,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import type { ExportDOMDom, ExportDOMOptions } from '@/nodes/base'
 
 import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
+import { resolveHeadlessDom } from '@/html/headless-dom'
 import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
 import { registerRemoveAtLinkNodesTransform } from '@/transforms'
 
@@ -34,7 +35,7 @@ export default class LexicalHTMLRenderer {
 
   async render(lexicalState: SerializedEditorState | string, userOptions: RenderOptions = {}) {
     const defaultOptions: ExportDOMOptions = {
-      dom: await this._getDefaultDom(userOptions.dom),
+      dom: await resolveHeadlessDom(userOptions.dom ?? this.dom),
     }
     const options: ExportDOMOptions = Object.assign({}, defaultOptions, userOptions)
 
@@ -61,23 +62,5 @@ export default class LexicalHTMLRenderer {
     })
 
     return html
-  }
-
-  private async _getDefaultDom(dom?: ExportDOMDom): Promise<ExportDOMDom> {
-    if (dom) {
-      return dom
-    }
-
-    if (this.dom) {
-      return this.dom
-    }
-
-    // JSDOM default is a Node-side convenience. Consumers in browser
-    // environments can pass any {window: {document}}-shaped object.
-    const { JSDOM } = await import('jsdom')
-
-    this.dom = new JSDOM()
-
-    return this.dom
   }
 }

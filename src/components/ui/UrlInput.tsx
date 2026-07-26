@@ -3,6 +3,7 @@ import { COMMAND_PRIORITY_LOW, KEY_ENTER_COMMAND } from 'lexical'
 import React from 'react'
 
 import CloseIcon from '@/assets/icons/inkling-close.svg?react'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 export interface UrlInputProps {
   dataTestId?: string
@@ -53,6 +54,8 @@ export function UrlInput({
   placeholder,
   value = '',
 }: UrlInputProps) {
+  const labels = useInklingLabels()
+
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     handleUrlChange?.(event.target.value)
   }
@@ -112,7 +115,7 @@ export function UrlInput({
       >
         <div>
           <span className="mr-3" data-testid={`${dataTestId}-error-message`}>
-            Oops, that link didn&apos;t work.
+            {labels['url.error.message']}
           </span>
           <button
             className="mr-3 cursor-pointer"
@@ -120,7 +123,7 @@ export function UrlInput({
             type="button"
             onClick={handleRetry}
           >
-            <span className="font-semibold underline">Retry</span>
+            <span className="font-semibold underline">{labels['action.retry']}</span>
           </button>
           <button
             className="mr-3 cursor-pointer"
@@ -128,7 +131,7 @@ export function UrlInput({
             type="button"
             onClick={() => handlePasteAsLink?.(value)}
           >
-            <span className="font-semibold underline">Paste URL as link</span>
+            <span className="font-semibold underline">{labels['url.error.pasteAsLink']}</span>
           </button>
         </div>
         {handleClose && (
@@ -152,7 +155,7 @@ export function UrlInput({
         autoFocus
         className="w-full bg-transparent text-sm outline-none"
         data-testid={dataTestId}
-        placeholder={placeholder ?? 'Paste URL...'}
+        placeholder={placeholder ?? labels['url.paste.placeholder']}
         type="text"
         value={value ?? ''}
         onChange={handleChange}

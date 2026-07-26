@@ -23,6 +23,7 @@ export const calloutDeclaration = {
   menu: [
     {
       label: 'Callout',
+      labelKey: 'callout',
       desc: 'Info boxes that stand out',
       icon: 'callout',
       command: INSERT_CALLOUT_COMMAND,

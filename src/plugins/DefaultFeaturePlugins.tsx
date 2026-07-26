@@ -6,9 +6,12 @@ import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
 import { CardMenuPlugin } from '@/plugins/CardMenuPlugin'
 import EmEnDashPlugin from '@/plugins/EmEnDashPlugin'
 import { EmojiPickerPlugin } from '@/plugins/EmojiPickerPlugin'
+import FootnotePlugin from '@/plugins/FootnotePlugin'
 import HorizontalRulePlugin from '@/plugins/HorizontalRulePlugin'
 import InklingSelectorPlugin from '@/plugins/InklingSelectorPlugin'
 import { InklingSnippetPlugin } from '@/plugins/InklingSnippetPlugin'
+import { InklingTablePlugin } from '@/plugins/InklingTablePlugin'
+import MathInlinePlugin from '@/plugins/MathInlinePlugin'
 
 // A feature plugin entry, as data. The explicit key keeps rendering stable
 // without leaning on component names (which minification can collapse).
@@ -35,6 +38,9 @@ export const DEFAULT_FEATURE_PLUGINS: readonly FeaturePluginEntry[] = [
   // Cards
   { key: 'card-insert', Component: CardInsertPlugin },
   { key: 'horizontal-rule', Component: HorizontalRulePlugin },
+  { key: 'math-inline', Component: MathInlinePlugin },
+  { key: 'table', Component: InklingTablePlugin },
+  { key: 'footnote', Component: FootnotePlugin },
 ]
 
 export const DefaultFeaturePlugins = () => {

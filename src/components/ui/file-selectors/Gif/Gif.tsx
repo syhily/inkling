@@ -8,24 +8,30 @@ export interface GifProps {
   onClick?: () => void
   onMouseEnter?: () => void
   onFocus?: () => void
-  focusRequestRef?: React.MutableRefObject<string | null>
+  focusRequestId?: string | null
+  onFocusRequestHandled?: () => void
 }
 
-export function Gif({ data, isHighlighted, onClick, onMouseEnter, onFocus, focusRequestRef }: GifProps) {
+export function Gif({
+  data,
+  isHighlighted,
+  onClick,
+  onMouseEnter,
+  onFocus,
+  focusRequestId,
+  onFocusRequestHandled,
+}: GifProps) {
   const buttonRef = useRef<HTMLButtonElement | null>(null)
   const gif = data.media_formats?.gif || data.media_formats?.tinygif
 
   useEffect(() => {
-    if (
-      isHighlighted &&
-      focusRequestRef?.current === data.id &&
-      buttonRef.current &&
-      buttonRef.current !== buttonRef.current.ownerDocument.activeElement
-    ) {
-      buttonRef.current.focus()
-      focusRequestRef.current = null
+    if (isHighlighted && focusRequestId === data.id) {
+      if (buttonRef.current && buttonRef.current !== buttonRef.current.ownerDocument.activeElement) {
+        buttonRef.current.focus()
+      }
+      onFocusRequestHandled?.()
     }
-  }, [isHighlighted, data.id, focusRequestRef])
+  }, [isHighlighted, data.id, focusRequestId, onFocusRequestHandled])
 
   if (!gif?.url || !gif.dims) {
     return null

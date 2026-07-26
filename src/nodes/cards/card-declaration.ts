@@ -73,6 +73,7 @@ export type CardIconId =
   | 'header'
   | 'html'
   | 'image'
+  | 'math'
   | 'toggle'
   | 'video'
 
@@ -88,6 +89,11 @@ export type CardIconId =
  */
 export interface CardMenuEntrySpec {
   label: string
+  /** the labels-table stem this entry resolves through at menu-build time
+   * (`menu.${labelKey}.label` / `.desc`; docs/kobato-fit-plan.md C7). The
+   * English `label`/`desc` stay the self-describing defaults — resolution is
+   * an override, never a replacement. */
+  labelKey: string
   desc?: string
   icon: CardIconId
   /** the command this entry dispatches */
@@ -163,14 +169,16 @@ export interface CardDeclaration<NodeType extends string = string> {
   insert?: CardInsertSpec
   /**
    * The card's slash/plus menu entries (CONTEXT.md: "card declaration");
-   * see `CardMenuEntrySpec`. CodeBlock has no menu entry — it is inserted by
-   * its markdown code fence.
+   * see `CardMenuEntrySpec`. Menu-less cards: CodeBlock (inserted by its
+   * markdown code fence) and the footnote definition (created/ordered by the
+   * footnote behaviour module, never inserted by the user).
    */
   menu?: readonly CardMenuEntrySpec[]
   /**
-   * The drag-preview icon for cards with no menu entry to derive it from
-   * (CodeBlock is the only one). Menu-bearing cards use their first entry's
-   * icon; see `getCardDragIcon` in `@/nodes/cards/card-menus`.
+   * The drag-preview icon for menu-less cards that are still user-draggable
+   * (CodeBlock). Menu-bearing cards use their first entry's icon; the
+   * footnote definition names none (the doc-end-run invariant re-parks it).
+   * See `getCardDragIcon` in `@/nodes/cards/card-menus`.
    */
   dragIcon?: CardIconId
   /**

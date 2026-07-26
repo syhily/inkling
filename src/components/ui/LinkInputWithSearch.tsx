@@ -5,6 +5,7 @@ import { InputListGroup, InputListLoadingItem } from '@/components/ui/InputList'
 import { KeyboardSelectionWithGroups } from '@/components/ui/KeyboardSelectionWithGroups'
 import { LinkInputSearchItem } from '@/components/ui/LinkInputSearchItem'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { useSearchLinks, type ListOptionItem, type ListOptionSection } from '@/hooks/useSearchLinks'
 import trackEvent from '@/utils/analytics'
 import { POPUP_LIST_MAX_HEIGHT } from '@/utils/selection-anchored-popup'
@@ -19,6 +20,7 @@ export function LinkInputWithSearch({ href, update, cancel }: LinkInputWithSearc
   const {
     cardConfig: { searchLinks },
   } = React.useContext(InklingHostIntegrationContext)
+  const labels = useInklingLabels()
 
   // store the href/query in state so we can update it without affecting the saved editor value
   const [_href, setHref] = React.useState(href)
@@ -121,7 +123,7 @@ export function LinkInputWithSearch({ href, update, cancel }: LinkInputWithSearc
         className="my-1 h-auto w-full rounded-md border border-transparent bg-grey-100 px-4 py-2 text-left text-sm leading-snug font-medium text-black placeholder:text-sm placeholder:leading-snug placeholder:font-medium placeholder:text-grey-500 focus:border-green focus:bg-white focus:shadow-[0_0_0_2px_rgba(48,207,67,.25)] dark:border-grey-800/80 dark:bg-grey-900 dark:text-white dark:selection:bg-grey-600/40 dark:selection:text-grey-100 dark:focus:border-green dark:focus:bg-grey-900"
         dataTestId={testId}
         name="link-input"
-        placeholder="Search or enter URL to link"
+        placeholder={labels['link.search.placeholder']}
         value={_href}
         data-inkling-link-input
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {

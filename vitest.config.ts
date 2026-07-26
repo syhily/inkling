@@ -22,6 +22,7 @@ export default defineConfig({
       './test/unit/**/*.test.{js,jsx,ts,tsx}',
       './test/utils/**/*.test.{js,jsx,ts,tsx}',
       './test/clean-basic-html/**/*.test.{js,jsx,ts,tsx}',
+      './test/html-api/**/*.test.{js,jsx,ts,tsx}',
       './test/html-to-lexical/**/*.test.{js,jsx,ts,tsx}',
       './test/html-renderer/**/*.test.{js,jsx,ts,tsx}',
       './test/markdown/**/*.test.{js,jsx,ts,tsx}',

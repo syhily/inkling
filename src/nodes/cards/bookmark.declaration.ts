@@ -31,6 +31,7 @@ export const bookmarkDeclaration = {
   menu: [
     {
       label: 'Bookmark',
+      labelKey: 'bookmark',
       desc: 'Embed a link as a visual bookmark',
       icon: 'bookmark',
       command: INSERT_BOOKMARK_COMMAND,

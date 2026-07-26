@@ -245,6 +245,38 @@ const cases: ExportPathCase[] = [
     input: doc([{ type: 'horizontalrule', version: 1 }]),
     output: '<hr>',
   },
+  {
+    name: 'card (math) with svg artifact',
+    input: doc([
+      { type: 'math', version: 1, tex: 'x^2', mathml: '', svg: '<svg viewBox="0 0 10 10"><path d="M0 0z"/></svg>' },
+    ]),
+    output: '<div class="inkling-card inkling-math-card"><svg viewBox="0 0 10 10"><path d="M0 0z"></path></svg></div>',
+  },
+  {
+    name: 'card (math) tex fallback',
+    input: doc([{ type: 'math', version: 1, tex: 'a < b', mathml: '', svg: '' }]),
+    output: '<pre><code>a &lt; b</code></pre>',
+  },
+  {
+    name: 'math inline spliced into text',
+    // The string layer splices inline decorators into the text flow
+    // (convert-to-html-string.ts); both paths run that one branch.
+    input: doc([
+      block('paragraph', [
+        text('before '),
+        {
+          type: 'math-inline',
+          version: 1,
+          tex: 'x^2',
+          mathml: '',
+          svg: '<svg viewBox="0 0 10 10"><path d="M0 0z"/></svg>',
+        },
+        text(' after'),
+      ]),
+    ]),
+    output:
+      '<p>before <span class="inkling-math-inline"><svg viewBox="0 0 10 10"><path d="M0 0z"></path></svg></span> after</p>',
+  },
 ]
 
 describe('HTML export path parity (HtmlOutputPlugin vs LexicalHTMLRenderer)', () => {

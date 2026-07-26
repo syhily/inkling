@@ -5,6 +5,7 @@ import type { CardMenuSource, MenuItem } from '@/utils/buildCardMenu'
 
 import { CARD_DECLARATIONS } from '@/nodes/cards'
 import { getCardMenu } from '@/nodes/cards/card-menus'
+import { getHostCards } from '@/nodes/cards/host-card-registry'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
 /**
@@ -40,8 +41,10 @@ export function getEditorCardNodes(editor: LexicalEditor): [string, EditorCardNo
 /**
  * The pure core of `getEditorCardNodes`: the card declarations filtered to a
  * set of registered node types, preserving declaration order (which
- * reproduces the editor's card registration order — see `@/nodes/cards`).
- * Testable directly with a fake registered-type set, no editor mock needed.
+ * reproduces the editor's card registration order — see `@/nodes/cards`),
+ * with host cards (CONTEXT.md: "host card") following in their registration
+ * order. Testable directly with a fake registered-type set, no editor mock
+ * needed.
  */
 export function getRegisteredCardNodes(registeredNodeTypes: ReadonlySet<string>): [string, EditorCardNode][] {
   const cardNodes: [string, EditorCardNode][] = []
@@ -59,6 +62,16 @@ export function getRegisteredCardNodes(registeredNodeTypes: ReadonlySet<string>)
         uploadType: 'uploadType' in declaration ? declaration.uploadType : undefined,
       },
     ])
+  }
+
+  // host cards carry their resolved menu entries and upload key on the
+  // registry record — the same facts the declarations provide above
+  for (const host of getHostCards()) {
+    if (!registeredNodeTypes.has(host.nodeType)) {
+      continue
+    }
+
+    cardNodes.push([host.nodeType, { cardMenu: host.cardMenu, uploadType: host.uploadType }])
   }
 
   return cardNodes

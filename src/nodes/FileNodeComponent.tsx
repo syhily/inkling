@@ -9,17 +9,18 @@ import { useCardSelection } from '@/hooks/useCardSelection'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
 import { $isFileNode } from '@/nodes/base'
 import { fileUploadIntent } from '@/utils/upload-intent'
 
 export interface FileNodeComponentProps {
   fileDesc: string
-  fileDescPlaceholder: string
+  fileDescPlaceholder?: string
   fileName: string
   fileSize: string
   fileTitle: string
-  fileTitlePlaceholder: string
+  fileTitlePlaceholder?: string
   fileSrc: string
   nodeKey: NodeKey
   triggerFileDialog: boolean
@@ -40,6 +41,7 @@ function FileNodeComponent({
 }: FileNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
   const write = useCardWriter(nodeKey, $isFileNode)
+  const labels = useInklingLabels()
   const [isPopulated, setIsPopulated] = React.useState<boolean>(false)
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
   const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
@@ -103,13 +105,13 @@ function FileNodeComponent({
     <>
       <FileCard
         fileDesc={fileDesc}
-        fileDescPlaceholder={fileDescPlaceholder}
+        fileDescPlaceholder={fileDescPlaceholder ?? labels['file.desc.placeholder']}
         fileDragHandler={fileDragHandler}
         fileInputRef={fileInputRef}
         fileName={fileName}
         fileSize={fileSize}
         fileTitle={fileTitle}
-        fileTitlePlaceholder={fileTitlePlaceholder}
+        fileTitlePlaceholder={fileTitlePlaceholder ?? labels['file.title.placeholder']}
         fileUploader={uploader}
         handleFileDesc={handleFileDesc}
         handleFileTitle={handleFileTitle}

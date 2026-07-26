@@ -36,6 +36,7 @@ export const headerDeclaration = {
   menu: [
     {
       label: 'Header',
+      labelKey: 'header',
       desc: 'Add a header',
       icon: 'header',
       command: INSERT_HEADER_COMMAND,

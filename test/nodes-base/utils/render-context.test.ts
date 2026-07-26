@@ -136,6 +136,25 @@ describe('createRenderContext', () => {
     })
   })
 
+  describe('resolveRenderMeta', () => {
+    it('carries the resolver by reference, hitting and missing by (kind, id)', () => {
+      const resolveRenderMeta = (kind: string, id: string) =>
+        kind === 'musicPlayer' && id === 'player-1' ? { title: 'Song', artist: 'Artist' } : undefined
+      const context = createRenderContext({ dom, resolveRenderMeta })
+
+      expect(context.resolveRenderMeta).toBe(resolveRenderMeta)
+      expect(context.resolveRenderMeta?.('musicPlayer', 'player-1')).toEqual({ title: 'Song', artist: 'Artist' })
+      expect(context.resolveRenderMeta?.('musicPlayer', 'player-unknown')).toBeUndefined()
+    })
+
+    it('is undefined on the frozen context when not passed', () => {
+      const context = createRenderContext({ dom })
+
+      expect(Object.isFrozen(context)).toBe(true)
+      expect(context.resolveRenderMeta).toBeUndefined()
+    })
+  })
+
   describe('safeUrl', () => {
     const context = createRenderContext({ dom })
 
