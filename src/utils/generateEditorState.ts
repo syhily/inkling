@@ -1,13 +1,7 @@
 import { $generateNodesFromDOM } from '@lexical/html'
-import {
-  $createParagraphNode,
-  $getRoot,
-  $insertNodes,
-  $setSelection,
-  type EditorState,
-  type LexicalEditor,
-  type LexicalNode,
-} from 'lexical'
+import { $getRoot, $insertNodes, $setSelection, type EditorState, type LexicalEditor, type LexicalNode } from 'lexical'
+
+import { $appendEmptyParagraph } from '@/utils/initial-document'
 
 // exported for testing
 export function _$generateNodesFromHTML(editor: LexicalEditor, html: string): LexicalNode[] {
@@ -26,6 +20,8 @@ export default function generateEditorState({
 }): EditorState {
   if (initialHtml) {
     // convert html in `text` to Lexical nodes and populate the editor
+    // (no registerDefaultTransforms on this long-lived editor on purpose —
+    // see the transform-policy note in src/utils/initial-document.ts)
     editor.update(
       () => {
         const nodes = _$generateNodesFromHTML(editor, initialHtml)
@@ -49,11 +45,11 @@ export default function generateEditorState({
       { discrete: true, tag: 'history-merge' },
     ) // use history merge to prevent undo clearing the initial state
   } else {
-    // for empty initial values, create a paragraph because a completely empty
-    // root won't accept focus
+    // for empty initial values, seed the minimal document's paragraph — a
+    // completely empty root won't accept focus
     editor.update(
       () => {
-        $getRoot().append($createParagraphNode())
+        $appendEmptyParagraph()
       },
       { discrete: true, tag: 'history-merge' },
     ) // use history merge to prevent undo clearing the initial state

@@ -19,7 +19,7 @@ import { createDragDropHandle } from '@/plugins/behaviour/dragDropHandle'
 import { createTKHandle } from '@/plugins/behaviour/tkHandle'
 import { createWordCountHandle } from '@/plugins/behaviour/wordCountHandle'
 import defaultTheme from '@/themes/default'
-import { type InklingInitialEditorState, normalizeInitialEditorState } from '@/utils/normalizeInitialEditorState'
+import { type InklingInitialEditorState, normalizeInitialEditorState } from '@/utils/initial-document'
 import { createWebsocketProviderFactory, requireMultiplayerConfig } from '@/utils/services/collaboration'
 
 export type { InklingInitialEditorState }

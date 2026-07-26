@@ -9,26 +9,10 @@ import {
 
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import generateEditorState from '@/utils/generateEditorState'
+import { MINIMAL_DOCUMENT_LEGACY_PAYLOAD } from '@/utils/initial-document'
 
-const BLANK_EDITOR_STATE = JSON.stringify({
-  root: {
-    children: [
-      {
-        children: [],
-        direction: null,
-        format: '',
-        indent: 0,
-        type: 'paragraph',
-        version: 1,
-      },
-    ],
-    direction: null,
-    format: '',
-    indent: 0,
-    type: 'root',
-    version: 1,
-  },
-})
+// nested editors bootstrap from the historical payload dialect (src/utils/initial-document.ts)
+const BLANK_EDITOR_STATE = JSON.stringify(MINIMAL_DOCUMENT_LEGACY_PAYLOAD)
 
 export interface SetupNestedEditorOptions {
   editor?: LexicalEditor

@@ -9,7 +9,7 @@ import InklingComposer from '@/components/InklingComposer'
 import InklingErrorBoundary from '@/components/InklingErrorBoundary'
 import InklingCollaborationContext, { type LexicalProviderFactory } from '@/context/InklingCollaborationContext'
 import InklingHostIntegrationContext, { type FileUploader } from '@/context/InklingHostIntegrationContext'
-import { normalizeInitialEditorState } from '@/utils/normalizeInitialEditorState'
+import { normalizeInitialEditorState } from '@/utils/initial-document'
 
 vi.mock('@lexical/react/LexicalCollaborationPlugin', () => ({
   CollaborationPlugin: vi.fn(() => null),

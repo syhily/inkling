@@ -1,4 +1,4 @@
-import type { CreateEditorArgs, SerializedEditorState, SerializedParagraphNode } from 'lexical'
+import type { CreateEditorArgs, SerializedEditorState } from 'lexical'
 
 import { $insertGeneratedNodes } from '@lexical/clipboard'
 import { createHeadlessEditor } from '@lexical/headless'
@@ -10,29 +10,8 @@ import { $createParagraphNode, $getRoot } from 'lexical'
 import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import { DEFAULT_CONFIG } from '@/nodes/base'
 import { registerDefaultTransforms } from '@/transforms'
+import { MINIMAL_DOCUMENT } from '@/utils/initial-document'
 /* c8 ignore stop */
-
-const EMPTY_PARAGRAPH: SerializedParagraphNode = {
-  children: [],
-  direction: null,
-  format: '',
-  indent: 0,
-  textFormat: 0,
-  textStyle: '',
-  type: 'paragraph',
-  version: 1,
-}
-
-const BLANK_DOCUMENT: SerializedEditorState = {
-  root: {
-    children: [EMPTY_PARAGRAPH],
-    direction: null,
-    format: '',
-    indent: 0,
-    type: 'root',
-    version: 1,
-  },
-}
 
 export interface htmlToLexicalOptions {
   editorConfig: CreateEditorArgs
@@ -41,7 +20,7 @@ export interface htmlToLexicalOptions {
 /* c8 ignore next -- V8 creates a phantom branch for the export */
 export function htmlToLexical(html: string, options?: htmlToLexicalOptions): SerializedEditorState {
   if (!html) {
-    return BLANK_DOCUMENT
+    return MINIMAL_DOCUMENT
   }
 
   // The importer replaces these defaults wholesale when the caller passes
@@ -56,6 +35,8 @@ export function htmlToLexical(html: string, options?: htmlToLexicalOptions): Ser
   const dom = new JSDOM(`<body>${html.trim()}</body>`)
   const editor = createHeadlessEditor(editorConfig)
 
+  // one-shot headless editor, so the default transforms only normalize this
+  // import — see the transform-policy note in src/utils/initial-document.ts
   registerDefaultTransforms(editor)
 
   editor.update(
