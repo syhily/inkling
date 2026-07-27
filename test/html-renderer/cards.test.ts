@@ -1,7 +1,7 @@
 import { JSDOM } from 'jsdom'
 import Prettier from 'prettier'
 
-import { LexicalHTMLRenderer as Renderer } from '@/html/renderer/index'
+import { lexicalStateToHtml } from '@/html/headless-html'
 import { BaseImageNode, BaseHtmlNode } from '@/nodes/base'
 
 const nodes = [BaseImageNode, BaseHtmlNode]
@@ -57,8 +57,7 @@ describe('Cards', function () {
     }
     lexicalState.root.children.push(imageCard)
 
-    const renderer = new Renderer({ nodes })
-    const renderedInput = await renderer.render(JSON.stringify(lexicalState), options)
+    const renderedInput = await lexicalStateToHtml(JSON.stringify(lexicalState), { nodes, ...options })
 
     const output = await Prettier.format(renderedInput, { parser: 'html' })
 
@@ -105,8 +104,7 @@ describe('Cards', function () {
       },
     )
 
-    const renderer = new Renderer({ nodes })
-    const renderedInput = await renderer.render(JSON.stringify(lexicalState), options)
+    const renderedInput = await lexicalStateToHtml(JSON.stringify(lexicalState), { nodes, ...options })
 
     const expected = `
 <!--inkling-card-begin: html-->
@@ -126,8 +124,7 @@ describe('Cards', function () {
       html: '<p>&lt;pre&gt;Test&lt;/pre&gt;</p>\n<div data-graph-name=\'The "all-in" cost of a grant\'>Test</div>',
     })
 
-    const renderer = new Renderer({ nodes })
-    const renderedInput = await renderer.render(JSON.stringify(lexicalState), options)
+    const renderedInput = await lexicalStateToHtml(JSON.stringify(lexicalState), { nodes, ...options })
 
     const expected = `
 <!--inkling-card-begin: html-->

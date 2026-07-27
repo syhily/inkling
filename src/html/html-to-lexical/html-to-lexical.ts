@@ -1,15 +1,13 @@
 import type { CreateEditorArgs, SerializedEditorState } from 'lexical'
 
 import { $insertGeneratedNodes } from '@lexical/clipboard'
-import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
 /* c8 ignore start -- V8 creates phantom branches for ESM imports */
 import { $createParagraphNode, $getRoot } from 'lexical'
 
 import type { ExportDOMDom } from '@/nodes/base'
 
-import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
-import { DEFAULT_CONFIG } from '@/nodes/base'
+import { createHeadlessHtmlEditor } from '@/html/headless-editor'
 import { registerDefaultTransforms, type DefaultTransformsOptions } from '@/transforms'
 import { MINIMAL_DOCUMENT } from '@/utils/initial-document'
 /* c8 ignore stop */
@@ -28,20 +26,16 @@ export function htmlToLexical(html: string, options: htmlToLexicalOptions): Seri
     return MINIMAL_DOCUMENT
   }
 
-  // The importer replaces these defaults wholesale when the caller passes
+  // The importer replaces the defaults wholesale when the caller passes
   // editorConfig.nodes; the renderer intentionally uses additive semantics
-  // instead — do not "unify" the two behaviors.
-  const defaultEditorConfig = {
-    nodes: [...DEFAULT_HTML_NODES],
-    html: DEFAULT_CONFIG.html,
-  }
-  const editorConfig = Object.assign({}, defaultEditorConfig, options.editorConfig)
+  // instead — the named merge modes in @/html/headless-editor make the
+  // asymmetry structural, so do not "unify" the two.
+  const editor = createHeadlessHtmlEditor({ merge: 'wholesale', editorConfig: options.editorConfig })
 
   // Standard parser entry — jsdom and browsers both support it, so the
   // injected dom's provenance stays out of this module.
   const doc = options.dom.window.document.implementation.createHTMLDocument('')
   doc.body.innerHTML = html.trim()
-  const editor = createHeadlessEditor(editorConfig)
 
   // one-shot headless editor, so the default transforms only normalize this
   // import — see the transform-policy note in src/utils/initial-document.ts

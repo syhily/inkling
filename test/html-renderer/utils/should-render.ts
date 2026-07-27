@@ -1,13 +1,13 @@
 import { JSDOM } from 'jsdom'
 
-import { LexicalHTMLRenderer as Renderer } from '@/html/renderer/index'
+import { lexicalStateToHtml, type LexicalStateToHtmlOptions } from '@/html/headless-html'
 
 const dom = new JSDOM()
 
 interface ShouldRenderParams {
   input: string
   output: string
-  options?: Record<string, unknown>
+  options?: LexicalStateToHtmlOptions
 }
 
 function shouldRender({ input, output, options = {} }: ShouldRenderParams) {
@@ -16,9 +16,15 @@ function shouldRender({ input, output, options = {} }: ShouldRenderParams) {
       throw err
     }
 
-    const { nodes, onError, ...renderOptions } = options as Record<string, unknown>
-    const renderer = new Renderer({ dom, nodes, onError: onError || defaultOnError } as Record<string, unknown>)
-    const renderedInput = await renderer.render(input, renderOptions)
+    const { nodes, onError, ...renderOptions } = options
+    // through the public seam: the stateless headless HTML function with the
+    // injected jsdom (the class this suite used to reach around is gone)
+    const renderedInput = await lexicalStateToHtml(input, {
+      dom,
+      nodes,
+      onError: onError || defaultOnError,
+      ...renderOptions,
+    })
     expect(renderedInput).toBe(output)
   }
 }

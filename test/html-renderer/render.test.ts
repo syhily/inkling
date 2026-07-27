@@ -1,25 +1,28 @@
 import shouldRender from '#/html-renderer/utils/should-render'
-import { LexicalHTMLRenderer as Renderer } from '@/html/renderer/index'
+import { lexicalStateToHtml } from '@/html/headless-html'
 import { AtLinkNode, AtLinkSearchNode, ZWNJNode } from '@/nodes/base'
 
 describe('render()', function () {
   it('works with no options', async function () {
     const editorState = `{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"First paragraph","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"Second paragraph","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}`
-    const renderer = new Renderer()
 
-    const html = await renderer.render(editorState)
+    const html = await lexicalStateToHtml(editorState)
 
     expect(html).toEqual(`<p>First paragraph</p><p>Second paragraph</p>`)
   })
 
-  it('accepts an error handler callback', function () {
-    const renderer = new Renderer({
-      onError: (error: Error) => {
-        expect(error.message).toEqual('test')
-      },
-    })
+  it('accepts an error handler callback', async function () {
+    // the seam forwards onError to the headless editor; a clean render never
+    // calls it
+    const onError = vi.fn()
 
-    renderer.onError(new Error('test'))
+    const html = await lexicalStateToHtml(
+      `{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"Hi","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}`,
+      { onError },
+    )
+
+    expect(onError).not.toHaveBeenCalled()
+    expect(html).toEqual('<p>Hi</p>')
   })
 
   it(

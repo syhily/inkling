@@ -34,8 +34,8 @@ import { JSDOM } from 'jsdom'
 import { createEditor } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
+import { lexicalStateToHtml } from '@/html/headless-html'
 import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
-import { LexicalHTMLRenderer } from '@/html/renderer/index'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import defaultTheme from '@/themes/default'
 
@@ -62,15 +62,15 @@ function renderLivePath(serializedState: string): string {
   return html
 }
 
-// The LexicalHTMLRenderer route, driven exactly as test/html-renderer does.
+// The headless route through the public seam, driven exactly as
+// test/html-renderer does.
 async function renderHeadlessPath(serializedState: string): Promise<string> {
-  const renderer = new LexicalHTMLRenderer({
+  return lexicalStateToHtml(serializedState, {
     dom,
-    onError: (error) => {
+    onError: (error: Error) => {
       throw error
     },
   })
-  return renderer.render(serializedState)
 }
 
 const text = (content: string, format = 0) => ({

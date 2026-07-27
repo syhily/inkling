@@ -1,7 +1,7 @@
 // Both HTML export paths render the table family: LIVE pins
 // `$convertToHtmlString` run against an editor configured like
 // InklingComposer (DEFAULT_NODES + defaultTheme), exactly as HtmlOutputPlugin
-// does; HEADLESS pins `LexicalHTMLRenderer`'s default node set
+// does; HEADLESS pins the headless HTML surface's default node set
 // (DEFAULT_HTML_NODES includes INKLING_TABLE_NODES) — the kobato server-side
 // rendering path. One serializer backs both, so each case pins one string
 // and asserts the two legs agree byte-exactly.
@@ -9,8 +9,8 @@ import { JSDOM } from 'jsdom'
 import { createEditor } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
+import { lexicalStateToHtml } from '@/html/headless-html'
 import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
-import { LexicalHTMLRenderer } from '@/html/renderer/index'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import defaultTheme from '@/themes/default'
 
@@ -34,17 +34,15 @@ function renderLive(serializedState: string): string {
   return html
 }
 
-// The LexicalHTMLRenderer route, driven exactly as the export parity suite
-// drives it — no constructor nodes, so the default headless set carries the
-// table family.
+// The headless route through the public seam — no extra nodes, so the
+// default headless set carries the table family.
 async function renderHeadless(serializedState: string): Promise<string> {
-  const renderer = new LexicalHTMLRenderer({
+  return lexicalStateToHtml(serializedState, {
     dom,
     onError: (error) => {
       throw error
     },
   })
-  return renderer.render(serializedState)
 }
 
 const text = (content: string, format = 0) => ({

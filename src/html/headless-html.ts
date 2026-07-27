@@ -1,14 +1,13 @@
 import type { CreateEditorArgs, LexicalNodeConfig, SerializedEditorState } from 'lexical'
 
-import { createHeadlessEditor } from '@lexical/headless'
 import { $getRoot } from 'lexical'
 
 import type { ExportDOMDom, ExportDOMOptions } from '@/nodes/base'
 
-import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import { resolveHeadlessDom } from '@/html/headless-dom'
+import { createHeadlessHtmlEditor } from '@/html/headless-editor'
 import { htmlToLexical } from '@/html/html-to-lexical/index'
-import { LexicalHTMLRenderer } from '@/html/renderer/index'
+import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
 import { registerRemoveAtLinkNodesTransform, type DefaultTransformsOptions } from '@/transforms'
 
 export { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
@@ -18,6 +17,11 @@ export interface LexicalStateToHtmlOptions extends ExportDOMOptions {
   nodes?: LexicalNodeConfig[]
   /** Swallows errors by default (the renderer's pinned behavior); server callers should pass one and fail fast. */
   onError?: (error: Error) => void
+}
+
+function defaultOnError(error: Error) {
+  void error
+  // do nothing
 }
 
 /**
@@ -34,7 +38,18 @@ export async function lexicalStateToHtml(
   const { nodes, onError, ...renderOptions } = options ?? {}
   const dom = await resolveHeadlessDom(renderOptions.dom)
 
-  return new LexicalHTMLRenderer({ nodes, onError, dom }).render(state, { ...renderOptions, dom })
+  const editor = createHeadlessHtmlEditor({ merge: 'additive', nodes, onError: onError ?? defaultOnError })
+  editor.setEditorState(editor.parseEditorState(state))
+
+  // register transforms that clean up state for rendering
+  registerRemoveAtLinkNodesTransform(editor)
+
+  let html = ''
+  editor.update(() => {
+    html = $convertToHtmlString(editor, { ...renderOptions, dom })
+  })
+
+  return html
 }
 
 export interface HtmlToLexicalStateOptions {
@@ -76,10 +91,7 @@ export function lexicalStateToPlainText(
   state: SerializedEditorState | string,
   options?: LexicalStateToPlainTextOptions,
 ): string {
-  const editor = createHeadlessEditor({
-    nodes: [...DEFAULT_HTML_NODES, ...(options?.nodes ?? [])],
-    onError: options?.onError,
-  })
+  const editor = createHeadlessHtmlEditor({ merge: 'additive', nodes: options?.nodes, onError: options?.onError })
 
   editor.setEditorState(editor.parseEditorState(state))
 
