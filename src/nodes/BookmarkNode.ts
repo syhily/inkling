@@ -1,6 +1,3 @@
-import type { EditorState, LexicalEditor } from 'lexical'
-
-import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { BookmarkData } from '@/nodes/base/nodes/bookmark/BookmarkNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
@@ -18,29 +15,17 @@ export type BookmarkNodeDataset = BookmarkData &
   }
 
 /**
- * Transition shim (plan 039, Batch 5): the hand-written wrapper is gone — the
- * registered class is assembled once from the card declaration
- * (`@/nodes/cards/card-wrappers`), and `$isBookmarkNode` is canonical on the
- * base node. `$createBookmarkNode` keeps constructing the assembled class so
- * the nested-editor and transient-prop specs are initialized.
+ * The registered class is assembled once from the card declaration, and
+ * `$isBookmarkNode` is canonical on the base node. The instance type
+ * carries the spec-derived `__*` field map (names and value types from the
+ * declaration's spec via CardSpecFieldMap), so `$createBookmarkNode`
+ * constructs the assembled class — which initializes the nested-editor and
+ * transient-prop specs — with no cast.
  */
 export const BookmarkNode = assembleCardNodeOnce(bookmarkDeclaration)
-// the `__*` field names derive from the declaration's spec — renaming a spec
-// entry is a compile error here (CardSpecFieldMap)
-export type BookmarkNode = InstanceType<typeof BookmarkNode> &
-  CardSpecFieldMap<
-    typeof bookmarkDeclaration,
-    {
-      __createdWithUrl: boolean
-      // non-null: the constructor's nested-editor setup always assigns an editor
-      // (only the video/gallery/callout/toggle editors are ever nulled, by the
-      // markdown card transformers)
-      __captionEditor: LexicalEditor
-      __captionEditorInitialState: EditorState | undefined
-    }
-  >
+export type BookmarkNode = InstanceType<typeof BookmarkNode>
 
 export const $createBookmarkNode = (dataset: BookmarkNodeDataset): BookmarkNode => {
   // the nested-editor and transient fields are initialized by the constructor from the dataset
-  return new BookmarkNode(dataset) as BookmarkNode
+  return new BookmarkNode(dataset)
 }

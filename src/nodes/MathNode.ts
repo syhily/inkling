@@ -18,5 +18,5 @@ export const MathNode = assembleCardNodeOnce(mathDeclaration)
 export type MathNode = InstanceType<typeof MathNode>
 
 export function $createMathNode(dataset: MathNodeDataset): MathNode {
-  return new MathNode(dataset) as MathNode
+  return new MathNode(dataset)
 }

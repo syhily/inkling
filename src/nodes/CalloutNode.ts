@@ -1,6 +1,5 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
-import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { CalloutData } from '@/nodes/base/nodes/callout/CalloutNode'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
@@ -18,24 +17,17 @@ export type CalloutNodeDataset = CalloutData & {
 }
 
 /**
- * Transition shim (plan 039, Batch 5): the hand-written wrapper is gone — the
- * registered class is assembled from the card declaration, and `$isCalloutNode`
- * is canonical on the base node. `$createCalloutNode` keeps constructing the
- * assembled class so the nested-editor spec is set up.
+ * The registered class is assembled from the card declaration, and
+ * `$isCalloutNode` is canonical on the base node. The instance type carries
+ * the spec-derived `__*` field map (names and value types from the
+ * declaration's spec via CardSpecFieldMap), so `$createCalloutNode`
+ * constructs the assembled class — which sets up the nested-editor spec —
+ * with no cast.
  */
 export const CalloutNode = assembleCardNodeOnce(calloutDeclaration)
-// the `__*` field names derive from the declaration's spec — renaming a spec
-// entry is a compile error here (CardSpecFieldMap)
-export type CalloutNode = InstanceType<typeof CalloutNode> &
-  CardSpecFieldMap<
-    typeof calloutDeclaration,
-    {
-      __calloutTextEditor: LexicalEditor | null
-      __calloutTextEditorInitialState: EditorState | undefined
-    }
-  >
+export type CalloutNode = InstanceType<typeof CalloutNode>
 
 export const $createCalloutNode = (dataset: CalloutNodeDataset): CalloutNode => {
   // the nested-editor fields are set up by the constructor from the dataset
-  return new CalloutNode(dataset) as CalloutNode
+  return new CalloutNode(dataset)
 }

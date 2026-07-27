@@ -1,6 +1,3 @@
-import type { EditorState, LexicalEditor } from 'lexical'
-
-import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { GalleryData } from '@/nodes/base/nodes/gallery/GalleryNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
@@ -19,25 +16,17 @@ export { INSERT_GALLERY_COMMAND } from '@/nodes/cards/card-commands'
 export type GalleryNodeDataset = GalleryData & CaptionEditorDataset
 
 /**
- * Transition shim (plan 039, Batch 5): the hand-written wrapper is gone — the
- * registered class is assembled from the card declaration, and `$isGalleryNode`
- * and the image-list helpers are canonical on the base node.
- * `$createGalleryNode` keeps constructing the assembled class so the
- * nested-editor spec is set up.
+ * The registered class is assembled from the card declaration, and
+ * `$isGalleryNode` and the image-list helpers are canonical on the base
+ * node. The instance type carries the spec-derived `__*` field map (names
+ * and value types from the declaration's spec via CardSpecFieldMap), so
+ * `$createGalleryNode` constructs the assembled class — which sets up the
+ * nested-editor spec — with no cast.
  */
 export const GalleryNode = assembleCardNodeOnce(galleryDeclaration)
-// the `__*` field names derive from the declaration's spec — renaming a spec
-// entry is a compile error here (CardSpecFieldMap)
-export type GalleryNode = InstanceType<typeof GalleryNode> &
-  CardSpecFieldMap<
-    typeof galleryDeclaration,
-    {
-      __captionEditor: LexicalEditor | null
-      __captionEditorInitialState: EditorState | undefined
-    }
-  >
+export type GalleryNode = InstanceType<typeof GalleryNode>
 
 export const $createGalleryNode = (dataset: GalleryNodeDataset): GalleryNode => {
   // the nested-editor fields are set up by the constructor from the dataset
-  return new GalleryNode(dataset) as GalleryNode
+  return new GalleryNode(dataset)
 }

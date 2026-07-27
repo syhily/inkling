@@ -1,6 +1,3 @@
-import type { EditorState, LexicalEditor } from 'lexical'
-
-import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { CodeBlockData } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
@@ -16,27 +13,17 @@ export type CodeBlockNodeDataset = CodeBlockData &
   }
 
 /**
- * Transition shim (plan 039, Batch 5): the hand-written wrapper is gone — the
- * registered class is assembled from the card declaration, and
- * `$isCodeBlockNode` is canonical on the base node. `$createCodeBlockNode`
- * keeps constructing the assembled class so the nested-editor and
- * transient-prop specs are initialized.
+ * The registered class is assembled from the card declaration, and
+ * `$isCodeBlockNode` is canonical on the base node. The instance type
+ * carries the spec-derived `__*` field map (names and value types from the
+ * declaration's spec via CardSpecFieldMap), so `$createCodeBlockNode`
+ * constructs the assembled class — which initializes the nested-editor and
+ * transient-prop specs — with no cast.
  */
 export const CodeBlockNode = assembleCardNodeOnce(codeBlockDeclaration)
-// the `__*` field names derive from the declaration's spec — renaming a spec
-// entry is a compile error here (CardSpecFieldMap)
-export type CodeBlockNode = InstanceType<typeof CodeBlockNode> &
-  CardSpecFieldMap<
-    typeof codeBlockDeclaration,
-    {
-      __openInEditMode: boolean
-      // non-null: the constructor's nested-editor setup always assigns an editor
-      __captionEditor: LexicalEditor
-      __captionEditorInitialState: EditorState | undefined
-    }
-  >
+export type CodeBlockNode = InstanceType<typeof CodeBlockNode>
 
 export function $createCodeBlockNode(dataset: CodeBlockNodeDataset): CodeBlockNode {
   // the nested-editor and transient fields are initialized by the constructor from the dataset
-  return new CodeBlockNode(dataset) as CodeBlockNode
+  return new CodeBlockNode(dataset)
 }

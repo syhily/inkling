@@ -1,6 +1,5 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
-import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { ToggleData } from '@/nodes/base/nodes/toggle/ToggleNode'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
@@ -21,29 +20,17 @@ export type ToggleNodeDataset = ToggleData & {
 }
 
 /**
- * Transition shim (plan 039, Batch 5): the hand-written wrapper is gone — the
- * registered class is assembled once from the card declaration
- * (`@/nodes/cards/card-wrappers`), and `$isToggleNode` is canonical on the
- * base node. `$createToggleNode` keeps constructing the assembled class so
- * the nested-editor spec is set up.
+ * The registered class is assembled once from the card declaration, and
+ * `$isToggleNode` is canonical on the base node. The instance type carries
+ * the spec-derived `__*` field map (names and value types from the
+ * declaration's spec via CardSpecFieldMap), so `$createToggleNode`
+ * constructs the assembled class — which sets up the nested-editor spec —
+ * with no cast.
  */
 export const ToggleNode = assembleCardNodeOnce(toggleDeclaration)
-// the `__*` field names derive from the declaration's spec — renaming a spec
-// entry is a compile error here (CardSpecFieldMap)
-export type ToggleNode = InstanceType<typeof ToggleNode> &
-  CardSpecFieldMap<
-    typeof toggleDeclaration,
-    {
-      // null only inside the headless markdown round-trip editor (the toggle card
-      // transformer nulls both nested editors after plain-text import)
-      __titleEditor: LexicalEditor | null
-      __titleEditorInitialState: EditorState | undefined
-      __contentEditor: LexicalEditor | null
-      __contentEditorInitialState: EditorState | undefined
-    }
-  >
+export type ToggleNode = InstanceType<typeof ToggleNode>
 
 export const $createToggleNode = (dataset?: ToggleNodeDataset): ToggleNode => {
   // the nested-editor fields are set up by the constructor from the dataset
-  return new ToggleNode(dataset) as ToggleNode
+  return new ToggleNode(dataset)
 }

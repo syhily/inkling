@@ -1,4 +1,3 @@
-import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { AudioData } from '@/nodes/base/nodes/audio/AudioNode'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
@@ -13,24 +12,17 @@ export type AudioNodeDataset = AudioData & {
 }
 
 /**
- * Transition shim (plan 039, Batch 5): the hand-written wrapper is gone — the
- * registered class is assembled from the card declaration, and `$isAudioNode`
- * is canonical on the base node. `$createAudioNode` keeps constructing the
- * assembled class so the transient-prop spec is initialized.
+ * The registered class is assembled from the card declaration, and
+ * `$isAudioNode` is canonical on the base node. The instance type carries
+ * the spec-derived `__*` field map (names and value types from the
+ * declaration's spec via CardSpecFieldMap), so `$createAudioNode`
+ * constructs the assembled class — which initializes the transient-prop
+ * spec — with no cast.
  */
 export const AudioNode = assembleCardNodeOnce(audioDeclaration)
-// the `__*` field names derive from the declaration's spec — renaming a spec
-// entry is a compile error here (CardSpecFieldMap)
-export type AudioNode = InstanceType<typeof AudioNode> &
-  CardSpecFieldMap<
-    typeof audioDeclaration,
-    {
-      __triggerFileDialog: boolean
-      __initialFile: File | undefined
-    }
-  >
+export type AudioNode = InstanceType<typeof AudioNode>
 
 export const $createAudioNode = (dataset: AudioNodeDataset): AudioNode => {
   // the transient fields are initialized by the constructor from the dataset
-  return new AudioNode(dataset) as AudioNode
+  return new AudioNode(dataset)
 }

@@ -1,5 +1,6 @@
 import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
 
+import { nullableNestedEditor } from '@/nodes/base/generate-decorator-node'
 import { BaseCalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
@@ -7,15 +8,17 @@ import type { CardDeclaration } from './card-declaration'
 
 import { INSERT_CALLOUT_COMMAND } from './card-commands'
 
-// `as const` keeps the literal `name`s on the declaration's type — the shim's
-// `__*` field map derives its keys from them (CardSpecFieldMap)
+// `as const` keeps the literal `name`s and value types on the declaration's
+// type — the `__*` field map derives both from them (CardSpecFieldMap). The
+// nested editor rides nullableNestedEditor's carrier: the markdown
+// round-trip detaches it
 const nestedEditors = [
-  {
+  nullableNestedEditor({
     name: 'calloutTextEditor',
     serializedKey: 'calloutText',
     nodes: MINIMAL_NODES,
     cleanBasicHtml: { allowBr: true },
-  },
+  }),
 ] as const satisfies readonly NestedEditorSpec[]
 
 export const calloutDeclaration = {

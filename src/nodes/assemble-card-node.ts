@@ -1,7 +1,7 @@
 import type { LexicalNode } from 'lexical'
 import type { ReactNode } from 'react'
 
-import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type { CardSpecFieldMap, NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 import type { CardDeclaration } from '@/nodes/cards/card-declaration'
 
 import { ensureLexicalNodeOwnMethods } from '@/nodes/base/ensure-node-own-methods'
@@ -10,7 +10,10 @@ import { decorateCard } from '@/nodes/decorate-card'
 /**
  * The class type `assembleCardNode` returns: the declaration's base node
  * class with the spec statics adopted (`nestedEditors`/`transientProps`)
- * and `decorate()` added. TypeScript can't see statics inherited
+ * and `decorate()` added, and the declaration's spec-derived `__*` field
+ * map folded into the instance side — so a shim's `InstanceType` already
+ * carries the full transient/nested-editor vocabulary and needs no
+ * hand-written map or cast. TypeScript can't see statics inherited
  * through a class-expression base, so the Lexical static side is spelled out
  * via the mapped type — at runtime every member here is genuinely present on
  * the assembled class. The static side deliberately carries no extra
@@ -19,12 +22,12 @@ import { decorateCard } from '@/nodes/decorate-card'
  * first, degrading the base node's method types (e.g. `exportJSON()`
  * collapsing to `SerializedLexicalNode`).
  */
-export type CardNodeClass<TNode extends LexicalNode> = {
+export type CardNodeClass<TNode extends LexicalNode, D = unknown> = {
   [k in keyof typeof LexicalNode]: (typeof LexicalNode)[k]
 } & {
   // oxlint-disable-next-line typescript/no-explicit-any
-  new (...args: any[]): TNode & { decorate(): ReactNode }
-  prototype: TNode & { decorate(): ReactNode }
+  new (...args: any[]): TNode & { decorate(): ReactNode } & CardSpecFieldMap<D>
+  prototype: TNode & { decorate(): ReactNode } & CardSpecFieldMap<D>
   readonly nestedEditors: readonly NestedEditorSpec[] | undefined
   readonly transientProps: readonly TransientPropSpec[] | undefined
 }
@@ -59,10 +62,11 @@ export type CardAssemblyDeclaration = Pick<
  * `ensureLexicalNodeOwnMethods` at assembly time — with every card assembled,
  * no registry-level own-method pass remains.
  */
-export function assembleCardNode<TNode extends LexicalNode>(
+export function assembleCardNode<
+  TNode extends LexicalNode,
+  D extends CardAssemblyDeclaration = CardAssemblyDeclaration,
   // oxlint-disable-next-line typescript/no-explicit-any
-  declaration: CardAssemblyDeclaration & { baseNode: new (...args: any[]) => TNode },
-): CardNodeClass<TNode> {
+>(declaration: D & { baseNode: new (...args: any[]) => TNode }): CardNodeClass<TNode, D> {
   // oxlint-disable-next-line typescript/no-explicit-any
   const baseNode = declaration.baseNode as new (...args: any[]) => LexicalNode
 
@@ -85,7 +89,7 @@ export function assembleCardNode<TNode extends LexicalNode>(
 
   ensureLexicalNodeOwnMethods(AssembledCardNode)
 
-  return AssembledCardNode as unknown as CardNodeClass<TNode>
+  return AssembledCardNode as unknown as CardNodeClass<TNode, D>
 }
 
 // `var` hoists: a shim reached through the wrapper-layer import cycle (shim →
@@ -113,14 +117,15 @@ var assembledCardNodeCache: WeakMap<object, CardNodeClass<LexicalNode>> | undefi
  * when a shim is evaluated mid-cycle it calls this function before the
  * wrapper-layer module bodies have run.
  */
-export function assembleCardNodeOnce<TNode extends LexicalNode>(
+export function assembleCardNodeOnce<
+  TNode extends LexicalNode,
+  D extends CardAssemblyDeclaration = CardAssemblyDeclaration,
   // oxlint-disable-next-line typescript/no-explicit-any
-  declaration: CardAssemblyDeclaration & { baseNode: new (...args: any[]) => TNode },
-): CardNodeClass<TNode> {
+>(declaration: D & { baseNode: new (...args: any[]) => TNode }): CardNodeClass<TNode, D> {
   assembledCardNodeCache ??= new WeakMap()
   const cached = assembledCardNodeCache.get(declaration)
   if (cached) {
-    return cached as CardNodeClass<TNode>
+    return cached as unknown as CardNodeClass<TNode, D>
   }
   const assembled = assembleCardNode(declaration)
   assembledCardNodeCache.set(declaration, assembled)

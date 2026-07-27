@@ -1,4 +1,5 @@
-import type { LexicalNode } from 'lexical'
+import type { LexicalNode, NodeKey } from 'lexical'
+import type { ComponentType } from 'react'
 
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
@@ -10,8 +11,8 @@ import type { CardDeclaration } from './card-declaration'
 
 import { INSERT_IMAGE_COMMAND, OPEN_GIF_SELECTOR_COMMAND, OPEN_IMAGE_LIBRARY_COMMAND } from './card-commands'
 
-// `as const` keeps the literal `name`s on the declaration's type — the shim's
-// `__*` field map derives its keys from them (CardSpecFieldMap)
+// `as const` keeps the literal `name`s and value types on the declaration's
+// type — the `__*` field map derives both from them (CardSpecFieldMap)
 const nestedEditors = [
   {
     name: 'captionEditor',
@@ -22,19 +23,30 @@ const nestedEditors = [
 ] as const satisfies readonly NestedEditorSpec[]
 
 const transientProps = [
-  { name: 'previewSrc', initial: (dataset) => dataset.previewSrc || '', datasetKey: '__previewSrc' },
+  {
+    name: 'previewSrc',
+    initial: (dataset): string | null => (dataset.previewSrc || '') as string,
+    datasetKey: '__previewSrc',
+  },
   {
     name: 'triggerFileDialog',
     // don't trigger the file dialog when rendering if we've already been given a url
-    initial: (dataset) => (!dataset.src && dataset.triggerFileDialog) || false,
+    initial: (dataset): boolean => ((!dataset.src && dataset.triggerFileDialog) || false) as boolean,
     datasetKey: '__triggerFileDialog',
   },
   // passed via INSERT_MEDIA_COMMAND on drag+drop or paste
-  { name: 'initialFile', initial: (dataset) => dataset.initialFile || undefined },
+  {
+    name: 'initialFile',
+    initial: (dataset): File | undefined => (dataset.initialFile || undefined) as File | undefined,
+  },
   // selector overlay component (e.g. the GIF picker) and the flag that hides
   // the image while it is open — client-side only, never serialized
-  { name: 'selector' },
-  { name: 'isImageHidden' },
+  {
+    name: 'selector',
+    initial: (dataset): ComponentType<{ nodeKey: NodeKey }> | undefined =>
+      dataset.selector as ComponentType<{ nodeKey: NodeKey }> | undefined,
+  },
+  { name: 'isImageHidden', initial: (dataset): boolean | undefined => dataset.isImageHidden as boolean | undefined },
 ] as const satisfies readonly TransientPropSpec[]
 
 export const imageDeclaration = {

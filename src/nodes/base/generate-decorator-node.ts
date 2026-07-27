@@ -1,5 +1,6 @@
 import type {
   DOMConversionMap,
+  EditorState,
   Klass,
   LexicalEditor,
   LexicalNode,
@@ -117,6 +118,40 @@ export interface NestedEditorSpec {
   exposeInitialStateInDataset?: boolean
 }
 
+// type-level brand key for the nested-editor value carrier below — never
+// assigned at runtime, so a `declare`d unique symbol keeps it off every
+// object shape while staying derivable in type space. Exported so inferred
+// entry types can name it through declaration bundling; the `declare` emits
+// no runtime binding
+export declare const nestedEditorValueType: unique symbol
+
+/**
+ * The type-level carrier recording one nested-editor entry's `__<name>`
+ * field value type: `LexicalEditor` for an editor that lives for the node's
+ * whole lifetime, `LexicalEditor | null` for one the markdown round-trip
+ * detaches (`$detachNestedEditorsForRoundTrip` nulls every spec-declared
+ * editor on a fence-imported card) or the export path drops. Carried as a
+ * branded property because a spec entry's inferred type is the only channel
+ * `CardSpecFieldMap` can derive from — a `satisfies` target's type arguments
+ * never reach it.
+ */
+export interface NestedEditorValueCarrier<TEditor extends LexicalEditor | null> {
+  readonly [nestedEditorValueType]: TEditor
+}
+
+/**
+ * Builds a nested-editor spec entry whose editor field is nullable (see
+ * NestedEditorValueCarrier): the markdown round-trip / headless export paths
+ * detach it. Entries built as plain literals default to a non-null
+ * `LexicalEditor` field. Runtime-identical to the literal — the brand is
+ * type-space only.
+ */
+export function nullableNestedEditor<const TName extends string>(
+  spec: Omit<NestedEditorSpec, 'name'> & { name: TName },
+): NestedEditorSpec & { name: TName } & NestedEditorValueCarrier<LexicalEditor | null> {
+  return spec as NestedEditorSpec & { name: TName } & NestedEditorValueCarrier<LexicalEditor | null>
+}
+
 const NO_NESTED_EDITORS: readonly NestedEditorSpec[] = []
 
 /**
@@ -209,22 +244,49 @@ export type CardSpecFieldNames<D> =
       : never)
 
 /**
- * The `__*` type map of a card node, DERIVED from its declaration's spec
- * (CONTEXT.md: "card declaration"): the mapped keys come from the spec, the
- * per-card value types from the `Values` argument. This is how the spec
- * stays the single source of the transient/nested-editor field vocabulary:
- * class `declare` fields cannot be computed from a spec, so the derivation
- * rides the shim's type intersection instead — the `Values` constraint
- * rejects a map that lacks a spec-named field, so renaming (or adding) a
- * spec entry in the declaration is a compile error at the shim. The base
- * classes keep their hand-written `declare __*` fields (a base cannot import
- * its declaration — the declaration imports the base); that leg is pinned by
- * `test/typecheck/card-spec-field-agreement.ts` and the runtime agreement
- * test in `test/unit/nodes/card-declarations.test.ts`.
+ * The value type one transient-prop spec entry carries: the annotated return
+ * type of its `initial` lambda. Every declaration entry provides an
+ * `initial` — an entry that wants the default `dataset[name]` read spells it
+ * out with its value type — so the spec is the single source of both the
+ * field NAME and the field TYPE. An entry without `initial` derives
+ * `unknown` (host specs stay loose).
  */
-export type CardSpecFieldMap<D, Values extends Record<CardSpecFieldNames<D>, unknown>> = {
-  [K in CardSpecFieldNames<D>]: Values[K]
+export type TransientPropValue<Spec> = Spec extends {
+  initial: (dataset: Record<string, unknown>) => infer Value
 }
+  ? Value
+  : unknown
+
+/**
+ * The value type one nested-editor spec entry carries: the carrier's brand
+ * (`nestedEditorSpec`) when present, else a non-null `LexicalEditor` — the
+ * constructor's nested-editor setup always assigns an editor, and only the
+ * round-trip-detached / export-dropped editors ride the carrier.
+ */
+export type NestedEditorValue<Spec> = Spec extends NestedEditorValueCarrier<infer Value> ? Value : LexicalEditor
+
+/**
+ * The `__*` type map of a card node, DERIVED from its declaration's spec
+ * (CONTEXT.md: "card declaration"): keys come from the spec names, value
+ * types from the entries' own type carriers (the transient `initial`
+ * lambda's return type, the nested-editor `nestedEditorSpec` brand) — the
+ * spec is the single source of the whole transient/nested-editor field
+ * vocabulary, and renaming or retyping a spec entry is a compile error at
+ * every consumer. The map rides the assembled class's instance type
+ * (`assembleCardNodeOnce` folds it in), so the shims are re-exports only.
+ * The base classes keep their hand-written `declare __*` fields (a base
+ * cannot import its declaration — the declaration imports the base); that
+ * leg is pinned by `test/typecheck/card-spec-field-agreement.ts` and the
+ * runtime agreement test in `test/unit/nodes/card-declarations.test.ts`.
+ */
+export type CardSpecFieldMap<D> = (D extends { transientProps: infer Specs extends readonly TransientPropSpec[] }
+  ? { [Spec in Specs[number] as TransientPropFieldName<Spec>]: TransientPropValue<Spec> }
+  : unknown) &
+  (D extends { nestedEditors: infer Specs extends readonly NestedEditorSpec[] }
+    ? { [Spec in Specs[number] as `__${Spec['name']}`]: NestedEditorValue<Spec> } & {
+        [Spec in Specs[number] as `__${Spec['name']}InitialState`]: EditorState | undefined
+      }
+    : unknown)
 
 export type DecoratorNodeValueMap<Props extends readonly DecoratorNodeProperty[]> = {
   [Prop in Props[number] as Prop['name']]: WidenLiteral<Prop['default']>

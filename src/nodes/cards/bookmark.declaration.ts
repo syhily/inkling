@@ -7,8 +7,8 @@ import type { CardDeclaration } from './card-declaration'
 
 import { INSERT_BOOKMARK_COMMAND } from './card-commands'
 
-// `as const` keeps the literal `name`s on the declaration's type — the shim's
-// `__*` field map derives its keys from them (CardSpecFieldMap)
+// `as const` keeps the literal `name`s and value types on the declaration's
+// type — the `__*` field map derives both from them (CardSpecFieldMap)
 const nestedEditors = [
   {
     name: 'captionEditor',
@@ -22,7 +22,7 @@ const transientProps = [
   // fetched — the component's metadata-fetch effect keys off it. The initial
   // value reads the dataset the base constructor forwards to the generated
   // constructor.
-  { name: 'createdWithUrl', initial: (dataset) => !!dataset.url && !dataset.metadata },
+  { name: 'createdWithUrl', initial: (dataset): boolean => !!dataset.url && !dataset.metadata },
 ] as const satisfies readonly TransientPropSpec[]
 
 export const bookmarkDeclaration = {

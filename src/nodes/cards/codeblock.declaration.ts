@@ -5,8 +5,8 @@ import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
 
-// `as const` keeps the literal `name`s on the declaration's type — the shim's
-// `__*` field map derives its keys from them (CardSpecFieldMap)
+// `as const` keeps the literal `name`s and value types on the declaration's
+// type — the `__*` field map derives both from them (CardSpecFieldMap)
 const nestedEditors = [
   {
     name: 'captionEditor',
@@ -22,7 +22,7 @@ const transientProps = [
   {
     name: '_openInEditMode',
     privateName: '__openInEditMode',
-    initial: (dataset) => dataset._openInEditMode || false,
+    initial: (dataset): boolean => (dataset._openInEditMode || false) as boolean,
   },
 ] as const satisfies readonly TransientPropSpec[]
 

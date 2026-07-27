@@ -1,7 +1,6 @@
-import type { EditorState, LexicalEditor, NodeKey } from 'lexical'
+import type { NodeKey } from 'lexical'
 import type React from 'react'
 
-import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { ImageData } from '@/nodes/base/nodes/image/ImageNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
@@ -24,33 +23,17 @@ export type ImageNodeDataset = ImageData &
   }
 
 /**
- * Transition shim (plan 039, Batch 5): the hand-written wrapper is gone — the
- * registered class is assembled from the card declaration, and `$isImageNode`
- * and the upload accessors are canonical on the base node. `$createImageNode`
- * keeps constructing the assembled class so the nested-editor and
- * transient-prop specs are initialized.
+ * The registered class is assembled from the card declaration, and
+ * `$isImageNode` and the upload accessors are canonical on the base node.
+ * The instance type carries the spec-derived `__*` field map (names and
+ * value types from the declaration's spec via CardSpecFieldMap), so
+ * `$createImageNode` constructs the assembled class — which initializes the
+ * nested-editor and transient-prop specs — with no cast.
  */
 export const ImageNode = assembleCardNodeOnce(imageDeclaration)
-// the `__*` field names derive from the declaration's spec — renaming a spec
-// entry is a compile error here (CardSpecFieldMap)
-export type ImageNode = InstanceType<typeof ImageNode> &
-  CardSpecFieldMap<
-    typeof imageDeclaration,
-    {
-      __triggerFileDialog: boolean
-      __previewSrc: string | null
-      // non-null: the constructor's nested-editor setup always assigns an editor
-      // (only the video/gallery/callout/toggle editors are ever nulled, by the
-      // markdown card transformers)
-      __captionEditor: LexicalEditor
-      __captionEditorInitialState: EditorState | undefined
-      __initialFile: File | undefined
-      __selector: React.ComponentType<{ nodeKey: NodeKey }> | undefined
-      __isImageHidden: boolean | undefined
-    }
-  >
+export type ImageNode = InstanceType<typeof ImageNode>
 
 export const $createImageNode = (dataset: ImageNodeDataset = {}, key?: NodeKey): ImageNode => {
   // the nested-editor and transient fields are initialized by the constructor from the dataset
-  return new ImageNode(dataset, key) as ImageNode
+  return new ImageNode(dataset, key)
 }

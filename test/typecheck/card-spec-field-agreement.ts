@@ -2,21 +2,22 @@
  * Compile-time agreement pins for the card spec field vocabulary (CONTEXT.md:
  * "card spec" / "card declaration").
  *
- * The shim node types derive their `__*` maps from their declarations via
- * `CardSpecFieldMap`, so a spec rename is a compile error at the shim. A
- * base node class cannot import its declaration (the declaration imports the
- * base), so the base's hand-written `declare __*` fields are pinned HERE
- * instead: every `__*` field a base class declares beyond its dataset
- * properties and the Lexical internals must be named by the card
- * declaration's spec. Rename a transient prop or nested editor in a
- * declaration and the stale base `declare` fails its pin below.
+ * The shim node types derive their `__*` maps — names AND value types — from
+ * their declarations via `CardSpecFieldMap`, so a spec rename or retype is a
+ * compile error at every consumer. A base node class cannot import its
+ * declaration (the declaration imports the base), so the base's hand-written
+ * `declare __*` fields are pinned HERE instead: every `__*` field a base
+ * class declares beyond its dataset properties and the Lexical internals
+ * must be named by the card declaration's spec. Rename a transient prop or
+ * nested editor in a declaration and the stale base `declare` fails its pin
+ * below.
  *
  * This file is included by the root tsconfig and is only type-checked — it
  * is never executed and contains no runtime assertions.
  */
 /* oxlint-disable no-unused-vars -- the pin aliases are assertions: their
    value is being checked by tsc, never being referenced */
-import type { DecoratorNode } from 'lexical'
+import type { DecoratorNode, EditorState, LexicalEditor } from 'lexical'
 
 import type { CardSpecFieldMap, CardSpecFieldNames, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 import type { HostCardSpec } from '@/nodes/cards/host-cards'
@@ -70,6 +71,29 @@ type BasePropertyDefaults<TClass extends { getPropertyDefaults(): Record<string,
 // transient field names
 type _DerivationSanity = Expect<
   Equal<CardSpecFieldNames<typeof audioDeclaration>, '__triggerFileDialog' | '__initialFile'>
+>
+
+// --- derived value types: the vocabulary the shims used to hand-write -------
+
+type _AudioValues = Expect<
+  Equal<CardSpecFieldMap<typeof audioDeclaration>, { __triggerFileDialog: boolean; __initialFile: File | undefined }>
+>
+type _BookmarkKeys = Expect<
+  Equal<
+    keyof CardSpecFieldMap<typeof bookmarkDeclaration>,
+    '__createdWithUrl' | '__captionEditor' | '__captionEditorInitialState'
+  >
+>
+// a plain nested-editor literal derives a non-null editor field; the
+// nullableNestedEditor carrier derives the nullable one
+type _BookmarkEditorValue = Expect<
+  Equal<CardSpecFieldMap<typeof bookmarkDeclaration>['__captionEditor'], LexicalEditor>
+>
+type _CalloutEditorValue = Expect<
+  Equal<CardSpecFieldMap<typeof calloutDeclaration>['__calloutTextEditor'], LexicalEditor | null>
+>
+type _ToggleInitialState = Expect<
+  Equal<CardSpecFieldMap<typeof toggleDeclaration>['__titleEditorInitialState'], EditorState | undefined>
 >
 
 // --- per-card pins: every base-declared `__*` field is spec-named -----------
@@ -146,8 +170,8 @@ type _Video = Expect<
 // @ts-expect-error - a `__*` field the spec does not name fails the pin
 type _NegativeBase = Expect<Extends<'__staleField', CardSpecFieldNames<typeof audioDeclaration>>>
 
-// @ts-expect-error - a values map missing a spec-named field fails the map constraint
-type _NegativeMap = CardSpecFieldMap<typeof audioDeclaration, { __triggerFileDialog: boolean }>
+// @ts-expect-error - a value type that drifts from the spec's carrier fails the pin
+type _NegativeValue = Expect<Equal<CardSpecFieldMap<typeof audioDeclaration>['__triggerFileDialog'], string>>
 
 // --- host cards: the same derivation over a `defineCard` spec ----------------
 
@@ -157,12 +181,13 @@ type _NegativeMap = CardSpecFieldMap<typeof audioDeclaration, { __triggerFileDia
 const hostSpec = {
   nodeType: 'hostProbe',
   baseNode: generateDecoratorNode({ nodeType: 'hostProbe' }),
-  transientProps: [{ name: 'initialFile' }] as const satisfies readonly TransientPropSpec[],
+  transientProps: [
+    { name: 'initialFile', initial: (dataset): File | undefined => dataset.initialFile as File | undefined },
+  ] as const satisfies readonly TransientPropSpec[],
   toolbarLabel: 'host-probe',
   render: () => null,
 } satisfies HostCardSpec<'hostProbe'>
 
 type _HostSpecNames = Expect<Equal<CardSpecFieldNames<typeof hostSpec>, '__initialFile'>>
-type HostSpecFields = CardSpecFieldMap<typeof hostSpec, { __initialFile: File | undefined }>
-declare const hostSpecFields: HostSpecFields
+declare const hostSpecFields: CardSpecFieldMap<typeof hostSpec>
 hostSpecFields.__initialFile = undefined

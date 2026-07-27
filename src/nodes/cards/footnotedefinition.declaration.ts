@@ -1,19 +1,22 @@
 import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
 
+import { nullableNestedEditor } from '@/nodes/base/generate-decorator-node'
 import { BaseFootnoteDefinitionNode } from '@/nodes/base/nodes/footnotedefinition/FootnoteDefinitionNode'
 import BASIC_NODES from '@/nodes/BasicNodes'
 
 import type { CardDeclaration } from './card-declaration'
 
-// `as const` keeps the literal `name`s on the declaration's type — the shim's
-// `__*` field map derives its keys from them (CardSpecFieldMap)
+// `as const` keeps the literal `name`s and value types on the declaration's
+// type — the `__*` field map derives both from them (CardSpecFieldMap). The
+// nested editor rides nullableNestedEditor's carrier: the headless
+// round-trip invariant detaches it (same shape as toggle's)
 const nestedEditors = [
-  {
+  nullableNestedEditor({
     name: 'contentEditor',
     serializedKey: 'content',
     nodes: BASIC_NODES,
     cleanBasicHtml: { allowBr: true },
-  },
+  }),
 ] as const satisfies readonly NestedEditorSpec[]
 
 export const footnoteDefinitionDeclaration = {

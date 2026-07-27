@@ -7,8 +7,8 @@ import type { CardDeclaration } from './card-declaration'
 
 import { INSERT_HEADER_COMMAND } from './card-commands'
 
-// `as const` keeps the literal `name`s on the declaration's type — the shim's
-// `__*` field map derives its keys from them (CardSpecFieldMap)
+// `as const` keeps the literal `name`s and value types on the declaration's
+// type — the `__*` field map derives both from them (CardSpecFieldMap)
 const nestedEditors = [
   {
     name: 'headerTextEditor',
