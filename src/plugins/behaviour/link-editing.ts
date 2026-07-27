@@ -3,12 +3,14 @@ import {
   $createRangeSelection,
   $getNearestNodeFromDOMNode,
   $getSelection,
+  $isParagraphNode,
   $isRangeSelection,
   $isTextNode,
   $setSelection,
   type LexicalEditor,
 } from 'lexical'
 
+import { $isAtLinkSearchNode } from '@/nodes/base'
 import { createComposerHandle, type ComposerHandle } from '@/plugins/behaviour/composer-handle'
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
@@ -25,6 +27,10 @@ import { getSelectedNode } from '@/utils/getSelectedNode'
 // (debounced mousemove targets in through a port, link resolution inside
 // editor.read()) and createToolbarRevealFeed (the format toolbar's reveal
 // gesture — move threshold + release-inside-selection behind an effect port).
+// registerToolbarSelectionSync owns the floating toolbar's selection
+// classifier (the selectionchange listener policy: composing skip,
+// outside-editor close, at-link suppression, textSelected/href derivation) so
+// FloatingToolbarPlugin keeps only the registration and the rendering.
 //
 // The $-functions must run inside editor.read()/editor.update().
 
@@ -195,6 +201,54 @@ export function createToolbarSession(
 }
 
 export type ToolbarSession = ReturnType<typeof createToolbarSession>
+
+/**
+ * The floating toolbar's selection classifier, headless behind the session
+ * seam (mirrors registerAtLinkSession): owns the document selectionchange
+ * listener and its policy — composing skip, outside-editor close
+ * (native-selection containment), at-link-search suppression, and the
+ * textSelected/href derivation — feeding session.syncSelection.
+ * FloatingToolbarPlugin keeps only the effect that registers it. Returns the
+ * unregister.
+ */
+export function registerToolbarSelectionSync(editor: LexicalEditor, session: ToolbarSession): () => void {
+  const syncToolbarToSelection = () => {
+    editor.getEditorState().read(() => {
+      // Should not pop up the floating toolbar when using IME input
+      if (editor.isComposing()) {
+        return
+      }
+
+      const selection = $getSelection()
+      const nativeSelection = window.getSelection()
+      const rootElement = editor.getRootElement()
+
+      // close toolbar if selection was outside of editor
+      if (
+        nativeSelection !== null &&
+        (!$isRangeSelection(selection) || rootElement === null || !rootElement.contains(nativeSelection.anchorNode))
+      ) {
+        session.syncSelection(null)
+        return
+      }
+
+      if (!$isRangeSelection(selection) || $isAtLinkSearchNode(selection.anchor.getNode())) {
+        session.syncSelection(null)
+        return
+      }
+
+      const anchorNode = getSelectedNode(selection)
+      const textSelected =
+        selection.getTextContent().trim() !== '' && ($isTextNode(anchorNode) || $isParagraphNode(anchorNode))
+      session.syncSelection({ textSelected, href: $getLinkHrefAtSelection() })
+    })
+  }
+
+  document.addEventListener('selectionchange', syncToolbarToSelection)
+  return () => {
+    document.removeEventListener('selectionchange', syncToolbarToSelection)
+  }
+}
 
 /** Debounce of the hover feed's mousemove adapter — the hover delay before the link toolbar appears. */
 export const LINK_HOVER_DEBOUNCE_MS = 50

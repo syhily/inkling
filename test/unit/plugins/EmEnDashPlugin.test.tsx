@@ -34,19 +34,20 @@ async function updateEditor(editor: ReturnType<typeof createTestEditor>, updateF
   })
 }
 
+// Types each character as its own keystroke. The dash grammar itself is
+// pinned synchronously in test/unit/plugins/behaviour/em-en-dash.test.ts;
+// these tests only pin the plugin wiring — the registered scan and the
+// 'history-push' tag that keeps the replacement a separate undo entry, so a
+// single undo restores the raw typed dashes (the characters themselves merge
+// into one history entry, which the undo never reaches).
 async function typeText(editor: ReturnType<typeof createTestEditor>, text: string): Promise<void> {
   for (const char of text) {
     await act(async () => {
       editor.dispatchCommand(CONTROLLED_TEXT_INSERTION_COMMAND, char)
     })
-    // Flush the deferred dash replacement timeout before the next keystroke.
+    // Flush the listener-enqueued scan commit before the next keystroke.
     await new Promise((resolve) => {
       setTimeout(resolve, 0)
-    })
-    // Wait longer than Lexical history's default merge delay (1000ms) so each
-    // character becomes its own undo entry.
-    await new Promise((resolve) => {
-      setTimeout(resolve, 1100)
     })
   }
 }

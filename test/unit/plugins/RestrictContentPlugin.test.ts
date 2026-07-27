@@ -43,7 +43,7 @@ describe('RestrictContentPlugin', () => {
     editor = createTestEditor()
   })
 
-  it('imports ListItemNode from @lexical/list and truncates to specified paragraphs', async () => {
+  it('mount smoke: the registered transform applies the restriction on update', async () => {
     mockComposerContext(editor)
 
     renderHook(() => RestrictContentPlugin({ paragraphs: 2 }))

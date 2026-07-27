@@ -1,9 +1,7 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
   $getSelection,
-  $isParagraphNode,
   $isRangeSelection,
-  $isTextNode,
   COMMAND_PRIORITY_LOW,
   DELETE_CHARACTER_COMMAND,
   KEY_MODIFIER_COMMAND,
@@ -13,16 +11,14 @@ import React from 'react'
 
 import { FloatingFormatToolbar } from '@/components/ui/FloatingFormatToolbar'
 import { FloatingLinkToolbar } from '@/components/ui/FloatingLinkToolbar'
-import { $isAtLinkSearchNode } from '@/nodes/base'
 import {
-  $getLinkHrefAtSelection,
   createLinkHoverFeed,
   createToolbarSession,
   LINK_HOVER_DEBOUNCE_MS,
+  registerToolbarSelectionSync,
   type ToolbarSession,
 } from '@/plugins/behaviour/link-editing'
 import { debounce } from '@/utils'
-import { getSelectedNode } from '@/utils/getSelectedNode'
 
 export default function FloatingToolbarPlugin({
   anchorElem = document.body,
@@ -69,44 +65,12 @@ function useFloatingFormatToolbar(
     }
   }, [editor, session])
 
-  const syncToolbarToSelection = React.useCallback(() => {
-    editor.getEditorState().read(() => {
-      // Should not pop up the floating toolbar when using IME input
-      if (editor.isComposing()) {
-        return
-      }
-
-      const selection = $getSelection()
-      const nativeSelection = window.getSelection()
-      const rootElement = editor.getRootElement()
-
-      // close toolbar if selection was outside of editor
-      if (
-        nativeSelection !== null &&
-        (!$isRangeSelection(selection) || rootElement === null || !rootElement.contains(nativeSelection.anchorNode))
-      ) {
-        session.syncSelection(null)
-        return
-      }
-
-      if (!$isRangeSelection(selection) || $isAtLinkSearchNode(selection.anchor.getNode())) {
-        session.syncSelection(null)
-        return
-      }
-
-      const anchorNode = getSelectedNode(selection)
-      const textSelected =
-        selection.getTextContent().trim() !== '' && ($isTextNode(anchorNode) || $isParagraphNode(anchorNode))
-      session.syncSelection({ textSelected, href: $getLinkHrefAtSelection() })
-    })
-  }, [editor, session])
-
+  // the selection classifier (composing skip, outside-editor close, at-link
+  // suppression, textSelected/href derivation) lives headlessly in the
+  // link-editing module; this hook only registers it
   React.useEffect(() => {
-    document.addEventListener('selectionchange', syncToolbarToSelection)
-    return () => {
-      document.removeEventListener('selectionchange', syncToolbarToSelection)
-    }
-  }, [syncToolbarToSelection])
+    return registerToolbarSelectionSync(editor, session)
+  }, [editor, session])
 
   React.useEffect(() => {
     // clear out the toolbar when the user removes selected content
@@ -154,7 +118,7 @@ function useFloatingFormatToolbar(
     return () => {
       document.removeEventListener('mousedown', handleMousedown)
     }
-  })
+  }, [anchorElem, session])
 
   return (
     <>

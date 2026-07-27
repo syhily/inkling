@@ -15,6 +15,7 @@ import CardContext from '@/context/CardContext'
 import { useTKHandle, useTKHandleState } from '@/context/TKHandleContext'
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
 import { $createTKNode, $isTKNode, ExtendedTextNode, TKNode } from '@/nodes/base'
+import { nextTkNodeKey, resolveTkIndicatorPosition } from '@/plugins/behaviour/tk-indicator'
 import { getTKMatch } from '@/plugins/behaviour/tk-matcher'
 import { SELECT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 import { getEditorTheme } from '@/utils/lexical-internals'
@@ -43,24 +44,12 @@ function TKIndicator({
   // position element relative to the TK Node containing element
   const calculatePosition = useCallback(() => {
     if (!containingElement) {
-      return { top: 0, right: -56 }
+      return resolveTkIndicatorPosition(null, null)
     }
-
-    let top = 0
-    let right = -56
-
-    const rootElementRect = rootElement.getBoundingClientRect()
 
     const positioningElement = containingElement.querySelector('[data-inkling-card]') || containingElement
-    const positioningElementRect = positioningElement.getBoundingClientRect()
 
-    top = positioningElementRect.top - rootElementRect.top + 4
-
-    if (positioningElementRect.right > rootElementRect.right) {
-      right = right - (positioningElementRect.right - rootElementRect.right)
-    }
-
-    return { top, right }
+    return resolveTkIndicatorPosition(rootElement.getBoundingClientRect(), positioningElement.getBoundingClientRect())
   }, [rootElement, containingElement])
 
   const [position, setPosition] = useState(calculatePosition())
@@ -97,20 +86,13 @@ function TKIndicator({
         return
       }
 
-      let nodeKeyToSelect = nodeKeys[0]
-
       // if there is a selection, and it is a TK node, select the next one
       const selection = $getSelection()
-      if ($isRangeSelection(selection) && $isTKNode(selection.getNodes()[0])) {
-        const selectedIndex = nodeKeys.indexOf(selection.getNodes()[0].getKey())
-        if (selectedIndex === nodeKeys.length - 1) {
-          nodeKeyToSelect = nodeKeys[0]
-        } else {
-          nodeKeyToSelect = nodeKeys[selectedIndex + 1]
-        }
-      }
+      const selectedNode = $isRangeSelection(selection) ? selection.getNodes()[0] : null
+      const currentKey = $isTKNode(selectedNode) ? selectedNode.getKey() : null
 
-      const node = $getNodeByKey(nodeKeyToSelect)
+      const nodeKeyToSelect = nextTkNodeKey(nodeKeys, currentKey)
+      const node = nodeKeyToSelect ? $getNodeByKey(nodeKeyToSelect) : null
       if ($isTextNode(node)) {
         node.select(0, node.getTextContentSize())
       }

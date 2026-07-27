@@ -4,6 +4,7 @@ import {
   $createTextNode,
   $getRoot,
   $getSelection,
+  $isElementNode,
   $isRangeSelection,
   $isTextNode,
   $nodesOfType,
@@ -14,6 +15,15 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  $createAtLinkNode,
+  $createAtLinkSearchNode,
+  $createZWNJNode,
+  $isAtLinkSearchNode,
+  AtLinkNode,
+  AtLinkSearchNode,
+  ZWNJNode,
+} from '@/nodes/base'
+import {
   $applyLinkToSelection,
   $getLinkHrefAtSelection,
   $removeLink,
@@ -21,7 +31,9 @@ import {
   createLinkHoverFeed,
   createToolbarRevealFeed,
   createToolbarSession,
+  registerToolbarSelectionSync,
   type HoveredLink,
+  type ToolbarSession,
 } from '@/plugins/behaviour/link-editing'
 
 function createTestEditor(): LexicalEditor {
@@ -598,5 +610,185 @@ describe('createToolbarRevealFeed', () => {
         outside.remove()
       }
     })
+  })
+})
+
+/** An editor with the at-link family registered and a reconciled root element, for the selection classifier. */
+function createClassifierEditor(): { editor: LexicalEditor; rootElement: HTMLDivElement } {
+  const editor = createEditor({
+    namespace: 'test',
+    nodes: [LinkNode, AtLinkNode, AtLinkSearchNode, ZWNJNode],
+    onError: () => {},
+  })
+  const rootElement = document.createElement('div')
+  document.body.appendChild(rootElement)
+  editor.setRootElement(rootElement)
+  return { editor, rootElement }
+}
+
+// Places the native selection and dispatches the document selectionchange the
+// classifier listens to — mimics the browser driving the listener.
+function dispatchNativeSelection(anchorNode: Node, anchorOffset: number, focusNode: Node, focusOffset: number) {
+  const nativeSelection = window.getSelection()
+  if (!nativeSelection) {
+    throw new Error('expected a native selection')
+  }
+  nativeSelection.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset)
+  document.dispatchEvent(new Event('selectionchange'))
+}
+
+describe('registerToolbarSelectionSync', () => {
+  let editor: LexicalEditor
+  let rootElement: HTMLDivElement
+  let session: ToolbarSession
+
+  beforeEach(() => {
+    const domEditor = createClassifierEditor()
+    editor = domEditor.editor
+    rootElement = domEditor.rootElement
+    session = createToolbarSession()
+    const unregister = registerToolbarSelectionSync(editor, session)
+    return () => {
+      unregister()
+      rootElement.remove()
+    }
+  })
+
+  // The rendered DOM text of the editor's only plain-text node — the native
+  // selection anchor for an in-editor selection.
+  function getPlainTextDom(): Node {
+    const spans = rootElement.querySelectorAll('span')
+    const text = spans[spans.length - 1]?.firstChild
+    if (!text) {
+      throw new Error('expected the reconciled text element')
+    }
+    return text
+  }
+
+  it('opens the text toolbar for a selected range of text', async () => {
+    await selectText(editor, 'hello')
+
+    const text = getPlainTextDom()
+    dispatchNativeSelection(text, 0, text, 5)
+
+    expect(session.handle.getState()).toEqual({ type: 'text', href: '', hoveredLink: null })
+  })
+
+  it('hides the text toolbar when the selection collapses to a caret', async () => {
+    await selectText(editor, 'hello')
+    const text = getPlainTextDom()
+    dispatchNativeSelection(text, 0, text, 5)
+    expect(session.handle.getState().type).toBe('text')
+
+    await update(editor, () => {
+      const paragraph = $getRoot().getFirstChild()
+      if (!$isElementNode(paragraph)) {
+        throw new Error('expected the paragraph')
+      }
+      const textNode = paragraph.getFirstChild()
+      if (!$isTextNode(textNode)) {
+        throw new Error('expected the paragraph text')
+      }
+      textNode.select(0, 0)
+    })
+    dispatchNativeSelection(text, 0, text, 0)
+
+    // a collapsed caret carries no text: textSelected is false and the
+    // session hides, keeping the href
+    expect(session.handle.getState()).toEqual({ type: 'hidden', href: '', hoveredLink: null })
+  })
+
+  it('suppresses the toolbar while the selection is inside an at-link search node', async () => {
+    let searchNodeKey = ''
+    await update(editor, () => {
+      const root = $getRoot()
+      root.clear()
+      const paragraph = $createParagraphNode()
+      const atLinkNode = $createAtLinkNode()
+      atLinkNode.append($createZWNJNode())
+      const searchNode = $createAtLinkSearchNode('abc')
+      atLinkNode.append(searchNode)
+      paragraph.append(atLinkNode, $createTextNode('plain'))
+      root.append(paragraph)
+      searchNodeKey = searchNode.getKey()
+    })
+
+    // liveness: a plain-text selection opens the toolbar through the same listener
+    await update(editor, () => {
+      const paragraph = $getRoot().getFirstChild()
+      if (!$isElementNode(paragraph)) {
+        throw new Error('expected the paragraph')
+      }
+      const textNode = paragraph.getLastChild()
+      if (!$isTextNode(textNode)) {
+        throw new Error('expected the plain text')
+      }
+      textNode.select(0, 5)
+    })
+    const plainText = getPlainTextDom()
+    dispatchNativeSelection(plainText, 0, plainText, 5)
+    expect(session.handle.getState().type).toBe('text')
+
+    // the same selected-text shape inside the at-link search node is suppressed
+    await update(editor, () => {
+      const paragraph = $getRoot().getFirstChild()
+      if (!$isElementNode(paragraph)) {
+        throw new Error('expected the paragraph')
+      }
+      const atLinkNode = paragraph.getFirstChild()
+      if (!$isElementNode(atLinkNode)) {
+        throw new Error('expected the at-link node')
+      }
+      const searchNode = atLinkNode.getChildAtIndex(1)
+      if (!$isAtLinkSearchNode(searchNode)) {
+        throw new Error('expected the at-link search node')
+      }
+      searchNode.select(0, 3)
+    })
+    const searchElement = editor.getElementByKey(searchNodeKey)
+    const searchText = searchElement?.firstChild
+    if (!searchText) {
+      throw new Error('expected the reconciled search node element')
+    }
+    dispatchNativeSelection(searchText, 0, searchText, 3)
+
+    expect(session.handle.getState().type).toBe('hidden')
+  })
+
+  it('closes the toolbar when the native selection moves outside the editor', async () => {
+    await selectText(editor, 'hello')
+    const text = getPlainTextDom()
+    dispatchNativeSelection(text, 0, text, 5)
+    expect(session.handle.getState().type).toBe('text')
+
+    const outside = document.createElement('div')
+    outside.textContent = 'outside'
+    document.body.appendChild(outside)
+    try {
+      const outsideText = outside.firstChild
+      if (!outsideText) {
+        throw new Error('expected the outside text')
+      }
+      dispatchNativeSelection(outsideText, 0, outsideText, 7)
+
+      expect(session.handle.getState().type).toBe('hidden')
+    } finally {
+      outside.remove()
+    }
+  })
+
+  it('ignores selection changes while composing', async () => {
+    await selectText(editor, 'hello')
+    const text = getPlainTextDom()
+
+    // editor.isComposing() is not reachable through jsdom composition events —
+    // spy the bail condition directly (same approach as the at-link tests)
+    const composing = vi.spyOn(editor, 'isComposing').mockReturnValue(true)
+    dispatchNativeSelection(text, 0, text, 5)
+    expect(session.handle.getState().type).toBe('hidden')
+
+    composing.mockRestore()
+    dispatchNativeSelection(text, 0, text, 5)
+    expect(session.handle.getState().type).toBe('text')
   })
 })
