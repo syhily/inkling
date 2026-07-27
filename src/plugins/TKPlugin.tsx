@@ -17,6 +17,7 @@ import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
 import { $createTKNode, $isTKNode, ExtendedTextNode, TKNode } from '@/nodes/base'
 import { nextTkNodeKey, resolveTkIndicatorPosition } from '@/plugins/behaviour/tk-indicator'
 import { getTKMatch } from '@/plugins/behaviour/tk-matcher'
+import { applyTkHoverHighlight, registerTkNodeTracking } from '@/plugins/behaviour/tk-tracking'
 import { SELECT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 import { getEditorTheme } from '@/utils/lexical-internals'
 
@@ -100,27 +101,7 @@ function TKIndicator({
   }
 
   const toggleHighlightClasses = (isHighlighted: boolean) => {
-    let isCard = false
-
-    editor.getEditorState().read(() => {
-      if ($isDecoratorNode($getNodeByKey(parentKey))) {
-        isCard = true
-      }
-    })
-
-    if (isCard) {
-      return
-    }
-
-    nodeKeys.forEach((key: string) => {
-      if (isHighlighted) {
-        editor.getElementByKey(key)?.classList.remove(...tkClasses)
-        editor.getElementByKey(key)?.classList.add(...tkHighlightClasses)
-      } else {
-        editor.getElementByKey(key)?.classList.add(...tkClasses)
-        editor.getElementByKey(key)?.classList.remove(...tkHighlightClasses)
-      }
-    })
+    applyTkHoverHighlight(editor, parentKey, nodeKeys, { tkClasses, tkHighlightClasses }, isHighlighted)
   }
 
   const onMouseEnter = () => {
@@ -169,22 +150,7 @@ export default function TKPlugin() {
   }, [editor, tkHandle])
 
   useEffect(() => {
-    return editor.registerMutationListener(TKNode, (mutatedNodes) => {
-      editor.getEditorState().read(() => {
-        // mutatedNodes is a Map where each key is the NodeKey, and the value is the state of mutation.
-        for (let [tkNodeKey, mutation] of mutatedNodes) {
-          if (mutation === 'destroyed') {
-            tkHandle.removeEditorTkNode(editor.getKey(), tkNodeKey)
-          } else {
-            const parentNodeKey = $getNodeByKey(tkNodeKey)?.getTopLevelElement()?.getKey()
-            const topLevelNodeKey = parentEditorNodeKey || parentNodeKey
-            if (topLevelNodeKey) {
-              tkHandle.addEditorTkNode(editor.getKey(), topLevelNodeKey, tkNodeKey)
-            }
-          }
-        }
-      })
-    })
+    return registerTkNodeTracking(editor, tkHandle, parentEditorNodeKey)
   }, [editor, tkHandle, parentEditorNodeKey])
 
   const createTKNode = useCallback((textNode: TextNode): TKNode => {
