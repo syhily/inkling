@@ -1,14 +1,18 @@
 import React from 'react'
 
+import type { SlashMenuVerdict } from '@/plugins/behaviour/card-menu-trigger'
+
 // Card-menu session — the one owner of the popup-session behaviour the slash
 // and plus card menus used to re-implement each: the cursor lease (a cached
 // native Range saved while the menu is open, restored on demand), the close
 // policy (Escape closes and restores the cursor because it always blurs the
 // contenteditable; outside mousedown and other closes leave the cursor where
-// the user put it), and insert-and-close. The native Selection arrives through
-// an injected adapter so the close policy is unit-testable without a plugin
-// mount. The plugins keep only their trigger (slash keypress vs plus-button
-// hover), their anchoring, and their trigger-state cleanup.
+// the user put it), insert-and-close, and the slash trigger-state lifecycle
+// (verdicts in through applyTriggerVerdict, { query, commandParams } out;
+// every close path resets them). The native Selection arrives through an
+// injected adapter so the close policy is unit-testable without a plugin
+// mount. The plugins keep only their trigger wiring (slash keypress vs
+// plus-button hover), their anchoring, and their rendering.
 
 export interface CardMenuSessionSelection {
   removeAllRanges: () => void
@@ -29,6 +33,11 @@ export function useCardMenuSession({ getSelection = () => document.getSelection(
   const [isOpen, setIsOpen] = React.useState(false)
   const cachedRange = React.useRef<Range | null>(null)
   const containerRef = React.useRef<HTMLDivElement | null>(null)
+  // slash trigger state — the typed query and its command params; owned here
+  // so every close path (Escape, outside mousedown, insert, verdict close)
+  // resets them in one place instead of the plugin effect-watching isOpen
+  const [query, setQuery] = React.useState('')
+  const [commandParams, setCommandParams] = React.useState<string[]>([])
 
   /** Cache the cursor position the menu may later restore (the cursor lease). */
   const saveCursor = React.useCallback((range: Range | null) => {
@@ -50,8 +59,9 @@ export function useCardMenuSession({ getSelection = () => document.getSelection(
     setIsOpen(true)
   }, [])
 
-  // Closing releases the cursor lease: resetCursor restores first (Escape),
-  // every other close leaves the cursor where the user put it.
+  // Closing releases the cursor lease and the trigger state: resetCursor
+  // restores first (Escape), every other close leaves the cursor where the
+  // user put it.
   const closeMenu = React.useCallback(
     ({ resetCursor = false }: CloseMenuOptions = {}) => {
       if (resetCursor) {
@@ -59,8 +69,26 @@ export function useCardMenuSession({ getSelection = () => document.getSelection(
       }
       setIsOpen(false)
       cachedRange.current = null
+      setQuery('')
+      setCommandParams((current) => (current.length > 0 ? [] : current))
     },
     [restoreCursor],
+  )
+
+  // Apply the slash trigger's per-update verdict: a query verdict leases the
+  // cursor range and tracks the typed query; a close verdict runs the close
+  // policy (which resets the trigger state above)
+  const applyTriggerVerdict = React.useCallback(
+    (verdict: SlashMenuVerdict) => {
+      if (verdict.type === 'close') {
+        closeMenu()
+        return
+      }
+      saveCursor(verdict.cursorRange)
+      setQuery(verdict.query)
+      setCommandParams(verdict.commandParams)
+    },
+    [closeMenu, saveCursor],
   )
 
   /** Insert-then-close: run the insertion, then close with the default policy. */
@@ -110,7 +138,18 @@ export function useCardMenuSession({ getSelection = () => document.getSelection(
     }
   }, [isOpen, closeMenu])
 
-  return { containerRef, isOpen, openMenu, closeMenu, insert, saveCursor, restoreCursor }
+  return {
+    containerRef,
+    isOpen,
+    query,
+    commandParams,
+    openMenu,
+    closeMenu,
+    insert,
+    saveCursor,
+    restoreCursor,
+    applyTriggerVerdict,
+  }
 }
 
 export type CardMenuSession = ReturnType<typeof useCardMenuSession>

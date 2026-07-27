@@ -17,24 +17,26 @@ import { SlashMenu } from '@/components/ui/SlashMenu'
 import { createMenuNavigator, type MenuNavigator } from '@/hooks/card-menu-navigation'
 import { useCardMenu } from '@/hooks/useCardMenu'
 import { useCardMenuSession } from '@/hooks/useCardMenuSession'
+import { useSelectionAnchoredPopup } from '@/hooks/useSelectionAnchoredPopup'
 import { isSlashTriggerPress, registerSlashCardMenuTrigger } from '@/plugins/behaviour/card-menu-trigger'
 import trackEvent from '@/utils/analytics'
 
 function useSlashCardMenu(editor: LexicalEditor) {
-  // the popup session (cursor lease, close policy) lives in useCardMenuSession
-  // and the trigger policy (valid-press grammar, query extraction, close
-  // verdicts) in @/plugins/behaviour/card-menu-trigger; this plugin keeps the
-  // keypress wiring, the query state, and the anchoring
+  // the popup session (cursor lease, close policy, slash trigger-state
+  // lifecycle) lives in useCardMenuSession, the trigger policy (valid-press
+  // grammar, query extraction, close verdicts) in
+  // @/plugins/behaviour/card-menu-trigger, and the placement policy in the
+  // anchored-popup seam (absolute mode: parent-relative, natural width,
+  // measured flip); this plugin keeps the keypress wiring and the rendering
   const {
     containerRef,
     isOpen: isShowingMenu,
+    query,
+    commandParams,
     openMenu,
     closeMenu: closeSessionMenu,
-    saveCursor,
+    applyTriggerVerdict,
   } = useCardMenuSession()
-  const [position, setPosition] = React.useState<React.CSSProperties>({})
-  const [query, setQuery] = React.useState('')
-  const [commandParams, setCommandParams] = React.useState<string[]>([])
 
   // the keyboard-selection state machine (wrap-around index, scroll-request
   // latch, reset-on-rebuild) lives in the headless menu navigator — created
@@ -49,41 +51,10 @@ function useSlashCardMenu(editor: LexicalEditor) {
     menuNavigator.getSnapshot,
   )
 
-  // positioning stays plugin-side on purpose: the selection-anchored popup
-  // seam (src/utils/selection-anchored-popup.ts) positions fixed, spans the
-  // container's full width, and flips on a scroll-container overflow budget —
-  // this menu is absolutely positioned at natural width under the trigger
-  // paragraph and flips on measured viewport overflow (only when it also fits
-  // above), so routing through the seam would move the menu.
-  const setMenuPosition = React.useCallback(
-    (elem: HTMLElement | null) => {
-      if (!elem) {
-        return
-      }
-
-      const elemRect = elem.getBoundingClientRect()
-      const containerRect = elem.parentElement?.getBoundingClientRect()
-      const menuRect = containerRef.current?.getBoundingClientRect()
-
-      if (!containerRect || !menuRect) {
-        return
-      }
-
-      const wouldBeOffscreenBottom = elemRect.bottom - containerRect.top + menuRect.height > window.innerHeight
-      const wouldBeOffscreenTop = elemRect.top - menuRect.height < 0
-
-      if (wouldBeOffscreenBottom && !wouldBeOffscreenTop) {
-        const bottom = containerRect.height - elem.offsetTop
-        setPosition({ left: 0, bottom })
-      } else {
-        const top = elem.offsetTop + elemRect.height
-        setPosition({ top, left: 0 })
-      }
-    },
-    [containerRef],
-  )
-
-  function getSelectionElement(): HTMLElement | null {
+  // anchor: the trigger paragraph (the selection's closest <p>); the
+  // positioning parent is that paragraph's parent — the seam resolves the
+  // below/above placement from those rects
+  const getSelectionElement = React.useCallback((): HTMLElement | null => {
     const anchorNode = window.getSelection()?.anchorNode
 
     if (!anchorNode) {
@@ -95,14 +66,30 @@ function useSlashCardMenu(editor: LexicalEditor) {
     }
 
     return anchorNode instanceof HTMLElement ? anchorNode : null
-  }
+  }, [])
 
-  // slash-specific trigger state resets whenever the session closes the menu,
-  // no matter which close path fired (Escape, outside mousedown, insert, …)
+  const updatePopupPosition = useSelectionAnchoredPopup({
+    editor,
+    popupRef: containerRef,
+    positioning: 'absolute',
+    absoluteEdge: 'below',
+    absoluteFlip: 'measured',
+    anchor: () => getSelectionElement()?.getBoundingClientRect() ?? null,
+    containerRect: () => getSelectionElement()?.parentElement?.getBoundingClientRect() ?? null,
+  })
+
+  // the popup mounts with the menu — request the positioning pass on open
+  // (the subscription set covers resize/scroll while it stays open)
+  React.useLayoutEffect(() => {
+    if (isShowingMenu) {
+      updatePopupPosition()
+    }
+  }, [isShowingMenu, updatePopupPosition])
+
+  // the navigator's scroll-request latch releases when the menu closes (the
+  // trigger state itself resets inside the session's close policy)
   React.useEffect(() => {
     if (!isShowingMenu) {
-      setQuery('')
-      setCommandParams((current) => (current.length > 0 ? [] : current))
       menuNavigator.consumeScrollRequest()
     }
   }, [isShowingMenu, menuNavigator])
@@ -120,23 +107,11 @@ function useSlashCardMenu(editor: LexicalEditor) {
     [insertCardItem, closeSessionMenu],
   )
 
-  // apply the trigger's update verdicts: close the menu, or lease the cursor
-  // range to the session (Escape restores it — Escape always blurs the
-  // contenteditable, which we don't want) and track the typed query
+  // the session applies the trigger's update verdicts: query tracking
+  // (leasing the cursor range so Escape can restore it) or close
   React.useEffect(() => {
-    return registerSlashCardMenuTrigger(editor, {
-      onVerdict: (verdict) => {
-        if (verdict.type === 'close') {
-          closeSessionMenu()
-          return
-        }
-
-        saveCursor(verdict.cursorRange)
-        setQuery(verdict.query)
-        setCommandParams(verdict.commandParams)
-      },
-    })
-  }, [editor, closeSessionMenu, saveCursor])
+    return registerSlashCardMenuTrigger(editor, { onVerdict: applyTriggerVerdict })
+  }, [editor, applyTriggerVerdict])
 
   // open the menu when / is pressed on a blank paragraph — the valid-press
   // grammar lives in the trigger module; this is only the keypress wiring
@@ -201,42 +176,13 @@ function useSlashCardMenu(editor: LexicalEditor) {
     menuNavigator.reset()
   }, [cardMenu, menuNavigator])
 
-  // attach a resize observer to call setMenuPosition when the window resizes
-  React.useEffect(() => {
-    if (!isShowingMenu) {
-      return
-    }
-
-    const resizeObserver = new ResizeObserver(() => {
-      setMenuPosition(getSelectionElement())
-    })
-    resizeObserver.observe(window.document.body)
-
-    return () => {
-      resizeObserver.disconnect()
-    }
-  }, [isShowingMenu, setMenuPosition])
-
-  // use this to position the menu based on the window size
-  React.useLayoutEffect(() => {
-    if (!isShowingMenu) {
-      return
-    }
-
-    if (!containerRef.current) {
-      return
-    }
-
-    setMenuPosition(getSelectionElement())
-  }, [isShowingMenu, containerRef, setMenuPosition])
-
   if (cardMenu.items.length === 0) {
     return null
   }
 
   if (isShowingMenu) {
     return (
-      <div ref={containerRef} className="absolute -left-2 z-50 mt-2" style={position} data-inkling-slash-container>
+      <div ref={containerRef} className="absolute -left-2 z-50 mt-2" data-inkling-slash-container>
         <SlashMenu>
           <CardMenu
             closeMenu={closeSessionMenu}

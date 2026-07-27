@@ -12,6 +12,7 @@ import {
   shouldHidePlusButtonOnSelectionChange,
   type PlusButtonVerdict,
 } from '@/plugins/behaviour/card-menu-trigger'
+import { resolveAnchoredPopupPlacement } from '@/utils/selection-anchored-popup'
 
 function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
   // the popup session (cursor lease, close policy, Escape/outside-mousedown)
@@ -33,14 +34,24 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
   const [topPosition, setTopPosition] = React.useState<number>(0)
   const [cachedRange, setCachedRange] = React.useState<Range | null>(null)
 
+  // the button sits at its paragraph's top, parent-relative — the
+  // anchored-popup seam's absolute at-anchor policy
   function getTopPosition(elem: Element): number {
-    const elemRect = elem.getBoundingClientRect()
     const parent = elem.parentElement
     if (!parent) {
       return 0
     }
-    const containerRect = parent.getBoundingClientRect()
-    return elemRect.top - containerRect.top
+    const placement = resolveAnchoredPopupPlacement({
+      positioning: 'absolute',
+      absoluteEdge: 'at-anchor',
+      anchorRect: elem.getBoundingClientRect(),
+      containerRect: parent.getBoundingClientRect(),
+      popupHeight: 0,
+      scrollTop: 0,
+      scrollHeight: 0,
+      viewportHeight: 0,
+    })
+    return placement.top ?? 0
   }
 
   function getElementRange(elem: Element): Range {

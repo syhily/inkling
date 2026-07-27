@@ -9,10 +9,16 @@ interface UseSelectionAnchoredPopupOptions {
   popupRef: React.RefObject<HTMLElement | null>
   /** Anchor-rect adapter (node element or selection range); resolved inside an editor update. */
   anchor: PopupAnchor
-  /** Rect the popup spans horizontally. */
+  /** Fixed mode: rect the popup spans horizontally. Absolute mode: the positioning parent's rect. */
   containerRect: () => PopupRectLike | null
   /** Gap above the anchor when the popup flips; defaults to the below gap. */
   aboveGap?: number
+  /** 'fixed' (default): viewport coords, container-spanning width. 'absolute': parent-relative offsets at natural width. */
+  positioning?: 'fixed' | 'absolute'
+  /** Absolute mode: the unflipped popup sits below the anchor or at the anchor's top. */
+  absoluteEdge?: 'below' | 'at-anchor'
+  /** Absolute mode: 'measured' flips when below overflows the viewport and the popup fits above. */
+  absoluteFlip?: 'measured' | 'never'
 }
 
 /**
@@ -27,6 +33,9 @@ export function useSelectionAnchoredPopup({
   anchor,
   containerRect,
   aboveGap,
+  positioning = 'fixed',
+  absoluteEdge,
+  absoluteFlip,
 }: UseSelectionAnchoredPopupOptions) {
   const scrollContainer = React.useMemo(() => getScrollParent(editor.getRootElement()), [editor])
 
@@ -43,10 +52,12 @@ export function useSelectionAnchoredPopup({
         return
       }
 
-      // Span the container first so the popup height is measured at its final
-      // width (wrapping changes with width), then resolve below/flip.
-      popupElement.style.left = `${container.left}px`
-      popupElement.style.width = `${container.right - container.left}px`
+      if (positioning === 'fixed') {
+        // Span the container first so the popup height is measured at its final
+        // width (wrapping changes with width), then resolve below/flip.
+        popupElement.style.left = `${container.left}px`
+        popupElement.style.width = `${container.right - container.left}px`
+      }
 
       const placement = resolveAnchoredPopupPlacement({
         anchorRect,
@@ -56,13 +67,19 @@ export function useSelectionAnchoredPopup({
         scrollHeight: scrollContainer.scrollHeight,
         viewportHeight: window.innerHeight,
         aboveGap,
+        positioning,
+        absoluteEdge,
+        absoluteFlip,
       })
 
-      popupElement.style.top = `${placement.top}px`
+      popupElement.style.top = placement.top === undefined ? '' : `${placement.top}px`
+      popupElement.style.bottom = placement.bottom === undefined ? '' : `${placement.bottom}px`
       popupElement.style.left = `${placement.left}px`
-      popupElement.style.width = `${placement.width}px`
+      if (placement.width !== undefined) {
+        popupElement.style.width = `${placement.width}px`
+      }
     })
-  }, [editor, popupRef, anchor, containerRect, scrollContainer, aboveGap])
+  }, [editor, popupRef, anchor, containerRect, scrollContainer, aboveGap, positioning, absoluteEdge, absoluteFlip])
 
   React.useEffect(() => {
     updatePopupPosition()

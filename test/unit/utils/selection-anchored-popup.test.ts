@@ -78,3 +78,56 @@ describe('resolveAnchoredPopupPlacement', () => {
     expect(placement.top).toBe(700 - 200 - 55)
   })
 })
+
+describe('resolveAnchoredPopupPlacement — absolute mode', () => {
+  // the card menus' geometry: parent-relative offsets at natural width
+  const parent = rect(0, 0, 700, 2000)
+
+  function absolute(overrides: Partial<Parameters<typeof resolveAnchoredPopupPlacement>[0]> = {}) {
+    return resolveAnchoredPopupPlacement({
+      positioning: 'absolute',
+      anchorRect: rect(100, 0, 100, 20),
+      containerRect: parent,
+      popupHeight: 300,
+      scrollTop: 0,
+      scrollHeight: 0,
+      viewportHeight: 1000,
+      ...overrides,
+    })
+  }
+
+  it('at-anchor places the popup at the anchor’s top offset within the parent (plus button)', () => {
+    expect(absolute({ absoluteEdge: 'at-anchor' })).toEqual({ top: 100, left: 0, flipped: false })
+  })
+
+  it('below places the popup under the anchor by default (slash menu)', () => {
+    expect(absolute({ absoluteEdge: 'below' })).toEqual({ top: 120, left: 0, flipped: false })
+  })
+
+  it('never flips without the measured policy, even when below overflows the viewport', () => {
+    // 120 + 300 = 420 > 400 overflows — but the policy is 'never'
+    const placement = absolute({ viewportHeight: 400, absoluteEdge: 'below', absoluteFlip: 'never' })
+
+    expect(placement).toEqual({ top: 120, left: 0, flipped: false })
+  })
+
+  it('measured flips above when below overflows the viewport and the popup fits above', () => {
+    // anchor bottom 520 + 300 = 820 > 800 overflows; 500 - 300 = 200 ≥ 0 fits above
+    const placement = absolute({
+      anchorRect: rect(500, 0, 100, 20),
+      viewportHeight: 800,
+      absoluteEdge: 'below',
+      absoluteFlip: 'measured',
+    })
+
+    // the flipped popup's bottom edge sits at the anchor's top: parent height minus the anchor offset
+    expect(placement).toEqual({ bottom: 2000 - 500, left: 0, flipped: true })
+  })
+
+  it('measured stays below when below overflows but the popup does not fit above', () => {
+    // 120 + 300 = 420 > 400 overflows; 100 - 300 < 0 does not fit above
+    const placement = absolute({ viewportHeight: 400, absoluteEdge: 'below', absoluteFlip: 'measured' })
+
+    expect(placement).toEqual({ top: 120, left: 0, flipped: false })
+  })
+})

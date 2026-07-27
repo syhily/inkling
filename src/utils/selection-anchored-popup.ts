@@ -2,14 +2,17 @@ import { $getSelection, type LexicalEditor } from 'lexical'
 
 import { $getSelectionRangeRect } from '@/utils/$getSelectionRangeRect'
 
-// Selection-anchored popup layout — the one module owning how a fixed-position
-// popup (at-link results, link-action toolbar) is placed against its anchor:
-// the below-the-anchor default with an above-the-anchor flip when the popup
-// would overflow the scroll container, and the max-height budget shared with
-// the CSS side. Rects arrive as plain data (the ReorderGeometry pattern from
-// @/utils/draggable/reorder-rules), so the flip rules are unit-testable with
-// fake rects. The two anchor adapters (node-element rect, selection-range
-// rect) live here at the edge; the React adapter that owns measuring, style
+// Anchored popup layout — the one module owning how a popup is placed against
+// its anchor. Two positioning modes share the module: 'fixed' (viewport
+// coords, spans the container's full width, flips above the anchor when the
+// below position plus the max-height budget would overflow the scroll
+// container — the at-link results popup and the link-action toolbar) and
+// 'absolute' (parent-relative offsets at natural width — the slash and plus
+// card menus, whose per-policy flip rules arrive as inputs). Rects arrive as
+// plain data (the ReorderGeometry pattern from
+// @/utils/draggable/reorder-rules), so every policy is unit-testable with
+// fake rects. The anchor adapters (node-element rect, selection-range rect)
+// live here at the edge; the React adapter that owns measuring, style
 // writes, and the resize/scroll/MutationObserver subscription set is
 // @/hooks/useSelectionAnchoredPopup.
 
@@ -53,31 +56,52 @@ export interface PopupRectLike {
 export interface AnchoredPopupLayoutInput {
   /** Rect the popup is anchored to (node element or selection range). */
   anchorRect: PopupRectLike
-  /** Rect the popup spans horizontally (the editor container). */
+  /** Fixed mode: the rect the popup spans horizontally (the editor container). Absolute mode: the positioning parent's rect (offsets resolve against it). */
   containerRect: PopupRectLike
   /** Popup height measured at its final width. */
   popupHeight: number
   scrollTop: number
   scrollHeight: number
   viewportHeight: number
-  /** Gap below the anchor; defaults to POPUP_VERTICAL_GAP. */
+  /** Gap below the anchor; defaults to POPUP_VERTICAL_GAP in fixed mode, 0 in absolute mode (the menus carry their own margin). */
   gap?: number
   /** Gap above the anchor when flipped; defaults to the below gap. */
   aboveGap?: number
+  /**
+   * 'fixed' (default): viewport coordinates, spans the container's width,
+   * budget flip. 'absolute': parent-relative offsets at natural width, the
+   * `absoluteEdge`/`absoluteFlip` policies.
+   */
+  positioning?: 'fixed' | 'absolute'
+  /** Absolute mode: the unflipped popup sits below the anchor (slash menu) or at the anchor's top (plus button). Defaults to 'below'. */
+  absoluteEdge?: 'below' | 'at-anchor'
+  /**
+   * Absolute mode: 'measured' flips the popup above the anchor when the
+   * below position overflows the viewport AND the popup fits above;
+   * 'never' (default) never flips.
+   */
+  absoluteFlip?: 'measured' | 'never'
 }
 
 export interface AnchoredPopupPlacement {
-  top: number
+  /** Fixed mode: viewport top. Absolute mode: the parent-relative top offset — absent when flipped (bottom is set instead). */
+  top?: number
+  /** Absolute mode only, set when flipped: the parent-relative bottom offset placing the popup above the anchor. */
+  bottom?: number
   left: number
-  width: number
+  /** Fixed mode only: the container-spanning width. Absolute mode is natural-width. */
+  width?: number
   /** True when the popup was flipped above the anchor. */
   flipped: boolean
 }
 
 /**
- * Resolves the popup's fixed position: below the anchor, spanning the
- * container horizontally, flipping above the anchor when the below position
- * plus the max-height budget would overflow the scroll container.
+ * Resolves the popup's placement against its anchor. Fixed mode: below the
+ * anchor, spanning the container horizontally, flipping above when the below
+ * position plus the max-height budget would overflow the scroll container.
+ * Absolute mode: the parent-relative offset named by the edge policy, with
+ * the measured flip placing the popup above the anchor only when the below
+ * position overflows the viewport and the popup fits above.
  */
 export function resolveAnchoredPopupPlacement({
   anchorRect,
@@ -88,7 +112,26 @@ export function resolveAnchoredPopupPlacement({
   viewportHeight,
   gap,
   aboveGap,
+  positioning = 'fixed',
+  absoluteEdge = 'below',
+  absoluteFlip = 'never',
 }: AnchoredPopupLayoutInput): AnchoredPopupPlacement {
+  if (positioning === 'absolute') {
+    const anchorTop = anchorRect.top - containerRect.top
+    if (absoluteEdge === 'at-anchor') {
+      return { top: anchorTop, left: 0, flipped: false }
+    }
+
+    // below the anchor; the measured flip fires only when below overflows
+    // the viewport and the popup fits above
+    const belowOverflowsViewport = anchorRect.bottom - containerRect.top + popupHeight > viewportHeight
+    const fitsAbove = anchorRect.top - popupHeight >= 0
+    if (absoluteFlip === 'measured' && belowOverflowsViewport && fitsAbove) {
+      return { bottom: containerRect.height - anchorTop, left: 0, flipped: true }
+    }
+    return { top: anchorTop + anchorRect.height, left: 0, flipped: false }
+  }
+
   const belowGap = gap ?? POPUP_VERTICAL_GAP
   const belowTop = anchorRect.bottom + belowGap
   const placement: AnchoredPopupPlacement = {
