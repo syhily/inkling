@@ -1,7 +1,7 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 import type { RefObject } from 'react'
 
-import type { DragHandlerLike, FileChangeEvent, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
+import type { DragHandlerLike, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
 
 import ImgFullIcon from '@/assets/icons/inkling-img-full.svg?react'
 import ImgRegularIcon from '@/assets/icons/inkling-img-regular.svg?react'
@@ -17,7 +17,7 @@ import { useInklingLabels } from '@/hooks/useInklingLabels'
 interface PopulatedVideoCardProps {
   thumbnail: string
   customThumbnail: string
-  onCustomThumbnailChange: (e: FileChangeEvent) => void
+  onCustomThumbnailChange: (files: File[]) => void
   videoUploader?: FileUploaderLike
   customThumbnailUploader?: FileUploaderLike
   onRemoveCustomThumbnail: () => void
@@ -143,14 +143,14 @@ export interface VideoCardProps {
   isSelected?: boolean
   isEditing?: boolean
   fileInputRef: RefObject<HTMLInputElement | null>
-  onVideoFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onVideoFileChange: (files: File[]) => void
   videoDragHandler: DragHandlerLike
   videoUploader?: FileUploaderLike
   videoUploadErrors?: Array<{ message?: string }>
   videoMimeTypes: string[]
   customThumbnail: string
   thumbnail: string
-  onCustomThumbnailChange: (e: FileChangeEvent) => void
+  onCustomThumbnailChange: (files: File[]) => void
   customThumbnailUploader?: FileUploaderLike
   onRemoveCustomThumbnail: () => void
   totalDuration: string

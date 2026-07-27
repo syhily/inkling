@@ -146,3 +146,40 @@ export function registerNestedEnterHandoff(
     COMMAND_PRIORITY_LOW,
   )
 }
+
+/**
+ * The caption type-to-focus policy (the fourth caption behaviour, joining
+ * the provenance/enter/arrow trio above): while the parent card is selected
+ * and the caption is not focused, a printable keystroke — single character,
+ * no ctrl/meta/alt, and NOT landing on an input or textarea — focuses the
+ * caption editor. Document-level listener; returns the teardown. The ports
+ * are read per event, so callers register once per state change cycle, not
+ * per keystroke.
+ */
+export function registerCaptionTypeToFocus(
+  editor: LexicalEditor,
+  { isSelected, hasFocus }: { isSelected: () => boolean; hasFocus: () => boolean },
+): () => void {
+  const handleKeyDown = (event: KeyboardEvent) => {
+    // don't focus caption input if card is not selected
+    if (!isSelected()) {
+      return
+    }
+
+    // don't focus caption input if any other input or textarea is focused
+    const target = event.target
+    if (target instanceof Element && target.matches('input, textarea')) {
+      return
+    }
+
+    // only if key is printable key, focus on editor
+    if (!hasFocus() && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      editor.focus()
+    }
+  }
+
+  document.addEventListener('keydown', handleKeyDown)
+  return () => {
+    document.removeEventListener('keydown', handleKeyDown)
+  }
+}

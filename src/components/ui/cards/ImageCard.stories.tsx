@@ -23,7 +23,7 @@ interface ImageCardStoryArgs extends Partial<ImageCardProps> {
 
 function ImageCardStory({ display = 'Default', caption = '', ...args }: ImageCardStoryArgs) {
   const captionEditor = createEditor({ nodes: MINIMAL_NODES })
-  populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
+  populateEditor({ editor: captionEditor, initialHtml: caption })
   const displayState = displayOptions[display]
   const componentProps = {
     onFileChange: () => {},

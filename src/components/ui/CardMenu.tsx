@@ -9,6 +9,57 @@ import trackEvent from '@/utils/analytics'
 export type CardMenuItemData = ResolvedMenuItem
 export type CardMenuSectionData = MenuSection
 
+// The shared item chrome of the card menu's flat-index contract (live with
+// the menu navigator and e2e): the idx/selected stamping, the
+// scroll-on-selected effect, and the mousedown policy — browsers move focus
+// on mousedown, and stealing it from the editor breaks key commands after
+// insertion (the snippet item also keeps the menu from closing before
+// insertion). The two items keep their distinct markups.
+function useCardMenuItemChrome<T extends HTMLElement>({
+  index,
+  isSelected,
+  scrollToItem,
+  stopPropagationOnMouseDown = false,
+}: {
+  index: number
+  isSelected?: boolean
+  scrollToItem?: boolean
+  stopPropagationOnMouseDown?: boolean
+}) {
+  const itemRef = React.useRef<T | null>(null)
+
+  React.useEffect(() => {
+    if (scrollToItem && itemRef.current) {
+      itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+    }
+  }, [scrollToItem])
+
+  const handleMouseDown = (event: React.MouseEvent) => {
+    if (stopPropagationOnMouseDown) {
+      event.stopPropagation()
+    }
+    event.preventDefault()
+  }
+
+  return {
+    itemRef,
+    chromeProps: {
+      'data-inkling-cardmenu-idx': index,
+      'data-inkling-cardmenu-selected': isSelected,
+      role: 'menuitem' as const,
+      onMouseDown: handleMouseDown,
+    },
+  }
+}
+
+function CardMenuItemIcon({ Icon }: { Icon: React.ComponentType<React.SVGProps<SVGSVGElement>> }) {
+  return (
+    <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-white text-grey-900 dark:bg-transparent dark:text-grey-500">
+      <Icon className="size-[1.8rem]" />
+    </div>
+  )
+}
+
 export interface CardMenuItemProps {
   label?: string
   desc?: string
@@ -39,24 +90,15 @@ export const CardMenuItem = ({
   customContent,
   ...props
 }: CardMenuItemProps) => {
-  const buttonRef = React.useRef<HTMLButtonElement | null>(null)
   const labels = useInklingLabels()
-
-  React.useEffect(() => {
-    if (scrollToItem && buttonRef.current) {
-      buttonRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
-    }
-  }, [scrollToItem])
+  const { itemRef, chromeProps } = useCardMenuItemChrome<HTMLButtonElement>({
+    index: dataItemId ?? 0,
+    isSelected,
+    scrollToItem,
+  })
 
   if (customContent) {
     return <li>{customContent}</li>
-  }
-
-  // browsers will move focus on mouseDown but we don't want that because it
-  // removes focus from the editor meaning key commands don't work as
-  // expected after a card is inserted
-  const preventMouseDown = (event: React.MouseEvent) => {
-    event.preventDefault()
   }
 
   return (
@@ -67,20 +109,13 @@ export const CardMenuItem = ({
       {...props}
     >
       <button
-        ref={buttonRef}
+        ref={itemRef}
         className={`group flex w-full cursor-pointer flex-row items-center gap-3 border border-transparent px-2 py-[.6rem] text-left text-grey-800 hover:bg-grey-100 md:rounded-md dark:hover:bg-grey-900 ${isSelected ? 'bg-grey-100 dark:bg-grey-900' : ''}`}
         data-inkling-card-menu-item={label}
-        data-inkling-cardmenu-idx={dataItemId}
-        data-inkling-cardmenu-selected={isSelected}
-        role="menuitem"
         type="button"
-        onMouseDown={preventMouseDown}
+        {...chromeProps}
       >
-        {Icon && (
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-white text-grey-900 dark:bg-transparent dark:text-grey-500">
-            <Icon className="size-[1.8rem]" />
-          </div>
-        )}
+        {Icon && <CardMenuItemIcon Icon={Icon} />}
         <div className="flex w-full justify-between gap-2">
           <div className="flex min-w-0 flex-1 flex-col items-start">
             <div className="m-0 w-full truncate text-[1.35rem] leading-snug font-medium tracking-[.02rem] text-grey-900 dark:text-grey-200">
@@ -163,14 +198,13 @@ export const CardSnippetItem = ({
   onRemove,
   closeMenu,
 }: CardSnippetItemProps) => {
-  const itemRef = React.useRef<HTMLDivElement | null>(null)
   const labels = useInklingLabels()
-
-  React.useEffect(() => {
-    if (scrollToItem && itemRef.current) {
-      itemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
-    }
-  }, [scrollToItem])
+  const { itemRef, chromeProps } = useCardMenuItemChrome<HTMLDivElement>({
+    index: dataItemId ?? 0,
+    isSelected,
+    scrollToItem,
+    stopPropagationOnMouseDown: true,
+  })
 
   const handleSnippetRemove = (event: React.MouseEvent) => {
     event.stopPropagation() // prevent snippet insertion
@@ -178,28 +212,15 @@ export const CardSnippetItem = ({
     closeMenu?.()
   }
 
-  const handleMouseDown = (event: React.MouseEvent) => {
-    // prevent menu closing before snippet insertion
-    event.stopPropagation()
-    event.preventDefault()
-  }
-
   return (
     <li className="mb-0 min-w-0 md:col-span-2" data-testid={dataTestId} onClick={onClick}>
       <div
         ref={itemRef}
         className={`inkling-cardmenu-card-hover group flex w-full min-w-0 cursor-pointer flex-row items-center rounded-md border border-transparent px-2 py-1 text-grey-800 hover:bg-grey-100 dark:hover:bg-grey-900 ${isSelected ? 'bg-grey-100 dark:bg-grey-900' : ''}`}
-        data-inkling-cardmenu-idx={dataItemId}
-        data-inkling-cardmenu-selected={isSelected}
-        role="menuitem"
         tabIndex={-1}
-        onMouseDown={handleMouseDown}
+        {...chromeProps}
       >
-        {Icon && (
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-white text-grey-900 dark:bg-transparent dark:text-grey-500">
-            <Icon className="size-[1.8rem]" />
-          </div>
-        )}
+        {Icon && <CardMenuItemIcon Icon={Icon} />}
         <div className="m-0 ml-4 min-w-0 flex-1 truncate text-[1.35rem] leading-snug font-medium tracking-[.02rem] text-grey-900 dark:text-grey-200">
           {label}
         </div>

@@ -26,7 +26,7 @@ interface AudioThumbnailProps {
   isUploading?: boolean
   isEditing?: boolean
   fileInputRef?: FileInputRef
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onFileChange: (files: File[]) => void
   removeThumbnail?: () => void
   isDraggedOver?: boolean
   errors?: Error[] | { message?: string }[]
@@ -42,7 +42,7 @@ interface PopulatedAudioCardProps {
   updateTitle: (value: string) => void
   thumbnailSrc?: string
   fileInputRef?: FileInputRef
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onFileChange: (files: File[]) => void
   removeThumbnail?: () => void
   thumbnailDragHandler?: DragHandlerLike
 }
@@ -60,8 +60,8 @@ export interface AudioCardProps {
   thumbnailMimeTypes?: string[]
   audioFileInputRef?: FileInputRef
   thumbnailFileInputRef?: FileInputRef
-  onAudioFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  onThumbnailFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onAudioFileChange: (files: File[]) => void
+  onThumbnailFileChange: (files: File[]) => void
   audioDragHandler?: DragHandlerLike
   removeThumbnail?: () => void
   thumbnailDragHandler?: DragHandlerLike

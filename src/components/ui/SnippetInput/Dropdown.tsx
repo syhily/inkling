@@ -2,6 +2,7 @@ import ReplaceIcon from '@/assets/icons/inkling-sync.svg?react'
 import PlusIcon from '@/assets/icons/plus.svg?react'
 import { type SnippetItem } from '@/context/InklingHostIntegrationContext'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { interpolateLabel } from '@/labels/inkling-labels'
 
 export const Dropdown = ({
   snippets,
@@ -31,7 +32,7 @@ export const Dropdown = ({
           type="button"
           onClick={onCreateSnippet}
         >
-          <span>{labels['snippet.create'].replace('{name}', value ?? '')}</span>
+          <span>{interpolateLabel(labels['snippet.create'], { name: value ?? '' })}</span>
           <PlusIcon className="size-3 stroke-green-600 stroke-[3px]" />
         </button>
       </li>

@@ -11,7 +11,7 @@ import {
   KEY_ARROW_UP_COMMAND,
   type LexicalEditor,
 } from 'lexical'
-import React, { useCallback, useContext } from 'react'
+import React, { useContext } from 'react'
 
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingNestedComposer from '@/components/InklingNestedComposer'
@@ -22,6 +22,7 @@ import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import {
   isTypeaheadMenuOpen,
   markEventFromCaptionEditor,
+  registerCaptionTypeToFocus,
   registerNestedEnterHandoff,
 } from '@/plugins/behaviour/nested-editor-protocol'
 import { EmojiPickerPlugin } from '@/plugins/EmojiPickerPlugin'
@@ -40,34 +41,14 @@ function CaptionPlugin({ parentEditor }: { parentEditor: LexicalEditor }) {
   const { setCaptionHasFocus, captionHasFocus, nodeKey } = useContext(CardContext)
   const isSelected = useCardSelectionState((state) => state.selectedCardKey === nodeKey)
 
-  // focus on caption editor when something is typed while card is selected
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      // don't focus caption input if card is not selected
-      if (!isSelected) {
-        return
-      }
-
-      // don't focus caption input if any other input or textarea is focused
-      const target = event.target
-      if (target instanceof Element && target.matches('input, textarea')) {
-        return
-      }
-
-      // only if key is printable key, focus on editor
-      if (!captionHasFocus && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
-        editor.focus()
-      }
-    },
-    [editor, captionHasFocus, isSelected],
-  )
-
+  // the type-to-focus policy lives in the nested-editor protocol; this
+  // adapter only supplies the card's selection/focus reads
   React.useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown)
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [handleKeyDown, editor])
+    return registerCaptionTypeToFocus(editor, {
+      isSelected: () => isSelected,
+      hasFocus: () => captionHasFocus,
+    })
+  }, [editor, isSelected, captionHasFocus])
 
   // handle focus/blur and enter key commands
   React.useEffect(() => {
@@ -143,6 +124,7 @@ const InklingCaptionEditor = ({
     <InklingNestedComposer
       initialEditor={captionEditor}
       initialEditorState={captionEditorInitialState}
+      // oxlint-disable-next-line typescript/no-deprecated -- load-bearing: the caption editor's node set arrives via this prop; see InklingNestedComposer
       initialNodes={MINIMAL_NODES}
     >
       <InklingComposableEditor

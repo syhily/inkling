@@ -65,7 +65,7 @@ describe('FileCard', function () {
     fireEvent.change(input, { target: { files: [file] } })
 
     expect(onFileChange).toHaveBeenCalledTimes(1)
-    expect((onFileChange.mock.calls[0]![0] as React.ChangeEvent<HTMLInputElement>).target.files![0]).toBe(file)
+    expect(onFileChange.mock.calls[0]![0]).toEqual([file])
   })
 
   it('shows the uploading state', function () {

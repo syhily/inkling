@@ -3,6 +3,7 @@ import React from 'react'
 import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { interpolateLabel } from '@/labels/inkling-labels'
 
 const CARD_WIDTH_CLASSES: Partial<Record<CardWidth, string>> = {
   wide: [
@@ -57,7 +58,7 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
       indicatorIcon = (
         <div className="sticky top-0 lg:top-8">
           <IndicatorIcon
-            aria-label={labels['aria.indicator'].replace('{cardType}', cardType ?? '')}
+            aria-label={interpolateLabel(labels['aria.indicator'], { cardType: cardType ?? '' })}
             className="absolute left-[-6rem] size-5 text-grey"
             style={{ top: '.6rem' }}
           />

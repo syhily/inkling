@@ -24,7 +24,7 @@ interface BookmarkCardStoryArgs extends Partial<BookmarkCardProps> {
 
 function BookmarkCardStory({ display = 'Default', caption = '', ...args }: BookmarkCardStoryArgs) {
   const captionEditor = createEditor({ nodes: MINIMAL_NODES })
-  populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
+  populateEditor({ editor: captionEditor, initialHtml: caption })
   const displayState = displayOptions[display]
   const componentProps = {
     handleClose: () => {},

@@ -2,12 +2,7 @@ import type { EditorState, LexicalEditor } from 'lexical'
 
 import React from 'react'
 
-import type {
-  DragHandlerLike,
-  FileChangeEvent,
-  FileInputRef,
-  FileUploaderLike,
-} from '@/components/ui/cards/card-ui-types'
+import type { DragHandlerLike, FileInputRef, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
 
 import WandIcon from '@/assets/icons/inkling-wand.svg?react'
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
@@ -15,6 +10,7 @@ import { IconButton } from '@/components/ui/IconButton'
 import { CardText } from '@/components/ui/MediaPlaceholder'
 import { UploadingOverlay, UploadPlaceholder } from '@/components/ui/UploadChrome'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { interpolateLabel } from '@/labels/inkling-labels'
 import { isGif } from '@/utils/isGif'
 
 interface PopulatedImageCardProps {
@@ -26,11 +22,11 @@ interface PopulatedImageCardProps {
   imageFileDragHandler?: DragHandlerLike
   isPinturaEnabled?: boolean
   openImageEditor?: (options: { image: string; handleSave: (blob: Blob) => void }) => void
-  onFileChange: (e: FileChangeEvent) => void
+  onFileChange: (files: File[]) => void
 }
 
 interface EmptyImageCardProps {
-  onFileChange: (e: FileChangeEvent) => void
+  onFileChange: (files: File[]) => void
   fileInputRef?: FileInputRef
   imageFileDragHandler?: DragHandlerLike
   errors?: Error[] | { message?: string }[]
@@ -39,7 +35,7 @@ interface EmptyImageCardProps {
 export interface ImageCardProps {
   isSelected?: boolean
   src?: string
-  onFileChange: (e: FileChangeEvent) => void
+  onFileChange: (files: File[]) => void
   captionEditor: LexicalEditor | null
   captionEditorInitialState?: EditorState
   altText?: string
@@ -68,17 +64,20 @@ function PopulatedImageCard({
   const labels = useInklingLabels()
   const progressAlt =
     imageUploader.progress !== undefined && Math.round(imageUploader.progress) < 100
-      ? labels['alt.imageUploadProgress'].replace('{progress}', `${imageUploader.progress}`)
+      ? interpolateLabel(labels['alt.imageUploadProgress'], { progress: `${imageUploader.progress}` })
       : ''
 
+  // the setRef dispatchers are stable (useState setters), so depending on
+  // them directly keeps this callback's identity stable too — no
+  // re-registration churn from the handler objects' identities
+  const setFileDragRef = imageFileDragHandler?.setRef
+  const setCardDragRef = imageCardDragHandler?.setRef
   const setRef = React.useCallback(
     (element: HTMLElement | null) => {
-      imageFileDragHandler?.setRef?.(element)
-      imageCardDragHandler?.setRef?.(element)
+      setFileDragRef?.(element)
+      setCardDragRef?.(element)
     },
-    // setRef dispatchers are stable and should not trigger re-registration
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [setFileDragRef, setCardDragRef],
   )
 
   return (
@@ -125,11 +124,7 @@ function PopulatedImageCard({
                       editedImage instanceof File
                         ? editedImage
                         : new File([editedImage], 'image', { type: editedImage.type || 'image/png' })
-                    onFileChange({
-                      target: {
-                        files: [file],
-                      },
-                    })
+                    onFileChange([file])
                   },
                 })
               }

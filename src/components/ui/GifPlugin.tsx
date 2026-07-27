@@ -6,7 +6,7 @@ import React from 'react'
 import GifSelector from '@/components/ui/GifSelector'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useGifBrowser } from '@/hooks/useGifBrowser'
-import { DELETE_CARD_COMMAND } from '@/plugins/behaviour/commands'
+import { useSelectorPlaceholderLifecycle } from '@/hooks/useSelectorPlaceholderLifecycle'
 import { INSERT_FROM_GIF_COMMAND } from '@/plugins/InklingSelectorPlugin'
 import { getGifProviderConfig, type GifProviderConfig } from '@/utils/services/gif'
 
@@ -30,29 +30,13 @@ const GifPlugin = ({ nodeKey }: GifPluginProps) => {
 const GifPluginSelector = ({ nodeKey, providerConfig }: { nodeKey: NodeKey; providerConfig: GifProviderConfig }) => {
   const browser = useGifBrowser({ config: providerConfig })
   const [editor] = useLexicalComposerContext()
+  const { closeSelector, placeholderExists } = useSelectorPlaceholderLifecycle(nodeKey)
 
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        editor.dispatchCommand(DELETE_CARD_COMMAND, { cardKey: nodeKey })
-      }
+  const insertImageToNode = (image: { src: string; width: number; height: number }) => {
+    // a pick that lands after cancellation (the placeholder is gone) no-ops
+    if (!placeholderExists()) {
+      return
     }
-
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-
-    // We only do this for init
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const onClickOutside = () => {
-    editor.dispatchCommand(DELETE_CARD_COMMAND, { cardKey: nodeKey })
-  }
-
-  const insertImageToNode = async (image: { src: string; width: number; height: number }) => {
     editor.dispatchCommand(INSERT_FROM_GIF_COMMAND, image)
   }
 
@@ -60,7 +44,7 @@ const GifPluginSelector = ({ nodeKey, providerConfig }: { nodeKey: NodeKey; prov
     <GifSelector
       browser={browser}
       provider={providerConfig.provider}
-      onClickOutside={onClickOutside}
+      onClickOutside={closeSelector}
       onGifInsert={insertImageToNode}
     />
   )

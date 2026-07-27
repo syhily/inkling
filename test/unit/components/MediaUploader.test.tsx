@@ -35,7 +35,7 @@ describe('MediaUploader', function () {
     fireEvent.change(input, { target: { files: [file] } })
 
     expect(onFileChange).toHaveBeenCalledTimes(1)
-    expect((onFileChange.mock.calls[0]![0] as { target: { files: File[] } }).target.files[0]).toBe(file)
+    expect(onFileChange.mock.calls[0]![0]).toEqual([file])
   })
 
   it('calls onRemoveMedia when the delete button is clicked', function () {
@@ -47,7 +47,7 @@ describe('MediaUploader', function () {
     expect(onRemoveMedia).toHaveBeenCalledTimes(1)
   })
 
-  it('opens the image editor with the current image and converts the saved blob into a FileChangeEvent', function () {
+  it('opens the image editor with the current image and converts the saved blob into a File', function () {
     const onFileChange = vi.fn()
     const openImageEditor = vi.fn(({ handleSave }: { image: string; handleSave: (blob: Blob) => void }) => {
       handleSave(file)
@@ -67,7 +67,7 @@ describe('MediaUploader', function () {
     expect(openImageEditor).toHaveBeenCalledTimes(1)
     expect(openImageEditor).toHaveBeenCalledWith(expect.objectContaining({ image: 'https://example.com/kitten.png' }))
     expect(onFileChange).toHaveBeenCalledTimes(1)
-    expect((onFileChange.mock.calls[0]![0] as { target: { files: File[] } }).target.files[0]).toBe(file)
+    expect(onFileChange.mock.calls[0]![0]).toEqual([file])
   })
 
   it('passes the file input ref to setFileInputRef', function () {

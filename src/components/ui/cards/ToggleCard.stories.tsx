@@ -26,10 +26,10 @@ interface ToggleCardStoryArgs extends Partial<ToggleCardProps> {
 
 function ToggleCardStory({ display = 'Default', heading = '', content = '', ...args }: ToggleCardStoryArgs) {
   const headingEditor = createEditor({ nodes: MINIMAL_NODES })
-  populateEditor({ editor: headingEditor, initialHtml: `${heading}` })
+  populateEditor({ editor: headingEditor, initialHtml: heading })
 
   const contentEditor = createEditor({ nodes: BASIC_NODES })
-  populateEditor({ editor: contentEditor, initialHtml: `${content}` })
+  populateEditor({ editor: contentEditor, initialHtml: content })
 
   const displayState = displayOptions[display]
   const componentProps = {

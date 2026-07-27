@@ -22,11 +22,11 @@ import { $createMarkdownNode, $isMarkdownNode, MarkdownNode } from '@/nodes/base
 import { CARD_MARKDOWN_DECLARATIONS } from '@/nodes/cards/card-markdown-transformers'
 import { deriveCardNodes } from '@/nodes/cards/derive-card-nodes'
 import { $createCodeBlockNode, $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
+import { resolveGfmPipeTableLines } from '@/nodes/table/table-facts'
 import {
   $createTableCellNode,
   $createTableNode,
   $createTableRowNode,
-  $isTableCellNode,
   $isTableNode,
   $isTableRowNode,
   TableCellHeaderStates,
@@ -203,17 +203,12 @@ const GFM_TABLE: MultilineElementTransformer = {
       return null
     }
 
-    const lines = rows.map((row) => {
-      const cells = row
-        .getChildren()
-        .map((cell) =>
-          $isTableCellNode(cell) ? exportChildren(cell).replace(/\n/g, ' ').replace(/\|/g, '\\|').trim() : '',
-        )
-      return '| ' + cells.join(' | ') + ' |'
-    })
-    const columnCount = Math.max(...rows.map((row) => row.getChildrenSize()))
-    const divider = '| ' + Array.from({ length: columnCount }, () => '---').join(' | ') + ' |'
-    return [lines[0], divider, ...lines.slice(1)].join('\n')
+    // the pipe-table shape — row 0 + divider + body — is declared in
+    // @/nodes/table/table-facts (the GFM direction forges the header; the
+    // HTML direction reads it)
+    return resolveGfmPipeTableLines(rows, (cell) =>
+      exportChildren(cell).replace(/\n/g, ' ').replace(/\|/g, '\\|').trim(),
+    ).join('\n')
   },
   type: 'multiline-element',
 }

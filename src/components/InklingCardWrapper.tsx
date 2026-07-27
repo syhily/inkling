@@ -69,11 +69,12 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
   const cardContextValue = React.useMemo(
     () => ({
       captionHasFocus,
+      cardType,
       setCaptionHasFocus,
       nodeKey,
     }),
     // setState dispatchers are stable and do not need to be listed
-    [captionHasFocus, nodeKey],
+    [captionHasFocus, cardType, nodeKey],
   )
 
   return (

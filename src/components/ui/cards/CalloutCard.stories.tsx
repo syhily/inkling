@@ -25,7 +25,7 @@ interface CalloutCardStoryArgs extends Partial<CalloutCardProps> {
 
 function CalloutCardStory({ display = 'Default', value = '', placeholder, ...args }: CalloutCardStoryArgs) {
   const textEditor = createEditor()
-  populateEditor({ editor: textEditor, initialHtml: `${value}` })
+  populateEditor({ editor: textEditor, initialHtml: value })
   const displayState = displayOptions[display]
 
   return (

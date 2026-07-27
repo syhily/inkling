@@ -47,7 +47,7 @@ describe('AudioCard', function () {
     fireEvent.change(input, { target: { files: [file] } })
 
     expect(onAudioFileChange).toHaveBeenCalledTimes(1)
-    expect((onAudioFileChange.mock.calls[0]![0] as React.ChangeEvent<HTMLInputElement>).target.files![0]).toBe(file)
+    expect(onAudioFileChange.mock.calls[0]![0]).toEqual([file])
   })
 
   it('displays the audio thumbnail when a thumbnailSrc is provided', function () {

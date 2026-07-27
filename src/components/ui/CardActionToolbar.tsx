@@ -5,6 +5,7 @@ import React from 'react'
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator, type ToolbarIconName } from '@/components/ui/ToolbarMenu'
+import CardContext from '@/context/CardContext'
 import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
@@ -47,17 +48,20 @@ const DEFAULT_ITEMS: CardToolbarItem[] = [{ kind: 'edit' }, { kind: 'separator' 
 
 // the card's toolbar name — both blocks render
 // data-inkling-card-toolbar={label} (a live CSS/e2e selector contract). The
-// label is resolved from the card declaration by the node's own type — the
-// same path data-inkling-card takes — so it cannot drift from the card it
-// annotates (the historical "signup" header label).
+// label is resolved from the card declaration by the node's own type — read
+// from the wrapper's CardContext when present (the wrapper derived it once
+// at init); a bare mount (tests) falls back to one init-time read. No
+// un-subscribed editor read on the render path — a card's type is static
+// for its mounted lifetime.
 export function useCardToolbarLabel(nodeKey: NodeKey): string | undefined {
+  const { cardType } = React.useContext(CardContext)
   const [editor] = useLexicalComposerContext()
-
-  let label: string | undefined
-  editor.getEditorState().read(() => {
-    label = getCardToolbarLabel($getNodeByKey(nodeKey)?.getType() ?? '')
-  })
-  return label
+  const [fallbackType] = React.useState(() =>
+    cardType !== undefined && cardType !== null
+      ? null
+      : editor.getEditorState().read(() => $getNodeByKey(nodeKey)?.getType() ?? null),
+  )
+  return getCardToolbarLabel(cardType ?? fallbackType ?? '')
 }
 
 export function CardActionToolbar({
@@ -88,8 +92,17 @@ export function CardActionToolbar({
   }
 
   // separators default to the snippet gate: they exist to separate the
-  // snippet item, so they share its visibility unless a card overrides them
+  // snippet item, so they share its visibility unless a card overrides them.
+  // Keys are precomputed in render scope — the render callback must not
+  // mutate a counter while mapping
+  const separatorKeys = new Map<CardToolbarItem, number>()
   let separatorCount = 0
+  for (const item of resolvedItems) {
+    if (item.kind === 'separator') {
+      separatorCount += 1
+      separatorKeys.set(item, separatorCount)
+    }
+  }
   const renderItem = (item: CardToolbarItem): React.ReactNode => {
     switch (item.kind) {
       case 'edit':
@@ -116,9 +129,11 @@ export function CardActionToolbar({
           />
         )
       case 'separator':
-        separatorCount += 1
         return (
-          <ToolbarMenuSeparator key={`separator-${separatorCount}`} hide={item.hide ?? !cardConfig.createSnippet} />
+          <ToolbarMenuSeparator
+            key={`separator-${separatorKeys.get(item) ?? 0}`}
+            hide={item.hide ?? !cardConfig.createSnippet}
+          />
         )
       case 'custom':
         return (

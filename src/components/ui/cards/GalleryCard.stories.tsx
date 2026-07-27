@@ -43,7 +43,7 @@ function GalleryCardStory({
       return captionEditorProp
     }
     const editor = createEditor({ nodes: MINIMAL_NODES })
-    populateEditor({ editor, initialHtml: `${caption}` })
+    populateEditor({ editor, initialHtml: caption })
     return editor
   }, [captionEditorProp, caption])
 
@@ -56,6 +56,7 @@ function GalleryCardStory({
   const cardContextValue = React.useMemo(
     () => ({
       captionHasFocus: false,
+      cardType: 'gallery',
       nodeKey: undefined,
       setCaptionHasFocus: () => {},
     }),

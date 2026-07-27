@@ -24,7 +24,7 @@ interface VideoCardStoryArgs extends Partial<VideoCardProps> {
 
 function VideoCardStory({ display = 'Default', caption = '', ...args }: VideoCardStoryArgs) {
   const captionEditor = createEditor({ nodes: MINIMAL_NODES })
-  populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
+  populateEditor({ editor: captionEditor, initialHtml: caption })
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const displayState = displayOptions[display]
   const componentProps = {
@@ -47,10 +47,14 @@ function VideoCardStory({ display = 'Default', caption = '', ...args }: VideoCar
     captionEditor,
   }
 
+  // computed from the raw args (not componentProps — it carries refs, and
+  // passing a ref-bearing object member into a function reads it during render)
+  const normalizedCardWidth = normalizeCardWidth(args.cardWidth ?? 'regular')
+
   return (
     <div className="inkling-prose">
       <div className="not-inkling-prose mx-auto my-8 max-w-[740px] min-w-[initial]">
-        <CardWrapper {...displayState} {...componentProps} cardWidth={normalizeCardWidth(componentProps.cardWidth)}>
+        <CardWrapper {...displayState} {...componentProps} cardWidth={normalizedCardWidth}>
           <VideoCard {...displayState} {...componentProps} />
         </CardWrapper>
       </div>

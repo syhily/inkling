@@ -9,6 +9,7 @@ import { IconButton } from '@/components/ui/IconButton'
 import { MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
 import { UploadFileInput, UploadingOverlay } from '@/components/ui/UploadChrome'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { interpolateLabel } from '@/labels/inkling-labels'
 import { MAX_IMAGES, buildGalleryRows } from '@/nodes/base/nodes/gallery/gallery-rows'
 
 interface GalleryRowProps {
@@ -143,7 +144,7 @@ function EmptyGalleryCard({ openFilePicker, isDraggedOver, reorderHandler }: Emp
 
   return (
     <MediaPlaceholder
-      desc={labels['upload.gallery.desc'].replace('{max}', `${MAX_IMAGES}`)}
+      desc={interpolateLabel(labels['upload.gallery.desc'], { max: `${MAX_IMAGES}` })}
       filePicker={openFilePicker}
       icon="gallery"
       isDraggedOver={isDraggedOver}
@@ -164,7 +165,7 @@ function FileDragOverlay() {
       data-inkling-card-drag-text
     >
       <span className="sans-serif fw7 f7 block w-full text-center font-bold text-white">
-        {labels['media.dragText.addToGallery'].replace('{max}', `${MAX_IMAGES}`)}
+        {interpolateLabel(labels['media.dragText.addToGallery'], { max: `${MAX_IMAGES}` })}
       </span>
     </div>
   )
@@ -181,7 +182,7 @@ export interface GalleryCardProps {
   imageMimeTypes?: string[]
   images?: GalleryImage[]
   isSelected?: boolean
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onFileChange: (files: File[]) => void
   uploader?: FileUploaderLike
   reorderHandler?: ReorderHandlerLike
 }
@@ -208,13 +209,13 @@ export function GalleryCard({
   }
 
   const { isLoading, progress } = uploader ?? {}
-  const { isDraggedOver: filesDraggedOver } = filesDropper
+  const { isDraggedOver: filesDraggedOver, setRef: filesDropSetRef } = filesDropper
   const reorderDraggedOver = reorderHandler?.isDraggedOver
   const isDragging = filesDraggedOver || reorderDraggedOver
 
   return (
     <figure>
-      <div ref={filesDropper.setRef} className="not-inkling-prose relative" data-testid="gallery-container">
+      <div ref={filesDropSetRef} className="not-inkling-prose relative" data-testid="gallery-container">
         {images.length ? (
           <PopulatedGalleryCard
             deleteImage={deleteImage}

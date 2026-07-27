@@ -25,7 +25,7 @@ interface CodeBlockCardStoryArgs extends Partial<CodeBlockCardProps> {
 
 function CodeBlockCardStory({ display = 'Default', caption = '', ...args }: CodeBlockCardStoryArgs) {
   const captionEditor = createEditor({ nodes: MINIMAL_NODES })
-  populateEditor({ editor: captionEditor, initialHtml: `${caption}` })
+  populateEditor({ editor: captionEditor, initialHtml: caption })
   const displayState = displayOptions[display]
 
   return (

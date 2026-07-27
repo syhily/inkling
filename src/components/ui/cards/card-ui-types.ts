@@ -1,4 +1,4 @@
-import type { ChangeEvent, MutableRefObject } from 'react'
+import type { RefObject } from 'react'
 
 import type { FileUploader } from '@/context/InklingHostIntegrationContext'
 import type { UseFileDragAndDropResult } from '@/hooks/useFileDragAndDrop'
@@ -31,6 +31,4 @@ export type FileUploaderLike = Omit<ReturnType<FileUploader['useFileUpload']>, '
   errors?: Array<{ message?: string }>
 }
 
-export type FileInputRef = MutableRefObject<HTMLInputElement | null>
-
-export type FileChangeEvent = ChangeEvent<HTMLInputElement> | { target: { files: File[] } }
+export type FileInputRef = RefObject<HTMLInputElement | null>

@@ -1,7 +1,6 @@
 import type { NodeKey } from 'lexical'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getNodeByKey } from 'lexical'
 import React from 'react'
 
 import type { ImageNodeDataset } from '@/nodes/ImageNode'
@@ -12,7 +11,7 @@ import InklingHostIntegrationContext, {
   type LibraryImageItem,
 } from '@/context/InklingHostIntegrationContext'
 import { useLibraryBrowser } from '@/hooks/useLibraryBrowser'
-import { DELETE_CARD_COMMAND } from '@/plugins/behaviour/commands'
+import { useSelectorPlaceholderLifecycle } from '@/hooks/useSelectorPlaceholderLifecycle'
 import { INSERT_FROM_LIBRARY_COMMAND } from '@/plugins/InklingSelectorPlugin'
 
 /**
@@ -57,52 +56,30 @@ const LibraryPlugin = ({ nodeKey }: LibraryPluginProps) => {
 const LibraryPluginSelector = ({ nodeKey, imageLibrary }: { nodeKey: NodeKey; imageLibrary: ImageLibrarySettings }) => {
   const browser = useLibraryBrowser({ search: imageLibrary.search })
   const [editor] = useLexicalComposerContext()
-
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        editor.dispatchCommand(DELETE_CARD_COMMAND, { cardKey: nodeKey })
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-
-    // We only do this for init
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const onClickOutside = () => {
-    editor.dispatchCommand(DELETE_CARD_COMMAND, { cardKey: nodeKey })
-  }
+  const { closeSelector, placeholderExists } = useSelectorPlaceholderLifecycle(nodeKey)
 
   const onPick = (item: LibraryImageItem) => {
     // a host upload UX resolves asynchronously and can land after the picker
-    // was cancelled (Escape / click-outside deleted the placeholder) — the
-    // insert surgery replaces the placeholder, so there is nothing to do
-    // once it is gone
-    const placeholderExists = editor.getEditorState().read(() => $getNodeByKey(nodeKey) !== null)
-    if (!placeholderExists) {
+    // was cancelled — a pick without its placeholder no-ops
+    if (!placeholderExists()) {
       return
     }
     editor.dispatchCommand(INSERT_FROM_LIBRARY_COMMAND, toImageDataset(item))
   }
 
   const onUpload = imageLibrary.upload
-    ? async () => {
+    ? () => {
         // the host owns the whole upload UX; its resolution is the selection
         // (undefined = cancelled — the picker stays open)
-        const item = await imageLibrary.upload?.()
-        if (item) {
-          onPick(item)
-        }
+        void imageLibrary.upload?.().then((item) => {
+          if (item) {
+            onPick(item)
+          }
+        })
       }
     : undefined
 
-  return <LibrarySelector browser={browser} onClickOutside={onClickOutside} onPick={onPick} onUpload={onUpload} />
+  return <LibrarySelector browser={browser} onClickOutside={closeSelector} onPick={onPick} onUpload={onUpload} />
 }
 
 export default LibraryPlugin

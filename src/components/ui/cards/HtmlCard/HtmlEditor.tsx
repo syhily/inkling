@@ -22,7 +22,9 @@ export default function HtmlEditor({
 }) {
   // Keep CodeMirror uncontrolled from the Lexical node to avoid feedback loops
   // caused by @uiw/react-codemirror's typing latch re-applying stale value props.
-  const initialHtml = React.useRef(html)
+  // State (never updated) captures the mount-time html without a render-time
+  // ref read.
+  const [initialHtml] = React.useState(html)
 
   const onChange = React.useCallback(
     (value: string) => {
@@ -43,13 +45,7 @@ export default function HtmlEditor({
 
   return (
     <div className="not-inkling-prose min-h-[170px]" onKeyDown={handleKeyDown}>
-      <CodeMirror
-        autoFocus={true}
-        basicSetup={false}
-        extensions={extensions}
-        value={initialHtml.current}
-        onChange={onChange}
-      />
+      <CodeMirror autoFocus={true} basicSetup={false} extensions={extensions} value={initialHtml} onChange={onChange} />
     </div>
   )
 }

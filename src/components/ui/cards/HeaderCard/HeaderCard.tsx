@@ -4,7 +4,7 @@ import type { LexicalEditor } from 'lexical'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 
-import type { DragHandlerLike, FileChangeEvent, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
+import type { DragHandlerLike, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
 
 import CenterAlignIcon from '@/assets/icons/inkling-align-center.svg?react'
 import LeftAlignIcon from '@/assets/icons/inkling-align-left.svg?react'
@@ -83,7 +83,7 @@ export interface HeaderCardUpload {
   isPinturaEnabled?: boolean
   openImageEditor: (options: { image: string; handleSave: (blob: Blob) => void }) => void
   setFileInputRef: (ref: React.RefObject<HTMLInputElement | null>) => void
-  onFileChange: (event: FileChangeEvent) => void
+  onFileChange: (files: File[]) => void
 }
 
 /** The two nested editors. */

@@ -28,7 +28,7 @@ export interface FileCardProps {
   fileDragHandler: DragHandlerLike
   isEditing?: boolean
   fileInputRef?: FileInputRef
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onFileChange: (files: File[]) => void
   handleFileTitle: (e: React.ChangeEvent<HTMLInputElement>) => void
   handleFileDesc: (e: React.ChangeEvent<HTMLInputElement>) => void
   fileUploader?: FileUploaderLike

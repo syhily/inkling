@@ -411,3 +411,23 @@ export function resolveLabels(input?: InklingLabelsInput): InklingLabels {
 export function lookupLabel(labels: InklingLabels, key: string, fallback: string): string {
   return (labels as unknown as Record<string, string | undefined>)[key] ?? fallback
 }
+
+/** The interpolation tokens the labels table speaks (plain string.replace, never an i18n library). */
+export type InklingLabelToken = 'max' | 'cardType' | 'name' | 'progress'
+
+/**
+ * The one interpolation seam: replaces the `{token}` placeholders a label
+ * carries with the given values. Owns the token contract the consumption
+ * sites used to re-do as raw `.replace` calls — a mistyped token is now a
+ * compile error at the call site, and the table stays the single owner of
+ * its format.
+ */
+export function interpolateLabel(text: string, vars: Partial<Record<InklingLabelToken, string>>): string {
+  let result = text
+  for (const [token, value] of Object.entries(vars)) {
+    if (value !== undefined) {
+      result = result.replace(`{${token}}`, value)
+    }
+  }
+  return result
+}

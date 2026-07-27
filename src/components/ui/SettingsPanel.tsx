@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import React from 'react'
 
-import type { DragHandlerLike, FileChangeEvent } from '@/components/ui/cards/card-ui-types'
+import type { DragHandlerLike } from '@/components/ui/cards/card-ui-types'
 
 import { ButtonGroup, type ButtonGroupButton } from '@/components/ui/ButtonGroup'
 import { ColorOptionButtons } from '@/components/ui/ColorOptionButtons'
@@ -28,7 +28,7 @@ export type SettingsPanelProps = {
 
 export function SettingsPanel({ children, darkMode, cardWidth, tabs, defaultTab, className = '' }: SettingsPanelProps) {
   const { nodeKey } = React.useContext(CardContext)
-  const { ref } = useFloatingPanel<HTMLDivElement>({ cardWidth: cardWidth ?? 'regular', cardKey: nodeKey })
+  const { ref } = useFloatingPanel({ cardWidth: cardWidth ?? 'regular', cardKey: nodeKey })
 
   const tabContent = React.useMemo<Record<string, React.ReactNode>>(() => {
     if (!tabs) {
@@ -379,7 +379,7 @@ interface MediaUploadSettingProps {
   imgClassName?: string
   label?: string
   hideLabel?: boolean
-  onFileChange: (e: FileChangeEvent) => void
+  onFileChange: (files: File[]) => void
   isDraggedOver?: boolean
   placeholderRef?: DragHandlerLike['setRef']
   src?: string
@@ -397,7 +397,7 @@ interface MediaUploadSettingProps {
   mimeTypes?: string[]
   isPinturaEnabled?: boolean
   openImageEditor?: (options: { image: string; handleSave: (blob: Blob) => void }) => void
-  setFileInputRef?: (ref: React.MutableRefObject<HTMLInputElement | null>) => void
+  setFileInputRef?: (ref: React.RefObject<HTMLInputElement | null>) => void
   dataTestId?: string
 }
 

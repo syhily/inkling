@@ -48,7 +48,8 @@ export interface UploadFileInputProps {
    * stopPropagation — so only the ex-ImageUploadForm call sites pass true.
    */
   stopClickPropagation?: boolean
-  onFileChange?: React.ChangeEventHandler<HTMLInputElement>
+  /** Fires with the picked files — the chrome adapts the DOM event at this boundary, so cards carry files only. */
+  onFileChange?: (files: File[]) => void
 }
 
 /** The hidden file input every upload affordance binds. */
@@ -71,7 +72,12 @@ export function UploadFileInput({
         multiple={multiple}
         name={name}
         type="file"
-        onChange={onFileChange}
+        onChange={(event) => {
+          const files = Array.from(event.target.files ?? [])
+          if (files.length > 0) {
+            onFileChange?.(files)
+          }
+        }}
         onClick={stopClickPropagation ? (e) => e.stopPropagation() : undefined}
       />
     </form>
@@ -81,33 +87,35 @@ export function UploadFileInput({
 export interface FileInputRefTunnel {
   /** The chrome's own input ref — openFileSelection clicks this one. */
   fileInputRef: FileInputRef
-  /** Callback ref to hand to UploadFileInput. */
-  onFileInputRef: (element: HTMLInputElement | null) => void
+  /** Ref to hand to UploadFileInput. */
+  onFileInputRef: React.Ref<HTMLInputElement>
 }
 
 /**
  * The file-input-ref tunnelling: the chrome binds its hidden input to a local
- * ref (so its own filePicker always works) and mirrors the element into the
- * parent channel — either the node component's FileInputRef (which
- * useTriggerFileDialog clicks) or a callback receiving the local ref object
- * (MediaUploader's setFileInputRef prop, e.g. HeaderCard).
+ * ref (so its own filePicker always works) and shares it with the parent
+ * channel — either the node component's FileInputRef (which
+ * useTriggerFileDialog clicks; it becomes the input's ref directly so parent
+ * and chrome read one object, no mirroring mutation) or a callback receiving
+ * the local ref object (MediaUploader's setFileInputRef prop, e.g. HeaderCard).
  */
 export function useFileInputRefTunnel(target?: FileInputRef | ((ref: FileInputRef) => void)): FileInputRefTunnel {
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
+  const localRef = React.useRef<HTMLInputElement | null>(null)
 
   const onFileInputRef = React.useCallback(
     (element: HTMLInputElement | null) => {
-      fileInputRef.current = element
+      localRef.current = element
       if (typeof target === 'function') {
-        target(fileInputRef)
-      } else if (target) {
-        target.current = element
+        target(localRef)
       }
     },
     [target],
   )
 
-  return { fileInputRef, onFileInputRef }
+  if (target && typeof target !== 'function') {
+    return { fileInputRef: target, onFileInputRef: target }
+  }
+  return { fileInputRef: localRef, onFileInputRef }
 }
 
 /** The empty card's uploading state: a placeholder-shaped panel holding the progress bar. */
@@ -153,7 +161,7 @@ export interface UploadPlaceholderProps {
   size: string
   /** The hidden input's `name` (see UploadFileInput). */
   inputName: string
-  onFileChange: React.ChangeEventHandler<HTMLInputElement>
+  onFileChange: (files: File[]) => void
   mimeTypes?: string[]
   isUploading?: boolean
   progress?: number

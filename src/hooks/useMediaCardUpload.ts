@@ -3,7 +3,6 @@ import type { NodeKey } from 'lexical'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import React from 'react'
 
-import type { FileChangeEvent } from '@/components/ui/cards/card-ui-types'
 import type { FileUploader } from '@/context/InklingHostIntegrationContext'
 import type { UseFileDragAndDropResult } from '@/hooks/useFileDragAndDrop'
 import type { TriggerFileDialogCardNode } from '@/hooks/useTriggerFileDialog'
@@ -52,7 +51,7 @@ export interface UseMediaCardUploadResult {
   uploader: MediaUploader
   fileInputRef: React.RefObject<HTMLInputElement | null>
   dragHandler: UseFileDragAndDropResult
-  onFileChange: (event: FileChangeEvent) => void
+  onFileChange: (files: FileList | File[] | null) => void
   /** The intent runner itself — for out-of-band sources (image's data-URL migration uses 'initial'). */
   runFiles: (files: FileList | File[] | null, source: MediaUploadSource) => void
   mimeTypes: string[] | undefined
@@ -104,8 +103,7 @@ export function useMediaCardUpload({
   })
 
   const onFileChange = React.useCallback(
-    (event: FileChangeEvent) => {
-      const files = event.target.files
+    (files: FileList | File[] | null) => {
       if (!files || files.length === 0) {
         return
       }
