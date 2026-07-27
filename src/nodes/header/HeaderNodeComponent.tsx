@@ -1,5 +1,6 @@
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef } from 'react'
 
 import type { FileChangeEvent } from '@/components/ui/cards/card-ui-types'
 
@@ -9,11 +10,12 @@ import InklingHostIntegrationContext from '@/context/InklingHostIntegrationConte
 import { useCardSelection } from '@/hooks/useCardSelection'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
+import { useHeaderBackgroundImage } from '@/hooks/useHeaderBackgroundImage'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
+import { headerFieldWriter } from '@/nodes/header/header-field-writer'
 import { $isHeaderNode } from '@/nodes/HeaderNode'
-import { getAccentColor } from '@/utils/getAccentColor'
 import { openFileSelection } from '@/utils/openFileSelection'
-import { backgroundImageUploadHandler } from '@/utils/upload-intent'
+import { headerBackgroundUploadIntent } from '@/utils/upload-intent'
 
 interface HeaderNodeComponentProps {
   alignment: string
@@ -64,75 +66,67 @@ function HeaderNodeComponent({
   isSwapped,
   accentColor,
 }: HeaderNodeComponentProps) {
+  const [editor] = useLexicalComposerContext()
   const write = useCardWriter(nodeKey, $isHeaderNode)
   const { cardConfig, fileUploader } = useContext(InklingHostIntegrationContext)
   const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
-  const [showBackgroundImage, setShowBackgroundImage] = useState<boolean>(Boolean(backgroundImageSrc))
-  const [lastBackgroundImage, setLastBackgroundImage] = useState<string>(backgroundImageSrc)
-
-  // this is used to determine if the image was deliberately removed by the user or not, for some UX finesse
-  const [imageRemoved, setImageRemoved] = useState<boolean>(false)
 
   const { isEnabled: isPinturaEnabled, openEditor: openImageEditor } = usePinturaEditor({
     config: cardConfig.pinturaConfig,
   })
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  useEffect(() => {
+  // the background-image show/hide/remove policy lives in the hook; the
+  // component only supplies the node src, the write seam, and the file dialog
+  const {
+    showBackgroundImage,
+    showImage: handleShowBackgroundImage,
+    hideImage: handleHideBackgroundImage,
+    clearImage: handleClearBackgroundImage,
+    imageApplied,
+  } = useHeaderBackgroundImage({
+    layout,
+    backgroundImageSrc,
+    write,
+    openFileDialog: () => openFileSelection({ fileInputRef }),
+  })
+
+  // field-name-as-data write handlers (src/nodes/header/header-field-writer.ts)
+  const field = headerFieldWriter(write)
+
+  const handleAlignment = field.set('alignment')
+  const handleBackgroundSize = field.set('backgroundSize')
+  const handleLayout = field.set('layout')
+  const handleTextColor = field.set('textColor')
+  const handleButtonUrl = field.set('buttonUrl')
+  const writeButtonText = field.set('buttonText')
+
+  const handleButtonText = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    writeButtonText(event.target.value)
+  }
+
+  const handleButtonTextBlur = field.blurFallback('buttonText', '')
+  const handleButtonUrlBlur = field.blurFallback('buttonUrl', 'https://')
+
+  const handleButtonColor = field.setColorPair('buttonColor', 'buttonTextColor')
+  const writeBackgroundColor = field.setColorPair('backgroundColor', 'textColor')
+
+  const handleBackgroundColor = (color: string, matchingTextColor: string): void => {
+    writeBackgroundColor(color, matchingTextColor)
+
     if (layout !== 'split') {
-      setShowBackgroundImage(Boolean(backgroundImageSrc))
+      handleHideBackgroundImage()
     }
-
-    if (layout === 'split' && !backgroundImageSrc && lastBackgroundImage) {
-      handleShowBackgroundImage()
-    }
-    // We just want to reset the show background image state when the layout changes, not when the image changes
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [layout])
-
-  useEffect(() => {
-    const accent = getAccentColor()
-
-    if (accent) {
-      write((node) => {
-        node.accentColor = accent
-      })
-    }
-  }, [write])
-
-  const handleAlignment = (a: string): void => {
-    write((node) => {
-      node.alignment = a
-    })
   }
 
-  const handleBackgroundSize = (a: string): void => {
-    write((node) => {
-      node.backgroundSize = a
-    })
-  }
+  const handleSwapLayout = field.toggle('swapped', isSwapped)
+  const handleButtonEnabled = field.toggle('buttonEnabled', buttonEnabled)
 
   const imageUploader = fileUploader.useFileUpload('image')
 
   const handleImageChange = async (files: FileList | File[] | null): Promise<void> => {
-    // reset original src so it can be replaced with preview and upload progress
-    write((node) => {
-      node.backgroundImageSrc = ''
-    })
-
-    const bgResult = await backgroundImageUploadHandler(files, imageUploader.upload)
-    const imageSrc = bgResult?.imageSrc ?? ''
-    const width = bgResult?.width ?? 0
-    const height = bgResult?.height ?? 0
-
-    write((node) => {
-      node.backgroundImageSrc = imageSrc ?? ''
-      node.backgroundImageWidth = width
-      node.backgroundImageHeight = height
-    })
-
-    setLastBackgroundImage(imageSrc ?? '')
-    setImageRemoved(false)
+    const imageSrc = await headerBackgroundUploadIntent({ editor, nodeKey, upload: imageUploader.upload, files })
+    imageApplied(imageSrc ?? '')
   }
 
   const onFileChange = async (e: FileChangeEvent): Promise<void> => {
@@ -140,102 +134,6 @@ function HeaderNodeComponent({
   }
 
   const imageDragHandler = useFileDragAndDrop({ handleDrop: handleImageChange })
-
-  const handleLayout = (l: string): void => {
-    write((node) => {
-      node.layout = l
-    })
-  }
-
-  const handleButtonText = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    write((node) => {
-      node.buttonText = event.target.value
-    })
-  }
-
-  const handleButtonTextBlur = (event: React.FocusEvent<HTMLInputElement>): void => {
-    if (!event.target.value) {
-      write((node) => {
-        node.buttonText = ''
-      })
-    }
-  }
-
-  const handleClearBackgroundImage = (): void => {
-    write((node) => {
-      node.backgroundImageSrc = ''
-    })
-    setImageRemoved(true)
-  }
-
-  const handleShowBackgroundImage = (): void => {
-    setShowBackgroundImage(true)
-
-    if (lastBackgroundImage && !imageRemoved) {
-      write((node) => {
-        node.backgroundImageSrc = lastBackgroundImage
-      })
-    } else {
-      openFileSelection({ fileInputRef })
-    }
-  }
-
-  const handleHideBackgroundImage = (): void => {
-    setShowBackgroundImage(false)
-    write((node) => {
-      node.backgroundImageSrc = ''
-    })
-  }
-
-  const handleBackgroundColor = (color: string, matchingTextColor: string): void => {
-    write((node) => {
-      node.backgroundColor = color
-      node.textColor = matchingTextColor
-
-      if (layout !== 'split') {
-        handleHideBackgroundImage()
-      }
-    })
-  }
-
-  const handleTextColor = (color: string): void => {
-    write((node) => {
-      node.textColor = color
-    })
-  }
-
-  const handleButtonColor = (color: string, matchingTextColor: string): void => {
-    write((node) => {
-      node.buttonColor = color
-      node.buttonTextColor = matchingTextColor
-    })
-  }
-
-  const handleSwapLayout = (): void => {
-    write((node) => {
-      node.swapped = !isSwapped
-    })
-  }
-
-  const handleButtonEnabled = (): void => {
-    write((node) => {
-      node.buttonEnabled = !buttonEnabled
-    })
-  }
-
-  const handleButtonUrl = (val: string): void => {
-    write((node) => {
-      node.buttonUrl = val
-    })
-  }
-
-  const handleButtonUrlBlur = (event: React.FocusEvent<HTMLInputElement>): void => {
-    if (!event.target.value) {
-      write((node) => {
-        node.buttonUrl = 'https://'
-      })
-    }
-  }
 
   useEffect(() => {
     headerTextEditor?.setEditable(isEditing)

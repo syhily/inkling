@@ -5,6 +5,7 @@ import type { GalleryImage } from '@/types/gallery'
 import {
   $isAudioNode,
   $isFileNode,
+  $isHeaderNode,
   $isImageNode,
   $isVideoNode,
   $updateCardNode,
@@ -518,39 +519,40 @@ export function customThumbnailUploadIntent({
   })
 }
 
-export interface BackgroundImageUploadResult {
-  imageSrc: string | undefined
-  width: number
-  height: number
-}
-
 /**
- * Re-homed verbatim from the deleted imageUploadHandler module (plan 045
- * Step 3): the header's background flow performs no node write — the header
- * patches `backgroundImageSrc/Width/Height` itself — so it is not a runner
- * configuration. Behavior is identical to the original handler.
+ * Header background image: the pre-upload src reset clears the node's
+ * `backgroundImageSrc`; dimensions come from the RESULT url after a
+ * non-empty upload; the patch ALWAYS lands — an empty result still writes
+ * `src: ''` with zeroed dimensions (the replaced handler's bail path).
+ * Rejections propagate.
  */
-export const backgroundImageUploadHandler = async (
-  files: FileList | File[] | null,
-  upload: UploadFn,
-): Promise<BackgroundImageUploadResult | undefined> => {
-  if (!files) {
-    return
-  }
-  const result = await upload(files)
-  const imageSrc = result?.[0]?.url
-
-  if (!imageSrc) {
-    return undefined
-  }
-
-  const { width, height } = await getImageDimensions(imageSrc)
-
-  return {
-    imageSrc,
-    width,
-    height,
-  }
+export function headerBackgroundUploadIntent({
+  editor,
+  nodeKey,
+  upload,
+  files,
+}: CardUploadIntentDeps): Promise<string | undefined> {
+  return runUploadIntent({
+    editor,
+    nodeKey,
+    guard: $isHeaderNode,
+    files,
+    upload,
+    // reset original src so it can be replaced by the upload result
+    prePatch: (node) => {
+      node.backgroundImageSrc = ''
+    },
+    metadataTiming: 'afterUpload',
+    // the patch-always policy means extraction also sees the empty result —
+    // like the replaced handler, dimensions are only read from a real url
+    extractMetadata: ({ resultUrl }) => (resultUrl ? getImageDimensions(resultUrl) : Promise.resolve(undefined)),
+    onEmptyResult: 'patch',
+    patch: (node, { meta, resultUrl }) => {
+      node.backgroundImageSrc = resultUrl ?? ''
+      node.backgroundImageWidth = meta?.width ?? 0
+      node.backgroundImageHeight = meta?.height ?? 0
+    },
+  })
 }
 
 /* ------------------------------------------------------------------------ */
