@@ -16,7 +16,7 @@ import React, { useCallback, useContext } from 'react'
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingNestedComposer from '@/components/InklingNestedComposer'
 import CardContext from '@/context/CardContext'
-import { useCardSelection } from '@/hooks/useCardSelection'
+import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import { MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import {
@@ -38,7 +38,7 @@ const Placeholder = ({ text = 'Type here' }) => {
 function CaptionPlugin({ parentEditor }: { parentEditor: LexicalEditor }) {
   const [editor] = useLexicalComposerContext()
   const { setCaptionHasFocus, captionHasFocus, nodeKey } = useContext(CardContext)
-  const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
+  const isSelected = useCardSelectionState((state) => state.selectedCardKey === nodeKey)
 
   // focus on caption editor when something is typed while card is selected
   const handleKeyDown = useCallback(

@@ -10,7 +10,7 @@ import { createComposerHandle, type ComposerHandle } from './composer-handle'
 // mount by InklingComposableEditor (containerElement) and
 // DragDropReorderPlugin (handler); the isDragging truth is published by the
 // handler itself through its onDraggingChange port. React subscribes
-// render-only via useDragDropState. One instance per top-level composer
+// render-only via useDragDropHandleState. One instance per top-level composer
 // (created in InklingComposer) — nested composers share the top-level
 // handle, exactly as the shared context value worked before.
 

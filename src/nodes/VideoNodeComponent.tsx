@@ -6,8 +6,8 @@ import type { FileChangeEvent } from '@/components/ui/cards/card-ui-types'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { VideoCard } from '@/components/ui/cards/VideoCard'
+import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { useCardSelection } from '@/hooks/useCardSelection'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
@@ -51,8 +51,8 @@ export function VideoNodeComponent({
   const [editor] = useLexicalComposerContext()
   const write = useCardWriter(nodeKey, $isVideoNode)
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
-  const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
-  const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+  const isSelected = useCardSelectionState((state) => state.selectedCardKey === nodeKey)
+  const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
   const videoFileInputRef = React.useRef<HTMLInputElement | null>(null)
   const [previewThumbnail, setThumbnailPreview] = usePreviewLease()
   const videoUploader = fileUploader.useFileUpload('video')

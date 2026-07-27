@@ -198,7 +198,7 @@ export interface CardDeclaration<NodeType extends string = string> {
    * selector contract). It is resolved from the declaration by the node's own
    * type — the same path `data-inkling-card` takes — so the label cannot
    * drift from the card it annotates (the historical "signup" header label;
-   * see `getCardToolbarLabel` in `@/nodes/cards/card-toolbar-labels`). Most
+   * see `getCardToolbarLabel` in `@/nodes/cards/card-facts`). Most
    * cards label by node type; CodeBlock ("code-block") and File
    * ("file-upload") deliberately diverge — the divergence is data here, not a
    * transform of `nodeType`.

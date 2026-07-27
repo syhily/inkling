@@ -2,7 +2,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { type NodeKey } from 'lexical'
 import React from 'react'
 
-import { useCardSelection } from '@/hooks/useCardSelection'
+import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import { SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 /**
@@ -12,7 +12,7 @@ import { SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
  */
 export function useReselectOnEscape(nodeKey: NodeKey): () => void {
   const [editor] = useLexicalComposerContext()
-  const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
+  const isSelected = useCardSelectionState((state) => state.selectedCardKey === nodeKey)
 
   return React.useCallback(() => {
     if (!isSelected) {

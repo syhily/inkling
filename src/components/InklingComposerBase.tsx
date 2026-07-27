@@ -6,21 +6,12 @@ import React from 'react'
 import type { LexicalProviderFactory } from '@/context/InklingCollaborationContext'
 import type { CardConfig, FileUploader, FileUploaderInput } from '@/context/InklingHostIntegrationContext'
 
-import { CardSelectionStoreContext } from '@/context/CardSelectionStoreContext'
-import { DragDropHandleContext } from '@/context/DragDropHandleContext'
-import { FootnoteHandleContext } from '@/context/FootnoteHandleContext'
+import { ComposerHandlesProvider } from '@/context/ComposerHandlesProvider'
 import InklingCollaborationContext, { noopWebsocketProviderFactory } from '@/context/InklingCollaborationContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
-import { TKHandleContext } from '@/context/TKHandleContext'
-import { WordCountHandleContext } from '@/context/WordCountHandleContext'
 import { resolveLabels, type InklingLabelsInput } from '@/labels/inkling-labels'
 import { DEFAULT_CONFIG } from '@/nodes/base'
-import { createCardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
-import { createDragDropHandle } from '@/plugins/behaviour/dragDropHandle'
-import { createFootnoteHandle } from '@/plugins/behaviour/footnoteHandle'
-import { createTKHandle } from '@/plugins/behaviour/tkHandle'
-import { createWordCountHandle } from '@/plugins/behaviour/wordCountHandle'
 import defaultTheme from '@/themes/default'
 import { type InklingInitialEditorState, normalizeInitialEditorState } from '@/utils/initial-document'
 import { requireMultiplayerConfig } from '@/utils/services/multiplayer-config'
@@ -148,13 +139,8 @@ const InklingComposerBase = ({
     [enableMultiplayer, normalizedInitialEditorState, nodes, onError],
   )
 
-  // one handle per channel per top-level composer (plan 047); the useState
-  // initializer keeps each instance stable for the provider's lifetime
-  const [dragDropHandle] = React.useState(createDragDropHandle)
-  const [wordCountHandle] = React.useState(createWordCountHandle)
-  const [cardSelectionStore] = React.useState(createCardSelectionStore)
-  const [tkHandle] = React.useState(createTKHandle)
-  const [footnoteHandle] = React.useState(createFootnoteHandle)
+  // the five per-composer handles are created and provided by
+  // ComposerHandlesProvider (src/context/ComposerHandlesProvider)
 
   const normalizedFileUploader = React.useMemo<FileUploader>(() => {
     const fileTypes = readFileTypes(fileUploader)
@@ -227,34 +213,26 @@ const InklingComposerBase = ({
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <DragDropHandleContext.Provider value={dragDropHandle}>
-        <WordCountHandleContext.Provider value={wordCountHandle}>
-          <InklingHostIntegrationContext.Provider value={hostIntegrationValue}>
-            <InklingCollaborationContext.Provider value={collaborationValue}>
-              <InklingUiPrefsContext.Provider value={uiPrefsValue}>
-                <CardSelectionStoreContext.Provider value={cardSelectionStore}>
-                  <TKHandleContext.Provider value={tkHandle}>
-                    <FootnoteHandleContext.Provider value={footnoteHandle}>
-                      <LexicalCollaboration>
-                        {enableMultiplayer && createWebsocketProvider ? (
-                          <CollaborationPlugin
-                            id="main"
-                            initialEditorState={normalizedInitialEditorState}
-                            providerFactory={createWebsocketProvider}
-                            shouldBootstrap={true}
-                            username={multiplayerUsername}
-                          />
-                        ) : null}
-                        {children}
-                      </LexicalCollaboration>
-                    </FootnoteHandleContext.Provider>
-                  </TKHandleContext.Provider>
-                </CardSelectionStoreContext.Provider>
-              </InklingUiPrefsContext.Provider>
-            </InklingCollaborationContext.Provider>
-          </InklingHostIntegrationContext.Provider>
-        </WordCountHandleContext.Provider>
-      </DragDropHandleContext.Provider>
+      <ComposerHandlesProvider>
+        <InklingHostIntegrationContext.Provider value={hostIntegrationValue}>
+          <InklingCollaborationContext.Provider value={collaborationValue}>
+            <InklingUiPrefsContext.Provider value={uiPrefsValue}>
+              <LexicalCollaboration>
+                {enableMultiplayer && createWebsocketProvider ? (
+                  <CollaborationPlugin
+                    id="main"
+                    initialEditorState={normalizedInitialEditorState}
+                    providerFactory={createWebsocketProvider}
+                    shouldBootstrap={true}
+                    username={multiplayerUsername}
+                  />
+                ) : null}
+                {children}
+              </LexicalCollaboration>
+            </InklingUiPrefsContext.Provider>
+          </InklingCollaborationContext.Provider>
+        </InklingHostIntegrationContext.Provider>
+      </ComposerHandlesProvider>
     </LexicalComposer>
   )
 }

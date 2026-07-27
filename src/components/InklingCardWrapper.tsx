@@ -13,8 +13,8 @@ import type { CardNode } from '@/types/lexical-internals'
 
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import CardContext from '@/context/CardContext'
-import { useCardSelection } from '@/hooks/useCardSelection'
-import { useDragDropState } from '@/hooks/useDragDropState'
+import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
+import { useDragDropHandleState } from '@/context/DragDropHandleContext'
 import { type CardWidth } from '@/nodes/base/utils/card-widths'
 import { EDIT_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
@@ -46,9 +46,9 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
   const containerRef = React.useRef<HTMLDivElement | null>(null)
   const skipClick = React.useRef(false)
 
-  const isDragging = useDragDropState((state) => state.isDragging)
-  const selectedCardKey = useCardSelection((state) => state.selectedCardKey)
-  const isEditingCard = useCardSelection((state) => state.isEditingCard)
+  const isDragging = useDragDropHandleState((state) => state.isDragging)
+  const selectedCardKey = useCardSelectionState((state) => state.selectedCardKey)
+  const isEditingCard = useCardSelectionState((state) => state.isEditingCard)
 
   const isSelected = selectedCardKey === nodeKey
   const isEditing = isSelected && isEditingCard

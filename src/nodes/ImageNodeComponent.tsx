@@ -16,8 +16,8 @@ import { CardActionToolbar, useCardToolbarLabel } from '@/components/ui/CardActi
 import { ImageCard } from '@/components/ui/cards/ImageCard'
 import { LinkInput } from '@/components/ui/LinkInput'
 import { UploadFileInput } from '@/components/ui/UploadChrome'
+import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { useCardSelection } from '@/hooks/useCardSelection'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import useDropTarget from '@/hooks/useDropTarget'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
@@ -64,7 +64,7 @@ export function ImageNodeComponent({
   const write = useCardWriter(nodeKey, $isImageNode)
   const [showLink, setShowLink] = React.useState(false)
   const { fileUploader, cardConfig, onError } = React.useContext(InklingHostIntegrationContext)
-  const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
+  const isSelected = useCardSelectionState((state) => state.selectedCardKey === nodeKey)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
   const toolbarFileInputRef = React.useRef<HTMLInputElement | null>(null)
 

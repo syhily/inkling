@@ -3,7 +3,7 @@ import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { ButtonCard } from '@/components/ui/cards/ButtonCard'
-import { useCardSelection } from '@/hooks/useCardSelection'
+import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import { $isButtonNode } from '@/nodes/base'
 
@@ -23,7 +23,7 @@ export function ButtonNodeComponent({
   nodeKey,
 }: ButtonNodeComponentProps) {
   const write = useCardWriter(nodeKey, $isButtonNode)
-  const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+  const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
 
   const handleButtonTextChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     write((node) => {

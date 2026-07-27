@@ -5,7 +5,7 @@ import { createComposerHandle, type ComposerHandle } from './composer-handle'
 // selectedCardKey and isEditingCard — so Lexical handlers can read them
 // synchronously instead of closing over a stale React mirror. Fed by
 // registerCardSelection and the card command handlers; React subscribes
-// render-only via useCardSelection.
+// render-only via useCardSelectionState.
 // One instance per top-level composer (created in InklingComposer).
 
 export interface CardSelectionState {

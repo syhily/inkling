@@ -4,8 +4,8 @@ import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { FileCard } from '@/components/ui/cards/FileCard'
+import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { useCardSelection } from '@/hooks/useCardSelection'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
@@ -44,7 +44,7 @@ function FileNodeComponent({
   const labels = useInklingLabels()
   const [isPopulated, setIsPopulated] = React.useState<boolean>(false)
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
-  const isEditing = useCardSelection((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+  const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
 
   const uploader = fileUploader.useFileUpload('file')

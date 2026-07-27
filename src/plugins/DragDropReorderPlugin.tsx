@@ -7,9 +7,8 @@ import { createRoot } from 'react-dom/client'
 import type { ImageNodeDataset } from '@/nodes/ImageNode'
 import type { CardNode } from '@/types/lexical-internals'
 
-import { useDragDropHandle } from '@/context/DragDropHandleContext'
-import { useCardSelection } from '@/hooks/useCardSelection'
-import { useDragDropState } from '@/hooks/useDragDropState'
+import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
+import { useDragDropHandle, useDragDropHandleState } from '@/context/DragDropHandleContext'
 import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import {
   $insertDraggedImage,
@@ -33,8 +32,8 @@ function preventDefault(event: Event): void {
 
 function useDragDropReorder(editor: LexicalEditor): void {
   const dragDropHandle = useDragDropHandle()
-  const containerElement = useDragDropState((state) => state.containerElement)
-  const isEditingCard = useCardSelection((state) => state.isEditingCard)
+  const containerElement = useDragDropHandleState((state) => state.containerElement)
+  const isEditingCard = useCardSelectionState((state) => state.isEditingCard)
 
   const cardContainer = useDragDropContainer({
     element: editor.getRootElement(),

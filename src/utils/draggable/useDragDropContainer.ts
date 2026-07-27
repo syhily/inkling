@@ -3,7 +3,7 @@ import React from 'react'
 import type { ContainerDragHandlers } from '@/utils/draggable/DragDropContainer'
 import type { DraggableContainerHandle } from '@/utils/draggable/DragDropHandler'
 
-import { useDragDropState } from '@/hooks/useDragDropState'
+import { useDragDropHandleState } from '@/context/DragDropHandleContext'
 
 export interface UseDragDropContainerOptions extends ContainerDragHandlers {
   // the element registered as the drag-drop container. Registration waits for
@@ -36,7 +36,7 @@ export function useDragDropContainer({
   droppable,
   lifecycle,
 }: UseDragDropContainerOptions): DraggableContainerHandle {
-  const handler = useDragDropState((state) => state.handler)
+  const handler = useDragDropHandleState((state) => state.handler)
 
   const callbacksRef = React.useRef({ draggable, droppable, lifecycle })
   callbacksRef.current = { draggable, droppable, lifecycle }

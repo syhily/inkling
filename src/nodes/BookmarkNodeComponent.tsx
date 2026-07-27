@@ -13,9 +13,9 @@ import React, { useCallback } from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
+import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useBookmarkMetadata } from '@/hooks/useBookmarkMetadata'
-import { useCardSelection } from '@/hooks/useCardSelection'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import trackEvent from '@/utils/analytics'
 import { isInternalUrl } from '@/utils/isInternalUrl'
@@ -51,7 +51,7 @@ export function BookmarkNodeComponent({
   const labels = useInklingLabels()
 
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
-  const isSelected = useCardSelection((state) => state.selectedCardKey === nodeKey)
+  const isSelected = useCardSelectionState((state) => state.selectedCardKey === nodeKey)
   const [urlInputValue, setUrlInputValue] = React.useState<string>(url)
   const { loading, urlError, clearUrlError, submitUrl, fetchInitialMetadata } = useBookmarkMetadata({
     editor,

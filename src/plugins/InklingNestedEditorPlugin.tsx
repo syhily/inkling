@@ -11,7 +11,7 @@ import {
 import React from 'react'
 
 import CardContext from '@/context/CardContext'
-import { useCardSelection } from '@/hooks/useCardSelection'
+import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import {
   isTypeaheadMenuOpen,
   markEventFromNested,
@@ -37,7 +37,7 @@ function InklingNestedEditorPlugin({
 }) {
   const [editor] = useLexicalComposerContext()
   const { nodeKey: parentCardNodeKey } = React.useContext(CardContext)
-  const isParentCardEditing = useCardSelection(
+  const isParentCardEditing = useCardSelectionState(
     (state) => state.selectedCardKey === parentCardNodeKey && state.isEditingCard,
   )
 
