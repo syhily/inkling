@@ -86,7 +86,7 @@ export function useDragDropContainer({
         droppableSelector: current().droppable.droppableSelector,
         getIndicatorPosition: (draggableInfo, droppableElem, position) =>
           current().droppable.getIndicatorPosition(draggableInfo, droppableElem, position),
-        onDrop: (draggableInfo) => current().droppable.onDrop(draggableInfo),
+        onDrop: (draggableInfo, resolution) => current().droppable.onDrop(draggableInfo, resolution),
         onDragEnterContainer: (draggableInfo) => current().droppable.onDragEnterContainer?.(draggableInfo),
         onDragEnterDroppable: (droppableElem, position) =>
           current().droppable.onDragEnterDroppable?.(droppableElem, position),

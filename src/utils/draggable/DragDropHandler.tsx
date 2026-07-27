@@ -35,6 +35,10 @@ export interface DragDropHandlerOptions {
   // forwarded to the ScrollHandler — e.g. to point its document scroll
   // container override at a custom selector
   scrollHandlerOptions?: ScrollHandlerOptions
+  // the handler publishes its own isDragging truth — consumers (the drag-drop
+  // handle) subscribe here instead of a container adapter hand-mirroring the
+  // flag through the lifecycle callbacks
+  onDraggingChange?: (isDragging: boolean) => void
 }
 
 export class DragDropHandler {
@@ -53,6 +57,7 @@ export class DragDropHandler {
   _dragPreviewContainerElement: HTMLElement | null = null
   _rafUpdateDragPreviewElementPosition: () => void
   _dragStartSession: DragStartSession | null = null
+  _onDraggingChange?: (isDragging: boolean) => void
 
   isDragging: boolean = false
 
@@ -64,8 +69,9 @@ export class DragDropHandler {
 
   // lifecycle ---------------------------------------------------------------
 
-  constructor({ editorContainerElement, scrollHandlerOptions }: DragDropHandlerOptions = {}) {
+  constructor({ editorContainerElement, scrollHandlerOptions, onDraggingChange }: DragDropHandlerOptions = {}) {
     this.editorContainerElement = editorContainerElement ?? null
+    this._onDraggingChange = onDraggingChange
     this.containers = []
     this.scrollHandler = new ScrollHandler(scrollHandlerOptions)
     this.dropIndicator = new DropIndicator({ editorContainerElement: this.editorContainerElement })
@@ -194,7 +200,9 @@ export class DragDropHandler {
       const dropTarget = drag.overContainer
 
       if (dropTarget) {
-        const result = dropTarget.onDrop(drag.draggableInfo)
+        // the drop consumes the resolution the indicator showed; null means
+        // no droppable resolution applied (container-level drop)
+        const result = dropTarget.onDrop(drag.draggableInfo, drag.dropResolution)
         if (typeof result === 'boolean') {
           success = result
         } else {
@@ -258,7 +266,7 @@ export class DragDropHandler {
 
   // called once drag start conditions have been met, `startEvent` is the initial mousedown event
   _initiateDrag(startEvent: MouseEvent) {
-    this.isDragging = true
+    this._setIsDragging(true)
     applyUserSelect(document.body, 'none')
 
     if (!this.sourceContainer) {
@@ -406,7 +414,8 @@ export class DragDropHandler {
       drag.overContainer.onDragLeaveContainer(draggableInfo)
       drag.overContainer = null
       drag.overContainerElem = null
-      this.dropIndicator.hide({ draggableInfo })
+      drag.dropResolution = null
+      this.dropIndicator.hide()
     }
 
     if (isOverContainer) {
@@ -442,16 +451,31 @@ export class DragDropHandler {
           drag.overContainer.onDragOverDroppable(overDroppableElem, position)
         }
 
-        // container.getIndicatorPosition returns false if the drop is not allowed
-        const indicatorPosition = drag.overContainer?.getIndicatorPosition(draggableInfo, overDroppableElem, position)
-        if (indicatorPosition) {
-          draggableInfo.insertIndex = indicatorPosition.insertIndex
+        // container.getIndicatorPosition returns false if the drop is not
+        // allowed; its answer is the drop's resolution — kept on the drag
+        // state and handed to onDrop at mouse-up, so what the indicator
+        // showed is exactly what the drop consumes
+        const resolution = drag.overContainer?.getIndicatorPosition(draggableInfo, overDroppableElem, position)
+        if (resolution) {
+          drag.dropResolution = resolution
           this.dropIndicator.show(overDroppableElem, position)
         } else {
-          this.dropIndicator.hide({ draggableInfo })
+          drag.dropResolution = null
+          this.dropIndicator.hide()
         }
       }
     }
+  }
+
+  // single writer for the handler's isDragging truth: the field and the
+  // published port flip together, so subscribers can never observe a state
+  // the handler itself doesn't hold
+  _setIsDragging(value: boolean) {
+    if (this.isDragging === value) {
+      return
+    }
+    this.isDragging = value
+    this._onDraggingChange?.(value)
   }
 
   _updateDragPreviewElementPosition() {
@@ -472,7 +496,7 @@ export class DragDropHandler {
     // cancel a grab still waiting for its start threshold (e.g. destroyed mid-grab)
     this._dragStartSession?.cancel()
     this._dragStartSession = null
-    this.dropIndicator.hide({ draggableInfo: this._activeDrag?.draggableInfo ?? null })
+    this.dropIndicator.hide()
 
     this.scrollHandler.dragStop()
 
@@ -480,7 +504,7 @@ export class DragDropHandler {
       this.grabbedElement.style.opacity = ''
     }
 
-    this.isDragging = false
+    this._setIsDragging(false)
     this.grabbedElement = null
     this.sourceContainer = null
 

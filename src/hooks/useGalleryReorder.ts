@@ -1,7 +1,7 @@
 import React from 'react'
 
 import type { GalleryImage } from '@/types/gallery'
-import type { DraggableInfo, DroppablePosition, IndicatorPosition } from '@/utils/draggable/DragDropContainer'
+import type { DraggableInfo, DroppablePosition, DropResolution } from '@/utils/draggable/DragDropContainer'
 
 import useDropTarget from '@/hooks/useDropTarget'
 import { pick } from '@/utils'
@@ -35,7 +35,7 @@ export default function useGalleryReorder({
   maxImages = 9,
   disabled = false,
 }: UseGalleryReorderOptions): UseGalleryReorderResult {
-  const onDrop = (draggableInfo: DraggableInfo) => {
+  const onDrop = (draggableInfo: DraggableInfo, dropResolution: DropResolution | null) => {
     // do not allow dropping of non-images
     if (draggableInfo.type !== 'image' && draggableInfo.cardName !== 'image') {
       return false
@@ -43,9 +43,10 @@ export default function useGalleryReorder({
 
     const updatedImages: GalleryImage[] = [...images]
     // insertIndex was derived by getIndicatorPosition (resolveReorder) and
-    // ferried here by the handler; an empty gallery has no droppables to
-    // derive one from, so the first image lands at slot 0
-    let insertIndex: number = draggableInfo.insertIndex ?? 0
+    // arrives as the resolution argument; an empty gallery has no droppables
+    // to derive one from (the drop is container-level, resolution null), so
+    // the first image deliberately lands at slot 0
+    let insertIndex: number = dropResolution?.insertIndex ?? 0
     if (!updatedImages.length) {
       insertIndex = 0
     }
@@ -143,7 +144,7 @@ export default function useGalleryReorder({
     draggableInfo: DraggableInfo,
     droppableElem: HTMLElement,
     position: DroppablePosition,
-  ): IndicatorPosition | false => {
+  ): DropResolution | false => {
     // do not allow dropping of non-images
     if (draggableInfo.type !== 'image' && draggableInfo.cardName !== 'image') {
       return false
@@ -153,8 +154,8 @@ export default function useGalleryReorder({
       return false
     }
 
-    // the single insertIndex derivation of this drag — the handler ferries it
-    // to onDrop on draggableInfo.insertIndex
+    // the single insertIndex derivation of this drag — the handler hands it
+    // back to onDrop above as the resolution argument
     const resolution = resolveReorder(
       createReorderGeometry(containerElement, '[data-image]'),
       draggableInfo.element,

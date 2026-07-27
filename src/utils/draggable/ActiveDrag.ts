@@ -1,4 +1,10 @@
-import type { DragDropContainer, DraggableInfo, DragPreview, DroppablePosition } from './DragDropContainer'
+import type {
+  DragDropContainer,
+  DraggableInfo,
+  DragPreview,
+  DroppablePosition,
+  DropResolution,
+} from './DragDropContainer'
 
 // the per-drag event handlers ActiveDrag listens to for the drag's lifetime
 export interface ActiveDragListeners {
@@ -30,6 +36,11 @@ export class ActiveDrag {
   overDroppableElem: HTMLElement | null = null
   overDroppablePosition: DroppablePosition | null = null
   dragPreviewInfo: (DragPreview & { positionX: number; positionY: number }) | null = null
+  // the getIndicatorPosition answer current for the hovered droppable —
+  // written and cleared only by DragDropHandler._handleDrag, passed to the
+  // drop target's onDrop at mouse-up. Null between drags by construction:
+  // it dies with the ActiveDrag it rides on
+  dropResolution: DropResolution | null = null
 
   private listenerEntries: ListenerEntry[] = []
 

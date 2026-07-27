@@ -103,7 +103,6 @@ describe('useGalleryReorder', () => {
       element: null,
       target: null,
       mousePosition: { x: 0, y: 0 },
-      insertIndex: 0,
       dataset: {
         src: 'https://example.com/image.jpg',
         width: 100,
@@ -111,7 +110,9 @@ describe('useGalleryReorder', () => {
       },
     }
 
-    const result = options.droppable.onDrop(draggableInfo)
+    // empty gallery: the drop is container-level, so the resolution is null
+    // and the first image lands at slot 0
+    const result = options.droppable.onDrop(draggableInfo, null)
 
     // the gallery consumed the drop itself, so it reports the source as
     // handled — its own onDropEnd must not remove the image again
@@ -139,11 +140,10 @@ describe('useGalleryReorder', () => {
       element,
       target: null,
       mousePosition: { x: 0, y: 0 },
-      insertIndex: 0,
       dataset: { src },
     }
 
-    const result = options.droppable.onDrop(draggableInfo)
+    const result = options.droppable.onDrop(draggableInfo, null)
 
     expect(result).toEqual({ success: true, sourceHandled: true })
     expect(updateImages).toHaveBeenCalledWith([expect.objectContaining({ src })])
@@ -164,11 +164,10 @@ describe('useGalleryReorder', () => {
       element: draggableElement as HTMLElement,
       target: null,
       mousePosition: { x: 0, y: 0 },
-      insertIndex: 3,
       dataset: { src: 'https://example.com/one.jpg' },
     }
 
-    const result = options.droppable.onDrop(draggableInfo)
+    const result = options.droppable.onDrop(draggableInfo, { insertIndex: 3 })
 
     expect(result).toEqual({ success: true, sourceHandled: true })
     expect(updateImages).toHaveBeenCalledWith([
@@ -188,11 +187,10 @@ describe('useGalleryReorder', () => {
       element: draggableElement,
       target: null,
       mousePosition: { x: 0, y: 0 },
-      insertIndex: 2,
       dataset: { src: 'https://example.com/removed-remotely.jpg' },
     }
 
-    const success = options.droppable.onDrop(draggableInfo)
+    const success = options.droppable.onDrop(draggableInfo, { insertIndex: 2 })
 
     expect(success).toBe(false)
     expect(updateImages).not.toHaveBeenCalled()
@@ -209,13 +207,12 @@ describe('useGalleryReorder', () => {
       element: draggableElement as HTMLElement,
       target: null,
       mousePosition: { x: 0, y: 0 },
-      insertIndex: 2,
       dataset: { src: 'https://example.com/one.jpg' },
     }
 
     // the handler routes the drop result back to the target container's own
     // onDropEnd — sourceHandled tells it not to remove the reordered image
-    const result = options.droppable.onDrop(draggableInfo)
+    const result = options.droppable.onDrop(draggableInfo, { insertIndex: 2 })
     expect(result).toEqual({ success: true, sourceHandled: true })
     expect(updateImages).toHaveBeenCalledWith([
       { src: 'https://example.com/two.jpg' },
@@ -256,7 +253,7 @@ describe('useGalleryReorder', () => {
       dataset: {},
     }
 
-    const success = options.droppable.onDrop(draggableInfo)
+    const success = options.droppable.onDrop(draggableInfo, null)
 
     expect(success).toBe(false)
     expect(updateImages).not.toHaveBeenCalled()

@@ -20,8 +20,8 @@ import {
 import {
   type DraggableInfo,
   type DroppablePosition,
+  type DropResolution,
   type DropResult,
-  type IndicatorPosition,
 } from '@/utils/draggable/DragDropContainer'
 import { DragDropHandler } from '@/utils/draggable/DragDropHandler'
 import { createReorderGeometry, resolveDrop, resolveReorder } from '@/utils/draggable/reorder-rules'
@@ -124,7 +124,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
         draggableInfo: DraggableInfo,
         droppableElem: HTMLElement,
         position: DroppablePosition,
-      ): IndicatorPosition | false => {
+      ): DropResolution | false => {
         // only allow card and image drops (images can be dragged out of a gallery)
         if (draggableInfo.type !== 'card' && draggableInfo.type !== 'image') {
           return false
@@ -135,8 +135,8 @@ function useDragDropReorder(editor: LexicalEditor): void {
           return false
         }
 
-        // the single insertIndex derivation of this drag — the handler ferries
-        // it to onDrop on draggableInfo.insertIndex
+        // the single insertIndex derivation of this drag — the handler hands
+        // it back to onDrop below as the resolution argument
         const resolution = resolveReorder(
           createReorderGeometry(rootElement, ':scope > *'),
           draggableInfo.element,
@@ -147,20 +147,22 @@ function useDragDropReorder(editor: LexicalEditor): void {
 
         return resolution ? { insertIndex: resolution.insertIndex } : false
       },
-      onDrop: (draggableInfo: DraggableInfo): DropResult => {
+      onDrop: (draggableInfo: DraggableInfo, dropResolution: DropResolution | null): DropResult => {
         if (draggableInfo.type !== 'card' && draggableInfo.type !== 'image') {
           return false
         }
 
         const rootElement = editor.getRootElement()
-        if (!rootElement || !draggableInfo.element) {
+        // no resolution, no drop: the card container only accepts drops the
+        // indicator resolved a slot for
+        if (!rootElement || !draggableInfo.element || !dropResolution) {
           return false
         }
 
         // insertIndex was derived by getIndicatorPosition (resolveReorder) and
-        // ferried here by the handler — re-verify it against a fresh scan,
-        // never re-derive it
-        const insertIndex = draggableInfo.insertIndex ?? 0
+        // arrives as the resolution argument — re-verify it against a fresh
+        // scan, never re-derive it
+        const insertIndex = dropResolution.insertIndex
         const resolution = resolveDrop(
           createReorderGeometry(rootElement, ':scope > *'),
           draggableInfo.element,
@@ -197,10 +199,6 @@ function useDragDropReorder(editor: LexicalEditor): void {
     lifecycle: {
       onDragStart: () => {
         cardContainer.refresh()
-        dragDropHandle.setState({ isDragging: true })
-      },
-      onDragEnd: () => {
-        dragDropHandle.setState({ isDragging: false })
       },
       // a card can be dropped into another card which means we need to remove the original
       onDropEnd: (draggableInfo: DraggableInfo, success: boolean, sourceHandled: boolean): void => {
@@ -222,6 +220,11 @@ function useDragDropReorder(editor: LexicalEditor): void {
     }
     const dndHandler = new DragDropHandler({
       editorContainerElement: containerElement,
+      // the handler publishes its own isDragging truth straight onto the
+      // handle — no lifecycle-callback mirroring in this adapter
+      onDraggingChange: (isDragging) => {
+        dragDropHandle.setState({ isDragging })
+      },
     })
     // publish the handler so the card drag hooks register against it — they
     // subscribe to the handle, so a hook whose registration effect ran before

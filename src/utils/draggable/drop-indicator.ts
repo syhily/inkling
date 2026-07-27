@@ -1,4 +1,4 @@
-import type { DraggableInfo, DroppablePosition } from '@/utils/draggable/DragDropContainer'
+import type { DroppablePosition } from '@/utils/draggable/DragDropContainer'
 
 import { DROP_INDICATOR_DATA_ATTR, DROP_INDICATOR_ZINDEX } from '@/utils/draggable/draggable-constants'
 
@@ -92,8 +92,8 @@ export class DropIndicator {
       return
     }
 
-    // reset everything except insertIndex before re-displaying the indicator
-    this.hide({ clearInsertIndex: false })
+    // reset the display before re-showing
+    this.hide()
 
     const parent = element.parentElement
     if (!parent) {
@@ -135,20 +135,13 @@ export class DropIndicator {
     }
   }
 
-  hide({
-    clearInsertIndex = true,
-    draggableInfo = null,
-  }: { clearInsertIndex?: boolean; draggableInfo?: DraggableInfo | null } = {}) {
+  // purely visual: the drop resolution this indicator's show() reflected is
+  // owned and cleared by the handler's drag state, never by this module
+  hide() {
     // make sure the indicator isn't shown due to a pending re-position
     if (this._repositionTimeout) {
       clearTimeout(this._repositionTimeout)
       this._repositionTimeout = null
-    }
-
-    // clear the droppable insert index unless instructed not to (eg, when
-    // resetting the display before re-positioning the indicator)
-    if (clearInsertIndex && draggableInfo) {
-      delete draggableInfo.insertIndex
     }
 
     if (this.element) {
@@ -157,7 +150,7 @@ export class DropIndicator {
   }
 
   destroy() {
-    this.hide({ clearInsertIndex: false })
+    this.hide()
     this.element?.remove()
     this.element = null
   }

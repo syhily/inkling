@@ -10,9 +10,9 @@ import type { DroppablePosition } from '@/utils/draggable/DragDropContainer'
 // their DOM/Lexical glue, the rules come from here.
 //
 // insertIndex is derived exactly once per drag — by resolveReorder on the
-// indicator path — and the DragDropHandler ferries it to the drop path on
-// draggableInfo.insertIndex; resolveDrop only re-verifies it against a fresh
-// scan, it never derives one.
+// indicator path — and the DragDropHandler hands it to the drop path as the
+// onDrop resolution argument; resolveDrop only re-verifies it against a
+// fresh scan, it never derives one.
 //
 // This module is deliberately NOT vendor-synced with inkling-card-gallery:
 // the drop-allowance rule used to live in draggable-utils.ts mirrored across

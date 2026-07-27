@@ -1,11 +1,6 @@
 import React from 'react'
 
-import type {
-  DraggableInfo,
-  DroppablePosition,
-  DropResult,
-  IndicatorPosition,
-} from '@/utils/draggable/DragDropContainer'
+import type { DraggableInfo, DroppablePosition, DropResolution, DropResult } from '@/utils/draggable/DragDropContainer'
 import type { DraggableContainerHandle } from '@/utils/draggable/DragDropHandler'
 
 import { useDragDropContainer } from '@/utils/draggable/useDragDropContainer'
@@ -33,8 +28,8 @@ export interface UseDropTargetOptions {
     draggableInfo: DraggableInfo,
     droppableElem: HTMLElement,
     position: DroppablePosition,
-  ) => IndicatorPosition | false
-  onDrop?: (draggableInfo: DraggableInfo) => DropResult | false | undefined
+  ) => DropResolution | false
+  onDrop?: (draggableInfo: DraggableInfo, resolution: DropResolution | null) => DropResult | false | undefined
   onDropEnd?: (draggableInfo: DraggableInfo, success: boolean, sourceHandled: boolean) => void
   /** Hover policy: whether an entering drag lights the target up. */
   canDrop: (draggableInfo: DraggableInfo) => boolean
@@ -86,7 +81,7 @@ export default function useDropTarget({
       droppableSelector,
       getIndicatorPosition: (draggableInfo, droppableElem, position) =>
         getIndicatorPosition?.(draggableInfo, droppableElem, position) ?? false,
-      onDrop: (draggableInfo) => onDrop?.(draggableInfo) ?? false,
+      onDrop: (draggableInfo, resolution) => onDrop?.(draggableInfo, resolution) ?? false,
       onDragEnterContainer: (draggableInfo) => {
         setIsDraggedOver(canDrop(draggableInfo))
       },

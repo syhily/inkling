@@ -8,10 +8,11 @@ import { createComposerHandle, type ComposerHandle } from './composer-handle'
 // drag hooks and card chrome read them synchronously instead of relying on a
 // context value mutated by DragDropReorderPlugin and on mount order. Fed at
 // mount by InklingComposableEditor (containerElement) and
-// DragDropReorderPlugin (handler; isDragging on drag start/end); React
-// subscribes render-only via useDragDropState. One instance per top-level
-// composer (created in InklingComposer) — nested composers share the
-// top-level handle, exactly as the shared context value worked before.
+// DragDropReorderPlugin (handler); the isDragging truth is published by the
+// handler itself through its onDraggingChange port. React subscribes
+// render-only via useDragDropState. One instance per top-level composer
+// (created in InklingComposer) — nested composers share the top-level
+// handle, exactly as the shared context value worked before.
 
 export interface DragDropHandleState {
   containerElement: HTMLElement | null

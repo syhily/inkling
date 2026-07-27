@@ -29,12 +29,19 @@ export interface DragPreview {
 
 export interface ContainerDroppableConfig {
   droppableSelector: string
+  // answers the hover question "where would this drop land, and may it?" —
+  // the resolution drives the drop indicator AND travels to this container's
+  // own onDrop as an argument, so the drop consumes exactly what the
+  // indicator showed (false = not allowed)
   getIndicatorPosition: (
     draggableInfo: DraggableInfo,
     droppableElem: HTMLElement,
     position: DroppablePosition,
-  ) => IndicatorPosition | false
-  onDrop: (draggableInfo: DraggableInfo) => DropResult
+  ) => DropResolution | false
+  // resolution is the getIndicatorPosition answer current at mouse-up; null
+  // means no droppable resolution applied (e.g. a container-level drop with
+  // no droppable hovered) — each adapter decides that case deliberately
+  onDrop: (draggableInfo: DraggableInfo, resolution: DropResolution | null) => DropResult
   onDragEnterContainer?: (draggableInfo: DraggableInfo) => void
   onDragEnterDroppable?: (droppable: HTMLElement, position: DroppablePosition) => void
   onDragOverDroppable?: (droppable: HTMLElement, position: DroppablePosition) => void
@@ -73,7 +80,6 @@ export interface DraggableInfo {
   element: HTMLElement | null
   target: HTMLElement | null
   mousePosition: { x: number; y: number }
-  insertIndex?: number
   // card datasets carry more than scalars — a dragged gallery's dataset
   // contains GalleryImage[] plus the live caption LexicalEditor/EditorState
   // (generate-decorator-node.getDataset copies all internal props verbatim)
@@ -82,7 +88,10 @@ export interface DraggableInfo {
 
 export type DroppablePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 
-export interface IndicatorPosition {
+// the answer to "where would this drop land" — derived exactly once per hover
+// target by getIndicatorPosition (reorder-rules), ferried by the handler as
+// the onDrop argument, never re-derived and never read back off shared state
+export interface DropResolution {
   insertIndex: number
 }
 

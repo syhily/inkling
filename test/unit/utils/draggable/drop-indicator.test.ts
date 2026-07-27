@@ -1,7 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
-
 import { DROP_INDICATOR_SELECTOR } from '@/utils/draggable/draggable-constants'
 import { DropIndicator, type DropIndicatorGeometry } from '@/utils/draggable/drop-indicator'
 
@@ -29,16 +27,6 @@ function createIndicator() {
 
   const droppable = document.createElement('div')
   return { indicator, element, droppable, editorContainer, geometry }
-}
-
-function createDraggableInfo(insertIndex: number): DraggableInfo {
-  return {
-    element: null,
-    target: null,
-    mousePosition: { x: 0, y: 0 },
-    insertIndex,
-    dataset: {},
-  }
 }
 
 describe('DropIndicator', () => {
@@ -166,17 +154,6 @@ describe('DropIndicator', () => {
     // the cancelled re-position never lands
     vi.advanceTimersByTime(1000)
     expect(element.style.left).toBe('')
-  })
-
-  it('hide clears the insert index unless instructed not to', () => {
-    const { indicator } = createIndicator()
-    const draggableInfo = createDraggableInfo(3)
-
-    indicator.hide({ draggableInfo, clearInsertIndex: false })
-    expect(draggableInfo.insertIndex).toBe(3)
-
-    indicator.hide({ draggableInfo })
-    expect(draggableInfo.insertIndex).toBeUndefined()
   })
 
   it('destroy removes the element and cancels a pending re-position', () => {

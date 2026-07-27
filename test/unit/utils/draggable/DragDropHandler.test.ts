@@ -206,13 +206,56 @@ describe('DragDropHandler', () => {
     document.elementFromPoint = vi.fn(() => droppable)
 
     handler.simulateDrag(draggable)
-    expect(handler.draggableInfo?.insertIndex).toBe(1)
     document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+
+    // the drop consumes exactly the resolution the indicator derived
+    expect(handlers.droppable.onDrop).toHaveBeenCalledWith(expect.objectContaining({ type: 'image' }), {
+      insertIndex: 1,
+    })
 
     handler.simulateDrag(draggable)
 
     expect(handlers.droppable.getIndicatorPosition).toHaveBeenCalledTimes(2)
-    expect(handler.draggableInfo?.insertIndex).toBe(2)
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+    expect(handlers.droppable.onDrop).toHaveBeenLastCalledWith(expect.anything(), { insertIndex: 2 })
+  })
+
+  it('passes a null resolution to onDrop when no drop position was resolved', () => {
+    const editorContainer = document.createElement('div')
+    document.body.appendChild(editorContainer)
+    handler.destroy()
+    handler = new DragDropHandler({ editorContainerElement: editorContainer })
+
+    const containerElement = createContainer('null-resolution')
+    const handlers = createHandlers()
+    // getIndicatorPosition returns false (the mock default): the drop is
+    // container-level, so onDrop receives a null resolution
+    handler.registerContainer(containerElement, handlers)
+    const draggable = containerElement.querySelector('.draggable') as HTMLElement
+    const droppable = containerElement.querySelector('.droppable') as HTMLElement
+    document.elementFromPoint = vi.fn(() => droppable)
+
+    const img = document.createElement('img')
+    img.width = 100
+    img.height = 100
+    draggable.appendChild(img)
+
+    handler.simulateDrag(draggable)
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+
+    expect(handlers.droppable.onDrop).toHaveBeenCalledWith(expect.anything(), null)
+  })
+
+  it('publishes its own isDragging truth through the onDraggingChange port', () => {
+    const published: boolean[] = []
+    handler.destroy()
+    handler = new DragDropHandler({ onDraggingChange: (isDragging) => published.push(isDragging) })
+
+    initiateDrag('dragging-change')
+    expect(published).toEqual([true])
+
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+    expect(published).toEqual([true, false])
   })
 
   it('cancels drag on escape key', () => {
