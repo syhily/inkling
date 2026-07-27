@@ -44,7 +44,6 @@ export interface ImageCardProps {
   captionEditorInitialState?: EditorState
   altText?: string
   setAltText: (value: string) => void
-  setFigureRef?: (ref: React.RefObject<HTMLElement | null>) => void
   fileInputRef?: FileInputRef
   cardWidth?: string
   previewSrc?: string | null
@@ -169,7 +168,6 @@ export function ImageCard({
   captionEditorInitialState,
   altText,
   setAltText,
-  setFigureRef,
   fileInputRef,
   cardWidth,
   previewSrc,
@@ -180,17 +178,10 @@ export function ImageCard({
   openImageEditor,
 }: ImageCardProps) {
   const labels = useInklingLabels()
-  const figureRef = React.useRef<HTMLElement | null>(null)
-
-  React.useEffect(() => {
-    if (setFigureRef) {
-      setFigureRef(figureRef)
-    }
-  }, [figureRef, setFigureRef])
 
   return (
     <>
-      <figure ref={figureRef} data-inkling-card-width={cardWidth}>
+      <figure data-inkling-card-width={cardWidth}>
         {previewSrc || src ? (
           <PopulatedImageCard
             alt={altText}

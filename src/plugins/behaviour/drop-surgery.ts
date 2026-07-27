@@ -7,17 +7,22 @@ import {
   type NodeKey,
 } from 'lexical'
 
+import type { GalleryNode } from '@/nodes/GalleryNode'
 import type { ImageNode, ImageNodeDataset } from '@/nodes/ImageNode'
+import type { GalleryImage } from '@/types/gallery'
 
+import { $isImageNode } from '@/nodes/base/nodes/image/ImageNode'
+import { getImageFilenameFromSrc } from '@/utils/getImageFilenameFromSrc'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
 // Drop surgery — the headless $-surgeries behind DragDropReorderPlugin. The
 // reorder rules (@/utils/draggable/reorder-rules) own the drop decisions
 // (allowance, insertIndex derivation, drop-time verification); this module
 // owns applying a resolved drop to the editor tree: relocating a dragged
-// card, inserting a gallery-dragged image, and the source-removal policy for
-// cross-card drops. The plugin keeps the DOM/selector glue, the handler
-// lifecycle, and the DropResult mapping — rules decide, surgeries apply.
+// card, merging an image dropped onto an image into a gallery, inserting a
+// gallery-dragged image, and the source-removal policy for cross-card drops.
+// The plugin keeps the DOM/selector glue, the handler lifecycle, and the
+// DropResult mapping — rules decide, surgeries apply.
 //
 // The $-functions must run inside editor.update()/editor.read().
 
@@ -87,6 +92,66 @@ export function $insertDraggedImage(
   nodeSelection.add(imageNode.getKey())
   $setSelection(nodeSelection)
   return imageNode
+}
+
+// image card datasets allow null dimensions and carry card-only keys, while
+// GalleryImage keeps every field optional — map the fields addImages persists
+// (ALLOWED_IMAGE_PROPS) explicitly instead of casting the whole dataset
+function toGalleryImage(imageDataset: Record<string, unknown>): GalleryImage {
+  return {
+    src: typeof imageDataset.src === 'string' ? imageDataset.src : undefined,
+    fileName: typeof imageDataset.fileName === 'string' ? imageDataset.fileName : undefined,
+    width: typeof imageDataset.width === 'number' ? imageDataset.width : undefined,
+    height: typeof imageDataset.height === 'number' ? imageDataset.height : undefined,
+    alt: typeof imageDataset.alt === 'string' ? imageDataset.alt : undefined,
+    caption: typeof imageDataset.caption === 'string' ? imageDataset.caption : undefined,
+  }
+}
+
+/**
+ * Merges an image card dropped onto another image card into a two-image
+ * gallery: the gallery takes the target's slot (target image first, dragged
+ * image second) and the dragged card's source node is removed. Image datasets
+ * carry no fileName, so it is derived from the src when absent — the dragged
+ * payload's dataset is patched in place, matching the drag producer's live
+ * object. Returns false — leaving the tree untouched — when either key no
+ * longer resolves to an image card, or when the editor doesn't register the
+ * gallery card (the class comes from the registered-node map, not the shim,
+ * so this module stays off the decorate tree).
+ */
+export function $mergeImagesIntoGallery(
+  targetImageKey: NodeKey,
+  draggedImageKey: NodeKey,
+  draggedDataset: Record<string, unknown>,
+): boolean {
+  const targetImageNode = $getNodeByKey(targetImageKey)
+  const droppedImageNode = $getNodeByKey(draggedImageKey)
+
+  if (!$isImageNode(targetImageNode) || !$isImageNode(droppedImageNode)) {
+    return false
+  }
+
+  const GalleryNodeClass = getRegisteredNodeMap($getEditor()).get('gallery')?.klass
+  if (!GalleryNodeClass) {
+    return false
+  }
+
+  const galleryNode = new GalleryNodeClass({}) as GalleryNode
+
+  // images don't contain the filename dataset property so we need to add it
+  const draggedFileName = typeof draggedDataset.fileName === 'string' ? draggedDataset.fileName : undefined
+  draggedDataset.fileName = draggedFileName || getImageFilenameFromSrc(String(draggedDataset.src))
+  const targetImageDataset = targetImageNode.getDataset()
+  const targetFileName = typeof targetImageDataset.fileName === 'string' ? targetImageDataset.fileName : undefined
+  targetImageDataset.fileName = targetFileName || getImageFilenameFromSrc(String(targetImageDataset.src))
+
+  // image datasets allow null dimensions while GalleryImage keeps them
+  // optional; the conversion only carries keys allowed by addImages
+  galleryNode.addImages([toGalleryImage(targetImageDataset), toGalleryImage(draggedDataset)])
+
+  targetImageNode.replace(galleryNode)
+  droppedImageNode.remove()
+  return true
 }
 
 /**

@@ -1,6 +1,7 @@
 import {
   $createParagraphNode,
   $createTextNode,
+  $getNodeByKey,
   $getRoot,
   $getSelection,
   $isNodeSelection,
@@ -10,9 +11,11 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { $isGalleryNode, GalleryNode } from '@/nodes/GalleryNode'
 import { $createImageNode, $isImageNode, ImageNode } from '@/nodes/ImageNode'
 import {
   $insertDraggedImage,
+  $mergeImagesIntoGallery,
   $relocateCard,
   $removeDropSource,
   shouldRemoveDropSource,
@@ -275,6 +278,170 @@ describe('$removeDropSource', () => {
     expect(removedWithoutKey).toBe(false)
     expect(readTopLevelKeys(editor)).toEqual(before)
     expect(readTopLevelKeys(editor)).toContain(keys.imageAKey)
+  })
+})
+
+describe('$mergeImagesIntoGallery', () => {
+  // the merge builds the gallery through the registered-node map, so the
+  // gallery card must be registered alongside the image card
+  const MERGE_NODES = [ImageNode, GalleryNode]
+
+  function createMergeEditor(): LexicalEditor {
+    return createEditor({ namespace: 'test', nodes: MERGE_NODES, onError: () => {} })
+  }
+
+  /** [imageA(target)] [imageB(dragged)] — absolute srcs so fileName derivation (new URL) works. */
+  async function buildImagePair(editor: LexicalEditor): Promise<{ targetKey: NodeKey; draggedKey: NodeKey }> {
+    const keys = {} as { targetKey: NodeKey; draggedKey: NodeKey }
+    await updateEditor(editor, () => {
+      const root = $getRoot()
+      root.clear()
+      const target = $createImageNode({
+        src: 'https://cdn.example.com/target.png',
+        width: 800,
+        height: 600,
+        alt: 'target alt',
+      })
+      const dragged = $createImageNode({ src: 'https://cdn.example.com/dragged.png' })
+      root.append(target, dragged)
+      keys.targetKey = target.getKey()
+      keys.draggedKey = dragged.getKey()
+    })
+    return keys
+  }
+
+  it('replaces the target with a gallery holding both images in order and removes the source', async () => {
+    const editor = createMergeEditor()
+    const keys = await buildImagePair(editor)
+    const draggedDataset: Record<string, unknown> = {
+      src: 'https://cdn.example.com/dragged.png',
+      fileName: 'dragged.png',
+      width: 640,
+      height: 480,
+      alt: 'dragged alt',
+      // drag payloads carry card-only keys; addImages persists ALLOWED_IMAGE_PROPS only
+      cardWidth: 'wide',
+    }
+
+    let merged = false
+    await updateEditor(editor, () => {
+      merged = $mergeImagesIntoGallery(keys.targetKey, keys.draggedKey, draggedDataset)
+    })
+
+    expect(merged).toBe(true)
+    editor.getEditorState().read(() => {
+      const children = $getRoot().getChildren()
+      expect(children).toHaveLength(1)
+      const gallery = children[0]
+      expect($isGalleryNode(gallery)).toBe(true)
+      if (!$isGalleryNode(gallery)) {
+        return
+      }
+      const images = gallery.getLatest().images
+      expect(images.map((image) => image.src)).toEqual([
+        'https://cdn.example.com/target.png',
+        'https://cdn.example.com/dragged.png',
+      ])
+      // the target image's dataset comes from the node, the dragged one's
+      // from the payload; both carry only gallery-allowed props
+      expect(images[0]).toMatchObject({
+        fileName: 'target.png',
+        width: 800,
+        height: 600,
+        alt: 'target alt',
+      })
+      expect(images[1]).toMatchObject({
+        fileName: 'dragged.png',
+        width: 640,
+        height: 480,
+        alt: 'dragged alt',
+      })
+      expect(images[1]).not.toHaveProperty('cardWidth')
+      // the dragged source node is gone
+      expect($getNodeByKey(keys.draggedKey)).toBeNull()
+    })
+  })
+
+  it('derives a missing fileName from the src and patches the dragged dataset in place', async () => {
+    const editor = createMergeEditor()
+    const keys = await buildImagePair(editor)
+    const draggedDataset: Record<string, unknown> = { src: 'https://cdn.example.com/payload-shot.jpg' }
+
+    await updateEditor(editor, () => {
+      $mergeImagesIntoGallery(keys.targetKey, keys.draggedKey, draggedDataset)
+    })
+
+    expect(draggedDataset.fileName).toBe('payload-shot.jpg')
+    editor.getEditorState().read(() => {
+      const gallery = $getRoot().getFirstChild()
+      if (!$isGalleryNode(gallery)) {
+        throw new Error('expected a gallery')
+      }
+      const images = gallery.getLatest().images
+      expect(images[0].fileName).toBe('target.png')
+      expect(images[1].fileName).toBe('payload-shot.jpg')
+      // null node dimensions stay absent on the gallery image
+      expect(images[1].width).toBeUndefined()
+      expect(images[1].height).toBeUndefined()
+    })
+  })
+
+  it('keeps an existing fileName instead of deriving it from the src', async () => {
+    const editor = createMergeEditor()
+    const keys = await buildImagePair(editor)
+    const draggedDataset: Record<string, unknown> = {
+      src: 'https://cdn.example.com/renamed.png',
+      fileName: 'original-name.png',
+    }
+
+    await updateEditor(editor, () => {
+      $mergeImagesIntoGallery(keys.targetKey, keys.draggedKey, draggedDataset)
+    })
+
+    expect(draggedDataset.fileName).toBe('original-name.png')
+    editor.getEditorState().read(() => {
+      const gallery = $getRoot().getFirstChild()
+      if (!$isGalleryNode(gallery)) {
+        throw new Error('expected a gallery')
+      }
+      expect(gallery.getLatest().images[1].fileName).toBe('original-name.png')
+    })
+  })
+
+  it('returns false and leaves the tree untouched when a key does not resolve to an image', async () => {
+    const editor = createMergeEditor()
+    const keys = await buildImagePair(editor)
+    const before = readTopLevelKeys(editor)
+
+    let mergedMissing = true
+    let mergedParagraph = true
+    await updateEditor(editor, () => {
+      mergedMissing = $mergeImagesIntoGallery(keys.targetKey, 'missing-key', { src: 'https://cdn.example.com/x.png' })
+      const paragraph = $createParagraphNode()
+      $getRoot().append(paragraph)
+      mergedParagraph = $mergeImagesIntoGallery(paragraph.getKey(), keys.draggedKey, {
+        src: 'https://cdn.example.com/x.png',
+      })
+      paragraph.remove()
+    })
+
+    expect(mergedMissing).toBe(false)
+    expect(mergedParagraph).toBe(false)
+    expect(readTopLevelKeys(editor)).toEqual(before)
+  })
+
+  it('returns false and leaves the tree untouched when the gallery card is not registered', async () => {
+    const editor = createTestEditor()
+    const keys = await buildImagePair(editor)
+    const before = readTopLevelKeys(editor)
+
+    let merged = true
+    await updateEditor(editor, () => {
+      merged = $mergeImagesIntoGallery(keys.targetKey, keys.draggedKey, { src: 'https://cdn.example.com/x.png' })
+    })
+
+    expect(merged).toBe(false)
+    expect(readTopLevelKeys(editor)).toEqual(before)
   })
 })
 

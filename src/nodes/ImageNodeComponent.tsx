@@ -9,7 +9,6 @@ import {
 } from 'lexical'
 import React from 'react'
 
-import type { GalleryImage } from '@/types/gallery'
 import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
@@ -26,11 +25,10 @@ import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
 import { isCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
-import { $createGalleryNode } from '@/nodes/GalleryNode'
 import { $isImageNode } from '@/nodes/ImageNode'
+import { $mergeImagesIntoGallery } from '@/plugins/behaviour/drop-surgery'
 import { dataSrcToFile } from '@/utils/dataSrcToFile'
 import { getImageDimensions } from '@/utils/getImageDimensions'
-import { getImageFilenameFromSrc } from '@/utils/getImageFilenameFromSrc'
 import { getAllowedImageCardWidths, getDefaultImageCardWidth } from '@/utils/image-card-widths'
 import { isGif } from '@/utils/isGif'
 import { imageUploadIntent } from '@/utils/upload-intent'
@@ -48,20 +46,6 @@ export interface ImageNodeComponentProps {
   // resolved from the node's cardWidth by the declaration's decorateTarget
   // width mapper, so undo/redo and collab changes arrive as a new prop
   cardWidth: CardWidth
-}
-
-// image card datasets allow null dimensions and carry card-only keys, while
-// GalleryImage keeps every field optional — map the fields addImages persists
-// (ALLOWED_IMAGE_PROPS) explicitly instead of casting the whole dataset
-function toGalleryImage(imageDataset: Record<string, unknown>): GalleryImage {
-  return {
-    src: typeof imageDataset.src === 'string' ? imageDataset.src : undefined,
-    fileName: typeof imageDataset.fileName === 'string' ? imageDataset.fileName : undefined,
-    width: typeof imageDataset.width === 'number' ? imageDataset.width : undefined,
-    height: typeof imageDataset.height === 'number' ? imageDataset.height : undefined,
-    alt: typeof imageDataset.alt === 'string' ? imageDataset.alt : undefined,
-    caption: typeof imageDataset.caption === 'string' ? imageDataset.caption : undefined,
-  }
 }
 
 export function ImageNodeComponent({
@@ -110,29 +94,7 @@ export function ImageNodeComponent({
 
       if (type === 'card' && cardName === 'image' && draggedNodeKey && dataset) {
         editor.update(() => {
-          const targetImageNode = $getNodeByKey(nodeKey)
-          const droppedImageNode = $getNodeByKey(draggedNodeKey)
-
-          if (!$isImageNode(targetImageNode) || !$isImageNode(droppedImageNode)) {
-            return
-          }
-
-          const galleryNode = $createGalleryNode({})
-
-          // images don't contain the filename dataset property so we need to add it
-          const draggedFileName = typeof dataset.fileName === 'string' ? dataset.fileName : undefined
-          dataset.fileName = draggedFileName || getImageFilenameFromSrc(String(dataset.src))
-          const targetImageDataset = targetImageNode.getDataset()
-          const targetFileName =
-            typeof targetImageDataset.fileName === 'string' ? targetImageDataset.fileName : undefined
-          targetImageDataset.fileName = targetFileName || getImageFilenameFromSrc(String(targetImageDataset.src))
-
-          // image datasets allow null dimensions while GalleryImage keeps them
-          // optional; the conversion only carries keys allowed by addImages
-          galleryNode.addImages([toGalleryImage(targetImageDataset), toGalleryImage(dataset)])
-
-          targetImageNode.replace(galleryNode)
-          droppedImageNode.remove()
+          $mergeImagesIntoGallery(nodeKey, draggedNodeKey, dataset)
         })
       }
 
@@ -296,10 +258,6 @@ export function ImageNodeComponent({
     await uploadImage(files)
   }
 
-  const setFigureRef = React.useCallback(() => {
-    // no-op: ImageNodeComponent does not need the figure ref
-  }, [])
-
   // the link-input toolbar is a raw ActionToolbar (not a CardActionToolbar),
   // so it resolves the declaration's toolbar label itself
   const toolbarLabel = useCardToolbarLabel(nodeKey)
@@ -320,7 +278,6 @@ export function ImageNodeComponent({
         openImageEditor={openImageEditor}
         previewSrc={previewSrc}
         setAltText={setAltText}
-        setFigureRef={setFigureRef}
         src={src}
         onFileChange={onFileChange}
       />
