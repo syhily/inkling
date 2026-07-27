@@ -4,15 +4,15 @@ import type { CardUploadType } from '@/nodes/cards/card-declaration'
 import type { CardMenuSource, MenuItem } from '@/utils/buildCardMenu'
 
 import { resolveAllCardFacts } from '@/nodes/cards/card-facts'
-import { getCardMenu } from '@/nodes/cards/card-menus'
+import { resolveCardMenuEntries } from '@/nodes/cards/card-menus'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
 /**
  * One registered card as declaration-backed data: the menu entries (resolved
- * through the same `getCardMenu` derived view the assembled class's static
- * `cardMenu` carries) and the upload-claiming key, keyed by node type.
- * Consumers take what they need — `buildCardMenu` skips menu-less entries
- * (CodeBlock), `DragDropPastePlugin` reads `uploadType`.
+ * through the one menu projection in `@/nodes/cards/card-menus`, shared by
+ * built-in declarations and host specs alike) and the upload-claiming key,
+ * keyed by node type. Consumers take what they need — `buildCardMenu` skips
+ * menu-less entries (CodeBlock), `DragDropPastePlugin` reads `uploadType`.
  */
 export interface EditorCardNode extends CardMenuSource {
   /** the declaration's menu entries resolved through `getCardMenu` — always
@@ -50,20 +50,20 @@ export function getRegisteredCardNodes(registeredNodeTypes: ReadonlySet<string>)
       return []
     }
 
-    if (facts.source === 'host') {
-      // host cards carry their resolved menu entries and upload key on the
-      // registry record — the same facts the declarations provide below
-      return [[facts.nodeType, { cardMenu: facts.host.cardMenu, uploadType: facts.host.uploadType }]]
-    }
-
-    const { declaration } = facts
     return [
       [
-        declaration.nodeType,
+        facts.nodeType,
         {
-          cardMenu: getCardMenu(declaration.nodeType),
-          // `in` narrows the union to the declarations carrying the optional upload entry
-          uploadType: 'uploadType' in declaration ? declaration.uploadType : undefined,
+          // both sources flow through the one menu projection
+          cardMenu: resolveCardMenuEntries(facts),
+          // `in` narrows the built-in union to the declarations carrying the
+          // optional upload entry
+          uploadType:
+            facts.source === 'builtin'
+              ? 'uploadType' in facts.declaration
+                ? facts.declaration.uploadType
+                : undefined
+              : facts.host.spec.uploadType,
         },
       ],
     ]

@@ -69,9 +69,13 @@ const hostWidget = defineCard({
 })
 
 describe('defineCard', () => {
-  it('registers the card in the host registry, in registration order', () => {
+  it('registers the card in the host registry, in registration order, with the raw spec stored verbatim', () => {
     expect(getHostCards().map((host) => host.nodeType)).toEqual(['musicPlayer', 'hostWidget'])
-    expect(getHostCard('musicPlayer')?.node).toBe(musicPlayer.node)
+    // the registry is a neutral fact store: the raw spec, complete at
+    // registration — the views derive every projection (including the
+    // assembled class, see the insert-registration test below)
+    expect(getHostCard('musicPlayer')?.spec.nodeType).toBe('musicPlayer')
+    expect(getHostCard('musicPlayer')?.spec.toolbarLabel).toBe('music-player')
   })
 
   it('throws when the nodeType collides with a built-in card', () => {
@@ -136,7 +140,9 @@ describe('defineCard', () => {
   })
 
   it('resolves the card menu from the host registry', () => {
-    expect(getCardMenu('musicPlayer')).toBe(getHostCard('musicPlayer')?.cardMenu)
+    expect(getCardMenu('musicPlayer')?.map((item) => item.label)).toEqual(
+      getHostCard('musicPlayer')?.spec.menu?.map((item) => item.label),
+    )
     expect(getCardMenu(hostWidget.nodeType)).toBeUndefined()
   })
 })

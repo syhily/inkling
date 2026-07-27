@@ -14,5 +14,5 @@ import { resolveCardFacts } from '@/nodes/cards/card-facts'
  */
 export function getCardToolbarLabel(nodeType: string): string | undefined {
   const facts = resolveCardFacts(nodeType)
-  return facts?.source === 'builtin' ? facts.declaration.toolbarLabel : facts?.host.toolbarLabel
+  return facts?.source === 'builtin' ? facts.declaration.toolbarLabel : facts?.host.spec.toolbarLabel
 }

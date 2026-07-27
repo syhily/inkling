@@ -2,6 +2,7 @@ import type { Klass, LexicalCommand, LexicalNode } from 'lexical'
 
 import type { CardInsertSpec } from '@/nodes/cards/card-declaration'
 
+import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { resolveAllCardFacts } from '@/nodes/cards/card-facts'
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
 
@@ -59,14 +60,17 @@ export function getCardInsertRegistrations(): CardInsertRegistration[] {
       const registration = CARD_INSERT_COMMANDS_BY_TYPE.get(facts.nodeType)
       return registration === undefined ? [] : [registration]
     }
-    const insert = facts.host.insert
+    const insert = facts.host.spec.insert
     if (insert === undefined) {
       return []
     }
     return [
       {
         nodeType: facts.nodeType,
-        node: facts.host.node,
+        // the registry stores the raw spec; the class comes from the same
+        // memoized assembler defineCard used, so the registration guards and
+        // constructs the exact class the host composed
+        node: assembleCardNodeOnce<LexicalNode>(facts.host.spec),
         command: insert.command,
         insert,
       },

@@ -41,8 +41,8 @@ describe('resolveCardFacts', () => {
       return
     }
     expect(facts.host.nodeType).toBe('factsProbe')
-    expect(facts.host.cardMenu?.[0]?.label).toBe('Probe')
-    expect(facts.host.toolbarLabel).toBe('facts-probe')
+    expect(facts.host.spec.menu?.[0]?.label).toBe('Probe')
+    expect(facts.host.spec.toolbarLabel).toBe('facts-probe')
   })
 
   it('returns undefined for an unknown node type', () => {
@@ -68,14 +68,12 @@ describe('the no-override invariant', () => {
     // to probe what the resolver guarantees even if that guard is bypassed
     registerHostCard({
       nodeType: 'video',
-      node: undefined as never,
-      cardMenu: undefined,
-      dragIcon: undefined,
-      decorateTarget: undefined,
-      render: () => null,
-      insert: undefined,
-      uploadType: undefined,
-      toolbarLabel: 'host-video',
+      spec: {
+        nodeType: 'video',
+        baseNode: generateDecoratorNode({ nodeType: 'video' }),
+        toolbarLabel: 'host-video',
+        render: () => null,
+      },
     })
 
     const facts = resolveCardFacts('video')

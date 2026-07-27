@@ -4,7 +4,7 @@ import type { ComponentType, ReactNode, SVGProps } from 'react'
 import type { DecorateTargetSpec } from '@/nodes/cards/card-declaration'
 
 import { CARD_DECLARATIONS, type CardNodeType } from '@/nodes/cards'
-import { resolveCardFacts } from '@/nodes/cards/card-facts'
+import { resolveCardFacts, type CardFacts } from '@/nodes/cards/card-facts'
 
 import { render as renderAudioCard } from './decorate/audio'
 import { render as renderBookmarkCard } from './decorate/bookmark'
@@ -87,9 +87,9 @@ const CARD_DECORATE_TARGETS_BY_TYPE = new Map(
  * The structural decorate-target type `getCardDecorateTarget` returns. The
  * built-in targets keep their precise per-card types in
  * `CARD_DECORATE_TARGETS` (the exhaustive `Record<CardNodeType, …>` guard
- * above is unchanged); the widened return type admits the host card registry
- * records (CONTEXT.md: "host card"), which carry the same facts resolved at
- * registration.
+ * above is unchanged); the widened return type admits the host card
+ * projections (CONTEXT.md: "host card"), which carry the same facts derived
+ * from the raw registry spec.
  */
 export interface CardDecorateTarget {
   nodeType: string
@@ -99,12 +99,30 @@ export interface CardDecorateTarget {
 }
 
 /**
+ * The one decorate-target projection every consumer shares: built-in
+ * declarations resolve to their paired `CARD_DECORATE_TARGETS` entry; a host
+ * spec carries the same facts in one place (its `render`, its
+ * `decorateTarget`, its indicator icon) and projects through the same
+ * `hasIndicatorIcon` gate — there is no host-side copy of the gating.
+ */
+export function resolveCardDecorateTarget(facts: CardFacts): CardDecorateTarget | undefined {
+  if (facts.source === 'builtin') {
+    return CARD_DECORATE_TARGETS_BY_TYPE.get(facts.nodeType)
+  }
+  const { spec } = facts.host
+  return {
+    nodeType: facts.nodeType,
+    decorateTarget: spec.decorateTarget,
+    render: spec.render,
+    IndicatorIcon: spec.decorateTarget?.hasIndicatorIcon ? spec.IndicatorIcon : undefined,
+  }
+}
+
+/**
  * Resolves a card's decorate target by node type. The built-in-first /
- * host-fallback merge lives in `@/nodes/cards/card-facts`; this view only
- * projects the built-in side to its paired `CARD_DECORATE_TARGETS` entry —
- * the host record already carries the same resolved shape.
+ * host-fallback merge lives in `@/nodes/cards/card-facts`.
  */
 export function getCardDecorateTarget(nodeType: string): CardDecorateTarget | undefined {
   const facts = resolveCardFacts(nodeType)
-  return facts?.source === 'builtin' ? CARD_DECORATE_TARGETS_BY_TYPE.get(nodeType) : facts?.host
+  return facts === undefined ? undefined : resolveCardDecorateTarget(facts)
 }

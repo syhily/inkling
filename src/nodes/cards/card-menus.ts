@@ -1,4 +1,6 @@
-import type { CardIconId } from '@/nodes/cards/card-declaration'
+import type { CardIconId, CardMenuEntrySpec } from '@/nodes/cards/card-declaration'
+import type { CardFacts } from '@/nodes/cards/card-facts'
+import type { HostCardMenuEntrySpec } from '@/nodes/cards/host-card-registry'
 import type { MenuItem } from '@/utils/buildCardMenu'
 
 import AudioCardIcon from '@/assets/icons/inkling-card-type-audio.svg?react'
@@ -16,7 +18,6 @@ import ImageCardIcon from '@/assets/icons/inkling-card-type-image.svg?react'
 import MathCardIcon from '@/assets/icons/inkling-card-type-math.svg?react'
 import ToggleIcon from '@/assets/icons/inkling-card-type-toggle.svg?react'
 import VideoCardIcon from '@/assets/icons/inkling-card-type-video.svg?react'
-import { CARD_DECLARATIONS } from '@/nodes/cards'
 import { resolveCardFacts } from '@/nodes/cards/card-facts'
 
 /**
@@ -54,63 +55,70 @@ export function resolveCardIcon(id: CardIconId): NonNullable<MenuItem['Icon']> {
 }
 
 /**
- * Wrapper-layer derived view over the card declarations: each declaration's
- * React-free `menu` spec resolved to `MenuItem[]` — the `icon` id becomes the
- * SVGR component and the entry's named `command` becomes its `insertCommand`.
- * CodeBlock declares no menu and drops out here.
+ * The one menu projection every view shares: a card's menu spec resolved to
+ * `MenuItem[]` — the icon (a built-in `CardIconId` or, for host cards, an
+ * SVG component directly) becomes the SVGR component and the entry's named
+ * `command` becomes its `insertCommand`. Built-in declarations and host
+ * specs flow through this same function; there is no host-side copy.
  */
-const CARD_MENUS: Partial<Record<string, MenuItem[]>> = Object.fromEntries(
-  CARD_DECLARATIONS.flatMap((declaration) => {
-    // `in` narrows the union to the declarations carrying the optional menu entry
-    const menu = 'menu' in declaration ? declaration.menu : undefined
-    if (!menu) {
-      return []
-    }
-    return [
-      [
-        declaration.nodeType,
-        menu.map(({ icon, command, ...item }) => ({
-          ...item,
-          Icon: resolveCardIcon(icon),
-          insertCommand: command,
-        })),
-      ],
-    ]
-  }),
-)
-
-/**
- * Resolves a card's slash/plus menu entries — what the hand-written
- * `CARD_MENUS` map keyed by node type used to hold, now derived from the
- * declarations. The built-in-first / host-fallback merge lives in
- * `@/nodes/cards/card-facts`; this view only projects each side to its menu
- * entries. Consumed by `getEditorCardNodes`.
- */
-export function getCardMenu(nodeType: string): MenuItem[] | undefined {
-  const facts = resolveCardFacts(nodeType)
-  return facts?.source === 'builtin' ? CARD_MENUS[nodeType] : facts?.host.cardMenu
+function projectMenuEntries(menu: readonly (CardMenuEntrySpec | HostCardMenuEntrySpec)[]): MenuItem[] {
+  return menu.map(({ icon, command, ...item }) => ({
+    ...item,
+    Icon: typeof icon === 'string' ? resolveCardIcon(icon) : icon,
+    insertCommand: command,
+  }))
 }
 
 /**
- * Resolves a card's drag-preview icon — what the thirteen `getIcon()` copies
- * returned. Menu-bearing cards use their first menu entry's icon (Image's
- * two-entry menu keeps the Image icon, not the GIF one); user-draggable
- * menu-less cards name theirs explicitly as the declaration's `dragIcon`
- * (CodeBlock). The menu-less footnote definition resolves no icon — it lives
- * in the doc-end run and the run-invariant transform re-parks it anyway.
- * Host cards resolve theirs at registration (`defineCard`).
+ * Resolves a card's slash/plus menu entries from its merged facts — what the
+ * hand-written `CARD_MENUS` map keyed by node type used to hold. CodeBlock
+ * declares no menu and resolves none. Consumed by `getCardMenu`,
+ * `getCardDragIcon`, and `getEditorCardNodes`.
+ */
+export function resolveCardMenuEntries(facts: CardFacts): MenuItem[] | undefined {
+  // `in` narrows the built-in union to the declarations carrying the
+  // optional menu entry
+  const menu =
+    facts.source === 'builtin'
+      ? 'menu' in facts.declaration
+        ? facts.declaration.menu
+        : undefined
+      : facts.host.spec.menu
+  return menu === undefined ? undefined : projectMenuEntries(menu)
+}
+
+/**
+ * Resolves a card's menu entries by node type. The built-in-first /
+ * host-fallback merge lives in `@/nodes/cards/card-facts`.
+ */
+export function getCardMenu(nodeType: string): MenuItem[] | undefined {
+  const facts = resolveCardFacts(nodeType)
+  return facts === undefined ? undefined : resolveCardMenuEntries(facts)
+}
+
+/**
+ * Resolves a card's drag-preview icon from its merged facts — what the
+ * thirteen `getIcon()` copies returned. Menu-bearing cards use their first
+ * menu entry's icon (Image's two-entry menu keeps the Image icon, not the
+ * GIF one); user-draggable menu-less cards name theirs explicitly as the
+ * spec's `dragIcon` (CodeBlock). The menu-less footnote definition resolves
+ * no icon — it lives in the doc-end run and the run-invariant transform
+ * re-parks it anyway.
+ */
+export function resolveCardDragIcon(facts: CardFacts): MenuItem['Icon'] {
+  const raw =
+    facts.source === 'builtin'
+      ? (('dragIcon' in facts.declaration ? facts.declaration.dragIcon : undefined) ??
+        ('menu' in facts.declaration ? facts.declaration.menu?.[0]?.icon : undefined))
+      : (facts.host.spec.dragIcon ?? facts.host.spec.menu?.[0]?.icon)
+  return raw === undefined ? undefined : typeof raw === 'string' ? resolveCardIcon(raw) : raw
+}
+
+/**
+ * Resolves a card's drag-preview icon by node type. The built-in-first /
+ * host-fallback merge lives in `@/nodes/cards/card-facts`.
  */
 export function getCardDragIcon(nodeType: string): MenuItem['Icon'] {
   const facts = resolveCardFacts(nodeType)
-  if (facts === undefined) {
-    return undefined
-  }
-  if (facts.source === 'host') {
-    return facts.host.dragIcon
-  }
-  const { declaration } = facts
-  const dragIcon = 'dragIcon' in declaration ? declaration.dragIcon : undefined
-  const menuIcon = 'menu' in declaration ? declaration.menu?.[0]?.icon : undefined
-  const icon = dragIcon ?? menuIcon
-  return icon ? CARD_ICONS[icon] : undefined
+  return facts === undefined ? undefined : resolveCardDragIcon(facts)
 }
