@@ -1,6 +1,7 @@
 import type { EditorState, LexicalEditor, NodeKey } from 'lexical'
 import type React from 'react'
 
+import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { ImageData } from '@/nodes/base/nodes/image/ImageNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
@@ -30,18 +31,24 @@ export type ImageNodeDataset = ImageData &
  * transient-prop specs are initialized.
  */
 export const ImageNode = assembleCardNodeOnce(imageDeclaration)
-export type ImageNode = InstanceType<typeof ImageNode> & {
-  __triggerFileDialog: boolean
-  __previewSrc: string | null
-  // non-null: the constructor's nested-editor setup always assigns an editor
-  // (only the video/gallery/callout/toggle editors are ever nulled, by the
-  // markdown card transformers)
-  __captionEditor: LexicalEditor
-  __captionEditorInitialState: EditorState | undefined
-  __initialFile: File | undefined
-  __selector: React.ComponentType<{ nodeKey: NodeKey }> | undefined
-  __isImageHidden: boolean | undefined
-}
+// the `__*` field names derive from the declaration's spec — renaming a spec
+// entry is a compile error here (CardSpecFieldMap)
+export type ImageNode = InstanceType<typeof ImageNode> &
+  CardSpecFieldMap<
+    typeof imageDeclaration,
+    {
+      __triggerFileDialog: boolean
+      __previewSrc: string | null
+      // non-null: the constructor's nested-editor setup always assigns an editor
+      // (only the video/gallery/callout/toggle editors are ever nulled, by the
+      // markdown card transformers)
+      __captionEditor: LexicalEditor
+      __captionEditorInitialState: EditorState | undefined
+      __initialFile: File | undefined
+      __selector: React.ComponentType<{ nodeKey: NodeKey }> | undefined
+      __isImageHidden: boolean | undefined
+    }
+  >
 
 export const $createImageNode = (dataset: ImageNodeDataset = {}, key?: NodeKey): ImageNode => {
   // the nested-editor and transient fields are initialized by the constructor from the dataset

@@ -1,3 +1,4 @@
+import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { AudioData } from '@/nodes/base/nodes/audio/AudioNode'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
@@ -18,10 +19,16 @@ export type AudioNodeDataset = AudioData & {
  * assembled class so the transient-prop spec is initialized.
  */
 export const AudioNode = assembleCardNodeOnce(audioDeclaration)
-export type AudioNode = InstanceType<typeof AudioNode> & {
-  __triggerFileDialog: boolean
-  __initialFile: File | undefined
-}
+// the `__*` field names derive from the declaration's spec — renaming a spec
+// entry is a compile error here (CardSpecFieldMap)
+export type AudioNode = InstanceType<typeof AudioNode> &
+  CardSpecFieldMap<
+    typeof audioDeclaration,
+    {
+      __triggerFileDialog: boolean
+      __initialFile: File | undefined
+    }
+  >
 
 export const $createAudioNode = (dataset: AudioNodeDataset): AudioNode => {
   // the transient fields are initialized by the constructor from the dataset

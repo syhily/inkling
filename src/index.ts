@@ -121,7 +121,13 @@ export type { FootnoteDefinitionNodeDataset } from '@/nodes/FootnoteDefinitionNo
 export { defineCard } from '@/nodes/cards/host-cards'
 export type { HostCard, HostCardMenuEntrySpec, HostCardSpec } from '@/nodes/cards/host-cards'
 export { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
-export type { DecoratorNodeProperty, NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+export type {
+  CardSpecFieldMap,
+  CardSpecFieldNames,
+  DecoratorNodeProperty,
+  NestedEditorSpec,
+  TransientPropSpec,
+} from '@/nodes/base/generate-decorator-node'
 export { InklingDecoratorNode } from '@/nodes/base/InklingDecoratorNode'
 export type { CardNodeClass } from '@/nodes/assemble-card-node'
 

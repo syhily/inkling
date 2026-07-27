@@ -124,7 +124,7 @@ const NO_NESTED_EDITORS: readonly NestedEditorSpec[] = []
  * adopts its own spec via `static nestedEditors` while the generated base
  * class (and spec-less subclasses) run no nested-editor behaviour.
  */
-function getNestedEditorSpecs(node: LexicalNode): readonly NestedEditorSpec[] {
+export function getNestedEditorSpecs(node: LexicalNode): readonly NestedEditorSpec[] {
   return (node.constructor as { nestedEditors?: readonly NestedEditorSpec[] }).nestedEditors ?? NO_NESTED_EDITORS
 }
 
@@ -169,6 +169,63 @@ function getTransientPropPrivateName(spec: TransientPropSpec): string {
   return spec.privateName ?? `__${spec.name}`
 }
 
+/**
+ * The node's private field name for one transient-prop spec entry (the
+ * `privateName` remap when present, else `__${name}`) — the type-level twin
+ * of `getTransientPropPrivateName` above. Only literal when the spec array
+ * was const-asserted (`as const satisfies readonly TransientPropSpec[]`), as
+ * every card declaration does.
+ */
+export type TransientPropFieldName<Spec extends TransientPropSpec> = Spec extends {
+  privateName: infer Name extends string
+}
+  ? Name
+  : `__${Spec['name']}`
+
+/**
+ * The private field names one nested-editor spec entry drives: the editor
+ * instance field `__<name>` and its `__<name>InitialState` companion (set
+ * when the editor is populated from its serialized HTML — the pair exists on
+ * the node regardless of `exposeInitialStateInDataset`, which only gates the
+ * `getDataset` key).
+ */
+export type NestedEditorFieldNames<Spec extends NestedEditorSpec> =
+  | `__${Spec['name']}`
+  | `__${Spec['name']}InitialState`
+
+/**
+ * Every `__*` field name a card declaration's spec (CONTEXT.md: "card spec")
+ * drives — transient props and nested editors together. Reads the spec
+ * arrays off the declaration's own type, so the declaration files must keep
+ * their spec arrays const-asserted (`as const satisfies …`) for the literal
+ * names to survive. A spec-less declaration yields `never`.
+ */
+export type CardSpecFieldNames<D> =
+  | (D extends { transientProps: infer Specs extends readonly TransientPropSpec[] }
+      ? TransientPropFieldName<Specs[number]>
+      : never)
+  | (D extends { nestedEditors: infer Specs extends readonly NestedEditorSpec[] }
+      ? NestedEditorFieldNames<Specs[number]>
+      : never)
+
+/**
+ * The `__*` type map of a card node, DERIVED from its declaration's spec
+ * (CONTEXT.md: "card declaration"): the mapped keys come from the spec, the
+ * per-card value types from the `Values` argument. This is how the spec
+ * stays the single source of the transient/nested-editor field vocabulary:
+ * class `declare` fields cannot be computed from a spec, so the derivation
+ * rides the shim's type intersection instead — the `Values` constraint
+ * rejects a map that lacks a spec-named field, so renaming (or adding) a
+ * spec entry in the declaration is a compile error at the shim. The base
+ * classes keep their hand-written `declare __*` fields (a base cannot import
+ * its declaration — the declaration imports the base); that leg is pinned by
+ * `test/typecheck/card-spec-field-agreement.ts` and the runtime agreement
+ * test in `test/unit/nodes/card-declarations.test.ts`.
+ */
+export type CardSpecFieldMap<D, Values extends Record<CardSpecFieldNames<D>, unknown>> = {
+  [K in CardSpecFieldNames<D>]: Values[K]
+}
+
 export type DecoratorNodeValueMap<Props extends readonly DecoratorNodeProperty[]> = {
   [Prop in Props[number] as Prop['name']]: WidenLiteral<Prop['default']>
 }
@@ -192,8 +249,8 @@ type GeneratedDecoratorNodeInstance<
  * the card's declared vocabulary instead of an open index signature.
  * Transient-prop and nested-editor fields (`__triggerFileDialog`,
  * `__captionEditor`, …) are per-class spec state, not dataset properties;
- * each card's node type declares them one layer up (the wrapper modules and
- * the hand-written wrappers).
+ * each card's shim type derives them from the declaration's spec one layer
+ * up via `CardSpecFieldMap`.
  */
 type PrivateDatasetFields<TDataset extends Record<string, unknown>> = {
   [K in keyof TDataset as `__${string & K}`]: TDataset[K]

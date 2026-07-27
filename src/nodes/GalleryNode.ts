@@ -1,5 +1,6 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
+import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { GalleryData } from '@/nodes/base/nodes/gallery/GalleryNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
@@ -25,10 +26,16 @@ export type GalleryNodeDataset = GalleryData & CaptionEditorDataset
  * nested-editor spec is set up.
  */
 export const GalleryNode = assembleCardNodeOnce(galleryDeclaration)
-export type GalleryNode = InstanceType<typeof GalleryNode> & {
-  __captionEditor: LexicalEditor | null
-  __captionEditorInitialState: EditorState | undefined
-}
+// the `__*` field names derive from the declaration's spec — renaming a spec
+// entry is a compile error here (CardSpecFieldMap)
+export type GalleryNode = InstanceType<typeof GalleryNode> &
+  CardSpecFieldMap<
+    typeof galleryDeclaration,
+    {
+      __captionEditor: LexicalEditor | null
+      __captionEditorInitialState: EditorState | undefined
+    }
+  >
 
 export const $createGalleryNode = (dataset: GalleryNodeDataset): GalleryNode => {
   // the nested-editor fields are set up by the constructor from the dataset

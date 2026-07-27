@@ -1,5 +1,6 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
+import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { BookmarkData } from '@/nodes/base/nodes/bookmark/BookmarkNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
@@ -24,14 +25,20 @@ export type BookmarkNodeDataset = BookmarkData &
  * the nested-editor and transient-prop specs are initialized.
  */
 export const BookmarkNode = assembleCardNodeOnce(bookmarkDeclaration)
-export type BookmarkNode = InstanceType<typeof BookmarkNode> & {
-  __createdWithUrl: boolean
-  // non-null: the constructor's nested-editor setup always assigns an editor
-  // (only the video/gallery/callout/toggle editors are ever nulled, by the
-  // markdown card transformers)
-  __captionEditor: LexicalEditor
-  __captionEditorInitialState: EditorState | undefined
-}
+// the `__*` field names derive from the declaration's spec — renaming a spec
+// entry is a compile error here (CardSpecFieldMap)
+export type BookmarkNode = InstanceType<typeof BookmarkNode> &
+  CardSpecFieldMap<
+    typeof bookmarkDeclaration,
+    {
+      __createdWithUrl: boolean
+      // non-null: the constructor's nested-editor setup always assigns an editor
+      // (only the video/gallery/callout/toggle editors are ever nulled, by the
+      // markdown card transformers)
+      __captionEditor: LexicalEditor
+      __captionEditorInitialState: EditorState | undefined
+    }
+  >
 
 export const $createBookmarkNode = (dataset: BookmarkNodeDataset): BookmarkNode => {
   // the nested-editor and transient fields are initialized by the constructor from the dataset

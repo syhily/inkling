@@ -7,13 +7,15 @@ import type { CardDeclaration } from './card-declaration'
 
 import { INSERT_GALLERY_COMMAND } from './card-commands'
 
-const nestedEditors: readonly NestedEditorSpec[] = [
+// `as const` keeps the literal `name`s on the declaration's type — the shim's
+// `__*` field map derives its keys from them (CardSpecFieldMap)
+const nestedEditors = [
   {
     name: 'captionEditor',
     serializedKey: 'caption',
     nodes: MINIMAL_NODES,
   },
-]
+] as const satisfies readonly NestedEditorSpec[]
 
 export const galleryDeclaration = {
   nodeType: 'gallery',

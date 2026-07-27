@@ -10,16 +10,18 @@ import type { CardDeclaration } from './card-declaration'
 
 import { INSERT_IMAGE_COMMAND, OPEN_GIF_SELECTOR_COMMAND, OPEN_IMAGE_LIBRARY_COMMAND } from './card-commands'
 
-const nestedEditors: readonly NestedEditorSpec[] = [
+// `as const` keeps the literal `name`s on the declaration's type — the shim's
+// `__*` field map derives its keys from them (CardSpecFieldMap)
+const nestedEditors = [
   {
     name: 'captionEditor',
     serializedKey: 'caption',
     nodes: MINIMAL_NODES,
     cleanBasicHtml: { firstChildInnerContent: true },
   },
-]
+] as const satisfies readonly NestedEditorSpec[]
 
-const transientProps: readonly TransientPropSpec[] = [
+const transientProps = [
   { name: 'previewSrc', initial: (dataset) => dataset.previewSrc || '', datasetKey: '__previewSrc' },
   {
     name: 'triggerFileDialog',
@@ -33,7 +35,7 @@ const transientProps: readonly TransientPropSpec[] = [
   // the image while it is open — client-side only, never serialized
   { name: 'selector' },
   { name: 'isImageHidden' },
-]
+] as const satisfies readonly TransientPropSpec[]
 
 export const imageDeclaration = {
   nodeType: 'image',

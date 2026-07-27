@@ -7,14 +7,16 @@ import type { CardDeclaration } from './card-declaration'
 
 import { INSERT_CALLOUT_COMMAND } from './card-commands'
 
-const nestedEditors: readonly NestedEditorSpec[] = [
+// `as const` keeps the literal `name`s on the declaration's type — the shim's
+// `__*` field map derives its keys from them (CardSpecFieldMap)
+const nestedEditors = [
   {
     name: 'calloutTextEditor',
     serializedKey: 'calloutText',
     nodes: MINIMAL_NODES,
     cleanBasicHtml: { allowBr: true },
   },
-]
+] as const satisfies readonly NestedEditorSpec[]
 
 export const calloutDeclaration = {
   nodeType: 'callout',

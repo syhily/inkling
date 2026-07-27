@@ -1,5 +1,6 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
+import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { VideoData } from '@/nodes/base/nodes/video/VideoNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
@@ -23,12 +24,18 @@ export type VideoNodeDataset = VideoData &
  * initialized.
  */
 export const VideoNode = assembleCardNodeOnce(videoDeclaration)
-export type VideoNode = InstanceType<typeof VideoNode> & {
-  __triggerFileDialog: boolean
-  __initialFile: File | null
-  __captionEditor: LexicalEditor | null
-  __captionEditorInitialState: EditorState | undefined
-}
+// the `__*` field names derive from the declaration's spec — renaming a spec
+// entry is a compile error here (CardSpecFieldMap)
+export type VideoNode = InstanceType<typeof VideoNode> &
+  CardSpecFieldMap<
+    typeof videoDeclaration,
+    {
+      __triggerFileDialog: boolean
+      __initialFile: File | null
+      __captionEditor: LexicalEditor | null
+      __captionEditorInitialState: EditorState | undefined
+    }
+  >
 
 export const $createVideoNode = (dataset: VideoNodeDataset): VideoNode => {
   // the nested-editor and transient fields are initialized by the constructor from the dataset

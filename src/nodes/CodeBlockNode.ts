@@ -1,5 +1,6 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
+import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { CodeBlockData } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
@@ -22,12 +23,18 @@ export type CodeBlockNodeDataset = CodeBlockData &
  * transient-prop specs are initialized.
  */
 export const CodeBlockNode = assembleCardNodeOnce(codeBlockDeclaration)
-export type CodeBlockNode = InstanceType<typeof CodeBlockNode> & {
-  __openInEditMode: boolean
-  // non-null: the constructor's nested-editor setup always assigns an editor
-  __captionEditor: LexicalEditor
-  __captionEditorInitialState: EditorState | undefined
-}
+// the `__*` field names derive from the declaration's spec — renaming a spec
+// entry is a compile error here (CardSpecFieldMap)
+export type CodeBlockNode = InstanceType<typeof CodeBlockNode> &
+  CardSpecFieldMap<
+    typeof codeBlockDeclaration,
+    {
+      __openInEditMode: boolean
+      // non-null: the constructor's nested-editor setup always assigns an editor
+      __captionEditor: LexicalEditor
+      __captionEditorInitialState: EditorState | undefined
+    }
+  >
 
 export function $createCodeBlockNode(dataset: CodeBlockNodeDataset): CodeBlockNode {
   // the nested-editor and transient fields are initialized by the constructor from the dataset

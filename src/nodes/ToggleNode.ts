@@ -1,5 +1,6 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
+import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { ToggleData } from '@/nodes/base/nodes/toggle/ToggleNode'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
@@ -27,14 +28,20 @@ export type ToggleNodeDataset = ToggleData & {
  * the nested-editor spec is set up.
  */
 export const ToggleNode = assembleCardNodeOnce(toggleDeclaration)
-export type ToggleNode = InstanceType<typeof ToggleNode> & {
-  // null only inside the headless markdown round-trip editor (the toggle card
-  // transformer nulls both nested editors after plain-text import)
-  __titleEditor: LexicalEditor | null
-  __titleEditorInitialState: EditorState | undefined
-  __contentEditor: LexicalEditor | null
-  __contentEditorInitialState: EditorState | undefined
-}
+// the `__*` field names derive from the declaration's spec — renaming a spec
+// entry is a compile error here (CardSpecFieldMap)
+export type ToggleNode = InstanceType<typeof ToggleNode> &
+  CardSpecFieldMap<
+    typeof toggleDeclaration,
+    {
+      // null only inside the headless markdown round-trip editor (the toggle card
+      // transformer nulls both nested editors after plain-text import)
+      __titleEditor: LexicalEditor | null
+      __titleEditorInitialState: EditorState | undefined
+      __contentEditor: LexicalEditor | null
+      __contentEditorInitialState: EditorState | undefined
+    }
+  >
 
 export const $createToggleNode = (dataset?: ToggleNodeDataset): ToggleNode => {
   // the nested-editor fields are set up by the constructor from the dataset

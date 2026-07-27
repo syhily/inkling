@@ -10,22 +10,24 @@ import type { CardDeclaration } from './card-declaration'
 
 import { INSERT_VIDEO_COMMAND } from './card-commands'
 
-const nestedEditors: readonly NestedEditorSpec[] = [
+// `as const` keeps the literal `name`s on the declaration's type — the shim's
+// `__*` field map derives its keys from them (CardSpecFieldMap)
+const nestedEditors = [
   {
     name: 'captionEditor',
     serializedKey: 'caption',
     nodes: MINIMAL_NODES,
   },
-]
+] as const satisfies readonly NestedEditorSpec[]
 
-const transientProps: readonly TransientPropSpec[] = [
+const transientProps = [
   {
     name: 'triggerFileDialog',
     // don't trigger the file dialog when rendering if we've already been given a url
     initial: (dataset) => (!dataset.src && dataset.triggerFileDialog) || false,
   },
   { name: 'initialFile', initial: (dataset) => dataset.initialFile || null },
-]
+] as const satisfies readonly TransientPropSpec[]
 
 export const videoDeclaration = {
   nodeType: 'video',

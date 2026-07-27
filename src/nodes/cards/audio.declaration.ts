@@ -6,14 +6,16 @@ import type { CardDeclaration } from './card-declaration'
 
 import { INSERT_AUDIO_COMMAND } from './card-commands'
 
-const transientProps: readonly TransientPropSpec[] = [
+// `as const` keeps the literal `name`s on the declaration's type — the shim's
+// `__*` field map derives its keys from them (CardSpecFieldMap)
+const transientProps = [
   {
     name: 'triggerFileDialog',
     // don't trigger the file dialog when rendering if we've already been given a url
     initial: (dataset) => (!dataset.src && dataset.triggerFileDialog) || false,
   },
   { name: 'initialFile' },
-]
+] as const satisfies readonly TransientPropSpec[]
 
 export const audioDeclaration = {
   nodeType: 'audio',

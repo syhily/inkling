@@ -1,4 +1,5 @@
-import { createCommand } from 'lexical'
+import { createHeadlessEditor } from '@lexical/headless'
+import { createCommand, type LexicalNode } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_LABELS } from '@/labels/inkling-labels'
@@ -7,7 +8,7 @@ import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
 import { BookmarkNode } from '@/nodes/BookmarkNode'
 import { ButtonNode } from '@/nodes/ButtonNode'
 import { CalloutNode } from '@/nodes/CalloutNode'
-import { CARD_DECLARATIONS, type CardNodeType } from '@/nodes/cards'
+import { CARD_DECLARATIONS, type CardDeclaration, type CardNodeType } from '@/nodes/cards'
 import { CARD_DECORATE_TARGETS, getCardDecorateTarget } from '@/nodes/cards/card-decorate'
 import { CARD_INSERT_COMMANDS, getCardInsertRegistrations } from '@/nodes/cards/card-insert-commands'
 import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
@@ -30,6 +31,23 @@ import { VideoNode } from '@/nodes/VideoNode'
 // The card declaration is the single per-card source of truth: these tests
 // pin the declarations themselves and that every registry is derived from
 // them, rather than pinning the derived wiring twice.
+
+/**
+ * Constructs every registered card class with an empty dataset inside one
+ * headless-editor update (node construction requires an active editor) and
+ * collects one value per card, keyed by node type.
+ */
+function collectFromConstructedCards<T>(collect: (node: LexicalNode) => T): Map<string, T> {
+  const editor = createHeadlessEditor({ nodes: CARD_WRAPPER_NODES.map((card) => card.node), onError: () => {} })
+  const collected = new Map<string, T>()
+  editor.update(() => {
+    for (const card of CARD_WRAPPER_NODES) {
+      collected.set(card.nodeType, collect(new card.node({})))
+    }
+  })
+  return collected
+}
+
 describe('card declarations as the single source of truth', () => {
   it('pairs every declaration with a wrapper node class', () => {
     expect(CARD_WRAPPER_NODES.map((card) => card.nodeType)).toEqual(CARD_DECLARATIONS.map((card) => card.nodeType))
@@ -144,6 +162,75 @@ describe('card declarations as the single source of truth', () => {
       expect(card.node).toBe(SHIM_CLASSES[card.nodeType])
     }
   })
+
+  it('initializes exactly the private fields its declaration spec names', () => {
+    // the spec is the single source of the transient/nested-editor field
+    // vocabulary: a `__*` field the constructor sets that neither the dataset
+    // properties nor the spec names is drift (e.g. a stale field left behind
+    // by a spec rename), and a spec-named field the constructor does not set
+    // is a broken adoption
+    const LEXICAL_INTERNALS = new Set([
+      '__type',
+      '__key',
+      '__parent',
+      '__prev',
+      '__next',
+      '__state',
+      '__slotHost',
+      '__slots',
+    ])
+    // node construction needs an active editor (Lexical $setNodeKey) — collect
+    // inside one update, assert outside for readable failures
+    const fieldsByCard = collectFromConstructedCards((node) =>
+      Object.keys(node)
+        .filter((key) => key.startsWith('__') && !LEXICAL_INTERNALS.has(key))
+        .sort(),
+    )
+    for (const card of CARD_WRAPPER_NODES) {
+      const declaration: CardDeclaration | undefined = CARD_DECLARATIONS.find(
+        (entry) => entry.nodeType === card.nodeType,
+      )
+      const defaults = (
+        card.node as unknown as { getPropertyDefaults(): Record<string, unknown> }
+      ).getPropertyDefaults()
+      const expected = new Set([
+        ...Object.keys(defaults).map((key) => `__${key}`),
+        ...(declaration?.transientProps ?? []).map((spec) => spec.privateName ?? `__${spec.name}`),
+        // the InitialState companions are assigned only when the editor is
+        // populated from serialized HTML, so an empty dataset initializes
+        // just the editor instance field
+        ...(declaration?.nestedEditors ?? []).map((spec) => `__${spec.name}`),
+      ])
+      expect(fieldsByCard.get(card.nodeType), card.nodeType).toEqual([...expected].sort())
+    }
+  })
+
+  it('exposes exactly the getDataset keys its declaration spec names', () => {
+    const datasetsByCard = collectFromConstructedCards((node) =>
+      (node as unknown as { getDataset(): Record<string, unknown> }).getDataset(),
+    )
+    for (const card of CARD_WRAPPER_NODES) {
+      const declaration: CardDeclaration | undefined = CARD_DECLARATIONS.find(
+        (entry) => entry.nodeType === card.nodeType,
+      )
+      const dataset = datasetsByCard.get(card.nodeType) ?? {}
+      for (const spec of declaration?.transientProps ?? []) {
+        if (spec.datasetKey) {
+          expect(dataset, `${card.nodeType} transient ${spec.name}`).toHaveProperty(spec.datasetKey)
+        } else {
+          expect(dataset, `${card.nodeType} transient ${spec.name}`).not.toHaveProperty(spec.name)
+        }
+      }
+      for (const spec of declaration?.nestedEditors ?? []) {
+        expect(dataset, card.nodeType).toHaveProperty(spec.name)
+        if (spec.exposeInitialStateInDataset === false) {
+          expect(dataset, card.nodeType).not.toHaveProperty(`${spec.name}InitialState`)
+        } else {
+          expect(dataset, card.nodeType).toHaveProperty(`${spec.name}InitialState`)
+        }
+      }
+    }
+  })
 })
 
 // Regression: with a host card registered (CONTEXT.md: "host card"), every
@@ -152,9 +239,10 @@ describe('card declarations as the single source of truth', () => {
 describe('built-in derived views with a host card present', () => {
   const REGRESSION_PROBE_COMMAND = createCommand('REGRESSION_PROBE_COMMAND')
 
-  defineCard({
+  const probe = defineCard({
     nodeType: 'regressionProbe',
     baseNode: generateDecoratorNode({ nodeType: 'regressionProbe' }),
+    transientProps: [{ name: 'probeFlag' }],
     menu: [{ label: 'Probe', labelKey: 'probe', icon: 'audio', command: REGRESSION_PROBE_COMMAND, matches: ['probe'] }],
     toolbarLabel: 'regression-probe',
     render: () => null,
@@ -181,5 +269,17 @@ describe('built-in derived views with a host card present', () => {
     expect(getCardMenu('regressionProbe')?.[0]?.label).toBe('Probe')
     expect(getCardToolbarLabel('regressionProbe')).toBe('regression-probe')
     expect(getCardInsertRegistrations().some((registration) => registration.nodeType === 'audio')).toBe(true)
+  })
+
+  it('adopts the host card spec on the assembled class', () => {
+    // the same spec-adoption path the built-in cards run: the assembled host
+    // class initializes the transient fields its spec names
+    const editor = createHeadlessEditor({ nodes: [probe.node], onError: () => {} })
+    editor.update(() => {
+      const node = new probe.node({})
+      expect(node).toHaveProperty('__probeFlag')
+      const dataset = (node as unknown as { getDataset(): Record<string, unknown> }).getDataset()
+      expect(dataset).not.toHaveProperty('probeFlag')
+    })
   })
 })

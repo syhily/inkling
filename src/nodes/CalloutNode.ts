@@ -1,5 +1,6 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
+import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { CalloutData } from '@/nodes/base/nodes/callout/CalloutNode'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
@@ -23,10 +24,16 @@ export type CalloutNodeDataset = CalloutData & {
  * assembled class so the nested-editor spec is set up.
  */
 export const CalloutNode = assembleCardNodeOnce(calloutDeclaration)
-export type CalloutNode = InstanceType<typeof CalloutNode> & {
-  __calloutTextEditor: LexicalEditor | null
-  __calloutTextEditorInitialState: EditorState | undefined
-}
+// the `__*` field names derive from the declaration's spec — renaming a spec
+// entry is a compile error here (CardSpecFieldMap)
+export type CalloutNode = InstanceType<typeof CalloutNode> &
+  CardSpecFieldMap<
+    typeof calloutDeclaration,
+    {
+      __calloutTextEditor: LexicalEditor | null
+      __calloutTextEditorInitialState: EditorState | undefined
+    }
+  >
 
 export const $createCalloutNode = (dataset: CalloutNodeDataset): CalloutNode => {
   // the nested-editor fields are set up by the constructor from the dataset

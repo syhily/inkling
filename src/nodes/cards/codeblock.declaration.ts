@@ -5,15 +5,17 @@ import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
 
-const nestedEditors: readonly NestedEditorSpec[] = [
+// `as const` keeps the literal `name`s on the declaration's type — the shim's
+// `__*` field map derives its keys from them (CardSpecFieldMap)
+const nestedEditors = [
   {
     name: 'captionEditor',
     serializedKey: 'caption',
     nodes: MINIMAL_NODES,
   },
-]
+] as const satisfies readonly NestedEditorSpec[]
 
-const transientProps: readonly TransientPropSpec[] = [
+const transientProps = [
   // the `_openInEditMode` edit-mode flag is the same shape as the upload
   // cards' transient props: read from the construction dataset, never
   // serialized, cleared via the node's `clearOpenInEditMode`
@@ -22,7 +24,7 @@ const transientProps: readonly TransientPropSpec[] = [
     privateName: '__openInEditMode',
     initial: (dataset) => dataset._openInEditMode || false,
   },
-]
+] as const satisfies readonly TransientPropSpec[]
 
 export const codeBlockDeclaration = {
   nodeType: 'codeblock',

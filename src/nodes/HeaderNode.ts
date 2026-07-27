@@ -1,5 +1,6 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
+import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { HeaderData } from '@/nodes/base/nodes/header/HeaderNode'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
@@ -28,14 +29,20 @@ export type HeaderNodeDataset = HeaderData & {
  * the nested-editor spec is set up.
  */
 export const HeaderNode = assembleCardNodeOnce(headerDeclaration)
-export type HeaderNode = InstanceType<typeof HeaderNode> & {
-  // non-null: the constructor's nested-editor setup always assigns an editor
-  // instance (src/utils/nested-editors.ts)
-  __headerTextEditor: LexicalEditor
-  __subheaderTextEditor: LexicalEditor
-  __headerTextEditorInitialState: EditorState | undefined
-  __subheaderTextEditorInitialState: EditorState | undefined
-}
+// the `__*` field names derive from the declaration's spec — renaming a spec
+// entry is a compile error here (CardSpecFieldMap)
+export type HeaderNode = InstanceType<typeof HeaderNode> &
+  CardSpecFieldMap<
+    typeof headerDeclaration,
+    {
+      // non-null: the constructor's nested-editor setup always assigns an editor
+      // instance (src/utils/nested-editors.ts)
+      __headerTextEditor: LexicalEditor
+      __subheaderTextEditor: LexicalEditor
+      __headerTextEditorInitialState: EditorState | undefined
+      __subheaderTextEditorInitialState: EditorState | undefined
+    }
+  >
 
 export const $createHeaderNode = (dataset: HeaderNodeDataset): HeaderNode => {
   // the nested-editor fields are set up by the constructor from the dataset

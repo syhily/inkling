@@ -146,7 +146,9 @@ export interface CardDeclaration<NodeType extends string = string> {
    * rich-text content in nested Lexical editors. The wrapper node class
    * adopts this as its static `nestedEditors`; the generated node machinery
    * (`@/nodes/base/generate-decorator-node`) drives constructor setup,
-   * `getDataset` appends, and `exportJSON` re-serialization from it.
+   * `getDataset` appends, and `exportJSON` re-serialization from it. Keep
+   * the spec array `as const` in the declaration file: the shim's `__*`
+   * field map derives its keys from the literal names (`CardSpecFieldMap`).
    */
   nestedEditors?: readonly NestedEditorSpec[]
   /**
@@ -155,7 +157,8 @@ export interface CardDeclaration<NodeType extends string = string> {
    * dataset, initialized by the generated node machinery, and never
    * serialized. The wrapper node class adopts this as its static
    * `transientProps`; see `TransientPropSpec` in
-   * `@/nodes/base/generate-decorator-node`.
+   * `@/nodes/base/generate-decorator-node`. Keep the spec array `as const`
+   * in the declaration file, as for `nestedEditors`.
    */
   transientProps?: readonly TransientPropSpec[]
   /**

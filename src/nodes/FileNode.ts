@@ -1,3 +1,4 @@
+import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { FileData } from '@/nodes/base/nodes/file/FileNode'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
@@ -18,10 +19,16 @@ export type FileNodeDataset = FileData & {
  * assembled class so the transient-prop spec is initialized.
  */
 export const FileNode = assembleCardNodeOnce(fileDeclaration)
-export type FileNode = InstanceType<typeof FileNode> & {
-  __triggerFileDialog: boolean
-  __initialFile: File | undefined
-}
+// the `__*` field names derive from the declaration's spec — renaming a spec
+// entry is a compile error here (CardSpecFieldMap)
+export type FileNode = InstanceType<typeof FileNode> &
+  CardSpecFieldMap<
+    typeof fileDeclaration,
+    {
+      __triggerFileDialog: boolean
+      __initialFile: File | undefined
+    }
+  >
 
 export const $createFileNode = (dataset: FileNodeDataset): FileNode => {
   // the transient fields are initialized by the constructor from the dataset

@@ -1,5 +1,6 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
+import type { CardSpecFieldMap } from '@/nodes/base/generate-decorator-node'
 import type { FootnoteDefinitionData } from '@/nodes/base/nodes/footnotedefinition/FootnoteDefinitionNode'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
@@ -23,10 +24,16 @@ export type FootnoteDefinitionNodeDataset = FootnoteDefinitionData & {
  * constructs the assembled class so the nested-editor spec is set up.
  */
 export const FootnoteDefinitionNode = assembleCardNodeOnce(footnoteDefinitionDeclaration)
-export type FootnoteDefinitionNode = InstanceType<typeof FootnoteDefinitionNode> & {
-  __contentEditor: LexicalEditor | null
-  __contentEditorInitialState: EditorState | undefined
-}
+// the `__*` field names derive from the declaration's spec — renaming a spec
+// entry is a compile error here (CardSpecFieldMap)
+export type FootnoteDefinitionNode = InstanceType<typeof FootnoteDefinitionNode> &
+  CardSpecFieldMap<
+    typeof footnoteDefinitionDeclaration,
+    {
+      __contentEditor: LexicalEditor | null
+      __contentEditorInitialState: EditorState | undefined
+    }
+  >
 
 export const $createFootnoteDefinitionNode = (dataset?: FootnoteDefinitionNodeDataset): FootnoteDefinitionNode => {
   // the nested-editor fields are set up by the constructor from the dataset
