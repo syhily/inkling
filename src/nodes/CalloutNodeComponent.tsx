@@ -100,10 +100,7 @@ export function CalloutNodeComponent({
         toggleEmoji={handleToggleEmoji}
         toggleEmojiPicker={handleToggleEmojiPicker}
       />
-      <CardActionToolbar
-        items={[{ kind: 'edit', dataTestId: 'edit-callout-card' }, { kind: 'separator' }, { kind: 'snippet' }]}
-        nodeKey={nodeKey}
-      />
+      <CardActionToolbar editDataTestId="edit-callout-card" nodeKey={nodeKey} />
     </>
   )
 }

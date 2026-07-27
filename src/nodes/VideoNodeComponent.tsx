@@ -207,11 +207,7 @@ export function VideoNodeComponent({
         onRemoveCustomThumbnail={onRemoveCustomThumbnail}
         onVideoFileChange={onVideoFileChange}
       />
-      <CardActionToolbar
-        items={[{ kind: 'edit', dataTestId: 'edit-video-card' }, { kind: 'separator' }, { kind: 'snippet' }]}
-        nodeKey={nodeKey}
-        visibleWhen={!!isCardPopulated}
-      />
+      <CardActionToolbar editDataTestId="edit-video-card" nodeKey={nodeKey} visibleWhen={!!isCardPopulated} />
     </>
   )
 }

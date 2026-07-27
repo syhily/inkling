@@ -56,10 +56,7 @@ export function ButtonNodeComponent({
         isEditing={isEditing}
       />
 
-      <CardActionToolbar
-        items={[{ kind: 'edit', dataTestId: 'edit-button-card' }, { kind: 'separator' }, { kind: 'snippet' }]}
-        nodeKey={nodeKey}
-      />
+      <CardActionToolbar editDataTestId="edit-button-card" nodeKey={nodeKey} />
     </>
   )
 }

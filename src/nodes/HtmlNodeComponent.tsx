@@ -23,10 +23,7 @@ export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: s
     <>
       <HtmlCard darkMode={darkMode} html={html} isEditing={isEditing} updateHtml={updateHtml} />
 
-      <CardActionToolbar
-        items={[{ kind: 'edit', dataTestId: 'edit-html' }, { kind: 'separator' }, { kind: 'snippet' }]}
-        nodeKey={nodeKey}
-      />
+      <CardActionToolbar editDataTestId="edit-html" nodeKey={nodeKey} />
     </>
   )
 }

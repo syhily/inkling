@@ -1,10 +1,10 @@
 import type { ElementTransformer, MultilineElementTransformer } from '@lexical/markdown'
 import type { Klass, LexicalNode } from 'lexical'
 
-import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
 import type { GalleryImage } from '@/types/gallery'
 
 import { $createAudioNode, type AudioNode } from '@/nodes/AudioNode'
+import { getNestedEditorSpecs } from '@/nodes/base/generate-decorator-node'
 import { $createBookmarkNode, type BookmarkNode } from '@/nodes/BookmarkNode'
 import { $createButtonNode, type ButtonNode } from '@/nodes/ButtonNode'
 import { $createCalloutNode, type CalloutNode } from '@/nodes/CalloutNode'
@@ -113,16 +113,6 @@ export function createCardTransformer({
     },
     type: 'multiline-element',
   }
-}
-
-const NO_NESTED_EDITOR_SPECS: readonly NestedEditorSpec[] = []
-
-// Mirrors `getNestedEditorSpecs` in `@/nodes/base/generate-decorator-node`
-// (module-private there, so not importable): reads the adopted
-// `static nestedEditors` spec off the node's actual class; spec-less classes
-// yield no entries.
-function getNestedEditorSpecs(node: LexicalNode): readonly NestedEditorSpec[] {
-  return (node.constructor as { nestedEditors?: readonly NestedEditorSpec[] }).nestedEditors ?? NO_NESTED_EDITOR_SPECS
 }
 
 /**
