@@ -2,7 +2,6 @@ import type { InitialEditorStateType } from '@lexical/react/LexicalComposer'
 import type { LexicalEditor } from 'lexical'
 
 import clsx from 'clsx'
-import { FastAverageColor } from 'fast-average-color'
 import React, { useEffect, useState } from 'react'
 
 import type { DragHandlerLike, FileChangeEvent, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
@@ -32,143 +31,131 @@ import {
 } from '@/components/ui/SettingsPanel'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
-import { Color, textColorForBackgroundColor } from '@/utils'
+import {
+  headerHexColor,
+  matchingHeaderTextColor,
+  resolveHeaderImageTextColor,
+} from '@/nodes/header/header-accent-color'
 import trackEvent from '@/utils/analytics'
-import { getAccentColor } from '@/utils/getAccentColor'
 import { isEditorEmpty } from '@/utils/isEditorEmpty'
 
-interface HeaderCardProps {
+/** The card's view state — every presentational value the node carries. */
+export interface HeaderCardViewModel {
   alignment?: string
-  buttonEnabled?: boolean
-  buttonText?: string
-  buttonUrl?: string
-  showBackgroundImage?: boolean
+  backgroundColor?: string
   backgroundImageSrc?: string
   backgroundSize?: 'cover' | 'contain'
-  backgroundColor?: string
   buttonColor?: string
+  buttonEnabled?: boolean
+  buttonText?: string
   buttonTextColor?: string
-  textColor?: string
+  buttonUrl?: string
   isEditing?: boolean
-  fileUploader?: FileUploaderLike
-  handleAlignment: (alignment: string) => void
-  handleButtonText: (event: React.ChangeEvent<HTMLInputElement>) => void
-  handleButtonEnabled: () => void
-  handleShowBackgroundImage: () => void
-  handleHideBackgroundImage: () => void
-  handleClearBackgroundImage: () => void
-  handleBackgroundColor: (color: string, matchingTextColor: string) => void
-  handleButtonColor: (color: string, matchingTextColor: string) => void
-  handleLayout: (layout: string) => void
-  handleTextColor: (color: string) => void
-  isPinturaEnabled?: boolean
+  isSwapped?: boolean
   layout?: 'regular' | 'wide' | 'full' | 'split'
-  onFileChange: (event: FileChangeEvent) => void
-  openImageEditor: (options: { image: string; handleSave: (blob: Blob) => void }) => void
+  showBackgroundImage?: boolean
+  textColor?: string
+}
+
+/** The card's write handlers — field-name-as-data on the node side (header-field-writer). */
+export interface HeaderCardHandlers {
+  handleAlignment: (alignment: string) => void
+  handleBackgroundColor: (color: string, matchingTextColor: string) => void
+  handleBackgroundSize: (size: string) => void
+  handleButtonColor: (color: string, matchingTextColor: string) => void
+  handleButtonEnabled: () => void
+  handleButtonText: (event: React.ChangeEvent<HTMLInputElement>) => void
+  handleButtonTextBlur: (event: React.FocusEvent<HTMLInputElement>) => void
+  handleButtonUrl: (value: string) => void
+  handleButtonUrlBlur: (event: React.FocusEvent<HTMLInputElement>) => void
+  handleClearBackgroundImage: () => void
+  handleHideBackgroundImage: () => void
+  handleLayout: (layout: string) => void
+  handleShowBackgroundImage: () => void
+  handleSwapLayout: () => void
+  handleTextColor: (color: string) => void
+}
+
+/** The background-image upload channel (the media-card upload wiring). */
+export interface HeaderCardUpload {
+  fileUploader?: FileUploaderLike
   imageDragHandler: DragHandlerLike
+  isPinturaEnabled?: boolean
+  openImageEditor: (options: { image: string; handleSave: (blob: Blob) => void }) => void
+  setFileInputRef: (ref: React.RefObject<HTMLInputElement | null>) => void
+  onFileChange: (event: FileChangeEvent) => void
+}
+
+/** The two nested editors. */
+export interface HeaderCardEditors {
   headerTextEditor: LexicalEditor
   headerTextEditorInitialState?: InitialEditorStateType
   subheaderTextEditor: LexicalEditor
   subheaderTextEditorInitialState?: InitialEditorStateType
-  isSwapped?: boolean
-  handleSwapLayout: () => void
-  handleBackgroundSize: (size: string) => void
-  handleButtonTextBlur: (event: React.FocusEvent<HTMLInputElement>) => void
-  handleButtonUrlBlur: (event: React.FocusEvent<HTMLInputElement>) => void
-  handleButtonUrl: (value: string) => void
-  setFileInputRef: (ref: React.MutableRefObject<HTMLInputElement | null>) => void
 }
 
-export function HeaderCard({
-  alignment,
-  buttonEnabled,
-  buttonText,
-  buttonUrl,
-  showBackgroundImage,
-  backgroundImageSrc,
-  backgroundSize,
-  backgroundColor,
-  buttonColor,
-  buttonTextColor,
-  textColor,
-  isEditing,
-  fileUploader,
-  handleAlignment,
-  handleButtonText,
-  handleButtonEnabled,
-  handleShowBackgroundImage,
-  handleHideBackgroundImage,
-  handleClearBackgroundImage,
-  handleBackgroundColor,
-  handleButtonColor,
-  handleLayout,
-  handleTextColor,
-  isPinturaEnabled,
-  layout,
-  onFileChange,
-  openImageEditor,
-  imageDragHandler,
-  headerTextEditor,
-  headerTextEditorInitialState,
-  subheaderTextEditor,
-  subheaderTextEditorInitialState,
-  isSwapped,
-  handleSwapLayout,
-  handleBackgroundSize,
-  handleButtonTextBlur,
-  handleButtonUrlBlur,
-  handleButtonUrl,
-  setFileInputRef,
-}: HeaderCardProps) {
+// The seam, narrowed: four view-model objects instead of ~40 flat props.
+// Internally the groups flatten — the card body is unchanged.
+interface HeaderCardProps {
+  view: HeaderCardViewModel
+  handlers: HeaderCardHandlers
+  upload: HeaderCardUpload
+  editors: HeaderCardEditors
+}
+
+export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps) {
+  const {
+    alignment,
+    backgroundColor,
+    backgroundImageSrc,
+    backgroundSize,
+    buttonColor,
+    buttonEnabled,
+    buttonText,
+    buttonTextColor,
+    buttonUrl,
+    isEditing,
+    isSwapped,
+    layout,
+    showBackgroundImage,
+    textColor,
+  } = view
+  const {
+    handleAlignment,
+    handleBackgroundColor,
+    handleBackgroundSize,
+    handleButtonColor,
+    handleButtonEnabled,
+    handleButtonText,
+    handleButtonTextBlur,
+    handleButtonUrl,
+    handleClearBackgroundImage,
+    handleHideBackgroundImage,
+    handleLayout,
+    handleShowBackgroundImage,
+    handleSwapLayout,
+    handleTextColor,
+  } = handlers
+  const { fileUploader, imageDragHandler, isPinturaEnabled, openImageEditor, setFileInputRef, onFileChange } = upload
+  const { headerTextEditor, headerTextEditorInitialState, subheaderTextEditor, subheaderTextEditorInitialState } =
+    editors
+
   const labels = useInklingLabels()
   const [backgroundColorPickerExpanded, setBackgroundColorPickerExpanded] = useState(false)
   const [buttonColorPickerExpanded, setButtonColorPickerExpanded] = useState(false)
 
-  const matchingTextColor = (color: string) => {
-    return color === 'transparent' ? '' : textColorForBackgroundColor(hexColorValue(color)).hex()
-  }
-
-  /**
-   * Convert a semi transparent color to a fully opaque color by merging it with a white background
-   */
-  const mergeWhiteColor = ({ r, g, b, a }: { r: number; g: number; b: number; a: number }) => {
-    const aPercentage = a / 255
-
-    return Color({
-      r: r * aPercentage + 255 * (1 - aPercentage),
-      g: g * aPercentage + 255 * (1 - aPercentage),
-      b: b * aPercentage + 255 * (1 - aPercentage),
-    }).hex()
-  }
-
+  // the background-image text color resolves in @/nodes/header/header-accent-color
   useEffect(() => {
-    if (backgroundImageSrc && layout !== 'split') {
-      const src = backgroundImageSrc
-      let cancelled = false
-      new FastAverageColor()
-        .getColorAsync(src, { defaultColor: [255, 255, 255, 255] })
-        .then((color) => {
-          // the background image changed again before the color was
-          // extracted — don't apply the previous image's color
-          if (cancelled) {
-            return
-          }
-          // If we uploaded a transparent image, the average color will be semi transparent, we need to merge it with white
-          // Merge white color to the color
-          const correctedHex = mergeWhiteColor({
-            r: color.value[0],
-            g: color.value[1],
-            b: color.value[2],
-            a: color.value[3],
-          })
-          handleTextColor(matchingTextColor(correctedHex))
-        })
-        .catch(() => {
-          // Failed to load/average the image — keep the current text color
-        })
-      return () => {
-        cancelled = true
+    let cancelled = false
+    void resolveHeaderImageTextColor(backgroundImageSrc, layout).then((color) => {
+      // the background image changed again before the color was
+      // extracted — don't apply the previous image's color
+      if (color && !cancelled) {
+        handleTextColor(color)
       }
+    })
+    return () => {
+      cancelled = true
     }
     // This is only needed when the background image or layout is changed
     // oxlint-disable-next-line react-hooks/exhaustive-deps
@@ -178,7 +165,7 @@ export function HeaderCard({
     if (backgroundColor && layout === 'split') {
       // Make sure the text color matches the background color
       // It might be different if an image was uploaded in a non-split layout
-      handleBackgroundColor(backgroundColor, matchingTextColor(backgroundColor || ''))
+      handleBackgroundColor(backgroundColor, matchingHeaderTextColor(backgroundColor || ''))
     }
     // This is only needed when the layout is changed
     // oxlint-disable-next-line react-hooks/exhaustive-deps
@@ -233,14 +220,6 @@ export function HeaderCard({
   const subheaderPlaceholder =
     layout === 'split' ? labels['header.subheading.placeholder.split'] : labels['header.subheading.placeholder']
 
-  const hexColorValue = (color: string) => {
-    if (color === 'accent') {
-      const accentColor = getAccentColor().trim()
-      return accentColor
-    }
-    return color.trim()
-  }
-
   const wrapperStyle = () => {
     if (backgroundImageSrc && layout !== 'split' && textColor) {
       return {
@@ -248,19 +227,19 @@ export function HeaderCard({
         backgroundSize: 'cover',
         backgroundPosition: 'center center',
         backgroundColor: 'white',
-        color: hexColorValue(textColor || ''),
+        color: headerHexColor(textColor || ''),
       }
     } else if (backgroundColor && textColor) {
       return {
-        backgroundColor: hexColorValue(backgroundColor),
-        color: hexColorValue(textColor || ''),
+        backgroundColor: headerHexColor(backgroundColor),
+        color: headerHexColor(textColor || ''),
       }
     }
 
     return {
       backgroundImage: `url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ctitle%3ERectangle%3C/title%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cpath fill='%23F2F6F8' d='M0 0h24v24H0z'/%3E%3Cpath fill='%23E5ECF0' d='M0 0h12v12H0zM12 12h12v12H12z'/%3E%3C/g%3E%3C/svg%3E")`,
       backgroundColor: 'transparent',
-      color: hexColorValue(textColor || ''),
+      color: headerHexColor(textColor || ''),
     }
   }
 
@@ -462,8 +441,8 @@ export function HeaderCard({
                   style={
                     buttonColor
                       ? {
-                          backgroundColor: hexColorValue(buttonColor),
-                          color: hexColorValue(buttonTextColor || ''),
+                          backgroundColor: headerHexColor(buttonColor),
+                          color: headerHexColor(buttonTextColor || ''),
                         }
                       : { backgroundColor: `#000000`, color: `#ffffff` }
                   }
@@ -541,9 +520,9 @@ export function HeaderCard({
               { title: labels['color.brandColor'], accent: true },
             ]}
             value={showBackgroundImage && layout !== 'split' ? 'image' : backgroundColor || ''}
-            onPickerChange={(color) => handleBackgroundColor(color, matchingTextColor(color))}
+            onPickerChange={(color) => handleBackgroundColor(color, matchingHeaderTextColor(color))}
             onSwatchChange={(color) => {
-              handleBackgroundColor(color, matchingTextColor(color))
+              handleBackgroundColor(color, matchingHeaderTextColor(color))
               setBackgroundColorPickerExpanded(false)
             }}
             onTogglePicker={(isExpanded) => {
@@ -553,7 +532,7 @@ export function HeaderCard({
                 }
 
                 if (backgroundColor) {
-                  handleBackgroundColor(backgroundColor, matchingTextColor(backgroundColor || ''))
+                  handleBackgroundColor(backgroundColor, matchingHeaderTextColor(backgroundColor || ''))
                 }
               }
 
@@ -586,7 +565,7 @@ export function HeaderCard({
               onFileChange={onFileChange}
               onRemoveMedia={() => {
                 handleClearBackgroundImage()
-                handleTextColor(matchingTextColor(backgroundColor || ''))
+                handleTextColor(matchingHeaderTextColor(backgroundColor || ''))
               }}
             />
           </ColorPickerSetting>
@@ -611,9 +590,9 @@ export function HeaderCard({
                   { title: labels['color.brandColor'], accent: true },
                 ]}
                 value={buttonColor || ''}
-                onPickerChange={(color) => handleButtonColor(color, matchingTextColor(color))}
+                onPickerChange={(color) => handleButtonColor(color, matchingHeaderTextColor(color))}
                 onSwatchChange={(color) => {
-                  handleButtonColor(color, matchingTextColor(color))
+                  handleButtonColor(color, matchingHeaderTextColor(color))
                   setButtonColorPickerExpanded(false)
                 }}
                 onTogglePicker={(isExpanded) => {

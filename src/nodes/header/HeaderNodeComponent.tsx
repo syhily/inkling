@@ -142,7 +142,7 @@ function HeaderNodeComponent({
   return (
     <>
       <HeaderCard
-        {...{
+        view={{
           alignment,
           backgroundColor,
           backgroundImageSrc,
@@ -155,7 +155,13 @@ function HeaderNodeComponent({
           buttonText,
           buttonTextColor,
           buttonUrl,
-          fileUploader: imageUploader,
+          isEditing,
+          isSwapped,
+          layout: layout === 'regular' || layout === 'wide' || layout === 'split' ? layout : 'full',
+          showBackgroundImage,
+          textColor,
+        }}
+        handlers={{
           handleAlignment,
           handleBackgroundColor,
           handleBackgroundSize,
@@ -171,22 +177,22 @@ function HeaderNodeComponent({
           handleShowBackgroundImage,
           handleSwapLayout,
           handleTextColor,
-          headerTextEditor,
-          headerTextEditorInitialState,
+        }}
+        upload={{
+          fileUploader: imageUploader,
           imageDragHandler,
-          isEditing,
           isPinturaEnabled,
-          isSwapped,
-          layout: layout === 'regular' || layout === 'wide' || layout === 'split' ? layout : 'full',
           openImageEditor,
           setFileInputRef: (ref: { current?: HTMLInputElement | null }) => {
             fileInputRef.current = ref?.current ?? null
           },
-          showBackgroundImage,
+          onFileChange,
+        }}
+        editors={{
+          headerTextEditor,
+          headerTextEditorInitialState,
           subheaderTextEditor,
           subheaderTextEditorInitialState,
-          textColor,
-          onFileChange,
         }}
       />
       <CardActionToolbar nodeKey={nodeKey} />

@@ -20,50 +20,72 @@ type DisplayKey = keyof typeof displayOptions
 
 type HeaderCardProps = React.ComponentProps<typeof HeaderCard>
 
-interface HeaderCardStoryArgs extends Partial<HeaderCardProps> {
-  display?: DisplayKey
-  header?: string
-  subheader?: string
+// story args stay flat (storybook controls are per-field); groupProps maps
+// them onto the card's grouped seam
+type HeaderCardStoryArgs = Partial<HeaderCardProps['view']> &
+  Partial<Pick<HeaderCardProps['editors'], 'headerTextEditorInitialState' | 'subheaderTextEditorInitialState'>> & {
+    display?: DisplayKey
+    header?: string
+    subheader?: string
+  }
+
+function groupProps(args: HeaderCardStoryArgs, editors: HeaderCardProps['editors']): HeaderCardProps {
+  const {
+    display: _display,
+    header: _header,
+    subheader: _subheader,
+    headerTextEditorInitialState,
+    subheaderTextEditorInitialState,
+    ...view
+  } = args
+  return {
+    view,
+    handlers: {
+      handleAlignment: () => {},
+      handleBackgroundColor: () => {},
+      handleBackgroundSize: () => {},
+      handleButtonColor: () => {},
+      handleButtonEnabled: () => {},
+      handleButtonText: () => {},
+      handleButtonTextBlur: () => {},
+      handleButtonUrl: () => {},
+      handleButtonUrlBlur: () => {},
+      handleClearBackgroundImage: () => {},
+      handleHideBackgroundImage: () => {},
+      handleLayout: () => {},
+      handleShowBackgroundImage: () => {},
+      handleSwapLayout: () => {},
+      handleTextColor: () => {},
+    },
+    upload: {
+      imageDragHandler: { isDraggedOver: false, setRef: () => {} },
+      openImageEditor: () => {},
+      setFileInputRef: () => {},
+      onFileChange: () => {},
+    },
+    editors: {
+      ...editors,
+      headerTextEditorInitialState,
+      subheaderTextEditorInitialState,
+    },
+  }
 }
 
 function HeaderCardStory({ display = 'Default', header = '', subheader = '', ...args }: HeaderCardStoryArgs) {
   const headerTextEditor = createEditor({ nodes: MINIMAL_NODES })
   const subheaderTextEditor = createEditor({ nodes: MINIMAL_NODES })
 
-  populateEditor({ editor: headerTextEditor, initialHtml: `${header}` })
-  populateEditor({ editor: subheaderTextEditor, initialHtml: `${subheader}` })
+  populateEditor({ editor: headerTextEditor, initialHtml: header })
+  populateEditor({ editor: subheaderTextEditor, initialHtml: subheader })
 
   const displayState = displayOptions[display]
-  const componentProps = {
-    handleAlignment: () => {},
-    handleButtonText: () => {},
-    handleButtonEnabled: () => {},
-    handleShowBackgroundImage: () => {},
-    handleHideBackgroundImage: () => {},
-    handleClearBackgroundImage: () => {},
-    handleBackgroundColor: () => {},
-    handleButtonColor: () => {},
-    handleLayout: () => {},
-    handleTextColor: () => {},
-    onFileChange: () => {},
-    openImageEditor: () => {},
-    imageDragHandler: { isDraggedOver: false, setRef: () => {} },
-    handleSwapLayout: () => {},
-    handleBackgroundSize: () => {},
-    handleButtonTextBlur: () => {},
-    handleButtonUrlBlur: () => {},
-    handleButtonUrl: () => {},
-    setFileInputRef: () => {},
-    ...args,
-    headerTextEditor,
-    subheaderTextEditor,
-  }
+  const componentProps = groupProps(args, { headerTextEditor, subheaderTextEditor })
 
   return (
     <div className="inkling-prose">
       <div className="mx-auto my-8 w-full min-w-[initial]">
-        <CardWrapper {...displayState} {...componentProps}>
-          <HeaderCard {...displayState} {...componentProps} />
+        <CardWrapper {...displayState}>
+          <HeaderCard {...componentProps} />
         </CardWrapper>
       </div>
     </div>
