@@ -2,7 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { getCardDragIcon } from '@/nodes/cards/card-menus'
+import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import { FileNode, $createFileNode, $isFileNode, INSERT_FILE_COMMAND } from '@/nodes/FileNode'
 
 const editorNodes = [FileNode]
@@ -27,9 +27,9 @@ describe('FileNode', () => {
     })
   })
 
-  it('exposes a static cardMenu entry', () => {
-    expect(FileNode.cardMenu?.[0]?.label).toBe('File')
-    expect(FileNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_FILE_COMMAND)
+  it('resolves a card menu entry', () => {
+    expect(getCardMenu('file')?.[0]?.label).toBe('File')
+    expect(getCardMenu('file')?.[0]?.insertCommand).toBe(INSERT_FILE_COMMAND)
   })
 
   it('resolves the file drag icon from the card menu', () => {

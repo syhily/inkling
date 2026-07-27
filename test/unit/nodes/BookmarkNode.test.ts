@@ -3,7 +3,7 @@ import { $createParagraphNode, $getRoot, $createTextNode, type LexicalEditor } f
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { BookmarkNode, $createBookmarkNode, $isBookmarkNode, INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
-import { getCardDragIcon } from '@/nodes/cards/card-menus'
+import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 
 const editorNodes = [BookmarkNode]
 
@@ -27,9 +27,9 @@ describe('BookmarkNode', () => {
     })
   })
 
-  it('exposes a static cardMenu entry', () => {
-    expect(BookmarkNode.cardMenu?.[0]?.label).toBe('Bookmark')
-    expect(BookmarkNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_BOOKMARK_COMMAND)
+  it('resolves a card menu entry', () => {
+    expect(getCardMenu('bookmark')?.[0]?.label).toBe('Bookmark')
+    expect(getCardMenu('bookmark')?.[0]?.insertCommand).toBe(INSERT_BOOKMARK_COMMAND)
   })
 
   it('resolves the bookmark drag icon from the card menu', () => {

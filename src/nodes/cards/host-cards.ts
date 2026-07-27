@@ -100,9 +100,9 @@ export function defineCard<NodeType extends string>(spec: HostCardSpec<NodeType>
       : spec.dragIcon
     : cardMenu?.[0]?.Icon
 
-  // Registered before assembly: the assembled class's static `cardMenu` is
-  // read from getCardMenu(nodeType) during assembly, so the menu facts must
-  // already be visible. `node` is attached right after — the registry shares
+  // Registered before assembly: the derived views (getCardMenu, read via
+  // getEditorCardNodes at editor mount) must see the menu facts as soon as
+  // the card exists. `node` is attached right after — the registry shares
   // the object, and its readers (the insert projection) run at editor mount.
   const record: HostCardRecord = {
     nodeType: spec.nodeType,

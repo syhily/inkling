@@ -2,7 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { getCardDragIcon } from '@/nodes/cards/card-menus'
+import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import { HtmlNode, $createHtmlNode, $isHtmlNode, INSERT_HTML_COMMAND } from '@/nodes/HtmlNode'
 
 const editorNodes = [HtmlNode]
@@ -27,9 +27,9 @@ describe('HtmlNode', () => {
     })
   })
 
-  it('exposes a static cardMenu entry', () => {
-    expect(HtmlNode.cardMenu?.[0]?.label).toBe('HTML')
-    expect(HtmlNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_HTML_COMMAND)
+  it('resolves a card menu entry', () => {
+    expect(getCardMenu('html')?.[0]?.label).toBe('HTML')
+    expect(getCardMenu('html')?.[0]?.insertCommand).toBe(INSERT_HTML_COMMAND)
   })
 
   it('resolves the html drag icon from the card menu', () => {

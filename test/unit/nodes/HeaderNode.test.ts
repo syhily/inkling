@@ -2,7 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { getCardDragIcon } from '@/nodes/cards/card-menus'
+import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import { HeaderNode, $createHeaderNode, $isHeaderNode, INSERT_HEADER_COMMAND } from '@/nodes/HeaderNode'
 
 const editorNodes = [HeaderNode]
@@ -27,9 +27,9 @@ describe('HeaderNode', () => {
     })
   })
 
-  it('exposes a static cardMenu entry', () => {
-    expect(HeaderNode.cardMenu?.[0]?.label).toBe('Header')
-    expect(HeaderNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_HEADER_COMMAND)
+  it('resolves a card menu entry', () => {
+    expect(getCardMenu('header')?.[0]?.label).toBe('Header')
+    expect(getCardMenu('header')?.[0]?.insertCommand).toBe(INSERT_HEADER_COMMAND)
   })
 
   it('resolves the header drag icon from the card menu', () => {

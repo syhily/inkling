@@ -2,7 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { getCardDragIcon } from '@/nodes/cards/card-menus'
+import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import { ToggleNode, $createToggleNode, $isToggleNode, INSERT_TOGGLE_COMMAND } from '@/nodes/ToggleNode'
 
 const editorNodes = [ToggleNode]
@@ -27,9 +27,9 @@ describe('ToggleNode', () => {
     })
   })
 
-  it('exposes a static cardMenu entry', () => {
-    expect(ToggleNode.cardMenu?.[0]?.label).toBe('Toggle')
-    expect(ToggleNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_TOGGLE_COMMAND)
+  it('resolves a card menu entry', () => {
+    expect(getCardMenu('toggle')?.[0]?.label).toBe('Toggle')
+    expect(getCardMenu('toggle')?.[0]?.insertCommand).toBe(INSERT_TOGGLE_COMMAND)
   })
 
   it('resolves the toggle drag icon from the card menu', () => {

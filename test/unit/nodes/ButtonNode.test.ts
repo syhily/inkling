@@ -4,7 +4,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { ButtonNode, $createButtonNode, $isButtonNode, INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
-import { getCardDragIcon } from '@/nodes/cards/card-menus'
+import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 
 const editorNodes = [ButtonNode]
 
@@ -28,9 +28,9 @@ describe('ButtonNode', () => {
     })
   })
 
-  it('exposes a static cardMenu entry', () => {
-    expect(ButtonNode.cardMenu?.[0]?.label).toBe('Button')
-    expect(ButtonNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_BUTTON_COMMAND)
+  it('resolves a card menu entry', () => {
+    expect(getCardMenu('button')?.[0]?.label).toBe('Button')
+    expect(getCardMenu('button')?.[0]?.insertCommand).toBe(INSERT_BUTTON_COMMAND)
   })
 
   it('resolves the button drag icon from the card menu', () => {

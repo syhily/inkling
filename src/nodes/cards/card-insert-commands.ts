@@ -2,8 +2,8 @@ import type { Klass, LexicalCommand, LexicalNode } from 'lexical'
 
 import type { CardInsertSpec } from '@/nodes/cards/card-declaration'
 
+import { resolveAllCardFacts } from '@/nodes/cards/card-facts'
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
-import { getHostCards } from '@/nodes/cards/host-card-registry'
 
 export interface CardInsertRegistration {
   nodeType: string
@@ -38,30 +38,38 @@ export const CARD_INSERT_COMMANDS: CardInsertRegistration[] = CARD_WRAPPER_NODES
   ]
 })
 
+const CARD_INSERT_COMMANDS_BY_TYPE = new Map(
+  CARD_INSERT_COMMANDS.map((registration) => [registration.nodeType, registration]),
+)
+
 /**
  * The full insert-registration view the registrar (`@/plugins/CardInsertPlugin`)
- * reads: the built-in projection above plus the host cards' insert projection
- * (CONTEXT.md: "host card"). A function rather than a constant so host cards
- * defined after module init still join — the per-card `hasNodes` guard at the
- * registration site keeps a surface that did not compose the card's node from
- * registering its command.
+ * reads: every card's insert projection in the merged card order — built-in
+ * declarations first, host cards (CONTEXT.md: "host card") after — owned by
+ * `@/nodes/cards/card-facts`; this view only projects each side to its
+ * registration (the built-in side reusing the `CARD_INSERT_COMMANDS` entries
+ * verbatim). A function rather than a constant so host cards defined after
+ * module init still join — the per-card `hasNodes` guard at the registration
+ * site keeps a surface that did not compose the card's node from registering
+ * its command.
  */
 export function getCardInsertRegistrations(): CardInsertRegistration[] {
-  return [
-    ...CARD_INSERT_COMMANDS,
-    ...getHostCards().flatMap((host) => {
-      const insert = host.insert
-      if (insert === undefined) {
-        return []
-      }
-      return [
-        {
-          nodeType: host.nodeType,
-          node: host.node,
-          command: insert.command,
-          insert,
-        },
-      ]
-    }),
-  ]
+  return resolveAllCardFacts().flatMap((facts) => {
+    if (facts.source === 'builtin') {
+      const registration = CARD_INSERT_COMMANDS_BY_TYPE.get(facts.nodeType)
+      return registration === undefined ? [] : [registration]
+    }
+    const insert = facts.host.insert
+    if (insert === undefined) {
+      return []
+    }
+    return [
+      {
+        nodeType: facts.nodeType,
+        node: facts.host.node,
+        command: insert.command,
+        insert,
+      },
+    ]
+  })
 }

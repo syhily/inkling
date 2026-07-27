@@ -2,7 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { getCardDragIcon } from '@/nodes/cards/card-menus'
+import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import { VideoNode, $createVideoNode, $isVideoNode, INSERT_VIDEO_COMMAND } from '@/nodes/VideoNode'
 
 const editorNodes = [VideoNode]
@@ -27,9 +27,9 @@ describe('VideoNode', () => {
     })
   })
 
-  it('exposes a static cardMenu entry', () => {
-    expect(VideoNode.cardMenu?.[0]?.label).toBe('Video')
-    expect(VideoNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_VIDEO_COMMAND)
+  it('resolves a card menu entry', () => {
+    expect(getCardMenu('video')?.[0]?.label).toBe('Video')
+    expect(getCardMenu('video')?.[0]?.insertCommand).toBe(INSERT_VIDEO_COMMAND)
   })
 
   it('resolves the video drag icon from the card menu', () => {

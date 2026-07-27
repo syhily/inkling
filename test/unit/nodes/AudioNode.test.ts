@@ -3,7 +3,7 @@ import { type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { AudioNode, $createAudioNode, $isAudioNode, INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
-import { getCardDragIcon } from '@/nodes/cards/card-menus'
+import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 
 const editorNodes = [AudioNode]
 
@@ -27,9 +27,9 @@ describe('AudioNode', () => {
     })
   })
 
-  it('exposes a static cardMenu entry', () => {
-    expect(AudioNode.cardMenu?.[0]?.label).toBe('Audio')
-    expect(AudioNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_AUDIO_COMMAND)
+  it('resolves a card menu entry', () => {
+    expect(getCardMenu('audio')?.[0]?.label).toBe('Audio')
+    expect(getCardMenu('audio')?.[0]?.insertCommand).toBe(INSERT_AUDIO_COMMAND)
   })
 
   it('resolves the audio drag icon from the card menu', () => {

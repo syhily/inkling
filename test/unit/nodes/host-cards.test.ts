@@ -135,9 +135,9 @@ describe('defineCard', () => {
     })
   })
 
-  it('resolves the assembled static cardMenu from the host registry at assembly time', () => {
-    expect(musicPlayer.node.cardMenu).toBe(getHostCard('musicPlayer')?.cardMenu)
-    expect(hostWidget.node.cardMenu).toBeUndefined()
+  it('resolves the card menu from the host registry', () => {
+    expect(getCardMenu('musicPlayer')).toBe(getHostCard('musicPlayer')?.cardMenu)
+    expect(getCardMenu(hostWidget.nodeType)).toBeUndefined()
   })
 })
 

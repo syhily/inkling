@@ -2,7 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { getCardDragIcon } from '@/nodes/cards/card-menus'
+import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import {
   HorizontalRuleNode,
   $createHorizontalRuleNode,
@@ -32,9 +32,9 @@ describe('HorizontalRuleNode', () => {
     })
   })
 
-  it('exposes a static cardMenu entry', () => {
-    expect(HorizontalRuleNode.cardMenu?.[0]?.label).toBe('Divider')
-    expect(HorizontalRuleNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_HORIZONTAL_RULE_COMMAND)
+  it('resolves a card menu entry', () => {
+    expect(getCardMenu('horizontalrule')?.[0]?.label).toBe('Divider')
+    expect(getCardMenu('horizontalrule')?.[0]?.insertCommand).toBe(INSERT_HORIZONTAL_RULE_COMMAND)
   })
 
   it('resolves the divider drag icon from the card menu', () => {

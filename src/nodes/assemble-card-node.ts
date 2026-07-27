@@ -3,16 +3,14 @@ import type { ReactNode } from 'react'
 
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 import type { CardDeclaration } from '@/nodes/cards/card-declaration'
-import type { MenuItem } from '@/utils/buildCardMenu'
 
 import { ensureLexicalNodeOwnMethods } from '@/nodes/base/ensure-node-own-methods'
-import { getCardMenu } from '@/nodes/cards/card-menus'
 import { decorateCard } from '@/nodes/decorate-card'
 
 /**
  * The class type `assembleCardNode` returns: the declaration's base node
- * class with the spec statics adopted (`nestedEditors`/`transientProps`/
- * `cardMenu`) and `decorate()` added. TypeScript can't see statics inherited
+ * class with the spec statics adopted (`nestedEditors`/`transientProps`)
+ * and `decorate()` added. TypeScript can't see statics inherited
  * through a class-expression base, so the Lexical static side is spelled out
  * via the mapped type — at runtime every member here is genuinely present on
  * the assembled class. The static side deliberately carries no extra
@@ -29,7 +27,6 @@ export type CardNodeClass<TNode extends LexicalNode> = {
   prototype: TNode & { decorate(): ReactNode }
   readonly nestedEditors: readonly NestedEditorSpec[] | undefined
   readonly transientProps: readonly TransientPropSpec[] | undefined
-  readonly cardMenu: MenuItem[] | undefined
 }
 
 /**
@@ -50,8 +47,8 @@ export type CardAssemblyDeclaration = Pick<
  * registered node class for a card from its declaration. The assembled class
  * subclasses the declaration's React-free base node and adopts the spec
  * statics — `nestedEditors` and `transientProps` (read off `this.constructor`
- * by the generated node machinery) and `cardMenu`. Its only method is
- * `decorate()`, delegating to the shared adapter (`@/nodes/decorate-card`).
+ * by the generated node machinery). Its only method is `decorate()`,
+ * delegating to the shared adapter (`@/nodes/decorate-card`).
  *
  * Behaviour the spec language can't express is NOT assembled here: upload
  * accessors, gallery image helpers, and the isEmpty()/getCardWidth()
@@ -72,8 +69,6 @@ export function assembleCardNode<TNode extends LexicalNode>(
   class AssembledCardNode extends baseNode {
     static nestedEditors = declaration.nestedEditors
     static transientProps = declaration.transientProps
-    // undefined for CodeBlock, the one card with no menu entry
-    static cardMenu: MenuItem[] | undefined = getCardMenu(declaration.nodeType)
 
     // Stamped at assembly, not inherited from the generated base: every card
     // built through the declaration pipeline — built-in or host-defined,

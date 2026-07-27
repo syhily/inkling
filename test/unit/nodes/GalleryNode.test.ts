@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import type { GalleryImage } from '@/types/gallery'
 
-import { getCardDragIcon } from '@/nodes/cards/card-menus'
+import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import {
   GalleryNode,
   $createGalleryNode,
@@ -36,9 +36,9 @@ describe('GalleryNode', () => {
     })
   })
 
-  it('exposes a static cardMenu entry', () => {
-    expect(GalleryNode.cardMenu?.[0]?.label).toBe('Gallery')
-    expect(GalleryNode.cardMenu?.[0]?.insertCommand).toBe(INSERT_GALLERY_COMMAND)
+  it('resolves a card menu entry', () => {
+    expect(getCardMenu('gallery')?.[0]?.label).toBe('Gallery')
+    expect(getCardMenu('gallery')?.[0]?.insertCommand).toBe(INSERT_GALLERY_COMMAND)
   })
 
   it('resolves the gallery drag icon from the card menu', () => {

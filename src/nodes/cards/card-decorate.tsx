@@ -4,7 +4,7 @@ import type { ComponentType, ReactNode, SVGProps } from 'react'
 import type { DecorateTargetSpec } from '@/nodes/cards/card-declaration'
 
 import { CARD_DECLARATIONS, type CardNodeType } from '@/nodes/cards'
-import { getHostCard } from '@/nodes/cards/host-card-registry'
+import { resolveCardFacts } from '@/nodes/cards/card-facts'
 
 import { render as renderAudioCard } from './decorate/audio'
 import { render as renderBookmarkCard } from './decorate/bookmark'
@@ -98,6 +98,13 @@ export interface CardDecorateTarget {
   IndicatorIcon?: ComponentType<SVGProps<SVGSVGElement>>
 }
 
+/**
+ * Resolves a card's decorate target by node type. The built-in-first /
+ * host-fallback merge lives in `@/nodes/cards/card-facts`; this view only
+ * projects the built-in side to its paired `CARD_DECORATE_TARGETS` entry —
+ * the host record already carries the same resolved shape.
+ */
 export function getCardDecorateTarget(nodeType: string): CardDecorateTarget | undefined {
-  return CARD_DECORATE_TARGETS_BY_TYPE.get(nodeType) ?? getHostCard(nodeType)
+  const facts = resolveCardFacts(nodeType)
+  return facts?.source === 'builtin' ? CARD_DECORATE_TARGETS_BY_TYPE.get(nodeType) : facts?.host
 }

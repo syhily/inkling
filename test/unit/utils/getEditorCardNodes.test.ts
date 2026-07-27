@@ -5,8 +5,8 @@ import { INSERT_IMAGE_COMMAND } from '@/nodes/cards/card-commands'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import { getEditorCardNodes, getRegisteredCardNodes } from '@/utils/getEditorCardNodes'
 
-// a cardMenu-carrying node with no matching declaration: the declarations are
-// the source of truth, so a static alone no longer makes a node a card
+// a card-shaped node with no matching declaration: the declarations are the
+// source of truth, so looking like a card does not make a node a card
 class UndeclaredCardNode extends DecoratorNode<null> {
   static getType() {
     return 'undeclared-card'
@@ -15,8 +15,6 @@ class UndeclaredCardNode extends DecoratorNode<null> {
   static clone() {
     return new UndeclaredCardNode()
   }
-
-  static cardMenu = [{ label: 'Card' }]
 
   createDOM() {
     return document.createElement('div')

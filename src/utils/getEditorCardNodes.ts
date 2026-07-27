@@ -3,9 +3,8 @@ import type { LexicalEditor } from 'lexical'
 import type { CardUploadType } from '@/nodes/cards/card-declaration'
 import type { CardMenuSource, MenuItem } from '@/utils/buildCardMenu'
 
-import { CARD_DECLARATIONS } from '@/nodes/cards'
+import { resolveAllCardFacts } from '@/nodes/cards/card-facts'
 import { getCardMenu } from '@/nodes/cards/card-menus'
-import { getHostCards } from '@/nodes/cards/host-card-registry'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
 /**
@@ -39,40 +38,34 @@ export function getEditorCardNodes(editor: LexicalEditor): [string, EditorCardNo
 }
 
 /**
- * The pure core of `getEditorCardNodes`: the card declarations filtered to a
- * set of registered node types, preserving declaration order (which
- * reproduces the editor's card registration order — see `@/nodes/cards`),
- * with host cards (CONTEXT.md: "host card") following in their registration
- * order. Testable directly with a fake registered-type set, no editor mock
- * needed.
+ * The pure core of `getEditorCardNodes`: the merged card facts
+ * (`@/nodes/cards/card-facts` — built-in declarations in declaration order,
+ * which reproduces the editor's card registration order, then host cards in
+ * their registration order) filtered to a set of registered node types.
+ * Testable directly with a fake registered-type set, no editor mock needed.
  */
 export function getRegisteredCardNodes(registeredNodeTypes: ReadonlySet<string>): [string, EditorCardNode][] {
-  const cardNodes: [string, EditorCardNode][] = []
-
-  for (const declaration of CARD_DECLARATIONS) {
-    if (!registeredNodeTypes.has(declaration.nodeType)) {
-      continue
+  return resolveAllCardFacts().flatMap((facts): [string, EditorCardNode][] => {
+    if (!registeredNodeTypes.has(facts.nodeType)) {
+      return []
     }
 
-    cardNodes.push([
-      declaration.nodeType,
-      {
-        cardMenu: getCardMenu(declaration.nodeType),
-        // `in` narrows the union to the declarations carrying the optional upload entry
-        uploadType: 'uploadType' in declaration ? declaration.uploadType : undefined,
-      },
-    ])
-  }
-
-  // host cards carry their resolved menu entries and upload key on the
-  // registry record — the same facts the declarations provide above
-  for (const host of getHostCards()) {
-    if (!registeredNodeTypes.has(host.nodeType)) {
-      continue
+    if (facts.source === 'host') {
+      // host cards carry their resolved menu entries and upload key on the
+      // registry record — the same facts the declarations provide below
+      return [[facts.nodeType, { cardMenu: facts.host.cardMenu, uploadType: facts.host.uploadType }]]
     }
 
-    cardNodes.push([host.nodeType, { cardMenu: host.cardMenu, uploadType: host.uploadType }])
-  }
-
-  return cardNodes
+    const { declaration } = facts
+    return [
+      [
+        declaration.nodeType,
+        {
+          cardMenu: getCardMenu(declaration.nodeType),
+          // `in` narrows the union to the declarations carrying the optional upload entry
+          uploadType: 'uploadType' in declaration ? declaration.uploadType : undefined,
+        },
+      ],
+    ]
+  })
 }

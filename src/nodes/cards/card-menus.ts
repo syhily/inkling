@@ -17,7 +17,7 @@ import MathCardIcon from '@/assets/icons/inkling-card-type-math.svg?react'
 import ToggleIcon from '@/assets/icons/inkling-card-type-toggle.svg?react'
 import VideoCardIcon from '@/assets/icons/inkling-card-type-video.svg?react'
 import { CARD_DECLARATIONS } from '@/nodes/cards'
-import { getHostCard } from '@/nodes/cards/host-card-registry'
+import { resolveCardFacts } from '@/nodes/cards/card-facts'
 
 /**
  * The menu/drag icons the declarations name by `CardIconId`. This is the one
@@ -82,12 +82,13 @@ const CARD_MENUS: Partial<Record<string, MenuItem[]>> = Object.fromEntries(
 /**
  * Resolves a card's slash/plus menu entries — what the hand-written
  * `CARD_MENUS` map keyed by node type used to hold, now derived from the
- * declarations, with a fallback to the host card registry (CONTEXT.md:
- * "host card"). Consumed by `assembleCardNode` (the assembled class's
- * static `cardMenu`) and by `getEditorCardNodes`.
+ * declarations. The built-in-first / host-fallback merge lives in
+ * `@/nodes/cards/card-facts`; this view only projects each side to its menu
+ * entries. Consumed by `getEditorCardNodes`.
  */
 export function getCardMenu(nodeType: string): MenuItem[] | undefined {
-  return CARD_MENUS[nodeType] ?? getHostCard(nodeType)?.cardMenu
+  const facts = resolveCardFacts(nodeType)
+  return facts?.source === 'builtin' ? CARD_MENUS[nodeType] : facts?.host.cardMenu
 }
 
 /**
@@ -100,10 +101,14 @@ export function getCardMenu(nodeType: string): MenuItem[] | undefined {
  * Host cards resolve theirs at registration (`defineCard`).
  */
 export function getCardDragIcon(nodeType: string): MenuItem['Icon'] {
-  const declaration = CARD_DECLARATIONS.find((entry) => entry.nodeType === nodeType)
-  if (!declaration) {
-    return getHostCard(nodeType)?.dragIcon
+  const facts = resolveCardFacts(nodeType)
+  if (facts === undefined) {
+    return undefined
   }
+  if (facts.source === 'host') {
+    return facts.host.dragIcon
+  }
+  const { declaration } = facts
   const dragIcon = 'dragIcon' in declaration ? declaration.dragIcon : undefined
   const menuIcon = 'menu' in declaration ? declaration.menu?.[0]?.icon : undefined
   const icon = dragIcon ?? menuIcon
