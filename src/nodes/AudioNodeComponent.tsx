@@ -7,9 +7,7 @@ import { AudioCard } from '@/components/ui/cards/AudioCard'
 import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
-import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
-import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
-import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
+import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import { $isAudioNode } from '@/nodes/base'
 import { audioThumbnailUploadIntent, audioUploadIntent } from '@/utils/upload-intent'
 
@@ -36,34 +34,34 @@ export function AudioNodeComponent({
   const write = useCardWriter(nodeKey, $isAudioNode)
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
   const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
-  const audioFileInputRef = React.useRef<HTMLInputElement>(null)
-  const thumbnailFileInputRef = React.useRef<HTMLInputElement>(null)
 
-  const audioUploader = fileUploader.useFileUpload('audio')
-  const thumbnailUploader = fileUploader.useFileUpload('mediaThumbnail')
-  const audioDragHandler = useFileDragAndDrop({ handleDrop: handleAudioDrop })
-  const thumbnailDragHandler = useFileDragAndDrop({ handleDrop: handleThumbnailDrop, disabled: !isEditing })
-
-  const uploadAudio = (files: FileList | File[] | null) =>
-    audioUploadIntent({ editor, nodeKey, upload: audioUploader.upload, files })
-  const uploadThumbnail = (files: FileList | File[] | null) =>
-    audioThumbnailUploadIntent({ editor, nodeKey, upload: thumbnailUploader.upload, files })
-
-  useInitialFileUpload({
+  const {
+    uploader: audioUploader,
+    fileInputRef: audioFileInputRef,
+    dragHandler: audioDragHandler,
+    onFileChange: onAudioFileChange,
+  } = useMediaCardUpload({
+    kind: 'audio',
+    nodeKey,
+    guard: $isAudioNode,
     initialFile,
-    isReady: !src && !audioUploader.isLoading,
-    run: (file) => uploadAudio([file]),
+    isReady: (uploader) => !src && !uploader.isLoading,
+    triggerFileDialog,
+    onFiles: (files, upload) => audioUploadIntent({ editor, nodeKey, upload, files }),
   })
 
-  const onAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fls = e.target.files
-    return await uploadAudio(fls)
-  }
-
-  const onThumbnailFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fls = e.target.files
-    return await uploadThumbnail(fls)
-  }
+  const {
+    uploader: thumbnailUploader,
+    fileInputRef: thumbnailFileInputRef,
+    dragHandler: thumbnailDragHandler,
+    onFileChange: onThumbnailFileChange,
+  } = useMediaCardUpload({
+    kind: 'mediaThumbnail',
+    nodeKey,
+    guard: $isAudioNode,
+    dragDisabled: !isEditing,
+    onFiles: (files, upload) => audioThumbnailUploadIntent({ editor, nodeKey, upload, files }),
+  })
 
   const setTitle = (newTitle: string) => {
     write((node) => {
@@ -76,22 +74,6 @@ export function AudioNodeComponent({
       node.thumbnailSrc = ''
     })
   }
-
-  async function handleAudioDrop(files: File[]) {
-    await uploadAudio(files)
-  }
-
-  async function handleThumbnailDrop(files: File[]) {
-    await uploadThumbnail(files)
-  }
-
-  useTriggerFileDialog({
-    editor,
-    nodeKey,
-    guard: $isAudioNode,
-    fileInputRef: audioFileInputRef,
-    triggerFileDialog,
-  })
 
   return (
     <>

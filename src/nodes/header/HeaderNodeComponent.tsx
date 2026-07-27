@@ -1,16 +1,14 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
-import { useContext, useEffect, useRef } from 'react'
-
-import type { FileChangeEvent } from '@/components/ui/cards/card-ui-types'
+import { useContext, useEffect } from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
 import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
-import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useHeaderBackgroundImage } from '@/hooks/useHeaderBackgroundImage'
+import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { headerFieldWriter } from '@/nodes/header/header-field-writer'
 import { $isHeaderNode } from '@/nodes/HeaderNode'
@@ -68,13 +66,12 @@ function HeaderNodeComponent({
 }: HeaderNodeComponentProps) {
   const [editor] = useLexicalComposerContext()
   const write = useCardWriter(nodeKey, $isHeaderNode)
-  const { cardConfig, fileUploader } = useContext(InklingHostIntegrationContext)
+  const { cardConfig } = useContext(InklingHostIntegrationContext)
   const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
 
   const { isEnabled: isPinturaEnabled, openEditor: openImageEditor } = usePinturaEditor({
     config: cardConfig.pinturaConfig,
   })
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   // the background-image show/hide/remove policy lives in the hook; the
   // component only supplies the node src, the write seam, and the file dialog
@@ -122,18 +119,20 @@ function HeaderNodeComponent({
   const handleSwapLayout = field.toggle('swapped', isSwapped)
   const handleButtonEnabled = field.toggle('buttonEnabled', buttonEnabled)
 
-  const imageUploader = fileUploader.useFileUpload('image')
-
-  const handleImageChange = async (files: FileList | File[] | null): Promise<void> => {
-    const imageSrc = await headerBackgroundUploadIntent({ editor, nodeKey, upload: imageUploader.upload, files })
-    imageApplied(imageSrc ?? '')
-  }
-
-  const onFileChange = async (e: FileChangeEvent): Promise<void> => {
-    await handleImageChange(e.target.files)
-  }
-
-  const imageDragHandler = useFileDragAndDrop({ handleDrop: handleImageChange })
+  const {
+    uploader: imageUploader,
+    fileInputRef,
+    dragHandler: imageDragHandler,
+    onFileChange,
+  } = useMediaCardUpload({
+    kind: 'image',
+    nodeKey,
+    guard: $isHeaderNode,
+    onFiles: async (files, upload) => {
+      const imageSrc = await headerBackgroundUploadIntent({ editor, nodeKey, upload, files })
+      imageApplied(imageSrc ?? '')
+    },
+  })
 
   useEffect(() => {
     headerTextEditor?.setEditable(isEditing)

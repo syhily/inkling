@@ -20,10 +20,8 @@ import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import useDropTarget from '@/hooks/useDropTarget'
-import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
-import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
+import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
-import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
 import { isCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 import { $isImageNode } from '@/nodes/ImageNode'
 import { $mergeImagesIntoGallery } from '@/plugins/behaviour/drop-surgery'
@@ -65,27 +63,37 @@ export function ImageNodeComponent({
   const [showLink, setShowLink] = React.useState(false)
   const { fileUploader, cardConfig, onError } = React.useContext(InklingHostIntegrationContext)
   const isSelected = useCardSelectionState((state) => state.selectedCardKey === nodeKey)
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
   const toolbarFileInputRef = React.useRef<HTMLInputElement | null>(null)
 
-  const imageUploader = fileUploader.useFileUpload('image')
-
-  const uploadImage = React.useCallback(
-    (files: FileList | File[] | null, { resetSrc = false } = {}) =>
+  const {
+    uploader: imageUploader,
+    fileInputRef,
+    dragHandler: imageFileDragHandler,
+    onFileChange,
+    runFiles,
+  } = useMediaCardUpload({
+    kind: 'image',
+    nodeKey,
+    guard: $isImageNode,
+    initialFile,
+    isReady: () => !src,
+    triggerFileDialog,
+    onFiles: (files, upload, source) =>
       imageUploadIntent({
         editor,
         nodeKey,
-        upload: imageUploader.upload,
+        upload,
         files,
-        // reset original src so it can be replaced with preview and upload progress
-        prePatch: resetSrc
-          ? (node) => {
-              node.src = ''
-            }
-          : undefined,
+        // reset original src on picker change so it can be replaced with
+        // preview and upload progress (drops/initial/data-URL files keep it)
+        prePatch:
+          source === 'input'
+            ? (node) => {
+                node.src = ''
+              }
+            : undefined,
       }),
-    [editor, imageUploader.upload, nodeKey],
-  )
+  })
 
   const onDropImageCard = React.useCallback(
     (draggable: DraggableInfo): boolean | undefined => {
@@ -111,7 +119,6 @@ export function ImageNodeComponent({
     [nodeKey],
   )
 
-  const imageFileDragHandler = useFileDragAndDrop({ handleDrop: handleImageDrop })
   const imageCardDragHandler = useDropTarget({
     canDrop: canDropImageCard,
     // the container ref is the image wrapper itself, so :scope makes the
@@ -146,7 +153,7 @@ export function ImageNodeComponent({
       try {
         const file = await dataSrcToFile(src)
         if (isMounted && file) {
-          await uploadImage([file])
+          runFiles([file], 'initial')
         }
       } catch (error) {
         onError(error, {})
@@ -158,10 +165,7 @@ export function ImageNodeComponent({
     return () => {
       isMounted = false
     }
-  }, [imageUploader.isLoading, onError, src, uploadImage])
-
-  // If an initial file is provided, upload it
-  useInitialFileUpload({ initialFile, isReady: !src, run: (file) => uploadImage([file]) })
+  }, [imageUploader.isLoading, onError, src, runFiles])
 
   React.useEffect(() => {
     // Populate missing image dimensions, occurs when images are
@@ -196,16 +200,6 @@ export function ImageNodeComponent({
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement> | { target: { files: File[] } }) => {
-    const files = e.target.files
-
-    if (!files || files.length === 0) {
-      return
-    }
-
-    return await uploadImage(files, { resetSrc: true })
-  }
-
   const setHref = (newHref: string) => {
     write((node) => {
       node.href = newHref
@@ -217,8 +211,6 @@ export function ImageNodeComponent({
       node.alt = newAltText
     })
   }
-
-  useTriggerFileDialog({ editor, nodeKey, guard: $isImageNode, fileInputRef, triggerFileDialog })
 
   const handleImageCardResize = React.useCallback(
     (newWidth: unknown) => {
@@ -252,10 +244,6 @@ export function ImageNodeComponent({
       nodeSelection.add(nodeKey)
       $setSelection(nodeSelection)
     })
-  }
-
-  async function handleImageDrop(files: File[]) {
-    await uploadImage(files)
   }
 
   // the link-input toolbar is a raw ActionToolbar (not a CardActionToolbar),

@@ -2,21 +2,17 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React, { useState } from 'react'
 
-import type { FileChangeEvent } from '@/components/ui/cards/card-ui-types'
-
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { VideoCard } from '@/components/ui/cards/VideoCard'
 import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
-import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
-import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
+import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import { usePreviewLease } from '@/hooks/usePreviewLease'
-import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
 import { $isVideoNode } from '@/nodes/base'
 import { isCardWidth } from '@/nodes/base/utils/card-widths'
 import extractVideoMetadata, { type VideoMetadata } from '@/utils/extractVideoMetadata'
-import { customThumbnailUploadIntent, videoThumbnailUploadIntent, videoUploadIntent } from '@/utils/upload-intent'
+import { customThumbnailUploadIntent, videoFlowUploadIntent, type UploadFn } from '@/utils/upload-intent'
 
 interface VideoNodeComponentProps {
   nodeKey: NodeKey
@@ -53,26 +49,18 @@ export function VideoNodeComponent({
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
   const isSelected = useCardSelectionState((state) => state.selectedCardKey === nodeKey)
   const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
-  const videoFileInputRef = React.useRef<HTMLInputElement | null>(null)
   const [previewThumbnail, setThumbnailPreview] = usePreviewLease()
-  const videoUploader = fileUploader.useFileUpload('video')
+  // host-provided hook seam: the composer contract requires useFileUpload to
+  // be identity-stable for the editor's lifetime, so this call is the same
+  // function every render (the compiler cannot verify context provenance)
+  // oxlint-disable-next-line react/react-compiler -- host-provided hook; identity is a composer contract
   const thumbnailUploader = fileUploader.useFileUpload('mediaThumbnail')
-  const customThumbnailUploader = fileUploader.useFileUpload('image')
-
-  const videoDragHandler = useFileDragAndDrop({ handleDrop: handleVideoDrop })
-  const thumbnailDragHandler = useFileDragAndDrop({ handleDrop: handleThumbnailDrop })
   const [metadataExtractionErrors, setMetadataExtractionErrors] = useState<VideoNodeMetadataError[]>([])
 
   const videoMimeTypes: string[] = fileUploader.fileTypes?.video?.mimeTypes || ['video/*']
 
-  useInitialFileUpload({
-    initialFile,
-    isReady: !videoUploader.isLoading,
-    run: (file) => handleVideoUpload([file]),
-  })
-
-  const handleVideoUpload = async (files: FileList | File[]) => {
-    const file = files[0]
+  const handleVideoUpload = async (files: FileList | File[] | null, videoUpload: UploadFn) => {
+    const file = files?.[0]
     if (!file) {
       return
     }
@@ -94,54 +82,46 @@ export function VideoNodeComponent({
       setThumbnailPreview(metadata.thumbnailBlob)
     }
 
-    const videoUrl = await videoUploadIntent({
+    // the main → thumbnail composition lives in upload-intent; the
+    // component keeps the metadata catch and the preview lease
+    await videoFlowUploadIntent({
       editor,
       nodeKey,
-      upload: videoUploader.upload,
+      videoUpload,
+      thumbnailUpload: thumbnailUploader.upload,
       files: [file],
       meta: metadata,
       onEmptyPreview: () => setThumbnailPreview(null),
     })
 
-    if (!videoUrl || !metadata.thumbnailBlob) {
-      return
-    }
-
-    const thumbnailFile = new File([metadata.thumbnailBlob], `${file.name}.jpg`, { type: 'image/jpeg' })
-    await videoThumbnailUploadIntent({
-      editor,
-      nodeKey,
-      upload: thumbnailUploader.upload,
-      files: [thumbnailFile],
-      videoUrl,
-    })
-
     setThumbnailPreview(null)
   }
 
-  const onVideoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) {
-      return
-    }
-    await handleVideoUpload(e.target.files ? Array.from(e.target.files) : [])
-  }
+  const {
+    uploader: videoUploader,
+    fileInputRef: videoFileInputRef,
+    dragHandler: videoDragHandler,
+    onFileChange: onVideoFileChange,
+  } = useMediaCardUpload({
+    kind: 'video',
+    nodeKey,
+    guard: $isVideoNode,
+    initialFile,
+    isReady: (uploader) => !uploader.isLoading,
+    triggerFileDialog,
+    onFiles: (files, upload) => handleVideoUpload(files, upload),
+  })
 
-  const handleCustomThumbnailChange = async (files: FileList | File[]) => {
-    await customThumbnailUploadIntent({ editor, nodeKey, upload: customThumbnailUploader.upload, files })
-  }
-
-  const onCustomThumbnailChange = async (e: FileChangeEvent) => {
-    await handleCustomThumbnailChange(e.target.files ? Array.from(e.target.files) : [])
-  }
-
-  async function handleVideoDrop(files: File[]) {
-    await handleVideoUpload(files)
-  }
-
-  async function handleThumbnailDrop(files: File[]) {
-    await handleCustomThumbnailChange(files)
-  }
+  const {
+    uploader: customThumbnailUploader,
+    dragHandler: thumbnailDragHandler,
+    onFileChange: onCustomThumbnailChange,
+  } = useMediaCardUpload({
+    kind: 'image',
+    nodeKey,
+    guard: $isVideoNode,
+    onFiles: (files, upload) => customThumbnailUploadIntent({ editor, nodeKey, upload, files }),
+  })
 
   const onRemoveCustomThumbnail = () => {
     write((node) => {
@@ -166,14 +146,6 @@ export function VideoNodeComponent({
       node.cardWidth = width
     })
   }
-
-  useTriggerFileDialog({
-    editor,
-    nodeKey,
-    guard: $isVideoNode,
-    fileInputRef: videoFileInputRef,
-    triggerFileDialog,
-  })
 
   const isCardPopulated = customThumbnail || thumbnail
 

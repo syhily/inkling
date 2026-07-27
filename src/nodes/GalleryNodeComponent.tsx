@@ -7,10 +7,10 @@ import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { GalleryCard } from '@/components/ui/cards/GalleryCard'
 import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useGalleryImages } from '@/hooks/useGalleryImages'
 import useGalleryReorder from '@/hooks/useGalleryReorder'
-import { recalculateImageRows } from '@/nodes/GalleryNode'
+import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
+import { $isGalleryNode, recalculateImageRows } from '@/nodes/GalleryNode'
 import { createPreviewLeasePool, galleryUploadIntent } from '@/utils/upload-intent'
 
 export interface GalleryNodeComponentProps {
@@ -22,19 +22,32 @@ export interface GalleryNodeComponentProps {
 export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInitialState }: GalleryNodeComponentProps) {
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
   const isSelected = useCardSelectionState((state) => state.selectedCardKey === nodeKey)
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const { images, setImages, setPreviewImages } = useGalleryImages(nodeKey)
   const [previewPool] = React.useState(() => createPreviewLeasePool())
 
   const galleryReorder = useGalleryReorder({ images, updateImages: reorderImages, isSelected })
-  const imageUploader = fileUploader.useFileUpload('image')
 
-  const handleImageFilesDrop = async (files: File[] | FileList): Promise<void> => {
-    await handleImageUploads(files)
-  }
-
-  const imageFilesDropper = useFileDragAndDrop({ handleDrop: handleImageFilesDrop })
+  const {
+    uploader: imageUploader,
+    fileInputRef,
+    dragHandler: imageFilesDropper,
+    onFileChange,
+  } = useMediaCardUpload({
+    kind: 'image',
+    nodeKey,
+    guard: $isGalleryNode,
+    onFiles: (files, upload) =>
+      galleryUploadIntent({
+        upload,
+        files: files ?? [],
+        images,
+        previews: previewPool,
+        setImages,
+        setPreviewImages,
+        setErrorMessage,
+      }),
+  })
 
   function reorderImages(newImages: GalleryImage[]): void {
     recalculateImageRows(newImages)
@@ -54,28 +67,6 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
       previewPool.releaseAll()
     }
   }, [previewPool])
-
-  const handleImageUploads = async (files: FileList | File[]): Promise<void> => {
-    await galleryUploadIntent({
-      upload: imageUploader.upload,
-      files,
-      images,
-      previews: previewPool,
-      setImages,
-      setPreviewImages,
-      setErrorMessage,
-    })
-  }
-
-  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
-    const files = e.target.files
-
-    if (!files || !files.length) {
-      return
-    }
-
-    return await handleImageUploads(files)
-  }
 
   function handleToolbarAdd(event: React.MouseEvent): void {
     event.preventDefault()

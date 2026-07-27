@@ -5,12 +5,9 @@ import React from 'react'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { FileCard } from '@/components/ui/cards/FileCard'
 import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
-import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
-import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
-import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
+import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import { $isFileNode } from '@/nodes/base'
 import { fileUploadIntent } from '@/utils/upload-intent'
 
@@ -42,46 +39,51 @@ function FileNodeComponent({
   const [editor] = useLexicalComposerContext()
   const write = useCardWriter(nodeKey, $isFileNode)
   const labels = useInklingLabels()
-  const [isPopulated, setIsPopulated] = React.useState<boolean>(false)
-  const { fileUploader } = React.useContext(InklingHostIntegrationContext)
+  // populated is a latch (below); a card MOUNTED with a complete file never
+  // transitions, so the initial state must start populated
+  const [isPopulated, setIsPopulated] = React.useState<boolean>(() => !!(fileSrc && fileSize && fileName))
   const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
 
-  const uploader = fileUploader.useFileUpload('file')
+  const {
+    uploader,
+    fileInputRef,
+    dragHandler: fileDragHandler,
+    onFileChange,
+  } = useMediaCardUpload({
+    kind: 'file',
+    nodeKey,
+    guard: $isFileNode,
+    initialFile,
+    isReady: () => !fileSrc,
+    triggerFileDialog,
+    onFiles: (files, upload, source) =>
+      fileUploadIntent({
+        editor,
+        nodeKey,
+        upload,
+        files,
+        // reset original src on picker change so it can be replaced with
+        // preview and upload progress (drops/initial files keep it)
+        prePatch:
+          source === 'input'
+            ? (node) => {
+                node.src = ''
+              }
+            : undefined,
+      }),
+  })
 
-  const uploadFile = (files: FileList | File[] | null, { resetSrc = false } = {}) =>
-    fileUploadIntent({
-      editor,
-      nodeKey,
-      upload: uploader.upload,
-      files,
-      // reset original src so it can be replaced with preview and upload progress
-      prePatch: resetSrc
-        ? (node) => {
-            node.src = ''
-          }
-        : undefined,
-    })
-
-  const handleFileDrop = async (files: File[] | FileList): Promise<void> => {
-    await uploadFile(files)
-  }
-
-  const fileDragHandler = useFileDragAndDrop({ handleDrop: handleFileDrop })
-
-  useInitialFileUpload({ initialFile, isReady: !fileSrc, run: (file) => uploadFile([file]) })
-
-  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
-    const files = e.target.files
-
-    await uploadFile(files, { resetSrc: true })
-  }
-
-  React.useEffect(() => {
-    if (fileSrc && fileSize && fileName) {
+  // populated is a latch: once the card has a complete file it stays populated
+  // (a later picker change clears src again, but the card must not flip back).
+  // Adjusted during render — React re-renders immediately, before committing
+  const isComplete = !!(fileSrc && fileSize && fileName)
+  const [prevComplete, setPrevComplete] = React.useState(isComplete)
+  if (prevComplete !== isComplete) {
+    setPrevComplete(isComplete)
+    if (isComplete) {
       setIsPopulated(true)
     }
-  }, [fileName, fileSize, fileSrc])
+  }
 
   const handleFileTitle = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const title = e.target.value
@@ -98,8 +100,6 @@ function FileNodeComponent({
       node.fileCaption = desc
     })
   }
-
-  useTriggerFileDialog({ editor, nodeKey, guard: $isFileNode, fileInputRef, triggerFileDialog })
 
   return (
     <>

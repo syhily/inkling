@@ -204,20 +204,26 @@ export async function runUploadIntent<TNode extends LexicalNode, TMeta = undefin
   }
 
   if (prePatch) {
-    await editor.update(() => {
+    // the microtask yields are load-bearing: Lexical 0.46 commits state on a
+    // microtask, and the reset must be visible BEFORE the upload begins
+    // (the prePatch is the early src reset the preview/progress UX reads —
+    // pinned by headerBackgroundUploadIntent.test.ts)
+    editor.update(() => {
       $updateCardNode(nodeKey, guard, prePatch)
     })
+    await Promise.resolve()
   }
 
   const lease = leasePreview ? createPreviewLease(file) : null
 
   try {
     if (lease && previewPatch) {
-      await editor.update(() => {
+      editor.update(() => {
         $updateCardNode(nodeKey, guard, (node) => {
           previewPatch(node, lease.url)
         })
       })
+      await Promise.resolve()
     }
 
     let extracted = meta
@@ -247,11 +253,12 @@ export async function runUploadIntent<TNode extends LexicalNode, TMeta = undefin
       extracted = await extractMetadata({ file, previewUrl: lease?.url ?? null, resultUrl })
     }
 
-    await editor.update(() => {
+    editor.update(() => {
       $updateCardNode(nodeKey, guard, (node) => {
         patch(node, { meta: extracted, resultUrl, result, file })
       })
     })
+    await Promise.resolve()
 
     return resultUrl
   } finally {
@@ -488,6 +495,68 @@ export function videoThumbnailUploadIntent({
       node.thumbnailSrc = resultUrl ?? ''
     },
   })
+}
+
+/**
+ * The video flow's metadata: the main flow's fields plus the thumbnail
+ * blob the sub-flow synthesizes into `${file.name}.jpg`.
+ */
+export interface VideoFlowMetadata extends VideoUploadMetadata {
+  thumbnailBlob?: Blob | null
+}
+
+/**
+ * The one video upload flow: main upload first, then — only when the main
+ * upload produced a url AND the metadata carries a thumbnail blob — the
+ * thumbnail sub-flow. An empty main result bails both flows and clears the
+ * component-owned preview via `onEmptyPreview` (the ordering the video
+ * component used to own inline). Returns the uploaded video url.
+ */
+export async function videoFlowUploadIntent({
+  editor,
+  nodeKey,
+  videoUpload,
+  thumbnailUpload,
+  files,
+  meta,
+  onEmptyPreview,
+}: {
+  editor: LexicalEditor
+  nodeKey: NodeKey
+  videoUpload: UploadFn
+  thumbnailUpload: UploadFn
+  files: FileList | File[]
+  meta: VideoFlowMetadata
+  onEmptyPreview: () => void
+}): Promise<string | undefined> {
+  const file = files[0]
+  if (!file) {
+    return undefined
+  }
+
+  const videoUrl = await videoUploadIntent({
+    editor,
+    nodeKey,
+    upload: videoUpload,
+    files: [file],
+    meta,
+    onEmptyPreview,
+  })
+
+  if (!videoUrl || !meta.thumbnailBlob) {
+    return videoUrl
+  }
+
+  const thumbnailFile = new File([meta.thumbnailBlob], `${file.name}.jpg`, { type: 'image/jpeg' })
+  await videoThumbnailUploadIntent({
+    editor,
+    nodeKey,
+    upload: thumbnailUpload,
+    files: [thumbnailFile],
+    videoUrl,
+  })
+
+  return videoUrl
 }
 
 /**
