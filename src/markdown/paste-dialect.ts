@@ -1,16 +1,14 @@
-// The paste dialect — one of Inkling's two markdown dialects (the shared
-// seam and grammar interface live in `@/markdown/dialects`; the card-aware
+// The paste dialect — one of Inkling's two markdown dialects (the card-aware
 // round-trip dialect is `@/markdown/round-trip`). Two pipelines speak it:
 // clipboard markdown (the headless `markdownToSanitizedHtml` in
 // `@/plugins/behaviour/markdownPaste`, fed into Lexical's HTML import by
 // `MarkdownPastePlugin`) and the markdown card's HTML export
 // (`@/nodes/base/nodes/markdown/markdown-renderer`).
 //
-// What the dialect speaks is declared as data on `pasteDialect.grammar`
-// (footnotes, ==mark==, ~sub~, ^sup^ — and no card-fence grammar). The
-// engine — markdown-it with its plugin stack, the cached per-slug-policy
-// instances, and the legacy `inklingVersion` slug branching — is the
-// module's hidden implementation below.
+// What the dialect speaks: footnotes, ==mark==, ~sub~, ^sup^ — and no
+// card-fence grammar. The engine — markdown-it with its plugin stack, the
+// cached per-slug-policy instances, and the legacy `inklingVersion` slug
+// branching — is the module's hidden implementation below.
 //
 // Where the dialects meet: the round-trip dialect's own export does not
 // survive this dialect — a pasted ```inkling:*``` fence renders as
@@ -28,8 +26,6 @@ import markdownItLazyHeaders from 'markdown-it-lazy-headers'
 import markdownItMark from 'markdown-it-mark'
 import markdownItSub from 'markdown-it-sub'
 import markdownItSup from 'markdown-it-sup'
-
-import type { MarkdownDialect } from '@/markdown/dialects'
 
 import { DEFAULT_INKLING_VERSION, isLegacyVersion, slugify } from '@/utils'
 
@@ -122,13 +118,5 @@ export function render(markdown: string, options: RenderOptions = {}): string {
   return selectRenderer(options).render(markdown)
 }
 
-export const pasteDialect: MarkdownDialect & { render: typeof render } = {
-  name: 'paste',
-  grammar: {
-    footnotes: true,
-    mark: true,
-    subSup: true,
-    cardFences: false,
-  },
-  render,
-}
+/** The paste dialect's single handle (CONTEXT.md: "markdown dialect"). */
+export const pasteDialect = { render }

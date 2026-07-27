@@ -13,9 +13,9 @@ import {
 import { HeadingNode, QuoteNode } from '@lexical/rich-text'
 import { $createParagraphNode } from 'lexical'
 
-import type { MarkdownDialect } from '@/markdown/dialects'
 import type { HostCard } from '@/nodes/cards/host-cards'
 
+import { codeBlockFence, stripFenceLines } from '@/markdown/card-shortcuts'
 import { DEFAULT_TRANSFORMERS } from '@/markdown/transformers'
 import { MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
 import { $createMarkdownNode, $isMarkdownNode, MarkdownNode } from '@/nodes/base/nodes/markdown/MarkdownNode'
@@ -38,17 +38,17 @@ import {
 
 /**
  * The card-aware round-trip dialect — one of Inkling's two markdown dialects
- * (the shared seam and grammar interface live in `@/markdown/dialects`; the
- * paste dialect is `@/markdown/paste-dialect`) and the public markdown
- * import/export API documented in `docs/markdown-api.md`.
+ * (the paste dialect is `@/markdown/paste-dialect`) and the public markdown
+ * import/export API (`markdownToLexicalState` / `lexicalStateToMarkdown`,
+ * documented in `docs/markdown-api.md`).
  *
- * What the dialect speaks is declared as data on `roundTripDialect.grammar`:
- * ```inkling:<card>``` fences, standard `![alt](src)` image syntax, and
- * `~`/`^` sub/sup — but not footnotes. (`==mark==` converts in both
- * dialects: `@lexical/markdown`'s TEXT_FORMAT_TRANSFORMERS include
- * HIGHLIGHT.) Conversion runs through `@lexical/markdown`'s
- * `$convertFromMarkdownString` / `$convertToMarkdownString` on a temporary
- * headless editor with the constrained node set below.
+ * What the dialect speaks: ```inkling:<card>``` fences, standard
+ * `![alt](src)` image syntax, and `~`/`^` sub/sup — but not footnotes.
+ * (`==mark==` converts in both dialects: `@lexical/markdown`'s
+ * TEXT_FORMAT_TRANSFORMERS include HIGHLIGHT.) Conversion runs through
+ * `@lexical/markdown`'s `$convertFromMarkdownString` /
+ * `$convertToMarkdownString` on a temporary headless editor with the
+ * constrained node set below.
  */
 
 // The pre-declaration markdown card order — pinned so the derived views stay
@@ -102,11 +102,7 @@ const MARKDOWN_CARD_TRANSFORMER: MultilineElementTransformer = {
   regExpEnd: /^```\s*$/,
   regExpStart: /^```inkling:markdown\s*$/,
   replace: (rootNode, _children, _startMatch, _endMatch, linesInBetween, _isImport) => {
-    // `linesInBetween` includes the (always empty) remainder of the opening
-    // fence line and the (always empty) prefix of the closing fence line —
-    // strip both, like the built-in CODE transformer does.
-    const markdown = linesInBetween?.slice(1, -1).join('\n') ?? ''
-    rootNode.append($createMarkdownNode({ markdown }))
+    rootNode.append($createMarkdownNode({ markdown: stripFenceLines(linesInBetween) }))
   },
   type: 'multiline-element',
 }
@@ -131,16 +127,14 @@ const CODE_FENCE: MultilineElementTransformer = {
     if (!$isCodeBlockNode(node)) {
       return null
     }
-    const code = node.code
-    return '```' + (node.language || '') + (code ? '\n' + code : '') + '\n' + '```'
+    // the fence shape is single-sourced in the card-shortcut seam; this
+    // transformer's variance is the text source (node.code)
+    return codeBlockFence(node.language, node.code)
   },
   regExpEnd: /^```\s*$/,
   regExpStart: /^```(\w+)?\s*$/,
   replace: (rootNode, _children, startMatch, _endMatch, linesInBetween, _isImport) => {
-    // Same bracketing as MARKDOWN_CARD_TRANSFORMER: strip the (always empty)
-    // remainder of the opening fence line and prefix of the closing line.
-    const code = linesInBetween?.slice(1, -1).join('\n') ?? ''
-    rootNode.append($createCodeBlockNode({ code, language: startMatch[1] }))
+    rootNode.append($createCodeBlockNode({ code: stripFenceLines(linesInBetween), language: startMatch[1] }))
   },
   type: 'multiline-element',
 }
@@ -297,19 +291,4 @@ export function lexicalStateToMarkdown(state: SerializedEditorState, options: Ma
   return editor.getEditorState().read(() => {
     return $convertToMarkdownString(resolveTransformers(cards))
   })
-}
-
-export const roundTripDialect: MarkdownDialect & {
-  markdownToLexicalState: typeof markdownToLexicalState
-  lexicalStateToMarkdown: typeof lexicalStateToMarkdown
-} = {
-  name: 'card-aware round-trip',
-  grammar: {
-    footnotes: false,
-    mark: true,
-    subSup: true,
-    cardFences: true,
-  },
-  markdownToLexicalState,
-  lexicalStateToMarkdown,
 }

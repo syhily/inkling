@@ -77,6 +77,26 @@ function $registeredCardClass(nodeType: string): Klass<LexicalNode> | undefined 
   return getRegisteredNodeMap($getEditor()).get(nodeType)?.klass
 }
 
+/**
+ * The one code-fence serialization: opening fence with language, body,
+ * closing fence. The two export transformers (the typing/import `CODE_BLOCK`
+ * in `@/markdown/transformers` and the round-trip dialect's `CODE_FENCE`)
+ * differ only in their TEXT SOURCE — `getTextContent()` vs `node.code` — and
+ * both delegate here, so the fence shape can never fork again.
+ */
+export function codeBlockFence(language: string, text: string): string {
+  return '```' + (language || '') + (text ? '\n' + text : '') + '\n' + '```'
+}
+
+/**
+ * The one bracketing-fence strip for multiline-element import: `linesInBetween`
+ * includes the (always empty) remainder of the opening fence line and the
+ * (always empty) prefix of the closing fence line — drop both.
+ */
+export function stripFenceLines(linesInBetween: string[] | null | undefined): string {
+  return linesInBetween?.slice(1, -1).join('\n') ?? ''
+}
+
 /** enter/tab trigger: fires on the key regardless of trailing space. NOT
  * end-anchored, so the `(\w{1,10})` group does not cap the language length
  * on this trigger (see module comment). */

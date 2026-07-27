@@ -19,6 +19,7 @@ import {
 import {
   $insertCodeBlockForShortcut,
   $insertHorizontalRuleForMarkdownTrigger,
+  codeBlockFence,
   DIVIDER_REGEXP,
   FENCE_TRANSFORMER_REGEXP,
 } from '@/markdown/card-shortcuts'
@@ -46,8 +47,9 @@ export const CODE_BLOCK = {
     if (!$isCodeBlockNode(node)) {
       return null
     }
-    const textContent = node.getTextContent()
-    return '```' + (node.language || '') + (textContent ? '\n' + textContent : '') + '\n' + '```'
+    // the fence shape is single-sourced in the card-shortcut seam; this
+    // transformer's variance is the text source (getTextContent)
+    return codeBlockFence(node.language, node.getTextContent())
   },
   // trigger only: the regex lives in the card-shortcut seam, and the trailing
   // `\s` there is what makes the fence fire on the space keystroke
