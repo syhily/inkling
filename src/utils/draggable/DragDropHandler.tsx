@@ -5,7 +5,7 @@ import {
   type DragSessionPoint,
   type DragStartSession,
 } from '@/utils/draggable/drag-session'
-import { DragDropContainer, type DraggableInfo, type DroppablePosition } from '@/utils/draggable/DragDropContainer'
+import { DragDropContainer, type DraggableInfo } from '@/utils/draggable/DragDropContainer'
 import {
   CONTAINER_SELECTOR,
   DRAGGABLE_SELECTOR,
@@ -16,6 +16,7 @@ import {
 } from '@/utils/draggable/draggable-constants'
 import { applyUserSelect, getParent } from '@/utils/draggable/draggable-utils'
 import { DropIndicator } from '@/utils/draggable/drop-indicator'
+import { resolveHoverTransition } from '@/utils/draggable/hover-transitions'
 import { ScrollHandler, type ScrollHandlerOptions } from '@/utils/draggable/ScrollHandler'
 
 interface EventHandlerEntry {
@@ -378,7 +379,10 @@ export class DragDropHandler {
     }
   }
 
-  // called when mouse moves whilst a drag is in progress
+  // called when mouse moves whilst a drag is in progress. The transition
+  // machine (hover-transitions) decides; this adapter measures the frame,
+  // applies the next state, and interprets the ordered effects — container
+  // callbacks, the indicator, and the drop resolution write
   _handleDrag(_event?: MouseEvent) {
     const drag = this._activeDrag
     if (!drag || !this._dragPreviewContainerElement) {
@@ -395,73 +399,65 @@ export class DragDropHandler {
 
     this.scrollHandler.dragMove(draggableInfo)
 
-    const overContainerElem = getParent(target, CONTAINER_SELECTOR)
-    let overDroppableElem: Element | null = getParent(target, DROPPABLE_SELECTOR)
+    const containerElem = getParent(target, CONTAINER_SELECTOR)
+    const rawDroppable = getParent(target, DROPPABLE_SELECTOR)
+    const droppableElem = rawDroppable instanceof HTMLElement ? rawDroppable : null
 
-    // it's possible for the mouse to be over a "dead" area when dragging over
-    // the position indicator, in this case we want to prevent a parent
-    // container's droppable from being picked up
-    if (!overContainerElem || !overContainerElem.contains(overDroppableElem)) {
-      overDroppableElem = null
-    }
+    const { state, effects } = resolveHoverTransition<DragDropContainer>(
+      {
+        container: drag.overContainer,
+        containerElem: drag.overContainerElem,
+        droppableElem: drag.overDroppableElem,
+        droppablePosition: drag.overDroppablePosition,
+      },
+      {
+        containerElem,
+        container: containerElem ? (this.containers.find((c) => c.element === containerElem) ?? null) : null,
+        droppableElem,
+        droppableRect: droppableElem ? droppableElem.getBoundingClientRect() : null,
+        mouse: draggableInfo.mousePosition,
+      },
+    )
 
-    const currentOverDroppableElem = drag.overDroppableElem
-    const isLeavingContainer = drag.overContainerElem !== null && overContainerElem !== drag.overContainerElem
-    const isLeavingDroppable = currentOverDroppableElem !== null && overDroppableElem !== currentOverDroppableElem
-    const isOverContainer = overContainerElem !== null && overContainerElem !== drag.overContainerElem
+    const prevContainer = drag.overContainer
+    drag.overContainer = state.container
+    drag.overContainerElem = state.containerElem
+    drag.overDroppableElem = state.droppableElem
+    drag.overDroppablePosition = state.droppablePosition
 
-    if (isLeavingContainer && drag.overContainer) {
-      drag.overContainer.onDragLeaveContainer(draggableInfo)
-      drag.overContainer = null
-      drag.overContainerElem = null
-      drag.dropResolution = null
-      this.dropIndicator.hide()
-    }
-
-    if (isOverContainer) {
-      const container = this.containers.find((c) => c.element === overContainerElem)
-      if (!drag.overContainer && container) {
-        container.onDragEnterContainer(draggableInfo)
-      }
-
-      drag.overContainer = container ?? null
-      drag.overContainerElem = overContainerElem
-    }
-
-    if (isLeavingDroppable && drag.overContainer && currentOverDroppableElem) {
-      drag.overContainer.onDragLeaveDroppable(currentOverDroppableElem)
-      drag.overDroppableElem = null
-    }
-
-    if (overDroppableElem instanceof HTMLElement) {
-      // get position within the droppable
-      const rect = overDroppableElem.getBoundingClientRect()
-      const inTop = draggableInfo.mousePosition.y < rect.y + rect.height / 2
-      const inLeft = draggableInfo.mousePosition.x < rect.x + rect.width / 2
-      const position: DroppablePosition = `${inTop ? 'top' : 'bottom'}-${inLeft ? 'left' : 'right'}`
-
-      if (!drag.overDroppableElem && drag.overContainer) {
-        drag.overContainer.onDragEnterDroppable(overDroppableElem, position)
-      }
-
-      if (overDroppableElem !== drag.overDroppableElem || position !== drag.overDroppablePosition) {
-        drag.overDroppableElem = overDroppableElem
-        drag.overDroppablePosition = position
-        if (drag.overContainer) {
-          drag.overContainer.onDragOverDroppable(overDroppableElem, position)
-        }
-
-        // container.getIndicatorPosition returns false if the drop is not
-        // allowed; its answer is the drop's resolution — kept on the drag
-        // state and handed to onDrop at mouse-up, so what the indicator
-        // showed is exactly what the drop consumes
-        const resolution = drag.overContainer?.getIndicatorPosition(draggableInfo, overDroppableElem, position)
-        if (resolution) {
-          drag.dropResolution = resolution
-          this.dropIndicator.show(overDroppableElem, position)
-        } else {
+    for (const effect of effects) {
+      switch (effect.kind) {
+        case 'leave-container':
+          prevContainer?.onDragLeaveContainer(draggableInfo)
           drag.dropResolution = null
           this.dropIndicator.hide()
+          break
+        case 'enter-container':
+          drag.overContainer?.onDragEnterContainer(draggableInfo)
+          break
+        case 'leave-droppable':
+          drag.overContainer?.onDragLeaveDroppable(effect.droppable)
+          break
+        case 'enter-droppable':
+          drag.overContainer?.onDragEnterDroppable(effect.droppable, effect.position)
+          break
+        case 'resolve-drop': {
+          if (drag.overContainer) {
+            drag.overContainer.onDragOverDroppable(effect.droppable, effect.position)
+          }
+          // container.getIndicatorPosition returns false if the drop is not
+          // allowed; its answer is the drop's resolution — kept on the drag
+          // state and handed to onDrop at mouse-up, so what the indicator
+          // showed is exactly what the drop consumes
+          const resolution = drag.overContainer?.getIndicatorPosition(draggableInfo, effect.droppable, effect.position)
+          if (resolution) {
+            drag.dropResolution = resolution
+            this.dropIndicator.show(effect.droppable, effect.position)
+          } else {
+            drag.dropResolution = null
+            this.dropIndicator.hide()
+          }
+          break
         }
       }
     }
