@@ -18,6 +18,8 @@ import {
   $mergeImagesIntoGallery,
   $relocateCard,
   $removeDropSource,
+  applyImageCardDrop,
+  isImageCardDropAllowed,
   shouldRemoveDropSource,
 } from '@/plugins/behaviour/drop-surgery'
 
@@ -461,6 +463,77 @@ describe('$insertDraggedImage without the image card registered', () => {
     expect(result).toBeNull()
     editor.getEditorState().read(() => {
       expect($getRoot().getChildrenSize()).toBe(0)
+    })
+  })
+})
+
+describe('the image-card-onto-image drop policy', () => {
+  const MERGE_NODES = [ImageNode, GalleryNode]
+
+  function draggableInfo(overrides: Record<string, unknown> = {}) {
+    return {
+      type: 'card',
+      cardName: 'image',
+      nodeKey: 'dragged-key',
+      element: null,
+      target: null,
+      mousePosition: { x: 0, y: 0 },
+      dataset: { src: 'https://cdn.example.com/dragged.png' },
+      ...overrides,
+    } as Parameters<typeof isImageCardDropAllowed>[0]
+  }
+
+  it.each([
+    ['allows an image card dragged from a different node', draggableInfo(), true],
+    ['rejects a non-card payload', draggableInfo({ type: 'image' }), false],
+    ['rejects a non-image card', draggableInfo({ cardName: 'file' }), false],
+    ['rejects a missing node key', draggableInfo({ nodeKey: undefined }), false],
+    ['rejects dropping the card onto itself', draggableInfo({ nodeKey: 'target-key' }), false],
+  ])('%s', (_label, info, expected) => {
+    expect(isImageCardDropAllowed(info, 'target-key')).toBe(expected)
+  })
+
+  it('applyImageCardDrop merges the pair into a gallery', async () => {
+    const editor = createEditor({ namespace: 'test', nodes: MERGE_NODES, onError: () => {} })
+    let targetKey = ''
+    let info = draggableInfo()
+    await updateEditor(editor, () => {
+      const root = $getRoot()
+      root.clear()
+      const target = $createImageNode({ src: 'https://cdn.example.com/target.png' })
+      const dragged = $createImageNode({ src: 'https://cdn.example.com/dragged.png' })
+      root.append(target, dragged)
+      targetKey = target.getKey()
+      info = draggableInfo({ nodeKey: dragged.getKey() })
+    })
+
+    applyImageCardDrop(editor, targetKey, info)
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0)
+    })
+
+    editor.getEditorState().read(() => {
+      const children = $getRoot().getChildren()
+      expect(children).toHaveLength(1)
+      expect($isGalleryNode(children[0])).toBe(true)
+    })
+  })
+
+  it('applyImageCardDrop leaves the tree untouched when the allowance fails', async () => {
+    const editor = createEditor({ namespace: 'test', nodes: MERGE_NODES, onError: () => {} })
+    await updateEditor(editor, () => {
+      $getRoot().clear()
+      $getRoot().append($createImageNode({ src: 'https://cdn.example.com/target.png' }))
+    })
+
+    applyImageCardDrop(editor, 'target-key', draggableInfo({ type: 'image' }))
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0)
+    })
+
+    editor.getEditorState().read(() => {
+      expect($getRoot().getChildrenSize()).toBe(1)
+      expect($isImageNode($getRoot().getFirstChild())).toBe(true)
     })
   })
 })

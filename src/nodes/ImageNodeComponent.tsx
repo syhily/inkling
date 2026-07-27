@@ -1,15 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import {
-  $createNodeSelection,
-  $getNodeByKey,
-  $setSelection,
-  type EditorState,
-  type LexicalEditor,
-  type NodeKey,
-} from 'lexical'
+import { $createNodeSelection, $setSelection, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
-
-import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { CardActionToolbar, useCardToolbarLabel } from '@/components/ui/CardActionToolbar'
@@ -24,10 +15,9 @@ import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { isCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 import { $isImageNode } from '@/nodes/ImageNode'
-import { $mergeImagesIntoGallery } from '@/plugins/behaviour/drop-surgery'
-import { dataSrcToFile } from '@/utils/dataSrcToFile'
-import { getImageDimensions } from '@/utils/getImageDimensions'
-import { getAllowedImageCardWidths, getDefaultImageCardWidth } from '@/utils/image-card-widths'
+import { applyImageCardDrop, isImageCardDropAllowed } from '@/plugins/behaviour/drop-surgery'
+import { backfillImageDimensions, clampImageCardWidth, migrateImageDataUrl } from '@/plugins/behaviour/image-lifecycle'
+import { getAllowedImageCardWidths } from '@/utils/image-card-widths'
 import { isGif } from '@/utils/isGif'
 import { imageUploadIntent } from '@/utils/upload-intent'
 
@@ -95,37 +85,16 @@ export function ImageNodeComponent({
       }),
   })
 
-  const onDropImageCard = React.useCallback(
-    (draggable: DraggableInfo): boolean | undefined => {
-      const { type, cardName, dataset } = draggable
-      const draggedNodeKey = draggable.nodeKey
-
-      if (type === 'card' && cardName === 'image' && draggedNodeKey && dataset) {
-        editor.update(() => {
-          $mergeImagesIntoGallery(nodeKey, draggedNodeKey, dataset)
-        })
-      }
-
-      return undefined
-    },
-    [editor, nodeKey],
-  )
-
-  const canDropImageCard = React.useCallback(
-    (draggable: DraggableInfo): boolean => {
-      const draggedNodeKey = draggable.nodeKey
-      return draggable.type === 'card' && draggable.cardName === 'image' && draggedNodeKey !== nodeKey
-    },
-    [nodeKey],
-  )
-
   const imageCardDragHandler = useDropTarget({
-    canDrop: canDropImageCard,
+    canDrop: (draggable) => isImageCardDropAllowed(draggable, nodeKey),
     // the container ref is the image wrapper itself, so :scope makes the
     // whole image card draggable/droppable for creating galleries
     draggableSelector: ':scope',
     droppableSelector: ':scope',
-    onDrop: onDropImageCard,
+    onDrop: (draggable) => {
+      applyImageCardDrop(editor, nodeKey, draggable)
+      return undefined
+    },
   })
 
   const { isEnabled: isPinturaEnabled, openEditor: openImageEditor } = usePinturaEditor({
@@ -135,66 +104,28 @@ export function ImageNodeComponent({
   const allowedImageCardWidths = React.useMemo(() => {
     return getAllowedImageCardWidths(cardConfig.image?.allowedWidths)
   }, [cardConfig.image?.allowedWidths])
-  const defaultImageCardWidth = React.useMemo(() => {
-    return getDefaultImageCardWidth(allowedImageCardWidths)
-  }, [allowedImageCardWidths])
   const hasMultipleImageCardWidths = allowedImageCardWidths.length > 1
 
+  // the mount-time document migrations (data:-URL upload, dimension
+  // backfill, width clamp) live in @/plugins/behaviour/image-lifecycle
   React.useEffect(() => {
-    if (!src?.startsWith('data:') || imageUploader.isLoading) {
-      return undefined
-    }
-
     let isMounted = true
-
-    // When copy/pasting from Google Docs it's possible for images to be transferred with data: URLs.
-    // Convert `data:` URL to File and upload it
-    const uploadFile = async () => {
-      try {
-        const file = await dataSrcToFile(src)
-        if (isMounted && file) {
-          runFiles([file], 'initial')
-        }
-      } catch (error) {
-        onError(error, {})
-      }
-    }
-
-    void uploadFile()
-
+    void migrateImageDataUrl(
+      { src: src ?? '', isLoading: imageUploader.isLoading, isCancelled: () => !isMounted },
+      { runUpload: (file) => runFiles([file], 'initial'), onError: (error) => onError(error, {}) },
+    )
     return () => {
       isMounted = false
     }
   }, [imageUploader.isLoading, onError, src, runFiles])
 
   React.useEffect(() => {
-    // Populate missing image dimensions, occurs when images are
-    // pasted/dragged/inserted as external or when loaded from serialized
-    // state that has missing images
-    const populateImageDimensions = async () => {
-      if (src && !initialFile && !triggerFileDialog) {
-        const { width, height } = await getImageDimensions(src)
-        write((node) => {
-          node.width = width
-          node.height = height
-        })
-      }
-    }
-
-    const hasMissingDimensions = editor.getEditorState().read(() => {
-      const node = $getNodeByKey(nodeKey)
-      if ($isImageNode(node) && (!node.width || !node.height)) {
-        return true
-      }
-      return false
-    })
-
-    if (hasMissingDimensions) {
-      // a broken/unloadable src rejects here; the dimensions simply stay unset
-      populateImageDimensions().catch((error: unknown) => {
-        onError(error, {})
-      })
-    }
+    void backfillImageDimensions(
+      editor,
+      nodeKey,
+      { src, initialFile, triggerFileDialog },
+      { write, onError: (error) => onError(error, {}) },
+    )
 
     // We only do this for init
     // oxlint-disable-next-line react-hooks/exhaustive-deps
@@ -228,10 +159,8 @@ export function ImageNodeComponent({
   )
 
   React.useEffect(() => {
-    if (!allowedImageCardWidths.includes(cardWidth)) {
-      handleImageCardResize(defaultImageCardWidth)
-    }
-  }, [allowedImageCardWidths, cardWidth, defaultImageCardWidth, handleImageCardResize])
+    clampImageCardWidth(cardWidth, allowedImageCardWidths, { write })
+  }, [allowedImageCardWidths, cardWidth, write])
 
   const cancelLinkAndReselect = () => {
     setShowLink(false)

@@ -4,12 +4,14 @@ import {
   $getNearestNodeFromDOMNode,
   $getNodeByKey,
   $setSelection,
+  type LexicalEditor,
   type NodeKey,
 } from 'lexical'
 
 import type { GalleryNode } from '@/nodes/GalleryNode'
 import type { ImageNode, ImageNodeDataset } from '@/nodes/ImageNode'
 import type { GalleryImage } from '@/types/gallery'
+import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { $isImageNode } from '@/nodes/base/nodes/image/ImageNode'
 import { getImageFilenameFromSrc } from '@/utils/getImageFilenameFromSrc'
@@ -152,6 +154,37 @@ export function $mergeImagesIntoGallery(
   targetImageNode.replace(galleryNode)
   droppedImageNode.remove()
   return true
+}
+
+/**
+ * The image-card-onto-image drop allowance (gallery creation): the payload
+ * is an image CARD dragged from a different node than the target.
+ */
+export function isImageCardDropAllowed(draggable: DraggableInfo, targetNodeKey: NodeKey): boolean {
+  return (
+    draggable.type === 'card' &&
+    draggable.cardName === 'image' &&
+    !!draggable.nodeKey &&
+    draggable.nodeKey !== targetNodeKey
+  )
+}
+
+/**
+ * Applies the image-card-onto-image drop: merges both cards into a gallery
+ * ($mergeImagesIntoGallery — the gallery takes the target's slot). Returns
+ * false when the allowance fails or the payload carries no key/dataset. The
+ * drop target's `onDrop` returns `undefined` regardless — the merge is its
+ * own acknowledgement, matching the historical glue.
+ */
+export function applyImageCardDrop(editor: LexicalEditor, targetNodeKey: NodeKey, draggable: DraggableInfo): void {
+  if (!isImageCardDropAllowed(draggable, targetNodeKey) || !draggable.nodeKey || !draggable.dataset) {
+    return
+  }
+  const draggedImageKey = draggable.nodeKey
+  const draggedDataset = draggable.dataset
+  editor.update(() => {
+    $mergeImagesIntoGallery(targetNodeKey, draggedImageKey, draggedDataset)
+  })
 }
 
 /**
