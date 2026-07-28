@@ -1,16 +1,7 @@
 import type { InitialEditorStateType } from '@lexical/react/LexicalComposer'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import {
-  mergeRegister,
-  BLUR_COMMAND,
-  COMMAND_PRIORITY_HIGH,
-  COMMAND_PRIORITY_LOW,
-  FOCUS_COMMAND,
-  KEY_ARROW_DOWN_COMMAND,
-  KEY_ARROW_UP_COMMAND,
-  type LexicalEditor,
-} from 'lexical'
+import { mergeRegister, BLUR_COMMAND, COMMAND_PRIORITY_LOW, FOCUS_COMMAND, type LexicalEditor } from 'lexical'
 import React, { useContext } from 'react'
 
 import InklingComposableEditor from '@/components/InklingComposableEditor'
@@ -20,8 +11,7 @@ import { useCardIsSelected } from '@/context/CardSelectionStoreContext'
 import { MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import {
-  isTypeaheadMenuOpen,
-  markEventFromCaptionEditor,
+  registerCaptionArrowHandoff,
   registerCaptionTypeToFocus,
   registerNestedEnterHandoff,
 } from '@/plugins/behaviour/nested-editor-protocol'
@@ -70,34 +60,9 @@ function CaptionPlugin({ parentEditor }: { parentEditor: LexicalEditor }) {
         COMMAND_PRIORITY_LOW,
       ),
       registerNestedEnterHandoff(editor, parentEditor),
-      editor.registerCommand(
-        KEY_ARROW_DOWN_COMMAND,
-        (event) => {
-          // bail out when a typeahead menu is open so arrow keys navigate the
-          // menu instead of moving focus to the next/parent editor
-          if (isTypeaheadMenuOpen()) {
-            return false
-          }
-          // handle moving focus at the parent editor level (select next card)
-          parentEditor.dispatchCommand(KEY_ARROW_DOWN_COMMAND, markEventFromCaptionEditor(event))
-          return true
-        },
-        COMMAND_PRIORITY_HIGH,
-      ),
-      editor.registerCommand(
-        KEY_ARROW_UP_COMMAND,
-        (event) => {
-          // bail out when a typeahead menu is open so arrow keys navigate the
-          // menu instead of moving focus to the next/parent editor
-          if (isTypeaheadMenuOpen()) {
-            return false
-          }
-          // handle moving focus at the parent editor level (select next card)
-          parentEditor.dispatchCommand(KEY_ARROW_UP_COMMAND, markEventFromCaptionEditor(event))
-          return true
-        },
-        COMMAND_PRIORITY_HIGH,
-      ),
+      // the caption arrow hand-off lives in the nested-editor protocol
+      // beside the Enter hand-off it mirrors
+      registerCaptionArrowHandoff(editor, parentEditor),
     )
   }, [editor, setCaptionHasFocus, parentEditor, nodeKey])
 

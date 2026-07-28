@@ -46,8 +46,13 @@ import {
   $getSelection,
   $setSelection,
   BLUR_COMMAND,
+  COMMAND_PRIORITY_HIGH,
   COMMAND_PRIORITY_LOW,
+  KEY_ARROW_DOWN_COMMAND,
+  KEY_ARROW_UP_COMMAND,
   KEY_ENTER_COMMAND,
+  mergeRegister,
+  type LexicalCommand,
   type LexicalEditor,
   type NodeKey,
 } from 'lexical'
@@ -154,6 +159,36 @@ export function registerNestedEnterHandoff(
     },
     COMMAND_PRIORITY_LOW,
   )
+}
+
+/**
+ * The caption arrow hand-off (the third caption behaviour, completing the
+ * provenance/enter/arrow trio this module's header names): arrow keys in a
+ * caption editor re-dispatch to the parent editor — marked with caption
+ * provenance so the parent's handlers can reselect the card — with the same
+ * typeahead bail as the Enter hand-off (an open menu navigates instead).
+ * Registered at COMMAND_PRIORITY_HIGH (the caption's arrows pre-empt the
+ * shared LOW-priority handlers). One registration owns both arrow commands;
+ * the caption plugin keeps only its FOCUS/BLUR focus-tracking pair.
+ */
+export function registerCaptionArrowHandoff(editor: LexicalEditor, parentEditor: LexicalEditor): () => void {
+  const registerArrowHandoff = (command: LexicalCommand<KeyboardEvent>) =>
+    editor.registerCommand(
+      command,
+      (event) => {
+        // bail out when a typeahead menu is open so arrow keys navigate the
+        // menu instead of moving focus to the next/parent editor
+        if (isTypeaheadMenuOpen()) {
+          return false
+        }
+        // handle moving focus at the parent editor level (select next card)
+        parentEditor.dispatchCommand(command, markEventFromCaptionEditor(event))
+        return true
+      },
+      COMMAND_PRIORITY_HIGH,
+    )
+
+  return mergeRegister(registerArrowHandoff(KEY_ARROW_UP_COMMAND), registerArrowHandoff(KEY_ARROW_DOWN_COMMAND))
 }
 
 /**
