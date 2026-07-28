@@ -16,6 +16,10 @@ import type { CardNode } from '@/types/lexical-internals'
 import { $isAtTopOfNode, $selectDecoratorNode, getTopLevelNativeElement } from '@/utils'
 import { $ensureParagraphAfterCard } from '@/utils/$ensureParagraphAfterCard'
 
+import type { CardSelectionStore } from './cardSelectionStore'
+
+import { DELETE_CARD_COMMAND } from './commands'
+
 export const RANGE_TO_ELEMENT_BOUNDARY_THRESHOLD_PX = 10
 
 // Card adjacency (see CONTEXT.md) comes in two notions: visual adjacency — the
@@ -192,6 +196,31 @@ export function editorOwnsFocus(editor: LexicalEditor): boolean {
   return document.activeElement === editor.getRootElement()
 }
 
+/**
+ * The "selected card eats the destructive key" gate — the one home of the
+ * policy the backspace/delete/delete-line handlers share: while the editor
+ * owns focus and a top-level (non-nested) card is selected, the key deletes
+ * the card with the handler's direction instead of touching text. Returns
+ * true when the key was claimed. Each handler keeps its own focus-swallow
+ * policy (backspace/delete swallow early; delete-line falls through to its
+ * caret-adjacent branches); this gate owns only the selected-card branch.
+ */
+export function dispatchSelectedCardDeletion(
+  editor: LexicalEditor,
+  store: CardSelectionStore,
+  isNested: boolean | undefined,
+  direction: 'backward' | 'forward',
+  event?: KeyboardEvent | null,
+): boolean {
+  const { selectedCardKey } = store.getState()
+  if (isNested || !selectedCardKey || !editorOwnsFocus(editor)) {
+    return false
+  }
+  event?.preventDefault()
+  editor.dispatchCommand(DELETE_CARD_COMMAND, { cardKey: selectedCardKey, direction })
+  return true
+}
+
 // Card selection operations — the commands half of the module; the queries above find the cards these act on.
 export function $selectCard(editor: LexicalEditor, nodeKey: string) {
   const selection = $createNodeSelection()
@@ -215,19 +244,40 @@ export function $deselectCard(editor: LexicalEditor, nodeKey: string) {
   }
 }
 
-export function $removeOrReplaceNodeWithParagraph(editor: LexicalEditor, node: CardNode) {
+/**
+ * The focus choreography of `$removeOrReplaceNodeWithParagraph`:
+ * - `'decorator-next'` (default, deselect-driven removal): focus moves to the
+ *   root element only when the next sibling is a decorator, because selecting
+ *   one leaves no caret to carry focus.
+ * - `'root-first'` (ctrl/cmd+Enter leaving edit mode): focus returns to the
+ *   editor BEFORE the card's chrome unmounts — otherwise it stays on removed
+ *   elements and swallows further key events.
+ */
+export type CardRemovalFocus = 'decorator-next' | 'root-first'
+
+export function $removeOrReplaceNodeWithParagraph(
+  editor: LexicalEditor,
+  node: LexicalNode,
+  { focus = 'decorator-next' }: { focus?: CardRemovalFocus } = {},
+) {
+  if (focus === 'root-first') {
+    editor.getRootElement()?.focus({ preventScroll: true })
+  }
+
   if ($getRoot().getLastChild()?.is(node)) {
     $ensureParagraphAfterCard(node, { select: true })
   } else {
     const nextNode = node.getNextSibling()
     if (nextNode && $isDecoratorNode(nextNode)) {
       $selectDecoratorNode(nextNode)
-      // selecting a decorator node does not change the
-      // window selection (there's no caret) so we need
-      // to manually move focus to the editor element
-      const rootElement = editor.getRootElement()
-      if (rootElement) {
-        rootElement.focus()
+      if (focus === 'decorator-next') {
+        // selecting a decorator node does not change the
+        // window selection (there's no caret) so we need
+        // to manually move focus to the editor element
+        const rootElement = editor.getRootElement()
+        if (rootElement) {
+          rootElement.focus()
+        }
       }
     } else {
       nextNode?.selectStart()

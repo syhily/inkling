@@ -19,8 +19,7 @@ import { $selectDecoratorNode } from '@/utils'
 
 import type { KeyboardNavigationDeps } from './types'
 
-import { $getLogicallyAdjacentCard, editorOwnsFocus } from '../card-adjacency'
-import { DELETE_CARD_COMMAND } from '../commands'
+import { $getLogicallyAdjacentCard, dispatchSelectedCardDeletion, editorOwnsFocus } from '../card-adjacency'
 
 const SPECIAL_MARKUPS = {
   code: '`',
@@ -41,10 +40,7 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
       }
 
       // delete selected card if we have one
-      const { selectedCardKey } = store.getState()
-      if (!isNested && selectedCardKey) {
-        event?.preventDefault()
-        editor.dispatchCommand(DELETE_CARD_COMMAND, { cardKey: selectedCardKey, direction: 'backward' })
+      if (dispatchSelectedCardDeletion(editor, store, isNested, 'backward', event)) {
         return true
       }
 

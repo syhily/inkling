@@ -9,7 +9,7 @@ A block-level embed in the document (image, video, gallery, button, bookmark, ca
 _Avoid_: decorator, embed, block
 
 **Card adjacency**:
-The state of the caret or selection sitting immediately before or after a card. Comes in two notions: **visual adjacency** (the caret's rendered position, derived from geometry — what arrow keys care about) and **logical adjacency** (the selection anchor's offset — what backspace/delete care about).
+The state of the caret or selection sitting immediately before or after a card. Comes in two notions: **visual adjacency** (the caret's rendered position, derived from geometry — what arrow keys care about) and **logical adjacency** (the selection anchor's offset — what backspace/delete care about). The adjacency module (src/plugins/behaviour/card-adjacency.ts) also owns the two destructive-key policies: `dispatchSelectedCardDeletion` — the one home of the "selected card eats the destructive key" gate (focus guard + `DELETE_CARD_COMMAND` with the handler's direction; backspace/delete/delete-line call it as their first policy gate, each keeping its own focus-swallow policy) — and `$removeOrReplaceNodeWithParagraph`, the empty-card removal surgery with a named **focus policy** (`'decorator-next'` default vs `'root-first'` for ctrl/cmd+Enter leaving edit mode — the divergence that used to be enter.ts's private copy of the surgery).
 _Avoid_: next-to-card, beside-card
 
 **Card spec**:

@@ -6,8 +6,7 @@ import { $selectDecoratorNode } from '@/utils'
 
 import type { KeyboardNavigationDeps } from './types'
 
-import { $getLogicallyAdjacentCard, editorOwnsFocus } from '../card-adjacency'
-import { DELETE_CARD_COMMAND } from '../commands'
+import { $getLogicallyAdjacentCard, dispatchSelectedCardDeletion, editorOwnsFocus } from '../card-adjacency'
 
 export function registerDeleteCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
   const { store, isNested } = deps
@@ -21,10 +20,7 @@ export function registerDeleteCommand(editor: LexicalEditor, deps: KeyboardNavig
       }
 
       // delete selected card if we have one
-      const { selectedCardKey } = store.getState()
-      if (!isNested && selectedCardKey) {
-        event?.preventDefault()
-        editor.dispatchCommand(DELETE_CARD_COMMAND, { cardKey: selectedCardKey, direction: 'forward' })
+      if (dispatchSelectedCardDeletion(editor, store, isNested, 'forward', event)) {
         return true
       }
 

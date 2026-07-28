@@ -6,8 +6,7 @@ import { $selectDecoratorNode } from '@/utils'
 
 import type { KeyboardNavigationDeps } from './types'
 
-import { $getLogicallyAdjacentCard, $isCaretAtBlockTop, editorOwnsFocus } from '../card-adjacency'
-import { DELETE_CARD_COMMAND } from '../commands'
+import { $getLogicallyAdjacentCard, $isCaretAtBlockTop, dispatchSelectedCardDeletion } from '../card-adjacency'
 
 export function registerDeleteLineCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
   const { store, isNested } = deps
@@ -15,13 +14,10 @@ export function registerDeleteLineCommand(editor: LexicalEditor, deps: KeyboardN
   return editor.registerCommand(
     DELETE_LINE_COMMAND,
     (isBackward) => {
-      // delete selected card if it's not a nested editor
-      const { selectedCardKey } = store.getState()
-      if (selectedCardKey && editorOwnsFocus(editor) && !isNested) {
-        editor.dispatchCommand(DELETE_CARD_COMMAND, {
-          cardKey: selectedCardKey,
-          direction: isBackward ? 'backward' : 'forward',
-        })
+      // delete selected card if it's not a nested editor (the shared gate
+      // owns the focus guard; the payload is a direction boolean, so there
+      // is no event to preventDefault here)
+      if (dispatchSelectedCardDeletion(editor, store, isNested, isBackward ? 'backward' : 'forward')) {
         return true
       }
 

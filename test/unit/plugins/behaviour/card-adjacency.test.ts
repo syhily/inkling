@@ -24,9 +24,12 @@ import {
   $isCaretAtBlockTop,
   $removeOrReplaceNodeWithParagraph,
   $selectCard,
+  dispatchSelectedCardDeletion,
   editorOwnsFocus,
   type CardAdjacencyGeometry,
 } from '@/plugins/behaviour/card-adjacency'
+import { createCardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
+import { DELETE_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { $selectDecoratorNode } from '@/utils'
 
 // Minimal node set: one card type is enough to exercise adjacency in jsdom.
@@ -671,6 +674,101 @@ describe('card-adjacency', () => {
         }
         expect($getNodeByKey(cardKey)).toBeNull()
       })
+    })
+  })
+
+  describe('$removeOrReplaceNodeWithParagraph with root-first focus', () => {
+    it('focuses the root (preventScroll) before removing, and skips the decorator-next focus', async () => {
+      const root = document.createElement('div')
+      editor.setRootElement(root)
+      const focusSpy = vi.spyOn(root, 'focus')
+
+      let cardKey = ''
+      let nextCardKey = ''
+      await updateEditor(editor, () => {
+        const rootNode = $getRoot()
+        const image = $createImageNode({ src: '/image.png' })
+        const nextImage = $createImageNode({ src: '/next.png' })
+        rootNode.append(image)
+        rootNode.append(nextImage)
+        cardKey = image.getKey()
+        nextCardKey = nextImage.getKey()
+      })
+
+      await updateEditor(editor, () => {
+        $removeOrReplaceNodeWithParagraph(editor, $getRoot().getFirstChild() as CardNode, { focus: 'root-first' })
+      })
+
+      // exactly one focus call: the root-first one, with preventScroll
+      expect(focusSpy).toHaveBeenCalledTimes(1)
+      expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true })
+      read(() => {
+        const selection = $getSelection()
+        expect($isNodeSelection(selection)).toBe(true)
+        if ($isNodeSelection(selection)) {
+          expect(selection.has(nextCardKey)).toBe(true)
+        }
+        expect($getNodeByKey(cardKey)).toBeNull()
+      })
+    })
+  })
+
+  describe('dispatchSelectedCardDeletion', () => {
+    function setup({ focused = true }: { focused?: boolean } = {}) {
+      const root = document.createElement('div')
+      editor.setRootElement(root)
+      vi.spyOn(document, 'activeElement', 'get').mockReturnValue(focused ? root : document.body)
+
+      const store = createCardSelectionStore()
+      const dispatched: Array<{ cardKey: string; direction?: string }> = []
+      editor.registerCommand(
+        DELETE_CARD_COMMAND,
+        (payload) => {
+          dispatched.push(payload)
+          return true
+        },
+        0,
+      )
+      return { store, dispatched }
+    }
+
+    it('dispatches DELETE_CARD_COMMAND with the direction and preventDefaults the event', () => {
+      const { store, dispatched } = setup()
+      store.setState({ selectedCardKey: 'card-1' })
+      const event = new KeyboardEvent('keydown')
+      const preventSpy = vi.spyOn(event, 'preventDefault')
+
+      expect(dispatchSelectedCardDeletion(editor, store, false, 'backward', event)).toBe(true)
+      expect(dispatched).toEqual([{ cardKey: 'card-1', direction: 'backward' }])
+      expect(preventSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('claims the key without an event (delete-line payload)', () => {
+      const { store, dispatched } = setup()
+      store.setState({ selectedCardKey: 'card-1' })
+
+      expect(dispatchSelectedCardDeletion(editor, store, false, 'forward')).toBe(true)
+      expect(dispatched).toEqual([{ cardKey: 'card-1', direction: 'forward' }])
+    })
+
+    it('passes through when no card is selected', () => {
+      const { dispatched } = setup()
+      expect(dispatchSelectedCardDeletion(editor, createCardSelectionStore(), false, 'backward')).toBe(false)
+      expect(dispatched).toEqual([])
+    })
+
+    it('passes through in nested editors', () => {
+      const { store, dispatched } = setup()
+      store.setState({ selectedCardKey: 'card-1' })
+      expect(dispatchSelectedCardDeletion(editor, store, true, 'backward')).toBe(false)
+      expect(dispatched).toEqual([])
+    })
+
+    it('passes through when the editor does not own focus', () => {
+      const { store, dispatched } = setup({ focused: false })
+      store.setState({ selectedCardKey: 'card-1' })
+      expect(dispatchSelectedCardDeletion(editor, store, false, 'backward')).toBe(false)
+      expect(dispatched).toEqual([])
     })
   })
 

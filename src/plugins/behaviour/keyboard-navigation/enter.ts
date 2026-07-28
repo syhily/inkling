@@ -1,22 +1,13 @@
 import type { LexicalEditor } from 'lexical'
 
-import {
-  $createParagraphNode,
-  $getNodeByKey,
-  $getRoot,
-  $isDecoratorNode,
-  COMMAND_PRIORITY_LOW,
-  KEY_ENTER_COMMAND,
-} from 'lexical'
+import { $createParagraphNode, $getNodeByKey, COMMAND_PRIORITY_LOW, KEY_ENTER_COMMAND } from 'lexical'
 
 import { $fireFenceKeyboardShortcut } from '@/markdown/card-shortcuts'
 import { $isInklingCard } from '@/nodes/base'
-import { $selectDecoratorNode } from '@/utils'
-import { $ensureParagraphAfterCard } from '@/utils/$ensureParagraphAfterCard'
 
 import type { KeyboardNavigationDeps } from './types'
 
-import { $selectCard } from '../card-adjacency'
+import { $removeOrReplaceNodeWithParagraph, $selectCard } from '../card-adjacency'
 import { getEventProvenance } from '../nested-editor-protocol'
 
 export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
@@ -37,32 +28,13 @@ export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNaviga
           // when leaving edit mode, ensure focus moves back to the editor
           // otherwise focus can be left on removed elements preventing further key events
           if (isEditingCard) {
-            const rootElement = editor.getRootElement()
-            if (rootElement) {
-              rootElement.focus({ preventScroll: true })
-            }
-
             if (cardNode.isEmpty?.()) {
-              const lastChild = $getRoot().getLastChild()
-              if (lastChild && lastChild.is(cardNode)) {
-                // we don't have anything to select after the card, so create a new paragraph
-                $ensureParagraphAfterCard(cardNode, { select: true })
-              } else {
-                // select the next paragraph or card directly rather than
-                // dispatching KEY_ARROW_DOWN_COMMAND, which can bail out
-                // when focus is still inside the card's nested editor and
-                // leave the selection on the removed card
-                const nextSibling = cardNode.getNextSibling()
-                if (nextSibling) {
-                  if ($isDecoratorNode(nextSibling)) {
-                    $selectDecoratorNode(nextSibling)
-                  } else {
-                    nextSibling.selectStart()
-                  }
-                }
-              }
-
-              cardNode.remove()
+              // the removal surgery (and its root-first focus choreography)
+              // lives in the card-adjacency module; selecting the next block
+              // directly rather than dispatching KEY_ARROW_DOWN_COMMAND
+              // avoids its bail-out when focus is still inside the card's
+              // nested editor
+              $removeOrReplaceNodeWithParagraph(editor, cardNode, { focus: 'root-first' })
             } else {
               // re-create the node selection because the focus will place the cursor at
               // the beginning of the doc
