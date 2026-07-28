@@ -1,7 +1,8 @@
 // Floating panel — the one headless module owning the settings panel's layout
 // decisions: the clamp math (keepWithinSpacing*), the card-origin resolution,
-// the initial placement, and the drag session (start threshold → move → end
-// with declared side effects). Everything DOM-shaped arrives as plain data or
+// the initial placement, the wide-card width transition, and the drag session
+// (start threshold → move → end with declared side effects). Everything
+// DOM-shaped arrives as plain data or
 // behind injected ports (position get/set, effect activate/deactivate), so the
 // rules are unit-testable without layout or pointer events. The React adapter
 // owning the DOM ports (body-level pointer listeners, the user-select
@@ -187,6 +188,98 @@ export function resolveInitialPanelPosition({
   const y = cardRect.top + visibleHeight / 2 - panelSize.height / 2
   const x = cardRect.right + CARD_SPACING
   return clampOnResize({ x, y, panelSize, viewport, origin })
+}
+
+/**
+ * Empirical origin offset applied when a card goes wide — the wide-card
+ * transform shifts the card's rect by a couple of pixels relative to where
+ * the panel math expects it, and without the fudge the panel visibly bounces
+ * on the transition. Carried from the original inline effect math.
+ */
+export const WIDE_CARD_ORIGIN_OFFSET: PanelPosition = { x: 2, y: 1 }
+
+export interface CardWidthTransitionInput {
+  /** Current committed panel position (window coordinates). */
+  position: PanelPosition
+  /** The card origin the panel positioned against while wide ({0,0} before the first wide transition). */
+  previousOrigin: PanelPosition
+  /** The card element's viewport rect; null when the element is missing (no transition resolves). */
+  cardRect: { left: number; top: number } | null
+  panelSize: PanelSize | null
+  viewport: PanelViewport
+  /** The clamp origin (`resolveCardOrigin` of the card element). */
+  origin: PanelPosition
+  /** The card width before this render. */
+  from: string
+  /** The card width now. */
+  to: string
+}
+
+export interface CardWidthTransition {
+  /** The re-clamped panel position to commit. */
+  position: PanelPosition
+  /**
+   * The origin the panel now positions against: the card's rect (plus
+   * `WIDE_CARD_ORIGIN_OFFSET`) when entering wide, the window origin when
+   * leaving it.
+   */
+  cardOrigin: PanelPosition
+}
+
+/**
+ * The wide-card origin-shift policy: the panel positions in window
+ * coordinates normally, but against the card's rect while the card is wide
+ * (its transform makes it the coordinate origin — see `resolveCardOrigin`).
+ * Entering wide re-bases the position from window to card origin; leaving
+ * wide re-bases it back through the remembered origin. Both directions
+ * settle-clamp the result. Returns null when no wide transition happened
+ * (or the card element is gone), so the caller leaves its bookkeeping
+ * untouched.
+ */
+export function resolveCardWidthTransition({
+  position,
+  previousOrigin,
+  cardRect,
+  panelSize,
+  viewport,
+  origin,
+  from,
+  to,
+}: CardWidthTransitionInput): CardWidthTransition | null {
+  if (to === 'wide' && from !== 'wide') {
+    if (!cardRect) {
+      return null
+    }
+    const cardOrigin: PanelPosition = {
+      x: cardRect.left + WIDE_CARD_ORIGIN_OFFSET.x,
+      y: cardRect.top + WIDE_CARD_ORIGIN_OFFSET.y,
+    }
+    return {
+      cardOrigin,
+      position: clampOnResize({
+        x: position.x - cardOrigin.x,
+        y: position.y - cardOrigin.y,
+        panelSize,
+        viewport,
+        origin,
+      }),
+    }
+  }
+
+  if (from === 'wide' && to !== 'wide') {
+    return {
+      cardOrigin: { x: 0, y: 0 },
+      position: clampOnResize({
+        x: position.x + previousOrigin.x,
+        y: position.y + previousOrigin.y,
+        panelSize,
+        viewport,
+        origin,
+      }),
+    }
+  }
+
+  return null
 }
 
 /**

@@ -11,6 +11,7 @@ import {
   driftTowardsInitial,
   isMobileViewport,
   resolveCardOrigin,
+  resolveCardWidthTransition,
   resolveInitialPanelPosition,
   type PanelPosition,
   type PanelSpacing,
@@ -210,6 +211,22 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
     latest.current = { resolveCardElement, getViewport }
   }, [resolveCardElement, getViewport])
 
+  // the one settle-clamp assembly: measure the panel (default the committed
+  // element), the viewport, and the card origin, then clampOnResize. Every
+  // re-clamp below (panel resize, viewport drift, width transition) is a
+  // one-line call; the math itself lives in @/utils/floating-panel.
+  const clampSettled = useCallback(
+    (position: PanelPosition, spacing: PanelSpacing | null = null, panelElem: HTMLElement | null = ref.current) =>
+      clampOnResize({
+        ...position,
+        panelSize: panelElem ? { width: panelElem.offsetWidth, height: panelElem.offsetHeight } : null,
+        viewport: latest.current.getViewport(),
+        origin: resolveCardOrigin(latest.current.resolveCardElement()),
+        lastSpacing: spacing,
+      }),
+    [],
+  )
+
   useLayoutEffect(() => {
     const elem = ref.current
     if (!elem) {
@@ -315,15 +332,7 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
         return
       }
 
-      const cardElement = latest.current.resolveCardElement()
-      const position = clampOnResize({
-        x,
-        y,
-        panelSize: { width: elem.offsetWidth, height: elem.offsetHeight },
-        viewport: latest.current.getViewport(),
-        origin: resolveCardOrigin(cardElement),
-        lastSpacing: lastSpacing.current,
-      })
+      const position = clampSettled({ x, y }, lastSpacing.current, elem)
 
       if (position.x !== x || position.y !== y) {
         session.adjustOffset(position.x - x, position.y - y)
@@ -383,20 +392,11 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
         viewport,
       )
 
-      setPosition(
-        clampOnResize({
-          x: drifted.x,
-          y: drifted.y,
-          panelSize: panelElem ? { width: panelElem.offsetWidth, height: panelElem.offsetHeight } : null,
-          viewport,
-          origin: resolveCardOrigin(resolveCardElement()),
-          lastSpacing: spacing,
-        }),
-      )
+      setPosition(clampSettled(drifted, spacing, panelElem))
 
       previousViewport.current = viewport
     },
-    [getPosition, getViewport, getInitialPosition, setPosition, resolveCardElement],
+    [getPosition, getViewport, getInitialPosition, setPosition, clampSettled],
   )
 
   // reposition on scroll container resize, covers two cases:
@@ -456,45 +456,30 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
   }, [getInitialPosition, setPosition, getViewport])
 
   // account for wide cards using a transform so we need to adjust the origin position
-  // previousCardWidth starts at cardWidth so the first render never shifts the origin
+  // previousCardWidth starts at cardWidth so the first render never shifts the origin.
+  // The transition policy (origin re-base + settle clamp) lives in
+  // @/utils/floating-panel's resolveCardWidthTransition; this effect only measures.
   useLayoutEffect(() => {
     const cardElement = resolveCardElement()
-    if (cardWidth === 'wide' && previousCardWidth.current !== 'wide') {
-      // offset origin to account for wide card (origin = card origin)
-      if (!cardElement) {
-        return
-      }
-      const containerRect = cardElement.getBoundingClientRect()
-      const origin: PanelPosition = { x: containerRect.left + 2, y: containerRect.top + 1 } // not sure why 2,1 offsets mild bounce in positioning
-      previousCardOrigin.current = origin
-
-      const x = getPosition().x - origin.x
-      const y = getPosition().y - origin.y
+    if (cardWidth === 'wide' && previousCardWidth.current !== 'wide' && !cardElement) {
+      // no card element yet — leave previousCardWidth so the shift can apply later
+      return
+    }
+    const cardRect = cardElement?.getBoundingClientRect() ?? null
+    const transition = resolveCardWidthTransition({
+      position: getPosition(),
+      previousOrigin: previousCardOrigin.current,
+      cardRect: cardRect ? { left: cardRect.left, top: cardRect.top } : null,
+      panelSize: ref.current ? { width: ref.current.offsetWidth, height: ref.current.offsetHeight } : null,
+      viewport: getViewport(),
+      origin: resolveCardOrigin(cardElement),
+      from: previousCardWidth.current,
+      to: cardWidth,
+    })
+    if (transition) {
+      previousCardOrigin.current = transition.cardOrigin
       if (ref.current) {
-        setPosition(
-          clampOnResize({
-            x,
-            y,
-            panelSize: { width: ref.current.offsetWidth, height: ref.current.offsetHeight },
-            viewport: getViewport(),
-            origin: resolveCardOrigin(cardElement),
-          }),
-        )
-      }
-    } else if (previousCardWidth.current === 'wide' && cardWidth !== 'wide') {
-      // reset origin to window origin
-      const x = getPosition().x + previousCardOrigin.current.x
-      const y = getPosition().y + previousCardOrigin.current.y
-      if (ref.current) {
-        setPosition(
-          clampOnResize({
-            x,
-            y,
-            panelSize: { width: ref.current.offsetWidth, height: ref.current.offsetHeight },
-            viewport: getViewport(),
-            origin: resolveCardOrigin(cardElement),
-          }),
-        )
+        setPosition(transition.position)
       }
     }
     previousCardWidth.current = cardWidth

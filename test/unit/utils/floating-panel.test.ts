@@ -8,7 +8,9 @@ import {
   driftTowardsInitial,
   isMobileViewport,
   MIN_PANEL_SPACING,
+  resolveCardWidthTransition,
   resolveInitialPanelPosition,
+  WIDE_CARD_ORIGIN_OFFSET,
   type PanelPosition,
 } from '@/utils/floating-panel'
 
@@ -117,6 +119,80 @@ describe('resolveInitialPanelPosition', () => {
   it('detects mobile viewports', () => {
     expect(isMobileViewport({ width: 375, height: 700 })).toBe(true)
     expect(isMobileViewport(viewport)).toBe(false)
+  })
+})
+
+describe('resolveCardWidthTransition', () => {
+  const cardRect = { left: 120, top: 80 }
+  const base = { panelSize, viewport, origin }
+
+  it('returns null when the wideness did not change', () => {
+    expect(
+      resolveCardWidthTransition({
+        ...base,
+        position: { x: 500, y: 100 },
+        previousOrigin: { x: 0, y: 0 },
+        cardRect,
+        from: 'regular',
+        to: 'regular',
+      }),
+    ).toBeNull()
+  })
+
+  it('returns null entering wide without a card rect', () => {
+    expect(
+      resolveCardWidthTransition({
+        ...base,
+        position: { x: 500, y: 100 },
+        previousOrigin: { x: 0, y: 0 },
+        cardRect: null,
+        from: 'regular',
+        to: 'wide',
+      }),
+    ).toBeNull()
+  })
+
+  it('re-bases the position onto the card origin (plus the fudge) entering wide', () => {
+    const transition = resolveCardWidthTransition({
+      ...base,
+      position: { x: 500, y: 400 },
+      previousOrigin: { x: 0, y: 0 },
+      cardRect,
+      from: 'regular',
+      to: 'wide',
+    })
+    const cardOrigin = { x: cardRect.left + WIDE_CARD_ORIGIN_OFFSET.x, y: cardRect.top + WIDE_CARD_ORIGIN_OFFSET.y }
+    expect(transition?.cardOrigin).toEqual(cardOrigin)
+    // 500-122=378, 400-81=319 — inside spacing, so the clamp leaves them
+    expect(transition?.position).toEqual({ x: 500 - cardOrigin.x, y: 400 - cardOrigin.y })
+  })
+
+  it('re-bases back through the remembered origin leaving wide', () => {
+    const previousOrigin = { x: 122, y: 81 }
+    const transition = resolveCardWidthTransition({
+      ...base,
+      position: { x: 378, y: 319 },
+      previousOrigin,
+      cardRect,
+      from: 'wide',
+      to: 'regular',
+    })
+    expect(transition?.cardOrigin).toEqual({ x: 0, y: 0 })
+    expect(transition?.position).toEqual({ x: 378 + previousOrigin.x, y: 319 + previousOrigin.y })
+  })
+
+  it('settle-clamps the re-based position', () => {
+    // entering wide at a position that lands offscreen-left after the re-base
+    const transition = resolveCardWidthTransition({
+      ...base,
+      position: { x: 130, y: 90 },
+      previousOrigin: { x: 0, y: 0 },
+      cardRect,
+      from: 'regular',
+      to: 'wide',
+    })
+    // re-based x = 130-122 = 8 → clamped to left spacing 20
+    expect(transition?.position.x).toBe(20)
   })
 })
 
