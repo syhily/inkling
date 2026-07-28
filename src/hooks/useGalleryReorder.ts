@@ -5,13 +5,8 @@ import type { DraggableInfo, DroppablePosition, DropResolution } from '@/utils/d
 
 import useDropTarget from '@/hooks/useDropTarget'
 import { pick } from '@/utils'
-import {
-  adjustInsertIndexForRemoval,
-  createReorderGeometry,
-  resolveDrop,
-  resolveReorder,
-} from '@/utils/draggable/reorder-rules'
-import { getImageFilenameFromSrc } from '@/utils/getImageFilenameFromSrc'
+import { isGalleryImageDrag, resolveGalleryDrop, resolveGallerySourceRemoval } from '@/utils/draggable/gallery-drop'
+import { createReorderGeometry, resolveDrop, resolveReorder } from '@/utils/draggable/reorder-rules'
 
 export type { GalleryImage }
 
@@ -37,19 +32,15 @@ export default function useGalleryReorder({
 }: UseGalleryReorderOptions): UseGalleryReorderResult {
   const onDrop = (draggableInfo: DraggableInfo, dropResolution: DropResolution | null) => {
     // do not allow dropping of non-images
-    if (draggableInfo.type !== 'image' && draggableInfo.cardName !== 'image') {
+    if (!isGalleryImageDrag(draggableInfo)) {
       return false
     }
 
-    const updatedImages: GalleryImage[] = [...images]
     // insertIndex was derived by getIndicatorPosition (resolveReorder) and
     // arrives as the resolution argument; an empty gallery has no droppables
-    // to derive one from (the drop is container-level, resolution null), so
-    // the first image deliberately lands at slot 0
-    let insertIndex: number = dropResolution?.insertIndex ?? 0
-    if (!updatedImages.length) {
-      insertIndex = 0
-    }
+    // to derive one from (the drop is container-level, resolution null) —
+    // the gallery-drop module lands the first image at slot 0
+    const insertIndex: number = dropResolution?.insertIndex ?? 0
 
     const resolution = resolveDrop(
       createReorderGeometry(containerElement, '[data-image]'),
@@ -59,47 +50,15 @@ export default function useGalleryReorder({
     if (!resolution) {
       return false
     }
-    const { draggableIndex } = resolution
 
-    if (draggableIndex === -1) {
-      // external image being added
-      const { dataset } = draggableInfo
-      const src = dataset.src
-      if (typeof src !== 'string') {
-        return false
-      }
-
-      const img = draggableInfo.element?.querySelector<HTMLImageElement>('img')
-
-      // image card datasets may not have all of the details we need but we can fill them in
-      const width = typeof dataset.width === 'number' ? dataset.width : img?.naturalWidth
-      const height = typeof dataset.height === 'number' ? dataset.height : img?.naturalHeight
-      const fileName =
-        typeof dataset.fileName === 'string' && dataset.fileName ? dataset.fileName : getImageFilenameFromSrc(src)
-
-      const newImage: GalleryImage = {
-        src,
-        fileName,
-        row: typeof dataset.row === 'number' ? dataset.row : undefined,
-        width,
-        height,
-        caption: typeof dataset.caption === 'string' ? dataset.caption : undefined,
-      }
-
-      updatedImages.splice(insertIndex, 0, newImage)
-    } else {
-      // internal image being re-ordered
-      const draggedImage = updatedImages.find((i) => i.src === draggableInfo.dataset.src)
-      if (!draggedImage) {
-        return false
-      }
-      const filtered = updatedImages.filter((i) => i !== draggedImage)
-      filtered.splice(adjustInsertIndexForRemoval(draggableIndex, insertIndex), 0, draggedImage)
-      updateImages(filtered)
-      container.refresh()
-
-      // this gallery consumed the drop itself — onDropEnd must not remove it
-      return { success: true, sourceHandled: true }
+    // the application half (external add / internal reorder) is the pure
+    // gallery-drop module; the natural-size read is its probe port
+    const img = draggableInfo.element?.querySelector<HTMLImageElement>('img')
+    const updatedImages = resolveGalleryDrop(images, draggableInfo, resolution.draggableIndex, insertIndex, {
+      naturalSize: img ? { width: img.naturalWidth, height: img.naturalHeight } : null,
+    })
+    if (!updatedImages) {
+      return false
     }
 
     updateImages(updatedImages)
@@ -115,9 +74,8 @@ export default function useGalleryReorder({
       return
     }
 
-    const image = images.find((i) => i.src === draggableInfo.dataset.src)
-    if (image) {
-      const updatedImages = images.filter((i) => i !== image)
+    const updatedImages = resolveGallerySourceRemoval(images, draggableInfo.dataset.src)
+    if (updatedImages) {
       updateImages(updatedImages)
       container.refresh()
     }
