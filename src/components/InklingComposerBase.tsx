@@ -3,13 +3,13 @@ import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin'
 import { LexicalComposer, type InitialConfigType } from '@lexical/react/LexicalComposer'
 import React from 'react'
 
-import type { LexicalProviderFactory } from '@/context/InklingCollaborationContext'
 import type { CardConfig, FileUploader, FileUploaderInput } from '@/context/InklingHostIntegrationContext'
 
 import { ComposerHandlesProvider } from '@/context/ComposerHandlesProvider'
 import InklingCollaborationContext, { noopWebsocketProviderFactory } from '@/context/InklingCollaborationContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
+import { useCollaborationProviderFactory } from '@/hooks/useCollaborationProviderFactory'
 import { resolveLabels, type InklingLabelsInput } from '@/labels/inkling-labels'
 import { DEFAULT_CONFIG } from '@/nodes/base'
 import defaultTheme from '@/themes/default'
@@ -118,45 +118,15 @@ const InklingComposerBase = ({
   // synchronous test table); the composer keeps one memo line
   const normalizedFileUploader = React.useMemo<FileUploader>(() => normalizeFileUploader(fileUploader), [fileUploader])
 
-  // The collaboration module (yjs/y-websocket) loads on demand: the dynamic
-  // import runs inside an effect — never during SSR — and only when
-  // multiplayer is enabled, so the core path never pays for yjs. Until the
-  // chunk resolves, the context serves the inert factory and the
-  // CollaborationPlugin stays unmounted, so the collab connection starts one
-  // async tick later than the eager build did (documented C5 tradeoff).
-  const [createWebsocketProvider, setCreateWebsocketProvider] = React.useState<LexicalProviderFactory | null>(null)
-
-  // adjust state during render: drop the provider the moment multiplayer is
-  // disabled, without waiting for the import effect
-  const [prevEnableMultiplayer, setPrevEnableMultiplayer] = React.useState(enableMultiplayer)
-  if (prevEnableMultiplayer !== enableMultiplayer) {
-    setPrevEnableMultiplayer(enableMultiplayer)
-    if (!enableMultiplayer) {
-      setCreateWebsocketProvider(null)
-    }
-  }
-
-  React.useEffect(() => {
-    if (!enableMultiplayer) {
-      return
-    }
-    let cancelled = false
-    void import('@/utils/services/collaboration').then(({ createWebsocketProviderFactory }) => {
-      if (cancelled) {
-        return
-      }
-      setCreateWebsocketProvider(() =>
-        createWebsocketProviderFactory({
-          endpoint: multiplayerEndpoint,
-          docId: multiplayerDocId,
-          debug: multiplayerDebug,
-        }),
-      )
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [enableMultiplayer, multiplayerEndpoint, multiplayerDocId, multiplayerDebug])
+  // the lazy collaboration chunk's load choreography (the C5 tradeoff:
+  // inert factory + unmounted plugin until the chunk resolves) lives in
+  // useCollaborationProviderFactory over the headless session
+  const createWebsocketProvider = useCollaborationProviderFactory({
+    enabled: enableMultiplayer,
+    endpoint: multiplayerEndpoint,
+    docId: multiplayerDocId,
+    debug: multiplayerDebug,
+  })
 
   // the telemetry port: the host's handler replaces the default
   // plausible/posthog adapter page-wide while this composer is mounted
