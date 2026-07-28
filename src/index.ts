@@ -90,6 +90,7 @@ export { defineCard } from '@/nodes/cards/host-cards'
 export type { HostCard, HostCardMenuEntrySpec, HostCardSpec } from '@/nodes/cards/host-cards'
 export { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
 export type {
+  CardSpecAccessorMap,
   CardSpecFieldMap,
   CardSpecFieldNames,
   DecoratorNodeProperty,
