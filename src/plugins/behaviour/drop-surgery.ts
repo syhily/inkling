@@ -3,7 +3,9 @@ import {
   $getEditor,
   $getNearestNodeFromDOMNode,
   $getNodeByKey,
+  $getRoot,
   $setSelection,
+  type EditorState,
   type LexicalEditor,
   type NodeKey,
 } from 'lexical'
@@ -212,4 +214,46 @@ export function $removeDropSource(nodeKey: NodeKey | undefined): boolean {
   }
   cardNode.remove(false)
   return true
+}
+
+/**
+ * The drag-marker refresh policy: should a document update refresh the
+ * drag/drop markers? Refresh only when the set, order, or DOM identity of
+ * top-level blocks may have changed. Text edits only mark the edited node's
+ * ancestors as dirty *parents* (flag false), so per-keystroke updates skip
+ * the refresh; a direct root child being intentionally dirty (cloned) means
+ * a block was added, removed, reordered, or re-rendered — and the
+ * reconciler recreates its DOM. Lexical 0.46 marks the root itself
+ * intentionally dirty on every update ($applyAllTransforms), so the root's
+ * own flag is ignored. The plugin additionally forces a refresh on drag
+ * start as a final safety net.
+ *
+ * Not a $-function: it takes the update-listener payload and runs the read
+ * itself, so the plugin's listener body is a one-line adapter.
+ */
+export function resolveDragMarkerRefresh(dirtyElements: Map<NodeKey, boolean>, editorState: EditorState): boolean {
+  let hasDirtyRootChildCandidate = false
+  for (const [key, intentionallyDirty] of dirtyElements) {
+    if (key !== 'root' && intentionallyDirty) {
+      hasDirtyRootChildCandidate = true
+      break
+    }
+  }
+  if (!hasDirtyRootChildCandidate) {
+    return false
+  }
+
+  return editorState.read(() => {
+    const root = $getRoot()
+    for (const [key, intentionallyDirty] of dirtyElements) {
+      if (key === 'root' || !intentionallyDirty) {
+        continue
+      }
+      const node = $getNodeByKey(key)
+      if (node && node.getParent() === root) {
+        return true
+      }
+    }
+    return false
+  })
 }

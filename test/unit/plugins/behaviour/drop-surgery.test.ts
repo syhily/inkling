@@ -5,7 +5,10 @@ import {
   $getRoot,
   $getSelection,
   $isNodeSelection,
+  $isParagraphNode,
+  $isTextNode,
   createEditor,
+  type EditorState,
   type LexicalEditor,
   type NodeKey,
 } from 'lexical'
@@ -20,6 +23,7 @@ import {
   $removeDropSource,
   applyImageCardDrop,
   isImageCardDropAllowed,
+  resolveDragMarkerRefresh,
   shouldRemoveDropSource,
 } from '@/plugins/behaviour/drop-surgery'
 
@@ -535,5 +539,68 @@ describe('the image-card-onto-image drop policy', () => {
       expect($getRoot().getChildrenSize()).toBe(1)
       expect($isImageNode($getRoot().getFirstChild())).toBe(true)
     })
+  })
+})
+
+describe('resolveDragMarkerRefresh', () => {
+  let editor: LexicalEditor
+  let updates: Array<{ dirtyElements: Map<NodeKey, boolean>; editorState: EditorState }>
+
+  beforeEach(async () => {
+    editor = createTestEditor()
+    updates = []
+    editor.registerUpdateListener((payload) => {
+      updates.push(payload)
+    })
+    await updateEditor(editor, () => {
+      $getRoot().append($createParagraphNode().append($createTextNode('hello')))
+    })
+    updates.length = 0
+  })
+
+  it('skips the refresh for text edits (the dirty node is not a root child)', async () => {
+    await updateEditor(editor, () => {
+      const paragraph = $getRoot().getFirstChild()
+      if (!$isParagraphNode(paragraph)) {
+        throw new Error('expected paragraph')
+      }
+      // an in-place text mutation dirties the text node; its ancestors are
+      // marked as dirty parents (flag false) — the per-keystroke shape
+      const text = paragraph.getFirstChild()
+      if (!$isTextNode(text)) {
+        throw new Error('expected text node')
+      }
+      text.setTextContent('hello world')
+    })
+
+    expect(updates.length).toBeGreaterThan(0)
+    for (const { dirtyElements, editorState } of updates) {
+      expect(resolveDragMarkerRefresh(dirtyElements, editorState)).toBe(false)
+    }
+  })
+
+  it('refreshes when a top-level block is added', async () => {
+    await updateEditor(editor, () => {
+      $getRoot().append($createParagraphNode().append($createTextNode('new block')))
+    })
+
+    expect(updates.some(({ dirtyElements, editorState }) => resolveDragMarkerRefresh(dirtyElements, editorState))).toBe(
+      true,
+    )
+  })
+
+  it('refreshes when a top-level card is added', async () => {
+    await updateEditor(editor, () => {
+      $getRoot().append($createImageNode({ src: 'https://cdn.example.com/new.png' }))
+    })
+
+    expect(updates.some(({ dirtyElements, editorState }) => resolveDragMarkerRefresh(dirtyElements, editorState))).toBe(
+      true,
+    )
+  })
+
+  it('ignores the root flag alone (Lexical 0.46 dirties root on every update)', () => {
+    const dirtyElements = new Map<NodeKey, boolean>([['root', true]])
+    expect(resolveDragMarkerRefresh(dirtyElements, editor.getEditorState())).toBe(false)
   })
 })

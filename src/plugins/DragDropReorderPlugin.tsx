@@ -1,5 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getNearestNodeFromDOMNode, $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
+import { $getNearestNodeFromDOMNode, type LexicalEditor } from 'lexical'
 import React from 'react'
 import { flushSync } from 'react-dom'
 import { createRoot } from 'react-dom/client'
@@ -15,6 +15,7 @@ import {
   $insertDraggedImage,
   $relocateCard,
   $removeDropSource,
+  resolveDragMarkerRefresh,
   shouldRemoveDropSource,
 } from '@/plugins/behaviour/drop-surgery'
 import {
@@ -243,41 +244,13 @@ function useDragDropReorder(editor: LexicalEditor): void {
     }
   }, [editor, containerElement, dragDropHandle, dragScrollContainerSelector])
 
+  // the refresh policy (which dirty sets mean a top-level block changed)
+  // lives in the drop-surgery module as a synchronous test table
   React.useEffect(() => {
     return editor.registerUpdateListener(({ dirtyElements, editorState }) => {
-      // Refresh drag/drop markers only when the set, order, or DOM identity of
-      // top-level blocks may have changed. Text edits only mark the edited
-      // node's ancestors as dirty *parents* (flag false), so per-keystroke
-      // updates skip the refresh; a direct root child being intentionally
-      // dirty (cloned) means a block was added, removed, reordered, or
-      // re-rendered — and the reconciler recreates its DOM. Lexical 0.46
-      // marks the root itself intentionally dirty on every update
-      // ($applyAllTransforms), so the root's own flag is ignored.
-      // onDragStart additionally forces a refresh as a final safety net.
-      let hasDirtyRootChildCandidate = false
-      for (const [key, intentionallyDirty] of dirtyElements) {
-        if (key !== 'root' && intentionallyDirty) {
-          hasDirtyRootChildCandidate = true
-          break
-        }
+      if (resolveDragMarkerRefresh(dirtyElements, editorState)) {
+        cardContainer.refresh()
       }
-      if (!hasDirtyRootChildCandidate) {
-        return
-      }
-
-      editorState.read(() => {
-        const root = $getRoot()
-        for (const [key, intentionallyDirty] of dirtyElements) {
-          if (key === 'root' || !intentionallyDirty) {
-            continue
-          }
-          const node = $getNodeByKey(key)
-          if (node && node.getParent() === root) {
-            cardContainer.refresh()
-            return
-          }
-        }
-      })
     })
   }, [editor, cardContainer])
 
