@@ -71,6 +71,42 @@ export function SettingsPanel({ children, darkMode, cardWidth, tabs, defaultTab,
   )
 }
 
+/**
+ * The inline label+control row shared by the settings below: label (with
+ * optional description) left, control right; `stacked` switches to the
+ * column layout. Internal by design — the rows' layouts genuinely diverge
+ * beyond these four (sr-only, custom), so only the shared skeleton folds;
+ * see SettingLabel.tsx.
+ */
+function SettingRow({
+  label,
+  description,
+  stacked = false,
+  className,
+  dataTestId,
+  children,
+}: {
+  label?: string
+  description?: string
+  stacked?: boolean
+  className?: string
+  dataTestId?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      className={cx('flex w-full', stacked ? 'flex-col' : 'items-center justify-between', className)}
+      data-testid={dataTestId}
+    >
+      <div>
+        <SettingLabel>{label}</SettingLabel>
+        {description && <SettingDescription className="mt-1 w-11/12">{description}</SettingDescription>}
+      </div>
+      <div className={cx('shrink-0', stacked ? '-mx-1 pt-[.6rem]' : 'pl-2')}>{children}</div>
+    </div>
+  )
+}
+
 interface ToggleSettingProps {
   label?: string
   description?: string
@@ -81,14 +117,12 @@ interface ToggleSettingProps {
 
 export function ToggleSetting({ label, description, isChecked, onChange, dataTestId }: ToggleSettingProps) {
   return (
-    <label className="flex w-full cursor-pointer items-center justify-between">
-      <div>
-        <SettingLabel>{label}</SettingLabel>
-        {description && <SettingDescription className="mt-1 w-11/12">{description}</SettingDescription>}
-      </div>
-      <div className="flex shrink-0 pl-2">
+    // the outer <label> is load-bearing: clicking anywhere in the row
+    // (including the label text) activates the Toggle inside
+    <label className="cursor-pointer">
+      <SettingRow description={description} label={label}>
         <Toggle dataTestId={dataTestId} isChecked={isChecked} onChange={onChange} />
-      </div>
+      </SettingRow>
     </label>
   )
 }
@@ -275,13 +309,9 @@ interface ButtonGroupSettingProps {
 
 export function ButtonGroupSetting({ label, onClick, selectedName, buttons, hasTooltip }: ButtonGroupSettingProps) {
   return (
-    <div className="flex w-full items-center justify-between text-[1.3rem]">
-      <SettingLabel>{label}</SettingLabel>
-
-      <div className="shrink-0 pl-2">
-        <ButtonGroup buttons={buttons} hasTooltip={hasTooltip} selectedName={selectedName} onClick={onClick} />
-      </div>
-    </div>
+    <SettingRow className="text-[1.3rem]" label={label}>
+      <ButtonGroup buttons={buttons} hasTooltip={hasTooltip} selectedName={selectedName} onClick={onClick} />
+    </SettingRow>
   )
 }
 
@@ -303,16 +333,9 @@ export function ColorOptionSetting({
   dataTestId,
 }: ColorOptionSettingProps) {
   return (
-    <div
-      className={`flex w-full text-[1.3rem] ${layout === 'stacked' ? 'flex-col' : 'items-center justify-between'}`}
-      data-testid={dataTestId}
-    >
-      <SettingLabel>{label}</SettingLabel>
-
-      <div className={`shrink-0 ${layout === 'stacked' ? '-mx-1 pt-[.6rem]' : 'pl-2'}`}>
-        <ColorOptionButtons buttons={buttons} selectedName={selectedName} onClick={onClick} />
-      </div>
-    </div>
+    <SettingRow className="text-[1.3rem]" dataTestId={dataTestId} label={label} stacked={layout === 'stacked'}>
+      <ColorOptionButtons buttons={buttons} selectedName={selectedName} onClick={onClick} />
+    </SettingRow>
   )
 }
 
@@ -351,25 +374,21 @@ export function ColorPickerSetting({
 
   return (
     <div className="flex-col" data-testid={dataTestId} onClick={markClickedInside}>
-      <div className="flex w-full items-center justify-between text-[1.3rem]">
-        <SettingLabel>{label}</SettingLabel>
-
-        <div className="shrink-0 pl-2">
-          <ColorIndicator
-            eyedropper={eyedropper}
-            hasTransparentOption={hasTransparentOption}
-            isExpanded={isExpanded}
-            showChildren={showChildren}
-            swatches={swatches ?? []}
-            value={value}
-            onChange={onPickerChange ?? (() => {})}
-            onSwatchChange={onSwatchChange ?? (() => {})}
-            onTogglePicker={onTogglePicker ?? (() => {})}
-          >
-            {children}
-          </ColorIndicator>
-        </div>
-      </div>
+      <SettingRow className="text-[1.3rem]" label={label}>
+        <ColorIndicator
+          eyedropper={eyedropper}
+          hasTransparentOption={hasTransparentOption}
+          isExpanded={isExpanded}
+          showChildren={showChildren}
+          swatches={swatches ?? []}
+          value={value}
+          onChange={onPickerChange ?? (() => {})}
+          onSwatchChange={onSwatchChange ?? (() => {})}
+          onTogglePicker={onTogglePicker ?? (() => {})}
+        >
+          {children}
+        </ColorIndicator>
+      </SettingRow>
     </div>
   )
 }
