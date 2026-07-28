@@ -1,5 +1,6 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
+import { appendCardCaption } from '@/nodes/base/utils/append-card-caption'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface BookmarkNodeData {
@@ -35,11 +36,7 @@ function frontendTemplate(node: BookmarkNodeData, document: Document, context: R
 
   const element = document.createElement('figure')
   const caption = node.caption
-  let cardClass = 'inkling-card inkling-bookmark-card'
-  if (caption) {
-    cardClass += ' inkling-card-hascaption'
-  }
-  element.setAttribute('class', cardClass)
+  element.setAttribute('class', 'inkling-card inkling-bookmark-card')
 
   const container = document.createElement('a')
   container.setAttribute('class', 'inkling-bookmark-container')
@@ -101,9 +98,7 @@ function frontendTemplate(node: BookmarkNodeData, document: Document, context: R
   }
 
   if (caption) {
-    const figCaption = document.createElement('figcaption')
-    figCaption.innerHTML = context.sanitizeBasicHtml(caption)
-    element.appendChild(figCaption)
+    appendCardCaption(element, caption, context)
   }
 
   return { element, type: 'outer' as const }

@@ -1,5 +1,6 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
+import { appendCardCaption } from '@/nodes/base/utils/append-card-caption'
 import { getExportImageDimensions } from '@/nodes/base/utils/export-image-sizing'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { getSrcsetAttribute, setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
@@ -38,9 +39,6 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
   let figureClasses = 'inkling-card inkling-image-card'
   if (node.cardWidth !== 'regular') {
     figureClasses += ` inkling-width-${node.cardWidth}`
-  }
-  if (node.caption) {
-    figureClasses += ' inkling-card-hascaption'
   }
 
   figure.setAttribute('class', figureClasses)
@@ -163,9 +161,7 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
   }
 
   if (node.caption) {
-    const caption = document.createElement('figcaption')
-    caption.innerHTML = context.sanitizeBasicHtml(node.caption)
-    figure.appendChild(caption)
+    appendCardCaption(figure, node.caption, context)
   }
 
   return { element: figure, type: 'outer' as const }

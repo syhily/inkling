@@ -29,7 +29,7 @@ The card declaration's DOM-import knowledge — how the card's markup reads back
 _Avoid_: import parser, DOM conversion config
 
 **Render context**:
-The read-only, per-render-pass view of export-time policy and data that is the sole export-time view a card renderer receives besides the node: URL safety, sanitization, feature flags, color checks, document resolution, heading-id tracking, image/markdown data options, render-time meta resolution. The public entry points (`exportDOM(editor, options)`, `$convertToHtmlString`, `LexicalHTMLRenderer.render`) still accept the export options and build the context from them. Card sources must not import the policy modules directly — an import guard enforces the seam.
+The read-only, per-render-pass view of export-time policy and data that is the sole export-time view a card renderer receives besides the node: URL safety, sanitization, feature flags, color checks, document resolution, heading-id tracking, image/markdown data options, render-time meta resolution. The public entry points (`exportDOM(editor, options)`, `$convertToHtmlString`, `LexicalHTMLRenderer.render`) still accept the export options and build the context from them. Card sources must not import the policy modules directly — an import guard enforces the seam. The caption pairing invariant is single-homed beside it: `appendCardCaption` (src/nodes/base/utils/append-card-caption.ts) owns the `inkling-card-hascaption` marker class AND the sanitized `<figcaption>` together (the image/gallery/bookmark/codeblock renderers are adapters; video's pinned escapeText divergence stays out).
 _Avoid_: options bag, policy object
 
 **Headless HTML surface**:

@@ -388,7 +388,7 @@ describe('BaseCodeBlockNode', function () {
         await expectPrettifiedHtml(
           el.outerHTML,
           html`
-            <figure class="inkling-card inkling-code-card">
+            <figure class="inkling-card inkling-code-card inkling-card-hascaption">
               <pre><code class="language-javascript">&lt;script&gt;&lt;/script&gt;</code></pre>
               <figcaption>A code block</figcaption>
             </figure>
@@ -433,7 +433,7 @@ describe('BaseCodeBlockNode', function () {
         await expectPrettifiedHtml(
           el.outerHTML,
           html`
-            <figure class="inkling-card inkling-code-card">
+            <figure class="inkling-card inkling-code-card inkling-card-hascaption">
               <pre><code class="language-javascript" data-language="javascript" data-code="const a = 1"><span style="--shiki-light:#657b83">const</span></code></pre>
               <figcaption>A code block</figcaption>
             </figure>

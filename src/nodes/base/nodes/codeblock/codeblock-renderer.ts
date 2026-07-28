@@ -1,6 +1,7 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { SHIKI_HTML_CONFIG } from '@/nodes/base/render-context'
+import { appendCardCaption } from '@/nodes/base/utils/append-card-caption'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface CodeBlockNodeData {
@@ -43,9 +44,9 @@ export function renderCodeBlockNode(node: CodeBlockNodeData, context: RenderCont
     figure.setAttribute('class', 'inkling-card inkling-code-card')
     figure.appendChild(pre)
 
-    const figcaption = document.createElement('figcaption')
-    figcaption.innerHTML = context.sanitizeBasicHtml(node.caption)
-    figure.appendChild(figcaption)
+    // the marker class rides the seam like every other captioned card —
+    // codeblock's bare-figure export was drift, not policy
+    appendCardCaption(figure, node.caption, context)
 
     return { element: figure, type: 'outer' as const }
   } else {

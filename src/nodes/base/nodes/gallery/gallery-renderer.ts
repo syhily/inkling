@@ -2,6 +2,7 @@ import type { RenderContext } from '@/nodes/base/render-context'
 import type { GalleryImage } from '@/types/gallery'
 
 import { buildGalleryRows } from '@/nodes/base/nodes/gallery/gallery-rows'
+import { appendCardCaption } from '@/nodes/base/utils/append-card-caption'
 import { getExportImageDimensions } from '@/nodes/base/utils/export-image-sizing'
 import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
@@ -128,10 +129,7 @@ export function renderGalleryNode(node: GalleryNodeData, context: RenderContext)
   })
 
   if (node.caption) {
-    const figcaption = document.createElement('figcaption')
-    figcaption.innerHTML = context.sanitizeBasicHtml(node.caption)
-    figure.appendChild(figcaption)
-    figure.setAttribute('class', `${figure.getAttribute('class')} inkling-card-hascaption`)
+    appendCardCaption(figure, node.caption, context)
   }
 
   return { element: figure, type: 'outer' as const }
