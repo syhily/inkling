@@ -10,14 +10,12 @@ describe('getImageDimensions', () => {
   })
 
   it('resolves with natural dimensions when the image loads', async () => {
-    globalThis.Image = class MockImage {
-      onload: (() => void) | null = null
-      onerror: (() => void) | null = null
+    globalThis.Image = class MockImage extends EventTarget {
       naturalWidth = 120
       naturalHeight = 90
 
       set src(_url: string) {
-        queueMicrotask(() => this.onload?.())
+        queueMicrotask(() => this.dispatchEvent(new Event('load')))
       }
     } as unknown as typeof Image
 
@@ -28,12 +26,9 @@ describe('getImageDimensions', () => {
   })
 
   it('rejects when the image fails to load', async () => {
-    globalThis.Image = class MockImage {
-      onload: (() => void) | null = null
-      onerror: (() => void) | null = null
-
+    globalThis.Image = class MockImage extends EventTarget {
       set src(_url: string) {
-        queueMicrotask(() => this.onerror?.())
+        queueMicrotask(() => this.dispatchEvent(new Event('error')))
       }
     } as unknown as typeof Image
 

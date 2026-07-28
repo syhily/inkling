@@ -10,13 +10,11 @@ describe('getAudioMetadata', () => {
   })
 
   it('resolves with duration when metadata loads', async () => {
-    globalThis.Audio = class MockAudio {
-      onloadedmetadata: (() => void) | null = null
-      onerror: (() => void) | null = null
+    globalThis.Audio = class MockAudio extends EventTarget {
       duration = 123.456
 
       set src(_url: string) {
-        queueMicrotask(() => this.onloadedmetadata?.())
+        queueMicrotask(() => this.dispatchEvent(new Event('loadedmetadata')))
       }
     } as unknown as typeof Audio
 
@@ -26,13 +24,11 @@ describe('getAudioMetadata', () => {
   })
 
   it('rejects when the audio fails to load', async () => {
-    globalThis.Audio = class MockAudio {
-      onloadedmetadata: (() => void) | null = null
-      onerror: (() => void) | null = null
+    globalThis.Audio = class MockAudio extends EventTarget {
       duration = 0
 
       set src(_url: string) {
-        queueMicrotask(() => this.onerror?.())
+        queueMicrotask(() => this.dispatchEvent(new Event('error')))
       }
     } as unknown as typeof Audio
 

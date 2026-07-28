@@ -1,4 +1,8 @@
 // taken from the original upstream implementation
+
+import { awaitMediaEvents } from '@/utils/awaitMediaEvents'
+import { createPreviewLease } from '@/utils/upload-intent'
+
 export interface VideoMetadata {
   duration: number
   width: number
@@ -7,65 +11,59 @@ export interface VideoMetadata {
   thumbnailBlob: Blob
 }
 
-export default function extractVideoMetadata(file: File): Promise<VideoMetadata> {
-  return new Promise((resolve, reject) => {
-    const mimeType = file.type
-    let duration = 0
-    let width = 0
-    let height = 0
+export default async function extractVideoMetadata(file: File): Promise<VideoMetadata> {
+  const mimeType = file.type
 
-    const video = document.createElement('video')
-    video.muted = true
-    video.playsInline = true
+  const video = document.createElement('video')
+  video.muted = true
+  video.playsInline = true
 
-    video.onerror = () => reject(new Error('Failed to load video metadata'))
+  // The object URL lives behind a lease so every settle path — success, load
+  // error, timeout, canvas failure — revokes it exactly once.
+  const lease = createPreviewLease(file)
 
-    video.onloadedmetadata = function () {
-      duration = video.duration
-      width = video.videoWidth
-      height = video.videoHeight
+  try {
+    // loadedmetadata and canplay can arrive in one task for a local blob, so
+    // both listeners attach before the load starts.
+    await awaitMediaEvents(video, {
+      events: ['loadedmetadata', 'canplay'],
+      errorMessage: 'Failed to load video metadata',
+      start: () => {
+        video.src = lease.url
+        // required for iPhone Safari to load the video contents for the thumbnail
+        video.load()
+      },
+    })
+
+    const { duration, videoWidth: width, videoHeight: height } = video
+
+    await awaitMediaEvents(video, {
+      events: ['seeked'],
+      errorMessage: 'Failed to load video metadata',
+      start: () => {
+        video.currentTime = 0.5
+      },
+    })
+
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      throw new Error('Failed to get canvas context')
+    }
+    ctx.drawImage(video, 0, 0, width, height)
+
+    const thumbnailBlob = await new Promise<Blob | null>((resolve) => {
+      ctx.canvas.toBlob(resolve, 'image/jpeg', 0.75)
+    })
+    if (!thumbnailBlob) {
+      throw new Error('Failed to create thumbnail blob')
     }
 
-    video.oncanplay = function () {
-      video.currentTime = 0.5
-      video.oncanplay = null
-    }
-
-    video.onseeked = function () {
-      const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
-
-      const ctx = canvas.getContext('2d')
-      if (!ctx) {
-        reject(new Error('Failed to get canvas context'))
-        return
-      }
-      ctx.drawImage(video, 0, 0, width, height)
-
-      URL.revokeObjectURL(video.src)
-
-      ctx.canvas.toBlob(
-        (thumbnailBlob) => {
-          if (!thumbnailBlob) {
-            reject(new Error('Failed to create thumbnail blob'))
-            return
-          }
-          resolve({
-            duration,
-            width,
-            height,
-            mimeType,
-            thumbnailBlob,
-          })
-        },
-        'image/jpeg',
-        0.75,
-      )
-    }
-
-    video.src = URL.createObjectURL(file)
-    // required for iPhone Safari to load the video contents for the thumbnail
-    video.load()
-  })
+    return { duration, width, height, mimeType, thumbnailBlob }
+  } finally {
+    lease.release()
+  }
 }

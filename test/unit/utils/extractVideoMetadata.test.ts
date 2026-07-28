@@ -18,7 +18,7 @@ class MockCanvas {
   }
 }
 
-class MockVideo {
+class MockVideo extends EventTarget {
   muted = false
   playsInline = false
   src = ''
@@ -27,34 +27,35 @@ class MockVideo {
   videoHeight = 50
   private _currentTime = 0
 
-  onerror: (() => void) | null = null
-  onloadedmetadata: (() => void) | null = null
-  oncanplay: (() => void) | null = null
-  onseeked: (() => void) | null = null
-
   get currentTime() {
     return this._currentTime
   }
 
   set currentTime(value: number) {
     this._currentTime = value
-    queueMicrotask(() => this.onseeked?.())
+    queueMicrotask(() => this.dispatchEvent(new Event('seeked')))
   }
 
   load() {
-    this.onloadedmetadata?.()
-    this.oncanplay?.()
+    this.dispatchEvent(new Event('loadedmetadata'))
+    this.dispatchEvent(new Event('canplay'))
   }
 }
 
 describe('extractVideoMetadata', () => {
-  const originalCreateElement = document.createElement
-  const originalCreateObjectURL = URL.createObjectURL
-  const originalRevokeObjectURL = URL.revokeObjectURL
+  // capture the originals through Reflect.get: a plain `document.createElement`
+  // reference trips unbound-method, and one of its overloads is deprecated
+  const originalCreateElement = Reflect.get(document, 'createElement') as (tagName: string) => HTMLElement
+  const originalCreateObjectURL = Reflect.get(URL, 'createObjectURL') as typeof URL.createObjectURL
+  const originalRevokeObjectURL = Reflect.get(URL, 'revokeObjectURL') as typeof URL.revokeObjectURL
+
+  // a local handle avoids unbound-method on URL.revokeObjectURL references
+  let revokeObjectURL: ReturnType<typeof vi.fn<(url: string) => void>>
 
   beforeEach(() => {
+    revokeObjectURL = vi.fn<(url: string) => void>()
     URL.createObjectURL = () => 'blob://video'
-    URL.revokeObjectURL = vi.fn()
+    URL.revokeObjectURL = revokeObjectURL
 
     vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
       if (tagName === 'video') {
@@ -83,13 +84,14 @@ describe('extractVideoMetadata', () => {
     expect(result.height).toBe(50)
     expect(result.mimeType).toBe('video/mp4')
     expect(result.thumbnailBlob).toBeInstanceOf(Blob)
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob://video')
   })
 
-  it('rejects when the video fails to load', async () => {
+  it('rejects when the video fails to load — and still releases the object URL', async () => {
     vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
       if (tagName === 'video') {
         const video = new MockVideo()
-        video.load = () => video.onerror?.()
+        video.load = () => video.dispatchEvent(new Event('error'))
         return video as unknown as HTMLElement
       }
       return originalCreateElement.call(document, tagName)
@@ -98,5 +100,29 @@ describe('extractVideoMetadata', () => {
     const file = new File(['video'], 'test.mp4', { type: 'video/mp4' })
 
     await expect(extractVideoMetadata(file)).rejects.toThrow('Failed to load video metadata')
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob://video')
+  })
+
+  it('rejects when the video load hangs past the timeout — and still releases the object URL', async () => {
+    vi.useFakeTimers()
+    try {
+      vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+        if (tagName === 'video') {
+          const video = new MockVideo()
+          video.load = () => {}
+          return video as unknown as HTMLElement
+        }
+        return originalCreateElement.call(document, tagName)
+      })
+
+      const file = new File(['video'], 'test.mp4', { type: 'video/mp4' })
+
+      const assertion = expect(extractVideoMetadata(file)).rejects.toThrow('timed out')
+      await vi.advanceTimersByTimeAsync(15_000)
+      await assertion
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob://video')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
