@@ -2,6 +2,7 @@ import React from 'react'
 
 import type { PinturaConfig } from '@/hooks/usePinturaEditor'
 import type { ListOptionItem, SearchResult } from '@/hooks/useSearchLinks'
+import type { TelemetryHandler } from '@/utils/analytics'
 
 export interface FileUploader {
   useFileUpload: (type: 'image' | 'video' | 'audio' | 'file' | 'mediaThumbnail') => {
@@ -125,11 +126,28 @@ export interface MathSettings {
   renderMath?: (args: { tex: string; display: boolean }) => Promise<{ mathml?: string; svg?: string; error?: string }>
 }
 
+export interface TelemetrySettings {
+  /**
+   * The host's telemetry handler (CONTEXT.md: "host config"). The editor's
+   * `trackEvent` events route here instead of the default adapter (the
+   * plausible/posthog fan-out). Page-global by nature — analytics abstracts
+   * window-global vendors — so the last registered handler wins page-wide.
+   */
+  telemetry?: TelemetryHandler
+}
+
 // The host's card-behaviour contract, closed (plan 048): every key the editor
 // reads is declared on a per-area slice and nothing else is accepted, so
 // renaming or tightening a key breaks host code loudly at compile time.
 export interface CardConfig
-  extends GifSettings, LinkingSettings, SnippetSettings, UploadSettings, MathSettings, LibrarySettings {}
+  extends
+    GifSettings,
+    LinkingSettings,
+    SnippetSettings,
+    UploadSettings,
+    MathSettings,
+    LibrarySettings,
+    TelemetrySettings {}
 
 // Host-integration lifecycle (plan 047): the values the host application
 // hands the editor — uploads, card behaviour flags, and the error sink.

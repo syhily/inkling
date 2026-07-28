@@ -13,6 +13,7 @@ import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { resolveLabels, type InklingLabelsInput } from '@/labels/inkling-labels'
 import { DEFAULT_CONFIG } from '@/nodes/base'
 import defaultTheme from '@/themes/default'
+import { setTelemetryHandler } from '@/utils/analytics'
 import { type InklingInitialEditorState, normalizeInitialEditorState } from '@/utils/initial-document'
 import { requireMultiplayerConfig } from '@/utils/services/multiplayer-config'
 
@@ -163,9 +164,18 @@ const InklingComposerBase = ({
   // async tick later than the eager build did (documented C5 tradeoff).
   const [createWebsocketProvider, setCreateWebsocketProvider] = React.useState<LexicalProviderFactory | null>(null)
 
-  React.useEffect(() => {
+  // adjust state during render: drop the provider the moment multiplayer is
+  // disabled, without waiting for the import effect
+  const [prevEnableMultiplayer, setPrevEnableMultiplayer] = React.useState(enableMultiplayer)
+  if (prevEnableMultiplayer !== enableMultiplayer) {
+    setPrevEnableMultiplayer(enableMultiplayer)
     if (!enableMultiplayer) {
       setCreateWebsocketProvider(null)
+    }
+  }
+
+  React.useEffect(() => {
+    if (!enableMultiplayer) {
       return
     }
     let cancelled = false
@@ -185,6 +195,10 @@ const InklingComposerBase = ({
       cancelled = true
     }
   }, [enableMultiplayer, multiplayerEndpoint, multiplayerDocId, multiplayerDebug])
+
+  // the telemetry port: the host's handler replaces the default
+  // plausible/posthog adapter page-wide while this composer is mounted
+  React.useEffect(() => setTelemetryHandler(cardConfig.telemetry), [cardConfig.telemetry])
 
   const hostIntegrationValue = React.useMemo(
     () => ({

@@ -12,6 +12,7 @@ import InklingCollaborationContext, {
   type LexicalProviderFactory,
 } from '@/context/InklingCollaborationContext'
 import InklingHostIntegrationContext, { type FileUploader } from '@/context/InklingHostIntegrationContext'
+import trackEvent from '@/utils/analytics'
 import { normalizeInitialEditorState } from '@/utils/initial-document'
 
 vi.mock('@lexical/react/LexicalCollaborationPlugin', () => ({
@@ -61,6 +62,24 @@ describe('InklingComposer', function () {
     )
 
     expect(container.querySelector('[contenteditable]')).toBeInTheDocument()
+  })
+
+  it('routes trackEvent through cardConfig.telemetry while mounted', () => {
+    const telemetry = vi.fn()
+    const { unmount } = render(
+      <InklingComposer cardConfig={{ telemetry }}>
+        <EditorTree />
+      </InklingComposer>,
+    )
+
+    trackEvent('test-event', { foo: 'bar' })
+    expect(telemetry).toHaveBeenCalledWith('test-event', { foo: 'bar' })
+
+    // unmounting restores the default adapter
+    telemetry.mockClear()
+    unmount()
+    trackEvent('test-event')
+    expect(telemetry).not.toHaveBeenCalled()
   })
 
   it('accepts initialEditorState prop', () => {
@@ -180,10 +199,10 @@ describe('InklingComposer', function () {
 
     const provider = factory('card-1', new Map())
     expect(provider.awareness).toBeDefined()
-    expect(provider.connect).toBeTypeOf('function')
-    expect(provider.disconnect).toBeTypeOf('function')
-    expect(provider.on).toBeTypeOf('function')
-    expect(provider.off).toBeTypeOf('function')
+    expect(typeof provider.connect).toBe('function')
+    expect(typeof provider.disconnect).toBe('function')
+    expect(typeof provider.on).toBe('function')
+    expect(typeof provider.off).toBe('function')
     provider.disconnect()
   })
 
