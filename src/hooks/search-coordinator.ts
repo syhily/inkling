@@ -1,14 +1,16 @@
 import React from 'react'
 
 import EarthIcon from '@/assets/icons/inkling-earth.svg?react'
+import { createRequestTrack, createSnapshotStore, type RequestScheduler } from '@/utils/services/request-track'
 
 // Search coordinator — the headless module owning the link-search flow behind
 // useSearchLinks: two request tracks (the debounced query search and the
-// default-options prefetch), the URL short-circuit, and the cross-track
-// waiting. The churn (stale responses, superseded queries, rejections,
-// cancellation) lives here behind injected ports — the scheduler and the
-// searchLinks promise factory — so the race matrix is a synchronous test
-// table instead of renderHook + wall-clock sleeps. The React adapter is
+// default-options prefetch, both composed from the request-track primitives
+// in src/utils/services/request-track.ts), the URL short-circuit, and the
+// cross-track waiting. The churn (stale responses, superseded queries,
+// rejections, cancellation) lives here behind injected ports — the scheduler
+// and the searchLinks promise factory — so the race matrix is a synchronous
+// test table instead of renderHook + wall-clock sleeps. The React adapter is
 // useSearchLinks (~40 lines): position and constraints in, a snapshot out.
 
 export const SEARCH_DEBOUNCE_MS = 100
@@ -117,19 +119,8 @@ export interface SearchCoordinatorSnapshot {
   defaultListOptions: ListOptionSection[]
 }
 
-/** Scheduler port for the debounced query track — tests inject a manual one. */
-export interface SearchScheduler {
-  schedule: (fn: () => void, ms: number) => () => void
-}
-
-const defaultScheduler: SearchScheduler = {
-  schedule(fn, ms) {
-    const id = setTimeout(fn, ms)
-    return () => {
-      clearTimeout(id)
-    }
-  },
-}
+/** Scheduler port for the debounced query track — an alias of the request track's `RequestScheduler`. */
+export type SearchScheduler = RequestScheduler
 
 interface CreateSearchCoordinatorOptions {
   searchLinks?: SearchLinksFn
@@ -141,39 +132,28 @@ interface CreateSearchCoordinatorOptions {
 export function createSearchCoordinator({
   searchLinks,
   noResultOptions,
-  scheduler = defaultScheduler,
+  scheduler,
   debounceMs = SEARCH_DEBOUNCE_MS,
 }: CreateSearchCoordinatorOptions) {
-  let snapshot: SearchCoordinatorSnapshot = { isSearching: false, listOptions: [], defaultListOptions: [] }
-  const listeners = new Set<() => void>()
+  const store = createSnapshotStore<SearchCoordinatorSnapshot>({
+    isSearching: false,
+    listOptions: [],
+    defaultListOptions: [],
+  })
 
-  const emit = (partial: Partial<SearchCoordinatorSnapshot>) => {
-    snapshot = { ...snapshot, ...partial }
-    for (const listener of listeners) {
-      listener()
-    }
-  }
-
-  // query track
-  let latestRequestId = 0
-  let cancelScheduledSearch: (() => void) | null = null
-
-  // default (prefetch) track
-  let latestDefaultRequestId = 0
+  // query track (debounced) and default (prefetch) track — the latest-wins
+  // guards are the shared request-track primitive
+  const queryTrack = createRequestTrack({ scheduler })
+  const defaultTrack = createRequestTrack()
   let defaultRequest: { id: number; promise: Promise<void> } | null = null
   let defaultOptionsLoaded = false
 
-  const cancelSearch = () => {
-    cancelScheduledSearch?.()
-    cancelScheduledSearch = null
-  }
-
   const runSearch = async (id: number, term: string): Promise<void> => {
-    if (latestRequestId !== id) {
+    if (!queryTrack.isLatest(id)) {
       return
     }
 
-    emit({ isSearching: true })
+    store.emit({ isSearching: true })
     try {
       // a missing search function resolves like a cancelled search: keep the
       // current options and leave the searching state
@@ -181,34 +161,33 @@ export function createSearchCoordinator({
 
       // a newer query superseded this one while we were awaiting — don't
       // let a slow older response overwrite the newer results
-      if (latestRequestId !== id) {
+      if (!queryTrack.isLatest(id)) {
         return
       }
 
       // undefined means the search was cancelled: keep the current options
       // instead of flashing "no results" while a later search is in flight
       if (results !== undefined) {
-        emit({ listOptions: convertSearchResultsToListOptions(results, term, { noResultOptions }) })
+        store.emit({ listOptions: convertSearchResultsToListOptions(results, term, { noResultOptions }) })
       }
     } catch {
       // Search is best-effort. Preserve the last options when the host
       // rejects, and always leave the searching state below.
     } finally {
-      if (latestRequestId === id) {
-        emit({ isSearching: false })
+      if (queryTrack.isLatest(id)) {
+        store.emit({ isSearching: false })
       }
     }
   }
 
   const startDefaultOptionsFetch = (): Promise<void> => {
-    latestDefaultRequestId += 1
-    const id = latestDefaultRequestId
+    const id = defaultTrack.next()
     const promise = (async () => {
       try {
         const results = searchLinks ? await searchLinks() : undefined
-        if (latestDefaultRequestId === id) {
+        if (defaultTrack.isLatest(id)) {
           defaultOptionsLoaded = true
-          emit({ defaultListOptions: convertSearchResultsToListOptions(results, '', { type: 'default' }) })
+          store.emit({ defaultListOptions: convertSearchResultsToListOptions(results, '', { type: 'default' }) })
         }
       } catch {
         // Default suggestions are best-effort.
@@ -232,44 +211,36 @@ export function createSearchCoordinator({
   }
 
   return {
-    getSnapshot: () => snapshot,
-
-    subscribe(listener: () => void) {
-      listeners.add(listener)
-      return () => {
-        listeners.delete(listener)
-      }
-    },
+    getSnapshot: store.getSnapshot,
+    subscribe: store.subscribe,
 
     setQuery(query: string) {
-      latestRequestId += 1
-      const requestId = latestRequestId
+      const requestId = queryTrack.next()
 
       // URL queries skip the debounced search so the "Link to web page"
       // option updates more responsively
       if (URL_QUERY_REGEX.test(query)) {
-        cancelSearch()
-        emit({ listOptions: urlQueryOptions(query), isSearching: false })
+        queryTrack.cancelScheduled()
+        store.emit({ listOptions: urlQueryOptions(query), isSearching: false })
         return
       }
 
       if (!query) {
-        cancelSearch()
+        queryTrack.cancelScheduled()
         if (defaultOptionsLoaded) {
-          emit({ isSearching: false })
+          store.emit({ isSearching: false })
         } else {
-          emit({ isSearching: true })
+          store.emit({ isSearching: true })
           void waitForDefaultOptions().then(() => {
-            if (latestRequestId === requestId) {
-              emit({ isSearching: false })
+            if (queryTrack.isLatest(requestId)) {
+              store.emit({ isSearching: false })
             }
           })
         }
         return
       }
 
-      cancelSearch()
-      cancelScheduledSearch = scheduler.schedule(() => void runSearch(requestId, query), debounceMs)
+      queryTrack.schedule(() => void runSearch(requestId, query), debounceMs)
     },
 
     /** Begin the default-options prefetch (adapter mount). */
@@ -280,9 +251,8 @@ export function createSearchCoordinator({
 
     /** Invalidate every in-flight request (adapter unmount / recreation). */
     dispose() {
-      cancelSearch()
-      latestRequestId += 1
-      latestDefaultRequestId += 1
+      queryTrack.dispose()
+      defaultTrack.dispose()
       defaultRequest = null
     },
   }

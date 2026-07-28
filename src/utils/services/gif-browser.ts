@@ -7,6 +7,7 @@ import {
   type GifProviderConfig,
   type GifResponse,
 } from '@/utils/services/gif'
+import { createRequestTrack, createSnapshotStore, type RequestScheduler } from '@/utils/services/request-track'
 
 // Gif browser — the headless module behind the GIF selector: fetch/pagination
 // behind an injected port, column balancing, and the keyboard-navigation
@@ -14,9 +15,11 @@ import {
 // the browser keeps the gif list, the balanced columns, the highlight, and the
 // loading/error flags; React subscribes to the snapshot and dispatches
 // intents. The churn (debounced search, overlapping requests, stale
-// responses) lives here behind injected ports — the scheduler and the
-// fetchPage promise factory — so the race matrix and the navigation table are
-// synchronous unit tests instead of renderHook + wall-clock sleeps. The
+// responses) composes the request-track primitives
+// (src/utils/services/request-track.ts — scheduler port, snapshot store,
+// latest-wins guard) with the fetchPage promise factory port, so the race
+// matrix and the navigation table are synchronous unit tests instead of
+// renderHook + wall-clock sleeps. The
 // elementFromPoint probing used by horizontal moves is inherently DOM: it
 // sits behind the GifGeometry port (the adapter supplies the real probing
 // implementation) so the pure transitions stay table-testable. The React
@@ -39,10 +42,8 @@ export type GifFetchOutcome = { ok: true; results: GifData[]; next: string | nul
 
 export type GifFetchPage = (url: string) => Promise<GifFetchOutcome>
 
-/** Scheduler port for the debounced search track — tests inject a manual one. */
-export interface GifScheduler {
-  schedule: (fn: () => void, ms: number) => () => void
-}
+/** Scheduler port for the debounced search track — an alias of the request track's `RequestScheduler`. */
+export type GifScheduler = RequestScheduler
 
 export interface GifTileRect {
   left: number
@@ -325,15 +326,6 @@ export function reduceGifKey(state: GifNavState, event: GifKeyEventData, geometr
   }
 }
 
-const defaultScheduler: GifScheduler = {
-  schedule(fn, ms) {
-    const id = setTimeout(fn, ms)
-    return () => {
-      clearTimeout(id)
-    }
-  },
-}
-
 const defaultFetchPage: GifFetchPage = async (url) => {
   const response = await fetch(url)
   if (response.status >= 200 && response.status < 300) {
@@ -358,7 +350,7 @@ interface CreateGifBrowserOptions {
 export function createGifBrowser({
   config,
   fetchPage = defaultFetchPage,
-  scheduler = defaultScheduler,
+  scheduler,
   debounceMs = GIF_SEARCH_DEBOUNCE_MS,
 }: CreateGifBrowserOptions) {
   let gifs: GifData[] = []
@@ -372,20 +364,22 @@ export function createGifBrowser({
   let isLoading = false
   let isLazyLoading = false
   let error: string | null = null
-  // Latest-wins request guard: a newer search supersedes every in-flight
-  // request from an older track, so a slow response can never overwrite newer
-  // results (or resurrect cleared ones).
-  let requestSeq = 0
-  let cancelScheduledSearch: (() => void) | null = null
 
-  let snapshot: GifBrowserSnapshot = { gifs, columns, highlightedId, isLoading, isLazyLoading, error }
-  const listeners = new Set<() => void>()
+  // the snapshot store and the latest-wins request guard: a newer search
+  // supersedes every in-flight request from an older generation, so a slow
+  // response can never overwrite newer results (or resurrect cleared ones)
+  const store = createSnapshotStore<GifBrowserSnapshot>({
+    gifs,
+    columns,
+    highlightedId,
+    isLoading,
+    isLazyLoading,
+    error,
+  })
+  const track = createRequestTrack({ scheduler })
 
-  const emit = () => {
-    snapshot = { gifs, columns, highlightedId, isLoading, isLazyLoading, error }
-    for (const listener of listeners) {
-      listener()
-    }
+  const emitFlags = (): void => {
+    store.emit({ gifs, columns, highlightedId, isLoading, isLazyLoading, error })
   }
 
   const addGifToColumns = (gif: GifData): void => {
@@ -448,7 +442,7 @@ export function createGifBrowser({
   const runRequest = async (seq: number, path: string, params: Record<string, string>): Promise<void> => {
     error = null
     isLoading = true
-    emit()
+    emitFlags()
 
     let outcome: GifFetchOutcome
     try {
@@ -459,7 +453,7 @@ export function createGifBrowser({
 
     // a newer search superseded this request while we were awaiting — the
     // newer request owns the flags, and the stale outcome must not apply
-    if (seq !== requestSeq) {
+    if (!track.isLatest(seq)) {
       return
     }
 
@@ -479,11 +473,11 @@ export function createGifBrowser({
 
     isLoading = false
     isLazyLoading = false
-    emit()
+    emitFlags()
   }
 
   const startSearchFetch = (term: string): void => {
-    requestSeq += 1
+    const generation = track.next()
     searchTerm = term
     gifs = []
     nextPos = null
@@ -491,17 +485,15 @@ export function createGifBrowser({
 
     if (term) {
       loadedType = 'search'
-      void runRequest(requestSeq, 'search', { q: term, media_filter: 'tinygif,gif' })
+      void runRequest(generation, 'search', { q: term, media_filter: 'tinygif,gif' })
     } else {
       loadedType = 'featured'
-      void runRequest(requestSeq, 'featured', { q: 'excited', media_filter: 'tinygif,gif' })
+      void runRequest(generation, 'featured', { q: 'excited', media_filter: 'tinygif,gif' })
     }
   }
 
   const setSearch = (term: string): void => {
-    cancelScheduledSearch?.()
-    cancelScheduledSearch = scheduler.schedule(() => {
-      cancelScheduledSearch = null
+    track.schedule(() => {
       startSearchFetch(term)
     }, debounceMs)
   }
@@ -512,9 +504,8 @@ export function createGifBrowser({
     }
 
     if (!gifs.length) {
-      requestSeq += 1
       loadedType = 'featured'
-      void runRequest(requestSeq, 'featured', { q: 'excited', media_filter: 'tinygif,gif' })
+      void runRequest(track.next(), 'featured', { q: 'excited', media_filter: 'tinygif,gif' })
       return
     }
 
@@ -533,7 +524,9 @@ export function createGifBrowser({
 
     isLazyLoading = true
 
-    void runRequest(requestSeq, loadedType, params)
+    // pagination deliberately joins the current generation — a load-more is
+    // not a new search and must not supersede itself
+    void runRequest(track.current(), loadedType, params)
   }
 
   const setColumnCount = (count: number): void => {
@@ -542,7 +535,7 @@ export function createGifBrowser({
     }
     columnCount = count
     rebuildColumns()
-    emit()
+    store.emit({ columns })
   }
 
   const dispatch = (intent: GifBrowserIntent, geometry?: GifGeometry): GifBrowserEffect[] => {
@@ -561,7 +554,7 @@ export function createGifBrowser({
           return []
         }
         highlightedId = intent.id
-        emit()
+        store.emit({ highlightedId })
         return []
       }
       case 'select': {
@@ -577,7 +570,7 @@ export function createGifBrowser({
         )
         if (transition.state.highlightedId !== highlightedId) {
           highlightedId = transition.state.highlightedId
-          emit()
+          store.emit({ highlightedId })
         }
         return transition.effects
       }
@@ -585,23 +578,13 @@ export function createGifBrowser({
   }
 
   return {
-    getSnapshot: () => snapshot,
-
-    subscribe(listener: () => void) {
-      listeners.add(listener)
-      return () => {
-        listeners.delete(listener)
-      }
-    },
+    getSnapshot: store.getSnapshot,
+    subscribe: store.subscribe,
 
     dispatch,
 
     /** Cancel the pending search and invalidate every in-flight request. */
-    dispose() {
-      cancelScheduledSearch?.()
-      cancelScheduledSearch = null
-      requestSeq += 1
-    },
+    dispose: () => track.dispose(),
   }
 }
 
