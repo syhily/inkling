@@ -14,6 +14,7 @@ import { resolveLabels, type InklingLabelsInput } from '@/labels/inkling-labels'
 import { DEFAULT_CONFIG } from '@/nodes/base'
 import defaultTheme from '@/themes/default'
 import { setTelemetryHandler } from '@/utils/analytics'
+import { normalizeFileUploader } from '@/utils/file-uploader'
 import { type InklingInitialEditorState, normalizeInitialEditorState } from '@/utils/initial-document'
 import { requireMultiplayerConfig } from '@/utils/services/multiplayer-config'
 
@@ -32,42 +33,6 @@ const defaultConfig = {
   namespace: 'InklingEditor',
   theme: defaultTheme,
   html: DEFAULT_CONFIG.html,
-}
-
-function hasFileUploadHook(
-  fileUploader: FileUploaderInput,
-): fileUploader is FileUploaderInput & Pick<FileUploader, 'useFileUpload'> {
-  return 'useFileUpload' in fileUploader && typeof fileUploader.useFileUpload === 'function'
-}
-
-// The public prop accepts legacy bags, so only forward `fileTypes` entries
-// whose shape the consumers actually read (`{ mimeTypes: string[] }` per
-// media type) — anything else degrades to "no restriction", which is what the
-// optional-chaining reads in the node components already fall back to.
-function readFileTypes(fileUploader: FileUploaderInput): FileUploader['fileTypes'] {
-  if (!('fileTypes' in fileUploader)) {
-    return undefined
-  }
-  const value: unknown = fileUploader.fileTypes
-  if (typeof value !== 'object' || value === null) {
-    return undefined
-  }
-  const fileTypes: NonNullable<FileUploader['fileTypes']> = {}
-  for (const [media, entry] of Object.entries(value)) {
-    if (media !== 'image' && media !== 'video' && media !== 'audio' && media !== 'file') {
-      continue
-    }
-    if (
-      typeof entry === 'object' &&
-      entry !== null &&
-      'mimeTypes' in entry &&
-      Array.isArray(entry.mimeTypes) &&
-      entry.mimeTypes.every((mimeType: unknown) => typeof mimeType === 'string')
-    ) {
-      fileTypes[media] = { mimeTypes: entry.mimeTypes }
-    }
-  }
-  return fileTypes
 }
 
 /**
@@ -149,18 +114,9 @@ const InklingComposerBase = ({
   // the five per-composer handles are created and provided by
   // ComposerHandlesProvider (src/context/ComposerHandlesProvider)
 
-  const normalizedFileUploader = React.useMemo<FileUploader>(() => {
-    const fileTypes = readFileTypes(fileUploader)
-    const useFileUpload = hasFileUploadHook(fileUploader)
-      ? fileUploader.useFileUpload
-      : (): ReturnType<FileUploader['useFileUpload']> => {
-          console.error(
-            '<InklingComposer> requires a `fileUploader` prop object to be passed containing a `useFileUpload` custom hook',
-          )
-          return { upload: () => Promise.resolve(undefined) }
-        }
-    return fileTypes === undefined ? { useFileUpload } : { useFileUpload, fileTypes }
-  }, [fileUploader])
+  // the legacy-bag degradation policy lives in @/utils/file-uploader (a
+  // synchronous test table); the composer keeps one memo line
+  const normalizedFileUploader = React.useMemo<FileUploader>(() => normalizeFileUploader(fileUploader), [fileUploader])
 
   // The collaboration module (yjs/y-websocket) loads on demand: the dynamic
   // import runs inside an effect — never during SSR — and only when
