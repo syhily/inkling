@@ -4,11 +4,14 @@ import React from 'react'
 
 import CloseIcon from '@/assets/icons/inkling-close.svg?react'
 import { InputList } from '@/components/ui/InputList'
-import { LinkInputSearchItem } from '@/components/ui/LinkInputSearchItem'
+import {
+  createLinkSuggestionGetItem,
+  useLinkDropdownEscape,
+  useLinkDropdownOpenedTracking,
+} from '@/components/ui/LinkSuggestionList'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { useSearchLinks, type ListOptionItem } from '@/hooks/useSearchLinks'
-import trackEvent from '@/utils/analytics'
 
 export interface UrlInputProps {
   dataTestId?: string
@@ -69,27 +72,8 @@ export function UrlInput({
   const searchEnabled = typeof searchLinks === 'function'
   const { isSearching, listOptions } = useSearchLinks(value || '', searchEnabled ? searchLinks : undefined)
 
-  React.useEffect(() => {
-    if (searchEnabled && !value) {
-      trackEvent('Link dropdown: Opened', { context: 'bookmark' })
-    }
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        event.stopPropagation()
-        handleClose?.()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [handleClose])
+  useLinkDropdownOpenedTracking('bookmark', searchEnabled && !value)
+  useLinkDropdownEscape(handleClose, { swallow: true })
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     handleUrlChange?.(event.target.value)
@@ -130,20 +114,7 @@ export function UrlInput({
     }
   }
 
-  const getItem = (item: ListOptionItem, selected: boolean, onMouseOver: () => void, scrollIntoView: boolean) => {
-    return (
-      <LinkInputSearchItem
-        key={item.value ?? 'no-results'}
-        dataTestId={dataTestId}
-        highlightString={value}
-        item={item}
-        scrollIntoView={scrollIntoView}
-        selected={selected}
-        onClick={onSelectEvent}
-        onMouseOver={onMouseOver}
-      />
-    )
-  }
+  const getItem = createLinkSuggestionGetItem({ dataTestId, highlightString: value, onSelect: onSelectEvent })
 
   if (isLoading) {
     return (

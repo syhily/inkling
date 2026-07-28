@@ -2,15 +2,15 @@ import React, { useEffect, useRef } from 'react'
 
 import CloseIcon from '@/assets/icons/inkling-close.svg?react'
 import { Input } from '@/components/ui/Input'
-import { InputListGroup, InputListLoadingItem } from '@/components/ui/InputList'
-import { KeyboardSelectionWithGroups } from '@/components/ui/KeyboardSelectionWithGroups'
-import { LinkInputSearchItem } from '@/components/ui/LinkInputSearchItem'
+import {
+  LinkSuggestionList,
+  useLinkDropdownEscape,
+  useLinkDropdownOpenedTracking,
+} from '@/components/ui/LinkSuggestionList'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
-import { useSearchLinks, type ListOptionItem, type ListOptionSection } from '@/hooks/useSearchLinks'
-import trackEvent from '@/utils/analytics'
-import { POPUP_LIST_MAX_HEIGHT } from '@/utils/selection-anchored-popup'
+import { useSearchLinks, type ListOptionItem } from '@/hooks/useSearchLinks'
 
 interface LinkInputProps {
   href?: string
@@ -40,12 +40,7 @@ export function LinkInput({ href, update, cancel }: LinkInputProps) {
 
   const testId = 'link-input'
 
-  React.useEffect(() => {
-    if (searchEnabled) {
-      trackEvent('Link dropdown: Opened', { context: 'text' })
-    }
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  useLinkDropdownOpenedTracking('text', searchEnabled)
 
   // adjust state during render: mirror a changed href prop into local state
   const [prevHref, setPrevHref] = React.useState(href)
@@ -61,41 +56,10 @@ export function LinkInput({ href, update, cancel }: LinkInputProps) {
 
   // close link input when clicking outside or pressing escape
   useClickOutside(true, containerRef, () => cancel())
-
-  React.useEffect(() => {
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        cancel()
-      }
-    }
-
-    window.addEventListener('keydown', onEscape)
-    return () => {
-      window.removeEventListener('keydown', onEscape)
-    }
-  }, [cancel])
+  useLinkDropdownEscape(cancel)
 
   const onItemSelected = (item: ListOptionItem) => {
     update(item.value || '', item.type)
-  }
-
-  const getItem = (item: ListOptionItem, selected: boolean, onMouseOver: () => void, scrollIntoView: boolean) => {
-    return (
-      <LinkInputSearchItem
-        key={item.value ?? 'no-results'}
-        dataTestId={testId}
-        highlightString={_href}
-        item={item}
-        scrollIntoView={scrollIntoView}
-        selected={selected}
-        onClick={onItemSelected}
-        onMouseOver={onMouseOver}
-      />
-    )
-  }
-
-  const getGroup = (group: ListOptionSection, { showSpinner }: { showSpinner?: boolean } = {}) => {
-    return <InputListGroup dataTestId={testId} group={group} showSpinner={showSpinner} />
   }
 
   const showSuggestions = searchEnabled && (isSearching || (listOptions && !!listOptions.length))
@@ -202,21 +166,14 @@ export function LinkInput({ href, update, cancel }: LinkInputProps) {
       )}
 
       {showSuggestions && (
-        <>
-          <ul
-            className="w-full overflow-y-auto bg-white py-1 dark:bg-grey-950"
-            style={{ maxHeight: POPUP_LIST_MAX_HEIGHT }}
-          >
-            {isSearching && !listOptions.length && <InputListLoadingItem dataTestId={testId} />}
-            <KeyboardSelectionWithGroups
-              getGroup={getGroup}
-              getItem={getItem}
-              groups={listOptions}
-              isLoading={isSearching}
-              onSelect={onItemSelected}
-            />
-          </ul>
-        </>
+        <LinkSuggestionList
+          dataTestId={testId}
+          groups={listOptions}
+          highlightString={_href}
+          isLoading={isSearching}
+          showLoadingItem={true}
+          onSelect={onItemSelected}
+        />
       )}
     </div>
   )
