@@ -1,98 +1,192 @@
 import React, { useEffect, useRef } from 'react'
 
 import CloseIcon from '@/assets/icons/inkling-close.svg?react'
+import { Input } from '@/components/ui/Input'
+import { InputListGroup, InputListLoadingItem } from '@/components/ui/InputList'
+import { KeyboardSelectionWithGroups } from '@/components/ui/KeyboardSelectionWithGroups'
+import { LinkInputSearchItem } from '@/components/ui/LinkInputSearchItem'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useClickOutside } from '@/hooks/useClickOutside'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { useSearchLinks, type ListOptionItem, type ListOptionSection } from '@/hooks/useSearchLinks'
+import trackEvent from '@/utils/analytics'
+import { POPUP_LIST_MAX_HEIGHT } from '@/utils/selection-anchored-popup'
 
 interface LinkInputProps {
   href?: string
-  update: (href: string) => void
+  update: (href: string, type?: string) => void
   cancel: () => void
 }
 
+// The one link-field: plain input by default, a search-suggestion list when
+// the host provides a searchLinks capability (read from host-integration
+// context — callers never fork). Shared chrome (href mirroring, dismissal,
+// Enter-submits-raw) lives here once; the search capability only changes
+// what renders below the input.
 export function LinkInput({ href, update, cancel }: LinkInputProps) {
+  const {
+    cardConfig: { searchLinks },
+  } = React.useContext(InklingHostIntegrationContext)
   const labels = useInklingLabels()
+
+  // store the href/query in state so we can update it without affecting the saved editor value
   const [_href, setHref] = React.useState<string | undefined>(href)
+  const searchEnabled = typeof searchLinks === 'function'
+  const { isSearching, listOptions } = useSearchLinks(_href || '', searchEnabled ? searchLinks : undefined)
 
   // add refs for input and container
   const inputRef = useRef<HTMLInputElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
-  // update the href when the prop changes
+  const testId = 'link-input'
+
   React.useEffect(() => {
+    if (searchEnabled) {
+      trackEvent('Link dropdown: Opened', { context: 'text' })
+    }
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // adjust state during render: mirror a changed href prop into local state
+  const [prevHref, setPrevHref] = React.useState(href)
+  if (prevHref !== href) {
+    setPrevHref(href)
     setHref(href)
-  }, [href])
+  }
 
   // when link is open, focus the input
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
 
-  // when link is open, watch the window for mousedown events so that we can
-  // close it when we detect a click outside
-  const closeOnClickOutside = React.useCallback(
-    (event: MouseEvent) => {
-      const target = event.target
-      if (containerRef.current && target instanceof Node && !containerRef.current.contains(target)) {
-        cancel()
-      }
-    },
-    [cancel],
-  )
+  // close link input when clicking outside or pressing escape
+  useClickOutside(true, containerRef, () => cancel())
 
   React.useEffect(() => {
-    window.addEventListener('mousedown', closeOnClickOutside)
-    return () => {
-      window.removeEventListener('mousedown', closeOnClickOutside)
-    }
-  }, [closeOnClickOutside])
-
-  // when link is open, watch the window for escape keydown events so that we can exit
-  const onEscape = React.useCallback(
-    (event: KeyboardEvent) => {
+    const onEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         cancel()
       }
-    },
-    [cancel],
-  )
+    }
 
-  React.useEffect(() => {
     window.addEventListener('keydown', onEscape)
     return () => {
       window.removeEventListener('keydown', onEscape)
     }
-  }, [onEscape])
+  }, [cancel])
+
+  const onItemSelected = (item: ListOptionItem) => {
+    update(item.value || '', item.type)
+  }
+
+  const getItem = (item: ListOptionItem, selected: boolean, onMouseOver: () => void, scrollIntoView: boolean) => {
+    return (
+      <LinkInputSearchItem
+        key={item.value ?? 'no-results'}
+        dataTestId={testId}
+        highlightString={_href}
+        item={item}
+        scrollIntoView={scrollIntoView}
+        selected={selected}
+        onClick={onItemSelected}
+        onMouseOver={onMouseOver}
+      />
+    )
+  }
+
+  const getGroup = (group: ListOptionSection, { showSpinner }: { showSpinner?: boolean } = {}) => {
+    return <InputListGroup dataTestId={testId} group={group} showSpinner={showSpinner} />
+  }
+
+  const showSuggestions = searchEnabled && (isSearching || (listOptions && !!listOptions.length))
+
+  const handleContainerKeyDownCapture = React.useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key !== 'Enter') {
+        return
+      }
+
+      const target = event.target
+      if (!(target instanceof HTMLInputElement) || target.dataset.inklingLinkInput === undefined) {
+        return
+      }
+
+      // The suggestion list's global capture listener runs before this handler.
+      // If the user navigated the list it will already have stopped propagation,
+      // so reaching here means no suggestion was selected. Submit the typed URL
+      // directly and stop the event so the input's own bubble handler doesn't
+      // duplicate the update.
+      event.preventDefault()
+      event.stopPropagation()
+      update(target.value || '')
+    },
+    [update],
+  )
+
+  const inputElement = searchEnabled ? (
+    <Input
+      autoFocus={true}
+      className="my-1 h-auto w-full rounded-md border border-transparent bg-grey-100 px-4 py-2 text-left text-sm leading-snug font-medium text-black placeholder:text-sm placeholder:leading-snug placeholder:font-medium placeholder:text-grey-500 focus:border-green focus:bg-white focus:shadow-[0_0_0_2px_rgba(48,207,67,.25)] dark:border-grey-800/80 dark:bg-grey-900 dark:text-white dark:selection:bg-grey-600/40 dark:selection:text-grey-100 dark:focus:border-green dark:focus:bg-grey-900"
+      dataTestId={testId}
+      name="link-input"
+      placeholder={labels['link.search.placeholder']}
+      value={_href}
+      data-inkling-link-input
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+        // update local value to allow searching
+        setHref(e.target.value)
+      }}
+      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+          // prevent Enter from triggering in the editor and removing text
+          // update the link value in the editor. Read the live input value so
+          // the last keystroke is always captured even if React state updates
+          // are slightly behind the native input value.
+          e.preventDefault()
+          update(e.currentTarget.value || '')
+          return
+        }
+      }}
+    />
+  ) : (
+    <input
+      ref={inputRef}
+      className="mb-[1px] h-8 w-full pl-3 leading-loose text-grey-900 selection:bg-grey/40 dark:bg-grey-950 dark:text-grey-300 dark:selection:bg-grey-800/40 dark:selection:text-grey-100"
+      data-testid={testId}
+      name="link-input"
+      placeholder={labels['link.input.placeholder']}
+      value={_href}
+      data-inkling-link-input
+      onInput={(e: React.InputEvent<HTMLInputElement>) => {
+        setHref(e.currentTarget.value)
+      }}
+      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+          // prevent Enter from triggering in the editor and removing text
+          // update the link value in the editor. Read the live input value so
+          // the last keystroke is always captured even if React state updates
+          // are slightly behind the native input value.
+          e.preventDefault()
+          update(e.currentTarget.value || '')
+          return
+        }
+      }}
+    />
+  )
 
   return (
     <div
       ref={containerRef}
-      className="relative m-0 flex items-center justify-evenly gap-1 rounded-lg bg-white p-1 font-sans text-md font-normal text-black shadow-md dark:bg-grey-950"
+      className={
+        searchEnabled
+          ? 'relative m-0 flex w-full flex-col rounded-lg bg-white p-1 px-2 font-sans text-sm font-medium shadow-md dark:bg-grey-950'
+          : 'relative m-0 flex items-center justify-evenly gap-1 rounded-lg bg-white p-1 font-sans text-md font-normal text-black shadow-md dark:bg-grey-950'
+      }
+      onKeyDownCapture={searchEnabled ? handleContainerKeyDownCapture : undefined}
     >
-      <input
-        ref={inputRef}
-        className="mb-[1px] h-8 w-full pl-3 leading-loose text-grey-900 selection:bg-grey/40 dark:bg-grey-950 dark:text-grey-300 dark:selection:bg-grey-800/40 dark:selection:text-grey-100"
-        data-testid="link-input"
-        name="link-input"
-        placeholder={labels['link.input.placeholder']}
-        value={_href}
-        data-inkling-link-input
-        onInput={(e: React.InputEvent<HTMLInputElement>) => {
-          setHref(e.currentTarget.value)
-        }}
-        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-          if (e.key === 'Enter') {
-            // prevent Enter from triggering in the editor and removing text
-            // update the link value in the editor. Read the live input value so
-            // the last keystroke is always captured even if React state updates
-            // are slightly behind the native input value.
-            e.preventDefault()
-            update(e.currentTarget.value || '')
-            return
-          }
-        }}
-      />
+      {inputElement}
 
-      {!!_href && (
+      {!searchEnabled && !!_href && (
         <button
           aria-label={labels['aria.close']}
           className="absolute right-3 cursor-pointer"
@@ -105,6 +199,24 @@ export function LinkInput({ href, update, cancel }: LinkInputProps) {
         >
           <CloseIcon className="size-4 stroke-2 text-grey" />
         </button>
+      )}
+
+      {showSuggestions && (
+        <>
+          <ul
+            className="w-full overflow-y-auto bg-white py-1 dark:bg-grey-950"
+            style={{ maxHeight: POPUP_LIST_MAX_HEIGHT }}
+          >
+            {isSearching && !listOptions.length && <InputListLoadingItem dataTestId={testId} />}
+            <KeyboardSelectionWithGroups
+              getGroup={getGroup}
+              getItem={getItem}
+              groups={listOptions}
+              isLoading={isSearching}
+              onSelect={onItemSelected}
+            />
+          </ul>
+        </>
       )}
     </div>
   )

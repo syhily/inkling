@@ -3,7 +3,12 @@ import { COMMAND_PRIORITY_LOW, KEY_ENTER_COMMAND } from 'lexical'
 import React from 'react'
 
 import CloseIcon from '@/assets/icons/inkling-close.svg?react'
+import { InputList } from '@/components/ui/InputList'
+import { LinkInputSearchItem } from '@/components/ui/LinkInputSearchItem'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { useSearchLinks, type ListOptionItem } from '@/hooks/useSearchLinks'
+import trackEvent from '@/utils/analytics'
 
 export interface UrlInputProps {
   dataTestId?: string
@@ -11,7 +16,7 @@ export interface UrlInputProps {
   handlePasteAsLink?: (href: string) => void
   handleRetry?: () => void
   handleUrlChange?: (value: string) => void
-  handleUrlSubmit?: (url: string) => void
+  handleUrlSubmit?: (url: string, type?: string) => void
   hasError?: boolean
   isLoading?: boolean
   placeholder?: string
@@ -42,8 +47,12 @@ function UrlInputPlugin({ onEnter }: { onEnter?: () => void }) {
   return null
 }
 
+// The one URL field: a plain input by default, a search-suggestion list
+// when the host provides a searchLinks capability (read from
+// host-integration context — callers never fork). The loading, error, and
+// close chrome lives here once; the capability only changes the input row.
 export function UrlInput({
-  dataTestId,
+  dataTestId = 'url-input',
   handleClose,
   handlePasteAsLink,
   handleRetry,
@@ -54,7 +63,33 @@ export function UrlInput({
   placeholder,
   value = '',
 }: UrlInputProps) {
+  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const labels = useInklingLabels()
+  const searchLinks = cardConfig.searchLinks
+  const searchEnabled = typeof searchLinks === 'function'
+  const { isSearching, listOptions } = useSearchLinks(value || '', searchEnabled ? searchLinks : undefined)
+
+  React.useEffect(() => {
+    if (searchEnabled && !value) {
+      trackEvent('Link dropdown: Opened', { context: 'bookmark' })
+    }
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        event.stopPropagation()
+        handleClose?.()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [handleClose])
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     handleUrlChange?.(event.target.value)
@@ -74,24 +109,41 @@ export function UrlInput({
     }
   }
 
-  React.useEffect(() => {
-    if (!hasError) {
+  const onSelectEvent = (selectedItemOrValue: ListOptionItem | string | null, type?: string) => {
+    if (selectedItemOrValue === null) {
       return
     }
 
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        event.stopPropagation()
-        handleClose?.()
-      }
-    }
+    const url = typeof selectedItemOrValue === 'string' ? selectedItemOrValue : selectedItemOrValue.value
+    handleUrlSubmit?.(url || '', type)
+  }
 
-    window.addEventListener('keydown', handleEscape)
-    return () => {
-      window.removeEventListener('keydown', handleEscape)
+  const handleSearchKeyDown = (event: React.KeyboardEvent) => {
+    if (!event.nativeEvent.isComposing && event.key === 'Enter') {
+      const target = event.target
+      if (!(target instanceof HTMLInputElement)) {
+        return
+      }
+      event.preventDefault()
+      event.stopPropagation()
+      handleUrlSubmit?.(target.value)
     }
-  }, [hasError, handleClose])
+  }
+
+  const getItem = (item: ListOptionItem, selected: boolean, onMouseOver: () => void, scrollIntoView: boolean) => {
+    return (
+      <LinkInputSearchItem
+        key={item.value ?? 'no-results'}
+        dataTestId={dataTestId}
+        highlightString={value}
+        item={item}
+        scrollIntoView={scrollIntoView}
+        selected={selected}
+        onClick={onSelectEvent}
+        onMouseOver={onMouseOver}
+      />
+    )
+  }
 
   if (isLoading) {
     return (
@@ -144,6 +196,28 @@ export function UrlInput({
             <CloseIcon className="size-4 stroke-2 text-grey-400" />
           </button>
         )}
+      </div>
+    )
+  }
+
+  if (searchEnabled) {
+    return (
+      <div className="not-inkling-prose" onKeyDown={handleSearchKeyDown}>
+        <InputList
+          autoFocus={true}
+          dataTestId={dataTestId}
+          dropdownClassName="z-[-1] w-full overflow-y-auto bg-white px-2 py-1 shadow-md dark:bg-grey-950"
+          dropdownPlacementBottomClass="mt-[.6rem] rounded-md"
+          dropdownPlacementTopClass="top-[-.6rem] -translate-y-full rounded-md"
+          getItem={getItem}
+          inputClassName={`w-full rounded-md border border-grey-300 p-2 font-sans text-sm font-normal leading-snug text-grey-900 placeholder:text-sm placeholder:font-medium placeholder:leading-snug placeholder:text-grey-500 focus-visible:outline-none dark:border-grey-800 dark:bg-grey-950 dark:text-grey-100 dark:placeholder:text-grey-800`}
+          isLoading={isSearching}
+          listOptions={listOptions}
+          placeholder={placeholder ?? ''}
+          value={value || ''}
+          onChange={(inputValue) => handleUrlChange?.(inputValue)}
+          onSelect={onSelectEvent}
+        />
       </div>
     )
   }

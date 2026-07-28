@@ -1,7 +1,7 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import React from 'react'
 
-import { LinkInputWithSearch } from '@/components/ui/LinkInputWithSearch'
+import { LinkInput } from '@/components/ui/LinkInput'
 import Portal from '@/components/ui/Portal'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useSelectionAnchoredPopup } from '@/hooks/useSelectionAnchoredPopup'
@@ -51,7 +51,7 @@ export function LinkActionToolbarWithSearch({ anchorElem, href, onClose }: LinkA
   return (
     <Portal>
       <div ref={linkToolbarRef} className="not-inkling-prose fixed z-[10000]">
-        <LinkInputWithSearch cancel={onClose} href={href} update={onLinkUpdate} />
+        <LinkInput cancel={onClose} href={href} update={onLinkUpdate} />
       </div>
     </Portal>
   )

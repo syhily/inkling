@@ -3,7 +3,24 @@ import { createEditor } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { SearchLinksFn } from '@/hooks/useSearchLinks'
+
 import { BookmarkCard, BookmarkIcon } from '@/components/ui/cards/BookmarkCard'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+
+function renderWithSearchLinks(searchLinks: SearchLinksFn, ui: React.ReactElement) {
+  return render(
+    <InklingHostIntegrationContext.Provider
+      value={{
+        fileUploader: { useFileUpload: () => ({ upload: () => Promise.resolve(undefined) }) },
+        cardConfig: { searchLinks },
+        onError: vi.fn(),
+      }}
+    >
+      {ui}
+    </InklingHostIntegrationContext.Provider>,
+  )
+}
 
 vi.mock('../../../../src/components/ui/CardCaptionEditor', () => ({
   CardCaptionEditor: () => <div data-testid="card-caption-editor" />,
@@ -71,20 +88,20 @@ describe('BookmarkCard', () => {
     expect(screen.queryByTestId('bookmark-thumbnail-container')).not.toBeInTheDocument()
   })
 
-  it('renders UrlSearchInput when searchLinks is provided', () => {
-    const searchLinks = vi.fn().mockResolvedValue([])
-    render(<BookmarkCard {...defaultProps} searchLinks={searchLinks} urlInputValue="test" />)
+  it('renders the search-capable field when the host configures searchLinks', () => {
+    const searchLinks: SearchLinksFn = vi.fn().mockResolvedValue([])
+    renderWithSearchLinks(searchLinks, <BookmarkCard {...defaultProps} urlInputValue="test" />)
 
     expect(screen.getByTestId('bookmark-url')).toBeInTheDocument()
   })
 
-  it('renders UrlInput when searchLinks is not provided', () => {
+  it('renders the plain field when searchLinks is not configured', () => {
     render(<BookmarkCard {...defaultProps} urlInputValue="test" />)
 
     expect(screen.getByTestId('bookmark-url')).toBeInTheDocument()
   })
 
-  it('submits the input value as a plain string on Enter in the UrlInput branch', () => {
+  it('submits the input value as a plain string on Enter in the plain branch', () => {
     const handleUrlSubmit = vi.fn()
     render(<BookmarkCard {...defaultProps} handleUrlSubmit={handleUrlSubmit} urlInputValue="https://example.com" />)
 
@@ -94,16 +111,12 @@ describe('BookmarkCard', () => {
     expect(handleUrlSubmit).toHaveBeenCalledWith('https://example.com')
   })
 
-  it('submits the input value as a plain string on Enter in the UrlSearchInput branch', () => {
+  it('submits the input value as a plain string on Enter in the search branch', () => {
     const handleUrlSubmit = vi.fn()
-    const searchLinks = vi.fn().mockResolvedValue([])
-    render(
-      <BookmarkCard
-        {...defaultProps}
-        handleUrlSubmit={handleUrlSubmit}
-        searchLinks={searchLinks}
-        urlInputValue="https://example.com"
-      />,
+    const searchLinks: SearchLinksFn = vi.fn().mockResolvedValue([])
+    renderWithSearchLinks(
+      searchLinks,
+      <BookmarkCard {...defaultProps} handleUrlSubmit={handleUrlSubmit} urlInputValue="https://example.com" />,
     )
 
     fireEvent.keyDown(screen.getByTestId('bookmark-url'), { key: 'Enter' })

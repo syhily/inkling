@@ -2,11 +2,8 @@ import type { EditorState, LexicalEditor } from 'lexical'
 
 import React from 'react'
 
-import type { SearchLinksFn } from '@/hooks/useSearchLinks'
-
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
 import { UrlInput } from '@/components/ui/UrlInput'
-import { UrlSearchInput } from '@/components/ui/UrlSearchInput'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 interface BookmarkCardProps {
@@ -29,7 +26,6 @@ interface BookmarkCardProps {
   isSelected?: boolean
   isLoading?: boolean
   urlError?: boolean
-  searchLinks?: SearchLinksFn
 }
 
 export function BookmarkCard({
@@ -52,7 +48,6 @@ export function BookmarkCard({
   isSelected,
   isLoading,
   urlError,
-  searchLinks,
 }: BookmarkCardProps) {
   const labels = useInklingLabels()
   // State to manage thumbnail visibility
@@ -127,38 +122,22 @@ export function BookmarkCard({
     )
   }
 
-  if (typeof searchLinks === 'function') {
-    return (
-      <UrlSearchInput
-        dataTestId="bookmark-url"
-        handleClose={handleClose}
-        handlePasteAsLink={handlePasteAsLink}
-        handleRetry={handleRetry}
-        handleUrlChange={handleUrlChange}
-        handleUrlSubmit={handleUrlSubmit}
-        hasError={urlError}
-        isLoading={isLoading}
-        placeholder={urlPlaceholder}
-        searchLinks={searchLinks}
-        value={urlInputValue}
-      />
-    )
-  } else {
-    return (
-      <UrlInput
-        dataTestId="bookmark-url"
-        handleClose={handleClose}
-        handlePasteAsLink={handlePasteAsLink}
-        handleRetry={handleRetry}
-        handleUrlChange={handleUrlChange}
-        handleUrlSubmit={handleUrlSubmit}
-        hasError={urlError}
-        isLoading={isLoading}
-        placeholder={urlPlaceholder}
-        value={urlInputValue}
-      />
-    )
-  }
+  // the field reads the searchLinks capability from host-integration
+  // context itself — this card only supplies the bookmark's handlers and copy
+  return (
+    <UrlInput
+      dataTestId="bookmark-url"
+      handleClose={handleClose}
+      handlePasteAsLink={handlePasteAsLink}
+      handleRetry={handleRetry}
+      handleUrlChange={handleUrlChange}
+      handleUrlSubmit={handleUrlSubmit}
+      hasError={urlError}
+      isLoading={isLoading}
+      placeholder={urlPlaceholder}
+      value={urlInputValue}
+    />
+  )
 }
 
 interface BookmarkIconProps {

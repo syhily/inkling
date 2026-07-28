@@ -118,9 +118,9 @@ export function BookmarkNodeComponent({
   //  fetch the metadata
   //  if it fails, paste as a link
   React.useEffect(() => {
-    // only run this once
+    // only run this once (the input state already initialises from `url`, so
+    // the effect only kicks off the initial fetch)
     if (createdWithUrl) {
-      setUrlInputValue(url)
       fetchInitialMetadata(url).catch(() => {
         handlePasteAsLink()
       })
@@ -147,7 +147,6 @@ export function BookmarkNodeComponent({
         isLoading={loading}
         isSelected={isSelected}
         publisher={publisher}
-        searchLinks={cardConfig.searchLinks}
         thumbnail={thumbnail}
         title={title}
         url={url}
