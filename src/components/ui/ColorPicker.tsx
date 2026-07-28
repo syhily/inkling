@@ -4,6 +4,7 @@ import { HexColorInput, HexColorPicker } from 'react-colorful'
 import EyedropperIcon from '@/assets/icons/inkling-eyedropper.svg?react'
 import ImgBgIcon from '@/assets/icons/inkling-img-bg.svg?react'
 import { Button } from '@/components/ui/Button'
+import { resolveSelectedSwatchTitle, resolveSwatchDisplayColor, resolveSwatchValue } from '@/components/ui/color-swatch'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
@@ -22,6 +23,25 @@ declare global {
   interface Window {
     EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> }
   }
+}
+
+const CONIC_RING_BACKGROUND =
+  'conic-gradient(hsl(360,100%,50%),hsl(315,100%,50%),hsl(270,100%,50%),hsl(225,100%,50%),hsl(180,100%,50%),hsl(135,100%,50%),hsl(90,100%,50%),hsl(45,100%,50%),hsl(0,100%,50%))'
+
+/** The rainbow ring marking "custom color" on the selector and picker-toggle buttons. */
+function ConicRing() {
+  return (
+    <div
+      className="absolute inset-0 rounded-full bg-clip-content p-[3px]"
+      style={{
+        background: CONIC_RING_BACKGROUND,
+        WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+        WebkitMaskComposite: 'xor',
+        mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+        maskComposite: 'exclude',
+      }}
+    />
+  )
 }
 
 export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange, children }: ColorPickerProps) {
@@ -46,13 +66,13 @@ export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange,
     e.preventDefault()
   }, [])
 
-  const isUsingColorPicker = useRef<boolean>(false)
   // the per-gesture document listener, so stop can remove it without the
-  // listener self-referencing its own binding
+  // listener self-referencing its own binding. The gesture's only real
+  // effect is returning focus to the hex input on release — the named
+  // "isUsingColorPicker" session state was never read and is gone.
   const gestureStopRef = useRef<(() => void) | null>(null)
 
   const stopUsingColorPicker = useCallback(() => {
-    isUsingColorPicker.current = false
     inputWrapperRef.current?.querySelector('input')?.focus()
 
     const stop = gestureStopRef.current
@@ -64,8 +84,6 @@ export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange,
   }, [])
 
   const startUsingColorPicker = useCallback(() => {
-    isUsingColorPicker.current = true
-
     const stop = () => stopUsingColorPicker()
     gestureStopRef.current = stop
     document.addEventListener('mouseup', stop)
@@ -76,10 +94,10 @@ export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange,
     async (e: React.MouseEvent) => {
       e.preventDefault()
 
-      isUsingColorPicker.current = true
       document.body.style.setProperty('pointer-events', 'none')
 
       if (!window.EyeDropper) {
+        document.body.style.removeProperty('pointer-events')
         return
       }
       const eyeDropper = new window.EyeDropper()
@@ -87,9 +105,8 @@ export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange,
         const result = await eyeDropper.open()
         onChange(result.sRGBHex)
       } catch {
-        // EyeDropper was cancelled or failed — picker state is reset in finally
+        // EyeDropper was cancelled or failed — pointer events are restored in finally
       } finally {
-        isUsingColorPicker.current = false
         document.body.style.removeProperty('pointer-events')
         inputWrapperRef.current?.querySelector('input')?.focus()
       }
@@ -101,12 +118,9 @@ export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange,
     inputWrapperRef.current?.querySelector('input')?.focus()
   }, [])
 
-  let hexValue = value
-  if (value === 'accent') {
-    hexValue = getAccentColor()
-  } else if (value === 'transparent') {
-    hexValue = ''
-  }
+  // the keyword grammar ('accent'/'transparent' vs raw hex) lives in
+  // @/components/ui/color-swatch; the picker's HexColorPicker takes '' for transparent
+  const hexValue = resolveSwatchDisplayColor(value, { transparentAs: '' })
 
   const focusHexInputOnClick = useCallback(() => {
     inputWrapperRef.current?.querySelector('input')?.focus()
@@ -170,12 +184,9 @@ function ColorSwatch({ hex, accent, transparent, title, isSelected, onSelect }: 
   const onSelectHandler = (e: React.MouseEvent): void => {
     e.preventDefault()
 
-    if (accent) {
-      onSelect('accent')
-    } else if (transparent) {
-      onSelect('transparent')
-    } else if (hex) {
-      onSelect(hex)
+    const swatchValue = resolveSwatchValue({ hex, accent, transparent })
+    if (swatchValue) {
+      onSelect(swatchValue)
     }
   }
 
@@ -244,19 +255,10 @@ export function ColorIndicator({
     e.preventDefault()
   }, [])
 
-  let backgroundColor = value
-  let selectedSwatch = swatches.find((swatch) => swatch.hex === value)?.title
-
-  if (value === 'accent') {
-    backgroundColor = getAccentColor()
-    selectedSwatch = swatches.find((swatch) => swatch.accent)?.title
-  } else if (value === 'image') {
-    backgroundColor = 'transparent'
-    selectedSwatch = swatches.find((swatch) => swatch.image)?.title
-  } else if (value === 'transparent') {
-    backgroundColor = 'white'
-    selectedSwatch = swatches.find((swatch) => swatch.transparent)?.title
-  }
+  // the indicator paints 'transparent' as white (the button needs a visible
+  // paint); the picker and swatch resolutions share the one grammar module
+  const backgroundColor = resolveSwatchDisplayColor(value, { transparentAs: 'white' })
+  let selectedSwatch = resolveSelectedSwatchTitle(value, swatches)
 
   if (isExpanded) {
     selectedSwatch = undefined
@@ -276,19 +278,7 @@ export function ColorIndicator({
           setIsOpen(!isOpen)
         }}
       >
-        {value && (
-          <div
-            className="absolute inset-0 rounded-full bg-clip-content p-[3px]"
-            style={{
-              background:
-                'conic-gradient(hsl(360,100%,50%),hsl(315,100%,50%),hsl(270,100%,50%),hsl(225,100%,50%),hsl(180,100%,50%),hsl(135,100%,50%),hsl(90,100%,50%),hsl(45,100%,50%),hsl(0,100%,50%))',
-              WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-              WebkitMaskComposite: 'xor',
-              mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-              maskComposite: 'exclude',
-            }}
-          />
-        )}
+        {value && <ConicRing />}
         <span
           className={cx(
             'block size-full rounded-full border-2 border-white dark:border-grey-950',
@@ -352,17 +342,7 @@ export function ColorIndicator({
             >
               {!selectedSwatch ? (
                 <>
-                  <div
-                    className="absolute inset-0 rounded-full bg-clip-content p-[3px]"
-                    style={{
-                      background:
-                        'conic-gradient(hsl(360,100%,50%),hsl(315,100%,50%),hsl(270,100%,50%),hsl(225,100%,50%),hsl(180,100%,50%),hsl(135,100%,50%),hsl(90,100%,50%),hsl(45,100%,50%),hsl(0,100%,50%))',
-                      WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                      WebkitMaskComposite: 'xor',
-                      mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                      maskComposite: 'exclude',
-                    }}
-                  />
+                  <ConicRing />
                   <span
                     className="block size-full rounded-full border-2 border-white dark:border-grey-950"
                     style={{ backgroundColor: value }}
@@ -373,7 +353,7 @@ export function ColorIndicator({
                   </span>
                 </>
               ) : (
-                <div className="absolute inset-0 rounded-full bg-[conic-gradient(hsl(360,100%,50%),hsl(315,100%,50%),hsl(270,100%,50%),hsl(225,100%,50%),hsl(180,100%,50%),hsl(135,100%,50%),hsl(90,100%,50%),hsl(45,100%,50%),hsl(0,100%,50%))]" />
+                <div className="absolute inset-0 rounded-full" style={{ background: CONIC_RING_BACKGROUND }} />
               )}
               <Tooltip label={labels['aria.pickColor']} />
             </button>
