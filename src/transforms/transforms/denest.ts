@@ -3,6 +3,8 @@ import type { ElementNode, Klass, LexicalEditor, LexicalNode } from 'lexical'
 /* c8 ignore start */
 import { $isListItemNode, $isListNode, ListItemNode } from '@lexical/list'
 import { $createParagraphNode, $getRoot, $isLineBreakNode, $isRootNode, $isTextNode } from 'lexical'
+
+import { registerNodeTransformIfPresent } from '@/transforms/register-node-transform'
 /* c8 ignore stop */
 
 export type CreateNodeFn<T extends LexicalNode> = (originalNode: T) => T
@@ -137,17 +139,12 @@ export function denestTransform<T extends ElementNode>(node: T, createNode: Crea
   tempParagraph.remove()
 }
 
-/* c8 ignore next */
 export function registerDenestTransform<T extends ElementNode>(
   editor: LexicalEditor,
   klass: Klass<T>,
   createNode: CreateNodeFn<T>,
 ): () => void {
-  if (editor.hasNodes([klass])) {
-    return editor.registerNodeTransform(klass, (node) => {
-      denestTransform(node, createNode)
-    })
-  }
-
-  return () => {}
+  return registerNodeTransformIfPresent(editor, klass, (node) => {
+    denestTransform(node, createNode)
+  })
 }

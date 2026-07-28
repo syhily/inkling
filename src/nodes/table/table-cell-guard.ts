@@ -5,6 +5,7 @@ import { $createParagraphNode, $isElementNode, $isParagraphNode } from 'lexical'
 
 import { $isFootnoteRefNode } from '@/nodes/footnote/FootnoteRefNode'
 import { $isMathInlineNode } from '@/nodes/math/MathInlineNode'
+import { registerNodeTransformIfPresent } from '@/transforms/register-node-transform'
 
 // Inline nodes that may never live inside a table cell — the tree-side
 // counterpart of kobato's table-cell-guard ILLEGAL_MARK_NAMES (a cell's
@@ -79,9 +80,5 @@ export function $guardTableCell(cell: TableCellNode): void {
 }
 
 export function registerTableCellGuard(editor: LexicalEditor): () => void {
-  if (editor.hasNode(TableCellNode)) {
-    return editor.registerNodeTransform(TableCellNode, $guardTableCell)
-  }
-
-  return () => {}
+  return registerNodeTransformIfPresent(editor, TableCellNode, $guardTableCell)
 }

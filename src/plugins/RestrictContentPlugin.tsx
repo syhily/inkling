@@ -1,10 +1,9 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { mergeRegister, COMMAND_PRIORITY_HIGH, PASTE_COMMAND, RootNode } from 'lexical'
+import { mergeRegister, COMMAND_PRIORITY_HIGH, PASTE_COMMAND } from 'lexical'
 import React from 'react'
 
 import { handlePlainTextPaste } from '@/plugins/behaviour/plainTextPaste'
-import { $enforceParagraphRestriction } from '@/plugins/behaviour/restrict-content'
-import { isEditorUpdating } from '@/utils/lexical-internals'
+import { registerParagraphRestriction } from '@/plugins/behaviour/restrict-content'
 
 /**
  * Paragraphs-only enforcement: any update strips decorator nodes (below) and
@@ -21,16 +20,9 @@ export const RestrictContentPlugin = ({ paragraphs, allowBr }: { paragraphs: num
 
   React.useEffect(() => {
     return mergeRegister(
-      editor.registerNodeTransform(RootNode, (rootNode) => {
-        // even if this node transform is registered on a nested editor it will
-        // still be triggered for root node changes in other editors so we need
-        // to make sure we're only operating on the root node for this editor
-        if (!isEditorUpdating(editor)) {
-          return
-        }
-
-        $enforceParagraphRestriction(rootNode, paragraphs)
-      }),
+      // the transform registration and its per-editor update guard live in
+      // the behaviour layer, mirroring registerTableCellGuard
+      registerParagraphRestriction(editor, paragraphs),
       editor.registerCommand(
         PASTE_COMMAND,
         (clipboardEvent) => {

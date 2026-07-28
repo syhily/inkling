@@ -1,7 +1,7 @@
 // The paragraphs-only restriction policy — headless; `RestrictContentPlugin`
-// is only the React adapter (it keeps the RootNode transform registration,
-// the per-editor update guard, and the HIGH-priority paste wiring). One
-// piece:
+// is only the React adapter (it keeps the HIGH-priority paste wiring; the
+// RootNode transform registration and its per-editor update guard live here,
+// mirroring registerTableCellGuard). One piece:
 //
 // - **Paragraph restriction** (`$enforceParagraphRestriction`) — the
 //   RootNode-invariant body: strip decorator nodes (they can't convert to
@@ -19,8 +19,11 @@ import {
   $isElementNode,
   $isParagraphNode,
   $isRangeSelection,
-  type RootNode,
+  RootNode,
+  type LexicalEditor,
 } from 'lexical'
+
+import { isEditorUpdating } from '@/utils/lexical-internals'
 
 /**
  * The cleaning policy: any non-clean root (a decorator, a list, any other
@@ -79,4 +82,20 @@ export function $enforceParagraphRestriction(rootNode: RootNode, paragraphs: num
   cleanedNodes.forEach((node) => rootNode.append(node))
   // move selection to end of new node
   rootNode.selectEnd()
+}
+
+/**
+ * The genus-shaped registration (mirrors `registerTableCellGuard`): the
+ * RootNode transform plus the per-editor update guard. Even registered on a
+ * nested editor, a RootNode transform fires for root changes in OTHER
+ * editors, so the guard restricts the invariant to this editor's updates.
+ */
+export function registerParagraphRestriction(editor: LexicalEditor, paragraphs: number): () => void {
+  return editor.registerNodeTransform(RootNode, (rootNode) => {
+    if (!isEditorUpdating(editor)) {
+      return
+    }
+
+    $enforceParagraphRestriction(rootNode, paragraphs)
+  })
 }
