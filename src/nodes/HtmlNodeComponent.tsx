@@ -2,7 +2,7 @@ import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { HtmlCard } from '@/components/ui/cards/HtmlCard'
-import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
+import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import { $isHtmlNode } from '@/nodes/HtmlNode'
@@ -11,7 +11,7 @@ export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: s
   const write = useCardWriter(nodeKey, $isHtmlNode)
   const { darkMode } = React.useContext(InklingUiPrefsContext)
 
-  const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+  const isEditing = useCardIsEditing(nodeKey)
 
   const updateHtml = (value: string) => {
     write((node) => {

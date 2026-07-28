@@ -53,7 +53,7 @@ The typed write path for card-node fields: `$updateCardNode(nodeKey, guard, upda
 _Avoid_: `$getNodeByKey` + `as GeneratedDecoratorNodeBase`
 
 **Card selection store**:
-The per-top-level-composer, editor-side store owning card-selection truth for non-React code: the selected card key and the edit-mode flag. Built on the composer handle factory; fed by registerCardSelection and the card command handlers, read synchronously by command handlers, subscribed to render-only by React via useCardSelectionState. There is no per-feature selection context — the former `InklingSelectedCardContext` folded into this store.
+The per-top-level-composer, editor-side store owning card-selection truth for non-React code: the selected card key and the edit-mode flag. Built on the composer handle factory; fed by registerCardSelection and the card command handlers, read synchronously by command handlers, subscribed to render-only by React via useCardSelectionState. Per-card subscriptions go through the named bindings `useCardIsSelected(nodeKey)` / `useCardIsEditing(nodeKey)` (the one home of the `selectedCardKey === nodeKey` selector shape, so the reference-equality guard's re-render granularity is decided once, never per call site); raw `useCardSelectionState` is reserved for cross-card reads (the wrapper's selectedCardKey, plugin-wide isEditingCard). There is no per-feature selection context — the former `InklingSelectedCardContext` folded into this store.
 _Avoid_: selection context, selection mirror, selected-card state
 
 **Composer handle**:

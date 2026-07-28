@@ -4,7 +4,7 @@ import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { FileCard } from '@/components/ui/cards/FileCard'
-import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
+import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
@@ -42,7 +42,7 @@ function FileNodeComponent({
   // populated is a latch (below); a card MOUNTED with a complete file never
   // transitions, so the initial state must start populated
   const [isPopulated, setIsPopulated] = React.useState<boolean>(() => !!(fileSrc && fileSize && fileName))
-  const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+  const isEditing = useCardIsEditing(nodeKey)
 
   const {
     uploader,

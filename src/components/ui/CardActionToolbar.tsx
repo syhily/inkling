@@ -6,7 +6,7 @@ import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator, type ToolbarIconName } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
-import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
+import { useCardIsEditing, useCardIsSelected } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { getCardToolbarLabel } from '@/nodes/cards/card-facts'
@@ -80,8 +80,8 @@ export function CardActionToolbar({
   const [editor] = useLexicalComposerContext()
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const labels = useInklingLabels()
-  const isSelected = useCardSelectionState((state) => state.selectedCardKey === nodeKey)
-  const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+  const isSelected = useCardIsSelected(nodeKey)
+  const isEditing = useCardIsEditing(nodeKey)
   const [showSnippetToolbar, setShowSnippetToolbar] = React.useState<boolean>(false)
   const toolbarLabel = useCardToolbarLabel(nodeKey)
 

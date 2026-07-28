@@ -4,7 +4,7 @@ import { useContext, useEffect } from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
-import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
+import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import { useHeaderBackgroundImage } from '@/hooks/useHeaderBackgroundImage'
@@ -66,7 +66,7 @@ function HeaderNodeComponent({
   const [editor] = useLexicalComposerContext()
   const write = useCardWriter(nodeKey, $isHeaderNode)
   const { cardConfig } = useContext(InklingHostIntegrationContext)
-  const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+  const isEditing = useCardIsEditing(nodeKey)
 
   const { isEnabled: isPinturaEnabled, openEditor: openImageEditor } = usePinturaEditor({
     config: cardConfig.pinturaConfig,

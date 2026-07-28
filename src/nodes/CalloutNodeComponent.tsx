@@ -3,7 +3,7 @@ import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CALLOUT_COLORS, CalloutCard, type CalloutColorName } from '@/components/ui/cards/CalloutCard'
-import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
+import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import { $isCalloutNode } from '@/nodes/base'
 
@@ -40,7 +40,7 @@ export function CalloutNodeComponent({
   calloutTextEditorInitialState,
 }: CalloutNodeComponentProps) {
   const write = useCardWriter(nodeKey, $isCalloutNode)
-  const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+  const isEditing = useCardIsEditing(nodeKey)
   const [showEmojiPicker, setShowEmojiPicker] = React.useState<boolean>(false)
 
   const handleEmojiChange = React.useCallback(

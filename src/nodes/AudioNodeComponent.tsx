@@ -4,7 +4,7 @@ import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { AudioCard } from '@/components/ui/cards/AudioCard'
-import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
+import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
@@ -33,7 +33,7 @@ export function AudioNodeComponent({
   const [editor] = useLexicalComposerContext()
   const write = useCardWriter(nodeKey, $isAudioNode)
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
-  const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+  const isEditing = useCardIsEditing(nodeKey)
 
   const {
     uploader: audioUploader,

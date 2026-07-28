@@ -3,7 +3,7 @@ import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CodeBlockCard } from '@/components/ui/cards/CodeBlockCard'
-import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
+import { useCardIsEditing, useCardIsSelected } from '@/context/CardSelectionStoreContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import { useReselectOnEscape } from '@/hooks/useReselectOnEscape'
@@ -26,8 +26,8 @@ export function CodeBlockNodeComponent({
 }: CodeBlockNodeComponentProps) {
   const write = useCardWriter(nodeKey, $isCodeBlockNode)
   const { darkMode } = React.useContext(InklingUiPrefsContext)
-  const isSelected = useCardSelectionState((state) => state.selectedCardKey === nodeKey)
-  const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+  const isSelected = useCardIsSelected(nodeKey)
+  const isEditing = useCardIsEditing(nodeKey)
   const exitEditMode = useReselectOnEscape(nodeKey)
 
   const updateCode = React.useCallback(

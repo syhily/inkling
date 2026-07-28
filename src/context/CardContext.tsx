@@ -4,8 +4,8 @@ import React from 'react'
 
 // Genuinely card-local state, provided by InklingCardWrapper to the card
 // subtree. Selection/edit-mode state is NOT here — readers subscribe to the
-// per-composer card selection store via useCardSelectionState
-// (state.selectedCardKey === nodeKey, plus state.isEditingCard), and entering
+// per-composer card selection store via the named bindings
+// (useCardIsSelected / useCardIsEditing), and entering
 // edit mode is a direct EDIT_CARD_COMMAND dispatch. Card width flows from the
 // node through the declaration's decorateTarget width mapper to the wrapper's
 // width prop (and to the card component as a prop for Image/Video) — there is

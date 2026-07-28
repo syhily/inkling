@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { VideoCard } from '@/components/ui/cards/VideoCard'
-import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
+import { useCardIsEditing, useCardIsSelected } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
@@ -47,8 +47,8 @@ export function VideoNodeComponent({
   const [editor] = useLexicalComposerContext()
   const write = useCardWriter(nodeKey, $isVideoNode)
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
-  const isSelected = useCardSelectionState((state) => state.selectedCardKey === nodeKey)
-  const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+  const isSelected = useCardIsSelected(nodeKey)
+  const isEditing = useCardIsEditing(nodeKey)
   const [previewThumbnail, setThumbnailPreview] = usePreviewLease()
   // host-provided hook seam: the composer contract requires useFileUpload to
   // be identity-stable for the editor's lifetime, so this call is the same

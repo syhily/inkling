@@ -3,7 +3,7 @@ import React from 'react'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { MathCard } from '@/components/ui/cards/MathCard'
-import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
+import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
 import { useReselectOnEscape } from '@/hooks/useReselectOnEscape'
@@ -19,7 +19,7 @@ export interface MathNodeComponentProps {
 export function MathNodeComponent({ nodeKey, tex, mathml, svg }: MathNodeComponentProps) {
   const write = useCardWriter(nodeKey, $isMathNode)
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
-  const isEditing = useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+  const isEditing = useCardIsEditing(nodeKey)
   const exitEditMode = useReselectOnEscape(nodeKey)
 
   const updateTex = React.useCallback(

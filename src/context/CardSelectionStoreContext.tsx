@@ -1,3 +1,5 @@
+import type { NodeKey } from 'lexical'
+
 import { createCardSelectionStore, type CardSelectionState } from '@/plugins/behaviour/cardSelectionStore'
 import { createComposerHandleBinding } from '@/plugins/behaviour/composer-handle'
 
@@ -11,3 +13,22 @@ export const {
   useHandle: useCardSelectionStore,
   useHandleState: useCardSelectionState,
 } = createComposerHandleBinding<CardSelectionState>(createCardSelectionStore)
+
+/**
+ * The named per-card bindings over the store — the one home of the
+ * `selectedCardKey === nodeKey` selector shape, so the reference-equality
+ * change guard's re-render granularity is decided here, never per call site.
+ * Cards subscribe through these; raw `useCardSelectionState` is for
+ * cross-card reads (the wrapper's selectedCardKey, the plugin-wide
+ * isEditingCard).
+ */
+
+/** True while this card is the selected card (edit mode or not). */
+export function useCardIsSelected(nodeKey: NodeKey | undefined): boolean {
+  return useCardSelectionState((state) => state.selectedCardKey === nodeKey)
+}
+
+/** True while this card is the selected card AND in edit mode. */
+export function useCardIsEditing(nodeKey: NodeKey | undefined): boolean {
+  return useCardSelectionState((state) => state.selectedCardKey === nodeKey && state.isEditingCard)
+}
