@@ -12,6 +12,8 @@
 
 import type { LexicalEditor, NodeKey } from 'lexical'
 
+import { $getSelection, $setSelection } from 'lexical'
+
 import type { BookmarkEmbedResponse, LinkingSettings } from '@/context/InklingHostIntegrationContext'
 
 import { $isBookmarkNode, $updateCardNode } from '@/nodes/base'
@@ -124,6 +126,24 @@ export function createBookmarkEmbedFlow({
       })
     })
     store.emit({ loading: false })
+
+    if (init) {
+      // re-apply the selection once the populated card has rendered: the
+      // loading-false render mounts the URL input, whose autoFocus steals
+      // focus and drops the block cursor the selectNext caret earns. Focus
+      // plus a dirty-selection no-op makes the reconciler re-render it. The
+      // pre-race-guard code got this second application for free from
+      // StrictMode's double fetch; with exactly one patch it must be said.
+      setTimeout(() => {
+        editor.getRootElement()?.focus({ preventScroll: true })
+        editor.update(() => {
+          const selection = $getSelection()
+          if (selection) {
+            $setSelection(selection.clone())
+          }
+        })
+      }, 0)
+    }
   }
 
   return {
