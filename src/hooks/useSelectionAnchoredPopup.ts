@@ -1,7 +1,7 @@
 import { type LexicalEditor } from 'lexical'
 import React from 'react'
 
-import { getScrollParent } from '@/utils/getScrollParent'
+import { getScrollAncestor } from '@/utils/scroll-ancestor'
 import { resolveAnchoredPopupPlacement, type PopupAnchor, type PopupRectLike } from '@/utils/selection-anchored-popup'
 
 interface UseSelectionAnchoredPopupOptions {
@@ -37,7 +37,7 @@ export function useSelectionAnchoredPopup({
   absoluteEdge,
   absoluteFlip,
 }: UseSelectionAnchoredPopupOptions) {
-  const scrollContainer = React.useMemo(() => getScrollParent(editor.getRootElement()), [editor])
+  const scrollContainer = React.useMemo(() => getScrollAncestor(editor.getRootElement()), [editor])
 
   const updatePopupPosition = React.useCallback(() => {
     editor.update(() => {

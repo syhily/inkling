@@ -11,9 +11,9 @@ const defaultOptions = {
 
 export interface ScrollHandlerOptions {
   // selector for the element that actually scrolls when the only scrollable
-  // ancestor is the document scrolling element — defaults to the Admin app's
-  // editor container; pass your own selector (or null to disable the override)
-  // if your layout differs
+  // ancestor is the document scrolling element — supplied by the host (the
+  // composer's dragScrollContainerSelector option); absent, the document
+  // scrolling element is used as found
   documentScrollContainerSelector?: string | null
 }
 
@@ -33,12 +33,9 @@ export class ScrollHandler {
 
   constructor(options?: ScrollHandlerOptions) {
     this.options = Object.assign({}, defaultOptions)
-    this._documentScrollContainerSelector =
-      options?.documentScrollContainerSelector === undefined
-        ? '.gh-inkling-editor'
-        : options.documentScrollContainerSelector
+    this._documentScrollContainerSelector = options?.documentScrollContainerSelector ?? null
 
-    this._isSafari = navigator.userAgent.indexOf('Safari') !== -1 && navigator.userAgent.indexOf('Chrome') === -1
+    this._isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')
 
     // bind `this` so methods can be passed to requestAnimationFrame
     this._scroll = this._scroll.bind(this)
@@ -68,7 +65,7 @@ export class ScrollHandler {
       clientY: draggableInfo.mousePosition.y,
     }
 
-    this.scrollAnimationFrame = requestAnimationFrame(this._scroll)
+    this.scrollAnimationFrame = requestAnimationFrame(() => this._scroll())
   }
 
   dragStop() {
@@ -137,6 +134,6 @@ export class ScrollHandler {
       scrollableElement.scrollLeft -= speed
     }
 
-    this.scrollAnimationFrame = requestAnimationFrame(this._scroll)
+    this.scrollAnimationFrame = requestAnimationFrame(() => this._scroll())
   }
 }

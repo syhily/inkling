@@ -9,6 +9,7 @@ import type { CardNode } from '@/types/lexical-internals'
 
 import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import { useDragDropHandle, useDragDropHandleState } from '@/context/DragDropHandleContext'
+import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import {
   $insertDraggedImage,
@@ -213,12 +214,17 @@ function useDragDropReorder(editor: LexicalEditor): void {
     },
   })
 
+  const { dragScrollContainerSelector } = React.useContext(InklingHostIntegrationContext)
+
   React.useEffect(() => {
     if (!containerElement || !editor.getRootElement()) {
       return
     }
     const dndHandler = new DragDropHandler({
       editorContainerElement: containerElement,
+      // the host's drag auto-scroll container (composer option); absent, the
+      // document scrolling element is used as found
+      scrollHandlerOptions: { documentScrollContainerSelector: dragScrollContainerSelector },
       // the handler publishes its own isDragging truth straight onto the
       // handle — no lifecycle-callback mirroring in this adapter
       onDraggingChange: (isDragging) => {
@@ -235,7 +241,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
       dragDropHandle.setState({ handler: null })
       dndHandler.destroy()
     }
-  }, [editor, containerElement, dragDropHandle])
+  }, [editor, containerElement, dragDropHandle, dragScrollContainerSelector])
 
   React.useEffect(() => {
     return editor.registerUpdateListener(({ dirtyElements, editorState }) => {

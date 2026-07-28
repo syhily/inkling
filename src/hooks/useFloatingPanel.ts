@@ -1,7 +1,7 @@
 import type { LexicalEditor, NodeKey } from 'lexical'
 
 import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { useCallback, useContext, useLayoutEffect, useRef, type RefObject } from 'react'
+import { useCallback, useContext, useId, useLayoutEffect, useRef, type RefObject } from 'react'
 
 import { debounce } from '@/utils'
 import {
@@ -15,9 +15,8 @@ import {
   type PanelPosition,
   type PanelSpacing,
   type PanelViewport,
-  type DragSession,
 } from '@/utils/floating-panel'
-import { getScrollParent } from '@/utils/getScrollParent'
+import { getScrollAncestor } from '@/utils/scroll-ancestor'
 
 // React adapter over @/utils/floating-panel (the deep module): owns the DOM
 // ports — body-level pointer listeners, the user-select stylesheet, click
@@ -34,10 +33,6 @@ interface UseFloatingPanelOptions {
   cardKey?: NodeKey
   cardWidth: string
 }
-
-// Stylesheet ids come from a module counter — the panel only needs uniqueness
-// within the document, not a UUID (this replaces the ember-port guidFor shim).
-let stylesheetSeq = 0
 
 // Resolves the card's wrapper element from its node key. The wrapper inside the
 // Lexical decorator element carries the card-width transform (e.g. wide cards),
@@ -81,12 +76,9 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
   const lastSpacing = useRef<PanelSpacing | null>(null)
 
   const originalOverflow = useRef<string>('')
-  const stylesheetIdRef = useRef<string | null>(null)
-  if (stylesheetIdRef.current === null) {
-    stylesheetSeq += 1
-    stylesheetIdRef.current = `inkling-floating-panel-drag-${stylesheetSeq}`
-  }
-  const stylesheetId = stylesheetIdRef.current
+  // the drag stylesheet id only needs document uniqueness — React's useId
+  // supplies it without a module counter (replaces the ember-port guidFor shim)
+  const stylesheetId = `inkling-floating-panel-drag-${useId()}`
 
   // the card that renders the panel is the positioning anchor — resolve its
   // element from the node key (CardContext) instead of querying global DOM
@@ -211,32 +203,12 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
 
   // --- drag session (headless core) + its DOM pointer wiring ---
 
-  // the session is created once and reads every changing input through refs, so
-  // no callback is captured mount-only and no resolver dance is needed
+  // the session reads every changing input through refs, so no callback is
+  // captured mount-only and no resolver dance is needed
   const latest = useRef({ resolveCardElement, getViewport })
   useLayoutEffect(() => {
     latest.current = { resolveCardElement, getViewport }
   }, [resolveCardElement, getViewport])
-
-  const sessionRef = useRef<DragSession | null>(null)
-  if (!sessionRef.current) {
-    sessionRef.current = createDragSession({
-      getPosition,
-      setPosition,
-      adjustOnDrag: (position) => {
-        const elem = ref.current
-        const cardElement = latest.current.resolveCardElement()
-        return clampOnDrag({
-          ...position,
-          panelSize: elem ? { width: elem.offsetWidth, height: elem.offsetHeight } : null,
-          viewport: latest.current.getViewport(),
-          origin: resolveCardOrigin(cardElement),
-        })
-      },
-      activateEffects,
-      deactivateEffects,
-    })
-  }
 
   useLayoutEffect(() => {
     const elem = ref.current
@@ -246,7 +218,23 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
     elem.setAttribute('draggable', 'true')
     elem.classList.add('inkling-card-movable')
 
-    const session = sessionRef.current!
+    // created once at mount alongside the wiring that consumes it (a pure
+    // closure-based state object — no cleanup of its own)
+    const session = createDragSession({
+      getPosition,
+      setPosition,
+      adjustOnDrag: (position) => {
+        const cardElement = latest.current.resolveCardElement()
+        return clampOnDrag({
+          ...position,
+          panelSize: { width: elem.offsetWidth, height: elem.offsetHeight },
+          viewport: latest.current.getViewport(),
+          origin: resolveCardOrigin(cardElement),
+        })
+      },
+      activateEffects,
+      deactivateEffects,
+    })
 
     const onMove = (e: Event) => {
       const point = eventPoint(e)
@@ -376,7 +364,10 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
     [resolveCardElement, getViewport],
   )
 
-  const previousViewport = useRef<PanelViewport>(getViewport())
+  // initial value matches getViewport() at mount (the panel ref is still null,
+  // so the breakout adjustment is 0) — reading the ref itself here would be a
+  // render-time ref access
+  const previousViewport = useRef<PanelViewport>({ width: window.innerWidth, height: window.innerHeight })
   const previousCardWidth = useRef<string>(cardWidth)
   const previousCardOrigin = useRef<PanelPosition>({ x: 0, y: 0 })
 
@@ -416,7 +407,7 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
       return
     }
 
-    const container = getScrollParent(ref.current) || document.body
+    const container = getScrollAncestor(ref.current) || document.body
     let prevWidth = 0
 
     const panelRepositionDebounced = debounce(

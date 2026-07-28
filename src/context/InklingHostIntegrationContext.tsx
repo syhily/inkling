@@ -155,6 +155,13 @@ export interface InklingHostIntegrationContextValue {
   fileUploader: FileUploader
   cardConfig: CardConfig
   onError: (error: unknown, info: React.ErrorInfo) => void
+  /**
+   * The host's drag auto-scroll container selector (the composer's
+   * `dragScrollContainerSelector` prop): when a drag's only scrollable
+   * ancestor is the document, the drag-scroll prefers the element matching
+   * this selector. Absent, the document scrolling element is used as found.
+   */
+  dragScrollContainerSelector?: string
 }
 
 const InklingHostIntegrationContext = React.createContext<InklingHostIntegrationContextValue>({

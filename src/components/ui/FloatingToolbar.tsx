@@ -4,7 +4,7 @@ import React from 'react'
 import Portal from '@/components/ui/Portal'
 import { usePopupRepositionSubscriptions } from '@/hooks/useSelectionAnchoredPopup'
 import { $getSelectionRangeRect } from '@/utils/$getSelectionRangeRect'
-import { getScrollParent } from '@/utils/getScrollParent'
+import { getScrollAncestor } from '@/utils/scroll-ancestor'
 import { setFloatingElemPosition } from '@/utils/setFloatingElemPosition'
 
 interface FloatingToolbarProps {
@@ -74,7 +74,7 @@ export default function FloatingToolbar({
     }
   }, [isVisible, onReposition, shouldReposition, updateToolbarPosition])
 
-  const scrollElement = React.useMemo(() => getScrollParent(anchorElem), [anchorElem])
+  const scrollElement = React.useMemo(() => getScrollAncestor(anchorElem), [anchorElem])
   usePopupRepositionSubscriptions(updateToolbarPosition, scrollElement)
 
   if (!isVisible) {

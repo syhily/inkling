@@ -97,6 +97,11 @@ export interface InklingComposerProps {
   multiplayerDebug?: boolean
   multiplayerDocId?: string
   multiplayerUsername?: string
+  /** The host's drag auto-scroll container selector — when a drag's only
+   * scrollable ancestor is the document, the drag-scroll prefers this
+   * element (kobato passes its editor container selector; absent, the
+   * document scrolling element is used). */
+  dragScrollContainerSelector?: string
   children?: React.ReactNode
 }
 
@@ -114,6 +119,7 @@ const InklingComposerBase = ({
   multiplayerDebug = true,
   multiplayerDocId,
   multiplayerUsername,
+  dragScrollContainerSelector,
   children,
 }: InklingComposerProps) => {
   if (enableMultiplayer) {
@@ -205,8 +211,9 @@ const InklingComposerBase = ({
       fileUploader: normalizedFileUploader,
       cardConfig,
       onError,
+      dragScrollContainerSelector,
     }),
-    [normalizedFileUploader, cardConfig, onError],
+    [normalizedFileUploader, cardConfig, onError, dragScrollContainerSelector],
   )
 
   const collaborationValue = React.useMemo(
