@@ -45,8 +45,13 @@ export default function usePinturaEditor({
   disabled = false,
 }: UsePinturaEditorOptions = {}): UsePinturaEditorResult {
   const labels = useInklingLabels()
-  const [scriptLoaded, setScriptLoaded] = useState<boolean>(false)
-  const [cssLoaded, setCssLoaded] = useState<boolean>(false)
+  // lazy initial state covers the "already loaded before mount" case so the
+  // loading effects below never setState synchronously
+  const [scriptLoaded, setScriptLoaded] = useState<boolean>(() => typeof window !== 'undefined' && !!window.pintura)
+  const [cssLoaded, setCssLoaded] = useState<boolean>(
+    () =>
+      typeof document !== 'undefined' && !!config?.cssUrl && !!document.querySelector(`link[href="${config.cssUrl}"]`),
+  )
   const [error, setError] = useState<Error | null>(null)
   const allowClose = useRef<boolean>(false)
 
@@ -60,7 +65,9 @@ export default function usePinturaEditor({
     }
 
     if (window.pintura) {
-      setScriptLoaded(true)
+      // the script arrived after the initial render (e.g. jsUrl changed) —
+      // defer the flag flip so the effect body never sets state synchronously
+      queueMicrotask(() => setScriptLoaded(true))
       return
     }
 
@@ -77,7 +84,8 @@ export default function usePinturaEditor({
           setError(new Error(`Failed to load Pintura script from ${jsUrl}`))
         })
     } catch (e) {
-      setError(e instanceof Error ? e : new Error('Failed to load Pintura script'))
+      // defer so the effect body never sets state synchronously
+      queueMicrotask(() => setError(e instanceof Error ? e : new Error('Failed to load Pintura script')))
     }
   }, [config?.jsUrl])
 
@@ -91,7 +99,8 @@ export default function usePinturaEditor({
       // Check if the CSS file is already present in the document's head
       const cssLink = document.querySelector(`link[href="${cssUrl}"]`)
       if (cssLink) {
-        setCssLoaded(true)
+        // defer the flag flip so the effect body never sets state synchronously
+        queueMicrotask(() => setCssLoaded(true))
       } else {
         const link = document.createElement('link')
         link.rel = 'stylesheet'
@@ -106,7 +115,8 @@ export default function usePinturaEditor({
         document.head.appendChild(link)
       }
     } catch (e) {
-      setError(e instanceof Error ? e : new Error('Failed to load Pintura stylesheet'))
+      // defer so the effect body never sets state synchronously
+      queueMicrotask(() => setError(e instanceof Error ? e : new Error('Failed to load Pintura stylesheet')))
     }
   }, [config?.cssUrl])
 

@@ -53,7 +53,7 @@ const TABLE_STATE = JSON.stringify({
   },
 })
 
-test.describe('Table', async () => {
+test.describe('Table', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

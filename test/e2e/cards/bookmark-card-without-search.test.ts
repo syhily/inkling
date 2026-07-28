@@ -12,7 +12,7 @@ import {
   waitForHistoryGroupBoundary,
 } from '#/utils/e2e'
 
-test.describe('Bookmark card', async () => {
+test.describe('Bookmark card', () => {
   const ctrlOrCmd = isMac() ? 'Meta' : 'Control'
   let page: Page
   test.beforeAll(async ({ browser }) => {
@@ -119,39 +119,39 @@ test.describe('Bookmark card', async () => {
     await focusEditor(page)
     await insertCard(page, { cardName: 'bookmark' })
 
-    const urlInput = await page.getByTestId('bookmark-url')
+    const urlInput = page.getByTestId('bookmark-url')
     await expect(urlInput).toHaveAttribute('placeholder', 'Paste URL to add bookmark content...')
 
     await urlInput.fill('test')
     await expect(urlInput).toHaveValue('test')
   })
 
-  test.describe('Valid URL handling', async () => {
+  test.describe('Valid URL handling', () => {
     test('shows loading wheel', async function () {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await urlInput.fill('https://inkling.local/')
       await urlInput.press('Enter')
 
-      await expect(await page.getByTestId('bookmark-url-loading-container')).toBeVisible()
-      await expect(await page.getByTestId('bookmark-url-loading-spinner')).toBeVisible()
+      await expect(page.getByTestId('bookmark-url-loading-container')).toBeVisible()
+      await expect(page.getByTestId('bookmark-url-loading-spinner')).toBeVisible()
     })
 
     test('displays expected metadata', async function () {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await urlInput.fill('https://inkling.local/')
       await urlInput.press('Enter')
 
-      await expect(await page.getByTestId('bookmark-title')).toHaveText('Inkling: The Creator Economy Platform')
-      await expect(await page.getByTestId('bookmark-description')).toContainText(
+      await expect(page.getByTestId('bookmark-title')).toHaveText('Inkling: The Creator Economy Platform')
+      await expect(page.getByTestId('bookmark-description')).toContainText(
         'The former of the two songs addresses the issue of negative rumors in a relationship, while the latter, with a more upbeat pulse, is a classic club track; the single is highlighted by a hyped bridge.',
       )
-      await expect(await page.getByTestId('bookmark-publisher')).toContainText(
+      await expect(page.getByTestId('bookmark-publisher')).toContainText(
         'Inkling - The Professional Publishing Platform',
       )
     })
@@ -161,43 +161,43 @@ test.describe('Bookmark card', async () => {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await urlInput.fill('https://inkling.local/')
       await urlInput.press('Enter')
 
-      const captionInput = await page.getByTestId('bookmark-caption')
+      const captionInput = page.getByTestId('bookmark-caption')
       await expect(captionInput).toContainText('Type caption for bookmark (optional)')
     })
   })
 
-  test.describe('Error Handling', async () => {
+  test.describe('Error Handling', () => {
     test('bad url entry shows error message', async function () {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await urlInput.fill('badurl')
       await expect(urlInput).toHaveValue('badurl')
       await urlInput.press('Enter')
 
-      await expect(await page.getByTestId('bookmark-url-error-message')).toContainText("Oops, that link didn't work.")
+      await expect(page.getByTestId('bookmark-url-error-message')).toContainText("Oops, that link didn't work.")
     })
 
     test('retry button bring back url input', async function () {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await expect(urlInput).toHaveAttribute('placeholder', 'Paste URL to add bookmark content...')
 
       await urlInput.fill('badurl')
       await expect(urlInput).toHaveValue('badurl')
       await urlInput.press('Enter')
 
-      const retryButton = await page.getByTestId('bookmark-url-error-retry')
+      const retryButton = page.getByTestId('bookmark-url-error-retry')
       await retryButton.click()
 
-      const urlInputRetry = await page.getByTestId('bookmark-url')
+      const urlInputRetry = page.getByTestId('bookmark-url')
       await expect(urlInputRetry).toHaveValue('badurl')
       await expect(retryButton).not.toBeVisible()
     })
@@ -206,14 +206,14 @@ test.describe('Bookmark card', async () => {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await expect(urlInput).toHaveAttribute('placeholder', 'Paste URL to add bookmark content...')
 
       await urlInput.fill('badurl')
       await expect(urlInput).toHaveValue('badurl')
       await urlInput.press('Enter')
 
-      const retryButton = await page.getByTestId('bookmark-url-error-pasteAsLink')
+      const retryButton = page.getByTestId('bookmark-url-error-pasteAsLink')
       await retryButton.click()
 
       await assertHTML(
@@ -231,14 +231,14 @@ test.describe('Bookmark card', async () => {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await expect(urlInput).toHaveAttribute('placeholder', 'Paste URL to add bookmark content...')
 
       await urlInput.fill('badurl')
       await expect(urlInput).toHaveValue('badurl')
       await urlInput.press('Enter')
 
-      const retryButton = await page.getByTestId('bookmark-url-error-close')
+      const retryButton = page.getByTestId('bookmark-url-error-close')
       await retryButton.click()
 
       await assertHTML(page, html`<p><br /></p>`)
@@ -249,10 +249,10 @@ test.describe('Bookmark card', async () => {
     await focusEditor(page)
     await insertCard(page, { cardName: 'bookmark' })
 
-    const urlInput = await page.getByTestId('bookmark-url')
+    const urlInput = page.getByTestId('bookmark-url')
     await urlInput.fill('https://inkling.local/')
     await urlInput.press('Enter')
-    await expect(await page.getByTestId('bookmark-description')).toBeVisible()
+    await expect(page.getByTestId('bookmark-description')).toBeVisible()
 
     // create snippet
     await page.keyboard.press('Escape')
@@ -263,17 +263,17 @@ test.describe('Bookmark card', async () => {
     await page.keyboard.type('/snippet')
     await expect(page.locator('[data-inkling-cardmenu-selected="true"]').filter({ hasText: 'snippet' })).toBeVisible()
     await page.keyboard.press('Enter')
-    await expect(await page.locator('[data-inkling-card="bookmark"]')).toHaveCount(2)
+    await expect(page.locator('[data-inkling-card="bookmark"]')).toHaveCount(2)
   })
 
   test('can undo/redo without losing caption', async function () {
     await focusEditor(page)
     await insertCard(page, { cardName: 'bookmark' })
 
-    const urlInput = await page.getByTestId('bookmark-url')
+    const urlInput = page.getByTestId('bookmark-url')
     await urlInput.fill('https://inkling.local/')
     await urlInput.press('Enter')
-    await expect(await page.getByTestId('bookmark-description')).toBeVisible()
+    await expect(page.getByTestId('bookmark-description')).toBeVisible()
 
     await page.click('[data-testid="bookmark-caption"]')
     await page.keyboard.type('My test caption')
@@ -355,7 +355,7 @@ test.describe('Bookmark card', async () => {
     await page.keyboard.type('badurl')
     await page.keyboard.press('Enter')
 
-    await expect(await page.getByTestId('bookmark-url-error-message')).toContainText("Oops, that link didn't work.")
+    await expect(page.getByTestId('bookmark-url-error-message')).toContainText("Oops, that link didn't work.")
 
     await page.keyboard.press('Escape')
 

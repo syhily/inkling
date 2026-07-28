@@ -54,7 +54,7 @@ export function ensureEmojiSearchReady() {
     return
   }
   emojiDataInitialized = true
-  init({ data: emojiData })
+  void init({ data: emojiData })
 }
 
 // Emoticon aliases: typing an emoticon after the ':' trigger searches its

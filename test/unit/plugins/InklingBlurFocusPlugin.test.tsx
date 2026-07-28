@@ -1,7 +1,9 @@
+import type { LexicalEditor } from 'lexical'
+
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { render } from '@testing-library/react'
-import { BLUR_COMMAND, FOCUS_COMMAND, LexicalEditor } from 'lexical'
+import { BLUR_COMMAND, FOCUS_COMMAND } from 'lexical'
 import { describe, expect, it, vi } from 'vitest'
 
 import { InklingBlurPlugin } from '@/plugins/InklingBlurPlugin'

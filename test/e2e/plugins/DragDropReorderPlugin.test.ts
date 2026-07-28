@@ -6,7 +6,7 @@ import { assertHTML, dragMouse, focusEditor, html, initialize, insertCard } from
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-test.describe('Drag Drop Reorder Plugin', async function () {
+test.describe('Drag Drop Reorder Plugin', function () {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -169,7 +169,7 @@ test.describe('Drag Drop Reorder Plugin', async function () {
     await insertDivider(page)
 
     await page.keyboard.type('This is some text', { delay: 100 }) // type slower to imitate user
-    await expect(await page.getByText('This is some text')).toBeVisible()
+    await expect(page.getByText('This is some text')).toBeVisible()
 
     await assertHTML(
       page,
@@ -276,8 +276,8 @@ test.describe('Drag Drop Reorder Plugin', async function () {
       { ignoreCardContents: true },
     )
 
-    const indicator = await page.locator('[data-inkling-drag-drop-indicator]')
-    await expect(await indicator).toBeVisible()
+    const indicator = page.locator('[data-inkling-drag-drop-indicator]')
+    await expect(indicator).toBeVisible()
 
     // Release the mouse to clean up drag state
     await page.mouse.up()

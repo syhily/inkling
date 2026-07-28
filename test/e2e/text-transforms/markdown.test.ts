@@ -85,7 +85,7 @@ const SPECIAL_MARKUP_TRANSFORMS = [
   },
 ]
 
-test.describe('Markdown', async () => {
+test.describe('Markdown', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -103,15 +103,15 @@ test.describe('Markdown', async () => {
     await focusEditor(page)
     await pasteText(page, '![Image](https://octodex.github.com/images/minion.png)')
 
-    await expect(await page.getByTestId('image-card-populated')).toBeVisible()
-    await expect(await page.locator('img')).toHaveAttribute('src', 'https://octodex.github.com/images/minion.png')
+    await expect(page.getByTestId('image-card-populated')).toBeVisible()
+    await expect(page.locator('img')).toHaveAttribute('src', 'https://octodex.github.com/images/minion.png')
   })
 
   test('converts markdown link to html', async function () {
     await focusEditor(page)
     await pasteText(page, '[link](https://inkling.local/)')
 
-    await expect(await page.locator('a[href="https://inkling.local/"]')).toBeVisible()
+    await expect(page.locator('a[href="https://inkling.local/"]')).toBeVisible()
   })
 
   test('converts to code card', async function () {
@@ -126,17 +126,17 @@ test.describe('Markdown', async () => {
     `,
     )
 
-    await expect(await page.locator('[data-inkling-card="codeblock"]')).toBeVisible()
+    await expect(page.locator('[data-inkling-card="codeblock"]')).toBeVisible()
   })
 
   test('converts --- to hr', async function () {
     await focusEditor(page)
     await pasteText(page, '---')
 
-    await expect(await page.locator('[data-inkling-card="horizontalrule"]')).toBeVisible()
+    await expect(page.locator('[data-inkling-card="horizontalrule"]')).toBeVisible()
   })
 
-  test.describe('converts ## to headlines', async function () {
+  test.describe('converts ## to headlines', function () {
     HEADLINE_TRANSFORMS.forEach((testCase) => {
       test(`${testCase.text} -> heading`, async function () {
         await focusEditor(page)
@@ -146,9 +146,9 @@ test.describe('Markdown', async () => {
     })
   })
 
-  test.describe('converts emphasis to html', async function () {
+  test.describe('converts emphasis to html', function () {
     EMPHASIS_TRANSFORMS.forEach((testCase) => {
-      test(`${testCase.text}`, async function () {
+      test(testCase.text, async function () {
         await focusEditor(page)
         await pasteText(page, testCase.text)
         await assertHTML(page, testCase.html)
@@ -156,9 +156,9 @@ test.describe('Markdown', async () => {
     })
   })
 
-  test.describe('backspace undoes special markdown', async function () {
+  test.describe('backspace undoes special markdown', function () {
     SPECIAL_MARKUP_TRANSFORMS.forEach((testCase) => {
-      test(`${testCase.text}`, async function () {
+      test(testCase.text, async function () {
         await focusEditor(page)
         await pasteText(page, testCase.text)
         await assertHTML(page, testCase.html)
@@ -187,9 +187,9 @@ test.describe('Markdown', async () => {
         ![Image](https://octodex.github.com/images/minion.png)
         `,
     )
-    await expect(await page.getByTestId('image-card-populated')).toHaveCount(0)
-    await expect(await page.locator('a[href="https://inkling.local/"]')).toHaveCount(0)
-    await expect(await page.locator('[data-inkling-card="horizontalrule"]')).toHaveCount(0)
+    await expect(page.getByTestId('image-card-populated')).toHaveCount(0)
+    await expect(page.locator('a[href="https://inkling.local/"]')).toHaveCount(0)
+    await expect(page.locator('[data-inkling-card="horizontalrule"]')).toHaveCount(0)
   })
 
   test('converts table to a native table', async function () {

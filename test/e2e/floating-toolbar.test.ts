@@ -7,7 +7,7 @@ import { assertHTML, ctrlOrCmd, focusEditor, html, initialize, insertCard, selec
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-test.describe('Floating format toolbar', async () => {
+test.describe('Floating format toolbar', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -25,16 +25,16 @@ test.describe('Floating format toolbar', async () => {
     await focusEditor(page)
     await page.keyboard.type('text for selection')
 
-    await expect(await page.locator('[data-inkling-floating-toolbar]')).toHaveCount(0)
+    await expect(page.locator('[data-inkling-floating-toolbar]')).toHaveCount(0)
 
     await selectBackwards(page, 'for selection'.length)
 
-    expect(await page.locator('[data-inkling-floating-toolbar]')).not.toBeNull()
+    expect(page.locator('[data-inkling-floating-toolbar]')).not.toBeNull()
   })
 
   test('appears on paragraph selection', async function () {
     await focusEditor(page)
-    await expect(await page.locator('[data-inkling-floating-toolbar]')).toHaveCount(0)
+    await expect(page.locator('[data-inkling-floating-toolbar]')).toHaveCount(0)
     await test.step('Insert paragraphs', async () => {
       await page.keyboard.type('paragraph for selection')
       await page.keyboard.press('Shift+Enter')
@@ -56,7 +56,7 @@ test.describe('Floating format toolbar', async () => {
       await page.keyboard.up('Shift')
     })
 
-    await expect(await page.locator('[data-inkling-floating-toolbar]')).toBeVisible()
+    await expect(page.locator('[data-inkling-floating-toolbar]')).toBeVisible()
   })
 
   test('disappears on selection removal', async function () {
@@ -64,11 +64,11 @@ test.describe('Floating format toolbar', async () => {
     await page.keyboard.type('text for selection')
     await selectBackwards(page, 1)
 
-    expect(await page.locator('[data-inkling-floating-toolbar]')).not.toBeNull()
+    expect(page.locator('[data-inkling-floating-toolbar]')).not.toBeNull()
 
     await page.keyboard.press('ArrowRight')
 
-    await expect(await page.locator('[data-inkling-floating-toolbar]')).toHaveCount(0)
+    await expect(page.locator('[data-inkling-floating-toolbar]')).toHaveCount(0)
   })
 
   test.describe('buttons', function () {

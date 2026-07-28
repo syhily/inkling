@@ -6,7 +6,7 @@ import { assertHTML, ctrlOrCmd, focusEditor, html, initialize } from '#/utils/e2
 // declared through the public defineCard seam — these tests pin that the
 // derived views (slash menu, insert, selection protocol) treat it like a
 // built-in card.
-test.describe('Host card', async () => {
+test.describe('Host card', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

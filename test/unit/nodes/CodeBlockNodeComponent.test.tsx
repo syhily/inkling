@@ -26,7 +26,7 @@ function createTestEditor(): LexicalEditor {
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected and not editing unless a test says otherwise
 function createSelection(
-  nodeKey: NodeKey | string = 'code-1',
+  nodeKey: NodeKey = 'code-1',
   { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
 ) {
   return createCardSelectionStoreWrapper({

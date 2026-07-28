@@ -5,7 +5,7 @@ import { focusEditor, getEditorStateJSON, initialize } from '#/utils/e2e'
 // The demo's fixture image library (demo/utils/imageLibrary.ts): two local
 // static images, gated on `?imageLibrary=fixture`; `fixture-upload` adds the
 // upload stub. The default demo host has no library config.
-test.describe('Image library picker', async () => {
+test.describe('Image library picker', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -15,7 +15,7 @@ test.describe('Image library picker', async () => {
     await page.close()
   })
 
-  test.describe('with the fixture library', async () => {
+  test.describe('with the fixture library', () => {
     test.beforeEach(async () => {
       await initialize({ page, uri: '/#/?content=false&imageLibrary=fixture' })
     })
@@ -108,7 +108,7 @@ test.describe('Image library picker', async () => {
     })
   })
 
-  test.describe('with the fixture upload stub', async () => {
+  test.describe('with the fixture upload stub', () => {
     test.beforeEach(async () => {
       await initialize({ page, uri: '/#/?content=false&imageLibrary=fixture-upload' })
     })
@@ -137,7 +137,7 @@ test.describe('Image library picker', async () => {
     })
   })
 
-  test.describe('without a library config', async () => {
+  test.describe('without a library config', () => {
     test.beforeEach(async () => {
       await initialize({ page })
     })

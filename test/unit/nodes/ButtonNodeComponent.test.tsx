@@ -29,7 +29,7 @@ function createTestEditor(): LexicalEditor {
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected and editing unless a test says otherwise
 function createSelection(
-  nodeKey: NodeKey | string = 'button-1',
+  nodeKey: NodeKey = 'button-1',
   { selected = true, editing = true }: { selected?: boolean; editing?: boolean } = {},
 ) {
   return createCardSelectionStoreWrapper({

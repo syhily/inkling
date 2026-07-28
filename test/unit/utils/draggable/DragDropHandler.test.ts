@@ -55,7 +55,7 @@ function createHandlers() {
 
 describe('DragDropHandler', () => {
   let handler: DragDropHandler
-  const originalElementFromPoint = document.elementFromPoint
+  const originalElementFromPoint = Reflect.get(document, 'elementFromPoint') as typeof document.elementFromPoint
 
   beforeEach(() => {
     document.body.innerHTML = ''

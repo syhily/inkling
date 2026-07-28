@@ -260,7 +260,9 @@ try {
   if (missingFiles.length > 0) {
     recordFailure('tarball contents', { message: `missing files: ${missingFiles.join(', ')}` })
   }
-  const forbidden = files.filter((path) => /(^|\/)(test|src|scripts|node_modules)\//.test(path) || /\.env/.test(path))
+  const forbidden = files.filter(
+    (path) => /(^|\/)(test|src|scripts|node_modules)\//.test(path) || path.includes('.env'),
+  )
   if (forbidden.length > 0) {
     recordFailure('tarball contents', { message: `unexpected files: ${forbidden.join(', ')}` })
   }

@@ -103,7 +103,7 @@ describe('adaptWebsocketProvider', function () {
     const fake = createFakeWebsocketProvider()
     const adapted = adaptFake(fake)
 
-    adapted.connect()
+    void adapted.connect()
     adapted.disconnect()
 
     expect(fake.connect).toHaveBeenCalledTimes(1)
@@ -147,10 +147,10 @@ describe('createWebsocketProviderFactory', function () {
     const provider = factory('card-1', new Map())
 
     expect(provider.awareness).toBeDefined()
-    expect(provider.connect).toBeTypeOf('function')
-    expect(provider.disconnect).toBeTypeOf('function')
-    expect(provider.on).toBeTypeOf('function')
-    expect(provider.off).toBeTypeOf('function')
+    expect(typeof provider.connect).toBe('function')
+    expect(typeof provider.disconnect).toBe('function')
+    expect(typeof provider.on).toBe('function')
+    expect(typeof provider.off).toBe('function')
 
     provider.disconnect()
   })

@@ -71,18 +71,17 @@ export function useBookmarkMetadata({
         editor.getRootElement()?.focus({ preventScroll: true }) // focus editor before causing the input element to dismount
       }
       setLoading(true)
-      let response: BookmarkEmbedResponse | undefined
-      try {
-        // set the test data return values in fetchEmbed.js
-        response = await fetchEmbed?.(href, { type: 'bookmark' })
-      } catch (e) {
+      // set the test data return values in fetchEmbed.js — a rejected embed
+      // resolves to undefined (unless init rethrows) and falls through the
+      // same not-an-embed-response exit below
+      const response = await Promise.resolve(fetchEmbed?.(href, { type: 'bookmark' })).catch((e: unknown) => {
         setLoading(false)
         setUrlError(true)
         if (init) {
           throw e
         }
-        return
-      }
+        return undefined
+      })
       if (!isEmbedResponse(response)) {
         setLoading(false)
         setUrlError(true)

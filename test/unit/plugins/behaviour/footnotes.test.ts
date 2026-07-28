@@ -5,9 +5,9 @@ import {
   $createTextNode,
   $getRoot,
   $getSelection,
+  $isParagraphNode,
   $isRangeSelection,
   type LexicalEditor,
-  type ParagraphNode,
 } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -266,7 +266,10 @@ describe('the registered renumber scan', () => {
 
     // a renumber-irrelevant commit: same signature → no re-publish
     await update(editor, () => {
-      $getRoot().getFirstChild<ParagraphNode>()?.append($createTextNode('x'))
+      const first = $getRoot().getFirstChild()
+      if ($isParagraphNode(first)) {
+        first.append($createTextNode('x'))
+      }
     })
     expect(publishSpy).not.toHaveBeenCalled()
 

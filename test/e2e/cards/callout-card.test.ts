@@ -13,7 +13,7 @@ import {
   waitForHistoryGroupBoundary,
 } from '#/utils/e2e'
 
-test.describe('Callout Card', async () => {
+test.describe('Callout Card', () => {
   const ctrlOrCmd = isMac() ? 'Meta' : 'Control'
 
   let page: Page
@@ -340,7 +340,7 @@ test.describe('Callout Card', async () => {
     await page.keyboard.type('/snippet')
     await expect(page.locator('[data-inkling-cardmenu-selected="true"]').filter({ hasText: 'snippet' })).toBeVisible()
     await page.keyboard.press('Enter')
-    await expect(await page.locator('[data-inkling-card="callout"]')).toHaveCount(2)
+    await expect(page.locator('[data-inkling-card="callout"]')).toHaveCount(2)
   })
 
   test('keeps focus on previous editor when changing size opts', async function () {

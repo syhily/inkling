@@ -20,7 +20,7 @@ import {
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-test.describe('Paste behaviour', async () => {
+test.describe('Paste behaviour', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -624,7 +624,7 @@ test.describe('Paste behaviour', async () => {
       await focusEditor(page)
       await pasteFiles(page, [{ filePath, fileName: 'large-image.png', fileType: 'image/png' }])
 
-      const imageCard = await page.locator('[data-inkling-card="image"]')
+      const imageCard = page.locator('[data-inkling-card="image"]')
       await expect(imageCard).toHaveCount(1)
     })
 
@@ -634,7 +634,7 @@ test.describe('Paste behaviour', async () => {
       await focusEditor(page)
       await pasteFiles(page, [{ filePath, fileName: 'large-image.jpeg', fileType: 'image/jpeg' }])
 
-      const imageCard = await page.locator('[data-inkling-card="image"]')
+      const imageCard = page.locator('[data-inkling-card="image"]')
       await expect(imageCard).toHaveCount(1)
     })
 
@@ -644,7 +644,7 @@ test.describe('Paste behaviour', async () => {
       await focusEditor(page)
       await pasteFiles(page, [{ filePath, fileName: 'video.mp4', fileType: 'video/mp4' }])
 
-      const videoCard = await page.locator('[data-inkling-card="video"]')
+      const videoCard = page.locator('[data-inkling-card="video"]')
       await expect(videoCard).toHaveCount(1)
     })
 
@@ -656,10 +656,10 @@ test.describe('Paste behaviour', async () => {
       await focusEditor(page)
       await pasteFilesWithText(page, files, textHtml)
 
-      const text = await page.locator('p').filter({ hasText: 'Some text' })
+      const text = page.locator('p').filter({ hasText: 'Some text' })
       expect(text).not.toBeNull()
 
-      const imageCard = await page.locator('[data-inkling-card="image"]')
+      const imageCard = page.locator('[data-inkling-card="image"]')
       await expect(imageCard).toHaveCount(0)
     })
 
@@ -673,7 +673,7 @@ test.describe('Paste behaviour', async () => {
       await focusEditor(page)
       await pasteFilesWithText(page, files, textHtml)
 
-      const imageCard = await page.locator('[data-inkling-card="image"]')
+      const imageCard = page.locator('[data-inkling-card="image"]')
       const imgSrc = await page.locator('[data-inkling-card="image"] img').getAttribute('src')
 
       await expect(imageCard).toHaveCount(1)

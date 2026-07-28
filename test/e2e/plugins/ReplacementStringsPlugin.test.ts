@@ -41,7 +41,7 @@ async function focusImageCaption(page: Page) {
   await page.click(CAPTION_EDITOR)
 }
 
-test.describe('ReplacementStringsPlugin', async function () {
+test.describe('ReplacementStringsPlugin', function () {
   test.describe('In a card caption (nested editor)', function () {
     let page: Page
     test.beforeAll(async ({ browser }) => {

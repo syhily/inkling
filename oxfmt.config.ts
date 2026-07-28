@@ -1,9 +1,9 @@
 import { defineConfig } from 'oxfmt'
 
-// Phase 0 — aligned to /Users/YufanSheng/Developer/xiaoyu/yufan.me/oxfmt.config.ts.
+// Aligned to /Users/Yufan/Developer/Business/syhily/kobato/oxfmt.config.ts.
 // Adaptations: Inkling has no `cn` wrapper (uses `clsx` directly), its tailwind
-// directive file lives under src/, and ignorePatterns cover the pnpm/Inkling
-// build outputs. All other style knobs mirror the reference.
+// directive file is src/styles/index.css, and ignorePatterns cover the
+// pnpm/Inkling build outputs. All other style knobs mirror kobato exactly.
 export default defineConfig({
   arrowParens: 'always',
   bracketSameLine: false,

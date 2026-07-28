@@ -15,6 +15,7 @@ const oneline = function (strings: TemplateStringsArray | string, ...values: unk
   // Handle tagged template literal case
   const result = strings.reduce((acc: string, str: string, i: number) => {
     // String() so falsy-but-real values (0, false) render instead of vanishing
+    // oxlint-disable-next-line typescript/no-base-to-string -- generic tagged-template helper: stringifying arbitrary interpolated values is its contract
     return acc + str + String(values[i] ?? '')
   }, '')
   // Remove newline+indentation patterns while preserving intentional whitespace

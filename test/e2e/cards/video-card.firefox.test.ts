@@ -20,7 +20,7 @@ const __dirname = path.dirname(__filename)
 // Video card is tested in firefox
 // Need to get video thumbnail before uploading on the server; for this purpose, convert video to blob (see extractVideoMetadata.js)
 // The problem is that Chromium can't read video src as blob
-test.describe('Video card', async () => {
+test.describe('Video card', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -149,7 +149,7 @@ test.describe('Video card', async () => {
     await fileChooser.setFiles([filePath])
 
     // Check that video file was uploaded
-    await expect(await page.getByTestId('media-duration')).toContainText('0:04')
+    await expect(page.getByTestId('media-duration')).toContainText('0:04')
   })
 
   test('can upload video file from card menu', async function () {
@@ -157,7 +157,7 @@ test.describe('Video card', async () => {
     await uploadVideo(page)
 
     // Check that video file was uploaded
-    await expect(await page.getByTestId('media-duration')).toContainText('0:04')
+    await expect(page.getByTestId('media-duration')).toContainText('0:04')
   })
 
   test('can show errors for failed video upload', async function () {
@@ -165,7 +165,7 @@ test.describe('Video card', async () => {
     await uploadVideo(page, 'video-fail.mp4')
 
     // Errors should be visible
-    await expect(await page.getByTestId('media-placeholder-errors')).toBeVisible()
+    await expect(page.getByTestId('media-placeholder-errors')).toBeVisible()
   })
 
   test('can manage custom thumbnail', async function () {
@@ -173,26 +173,26 @@ test.describe('Video card', async () => {
     await uploadVideo(page)
 
     // Settings panel should be visible
-    await expect(await page.getByTestId('settings-panel')).toBeVisible()
+    await expect(page.getByTestId('settings-panel')).toBeVisible()
 
     // Custom thumbnail should be visible
-    const emptyThumbnail = await page.getByTestId('media-upload-placeholder')
+    const emptyThumbnail = page.getByTestId('media-upload-placeholder')
     await expect(emptyThumbnail).toBeVisible()
 
     // Upload thumbnail
     const imagePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
     const fileChooserPromise = page.waitForEvent('filechooser')
-    emptyThumbnail.click()
+    await emptyThumbnail.click()
     const fileChooser = await fileChooserPromise
     await fileChooser.setFiles([imagePath])
 
     // Thumbnail should be visible
-    await expect(await page.getByTestId('media-upload-filled')).toBeVisible()
+    await expect(page.getByTestId('media-upload-filled')).toBeVisible()
 
     // Can remove thumbnail
     const replaceButton = page.getByTestId('media-upload-remove')
     await replaceButton.click()
-    await expect(await page.getByTestId('media-upload-placeholder')).toBeVisible()
+    await expect(page.getByTestId('media-upload-placeholder')).toBeVisible()
   })
 
   test('can show errors for custom thumbnail', async function () {
@@ -200,23 +200,23 @@ test.describe('Video card', async () => {
     await uploadVideo(page)
 
     // Settings panel should be visible
-    await expect(await page.getByTestId('settings-panel')).toBeVisible()
+    await expect(page.getByTestId('settings-panel')).toBeVisible()
 
     // Errors shouldn't be visible
     await expect(page.getByTestId('media-placeholder-errors')).toBeHidden()
 
     // Custom thumbnail should be visible
-    const emptyThumbnail = await page.getByTestId('media-upload-placeholder')
+    const emptyThumbnail = page.getByTestId('media-upload-placeholder')
 
     // Upload thumbnail
     const imagePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image-fail.jpeg')
     const fileChooserPromise = page.waitForEvent('filechooser')
-    emptyThumbnail.click()
+    await emptyThumbnail.click()
     const fileChooser = await fileChooserPromise
     await fileChooser.setFiles([imagePath])
 
     // Errors should be visible
-    await expect(await page.getByTestId('media-upload-errors')).toBeVisible()
+    await expect(page.getByTestId('media-upload-errors')).toBeVisible()
   })
 
   test('can upload dropped video', async function () {
@@ -235,13 +235,13 @@ test.describe('Video card', async () => {
     await page.getByTestId('media-placeholder').dispatchEvent('dragover', { dataTransfer })
 
     // Dragover text should be visible
-    await expect(await page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
+    await expect(page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
 
     // Drop file
     await page.getByTestId('media-placeholder').dispatchEvent('drop', { dataTransfer })
 
     // Check that video file was uploaded
-    await expect(await page.getByTestId('media-duration')).toContainText('0:04')
+    await expect(page.getByTestId('media-duration')).toContainText('0:04')
   })
 
   test('can show errors if was dropped a file with wrong extension to video placeholder', async function () {
@@ -263,7 +263,7 @@ test.describe('Video card', async () => {
     await page.getByTestId('media-placeholder').dispatchEvent('drop', { dataTransfer })
 
     // Errors should be visible
-    await expect(await page.getByTestId('media-placeholder-errors')).toBeVisible()
+    await expect(page.getByTestId('media-placeholder-errors')).toBeVisible()
   })
 
   test('can upload dropped custom thumbnail', async function () {
@@ -282,13 +282,13 @@ test.describe('Video card', async () => {
     await page.getByTestId('media-upload-placeholder').dispatchEvent('dragover', { dataTransfer })
 
     // Dragover text should be visible
-    await expect(await page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
+    await expect(page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
 
     // Drop file
     await page.getByTestId('media-upload-placeholder').dispatchEvent('drop', { dataTransfer })
 
     // Thumbnail should be visible
-    await expect(await page.getByTestId('media-upload-filled')).toBeVisible()
+    await expect(page.getByTestId('media-upload-filled')).toBeVisible()
   })
 
   test('can show errors if was dropped a file with wrong extension to custom thumbnail', async function () {
@@ -305,7 +305,7 @@ test.describe('Video card', async () => {
     await page.getByTestId('media-upload-placeholder').dispatchEvent('drop', { dataTransfer })
 
     // Errors should be visible
-    await expect(await page.getByTestId('media-upload-errors')).toBeVisible()
+    await expect(page.getByTestId('media-upload-errors')).toBeVisible()
   })
 
   test('renders video card toolbar', async function () {
@@ -319,7 +319,7 @@ test.describe('Video card', async () => {
     await page.keyboard.press('Escape')
 
     // Check that the toolbar is displayed
-    await expect(await page.locator('[data-inkling-card-toolbar="video"]')).toBeVisible()
+    await expect(page.locator('[data-inkling-card-toolbar="video"]')).toBeVisible()
   })
 
   test('video card toolbar has Edit button', async function () {
@@ -333,7 +333,7 @@ test.describe('Video card', async () => {
     await page.keyboard.press('Escape')
 
     // Check that the toolbar is displayed
-    await expect(await page.locator('[data-inkling-card-toolbar="video"]')).toBeVisible()
+    await expect(page.locator('[data-inkling-card-toolbar="video"]')).toBeVisible()
 
     // Edit video card
     await page.waitForSelector('[data-testid="edit-video-card"]')
@@ -406,7 +406,7 @@ test.describe('Video card', async () => {
     await page.keyboard.type('/snippet')
     await expect(page.locator('[data-inkling-cardmenu-selected="true"]').filter({ hasText: 'snippet' })).toBeVisible()
     await page.keyboard.press('Enter')
-    await expect(await page.locator('[data-inkling-card="video"]')).toHaveCount(2)
+    await expect(page.locator('[data-inkling-card="video"]')).toHaveCount(2)
   })
 
   test('can undo/redo without losing nested editor content', async () => {

@@ -40,7 +40,9 @@ export const useSearchLinks = (
     coordinator.setQuery(query)
   }, [coordinator, query])
 
-  const snapshot = React.useSyncExternalStore(coordinator.subscribe, coordinator.getSnapshot)
+  const subscribe = React.useCallback((listener: () => void) => coordinator.subscribe(listener), [coordinator])
+  const getSnapshot = React.useCallback(() => coordinator.getSnapshot(), [coordinator])
+  const snapshot = React.useSyncExternalStore(subscribe, getSnapshot)
 
   return {
     isSearching: snapshot.isSearching,

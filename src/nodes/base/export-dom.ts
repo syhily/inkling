@@ -63,5 +63,5 @@ export interface ExportDOMOptions {
    * (kobato prerenders music-player meta, then renders); the data is
    * request-scoped and never persisted on the node.
    */
-  resolveRenderMeta?: (kind: string, id: string) => unknown | undefined
+  resolveRenderMeta?: (kind: string, id: string) => unknown
 }

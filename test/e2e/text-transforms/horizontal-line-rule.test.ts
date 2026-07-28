@@ -2,7 +2,7 @@ import { test, type Page } from '@playwright/test'
 
 import { assertHTML, focusEditor, html, initialize } from '#/utils/e2e'
 
-test.describe('Renders horizontal line rule', async () => {
+test.describe('Renders horizontal line rule', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

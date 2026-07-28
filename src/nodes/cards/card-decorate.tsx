@@ -74,7 +74,7 @@ export const CARD_DECORATE_TARGETS = CARD_DECLARATIONS.map((declaration) => {
   return {
     ...declaration,
     decorateTarget,
-    render: module.render,
+    render: (node: LexicalNode) => module.render(node),
     IndicatorIcon: decorateTarget?.hasIndicatorIcon ? module.IndicatorIcon : undefined,
   }
 })
@@ -113,7 +113,7 @@ export function resolveCardDecorateTarget(facts: CardFacts): CardDecorateTarget 
   return {
     nodeType: facts.nodeType,
     decorateTarget: spec.decorateTarget,
-    render: spec.render,
+    render: (node: LexicalNode) => spec.render(node),
     IndicatorIcon: spec.decorateTarget?.hasIndicatorIcon ? spec.IndicatorIcon : undefined,
   }
 }

@@ -34,45 +34,6 @@ import SnippetIcon from '@/assets/icons/inkling-snippet.svg?react'
 import PlusIcon from '@/assets/icons/plus.svg?react'
 
 const DesignSandbox = () => {
-  return (
-    <div className="inkling-lexical">
-      <ComponentTitle label="Text toolbar" />
-      <TextToolbar />
-
-      <ComponentTitle label="Image toolbar" />
-      <ImageToolbar />
-
-      <ComponentTitle label="Gallery toolbar" />
-      <GalleryToolbar />
-
-      <ComponentTitle label="Plus menu" />
-      <PlusButton />
-
-      <ComponentTitle label="Card menu" />
-      <CardMenu />
-
-      <ComponentTitle label="Divider card" />
-      <div className="relative max-w-[740px]">
-        <DividerCard />
-      </div>
-
-      <ComponentTitle label="Code block" />
-      <div className="relative max-w-[740px]">
-        <CodeBlock />
-      </div>
-
-      <ComponentTitle label="Image card" />
-      <div className="relative max-w-[740px]">
-        <ImageCard />
-      </div>
-
-      <ComponentTitle label="Gallery card" />
-      <div className="relative max-w-[1172px]">
-        <GalleryCard />
-      </div>
-    </div>
-  )
-
   /* Component title
     /* ---------------------------------------------------------- */
 
@@ -359,6 +320,44 @@ const DesignSandbox = () => {
       </div>
     )
   }
+  return (
+    <div className="inkling-lexical">
+      <ComponentTitle label="Text toolbar" />
+      <TextToolbar />
+
+      <ComponentTitle label="Image toolbar" />
+      <ImageToolbar />
+
+      <ComponentTitle label="Gallery toolbar" />
+      <GalleryToolbar />
+
+      <ComponentTitle label="Plus menu" />
+      <PlusButton />
+
+      <ComponentTitle label="Card menu" />
+      <CardMenu />
+
+      <ComponentTitle label="Divider card" />
+      <div className="relative max-w-[740px]">
+        <DividerCard />
+      </div>
+
+      <ComponentTitle label="Code block" />
+      <div className="relative max-w-[740px]">
+        <CodeBlock />
+      </div>
+
+      <ComponentTitle label="Image card" />
+      <div className="relative max-w-[740px]">
+        <ImageCard />
+      </div>
+
+      <ComponentTitle label="Gallery card" />
+      <div className="relative max-w-[1172px]">
+        <GalleryCard />
+      </div>
+    </div>
+  )
 }
 
 export default DesignSandbox

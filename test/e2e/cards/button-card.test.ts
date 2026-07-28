@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { assertHTML, createSnippet, focusEditor, html, initialize, insertCard } from '#/utils/e2e'
 
-test.describe('Button Card', async () => {
+test.describe('Button Card', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -71,11 +71,11 @@ test.describe('Button Card', async () => {
     await focusEditor(page)
     await insertCard(page, { cardName: 'button' })
 
-    await expect(await page.getByTestId('settings-panel')).toBeVisible()
-    await expect(await page.getByTestId('button-align-left')).toBeVisible()
-    await expect(await page.getByTestId('button-align-center')).toBeVisible()
-    await expect(await page.getByTestId('button-input-text')).toBeVisible()
-    await expect(await page.getByTestId('button-input-url')).toBeVisible()
+    await expect(page.getByTestId('settings-panel')).toBeVisible()
+    await expect(page.getByTestId('button-align-left')).toBeVisible()
+    await expect(page.getByTestId('button-align-center')).toBeVisible()
+    await expect(page.getByTestId('button-input-text')).toBeVisible()
+    await expect(page.getByTestId('button-input-url')).toBeVisible()
   })
 
   test('alignment buttons work', async function () {
@@ -83,15 +83,15 @@ test.describe('Button Card', async () => {
     await insertCard(page, { cardName: 'button' })
 
     // align center by default
-    const buttonCard = await page.getByTestId('button-card')
+    const buttonCard = page.getByTestId('button-card')
     await expect(buttonCard).toHaveClass(/justify-center/)
 
-    const leftAlignButton = await page.getByTestId('button-align-left')
-    leftAlignButton.click()
+    const leftAlignButton = page.getByTestId('button-align-left')
+    await leftAlignButton.click()
     await expect(buttonCard).toHaveClass(/justify-start/)
 
-    const centerAlignButton = await page.getByTestId('button-align-center')
-    centerAlignButton.click()
+    const centerAlignButton = page.getByTestId('button-align-center')
+    await centerAlignButton.click()
     await expect(buttonCard).toHaveClass(/justify-center/)
   })
 
@@ -99,10 +99,10 @@ test.describe('Button Card', async () => {
     await focusEditor(page)
     await insertCard(page, { cardName: 'button' })
 
-    await expect(await page.getByTestId('button-card-btn-span').textContent()).toEqual('Add button text')
-    const buttonTextInput = await page.getByTestId('button-input-text')
+    expect(await page.getByTestId('button-card-btn-span').textContent()).toEqual('Add button text')
+    const buttonTextInput = page.getByTestId('button-input-text')
     await expect(buttonTextInput).toHaveAttribute('placeholder', 'Add button text')
-    const buttonUrlInput = await page.getByTestId('button-input-url')
+    const buttonUrlInput = page.getByTestId('button-input-url')
     await expect(buttonUrlInput).toHaveAttribute('placeholder', 'https://yoursite.com/#/portal/signup/')
   })
 
@@ -111,26 +111,26 @@ test.describe('Button Card', async () => {
     await insertCard(page, { cardName: 'button' })
 
     // verify default values
-    await expect(await page.getByTestId('button-card-btn-span').textContent()).toEqual('Add button text')
+    expect(await page.getByTestId('button-card-btn-span').textContent()).toEqual('Add button text')
 
-    const buttonTextInput = await page.getByTestId('button-input-text')
+    const buttonTextInput = page.getByTestId('button-input-text')
     await expect(buttonTextInput).toHaveValue('')
 
     await page.getByTestId('button-input-text').fill('test')
     await expect(buttonTextInput).toHaveValue('test')
-    await expect(await page.getByTestId('button-card-btn-span').textContent()).toEqual('test')
+    expect(await page.getByTestId('button-card-btn-span').textContent()).toEqual('test')
   })
 
   test('url input field works', async function () {
     await focusEditor(page)
     await insertCard(page, { cardName: 'button' })
 
-    const buttonTextInput = await page.getByTestId('button-input-url')
+    const buttonTextInput = page.getByTestId('button-input-url')
     await expect(buttonTextInput).toHaveValue('')
 
     await page.getByTestId('button-input-url').fill('https://someblog.com/somepost')
     await expect(buttonTextInput).toHaveValue('https://someblog.com/somepost')
-    const buttonLink = await page.getByTestId('button-card-btn')
+    const buttonLink = page.getByTestId('button-card-btn')
     await expect(buttonLink).toHaveAttribute('href', 'https://someblog.com/somepost')
   })
 
@@ -139,18 +139,18 @@ test.describe('Button Card', async () => {
     await focusEditor(page)
     await insertCard(page, { cardName: 'button' })
 
-    const buttonTextInput = await page.getByTestId('button-input-url')
+    const buttonTextInput = page.getByTestId('button-input-url')
     await expect(buttonTextInput).toHaveValue('')
 
     await page.getByTestId('button-input-url').fill('Home')
     await page.waitForSelector('[data-testid="button-input-url-listOption"]')
-    await expect(await page.getByTestId('button-input-url-listOption-Homepage')).toHaveText('Homepage')
+    await expect(page.getByTestId('button-input-url-listOption-Homepage')).toHaveText('Homepage')
     await page.getByTestId('button-input-url-listOption').click()
 
     // need to make this any string value because we don't want to hardcode the window.location value
     const anyString = new RegExp(`.*`)
     await expect(buttonTextInput).toHaveValue(anyString)
-    const buttonLink = await page.getByTestId('button-card-btn')
+    const buttonLink = page.getByTestId('button-card-btn')
     await expect(buttonLink).toHaveAttribute('href', anyString)
   })
 
@@ -169,6 +169,6 @@ test.describe('Button Card', async () => {
     await page.keyboard.type('/snippet')
     await expect(page.locator('[data-inkling-cardmenu-selected="true"]').filter({ hasText: 'snippet' })).toBeVisible()
     await page.keyboard.press('Enter')
-    await expect(await page.locator('[data-inkling-card="button"]')).toHaveCount(2)
+    await expect(page.locator('[data-inkling-card="button"]')).toHaveCount(2)
   })
 })

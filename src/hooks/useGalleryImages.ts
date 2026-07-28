@@ -51,7 +51,15 @@ export function useGalleryImages(nodeKey: NodeKey): GalleryImagesBinding {
     }
   }, [mirror])
 
-  const images = React.useSyncExternalStore(mirror.subscribe, mirror.getSnapshot)
+  const subscribe = React.useCallback((listener: () => void) => mirror.subscribe(listener), [mirror])
+  const getSnapshot = React.useCallback(() => mirror.getSnapshot(), [mirror])
+  const images = React.useSyncExternalStore(subscribe, getSnapshot)
 
-  return { images, setImages: mirror.setImages, setPreviewImages: mirror.setPreviewImages }
+  const setImages = React.useCallback<GalleryImagesBinding['setImages']>((next) => mirror.setImages(next), [mirror])
+  const setPreviewImages = React.useCallback<GalleryImagesBinding['setPreviewImages']>(
+    (next) => mirror.setPreviewImages(next),
+    [mirror],
+  )
+
+  return { images, setImages, setPreviewImages }
 }

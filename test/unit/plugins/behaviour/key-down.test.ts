@@ -17,8 +17,8 @@ function createTestEditor() {
   })
 }
 
-function fakeKeyEvent(target: EventTarget | null, key = 'x'): KeyboardEvent {
-  return { key, metaKey: false, target } as unknown as KeyboardEvent
+function fakeKeyEvent(target: EventTarget | null, key = 'x', metaKey = false): KeyboardEvent {
+  return { key, metaKey, target } as unknown as KeyboardEvent
 }
 
 describe('registerKeyDownPassthrough', () => {
@@ -62,7 +62,7 @@ describe('registerKeyDownPassthrough', () => {
     document.body.appendChild(input)
 
     editor.dispatchCommand(KEY_DOWN_COMMAND, fakeKeyEvent(input, 'Escape'))
-    editor.dispatchCommand(KEY_DOWN_COMMAND, { ...fakeKeyEvent(input, 'Enter'), metaKey: true })
+    editor.dispatchCommand(KEY_DOWN_COMMAND, fakeKeyEvent(input, 'Enter', true))
     expect(fallthrough).toHaveBeenCalledTimes(2)
 
     input.remove()

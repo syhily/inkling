@@ -12,7 +12,7 @@ import {
   waitForHistoryGroupBoundary,
 } from '#/utils/e2e'
 
-test.describe('Code Block card', async () => {
+test.describe('Code Block card', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -182,7 +182,7 @@ test.describe('Code Block card', async () => {
     // Type in the editor
     await page.keyboard.type('Here are some words')
 
-    const languageInput = await page.locator('[data-testid="code-card-language"]')
+    const languageInput = page.locator('[data-testid="code-card-language"]')
 
     // The language input should be hidden
     await expect(languageInput).toHaveClass(/opacity-0/)

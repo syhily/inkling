@@ -14,6 +14,33 @@ import {
 } from '@/plugins/behaviour/card-menu-trigger'
 import { resolveAnchoredPopupPlacement } from '@/utils/selection-anchored-popup'
 
+// the button sits at its paragraph's top, parent-relative — the
+// anchored-popup seam's absolute at-anchor policy
+function getTopPosition(elem: Element): number {
+  const parent = elem.parentElement
+  if (!parent) {
+    return 0
+  }
+  const placement = resolveAnchoredPopupPlacement({
+    positioning: 'absolute',
+    absoluteEdge: 'at-anchor',
+    anchorRect: elem.getBoundingClientRect(),
+    containerRect: parent.getBoundingClientRect(),
+    popupHeight: 0,
+    scrollTop: 0,
+    scrollHeight: 0,
+    viewportHeight: 0,
+  })
+  return placement.top ?? 0
+}
+
+function getElementRange(elem: Element): Range {
+  const range = new Range()
+  range.setStart(elem, 0)
+  range.setEnd(elem, 0)
+  return range
+}
+
 function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
   // the popup session (cursor lease, close policy, Escape/outside-mousedown)
   // lives in useCardMenuSession and the trigger policy (caret/hover verdicts,
@@ -33,33 +60,6 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
   const [isShowingButton, setIsShowingButton] = React.useState<boolean>(false)
   const [topPosition, setTopPosition] = React.useState<number>(0)
   const [cachedRange, setCachedRange] = React.useState<Range | null>(null)
-
-  // the button sits at its paragraph's top, parent-relative — the
-  // anchored-popup seam's absolute at-anchor policy
-  function getTopPosition(elem: Element): number {
-    const parent = elem.parentElement
-    if (!parent) {
-      return 0
-    }
-    const placement = resolveAnchoredPopupPlacement({
-      positioning: 'absolute',
-      absoluteEdge: 'at-anchor',
-      anchorRect: elem.getBoundingClientRect(),
-      containerRect: parent.getBoundingClientRect(),
-      popupHeight: 0,
-      scrollTop: 0,
-      scrollHeight: 0,
-      viewportHeight: 0,
-    })
-    return placement.top ?? 0
-  }
-
-  function getElementRange(elem: Element): Range {
-    const range = new Range()
-    range.setStart(elem, 0)
-    range.setEnd(elem, 0)
-    return range
-  }
 
   const showButton = React.useCallback(
     (elem: Element) => {

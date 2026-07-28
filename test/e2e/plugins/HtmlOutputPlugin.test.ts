@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { assertHTML, focusEditor, html, initialize, isMac, pasteHtml } from '#/utils/e2e'
 
-test.describe('Html Output Plugin', async function () {
+test.describe('Html Output Plugin', function () {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -37,7 +37,7 @@ test.describe('Html Output Plugin', async function () {
     await focusEditor(page)
 
     // check that default content renders to html
-    await expect(await page.getByTestId('html-output').textContent()).toEqual(
+    expect(await page.getByTestId('html-output').textContent()).toEqual(
       '<p>check <a href="https://inkling.local/changelog/markdown/">inkling.local/changelog/markdown/</a></p>',
     )
 
@@ -63,7 +63,7 @@ test.describe('Html Output Plugin', async function () {
     )
 
     // check that link renders to html
-    await expect(await page.getByTestId('html-output').textContent()).toEqual(
+    expect(await page.getByTestId('html-output').textContent()).toEqual(
       '<p><a href="https://inkling.local/changelog/markdown/">inkling.local/changelog/markdown/</a></p>',
     )
   })

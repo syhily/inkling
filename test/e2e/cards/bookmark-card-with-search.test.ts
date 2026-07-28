@@ -13,7 +13,7 @@ import {
   waitForHistoryGroupBoundary,
 } from '#/utils/e2e'
 
-test.describe('Bookmark card (with searchLinks)', async () => {
+test.describe('Bookmark card (with searchLinks)', () => {
   const ctrlOrCmd = isMac() ? 'Meta' : 'Control'
   let page: Page
   let errors: string[]
@@ -127,19 +127,19 @@ test.describe('Bookmark card (with searchLinks)', async () => {
     await focusEditor(page)
     await insertCard(page, { cardName: 'bookmark' })
 
-    const urlInput = await page.getByTestId('bookmark-url')
+    const urlInput = page.getByTestId('bookmark-url')
     await expect(urlInput).toHaveAttribute('placeholder', 'Paste URL or search posts and pages...')
 
     await urlInput.fill('test')
     await expect(urlInput).toHaveValue('test')
   })
 
-  test.describe('Valid URL handling', async () => {
+  test.describe('Valid URL handling', () => {
     test('shows loading wheel', async function () {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await urlInput.fill('https://inkling.local/')
       await urlInput.press('Enter')
 
@@ -151,7 +151,7 @@ test.describe('Bookmark card (with searchLinks)', async () => {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await urlInput.fill('https://inkling.local/')
       await urlInput.press('Enter')
 
@@ -169,21 +169,21 @@ test.describe('Bookmark card (with searchLinks)', async () => {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await urlInput.fill('https://inkling.local/')
       await urlInput.press('Enter')
 
-      const captionInput = await page.getByTestId('bookmark-caption')
+      const captionInput = page.getByTestId('bookmark-caption')
       await expect(captionInput).toContainText('Type caption for bookmark (optional)')
     })
   })
 
-  test.describe('Error Handling', async () => {
+  test.describe('Error Handling', () => {
     test('bad url entry shows error message', async function () {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await urlInput.fill('badurl')
       await expect(urlInput).toHaveValue('badurl')
       await urlInput.press('Enter')
@@ -195,17 +195,17 @@ test.describe('Bookmark card (with searchLinks)', async () => {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await expect(urlInput).toHaveAttribute('placeholder', 'Paste URL or search posts and pages...')
 
       await urlInput.fill('badurl')
       await expect(urlInput).toHaveValue('badurl')
       await urlInput.press('Enter')
 
-      const retryButton = await page.getByTestId('bookmark-url-error-retry')
+      const retryButton = page.getByTestId('bookmark-url-error-retry')
       await retryButton.click()
 
-      const urlInputRetry = await page.getByTestId('bookmark-url')
+      const urlInputRetry = page.getByTestId('bookmark-url')
       await expect(urlInputRetry).toHaveValue('badurl')
       await expect(retryButton).not.toBeVisible()
     })
@@ -214,14 +214,14 @@ test.describe('Bookmark card (with searchLinks)', async () => {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await expect(urlInput).toHaveAttribute('placeholder', 'Paste URL or search posts and pages...')
 
       await urlInput.fill('badurl')
       await expect(urlInput).toHaveValue('badurl')
       await urlInput.press('Enter')
 
-      const retryButton = await page.getByTestId('bookmark-url-error-pasteAsLink')
+      const retryButton = page.getByTestId('bookmark-url-error-pasteAsLink')
       await retryButton.click()
 
       await assertHTML(
@@ -239,14 +239,14 @@ test.describe('Bookmark card (with searchLinks)', async () => {
       await focusEditor(page)
       await insertCard(page, { cardName: 'bookmark' })
 
-      const urlInput = await page.getByTestId('bookmark-url')
+      const urlInput = page.getByTestId('bookmark-url')
       await expect(urlInput).toHaveAttribute('placeholder', 'Paste URL or search posts and pages...')
 
       await urlInput.fill('badurl')
       await expect(urlInput).toHaveValue('badurl')
       await urlInput.press('Enter')
 
-      const retryButton = await page.getByTestId('bookmark-url-error-close')
+      const retryButton = page.getByTestId('bookmark-url-error-close')
       await retryButton.click()
 
       await assertHTML(page, html`<p><br /></p>`)
@@ -257,7 +257,7 @@ test.describe('Bookmark card (with searchLinks)', async () => {
     await focusEditor(page)
     await insertCard(page, { cardName: 'bookmark' })
 
-    const urlInput = await page.getByTestId('bookmark-url')
+    const urlInput = page.getByTestId('bookmark-url')
     await urlInput.fill('https://inkling.local/')
     await urlInput.press('Enter')
     await expect(page.getByTestId('bookmark-description')).toBeVisible()
@@ -278,7 +278,7 @@ test.describe('Bookmark card (with searchLinks)', async () => {
     await focusEditor(page)
     await insertCard(page, { cardName: 'bookmark' })
 
-    const urlInput = await page.getByTestId('bookmark-url')
+    const urlInput = page.getByTestId('bookmark-url')
     await urlInput.fill('https://inkling.local/')
     await urlInput.press('Enter')
     await expect(page.getByTestId('bookmark-description')).toBeVisible()
@@ -376,7 +376,7 @@ test.describe('Bookmark card (with searchLinks)', async () => {
     await focusEditor(page)
     await insertCard(page, { cardName: 'bookmark' })
 
-    const urlInput = await page.getByTestId('bookmark-url')
+    const urlInput = page.getByTestId('bookmark-url')
     await expect(urlInput).toBeFocused()
 
     await pasteText(page, 'https://inkling.local/')

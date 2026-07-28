@@ -39,19 +39,17 @@ export function useDragDropContainer({
   const handler = useDragDropHandleState((state) => state.handler)
 
   const callbacksRef = React.useRef({ draggable, droppable, lifecycle })
-  callbacksRef.current = { draggable, droppable, lifecycle }
+  React.useEffect(() => {
+    callbacksRef.current = { draggable, droppable, lifecycle }
+  })
 
   const containerRef = React.useRef<DraggableContainerHandle | null>(null)
-  const proxyRef = React.useRef<DraggableContainerHandle | null>(null)
-  if (!proxyRef.current) {
-    proxyRef.current = {
-      enableDrag: () => containerRef.current?.enableDrag(),
-      disableDrag: () => containerRef.current?.disableDrag(),
-      refresh: () => containerRef.current?.refresh(),
-      destroy: () => containerRef.current?.destroy(),
-    }
-  }
-  const container = proxyRef.current
+  const [container] = React.useState<DraggableContainerHandle>(() => ({
+    enableDrag: () => containerRef.current?.enableDrag(),
+    disableDrag: () => containerRef.current?.disableDrag(),
+    refresh: () => containerRef.current?.refresh(),
+    destroy: () => containerRef.current?.destroy(),
+  }))
 
   // enable/disable toggles flow through the pair on the live container. This
   // effect is declared before the registration effect on purpose: on the

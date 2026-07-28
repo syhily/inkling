@@ -6,7 +6,7 @@ import { assertHTML, createDataTransfer, createSnippet, focusEditor, html, initi
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-test.describe('Audio card', async () => {
+test.describe('Audio card', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -86,7 +86,7 @@ test.describe('Audio card', async () => {
     await uploadAudio(page)
 
     // Check that audio file was uploaded
-    await expect(await page.getByTestId('audio-title')).toBeVisible()
+    await expect(page.getByTestId('audio-title')).toBeVisible()
     expect(await page.getByTestId('audio-title').inputValue()).toEqual('Audio sample')
 
     await assertHTML(
@@ -119,13 +119,13 @@ test.describe('Audio card', async () => {
     await page.getByTestId('media-placeholder').dispatchEvent('dragover', { dataTransfer })
 
     // Dragover text should be visible
-    await expect(await page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
+    await expect(page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
 
     // Drop file
     await page.getByTestId('media-placeholder').dispatchEvent('drop', { dataTransfer })
 
     // Check that audio file was uploaded
-    await expect(await page.getByTestId('media-duration')).toContainText('0:19')
+    await expect(page.getByTestId('media-duration')).toContainText('0:19')
   })
 
   test('shows errors on failed audio upload', async function () {
@@ -134,7 +134,7 @@ test.describe('Audio card', async () => {
 
     // Check that errors are displayed
     await page.waitForSelector('[data-testid="audio-upload-errors"]')
-    await expect(await page.getByTestId('audio-upload-errors')).toBeVisible()
+    await expect(page.getByTestId('audio-upload-errors')).toBeVisible()
   })
 
   test('can show errors if was dropped a file with wrong extension to audio placeholder', async function () {
@@ -155,7 +155,7 @@ test.describe('Audio card', async () => {
     await page.getByTestId('media-placeholder').dispatchEvent('drop', { dataTransfer })
 
     // Errors should be visible
-    await expect(await page.getByTestId('audio-upload-errors')).toBeVisible()
+    await expect(page.getByTestId('audio-upload-errors')).toBeVisible()
   })
 
   test('file input opens immediately when added via card menu', async function () {
@@ -181,7 +181,7 @@ test.describe('Audio card', async () => {
     await uploadAudio(page)
 
     // Change title
-    await expect(await page.getByTestId('audio-title')).toBeVisible()
+    await expect(page.getByTestId('audio-title')).toBeVisible()
     await page.getByTestId('audio-title').click()
     await page.keyboard.type(' 1')
 
@@ -201,11 +201,11 @@ test.describe('Audio card', async () => {
     const thumbnailFileChooser = await thumbnailFileChooserPromise
     await thumbnailFileChooser.setFiles([thumbnailFilePath])
 
-    expect(await page.getByTestId('audio-thumbnail')).not.toBeNull()
+    expect(page.getByTestId('audio-thumbnail')).not.toBeNull()
 
     // Remove thumbnail
     await page.getByTestId('remove-thumbnail').click()
-    expect(await page.getByTestId('upload-thumbnail')).not.toBeNull()
+    expect(page.getByTestId('upload-thumbnail')).not.toBeNull()
   })
 
   test('can upload dropped thumbnail', async function () {
@@ -214,7 +214,7 @@ test.describe('Audio card', async () => {
     await uploadAudio(page)
 
     // Check that audio file was uploaded
-    await expect(await page.getByTestId('media-duration')).toContainText('0:19')
+    await expect(page.getByTestId('media-duration')).toContainText('0:19')
 
     // Create and dispatch data transfer
     const dataTransfer = await createDataTransfer(page, [
@@ -223,13 +223,13 @@ test.describe('Audio card', async () => {
     await page.getByTestId('audio-card-populated').dispatchEvent('dragover', { dataTransfer })
 
     // Dragover text should be visible
-    await expect(await page.getByTestId('audio-thumbnail-dragover')).toBeVisible()
+    await expect(page.getByTestId('audio-thumbnail-dragover')).toBeVisible()
 
     // Drop file
     await page.getByTestId('audio-card-populated').dispatchEvent('drop', { dataTransfer })
 
     // Check that audio file was uploaded
-    await expect(await page.getByTestId('audio-thumbnail')).toBeVisible()
+    await expect(page.getByTestId('audio-thumbnail')).toBeVisible()
   })
 
   test('can show errors if was dropped a file with wrong extension to thumbnail', async function () {
@@ -238,14 +238,14 @@ test.describe('Audio card', async () => {
     await uploadAudio(page)
 
     // Check that audio file was uploaded
-    await expect(await page.getByTestId('media-duration')).toContainText('0:19')
+    await expect(page.getByTestId('media-duration')).toContainText('0:19')
 
     // Create and dispatch data transfer
     const dataTransfer = await createDataTransfer(page, [{ filePath, fileName: 'video.mp4', fileType: 'video/mp4' }])
     await page.getByTestId('audio-card-populated').dispatchEvent('drop', { dataTransfer })
 
     // Errors should be visible
-    await expect(await page.getByTestId('thumbnail-errors')).toBeVisible()
+    await expect(page.getByTestId('thumbnail-errors')).toBeVisible()
   })
 
   test('shows errors on a failed thumbnail upload', async function () {
@@ -269,11 +269,11 @@ test.describe('Audio card', async () => {
     await uploadAudio(page)
 
     // Leave editing mode to display the toolbar
-    await expect(await page.getByTestId('audio-title')).toBeVisible()
+    await expect(page.getByTestId('audio-title')).toBeVisible()
     await page.keyboard.press('Escape')
 
     // Check that the toolbar is displayed
-    expect(await page.locator('[data-inkling-card-toolbar="audio"]')).not.toBeNull()
+    expect(page.locator('[data-inkling-card-toolbar="audio"]')).not.toBeNull()
   })
 
   test('audio card toolbar has Edit button', async function () {
@@ -281,11 +281,11 @@ test.describe('Audio card', async () => {
     await uploadAudio(page)
 
     // Leave editing mode to display the toolbar
-    await expect(await page.getByTestId('audio-title')).toBeVisible()
+    await expect(page.getByTestId('audio-title')).toBeVisible()
     await page.keyboard.press('Escape')
 
     // Check that the toolbar is displayed
-    expect(await page.locator('[data-inkling-card-toolbar="audio"]')).not.toBeNull()
+    expect(page.locator('[data-inkling-card-toolbar="audio"]')).not.toBeNull()
 
     await page.waitForSelector('[data-inkling-card-toolbar="audio"] button[aria-label="Edit"]')
     await page.locator('[data-inkling-card-toolbar="audio"] button[aria-label="Edit"]').click()
@@ -307,11 +307,11 @@ test.describe('Audio card', async () => {
     await uploadAudio(page)
 
     // Check that audio file was uploaded
-    await expect(await page.getByTestId('media-duration')).toContainText('0:19')
+    await expect(page.getByTestId('media-duration')).toContainText('0:19')
     await page.keyboard.press('Escape')
 
     // Title input should be read only
-    await expect(await page.getByTestId('audio-title')).toHaveAttribute('readOnly', '')
+    await expect(page.getByTestId('audio-title')).toHaveAttribute('readOnly', '')
 
     const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
     // Create and dispatch data transfer
@@ -321,7 +321,7 @@ test.describe('Audio card', async () => {
     await page.getByTestId('audio-card-populated').dispatchEvent('dragover', { dataTransfer })
 
     // Dragover text shouldn't be visible
-    await expect(await page.getByTestId('audio-thumbnail-dragover')).toBeHidden()
+    await expect(page.getByTestId('audio-thumbnail-dragover')).toBeHidden()
   })
 
   test('does not add extra paragraph when audio is inserted mid-document', async function () {
@@ -368,7 +368,7 @@ test.describe('Audio card', async () => {
     await uploadAudio(page)
 
     // Check that audio file was uploaded
-    await expect(await page.getByTestId('audio-title')).toBeVisible()
+    await expect(page.getByTestId('audio-title')).toBeVisible()
     expect(await page.getByTestId('audio-title').inputValue()).toEqual('Audio sample')
 
     // create snippet
@@ -380,7 +380,7 @@ test.describe('Audio card', async () => {
     await page.keyboard.type('/snippet')
     await expect(page.locator('[data-inkling-cardmenu-selected="true"]').filter({ hasText: 'snippet' })).toBeVisible()
     await page.keyboard.press('Enter')
-    await expect(await page.locator('[data-inkling-card="audio"]')).toHaveCount(2)
+    await expect(page.locator('[data-inkling-card="audio"]')).toHaveCount(2)
   })
 })
 

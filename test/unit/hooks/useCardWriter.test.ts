@@ -51,7 +51,12 @@ describe('useCardWriter', () => {
 
     expect(updateSpy).toHaveBeenCalledTimes(1)
     await flushCommit()
-    expect(editor.getEditorState().read(() => $getRoot().getFirstChildOrThrow<HtmlNode>().html)).toBe('<p>changed</p>')
+    expect(
+      editor.getEditorState().read(() => {
+        const first = $getRoot().getFirstChildOrThrow()
+        return $isHtmlNode(first) ? first.html : null
+      }),
+    ).toBe('<p>changed</p>')
   })
 
   it('no-ops when the guard does not match the node', async () => {
@@ -63,6 +68,11 @@ describe('useCardWriter', () => {
 
     await flushCommit()
     expect(mutator).not.toHaveBeenCalled()
-    expect(editor.getEditorState().read(() => $getRoot().getFirstChildOrThrow<HtmlNode>().html)).toBe('<p>Hello</p>')
+    expect(
+      editor.getEditorState().read(() => {
+        const first = $getRoot().getFirstChildOrThrow()
+        return $isHtmlNode(first) ? first.html : null
+      }),
+    ).toBe('<p>Hello</p>')
   })
 })

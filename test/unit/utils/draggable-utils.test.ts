@@ -141,7 +141,7 @@ describe('draggable-utils', () => {
       applyUserSelect(el, 'none')
 
       expect(el.style.userSelect).toBe('none')
-      expect(el.style.webkitUserSelect).toBe('none')
+      expect(el.style.getPropertyValue('-webkit-user-select')).toBe('none')
       expect(setPropertySpy).toHaveBeenCalledWith('-moz-user-select', 'none')
       expect(setPropertySpy).toHaveBeenCalledWith('-ms-user-select', 'none')
       expect(setPropertySpy).toHaveBeenCalledWith('-o-user-select', 'none')

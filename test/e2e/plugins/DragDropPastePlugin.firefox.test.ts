@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename)
 // Video card is tested in firefox
 // Need to get video thumbnail before uploading on the server; for this purpose, convert video to blob (see extractVideoMetadata.js)
 // The problem is that Chromium can't read video src as blob
-test.describe('Drag Drop Paste Plugin Firefox', async function () {
+test.describe('Drag Drop Paste Plugin Firefox', function () {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -33,7 +33,7 @@ test.describe('Drag Drop Paste Plugin Firefox', async function () {
     await page.locator('.inkling-prose').dispatchEvent('drop', { dataTransfer })
 
     // Check that video file was uploaded
-    await expect(await page.getByTestId('media-duration')).toContainText('0:04')
+    await expect(page.getByTestId('media-duration')).toContainText('0:04')
   })
 
   test('can drag and drop multiple video files on the editor', async function () {
@@ -49,7 +49,7 @@ test.describe('Drag Drop Paste Plugin Firefox', async function () {
     await page.locator('.inkling-prose').dispatchEvent('drop', { dataTransfer })
 
     // wait for card visibility
-    await expect(await page.getByTestId('media-duration')).toHaveCount(2)
+    await expect(page.getByTestId('media-duration')).toHaveCount(2)
 
     await assertHTML(
       page,
@@ -81,11 +81,11 @@ test.describe('Drag Drop Paste Plugin Firefox', async function () {
     await page.locator('.inkling-prose').dispatchEvent('drop', { dataTransfer })
 
     // Wait for uploads to complete
-    await expect(await page.locator('input[value="Audio sample"]')).toBeVisible()
-    await expect(await page.getByTestId('image-card-populated')).toBeVisible()
-    await expect(
-      await page.locator('[data-testid="video-card-populated"] [data-testid="media-duration"]'),
-    ).toContainText('0:04')
+    await expect(page.locator('input[value="Audio sample"]')).toBeVisible()
+    await expect(page.getByTestId('image-card-populated')).toBeVisible()
+    await expect(page.locator('[data-testid="video-card-populated"] [data-testid="media-duration"]')).toContainText(
+      '0:04',
+    )
 
     await assertHTML(
       page,

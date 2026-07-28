@@ -18,7 +18,7 @@ async function insertToggleCard(page: Page) {
   await page.waitForSelector('[data-inkling-card="toggle"]')
 }
 
-test.describe('Toggle card', async () => {
+test.describe('Toggle card', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -261,7 +261,7 @@ test.describe('Toggle card', async () => {
     await page.keyboard.type('/snippet')
     await expect(page.locator('[data-inkling-cardmenu-selected="true"]').filter({ hasText: 'snippet' })).toBeVisible()
     await page.keyboard.press('Enter')
-    await expect(await page.locator('[data-inkling-card="toggle"]')).toHaveCount(2)
+    await expect(page.locator('[data-inkling-card="toggle"]')).toHaveCount(2)
   })
 
   test('can undo/redo without losing nested editor content', async () => {

@@ -202,19 +202,19 @@ describe('BaseBookmarkNode', function () {
                 <figure class="inkling-card inkling-bookmark-card inkling-card-hascaption">
                     <a class="inkling-bookmark-container" href="${dataset.url}">
                         <div class="inkling-bookmark-content">
-                            <div class="inkling-bookmark-title">${metadata.title}</div>
-                            <div class="inkling-bookmark-description">${metadata.description}</div>
+                            <div class="inkling-bookmark-title">${String(metadata.title)}</div>
+                            <div class="inkling-bookmark-description">${String(metadata.description)}</div>
                             <div class="inkling-bookmark-metadata">
-                                <img class="inkling-bookmark-icon" src="${metadata.icon}" alt="">
-                                <span class="inkling-bookmark-author">${metadata.publisher}</span>
-                                <span class="inkling-bookmark-publisher">${metadata.author}</span>
+                                <img class="inkling-bookmark-icon" src="${String(metadata.icon)}" alt="">
+                                <span class="inkling-bookmark-author">${String(metadata.publisher)}</span>
+                                <span class="inkling-bookmark-publisher">${String(metadata.author)}</span>
                             </div>
                         </div>
                         <div class="inkling-bookmark-thumbnail">
-                            <img src="${metadata.thumbnail}" alt="" onerror="this.style.display = 'none'">
+                            <img src="${String(metadata.thumbnail)}" alt="" onerror="this.style.display = 'none'">
                         </div>
                     </a>
-                    <figcaption>${dataset.caption}</figcaption>
+                    <figcaption>${String(dataset.caption)}</figcaption>
                 </figure>
             `
 

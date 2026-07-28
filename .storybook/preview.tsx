@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import type { Preview } from '@storybook/react'
 
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
@@ -59,7 +61,14 @@ const preview: Preview = {
   decorators: [
     (Story) => {
       return (
-        <LexicalComposer initialConfig={{ namespace: 'Storybook editor' }}>
+        <LexicalComposer
+          initialConfig={{
+            namespace: 'Storybook editor',
+            onError: (error: Error) => {
+              throw error
+            },
+          }}
+        >
           <div className="inkling-lexical">
             <div>
               <Story />

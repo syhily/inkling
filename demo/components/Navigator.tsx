@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useNavigate, type NavigateFunction } from 'react-router-dom'
 
 declare global {
@@ -10,7 +11,9 @@ const Navigator = () => {
   const navigate = useNavigate()
 
   // Hack, used to allow Playwright to navigate without triggering a full page reload.
-  window.navigate = navigate
+  useEffect(() => {
+    window.navigate = navigate
+  }, [navigate])
 
   return null
 }

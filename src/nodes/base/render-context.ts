@@ -193,7 +193,7 @@ export interface RenderContext {
    * when not passed). Synchronous by contract — see the option's declaration
    * in `@/nodes/base/export-dom`.
    */
-  readonly resolveRenderMeta: ((kind: string, id: string) => unknown | undefined) | undefined
+  readonly resolveRenderMeta: ((kind: string, id: string) => unknown) | undefined
   /** Resolved once: `options.createDocument` / `options.dom` / the browser global, in that order. */
   readonly createDocument: () => Document
   /** URL policy: returns `value` when it is safe for `kind`, `''` otherwise. */

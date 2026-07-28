@@ -3,7 +3,7 @@ import { test, type Page } from '@playwright/test'
 
 import { assertHTML, html, initialize } from '#/utils/e2e'
 
-test.describe('Node transforms', async () => {
+test.describe('Node transforms', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

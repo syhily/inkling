@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { assertHTML, assertSelection, focusEditor, html, initialize } from '#/utils/e2e'
 
-test.describe('List behaviour', async () => {
+test.describe('List behaviour', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

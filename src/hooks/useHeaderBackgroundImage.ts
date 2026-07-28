@@ -92,13 +92,31 @@ export function useHeaderBackgroundImage({
     setImageRemoved(false)
   }
 
-  useEffect(() => {
+  // layout transition, visibility half: a non-split layout re-derives
+  // visibility from the node src, and the split-restore transition shows the
+  // image — adjusted during render (React re-renders before committing)
+  const [prevLayout, setPrevLayout] = useState(layout)
+  if (prevLayout !== layout) {
+    setPrevLayout(layout)
     if (layout !== 'split') {
       setShowBackgroundImage(Boolean(backgroundImageSrc))
+    } else if (!backgroundImageSrc && lastBackgroundImage) {
+      setShowBackgroundImage(true)
     }
+  }
 
+  // layout transition, side-effect half: switching TO `split` with no src but
+  // a remembered image restores through the write seam (or opens the file
+  // dialog when the removal was deliberate) — node writes stay in an effect
+  useEffect(() => {
     if (layout === 'split' && !backgroundImageSrc && lastBackgroundImage) {
-      showImage()
+      if (!imageRemoved) {
+        write((node) => {
+          node.backgroundImageSrc = lastBackgroundImage
+        })
+      } else {
+        openFileDialog()
+      }
     }
     // We just want to reset the show background image state when the layout changes, not when the image changes
     // oxlint-disable-next-line react-hooks/exhaustive-deps

@@ -6,7 +6,7 @@ import { assertHTML, createDataTransfer, focusEditor, html, initialize, insertCa
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-test.describe('File card', async () => {
+test.describe('File card', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -116,14 +116,14 @@ test.describe('File card', async () => {
     await page.getByTestId('media-placeholder').dispatchEvent('dragover', { dataTransfer })
 
     // Dragover text should be visible
-    await expect(await page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
+    await expect(page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
 
     // Drop file
     await page.getByTestId('media-placeholder').dispatchEvent('drop', { dataTransfer })
 
     // Dragover text should not be visible
     // expect data-inkling-file-card="dataset
-    await expect(await page.locator('[data-inkling-file-card="dataset"]')).toBeVisible()
+    await expect(page.locator('[data-inkling-file-card="dataset"]')).toBeVisible()
   })
 
   test('file input opens immediately when added via card menu', async function () {
@@ -148,14 +148,14 @@ test.describe('File card', async () => {
     await focusEditor(page)
     await uploadFile(page)
     await page.locator('[data-inkling-file-card="fileTitle"]').fill('Free printable pdf')
-    await expect(await page.locator('[data-inkling-file-card="fileTitle"]')).toHaveValue('Free printable pdf')
+    await expect(page.locator('[data-inkling-file-card="fileTitle"]')).toHaveValue('Free printable pdf')
   })
 
   test('can edit file card description', async function () {
     await focusEditor(page)
     await uploadFile(page)
     await page.locator('[data-inkling-file-card="fileDescription"]').fill('Enjoy this free download of a puppy pdf')
-    await expect(await page.locator('[data-inkling-file-card="fileDescription"]')).toHaveValue(
+    await expect(page.locator('[data-inkling-file-card="fileDescription"]')).toHaveValue(
       'Enjoy this free download of a puppy pdf',
     )
   })
@@ -165,7 +165,7 @@ test.describe('File card', async () => {
     await uploadFile(page, 'print-img-fail.pdf')
 
     // Errors should be visible in the placeholder
-    await expect(await page.getByTestId('media-placeholder-errors')).toBeVisible()
+    await expect(page.getByTestId('media-placeholder-errors')).toBeVisible()
   })
 })
 

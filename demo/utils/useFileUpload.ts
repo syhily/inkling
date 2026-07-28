@@ -94,7 +94,7 @@ export function useFileUpload({ isMultiplayer = false }: UseFileUploadOptions = 
       const { extensions } = fileTypeConfig
       const [, extension] = /(?:\.([^.]+))?$/.exec(file.name) ?? []
 
-      if (!extension || extensions.indexOf(extension.toLowerCase()) === -1) {
+      if (!extension || !extensions.includes(extension.toLowerCase())) {
         const validExtensions = `.${extensions.join(', .').toUpperCase()}`
         return `The file type you uploaded is not supported. Please use ${validExtensions}`
       }

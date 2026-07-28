@@ -2,7 +2,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { assertHTML, assertPosition, assertSelection, focusEditor, html, initialize, insertCard } from '#/utils/e2e'
 
-test.describe('Plus button', async () => {
+test.describe('Plus button', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -19,21 +19,21 @@ test.describe('Plus button', async () => {
   test.describe('with caret', function () {
     test('appears on empty editor', async function () {
       await focusEditor(page)
-      expect(await page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
     })
 
     test('moves when selection moves between empty paragraphs', async function () {
       await focusEditor(page)
 
       // expect button to be positioned for first paragraph
-      const firstPara = await page.locator('[data-lexical-editor] > p')
+      const firstPara = page.locator('[data-lexical-editor] > p')
       const firstParaRect = await getBoundingBox(firstPara)
       await assertPosition(page, '[data-inkling-plus-button]', { y: firstParaRect.y }, { threshold: 5 })
 
       await page.keyboard.press('Enter')
 
       // expect button to be positioned for second paragraph
-      const secondPara = await page.locator('[data-lexical-editor] > p:nth-of-type(2)')
+      const secondPara = page.locator('[data-lexical-editor] > p:nth-of-type(2)')
       const secondParaRect = await getBoundingBox(secondPara)
       await assertPosition(page, '[data-inkling-plus-button]', { y: secondParaRect.y }, { threshold: 5 })
 
@@ -47,10 +47,10 @@ test.describe('Plus button', async () => {
 
     test('disappears when starting to type', async function () {
       await focusEditor(page)
-      expect(await page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
 
       await page.keyboard.type('t')
-      await expect(await page.locator('[data-inkling-plus-button]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-button]')).toHaveCount(0)
     })
 
     test('does not appear on list sections', async function () {
@@ -73,30 +73,30 @@ test.describe('Plus button', async () => {
         focusPath: [0, 0],
       })
 
-      await expect(await page.locator('[data-inkling-plus-button]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-button]')).toHaveCount(0)
     })
 
     test('is shown after deleting all paragraph contents', async function () {
       await focusEditor(page)
       await page.keyboard.type('t')
 
-      await expect(await page.locator('[data-inkling-plus-button]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-button]')).toHaveCount(0)
 
       await page.keyboard.press('Backspace')
       await page.waitForSelector('p > br', { state: 'attached' })
 
-      expect(await page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
     })
   })
 
-  test.describe('with mouse movement', async function () {
+  test.describe('with mouse movement', function () {
     test('appears over blank paragraphs', async function () {
-      await expect(await page.locator('[data-inkling-plus-button]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-button]')).toHaveCount(0)
 
-      const pHandle = await page.locator('[data-lexical-editor] > p')
+      const pHandle = page.locator('[data-lexical-editor] > p')
       await pHandle.hover()
 
-      expect(await page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
     })
 
     test('moves when mouse moves', async function () {
@@ -104,13 +104,13 @@ test.describe('Plus button', async () => {
       await page.keyboard.press('Enter')
       await page.keyboard.press('Enter')
 
-      const firstPHandle = await page.locator('[data-lexical-editor] > p').nth(2)
+      const firstPHandle = page.locator('[data-lexical-editor] > p').nth(2)
       const firstPHandleBox = await getBoundingBox(firstPHandle)
       await firstPHandle.hover()
 
       await assertPosition(page, '[data-inkling-plus-button]', { y: firstPHandleBox.y }, { threshold: 5 })
 
-      const secondPHandle = await page.locator('[data-lexical-editor] > p:nth-of-type(2)')
+      const secondPHandle = page.locator('[data-lexical-editor] > p:nth-of-type(2)')
       const secondPHandleBox = await getBoundingBox(secondPHandle)
       await secondPHandle.hover()
 
@@ -122,52 +122,52 @@ test.describe('Plus button', async () => {
       await page.keyboard.press('Enter')
       await page.keyboard.type('Testing')
 
-      await expect(await page.locator('[data-inkling-plus-button]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-button]')).toHaveCount(0)
 
-      const firstPHandle = await page.locator('[data-lexical-editor] > p').nth(0)
+      const firstPHandle = page.locator('[data-lexical-editor] > p').nth(0)
       await firstPHandle.hover()
 
-      expect(await page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
 
-      const secondPHandle = await page.locator('[data-lexical-editor] > p:nth-of-type(2)')
+      const secondPHandle = page.locator('[data-lexical-editor] > p:nth-of-type(2)')
       await secondPHandle.hover()
 
-      await expect(await page.locator('[data-inkling-plus-button]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-button]')).toHaveCount(0)
     })
 
     test('does not appear over list sections', async function () {
       await focusEditor(page)
       await page.keyboard.press('Enter')
 
-      expect(await page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
 
       await page.keyboard.type('- ')
 
-      await expect(await page.locator('[data-inkling-plus-button]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-button]')).toHaveCount(0)
 
-      const pHandle = await page.locator('[data-lexical-editor] > p')
+      const pHandle = page.locator('[data-lexical-editor] > p')
       await pHandle.hover()
 
-      expect(await page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
 
-      const listHandle = await page.locator('[data-lexical-editor] li')
+      const listHandle = page.locator('[data-lexical-editor] li')
       await listHandle.hover()
 
-      await expect(await page.locator('[data-inkling-plus-button]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-button]')).toHaveCount(0)
     })
 
     test('disappears from hovered p when typing on focused p', async function () {
       await focusEditor(page)
       await page.keyboard.press('Enter')
 
-      const firstPHandle = await page.locator('[data-lexical-editor] > p').nth(0)
+      const firstPHandle = page.locator('[data-lexical-editor] > p').nth(0)
       await firstPHandle.hover()
 
-      expect(await page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
 
       await page.keyboard.type('T')
 
-      await expect(await page.locator('[data-inkling-plus-button]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-button]')).toHaveCount(0)
     })
 
     test('returns to caret position when over non-empty element', async function () {
@@ -176,9 +176,9 @@ test.describe('Plus button', async () => {
       await page.keyboard.type('Testing')
       await page.keyboard.press('Enter')
 
-      const pHandle1 = await page.locator('[data-lexical-editor] > p:nth-of-type(1)')
-      const pHandle2 = await page.locator('[data-lexical-editor] > p:nth-of-type(2)')
-      const pHandle3 = await page.locator('[data-lexical-editor] > p:nth-of-type(3)')
+      const pHandle1 = page.locator('[data-lexical-editor] > p:nth-of-type(1)')
+      const pHandle2 = page.locator('[data-lexical-editor] > p:nth-of-type(2)')
+      const pHandle3 = page.locator('[data-lexical-editor] > p:nth-of-type(3)')
 
       const pHandle1Box = await getBoundingBox(pHandle1)
       const pHandle3Box = await getBoundingBox(pHandle3)
@@ -209,32 +209,32 @@ test.describe('Plus button', async () => {
   test.describe('menu', function () {
     test('opens on button click', async function () {
       await focusEditor(page)
-      await expect(await page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
       await page.click('[data-inkling-plus-button]')
-      expect(await page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
     })
 
     test('closes on click outside', async function () {
       await focusEditor(page)
       await page.click('[data-inkling-plus-button]')
-      expect(await page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
       await page.click('.inkling-lexical')
-      await expect(await page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
     })
 
     test('does not close on click inside', async function () {
       await focusEditor(page)
       await page.click('[data-inkling-plus-button]')
       await page.click('[data-inkling-plus-menu] [role="separator"] > span')
-      expect(await page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
     })
 
     test('closes on escape', async function () {
       await focusEditor(page)
       await page.click('[data-inkling-plus-button]')
-      expect(await page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
       await page.keyboard.press('Escape')
-      await expect(await page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
     })
 
     test('does not move on empty p mouseover when open', async function () {
@@ -242,8 +242,8 @@ test.describe('Plus button', async () => {
       await page.keyboard.press('Enter')
       await page.keyboard.press('Enter')
 
-      const p1 = await page.locator('[data-lexical-editor] > p:nth-of-type(1)')
-      const p3 = await page.locator('[data-lexical-editor] > p:nth-of-type(3)')
+      const p1 = page.locator('[data-lexical-editor] > p:nth-of-type(1)')
+      const p3 = page.locator('[data-lexical-editor] > p:nth-of-type(3)')
       const p3Box = await getBoundingBox(p3)
 
       await assertPosition(page, '[data-inkling-plus-button]', { y: p3Box.y }, { threshold: 5 })
@@ -253,7 +253,7 @@ test.describe('Plus button', async () => {
       // menu opens asynchronously after the click
       await page.waitForSelector('[data-inkling-plus-menu]')
 
-      expect(await page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
       await assertPosition(page, '[data-inkling-plus-menu]', { y: p3Box.y }, { threshold: 5 })
 
       await p1.hover()
@@ -273,7 +273,7 @@ test.describe('Plus button', async () => {
         focusPath: [1],
       })
 
-      const p1 = await page.locator('[data-lexical-editor] > p:nth-of-type(1)')
+      const p1 = page.locator('[data-lexical-editor] > p:nth-of-type(1)')
       await p1.hover()
       await page.click('[data-inkling-plus-button]')
 
@@ -288,10 +288,10 @@ test.describe('Plus button', async () => {
     test('closes when typing', async function () {
       await focusEditor(page)
       await page.click('[data-inkling-plus-button]')
-      expect(await page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
 
       await page.keyboard.type('Test')
-      await expect(await page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
       expect(
         await page.$eval('[data-lexical-editor] > p', (element) => {
           if (!(element instanceof HTMLElement)) {
@@ -307,7 +307,7 @@ test.describe('Plus button', async () => {
       await focusEditor(page)
       await page.keyboard.press('Enter')
       await page.click('[data-inkling-plus-button]')
-      expect(await page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
 
       await assertSelection(page, {
         anchorOffset: 0,
@@ -320,8 +320,8 @@ test.describe('Plus button', async () => {
       // Wait for plus button to reposition after cursor move
       await page.waitForTimeout(50)
 
-      await expect(await page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
-      expect(await page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
+      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
 
       await assertSelection(page, {
         anchorOffset: 0,
@@ -330,7 +330,7 @@ test.describe('Plus button', async () => {
         focusPath: [0],
       })
 
-      const p1 = await page.locator('[data-lexical-editor] > p').first()
+      const p1 = page.locator('[data-lexical-editor] > p').first()
       const p1Box = await getBoundingBox(p1)
       await assertPosition(page, '[data-inkling-plus-button]', { y: p1Box.y }, { threshold: 5 })
     })
@@ -340,7 +340,7 @@ test.describe('Plus button', async () => {
       await page.click('[data-inkling-plus-button]')
       await page.click('[data-inkling-card-menu-item="Divider"]')
 
-      await expect(await page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
 
       await assertHTML(
         page,
@@ -383,7 +383,7 @@ test.describe('Plus button', async () => {
         `,
       )
 
-      const pHandle = await page.locator('[data-lexical-editor] > p').nth(0)
+      const pHandle = page.locator('[data-lexical-editor] > p').nth(0)
       await pHandle.hover()
       await page.click('[data-inkling-plus-button]')
 
@@ -412,7 +412,7 @@ test.describe('Plus button', async () => {
       await page.waitForSelector('[data-inkling-card="codeblock"] .cm-editor')
       await page.keyboard.type('# Test')
 
-      const pHandle = await page.locator('[data-lexical-editor] > p').nth(0)
+      const pHandle = page.locator('[data-lexical-editor] > p').nth(0)
       await pHandle.hover()
       await page.click('[data-inkling-plus-button]')
       await page.waitForTimeout(200)

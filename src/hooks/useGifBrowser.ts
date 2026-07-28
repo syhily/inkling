@@ -18,11 +18,17 @@ interface UseGifBrowserOptions {
 }
 
 export function useGifBrowser({ config, fetchPage, scheduler, debounceMs }: UseGifBrowserOptions): GifBrowser {
+  // callers re-resolve the config object per render; rekey it on its fields
+  // (the config's full field set — the real inputs) so the browser only
+  // recreates when one of them changes
+  const { provider, apiUrl, apiKey, contentFilter } = config
+  const memoConfig = React.useMemo(
+    () => ({ provider, apiUrl, apiKey, contentFilter }),
+    [provider, apiUrl, apiKey, contentFilter],
+  )
   const browser = React.useMemo(
-    () => createGifBrowser({ config, fetchPage, scheduler, debounceMs }),
-    // config is re-resolved per render by callers; its fields are the real inputs
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-    [config.provider, config.apiUrl, config.apiKey, config.contentFilter, fetchPage, scheduler, debounceMs],
+    () => createGifBrowser({ config: memoConfig, fetchPage, scheduler, debounceMs }),
+    [memoConfig, fetchPage, scheduler, debounceMs],
   )
 
   React.useEffect(() => {

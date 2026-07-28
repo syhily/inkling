@@ -57,7 +57,7 @@ function EditorComposerProvider({ editor, children }: { editor: LexicalEditor; c
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected and not editing unless a test says otherwise
 function createSelection(
-  nodeKey: NodeKey | string = 'bookmark-1',
+  nodeKey: NodeKey = 'bookmark-1',
   { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
 ) {
   return createCardSelectionStoreWrapper({

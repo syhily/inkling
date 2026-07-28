@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { assertHTML, focusEditor, html, initialize, pasteText, selectBackwards } from '#/utils/e2e'
 
-test.describe('Linking', async () => {
+test.describe('Linking', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

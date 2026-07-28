@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { assertHTML, focusEditor, html, initialize, selectBackwards } from '#/utils/e2e'
 
-test.describe('Koening Editor with minimal nodes', async function () {
+test.describe('Koening Editor with minimal nodes', function () {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -55,41 +55,41 @@ test.describe('Koening Editor with minimal nodes', async function () {
 
   test('ignores slash menu on blank paragraph', async function () {
     await focusEditor(page)
-    await expect(await page.locator('[data-inkling-slash-menu]')).toHaveCount(0)
+    await expect(page.locator('[data-inkling-slash-menu]')).toHaveCount(0)
     await page.keyboard.type('/')
-    await expect(await page.locator('[data-inkling-slash-menu]')).toHaveCount(0)
+    await expect(page.locator('[data-inkling-slash-menu]')).toHaveCount(0)
   })
 
-  test.describe('Floating format toolbar', async () => {
+  test.describe('Floating format toolbar', () => {
     test('appears on text selection', async function () {
       await focusEditor(page)
       await page.keyboard.type('text for selection')
 
-      await expect(await page.locator('[data-inkling-floating-toolbar]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-floating-toolbar]')).toHaveCount(0)
 
       await selectBackwards(page, 'for selection'.length)
 
-      expect(await page.locator('[data-inkling-floating-toolbar]')).not.toBeNull()
+      expect(page.locator('[data-inkling-floating-toolbar]')).not.toBeNull()
     })
 
     test('does not has heading buttons', async function () {
       await focusEditor(page)
       await page.keyboard.type('text for selection')
 
-      await expect(await page.locator('[data-inkling-floating-toolbar]')).toHaveCount(0)
+      await expect(page.locator('[data-inkling-floating-toolbar]')).toHaveCount(0)
 
       await selectBackwards(page, 'for selection'.length)
 
-      expect(await page.locator('[data-inkling-floating-toolbar]')).not.toBeNull()
+      expect(page.locator('[data-inkling-floating-toolbar]')).not.toBeNull()
 
       const boldButtonSelector = `[data-inkling-floating-toolbar] [data-inkling-toolbar-button="bold"] button`
-      expect(await page.locator(boldButtonSelector)).not.toBeNull()
+      expect(page.locator(boldButtonSelector)).not.toBeNull()
 
       const h2ButtonSelector = `[data-inkling-floating-toolbar] [data-inkling-toolbar-button="h2"] button`
-      await expect(await page.locator(h2ButtonSelector)).toHaveCount(0)
+      await expect(page.locator(h2ButtonSelector)).toHaveCount(0)
 
       const h3ButtonSelector = `[data-inkling-floating-toolbar] [data-inkling-toolbar-button="h3"] button`
-      await expect(await page.locator(h3ButtonSelector)).toHaveCount(0)
+      await expect(page.locator(h3ButtonSelector)).toHaveCount(0)
     })
   })
 })

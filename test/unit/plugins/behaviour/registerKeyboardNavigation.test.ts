@@ -21,9 +21,9 @@ import {
   KEY_ARROW_UP_COMMAND,
   KEY_BACKSPACE_COMMAND,
   KEY_DELETE_COMMAND,
+  KEY_DOWN_COMMAND,
   KEY_ENTER_COMMAND,
   KEY_ESCAPE_COMMAND,
-  KEY_MODIFIER_COMMAND,
   KEY_TAB_COMMAND,
   type LexicalCommand,
   type LexicalEditor,
@@ -91,7 +91,7 @@ function mountEditor(editor: LexicalEditor) {
     y: 0,
     toJSON: () => ({}),
   } as DOMRect)
-  const originalRangeGetBoundingClientRect = Range.prototype.getBoundingClientRect
+  const originalRangeGetBoundingClientRect = Reflect.get(Range.prototype, 'getBoundingClientRect') as () => DOMRect
   Range.prototype.getBoundingClientRect = () =>
     ({
       bottom: 0,
@@ -604,7 +604,7 @@ describe('registerKeyboardNavigation', () => {
   // directions, plus the caption-provenance return the arrow handlers share.
   describe('shift+arrow selection extension', () => {
     /** Build a flat document of cards and text paragraphs, in order. */
-    async function setupBlocks(blocks: Array<'card' | string>) {
+    async function setupBlocks(blocks: string[]) {
       const keys: { cardKeys: string[]; textNodeKeys: string[] } = { cardKeys: [], textNodeKeys: [] }
       await updateEditor(editor, () => {
         const root = $getRoot()
@@ -1335,7 +1335,7 @@ describe('registerKeyboardNavigation', () => {
 
       const result = await dispatchAndCommit(
         editor,
-        KEY_MODIFIER_COMMAND,
+        KEY_DOWN_COMMAND,
         new KeyboardEvent('keydown', { key: 'ArrowDown', metaKey: true }),
       )
       expect(result).toBe(true)
@@ -1367,7 +1367,7 @@ describe('registerKeyboardNavigation', () => {
 
       const result = await dispatchAndCommit(
         editor,
-        KEY_MODIFIER_COMMAND,
+        KEY_DOWN_COMMAND,
         new KeyboardEvent('keydown', { key: 'ArrowUp', metaKey: true }),
       )
       expect(result).toBe(true)

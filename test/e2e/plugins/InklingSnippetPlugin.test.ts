@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { focusEditor, initialize } from '#/utils/e2e'
 
-test.describe('Snippet Plugin', async function () {
+test.describe('Snippet Plugin', function () {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

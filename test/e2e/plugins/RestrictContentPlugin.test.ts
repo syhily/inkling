@@ -11,7 +11,7 @@ import {
   selectBackwards,
 } from '#/utils/e2e'
 
-test.describe('Restrict Content Plugin', async function () {
+test.describe('Restrict Content Plugin', function () {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

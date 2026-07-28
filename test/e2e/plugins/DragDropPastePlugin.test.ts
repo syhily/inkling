@@ -6,7 +6,7 @@ import { assertHTML, createDataTransfer, focusEditor, html, initialize } from '#
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-test.describe('Drag Drop Paste Plugin', async function () {
+test.describe('Drag Drop Paste Plugin', function () {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -32,7 +32,7 @@ test.describe('Drag Drop Paste Plugin', async function () {
     await page.locator('.inkling-prose').dispatchEvent('drop', { dataTransfer })
 
     // wait for card visibility
-    await expect(await page.getByTestId('image-card-populated')).toBeVisible()
+    await expect(page.getByTestId('image-card-populated')).toBeVisible()
 
     await assertHTML(
       page,
@@ -70,7 +70,7 @@ test.describe('Drag Drop Paste Plugin', async function () {
     await page.locator('.inkling-prose').dispatchEvent('drop', { dataTransfer })
 
     // wait for card visibility
-    await expect(await page.getByTestId('image-card-populated')).toHaveCount(2)
+    await expect(page.getByTestId('image-card-populated')).toHaveCount(2)
 
     await assertHTML(
       page,
@@ -123,8 +123,8 @@ test.describe('Drag Drop Paste Plugin', async function () {
     await page.locator('.inkling-prose').dispatchEvent('dragenter', { dataTransfer })
     await page.locator('.inkling-prose').dispatchEvent('drop', { dataTransfer })
 
-    await expect(await page.locator('input[value="Audio sample 1"]')).toBeVisible()
-    await expect(await page.locator('input[value="Audio sample 2"]')).toBeVisible()
+    await expect(page.locator('input[value="Audio sample 1"]')).toBeVisible()
+    await expect(page.locator('input[value="Audio sample 2"]')).toBeVisible()
 
     await assertHTML(
       page,

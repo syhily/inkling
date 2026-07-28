@@ -475,8 +475,8 @@
     }
 
     > :where(div[data-inkling-card-width='full'] + div[data-inkling-card-width='full']):not(
-      :where(.not-inkling-prose, [class~='not-inkling-prose'] *)
-    ) {
+        :where(.not-inkling-prose, [class~='not-inkling-prose'] *)
+      ) {
       padding: 0;
     }
 

@@ -2,7 +2,7 @@ import { test, type Page } from '@playwright/test'
 
 import { assertHTML, ctrlOrCmd, focusEditor, html, initialize, selectBackwards } from '#/utils/e2e'
 
-test.describe('Editor keyboard shortcuts', async () => {
+test.describe('Editor keyboard shortcuts', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

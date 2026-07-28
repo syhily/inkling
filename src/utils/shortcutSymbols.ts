@@ -1,5 +1,5 @@
 function isMac() {
-  return navigator.userAgent.indexOf('Mac') !== -1
+  return navigator.userAgent.includes('Mac')
 }
 
 export function ctrlOrCmdSymbol() {

@@ -541,7 +541,7 @@ export class DragDropHandler {
   // the grab (mousedown) listener is the handler's only permanent listener;
   // the per-drag move/release/escape listeners live on ActiveDrag
   _addGrabListeners() {
-    this._addEventListener('mousedown', this._onMouseDown, { passive: false })
+    this._addEventListener('mousedown', (event) => this._onMouseDown(event), { passive: false })
   }
 
   _removeGrabListeners() {

@@ -363,7 +363,7 @@ test.describe('Header card V2', () => {
     // Click swap
     await page.click('[data-testid="header-swapped"]')
     // Check the parent class name was updated
-    const swappedContainer = await page.locator('[data-testid="header-card-content"]')
+    const swappedContainer = page.locator('[data-testid="header-card-content"]')
     await expect(swappedContainer).toHaveClass(/sm:flex-row-reverse/)
   })
   test('can import serialized header card nodes with br', async function () {

@@ -209,10 +209,10 @@ function buildSnippetMenuItem(data: SnippetItem, config: CardConfig | undefined)
     label: data.name,
     Icon: SnippetCardIcon,
     section: 'Snippets',
-    matches: (query: string) => name.indexOf(query) > -1 || 'snippets'.indexOf(query) > -1,
+    matches: (query: string) => name.includes(query) || 'snippets'.includes(query),
     insertCommand: INSERT_SNIPPET_COMMAND,
     insertParams: { name: data.name, value: data.value },
-    ...(config?.deleteSnippet && { onRemove: () => config.deleteSnippet?.(data) }),
+    ...(config?.deleteSnippet && { onRemove: () => void config.deleteSnippet?.(data) }),
   }
 
   return snippet

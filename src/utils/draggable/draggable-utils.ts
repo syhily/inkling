@@ -56,7 +56,7 @@ export function getDocumentScrollingElement(): HTMLElement {
 }
 
 export function applyUserSelect(element: HTMLElement, value: string): void {
-  element.style.webkitUserSelect = value
+  element.style.setProperty('-webkit-user-select', value)
   // the moz/ms/o prefixes have no IDL attribute in the DOM lib — setProperty
   // is the typed mechanism for vendor-prefixed properties
   element.style.setProperty('-moz-user-select', value)

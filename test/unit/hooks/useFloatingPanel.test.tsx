@@ -62,7 +62,7 @@ function Harness({ cardWidth = 'regular' }: { cardWidth?: string }) {
 }
 
 function KeyHarnessInner({ cardKey }: { cardKey: NodeKey }) {
-  const { ref } = useFloatingPanel<HTMLDivElement>({ cardWidth: 'regular', cardKey })
+  const { ref } = useFloatingPanel({ cardWidth: 'regular', cardKey })
   return <div ref={ref} data-testid="settings-panel" />
 }
 

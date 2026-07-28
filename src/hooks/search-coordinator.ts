@@ -275,7 +275,7 @@ export function createSearchCoordinator({
     /** Begin the default-options prefetch (adapter mount). */
     start() {
       defaultOptionsLoaded = false
-      startDefaultOptionsFetch()
+      void startDefaultOptionsFetch()
     },
 
     /** Invalidate every in-flight request (adapter unmount / recreation). */

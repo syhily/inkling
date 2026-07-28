@@ -484,7 +484,7 @@ export function generateDecoratorNode<
         if (!dataset[spec.name] && serialized) {
           // store the initial state separately as it's passed in to
           // `<CollaborationPlugin />` when no YJS document exists
-          this[`${editorProperty}InitialState`] = populateNestedEditor(nestedEditor, `${serialized}`)
+          this[`${editorProperty}InitialState`] = populateNestedEditor(nestedEditor, serialized as string)
         }
       })
 

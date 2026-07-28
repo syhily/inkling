@@ -64,11 +64,11 @@ export async function initialize({
 
       if (shouldForce) {
         // Purposefully navigate away from the current page to ensure component is reloaded
-        navigate('/404')
+        void navigate('/404')
         await new Promise<void>((resolve) => {
           setTimeout(() => {
             // Navigate in a task to ensure React Router cannot optimise out our first navigation
-            navigate(navigateTo)
+            void navigate(navigateTo)
             resolve()
           }, 10)
         })
@@ -613,7 +613,7 @@ export async function createSnippet(page: Page) {
 }
 
 export async function getScrollPosition(page: Page) {
-  return await page.evaluate(() => {
+  return page.evaluate(() => {
     const scrollContainer = document.querySelector<HTMLElement>('.h-full.overflow-auto')
     if (!scrollContainer) {
       throw new Error('Expected the editor scroll container')
@@ -674,7 +674,7 @@ export async function createDataTransfer(page: Page, data: readonly FilePathPayl
     }
   })
 
-  return await page.evaluateHandle((dataset: SerializedFilePayload[]) => {
+  return page.evaluateHandle((dataset: SerializedFilePayload[]) => {
     const dt = new DataTransfer()
 
     dataset.forEach((fileData) => {
@@ -687,7 +687,7 @@ export async function createDataTransfer(page: Page, data: readonly FilePathPayl
 }
 
 export async function getEditorState(page: Page) {
-  return await page.evaluate(() => {
+  return page.evaluate(() => {
     return window.lexicalEditor.getEditorState().toJSON()
   })
 }

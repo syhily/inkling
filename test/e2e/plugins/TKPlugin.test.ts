@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { assertHTML, assertSelection, focusEditor, html, initialize } from '#/utils/e2e'
 
-test.describe('TK Plugin', async function () {
+test.describe('TK Plugin', function () {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -16,7 +16,7 @@ test.describe('TK Plugin', async function () {
     await page.close()
   })
 
-  test.describe('highlights TK nodes', async function () {
+  test.describe('highlights TK nodes', function () {
     test('highlights a TK node when TK is typed in text', async function () {
       await focusEditor(page)
       await page.keyboard.type('TK')
@@ -99,7 +99,7 @@ test.describe('TK Plugin', async function () {
     })
   })
 
-  test.describe('indicators', async function () {
+  test.describe('indicators', function () {
     test('creates a TK indicator for each TK node', async function () {
       await focusEditor(page)
       await page.keyboard.type('TK and TK and TK')

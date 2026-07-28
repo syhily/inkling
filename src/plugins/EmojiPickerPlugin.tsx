@@ -38,13 +38,18 @@ interface EmojiMenuItemProps {
 
 const EmojiMenuItem = function ({ index, isSelected, onClick, onMouseEnter, emoji }: EmojiMenuItemProps) {
   // the typeahead scrolls the selected option into view via option.ref; with a
-  // custom menuRenderFn we must attach each option's ref ourselves
-  const ref = React.useRef<HTMLLIElement | null>(null)
-  emoji.ref = ref
+  // custom menuRenderFn we must attach each option's ref ourselves — through
+  // the option's own callback ref, invoked at commit (no render-time mutation)
+  const attachRef = React.useCallback(
+    (element: HTMLLIElement | null) => {
+      emoji.setRefElement(element)
+    },
+    [emoji],
+  )
   return (
     <li
       key={emoji.id}
-      ref={ref}
+      ref={attachRef}
       aria-selected={isSelected}
       className={`mb-0 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 font-sans text-sm leading-[1.65] tracking-wide whitespace-nowrap text-grey-800 dark:text-grey-200 ${isSelected ? 'bg-grey-100 text-grey-900 dark:bg-grey-900 dark:text-white' : ''}`}
       data-testid={'emoji-option-' + index}
@@ -68,7 +73,10 @@ const EmojiMenuItem = function ({ index, isSelected, onClick, onMouseEnter, emoj
 export function EmojiPickerPlugin() {
   const [editor] = useLexicalComposerContext()
   const [queryString, setQueryString] = React.useState<string | null>(null)
-  const [searchResults, setSearchResults] = React.useState<EmojiOption[] | null>(null)
+  const [fetchedResults, setSearchResults] = React.useState<EmojiOption[] | null>(null)
+  // a closed query never shows stale results — derived at render instead of
+  // cleared by an effect
+  const searchResults = queryString ? fetchedResults : null
 
   const checkForTriggerMatch = useTypeaheadTriggerMatch(':', { minLength: 1 })
 
@@ -94,7 +102,6 @@ export function EmojiPickerPlugin() {
 
   React.useEffect(() => {
     if (!queryString) {
-      setSearchResults(null)
       return
     }
     const query = queryString

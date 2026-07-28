@@ -16,7 +16,7 @@ import {
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-test.describe('Gallery card', async () => {
+test.describe('Gallery card', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -262,7 +262,7 @@ test.describe('Gallery card', async () => {
     await page.getByTestId('gallery-container').dispatchEvent('dragover', { dataTransfer })
 
     // dragover text should be visible
-    await expect(await page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
+    await expect(page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
 
     // drop files
     await page.getByTestId('gallery-container').dispatchEvent('drop', { dataTransfer })
@@ -296,7 +296,7 @@ test.describe('Gallery card', async () => {
     await page.getByTestId('gallery-container').dispatchEvent('dragover', { dataTransfer })
 
     // dragover text should be visible
-    await expect(await page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
+    await expect(page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
 
     // drop files
     await page.getByTestId('gallery-container').dispatchEvent('drop', { dataTransfer })

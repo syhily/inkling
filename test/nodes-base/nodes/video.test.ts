@@ -1,6 +1,8 @@
+import type { LexicalEditor } from 'lexical'
+
 import { createHeadlessEditor } from '@lexical/headless'
 import { $generateNodesFromDOM } from '@lexical/html'
-import { $getRoot, LexicalEditor } from 'lexical'
+import { $getRoot } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'

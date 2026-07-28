@@ -2,7 +2,7 @@ import { test, type Locator, type Page } from '@playwright/test'
 
 import { assertHTML, assertSelection, ctrlOrCmd, dragMouse, focusEditor, html, initialize } from '#/utils/e2e'
 
-test.describe('Selection behaviour', async () => {
+test.describe('Selection behaviour', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

@@ -59,7 +59,7 @@ const TWO_FOOTNOTE_STATE = JSON.stringify({
 
 const definitionRows = (page: Page) => page.locator('[data-inkling-footnote-definition]')
 
-test.describe('Footnotes', async () => {
+test.describe('Footnotes', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

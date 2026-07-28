@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { focusEditor, initialize } from '#/utils/e2e'
 
-test.describe('Labels (i18n seam)', async () => {
+test.describe('Labels (i18n seam)', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

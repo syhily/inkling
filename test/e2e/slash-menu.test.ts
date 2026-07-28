@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { assertHTML, assertSelection, focusEditor, html, initialize, insertCard } from '#/utils/e2e'
 
-test.describe('Slash menu', async () => {
+test.describe('Slash menu', () => {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -28,7 +28,7 @@ test.describe('Slash menu', async () => {
       await focusEditor(page)
       await page.keyboard.type('testing')
 
-      const paragraph = await page.locator('[data-lexical-editor] > p')
+      const paragraph = page.locator('[data-lexical-editor] > p')
       await paragraph.click({ clickCount: 3 })
 
       await assertSelection(page, {
@@ -173,7 +173,7 @@ test.describe('Slash menu', async () => {
       await focusEditor(page)
       await page.keyboard.type('/')
 
-      const menuItems = await page.locator('[data-inkling-slash-menu] [role="menuitem"]')
+      const menuItems = page.locator('[data-inkling-slash-menu] [role="menuitem"]')
       await expect(menuItems.nth(0)).toHaveAttribute('data-inkling-cardmenu-selected', 'true')
       await expect(menuItems.nth(1)).toHaveAttribute('data-inkling-cardmenu-selected', 'false')
     })
@@ -183,7 +183,7 @@ test.describe('Slash menu', async () => {
       await page.keyboard.type('/')
       await page.keyboard.press('ArrowDown')
 
-      const menuItems = await page.locator('[data-inkling-slash-menu] [role="menuitem"]')
+      const menuItems = page.locator('[data-inkling-slash-menu] [role="menuitem"]')
       await expect(menuItems.nth(0)).toHaveAttribute('data-inkling-cardmenu-selected', 'false')
       await expect(menuItems.nth(1)).toHaveAttribute('data-inkling-cardmenu-selected', 'true')
     })
@@ -193,7 +193,7 @@ test.describe('Slash menu', async () => {
       await page.keyboard.type('/')
       await page.keyboard.press('ArrowRight')
 
-      const menuItems = await page.locator('[data-inkling-slash-menu] [role="menuitem"]')
+      const menuItems = page.locator('[data-inkling-slash-menu] [role="menuitem"]')
       await expect(menuItems.nth(0)).toHaveAttribute('data-inkling-cardmenu-selected', 'false')
       await expect(menuItems.nth(1)).toHaveAttribute('data-inkling-cardmenu-selected', 'true')
     })
@@ -204,7 +204,7 @@ test.describe('Slash menu', async () => {
       await page.keyboard.press('ArrowDown')
       await page.keyboard.press('ArrowUp')
 
-      const menuItems = await page.locator('[data-inkling-slash-menu] [role="menuitem"]')
+      const menuItems = page.locator('[data-inkling-slash-menu] [role="menuitem"]')
       await expect(menuItems.nth(0)).toHaveAttribute('data-inkling-cardmenu-selected', 'true')
       await expect(menuItems.nth(1)).toHaveAttribute('data-inkling-cardmenu-selected', 'false')
     })
@@ -215,7 +215,7 @@ test.describe('Slash menu', async () => {
       await page.keyboard.press('ArrowDown')
       await page.keyboard.press('ArrowLeft')
 
-      const menuItems = await page.locator('[data-inkling-slash-menu] [role="menuitem"]')
+      const menuItems = page.locator('[data-inkling-slash-menu] [role="menuitem"]')
       await expect(menuItems.nth(0)).toHaveAttribute('data-inkling-cardmenu-selected', 'true')
       await expect(menuItems.nth(1)).toHaveAttribute('data-inkling-cardmenu-selected', 'false')
     })
@@ -226,7 +226,7 @@ test.describe('Slash menu', async () => {
       await page.keyboard.press('ArrowDown')
       await page.keyboard.type('hr')
 
-      const menuItems = await page.locator('[data-inkling-slash-menu] [role="menuitem"]')
+      const menuItems = page.locator('[data-inkling-slash-menu] [role="menuitem"]')
       await expect(menuItems.nth(0)).toHaveAttribute('data-inkling-cardmenu-selected', 'true')
     })
   })
@@ -327,10 +327,10 @@ test.describe('Slash menu', async () => {
       await focusEditor(page)
       await page.keyboard.type('/image https://example.com/image.jpg')
       await expect(
-        await page.locator('[data-inkling-card-menu-item="Image"][data-inkling-cardmenu-selected="true"]'),
+        page.locator('[data-inkling-card-menu-item="Image"][data-inkling-cardmenu-selected="true"]'),
       ).toBeVisible()
       await page.keyboard.press('Enter')
-      await expect(await page.locator('[data-inkling-card="image"]')).toBeVisible()
+      await expect(page.locator('[data-inkling-card="image"]')).toBeVisible()
 
       await assertHTML(
         page,
