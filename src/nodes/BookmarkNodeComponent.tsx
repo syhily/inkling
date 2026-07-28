@@ -1,14 +1,6 @@
 import { $createLinkNode } from '@lexical/link'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import {
-  $createParagraphNode,
-  $createTextNode,
-  $getNodeByKey,
-  $isParagraphNode,
-  type EditorState,
-  type LexicalEditor,
-  type NodeKey,
-} from 'lexical'
+import { $createTextNode, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React, { useCallback } from 'react'
 
 import type { BookmarkNode } from '@/nodes/BookmarkNode'
@@ -19,6 +11,7 @@ import { useCardIsSelected } from '@/context/CardSelectionStoreContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useBookmarkMetadata } from '@/hooks/useBookmarkMetadata'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { $replaceCardWithParagraph } from '@/plugins/behaviour/card-removal'
 import trackEvent from '@/utils/analytics'
 import { isInternalUrl } from '@/utils/isInternalUrl'
 
@@ -86,33 +79,15 @@ export function BookmarkNodeComponent({
 
   const handlePasteAsLink = useCallback(() => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (!node) {
-        return
-      }
-      const paragraph = $createParagraphNode().append(
-        $createLinkNode(urlInputValue).append($createTextNode(urlInputValue)),
-      )
-      node.replace(paragraph)
-      paragraph.selectEnd()
+      $replaceCardWithParagraph(nodeKey, {
+        content: $createLinkNode(urlInputValue).append($createTextNode(urlInputValue)),
+      })
     })
   }, [editor, nodeKey, urlInputValue])
 
   const handleClose = useCallback(() => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (!node) {
-        return
-      }
-      const nextSibling = node.getNextSibling()
-      if (nextSibling && $isParagraphNode(nextSibling) && nextSibling.getTextContentSize() === 0) {
-        node.remove()
-        nextSibling.selectEnd()
-      } else {
-        const paragraph = $createParagraphNode()
-        node.replace(paragraph)
-        paragraph.selectEnd()
-      }
+      $replaceCardWithParagraph(nodeKey, { reuseEmptySibling: true })
     })
   }, [editor, nodeKey])
 

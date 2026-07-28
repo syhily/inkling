@@ -3,42 +3,17 @@ import { type LexicalEditor, TextNode } from 'lexical'
 import { useEffect } from 'react'
 
 import { ExtendedTextNode } from '@/nodes/base'
-
-function replacementStringTransform(node: TextNode) {
-  if (node.hasFormat('code')) {
-    // prevent infinite loop
-    return
-  }
-  const textContent = node.getTextContent()
-  const replacementString = textContent.match(/\{(\w*?)(?:,? *"(.*?)")?\}/)?.[0]
-
-  if (!replacementString) {
-    return
-  }
-  // split the text content into an array including the matched string
-  const splitContent = textContent.split(/({.*?})/g).filter((e: string) => e !== '')
-
-  // create a new text node for each string in the array
-  splitContent.reverse().forEach((text: string) => {
-    const newNode = new TextNode(text)
-    if (text === replacementString) {
-      newNode.setFormat('code')
-      newNode.select()
-    }
-    node.insertAfter(newNode)
-  })
-  node.remove()
-}
+import { $replacementStringTransform } from '@/plugins/behaviour/replacement-strings'
 
 function useReplacementStrings(editor: LexicalEditor) {
   useEffect(() => {
-    const removeTextTransform = editor.registerNodeTransform(TextNode, replacementStringTransform)
+    const removeTextTransform = editor.registerNodeTransform(TextNode, $replacementStringTransform)
 
     // Only register ExtendedTextNode transform if the editor has it registered
     // (nested editors may not have ExtendedTextNode in their node list)
     let removeExtendedTextTransform: (() => void) | undefined
     if (editor.hasNode(ExtendedTextNode)) {
-      removeExtendedTextTransform = editor.registerNodeTransform(ExtendedTextNode, replacementStringTransform)
+      removeExtendedTextTransform = editor.registerNodeTransform(ExtendedTextNode, $replacementStringTransform)
     }
 
     return () => {

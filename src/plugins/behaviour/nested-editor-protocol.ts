@@ -41,7 +41,16 @@
 //   event: Lexical propagates unhandled commands up the parent-editor chain,
 //   so the parent's own Enter handlers still see it, unmarked.
 
-import { COMMAND_PRIORITY_LOW, KEY_ENTER_COMMAND, type LexicalEditor } from 'lexical'
+import {
+  $createNodeSelection,
+  $getSelection,
+  $setSelection,
+  BLUR_COMMAND,
+  COMMAND_PRIORITY_LOW,
+  KEY_ENTER_COMMAND,
+  type LexicalEditor,
+  type NodeKey,
+} from 'lexical'
 
 export type NestedEditorProvenance = 'nested-editor' | 'caption-editor'
 
@@ -142,6 +151,60 @@ export function registerNestedEnterHandoff(
 
       // prevent normal/InklingBehaviourPlugin enter key behaviour
       return true
+    },
+    COMMAND_PRIORITY_LOW,
+  )
+}
+
+/**
+ * The blur half of the nested-editor boundary choreography: while a card's
+ * settings panel is open, the parent editor cleared its selection when the
+ * nested editor took focus — so on blur the parent card is reselected and
+ * the panel keeps its anchor. Registered at the surfaces' usual
+ * COMMAND_PRIORITY_LOW; claims the blur only when the settings-panel case
+ * applies. The reselect is tagged history-merge so it never lands in undo
+ * history. `parentEditor` is resolved per event, matching the Enter
+ * hand-off's lazy resolver.
+ */
+export function registerNestedBlurCardReselect(
+  editor: LexicalEditor,
+  {
+    parentCardNodeKey,
+    hasSettingsPanel,
+    parentEditor,
+  }: {
+    parentCardNodeKey: NodeKey | undefined
+    hasSettingsPanel: boolean
+    parentEditor: () => LexicalEditor | null
+  },
+): () => void {
+  return editor.registerCommand(
+    BLUR_COMMAND,
+    () => {
+      const parent = parentEditor()
+
+      // when the nested editor is selected, the parent editor clears its selection so we need to
+      //   return parent editor selection to the card when the nested editor loses focus
+      if (hasSettingsPanel && parent) {
+        parent.getEditorState().read(() => {
+          parent.update(
+            () => {
+              if (!$getSelection()) {
+                const selection = $createNodeSelection()
+                if (parentCardNodeKey) {
+                  selection.add(parentCardNodeKey)
+                }
+                $setSelection(selection)
+              }
+            },
+            { tag: 'history-merge' },
+          ) // don't include an undo history entry for this change of selection
+        })
+
+        return true
+      }
+
+      return false
     },
     COMMAND_PRIORITY_LOW,
   )

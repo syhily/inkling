@@ -1,13 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import {
-  mergeRegister,
-  $createNodeSelection,
-  $getSelection,
-  $setSelection,
-  BLUR_COMMAND,
-  COMMAND_PRIORITY_LOW,
-  KEY_ENTER_COMMAND,
-} from 'lexical'
+import { mergeRegister, COMMAND_PRIORITY_LOW, KEY_ENTER_COMMAND } from 'lexical'
 import React from 'react'
 
 import CardContext from '@/context/CardContext'
@@ -15,6 +7,7 @@ import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
 import {
   isTypeaheadMenuOpen,
   markEventFromNested,
+  registerNestedBlurCardReselect,
   registerNestedEnterHandoff,
 } from '@/plugins/behaviour/nested-editor-protocol'
 import { getParentEditor } from '@/utils/lexical-internals'
@@ -125,36 +118,13 @@ function InklingNestedEditorPlugin({
       // listeners in registration order, so the plugin-specific branches get
       // first refusal and the hand-off only sees what they decline.
       ...(defaultInklingEnterBehaviour ? [registerNestedEnterHandoff(editor, () => getParentEditor(editor))] : []),
-      editor.registerCommand(
-        BLUR_COMMAND,
-        () => {
-          const parentEditor = getParentEditor(editor)
-
-          // when the nested editor is selected, the parent editor clears its selection so we need to
-          //   return parent editor selection to the card when the nested editor loses focus
-          if (hasSettingsPanel && parentEditor) {
-            parentEditor.getEditorState().read(() => {
-              parentEditor.update(
-                () => {
-                  if (!$getSelection()) {
-                    const selection = $createNodeSelection()
-                    if (parentCardNodeKey) {
-                      selection.add(parentCardNodeKey)
-                    }
-                    $setSelection(selection)
-                  }
-                },
-                { tag: 'history-merge' },
-              ) // don't include an undo history entry for this change of selection
-            })
-
-            return true
-          }
-
-          return false
-        },
-        COMMAND_PRIORITY_LOW,
-      ),
+      // the blur → card-reselect choreography lives in the nested-editor
+      // protocol beside the Enter hand-off
+      registerNestedBlurCardReselect(editor, {
+        parentCardNodeKey,
+        hasSettingsPanel: !!hasSettingsPanel,
+        parentEditor: () => getParentEditor(editor),
+      }),
     )
   }, [editor, autoFocus, focusNext, parentCardNodeKey, hasSettingsPanel, defaultInklingEnterBehaviour])
 

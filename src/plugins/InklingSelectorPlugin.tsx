@@ -17,7 +17,14 @@ export { INSERT_FROM_GIF_COMMAND, INSERT_FROM_LIBRARY_COMMAND } from '@/plugins/
 
 // the insert surgeries and their command registrations live in
 // `@/plugins/behaviour/selector-insertion`; this plugin keeps only the
-// OPEN_* placeholder dispatches, which name the React overlay components
+// OPEN_* placeholder dispatches, which name the React overlay components.
+// The two registrations are one skeleton folded through a table — the
+// overlay component is the only datum that varies.
+const SELECTOR_OPEN_COMMANDS = [
+  [OPEN_GIF_SELECTOR_COMMAND, GifPlugin],
+  [OPEN_IMAGE_LIBRARY_COMMAND, LibraryPlugin],
+] as const
+
 export const InklingSelectorPlugin = () => {
   const [editor] = useLexicalComposerContext()
 
@@ -26,35 +33,22 @@ export const InklingSelectorPlugin = () => {
       return
     }
     return mergeRegister(
-      editor.registerCommand(
-        OPEN_GIF_SELECTOR_COMMAND,
-        (dataset) => {
-          const cardNode = $createImageNode({
-            ...dataset,
-            selector: GifPlugin,
-            isImageHidden: true,
-          })
+      ...SELECTOR_OPEN_COMMANDS.map(([command, Selector]) =>
+        editor.registerCommand(
+          command,
+          (dataset) => {
+            const cardNode = $createImageNode({
+              ...dataset,
+              selector: Selector,
+              isImageHidden: true,
+            })
 
-          editor.dispatchCommand(INSERT_CARD_COMMAND, { cardNode })
+            editor.dispatchCommand(INSERT_CARD_COMMAND, { cardNode })
 
-          return true
-        },
-        COMMAND_PRIORITY_LOW,
-      ),
-      editor.registerCommand(
-        OPEN_IMAGE_LIBRARY_COMMAND,
-        (dataset) => {
-          const cardNode = $createImageNode({
-            ...dataset,
-            selector: LibraryPlugin,
-            isImageHidden: true,
-          })
-
-          editor.dispatchCommand(INSERT_CARD_COMMAND, { cardNode })
-
-          return true
-        },
-        COMMAND_PRIORITY_LOW,
+            return true
+          },
+          COMMAND_PRIORITY_LOW,
+        ),
       ),
       registerSelectorInsertCommands(editor),
     )
