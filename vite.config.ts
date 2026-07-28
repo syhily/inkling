@@ -1,11 +1,20 @@
-import 'dotenv/config'
+// .env loading via the Node built-in (dotenv's silent no-op when the file
+// is absent is preserved by the guard)
+try {
+  process.loadEnvFile()
+} catch {
+  // no .env file
+}
 import mdx from '@mdx-js/rollup'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { createRequire } from 'node:module'
 import { resolve, sep } from 'node:path'
-import { defineConfig, esmExternalRequirePlugin, loadEnv } from 'vite'
+import { esmExternalRequirePlugin, loadEnv } from 'vite'
 import svgr from 'vite-plugin-svgr'
+// vitest/config's defineConfig augments the vite config type with the
+// `test` property (the plain vite one overloads it away)
+import { defineConfig } from 'vitest/config'
 
 import pkg from './package.json'
 

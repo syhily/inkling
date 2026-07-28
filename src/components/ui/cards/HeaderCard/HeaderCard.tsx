@@ -1,7 +1,6 @@
 import type { InitialEditorStateType } from '@lexical/react/LexicalComposer'
 import type { LexicalEditor } from 'lexical'
 
-import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 
 import type { DragHandlerLike, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
@@ -37,6 +36,7 @@ import {
   resolveHeaderImageTextColor,
 } from '@/nodes/header/header-accent-color'
 import trackEvent from '@/utils/analytics'
+import { cx } from '@/utils/cx'
 import { isEditorEmpty } from '@/utils/isEditorEmpty'
 
 /** The card's view state — every presentational value the node carries. */
@@ -292,7 +292,7 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
         style={wrapperStyle()}
       >
         <div
-          className={clsx(
+          className={cx(
             'flex w-full flex-col transition-colors ease-in-out sm:flex-row',
             layout === 'split' && isSwapped && 'flex-col-reverse sm:flex-row-reverse',
             // This is needed to align the content with wide breakout width
@@ -320,7 +320,7 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
               }
               alt={labels['alt.backgroundImage']}
               backgroundSize={backgroundSize}
-              className={clsx(
+              className={cx(
                 'sm:w-1/2',
                 correctedBackgroundSize === 'contain' && 'sm:my-10 md:my-14',
                 !isSwapped &&
@@ -349,7 +349,7 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
           )}
 
           <div
-            className={clsx(
+            className={cx(
               'mx-auto flex w-full flex-1 flex-col justify-center',
               alignment === 'center' && 'items-center',
               layout === 'regular' && 'p-[4rem] sm:py-[6rem] md:px-[6rem] md:py-[10rem] lg:px-[8rem]',
@@ -378,7 +378,7 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
                 initialEditor={headerTextEditor}
                 initialEditorState={headerTextEditorInitialState}
                 nodes="minimal"
-                placeholderClassName={clsx(
+                placeholderClassName={cx(
                   '!leading-[1.1] !font-bold !tracking-tight opacity-50',
                   alignment === 'center' && 'text-center',
                   layout === 'regular' && 'text-3xl sm:text-4xl',
@@ -387,7 +387,7 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
                 )}
                 placeholderText={headerPlaceholder}
                 singleParagraph={true}
-                textClassName={clsx(
+                textClassName={cx(
                   'inkling-lexical-heading relative w-full font-bold whitespace-normal caret-current',
                   !isEditing && isEditorEmpty(headerTextEditor) ? 'hidden' : 'peer',
                   alignment === 'center' && 'text-center [&:has(.placeholder)]:w-fit [&:has(.placeholder)]:text-left',
@@ -407,7 +407,7 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
                 initialEditor={subheaderTextEditor}
                 initialEditorState={subheaderTextEditorInitialState}
                 nodes="minimal"
-                placeholderClassName={clsx(
+                placeholderClassName={cx(
                   '!leading-snug !font-medium !tracking-tight opacity-60',
                   alignment === 'center' && 'text-center',
                   layout === 'regular' && 'text-lg sm:text-xl',
@@ -416,7 +416,7 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
                 )}
                 placeholderText={subheaderPlaceholder}
                 singleParagraph={true}
-                textClassName={clsx(
+                textClassName={cx(
                   'inkling-lexical-subheading relative w-full whitespace-normal caret-current',
                   !isEditing && isEditorEmpty(subheaderTextEditor) ? 'hidden' : 'peer',
                   alignment === 'center' && 'text-center [&:has(.placeholder)]:w-fit [&:has(.placeholder)]:text-left',
@@ -495,7 +495,7 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
                       title: labels['color.image'],
                       customContent: (
                         <button
-                          className={clsx(
+                          className={cx(
                             `group relative flex size-6 shrink-0 items-center justify-center rounded-full border border-grey-300 bg-grey-100 text-black`,
                             showBackgroundImage && 'outline outline-2 outline-green',
                           )}
@@ -545,7 +545,7 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
             <MediaUploadSetting
               alt={labels['alt.backgroundImage']}
               borderStyle="rounded"
-              className={clsx('min-w-[296px]', (!showBackgroundImage || layout === 'split') && 'hidden')}
+              className={cx('min-w-[296px]', (!showBackgroundImage || layout === 'split') && 'hidden')}
               errors={fileUploader?.errors}
               hideLabel={layout !== 'split'}
               icon="file"

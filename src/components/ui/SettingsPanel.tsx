@@ -1,4 +1,3 @@
-import clsx from 'clsx'
 import React from 'react'
 
 import type { DragHandlerLike } from '@/components/ui/cards/card-ui-types'
@@ -16,6 +15,7 @@ import CardContext from '@/context/CardContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import useFloatingPanel from '@/hooks/useFloatingPanel'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { cx } from '@/utils/cx'
 
 export type SettingsPanelProps = {
   darkMode?: boolean
@@ -222,7 +222,7 @@ export function InputListSetting({
     return (
       <InputListItem
         key={item.value}
-        className={clsx(
+        className={cx(
           selected && 'bg-grey-100 dark:bg-grey-925',
           'm-0 cursor-pointer px-3 py-[7px] text-left hover:bg-grey-100 dark:hover:bg-grey-925',
         )}
@@ -428,7 +428,7 @@ export function MediaUploadSetting({
   setFileInputRef,
 }: MediaUploadSettingProps) {
   return (
-    <div className={clsx(className, !stacked && 'flex justify-between gap-3')} data-testid="media-upload-setting">
+    <div className={cx(className, !stacked && 'flex justify-between gap-3')} data-testid="media-upload-setting">
       <div
         className={
           hideLabel ? 'sr-only' : 'mb-2 shrink-0 text-sm font-medium tracking-normal text-grey-900 dark:text-grey-400'
@@ -439,7 +439,7 @@ export function MediaUploadSetting({
       <MediaUploader
         alt={alt}
         borderStyle={borderStyle}
-        className={clsx(
+        className={cx(
           stacked && 'h-32',
           !stacked && src && 'h-[5.2rem]',
           !stacked && type !== 'button' && !src && 'h-[5.2rem] w-[7.2rem]',

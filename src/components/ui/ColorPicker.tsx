@@ -1,4 +1,3 @@
-import clsx from 'clsx'
 import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { HexColorInput, HexColorPicker } from 'react-colorful'
 
@@ -8,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { cx } from '@/utils/cx'
 import { getAccentColor } from '@/utils/getAccentColor'
 
 interface ColorPickerProps {
@@ -47,20 +47,29 @@ export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange,
   }, [])
 
   const isUsingColorPicker = useRef<boolean>(false)
+  // the per-gesture document listener, so stop can remove it without the
+  // listener self-referencing its own binding
+  const gestureStopRef = useRef<(() => void) | null>(null)
 
   const stopUsingColorPicker = useCallback(() => {
     isUsingColorPicker.current = false
     inputWrapperRef.current?.querySelector('input')?.focus()
 
-    document.removeEventListener('mouseup', stopUsingColorPicker)
-    document.removeEventListener('touchend', stopUsingColorPicker)
+    const stop = gestureStopRef.current
+    if (stop) {
+      document.removeEventListener('mouseup', stop)
+      document.removeEventListener('touchend', stop)
+      gestureStopRef.current = null
+    }
   }, [])
 
   const startUsingColorPicker = useCallback(() => {
     isUsingColorPicker.current = true
 
-    document.addEventListener('mouseup', stopUsingColorPicker)
-    document.addEventListener('touchend', stopUsingColorPicker)
+    const stop = () => stopUsingColorPicker()
+    gestureStopRef.current = stop
+    document.addEventListener('mouseup', stop)
+    document.addEventListener('touchend', stop)
   }, [stopUsingColorPicker])
 
   const openColorPicker = useCallback(
@@ -128,7 +137,7 @@ export function ColorPicker({ value, eyedropper, hasTransparentOption, onChange,
             <button
               className="absolute inset-y-0 right-3 z-50 my-auto size-4 p-[1px]"
               type="button"
-              onClick={openColorPicker}
+              onClick={(e) => void openColorPicker(e)}
             >
               <EyedropperIcon className="size-full stroke-2" />
             </button>
@@ -173,7 +182,7 @@ function ColorSwatch({ hex, accent, transparent, title, isSelected, onSelect }: 
   return (
     <button
       ref={ref}
-      className={clsx(
+      className={cx(
         `group relative flex size-5 shrink-0 items-center rounded-full border border-grey-250 dark:border-grey-800`,
         isSelected && 'outline outline-2 outline-green',
       )}
@@ -281,7 +290,7 @@ export function ColorIndicator({
           />
         )}
         <span
-          className={clsx(
+          className={cx(
             'block size-full rounded-full border-2 border-white dark:border-grey-950',
             value === 'image' && 'flex items-center justify-center',
           )}
@@ -297,7 +306,7 @@ export function ColorIndicator({
       {isOpen && (
         <div
           ref={popoverRef}
-          className={clsx(
+          className={cx(
             'absolute -right-3 bottom-full z-10 mb-2 flex flex-col gap-3 rounded-lg bg-white p-3 shadow transition-[width] duration-200 ease-in-out dark:bg-grey-900',
             (isExpanded || showChildren) && 'min-w-[296px]',
           )}

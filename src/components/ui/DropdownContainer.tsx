@@ -1,7 +1,7 @@
-import clsx from 'clsx'
 import React, { useLayoutEffect } from 'react'
 
 import { debounce } from '@/utils'
+import { cx } from '@/utils/cx'
 import { POPUP_LIST_MAX_HEIGHT } from '@/utils/selection-anchored-popup'
 
 /**
@@ -73,7 +73,7 @@ export function DropdownContainer({
   return (
     <ul
       ref={divRef}
-      className={clsx(
+      className={cx(
         'absolute',
         placement === 'top' && placementTopClass,
         placement === 'bottom' && placementBottomClass,

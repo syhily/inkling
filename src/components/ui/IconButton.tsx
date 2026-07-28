@@ -1,8 +1,7 @@
 import type React from 'react'
 
-import clsx from 'clsx'
-
 import { Tooltip } from '@/components/ui/Tooltip'
+import { cx } from '@/utils/cx'
 
 export function IconButton({
   className,
@@ -20,7 +19,7 @@ export function IconButton({
   return (
     <button
       aria-label={label}
-      className={clsx(
+      className={cx(
         'group pointer-events-auto relative flex h-8 w-9 cursor-pointer items-center justify-center rounded-md bg-white/90 text-grey-900 transition-all hover:bg-white hover:text-black',
         className,
       )}

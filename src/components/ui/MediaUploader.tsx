@@ -1,6 +1,5 @@
 import type { RefObject } from 'react'
 
-import clsx from 'clsx'
 import React from 'react'
 
 import type { DragHandlerLike } from '@/components/ui/cards/card-ui-types'
@@ -11,6 +10,7 @@ import { IconButton } from '@/components/ui/IconButton'
 import { MediaPlaceholder, isPlaceholderIconName } from '@/components/ui/MediaPlaceholder'
 import { UploadFileInput, UploadingOverlay, useFileInputRefTunnel } from '@/components/ui/UploadChrome'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { cx } from '@/utils/cx'
 import { openFileSelection } from '@/utils/openFileSelection'
 
 export interface MediaUploaderProps {
@@ -109,7 +109,7 @@ export function MediaUploader({
 
   return (
     <div
-      className={clsx(
+      className={cx(
         'group/image relative flex items-center justify-center',
         isLoading ? 'min-w-[6.8rem]' : 'min-w-[5.2rem]',
         borderStyle === 'rounded' && 'rounded',
@@ -121,7 +121,7 @@ export function MediaUploader({
         <>
           <img
             alt={alt}
-            className={clsx(
+            className={cx(
               'mx-auto h-full w-auto min-w-[5.2rem]',
               borderStyle === 'rounded' && 'rounded-lg',
               backgroundSize === 'cover' ? 'object-cover' : 'object-contain',
@@ -130,7 +130,7 @@ export function MediaUploader({
             src={src}
           />
           <div
-            className={clsx(
+            className={cx(
               'absolute inset-0 bg-gradient-to-t from-black/0 via-black/5 to-black/30 opacity-0 transition-all group-hover/image:opacity-100',
               borderStyle === 'rounded' && 'rounded-lg',
             )}
@@ -159,7 +159,7 @@ export function MediaUploader({
 
       {isLoading && (
         <UploadingOverlay
-          className={clsx('bg-grey-100', borderStyle === 'rounded' && 'rounded-lg')}
+          className={cx('bg-grey-100', borderStyle === 'rounded' && 'rounded-lg')}
           dataTestId="custom-thumbnail-progress"
           progress={progress}
         />

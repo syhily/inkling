@@ -1,6 +1,5 @@
-import clsx from 'clsx'
-
 import { Button } from '@/components/ui/Button'
+import { cx } from '@/utils/cx'
 
 export function SubscribeForm({
   dataTestId,
@@ -33,13 +32,13 @@ export function SubscribeForm({
 
   return (
     <div
-      className={clsx(
+      className={cx(
         'relative flex rounded-md border border-grey-500/30 bg-white',
         buttonSize === 'large' ? 'p-[3px]' : 'p-[2px]',
       )}
     >
       <input
-        className={clsx(
+        className={cx(
           'relative w-full bg-white px-4 py-2 font-sans font-normal text-grey-900 focus-visible:outline-none',
           buttonSize === 'small' && 'h-10 text-md leading-[4rem]',
           buttonSize === 'medium' && 'h-11 text-[1.6rem] leading-[4.4rem]',

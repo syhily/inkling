@@ -75,10 +75,7 @@
     "verify:types": "node scripts/verify-packed-types.ts"
   },
   "dependencies": {
-    "@lexical/table": "0.46.0",
-    "clsx": "2.1.1",
-    "color": "5.0.3",
-    "react-error-boundary": "6.1.2"
+    "@lexical/table": "0.46.0"
   },
   "devDependencies": {
     "@codemirror/autocomplete": "6.20.3",
@@ -129,13 +126,10 @@
     "@vitest/ui": "4.1.9",
     "concurrently": "10.0.3",
     "dompurify": "3.4.11",
-    "dotenv": "17.4.2",
     "dts-bundle-generator": "9.5.1",
     "emoji-mart": "5.6.0",
     "eventemitter3": "5.0.4",
     "fast-average-color": "9.5.2",
-    "fs-extra": "11.3.6",
-    "globals": "17.7.0",
     "html-minifier-terser": "7.2.0",
     "husky": "9.1.7",
     "jsdom": "29.1.1",
@@ -148,8 +142,9 @@
     "markdown-it-mark": "4.0.0",
     "markdown-it-sub": "2.0.0",
     "markdown-it-sup": "2.0.0",
-    "oxfmt": "0.57.0",
-    "oxlint": "1.72.0",
+    "oxfmt": "0.61.0",
+    "oxlint": "1.76.0",
+    "oxlint-tsgolint": "^7.0.2001",
     "prettier": "3.9.4",
     "prettier-plugin-organize-attributes": "1.0.0",
     "react": "19.2.7",
@@ -184,5 +179,5 @@
       "oxfmt --write"
     ]
   },
-  "packageManager": "pnpm@11.9.0"
+  "packageManager": "pnpm@11.17.0"
 }

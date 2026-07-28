@@ -1,4 +1,3 @@
-import clsx from 'clsx'
 import React from 'react'
 
 import type { DragHandlerLike, FileInputRef } from '@/components/ui/cards/card-ui-types'
@@ -6,6 +5,7 @@ import type { PlaceholderIconName } from '@/components/ui/MediaPlaceholder'
 
 import { MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
 import { ProgressBar } from '@/components/ui/ProgressBar'
+import { cx } from '@/utils/cx'
 import { openFileSelection } from '@/utils/openFileSelection'
 
 /**
@@ -144,7 +144,7 @@ export interface UploadingOverlayProps {
 export function UploadingOverlay({ progress, dataTestId, bgStyle = 'default', className }: UploadingOverlayProps) {
   return (
     <div
-      className={clsx(
+      className={cx(
         'absolute inset-0 flex min-w-full items-center justify-center overflow-hidden',
         className ?? 'bg-white/50',
       )}

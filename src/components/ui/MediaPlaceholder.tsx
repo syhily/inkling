@@ -1,5 +1,3 @@
-import clsx from 'clsx'
-
 import AudioPlaceholderIcon from '@/assets/icons/inkling-audio-placeholder.svg?react'
 import FilePlaceholderIcon from '@/assets/icons/inkling-file-placeholder.svg?react'
 import GalleryPlaceholderIcon from '@/assets/icons/inkling-gallery-placeholder.svg?react'
@@ -7,6 +5,7 @@ import ImgPlaceholderIcon from '@/assets/icons/inkling-img-placeholder.svg?react
 import ProductPlaceholderIcon from '@/assets/icons/inkling-product-placeholder.svg?react'
 import VideoPlaceholderIcon from '@/assets/icons/inkling-video-placeholder.svg?react'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { cx } from '@/utils/cx'
 
 export const PLACEHOLDER_ICONS = {
   image: ImgPlaceholderIcon,
@@ -27,7 +26,7 @@ export function isPlaceholderIconName(icon: unknown): icon is PlaceholderIconNam
 
 export const CardText = ({ text, type }: { text?: string; type?: string }) => (
   <span
-    className={clsx(
+    className={cx(
       'text-center font-sans text-sm font-semibold text-grey-800 transition-all group-hover:text-grey-800',
       type === 'button' && 'px-3 py-1',
     )}
@@ -61,7 +60,7 @@ const StandardContents = ({
 
   const Icon = PLACEHOLDER_ICONS[icon]
 
-  const iconClasses = clsx(
+  const iconClasses = cx(
     'shrink-0 opacity-80 transition-all ease-linear group-hover:opacity-100 hover:scale-105',
     size === 'large' && 'size-20 text-grey',
     size === 'small' && 'size-14 text-grey',
@@ -70,7 +69,7 @@ const StandardContents = ({
     size === 'xsmall' && desc && 'mr-3',
   )
 
-  const descriptionClasses = clsx(
+  const descriptionClasses = cx(
     'flex min-w-[auto] !font-sans !text-sm !font-normal text-grey-700 opacity-80 transition-all group-hover:opacity-100',
     size === 'xsmall' && '!mt-0',
     size !== 'xsmall' && '!mt-4',
@@ -114,7 +113,7 @@ export function MediaPlaceholder({
 }) {
   const labels = useInklingLabels()
 
-  const containerClasses = clsx(
+  const containerClasses = cx(
     'relative flex h-full items-center justify-center',
     type === 'button' ? 'rounded-lg bg-grey-100' : 'border bg-grey-50',
     size === 'xsmall' && type !== 'button' && 'before:pb-[12.5%] dark:bg-grey-900',
@@ -127,13 +126,13 @@ export function MediaPlaceholder({
       'border-grey/20 dark:border-grey/10',
   )
 
-  const buttonClasses = clsx(
+  const buttonClasses = cx(
     'group flex cursor-pointer items-center justify-center select-none',
     type === 'button' && 'px-3 py-1',
     type !== 'button' && (size === 'xsmall' ? 'p-4' : 'flex-col p-20'),
   )
 
-  const errorClasses = clsx('font-sans text-sm font-semibold text-red', size !== 'xsmall' && 'mt-3 max-w-[65%]')
+  const errorClasses = cx('font-sans text-sm font-semibold text-red', size !== 'xsmall' && 'mt-3 max-w-[65%]')
 
   const errorMessages = errors.map((error) => (
     <span key={error.message} className={errorClasses} data-testid={errorDataTestId}>
