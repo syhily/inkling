@@ -1,7 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import trackEvent from '@/utils/analytics'
+import {
+  buildPinturaOptions,
+  bustImageCache,
+  createPinturaAssetLoader,
+  createPinturaCloseGate,
+  type PinturaAssetPorts,
+} from '@/utils/services/pintura-session'
 
 export interface PinturaConfig {
   jsUrl?: string
@@ -40,153 +47,76 @@ interface PinturaEditor {
   on(event: 'process', handler: (result: PinturaHandleSaveResult) => void): void
 }
 
+// the adapter's DOM ports: the loader, the options table, and the close
+// gate live headless in @/utils/services/pintura-session
+function createDomPorts(): PinturaAssetPorts {
+  return {
+    importModule: (url) => import(/* @vite-ignore */ url),
+    isScriptPresent: () => typeof window !== 'undefined' && !!window.pintura,
+    queryCssLink: (href) => typeof document !== 'undefined' && !!document.querySelector(`link[href="${href}"]`),
+    appendCssLink: (href, { onLoad, onError }) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.type = 'text/css'
+      link.href = href
+      link.onload = onLoad
+      link.onerror = onError
+      document.head.appendChild(link)
+    },
+    baseUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+  }
+}
+
 export default function usePinturaEditor({
   config,
   disabled = false,
 }: UsePinturaEditorOptions = {}): UsePinturaEditorResult {
   const labels = useInklingLabels()
-  // lazy initial state covers the "already loaded before mount" case so the
-  // loading effects below never setState synchronously
-  const [scriptLoaded, setScriptLoaded] = useState<boolean>(() => typeof window !== 'undefined' && !!window.pintura)
-  const [cssLoaded, setCssLoaded] = useState<boolean>(
-    () =>
-      typeof document !== 'undefined' && !!config?.cssUrl && !!document.querySelector(`link[href="${config.cssUrl}"]`),
+
+  // the loader is recreated on jsUrl/cssUrl change; the old generation is
+  // disposed so a stale in-flight load never flips the new loader's flags
+  const loader = useMemo(
+    () => createPinturaAssetLoader({ jsUrl: config?.jsUrl, cssUrl: config?.cssUrl }, createDomPorts()),
+    [config?.jsUrl, config?.cssUrl],
   )
-  const [error, setError] = useState<Error | null>(null)
-  const allowClose = useRef<boolean>(false)
+  useEffect(() => () => loader.dispose(), [loader])
+  const { scriptLoaded, cssLoaded, error: assetError } = useSyncExternalStore(loader.subscribe, loader.getSnapshot)
+  // the editor's own loaderror channel (asset errors ride the loader's snapshot)
+  const [editorError, setEditorError] = useState<Error | null>(null)
+
+  const closeGate = useMemo(() => createPinturaCloseGate(), [])
+  useEffect(
+    () =>
+      closeGate.attach((handler) => {
+        window.addEventListener('click', handler, { capture: true })
+        return () => window.removeEventListener('click', handler, { capture: true })
+      }),
+    [closeGate],
+  )
 
   const isEnabled = !disabled && scriptLoaded && cssLoaded
 
-  useEffect(() => {
-    const jsUrl = config?.jsUrl
-
-    if (!jsUrl) {
-      return
-    }
-
-    if (window.pintura) {
-      // the script arrived after the initial render (e.g. jsUrl changed) —
-      // defer the flag flip so the effect body never sets state synchronously
-      queueMicrotask(() => setScriptLoaded(true))
-      return
-    }
-
-    try {
-      const url = new URL(jsUrl)
-      const importUrl = `${url.protocol}//${url.host}${url.pathname}`
-      const importScriptPromise = import(/* @vite-ignore */ importUrl)
-
-      importScriptPromise
-        .then(() => {
-          setScriptLoaded(true)
-        })
-        .catch(() => {
-          setError(new Error(`Failed to load Pintura script from ${jsUrl}`))
-        })
-    } catch (e) {
-      // defer so the effect body never sets state synchronously
-      queueMicrotask(() => setError(e instanceof Error ? e : new Error('Failed to load Pintura script')))
-    }
-  }, [config?.jsUrl])
-
-  useEffect(() => {
-    const cssUrl = config?.cssUrl
-    if (!cssUrl) {
-      return
-    }
-
-    try {
-      // Check if the CSS file is already present in the document's head
-      const cssLink = document.querySelector(`link[href="${cssUrl}"]`)
-      if (cssLink) {
-        // defer the flag flip so the effect body never sets state synchronously
-        queueMicrotask(() => setCssLoaded(true))
-      } else {
-        const link = document.createElement('link')
-        link.rel = 'stylesheet'
-        link.type = 'text/css'
-        link.href = cssUrl
-        link.onload = () => {
-          setCssLoaded(true)
-        }
-        link.onerror = () => {
-          setError(new Error(`Failed to load Pintura stylesheet from ${cssUrl}`))
-        }
-        document.head.appendChild(link)
-      }
-    } catch (e) {
-      // defer so the effect body never sets state synchronously
-      queueMicrotask(() => setError(e instanceof Error ? e : new Error('Failed to load Pintura stylesheet')))
-    }
-  }, [config?.cssUrl])
-
   const openEditor = useCallback(
     ({ image, handleSave }: { image: string; handleSave: (blob: Blob) => void }) => {
-      allowClose.current = false
+      closeGate.reset()
 
       trackEvent('Image Edit Button Clicked', { location: 'editor' })
       if (image && isEnabled && window.pintura) {
-        // add a timestamp to the image src to bypass cache
-        // avoids cors issues with cached images
-        const imageUrl = new URL(image)
-        if (!imageUrl.searchParams.has('v')) {
-          imageUrl.searchParams.set('v', Date.now().toString())
-        }
-
-        const imageSrc = imageUrl.href
-        const editor = window.pintura.openDefaultEditor({
-          src: imageSrc,
-          enableTransparencyGrid: true,
-          util: 'crop',
-          utils: ['crop', 'filter', 'finetune', 'redact', 'annotate', 'trim', 'frame', 'resize'],
-          frameOptions: [
-            // No frame
-            [undefined, (locale: { labelNone: string }) => locale.labelNone],
-
-            // Sharp edge frame
-            ['solidSharp', (locale: { frameLabelMatSharp: string }) => locale.frameLabelMatSharp],
-
-            // Rounded edge frame
-            ['solidRound', (locale: { frameLabelMatRound: string }) => locale.frameLabelMatRound],
-
-            // A single line frame
-            ['lineSingle', (locale: { frameLabelLineSingle: string }) => locale.frameLabelLineSingle],
-
-            // A frame with cornenr hooks
-            ['hook', (locale: { frameLabelCornerHooks: string }) => locale.frameLabelCornerHooks],
-
-            // A polaroid frame
-            ['polaroid', (locale: { frameLabelPolaroid: string }) => locale.frameLabelPolaroid],
-          ],
-          cropSelectPresetFilter: 'landscape',
-          cropSelectPresetOptions: [
-            [undefined, labels['pintura.cropPreset.custom']],
-            [1, labels['pintura.cropPreset.square']],
-            // shown when cropSelectPresetFilter is set to 'landscape'
-            [2 / 1, '2:1'],
-            [3 / 2, '3:2'],
-            [4 / 3, '4:3'],
-            [16 / 10, '16:10'],
-            [16 / 9, '16:9'],
-            // shown when cropSelectPresetFilter is set to 'portrait'
-            [1 / 2, '1:2'],
-            [2 / 3, '2:3'],
-            [3 / 4, '3:4'],
-            [10 / 16, '10:16'],
-            [9 / 16, '9:16'],
-          ],
-          locale: {
-            labelButtonExport: labels['pintura.export'],
-            // the host's pinturaConfig.locale patches any Pintura string on
-            // top of the labels table (higher priority)
-            ...config?.locale,
-          },
-          previewPad: true,
-          willClose: () => allowClose.current, // prevent closing on escape, only allow on close button clicks
-        })
+        const editor = window.pintura.openDefaultEditor(
+          buildPinturaOptions({
+            imageSrc: bustImageCache(image, window.location.href),
+            labels: {
+              exportButton: labels['pintura.export'],
+              cropPresetCustom: labels['pintura.cropPreset.custom'],
+              cropPresetSquare: labels['pintura.cropPreset.square'],
+            },
+            hostLocale: config?.locale,
+            willClose: closeGate.willClose,
+          }),
+        )
 
         editor.on('loaderror', (err) => {
-          setError(err instanceof Error ? err : new Error('Pintura editor load error'))
+          setEditorError(err instanceof Error ? err : new Error('Pintura editor load error'))
         })
 
         editor.on('process', (result) => {
@@ -196,27 +126,12 @@ export default function usePinturaEditor({
         })
       }
     },
-    [isEnabled, labels, config?.locale],
+    [isEnabled, labels, config?.locale, closeGate],
   )
-
-  useEffect(() => {
-    const handleCloseClick = (event: MouseEvent) => {
-      const target = event.target
-      if (target instanceof Element && target.closest('.PinturaModal button[title="Close"]')) {
-        allowClose.current = true
-      }
-    }
-
-    window.addEventListener('click', handleCloseClick, { capture: true })
-
-    return () => {
-      window.removeEventListener('click', handleCloseClick, { capture: true })
-    }
-  }, [])
 
   return {
     isEnabled,
     openEditor,
-    error,
+    error: assetError ?? editorError,
   }
 }

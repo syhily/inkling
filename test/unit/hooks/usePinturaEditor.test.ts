@@ -74,13 +74,16 @@ describe('usePinturaEditor', () => {
   })
 
   it('sets error when the script URL is invalid', async () => {
-    const { result } = renderHook(() => usePinturaEditor({ config: { jsUrl: 'not a valid url' } }))
+    // 'http://' is invalid even with a base URL; note a RELATIVE jsUrl is
+    // no longer an error — it resolves against window.location (pinned in
+    // the pintura-session test table)
+    const { result } = renderHook(() => usePinturaEditor({ config: { jsUrl: 'http://' } }))
 
     await waitFor(() => {
       expect(result.current.error).toBeInstanceOf(Error)
     })
 
-    expect(result.current.error?.message).toBe('Invalid URL')
+    expect(result.current.error?.message).toContain('Invalid URL')
   })
 
   it('sets error when the script import fails', async () => {
