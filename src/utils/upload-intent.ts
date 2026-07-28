@@ -17,23 +17,18 @@ import {
 import { getAudioMetadata } from '@/utils/getAudioMetadata'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import prettifyFileName from '@/utils/prettifyFileName'
-
-/** Releases a preview object URL; the `blob:` guard keeps real URLs untouched. */
-function revokePreviewUrl(url: string | null | undefined): void {
-  if (url?.startsWith('blob:')) {
-    URL.revokeObjectURL(url)
-  }
-}
+import { createPreviewLease, type PreviewLeasePool } from '@/utils/preview-lease'
 
 /**
  * The one upload-intent module (plan 045): file(s) + per-card metadata
  * extraction in, typed node patch out through plan 044's write seam
- * ($updateCardNode), and the object-URL preview lifecycle created and revoked
- * in one place. The six near-clone upload flows (image/audio/file/thumbnail
- * handlers plus video's and gallery's inline re-implementations) are
- * configurations of these primitives — per-card variance (metadata
- * extraction, empty-result policy, the pre-upload src reset) stays per-card
- * data, never a copied skeleton.
+ * ($updateCardNode). The object-URL preview lifecycle is leased from the
+ * preview-lease module — each intent leases its preview on start and
+ * releases it on settle. The six near-clone upload flows (image/audio/
+ * file/thumbnail handlers plus video's and gallery's inline
+ * re-implementations) are configurations of these primitives — per-card
+ * variance (metadata extraction, empty-result policy, the pre-upload src
+ * reset) stays per-card data, never a copied skeleton.
  */
 
 export interface UploadResultItem {
@@ -53,69 +48,6 @@ export type UploadFn = (
 
 export interface UploadOptions {
   formData?: Record<string, string>
-}
-
-export interface PreviewLease {
-  /** The object URL handed out for preview/metadata use. */
-  url: string
-  /** Revokes the object URL. Idempotent — safe to call more than once. */
-  release: () => void
-}
-
-/**
- * The one place `URL.createObjectURL` is called for upload previews: a lease
- * pairs creation with an idempotent release built on `revokePreviewUrl`'s
- * `blob:` guard. Callers that outlive a single intent (video's thumbnail
- * preview) hold the lease through `usePreviewLease`; callers with several
- * concurrent previews (gallery) hold a `PreviewLeasePool`.
- */
-export function createPreviewLease(blob: Blob): PreviewLease {
-  const url = URL.createObjectURL(blob)
-  let released = false
-  return {
-    url,
-    release: () => {
-      if (!released) {
-        released = true
-        revokePreviewUrl(url)
-      }
-    },
-  }
-}
-
-export interface PreviewLeasePool {
-  /** Leases a preview URL for a blob and tracks it. Returns the URL. */
-  lease: (blob: Blob) => string
-  /** Releases one tracked URL; a no-op for unknown or already-released URLs. */
-  release: (url: string | null | undefined) => void
-  /** Releases every tracked URL (the unmount cleanup). */
-  releaseAll: () => void
-}
-
-/**
- * Tracks a set of preview leases (gallery's multi-file previews) so each can
- * be released individually — on success, failure, or delete — and all of them
- * at once on unmount.
- */
-export function createPreviewLeasePool(): PreviewLeasePool {
-  const leases = new Map<string, PreviewLease>()
-  return {
-    lease: (blob) => {
-      const lease = createPreviewLease(blob)
-      leases.set(lease.url, lease)
-      return lease.url
-    },
-    release: (url) => {
-      if (url) {
-        leases.get(url)?.release()
-        leases.delete(url)
-      }
-    },
-    releaseAll: () => {
-      leases.forEach((lease) => lease.release())
-      leases.clear()
-    },
-  }
 }
 
 export interface ExtractMetadataContext {

@@ -73,7 +73,7 @@ The one media-upload flow module (src/utils/upload-intent.ts): file(s) plus per-
 _Avoid_: upload handler, upload helper
 
 **Preview lease**:
-The owned lifetime of a blob object URL used as an in-editor preview: created by `createPreviewLease`, released exactly once by `release()` (idempotent), bridged to React state by `usePreviewLease`. Replacing or clearing a preview releases the previous lease; unmounting releases whatever is still held.
+The owned lifetime of a blob object URL used as an in-editor preview (src/utils/preview-lease.ts — the one file that calls `URL.createObjectURL`/`URL.revokeObjectURL`, pinned by the upload-preview import guard): created by `createPreviewLease`, released exactly once by `release()` (idempotent), tracked in sets by `createPreviewLeasePool`, bridged to React state by `usePreviewLease`. The upload-intent module is a consumer — each intent leases its preview on start and releases it on settle. Replacing or clearing a preview releases the previous lease; unmounting releases whatever is still held.
 _Avoid_: preview URL ref, object-URL ref
 
 **Host card**:

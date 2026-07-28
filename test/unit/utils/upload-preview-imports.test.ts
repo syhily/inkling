@@ -2,8 +2,8 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join, sep } from 'node:path'
 
 /**
- * Plan 045 import guard: object-URL preview leases are owned by the upload
- * seam — src/utils/upload-intent.ts is the one file that creates and
+ * Plan 045 import guard: object-URL preview leases are owned by the preview
+ * lease module — src/utils/preview-lease.ts is the one file that creates and
  * releases them. Card and plugin sources must not call URL.createObjectURL /
  * URL.revokeObjectURL directly — and since round 3 (C6/C7) neither does
  * extractVideoMetadata, which leases its URL from the seam. The allowlists
@@ -18,7 +18,7 @@ const OBJECT_URL_CALL = /URL\.(?:createObjectURL|revokeObjectURL)\(/g
 const ALLOWED_DIRECT_CALLERS: string[] = []
 
 // The sanctioned object-URL caller across all of src: the lease owner.
-const ALLOWED_OBJECT_URL_FILES = ['src/utils/upload-intent.ts']
+const ALLOWED_OBJECT_URL_FILES = ['src/utils/preview-lease.ts']
 
 function listSourceFiles(dir: string): string[] {
   return readdirSync(dir, { recursive: true })

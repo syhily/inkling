@@ -11,7 +11,8 @@ import { useGalleryImages } from '@/hooks/useGalleryImages'
 import useGalleryReorder from '@/hooks/useGalleryReorder'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import { $isGalleryNode, recalculateImageRows } from '@/nodes/GalleryNode'
-import { createPreviewLeasePool, galleryUploadIntent } from '@/utils/upload-intent'
+import { createPreviewLeasePool } from '@/utils/preview-lease'
+import { galleryUploadIntent } from '@/utils/upload-intent'
 
 export interface GalleryNodeComponentProps {
   nodeKey: NodeKey

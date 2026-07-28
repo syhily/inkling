@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import type { GalleryImage } from '@/types/gallery'
 
 import { getImageDimensions } from '@/utils/getImageDimensions'
-import { createPreviewLeasePool, galleryUploadIntent, type UploadFn } from '@/utils/upload-intent'
+import { createPreviewLeasePool } from '@/utils/preview-lease'
+import { galleryUploadIntent, type UploadFn } from '@/utils/upload-intent'
 
 vi.mock('@/utils/getImageDimensions', () => ({
   getImageDimensions: vi.fn(),

@@ -1,7 +1,7 @@
 // taken from the original upstream implementation
 
 import { awaitMediaEvents } from '@/utils/awaitMediaEvents'
-import { createPreviewLease } from '@/utils/upload-intent'
+import { createPreviewLease } from '@/utils/preview-lease'
 
 export interface VideoMetadata {
   duration: number
