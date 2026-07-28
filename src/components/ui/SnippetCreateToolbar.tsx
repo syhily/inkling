@@ -34,7 +34,7 @@ export function SnippetCreateToolbar({ nodeKey, onClose }: SnippetCreateToolbarP
         return
       }
       const value = JSON.stringify({ nodes: [node.exportJSON()] })
-      createSnippet({ name, value })
+      void createSnippet({ name, value })
     })
 
     handleClose()

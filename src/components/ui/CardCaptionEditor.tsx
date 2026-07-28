@@ -102,12 +102,15 @@ export function CardCaptionEditor({
     setIsEditingAlt(!isEditingAlt)
   }
 
-  // always switch back to displaying caption when card is not selected
-  React.useEffect(() => {
+  // always switch back to displaying caption when card is not selected —
+  // adjusted during render (React re-renders immediately, before committing)
+  const [prevIsSelected, setPrevIsSelected] = React.useState(isSelected)
+  if (prevIsSelected !== isSelected) {
+    setPrevIsSelected(isSelected)
     if (!isSelected) {
       setIsEditingAlt(false)
     }
-  }, [isSelected, setIsEditingAlt])
+  }
 
   // callers pass `captionEditor ?? null` when the node hasn't created its
   // nested editor yet — there is nothing to render without one

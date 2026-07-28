@@ -21,17 +21,16 @@ export function KeyboardSelection<T = { value?: string; label?: string }>({
   )
   const [selectedIndex, setSelectedIndex] = React.useState(defaultIndex)
 
-  // If items change, check if the selectedIndex is still valid, and if not, reset it to 0
-  React.useEffect(() => {
-    if (selectedIndex >= items.length) {
-      setSelectedIndex(defaultIndex)
-    }
-  }, [items, selectedIndex, defaultIndex])
-
-  // If the default index changes, select it again
-  React.useEffect(() => {
+  // Adjust the selection during render (React discards this render's output
+  // and re-renders immediately): re-select the default when it changes, and
+  // clamp the index back into range when the items shrink
+  const [prevDefaultIndex, setPrevDefaultIndex] = React.useState(defaultIndex)
+  if (prevDefaultIndex !== defaultIndex) {
+    setPrevDefaultIndex(defaultIndex)
     setSelectedIndex(defaultIndex)
-  }, [defaultIndex])
+  } else if (selectedIndex >= items.length && selectedIndex !== defaultIndex) {
+    setSelectedIndex(defaultIndex)
+  }
 
   const handleKeydown = React.useCallback(
     (event: KeyboardEvent) => {

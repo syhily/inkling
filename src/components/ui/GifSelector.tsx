@@ -35,7 +35,9 @@ const GifSelector = ({ browser, onGifInsert, onClickOutside, provider }: GifSele
   // must not yank focus out of the search input.
   const [focusRequestId, setFocusRequestId] = useState<string | null>(null)
   const clearFocusRequest = useCallback(() => setFocusRequestId(null), [])
-  const snapshot = React.useSyncExternalStore(browser.subscribe, browser.getSnapshot)
+  const subscribeToBrowser = useCallback((listener: () => void) => browser.subscribe(listener), [browser])
+  const getBrowserSnapshot = useCallback(() => browser.getSnapshot(), [browser])
+  const snapshot = React.useSyncExternalStore(subscribeToBrowser, getBrowserSnapshot)
   const { columns, isLoading, isLazyLoading, error, highlightedId } = snapshot
 
   useEffect(() => {

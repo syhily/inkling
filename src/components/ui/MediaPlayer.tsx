@@ -13,7 +13,7 @@ export function MediaPlayer({ duration, theme }: MediaPlayerProps) {
       <div
         className={`mb-[1px] font-sans text-sm font-medium ${theme === 'light' ? 'text-white/60' : 'text-black/50 dark:text-white/50'} `}
       >
-        <span className={`${theme === 'light' ? 'text-white' : 'text-black dark:text-white'}`}>0:00 </span>/{' '}
+        <span className={theme === 'light' ? 'text-white' : 'text-black dark:text-white'}>0:00 </span>/{' '}
         <span data-testid="media-duration">{duration}</span>
       </div>
       {/* <input type="range" max="100" value="0" className="relative grow bg-transparent mx-1" /> */}
@@ -32,7 +32,7 @@ export function MediaPlayer({ duration, theme }: MediaPlayerProps) {
         1&#215;
       </button>
       <button type="button">
-        <UnmuteIcon className={`${theme === 'light' ? 'fill-white' : 'fill-black dark:fill-black'}`} />
+        <UnmuteIcon className={theme === 'light' ? 'fill-white' : 'fill-black dark:fill-black'} />
       </button>
       <div
         className={`relative ml-1 h-1 w-[80px] rounded ${theme === 'light' ? 'bg-white/40' : 'bg-grey/30 dark:bg-white/40'}`}

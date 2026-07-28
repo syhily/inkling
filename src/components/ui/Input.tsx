@@ -24,6 +24,14 @@ export function Input({
   // uncontrolled (undefined) and controlled on first edit
   const [localValue, setLocalValue] = React.useState(value ?? '')
 
+  // adjust state during render: mirror a changed controlled value prop into
+  // the local state (React re-renders immediately, before committing)
+  const [prevValue, setPrevValue] = React.useState(value)
+  if (prevValue !== value) {
+    setPrevValue(value)
+    setLocalValue(value ?? '')
+  }
+
   const onChangeWrapper = React.useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setLocalValue(e.target.value)
@@ -36,8 +44,6 @@ export function Input({
   )
 
   React.useEffect(() => {
-    setLocalValue(value ?? '')
-
     // setting a value via state immediately after mounting results in React's
     // autoFocus not working, so we need to manually focus the input
     if (shouldFocusOnUpdate.current) {

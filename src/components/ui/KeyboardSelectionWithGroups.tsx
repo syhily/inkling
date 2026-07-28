@@ -26,26 +26,23 @@ export function KeyboardSelectionWithGroups<T extends { value: string | null } =
   isLoading,
 }: KeyboardSelectionWithGroupsProps<T>) {
   const items = groups.flatMap((group) => group.items)
-  const defaultIndex = Math.max(
-    0,
-    items.findIndex((item) => item === defaultSelected),
-  )
+  const defaultSelectedIndex = items.findIndex((item) => item === defaultSelected)
+  const defaultIndex = Math.max(0, defaultSelectedIndex)
   const [selectedIndex, setSelectedIndex] = React.useState(defaultIndex)
   const [scrollSelectedIntoView, setScrollSelectedIntoView] = React.useState(false)
   const [hasNavigated, setHasNavigated] = React.useState(false)
 
-  // If items change, check if the selectedIndex is still valid, and if not, reset it to 0
-  React.useEffect(() => {
-    if (selectedIndex >= items.length) {
-      setSelectedIndex(defaultIndex)
-    }
-  }, [items, selectedIndex, defaultIndex])
-
-  // If the default index changes, select it again and reset navigation state
-  React.useEffect(() => {
+  // Adjust the selection during render (React discards this render's output
+  // and re-renders immediately): re-select the default and reset navigation
+  // state when the default changes, clamp the index when the items shrink
+  const [prevDefaultIndex, setPrevDefaultIndex] = React.useState(defaultIndex)
+  if (prevDefaultIndex !== defaultIndex) {
+    setPrevDefaultIndex(defaultIndex)
     setSelectedIndex(defaultIndex)
     setHasNavigated(false)
-  }, [defaultIndex])
+  } else if (selectedIndex >= items.length && selectedIndex !== defaultIndex) {
+    setSelectedIndex(defaultIndex)
+  }
 
   const handleKeydown = React.useCallback(
     (event: KeyboardEvent) => {

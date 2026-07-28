@@ -35,7 +35,7 @@ export function SnippetActionToolbar({ onClose }: SnippetActionToolbarProps) {
           return
         }
         const nodeJson = $generateJSONFromSelectedNodes(editor, selection)
-        createSnippet({ name: snippetName, value: JSON.stringify(nodeJson) })
+        void createSnippet({ name: snippetName, value: JSON.stringify(nodeJson) })
       })
 
       handleClose()
