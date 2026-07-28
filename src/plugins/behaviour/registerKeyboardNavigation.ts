@@ -19,25 +19,29 @@ import { registerKeyDownPassthrough } from './keyboard-navigation/key-down'
 import { registerModifierCommand } from './keyboard-navigation/modifier'
 import { registerTabCommand } from './keyboard-navigation/tab'
 
+// ORDER IS LOAD-BEARING: every handler here registers at
+// COMMAND_PRIORITY_LOW, and same-priority handlers run in registration
+// order. The key-down passthrough must stay first so it can swallow key
+// events from card inner elements before any sibling handler sees them
+// (pinned by key-down.test.ts). The table IS the order — a mis-ordering is
+// a visible diff, not a comment violation (the MODIFIER_SHORTCUTS shape in
+// shortcuts.ts is the precedent).
+const KEYBOARD_HANDLERS = [
+  registerKeyDownPassthrough,
+  registerEnterCommand,
+  registerArrowUpCommand,
+  registerArrowDownCommand,
+  registerArrowLeftCommand,
+  registerArrowRightCommand,
+  registerModifierCommand,
+  // backspace when card isn't selected
+  registerBackspaceCommand,
+  registerDeleteCommand,
+  registerDeleteLineCommand,
+  registerTabCommand,
+  registerEscapeCommand,
+] as const
+
 export function registerKeyboardNavigation(editor: LexicalEditor, deps: KeyboardNavigationDeps) {
-  return mergeRegister(
-    // ORDER IS LOAD-BEARING: every handler here registers at
-    // COMMAND_PRIORITY_LOW, and same-priority handlers run in registration
-    // order. The key-down passthrough must stay first so it can swallow key
-    // events from card inner elements before any sibling handler sees them
-    // (pinned by key-down.test.ts).
-    registerKeyDownPassthrough(editor, deps),
-    registerEnterCommand(editor, deps),
-    registerArrowUpCommand(editor, deps),
-    registerArrowDownCommand(editor, deps),
-    registerArrowLeftCommand(editor, deps),
-    registerArrowRightCommand(editor, deps),
-    registerModifierCommand(editor, deps),
-    // backspace when card isn't selected
-    registerBackspaceCommand(editor, deps),
-    registerDeleteCommand(editor, deps),
-    registerDeleteLineCommand(editor, deps),
-    registerTabCommand(editor, deps),
-    registerEscapeCommand(editor, deps),
-  )
+  return mergeRegister(...KEYBOARD_HANDLERS.map((register) => register(editor, deps)))
 }
