@@ -66,7 +66,7 @@ describe('createSnapshotStore', () => {
 
     unsubscribe()
     store.emit({ items: [] })
-    expect(listener).toHaveBeenCalledTimes(2)
+    expect(listener).toHaveBeenCalledTimes(3)
   })
 })
 
