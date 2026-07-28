@@ -8,8 +8,11 @@ import { parseCodeBlockNode } from '@/nodes/base/nodes/codeblock/codeblock-parse
 import { renderCodeBlockNode } from '@/nodes/base/nodes/codeblock/codeblock-renderer'
 
 const codeBlockProperties = [
-  { name: 'code', default: '', wordCount: true },
-  { name: 'language', default: '' },
+  // the artifact-slot invariant as spec data: editing the source clears the
+  // prerendered `highlightedHtml` (edit-invalidates — construction/importJSON
+  // assign the private fields directly, so host-filled slots survive)
+  { name: 'code', default: '', wordCount: true, invalidates: ['highlightedHtml'] },
+  { name: 'language', default: '', invalidates: ['highlightedHtml'] },
   { name: 'caption', default: '', urlType: 'html', wordCount: true },
   // Server-prerendered highlight artifact (Shiki HTML), carried opaquely —
   // inkling never runs Shiki (CSP); the host fills it on save.
@@ -42,36 +45,9 @@ export class BaseCodeBlockNode extends generateDecoratorNode({
     self.__openInEditMode = false
   }
 
-  // The artifact describes the current source: reassigning `code` or
-  // `language` to a different value invalidates the prerendered
-  // `highlightedHtml` (the node-level equivalent of kobato's
-  // stripPrerenderArtifacts). The constructor and importJSON assign the
-  // private fields directly, so a host-filled artifact survives
-  // deserialization and cloning; only edits clear it.
-  get code(): string {
-    return this.getLatest().__code
-  }
-
-  set code(value: string) {
-    const writable = this.getWritable()
-    if (writable.__code !== value) {
-      writable.__highlightedHtml = ''
-    }
-    writable.__code = value
-  }
-
-  get language(): string {
-    return this.getLatest().__language
-  }
-
-  set language(value: string) {
-    const writable = this.getWritable()
-    if (writable.__language !== value) {
-      writable.__highlightedHtml = ''
-    }
-    writable.__language = value
-  }
-
+  // the artifact-slot invalidation (edit clears `highlightedHtml`) is spec
+  // data on the `code`/`language` properties above — the generated setters
+  // enforce it
   isEmpty() {
     return !this.__code
   }

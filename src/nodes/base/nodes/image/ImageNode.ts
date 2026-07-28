@@ -2,6 +2,7 @@ import type { CardImportSpec } from '@/nodes/base/import-spec'
 
 import {
   generateDecoratorNode,
+  redactDataUrlValue,
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
@@ -70,24 +71,23 @@ export class BaseImageNode extends generateDecoratorNode({
   properties: imageProperties,
   defaultRenderFn: renderImageNode,
   importSpec: imageImportSpec,
+  hasEditMode: false,
 }) {
   /* @override */
   exportJSON() {
     // Hand-written rather than derived from the generated exportJSON: the
     // persisted key order below (width/height before title/alt/caption) is
     // historical and differs from `imageProperties` order, and payloads must
-    // stay byte-identical. The blob guard is the card-specific logic — an
-    // upload-in-progress data-string src must not be persisted.
-    // checks if src is a data string
+    // stay byte-identical. The blob guard shares the one helper (an
+    // upload-in-progress data-string src must not be persisted).
     const { src, width, height, title, alt, caption, cardWidth, href } = this
-    const isBlob = src && src.startsWith('data:')
 
     // serializeNestedEditorHtml re-serializes the caption editor for wrapper
     // subclasses that adopt a `nestedEditors` spec; a no-op on the base class
     return this.serializeNestedEditorHtml({
       type: 'image',
       version: 1,
-      src: isBlob ? '<base64String>' : src,
+      src: redactDataUrlValue(src),
       width,
       height,
       title,
@@ -98,31 +98,18 @@ export class BaseImageNode extends generateDecoratorNode({
     })
   }
 
-  // The transient-prop spec (image.declaration.ts) initializes this only on
-  // spec-adopting assembled classes; a raw `new BaseImageNode()` leaves it unset,
-  // so `undefined` is part of the honest type for spec-less base instances
+  // The transient-prop spec (image.declaration.ts) initializes these only on
+  // spec-adopting assembled classes — including the accessors, which assembly
+  // defines from the spec's `accessor: true` entries; a raw `new
+  // BaseImageNode()` leaves the fields unset, so `undefined` is part of the
+  // honest type for spec-less base instances. The `declare` legs are
+  // type-only (the runtime pair is assembly-defined): they exist so
+  // base-typed write-seam consumers can name the accessor.
   declare __previewSrc: string | null | undefined
+  declare previewSrc: string | null | undefined
   // see `__previewSrc` — same spec-adoption lifecycle
   declare __triggerFileDialog: boolean | undefined
-
-  get previewSrc() {
-    const self = this.getLatest()
-    return self.__previewSrc
-  }
-
-  set previewSrc(previewSrc: string | null | undefined) {
-    const writable = this.getWritable()
-    writable.__previewSrc = previewSrc
-  }
-
-  set triggerFileDialog(shouldTrigger: boolean) {
-    const writable = this.getWritable()
-    writable.__triggerFileDialog = shouldTrigger
-  }
-
-  hasEditMode() {
-    return false
-  }
+  declare triggerFileDialog: boolean | undefined
 }
 
 export const $createBaseImageNode = (dataset?: ImageData) => {

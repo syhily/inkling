@@ -3,6 +3,7 @@ import type { ComponentType } from 'react'
 
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
+import { transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
 import { BaseImageNode } from '@/nodes/base/nodes/image/ImageNode'
 import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
@@ -27,13 +28,9 @@ const transientProps = [
     name: 'previewSrc',
     initial: (dataset): string | null => (dataset.previewSrc || '') as string,
     datasetKey: '__previewSrc',
+    accessor: true,
   },
-  {
-    name: 'triggerFileDialog',
-    // don't trigger the file dialog when rendering if we've already been given a url
-    initial: (dataset): boolean => ((!dataset.src && dataset.triggerFileDialog) || false) as boolean,
-    datasetKey: '__triggerFileDialog',
-  },
+  { ...transientTriggerFileDialogProp, datasetKey: '__triggerFileDialog' },
   // passed via INSERT_MEDIA_COMMAND on drag+drop or paste
   {
     name: 'initialFile',

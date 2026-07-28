@@ -2,7 +2,7 @@ import type { LexicalNode } from 'lexical'
 
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { nullableNestedEditor } from '@/nodes/base/generate-decorator-node'
+import { nullableNestedEditor, transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
 import { BaseVideoNode } from '@/nodes/base/nodes/video/VideoNode'
 import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
@@ -24,11 +24,7 @@ const nestedEditors = [
 ] as const satisfies readonly NestedEditorSpec[]
 
 const transientProps = [
-  {
-    name: 'triggerFileDialog',
-    // don't trigger the file dialog when rendering if we've already been given a url
-    initial: (dataset): boolean => ((!dataset.src && dataset.triggerFileDialog) || false) as boolean,
-  },
+  transientTriggerFileDialogProp,
   { name: 'initialFile', initial: (dataset): File | null => (dataset.initialFile || null) as File | null },
 ] as const satisfies readonly TransientPropSpec[]
 

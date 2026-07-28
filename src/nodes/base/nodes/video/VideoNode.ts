@@ -10,7 +10,9 @@ import { formatVideoDuration } from '@/nodes/base/nodes/video/format-video-durat
 import { renderVideoNode } from '@/nodes/base/nodes/video/video-renderer'
 
 const videoProperties = [
-  { name: 'src', default: '', urlType: 'url' },
+  // the blob guard as spec data: an upload-in-progress data-string src must
+  // not be persisted (the generated exportJSON redacts it)
+  { name: 'src', default: '', urlType: 'url', redactDataUrl: true },
   { name: 'caption', default: '', urlType: 'html', wordCount: true },
   { name: 'fileName', default: '' },
   { name: 'mimeType', default: '' },
@@ -101,29 +103,13 @@ export class BaseVideoNode extends generateDecoratorNode({
   defaultRenderFn: renderVideoNode,
   importSpec: videoImportSpec,
 }) {
-  /* override */
-  exportJSON() {
-    // the generated exportJSON already serializes every declared property in
-    // `videoProperties` order and re-serializes the caption editor for wrapper
-    // subclasses that adopt a `nestedEditors` spec; the only card-specific
-    // logic is the blob guard — an upload-in-progress data-string src must
-    // not be persisted
-    const json = super.exportJSON()
-    if (typeof json.src === 'string' && json.src.startsWith('data:')) {
-      json.src = '<base64String>'
-    }
-    return json
-  }
-
   // The transient-prop spec (video.declaration.ts) initializes this only on
-  // spec-adopting assembled classes; a raw `new BaseVideoNode()` leaves it
+  // spec-adopting assembled classes — the accessor is assembly-defined from
+  // the spec (the `declare` leg is type-only, so base-typed write-seam
+  // consumers can name it); a raw `new BaseVideoNode()` leaves the field
   // unset, so `undefined` is part of the honest type for spec-less instances
   declare __triggerFileDialog: boolean | undefined
-
-  set triggerFileDialog(shouldTrigger: boolean) {
-    const writable = this.getWritable()
-    writable.__triggerFileDialog = shouldTrigger
-  }
+  declare triggerFileDialog: boolean | undefined
 
   get formattedDuration() {
     return formatVideoDuration(this.duration)

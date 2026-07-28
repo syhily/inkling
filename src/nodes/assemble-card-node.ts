@@ -1,7 +1,12 @@
 import type { LexicalNode } from 'lexical'
 import type { ReactNode } from 'react'
 
-import type { CardSpecFieldMap, NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type {
+  CardSpecAccessorMap,
+  CardSpecFieldMap,
+  NestedEditorSpec,
+  TransientPropSpec,
+} from '@/nodes/base/generate-decorator-node'
 import type { CardDeclaration } from '@/nodes/cards/card-declaration'
 
 import { ensureLexicalNodeOwnMethods } from '@/nodes/base/ensure-node-own-methods'
@@ -26,8 +31,8 @@ export type CardNodeClass<TNode extends LexicalNode, D = unknown> = {
   [k in keyof typeof LexicalNode]: (typeof LexicalNode)[k]
 } & {
   // oxlint-disable-next-line typescript/no-explicit-any
-  new (...args: any[]): TNode & { decorate(): ReactNode } & CardSpecFieldMap<D>
-  prototype: TNode & { decorate(): ReactNode } & CardSpecFieldMap<D>
+  new (...args: any[]): TNode & { decorate(): ReactNode } & CardSpecFieldMap<D> & CardSpecAccessorMap<D>
+  prototype: TNode & { decorate(): ReactNode } & CardSpecFieldMap<D> & CardSpecAccessorMap<D>
   readonly nestedEditors: readonly NestedEditorSpec[] | undefined
   readonly transientProps: readonly TransientPropSpec[] | undefined
 }
@@ -53,9 +58,11 @@ export type CardAssemblyDeclaration = Pick<
  * by the generated node machinery). Its only method is `decorate()`,
  * delegating to the shared adapter (`@/nodes/decorate-card`).
  *
- * Behaviour the spec language can't express is NOT assembled here: upload
- * accessors, gallery image helpers, and the isEmpty()/getCardWidth()
- * overrides live on the base node classes.
+ * Behaviour the spec language can't express is NOT assembled here: gallery
+ * image helpers and the isEmpty()/getCardWidth() overrides live on the base
+ * node classes. The transient accessors ARE spec language — the get/set
+ * pair for each `accessor: true` entry is defined on the assembled
+ * prototype below, riding the same spec-adoption lifecycle as the fields.
  *
  * The base class's `getType`/`clone`/`importJSON`/`exportJSON` are inherited,
  * not own properties, so the assembled class runs through
@@ -85,6 +92,27 @@ export function assembleCardNode<
     decorate(): ReactNode {
       return decorateCard(this)
     }
+  }
+
+  // the spec's accessor entries: one get/set pair per `accessor: true`
+  // transient prop, reading/writing its private field
+  interface FieldCarrier {
+    getLatest(): Record<string, unknown>
+    getWritable(): Record<string, unknown>
+  }
+  for (const spec of declaration.transientProps ?? []) {
+    if (!spec.accessor) {
+      continue
+    }
+    const privateName = spec.privateName ?? `__${spec.name}`
+    Object.defineProperty(AssembledCardNode.prototype, spec.name, {
+      get: function (this: FieldCarrier) {
+        return this.getLatest()[privateName]
+      },
+      set: function (this: FieldCarrier, value: unknown) {
+        this.getWritable()[privateName] = value
+      },
+    })
   }
 
   ensureLexicalNodeOwnMethods(AssembledCardNode)

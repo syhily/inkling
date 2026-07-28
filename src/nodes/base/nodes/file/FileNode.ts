@@ -10,7 +10,9 @@ import { renderFileNode } from '@/nodes/base/nodes/file/file-renderer'
 import { bytesToSize, sizeToBytes } from '@/nodes/base/utils/size-byte-converter'
 
 const fileProperties = [
-  { name: 'src', default: '', urlType: 'url' },
+  // the blob guard as spec data: an upload-in-progress data-string src must
+  // not be persisted (the generated exportJSON redacts it)
+  { name: 'src', default: '', urlType: 'url', redactDataUrl: true },
   { name: 'fileTitle', default: '', wordCount: true },
   { name: 'fileCaption', default: '', wordCount: true },
   { name: 'fileName', default: '' },
@@ -46,27 +48,13 @@ export class BaseFileNode extends generateDecoratorNode({
   defaultRenderFn: renderFileNode,
   importSpec: fileImportSpec,
 }) {
-  /* @override */
-  exportJSON() {
-    // the generated exportJSON already serializes every declared property in
-    // `fileProperties` order; the only card-specific logic is the blob guard —
-    // an upload-in-progress data-string src must not be persisted
-    const json = super.exportJSON()
-    if (typeof json.src === 'string' && json.src.startsWith('data:')) {
-      json.src = '<base64String>'
-    }
-    return json
-  }
-
   // The transient-prop spec (file.declaration.ts) initializes this only on
-  // spec-adopting assembled classes; a raw `new BaseFileNode()` leaves it
+  // spec-adopting assembled classes — the accessor is assembly-defined from
+  // the spec (the `declare` leg is type-only, so base-typed write-seam
+  // consumers can name it); a raw `new BaseFileNode()` leaves the field
   // unset, so `undefined` is part of the honest type for spec-less instances
   declare __triggerFileDialog: boolean | undefined
-
-  set triggerFileDialog(shouldTrigger: boolean) {
-    const writable = this.getWritable()
-    writable.__triggerFileDialog = shouldTrigger
-  }
+  declare triggerFileDialog: boolean | undefined
 
   get formattedFileSize() {
     return bytesToSize(this.fileSize)

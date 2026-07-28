@@ -52,6 +52,7 @@ export class BaseGalleryNode extends generateDecoratorNode({
   nodeType: 'gallery',
   properties: galleryProperties,
   defaultRenderFn: renderGalleryNode,
+  hasEditMode: false,
 }) {
   /* override */
   static get urlTransformMap() {
@@ -66,10 +67,6 @@ export class BaseGalleryNode extends generateDecoratorNode({
 
   static importDOM() {
     return parseGalleryNode(this)
-  }
-
-  hasEditMode() {
-    return false
   }
 
   // Image-list mutation helpers the card spec doesn't cover live on the base

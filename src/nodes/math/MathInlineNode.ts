@@ -5,6 +5,7 @@ import { DecoratorNode } from 'lexical'
 
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 
+import { applyArtifactSlotInvalidation } from '@/nodes/base/generate-decorator-node'
 import { resolveMathArtifact } from '@/nodes/base/nodes/math/math-artifacts'
 import { createRenderContext, MATH_HTML_CONFIG } from '@/nodes/base/render-context'
 
@@ -67,15 +68,13 @@ export class MathInlineNode extends DecoratorNode<null> {
     return this.getLatest().__tex
   }
 
-  // The artifacts describe the current source — editing `tex` invalidates
-  // them (the same invariant BaseMathNode keeps); construction/importJSON
-  // assign the private fields directly, so host-filled slots survive.
+  // The artifact-slot invariant the generated nodes keep as spec data —
+  // this hand-written node shares the one implementation:
+  // construction/importJSON assign the private fields directly, so
+  // host-filled slots survive; only edits clear them.
   set tex(value: string) {
     const writable = this.getWritable()
-    if (writable.__tex !== value) {
-      writable.__mathml = ''
-      writable.__svg = ''
-    }
+    applyArtifactSlotInvalidation(writable.__tex !== value, writable, ['__mathml', '__svg'])
     writable.__tex = value
   }
 

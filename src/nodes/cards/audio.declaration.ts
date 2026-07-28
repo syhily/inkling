@@ -1,5 +1,6 @@
 import type { TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
+import { transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
 import { BaseAudioNode } from '@/nodes/base/nodes/audio/AudioNode'
 
 import type { CardDeclaration } from './card-declaration'
@@ -10,11 +11,7 @@ import { INSERT_AUDIO_COMMAND } from './card-commands'
 // declaration's type — the `__*` field map derives both from them
 // (CardSpecFieldMap)
 const transientProps = [
-  {
-    name: 'triggerFileDialog',
-    // don't trigger the file dialog when rendering if we've already been given a url
-    initial: (dataset): boolean => ((!dataset.src && dataset.triggerFileDialog) || false) as boolean,
-  },
+  transientTriggerFileDialogProp,
   { name: 'initialFile', initial: (dataset): File | undefined => dataset.initialFile as File | undefined },
 ] as const satisfies readonly TransientPropSpec[]
 

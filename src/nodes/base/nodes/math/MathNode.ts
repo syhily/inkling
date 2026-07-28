@@ -7,7 +7,9 @@ import {
 import { renderMathNode } from '@/nodes/base/nodes/math/math-renderer'
 
 const mathProperties = [
-  { name: 'tex', default: '', wordCount: true },
+  // the artifact-slot invariant as spec data: editing `tex` clears the
+  // prerendered `mathml`/`svg` (edit-invalidates)
+  { name: 'tex', default: '', wordCount: true, invalidates: ['mathml', 'svg'] },
   // Server-prerendered artifacts (KaTeX MathML / SVG), carried opaquely —
   // inkling never runs KaTeX (CSP); the host fills them on save.
   { name: 'mathml', default: '', urlType: 'html' },
@@ -23,25 +25,8 @@ export class BaseMathNode extends generateDecoratorNode({
   properties: mathProperties,
   defaultRenderFn: renderMathNode,
 }) {
-  // The artifacts describe the current source: reassigning `tex` to a
-  // different value invalidates the prerendered `mathml`/`svg` (the
-  // node-level equivalent of kobato's stripPrerenderArtifacts, the same
-  // invariant BaseCodeBlockNode keeps for `highlightedHtml`). The constructor
-  // and importJSON assign the private fields directly, so a host-filled
-  // artifact survives deserialization and cloning; only edits clear it.
-  get tex(): string {
-    return this.getLatest().__tex
-  }
-
-  set tex(value: string) {
-    const writable = this.getWritable()
-    if (writable.__tex !== value) {
-      writable.__mathml = ''
-      writable.__svg = ''
-    }
-    writable.__tex = value
-  }
-
+  // the artifact-slot invalidation (edit clears `mathml`/`svg`) is spec
+  // data on the `tex` property above — the generated setter enforces it
   isEmpty() {
     return !this.__tex
   }

@@ -69,14 +69,12 @@ export class BaseAudioNode extends generateDecoratorNode({
   importSpec: audioImportSpec,
 }) {
   // The transient-prop spec (audio.declaration.ts) initializes this only on
-  // spec-adopting assembled classes; a raw `new BaseAudioNode()` leaves it
+  // spec-adopting assembled classes — the accessor is assembly-defined from
+  // the spec (the `declare` leg is type-only, so base-typed write-seam
+  // consumers can name it); a raw `new BaseAudioNode()` leaves the field
   // unset, so `undefined` is part of the honest type for spec-less instances
   declare __triggerFileDialog: boolean | undefined
-
-  set triggerFileDialog(shouldTrigger: boolean) {
-    const writable = this.getWritable()
-    writable.__triggerFileDialog = shouldTrigger
-  }
+  declare triggerFileDialog: boolean | undefined
 }
 
 export const $createBaseAudioNode = (dataset: AudioData = {}) => {

@@ -11,13 +11,10 @@ export class BaseHorizontalRuleNode extends generateDecoratorNode({
   nodeType: 'horizontalrule',
   defaultRenderFn: renderHorizontalRuleNode,
   importSpec: horizontalRuleImportSpec,
+  hasEditMode: false,
 }) {
   getTextContent() {
     return '---\n\n'
-  }
-
-  hasEditMode() {
-    return false
   }
 }
 

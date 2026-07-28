@@ -36,6 +36,7 @@ export class BaseFootnoteDefinitionNode extends generateDecoratorNode({
   // No defaultRenderFn: the renderer needs the position-derived index, which
   // only the subclass-typed `this` can supply — exportDOM is overridden
   // below instead (the generated one would throw without a render fn).
+  hasEditMode: false,
 }) {
   // The generated constructor assigns nested editors only on subclasses that
   // adopt a `nestedEditors` spec (the assembled card class); a raw
@@ -45,10 +46,6 @@ export class BaseFootnoteDefinitionNode extends generateDecoratorNode({
 
   static importDOM() {
     return parseFootnoteDefinitionSection(this)
-  }
-
-  hasEditMode() {
-    return false
   }
 
   // The 1-based citation index is a render-time derivative of the node's

@@ -75,6 +75,11 @@ function validateArguments(nodeType: string, properties: readonly DecoratorNodeP
  * 'markdown' when its content may contain URLs — for the out-of-repo
  * `urlTransformMap` consumer, and `urlPath` remaps the key used there.
  * `wordCount` includes the property in the node's text content.
+ * `invalidates` names the sibling properties (the artifact slots,
+ * CONTEXT.md "artifact slot") an edit to this property clears — the
+ * edit-invalidates invariant the generated setter enforces. `redactDataUrl`
+ * marks a src property whose upload-in-progress `data:` value must not be
+ * persisted (exportJSON writes `'<base64String>'` instead).
  */
 export interface DecoratorNodeProperty<Name extends string = string, Default = unknown> {
   name: Name
@@ -83,6 +88,34 @@ export interface DecoratorNodeProperty<Name extends string = string, Default = u
   urlType?: 'url' | 'html' | 'markdown'
   urlPath?: string
   wordCount?: boolean
+  invalidates?: readonly string[]
+  redactDataUrl?: boolean
+}
+
+/**
+ * The artifact-slot edit-invalidation invariant, one implementation for the
+ * generated setters (from the spec's `invalidates` entries) and the one
+ * non-generated node (MathInlineNode's tex setter): only EDITS clear the
+ * slots — the constructor and importJSON assign the private fields
+ * directly, so a host-filled artifact survives deserialization and cloning.
+ */
+export function applyArtifactSlotInvalidation(
+  changed: boolean,
+  writable: object,
+  slotPrivateNames: readonly string[],
+): void {
+  if (!changed) {
+    return
+  }
+  const target = writable as Record<string, unknown>
+  for (const name of slotPrivateNames) {
+    target[name] = ''
+  }
+}
+
+/** The blob guard: an upload-in-progress `data:` src must not be persisted. */
+export function redactDataUrlValue<T>(value: T): T | '<base64String>' {
+  return typeof value === 'string' && value.startsWith('data:') ? '<base64String>' : value
 }
 
 /**
@@ -187,7 +220,24 @@ export interface TransientPropSpec {
   initial?: (dataset: Record<string, unknown>) => unknown
   /** Key under which `getDataset` re-exposes the current field value, if any. */
   datasetKey?: string
+  /** Generate the get/set accessor pair (reading/writing the private field) on the assembled class. */
+  accessor?: boolean
 }
+
+/**
+ * The shared `triggerFileDialog` spec entry (the four upload cards'): the
+ * insert-time "open the file picker" flag — don't trigger the dialog when
+ * rendering if the card was constructed with a url — with its accessor
+ * generated. Const-asserted so the literal `name` and value type survive
+ * into `CardSpecFieldMap`/`CardSpecAccessorMap`; image spreads it to add
+ * its `datasetKey`.
+ */
+export const transientTriggerFileDialogProp = {
+  name: 'triggerFileDialog',
+  initial: (dataset: Record<string, unknown>): boolean =>
+    ((!dataset.src && dataset.triggerFileDialog) || false) as boolean,
+  accessor: true,
+} as const satisfies TransientPropSpec
 
 const NO_TRANSIENT_PROPS: readonly TransientPropSpec[] = []
 
@@ -288,6 +338,18 @@ export type CardSpecFieldMap<D> = (D extends { transientProps: infer Specs exten
       }
     : unknown)
 
+/**
+ * The accessor map of a card node, DERIVED the same way as
+ * `CardSpecFieldMap`: one read/write property per transient spec entry
+ * marked `accessor: true`, at the entry's value type. The runtime pair is
+ * defined on the assembled class (`assembleCardNode`), so a base node
+ * without its declaration's spec has no accessor — matching the
+ * spec-adoption lifecycle of the fields themselves.
+ */
+export type CardSpecAccessorMap<D> = D extends { transientProps: infer Specs extends readonly TransientPropSpec[] }
+  ? { [Spec in Specs[number] as Spec extends { accessor: true } ? Spec['name'] : never]: TransientPropValue<Spec> }
+  : unknown
+
 export type DecoratorNodeValueMap<Props extends readonly DecoratorNodeProperty[]> = {
   [Prop in Props[number] as Prop['name']]: WidenLiteral<Prop['default']>
 }
@@ -383,6 +445,7 @@ export function generateDecoratorNode<
   defaultRenderFn,
   version = 1,
   importSpec,
+  hasEditMode = true,
 }: {
   nodeType: string
   properties?: Props
@@ -392,6 +455,8 @@ export function generateDecoratorNode<
   defaultRenderFn?: RenderFn<GeneratedDecoratorNodeInstance<DecoratorNodeValueMap<Props>, TOutput>, TOutput>
   version?: number
   importSpec?: CardImportSpec
+  /** The edit-mode fact as data (most cards have one; image/gallery/horizontalrule/footnotedefinition don't). */
+  hasEditMode?: boolean
 }): GeneratedDecoratorNodeClass<DecoratorNodeValueMap<Props>, TOutput> {
   type GeneratedDataset = DecoratorNodeValueMap<Props>
 
@@ -643,7 +708,9 @@ export function generateDecoratorNode<
         type: nodeType,
         version: version,
         ...internalProps.reduce((obj: Record<string, unknown>, prop) => {
-          obj[prop.name] = this[prop.name]
+          // the blob guard rides the property spec — an upload-in-progress
+          // data-string src must not be persisted
+          obj[prop.name] = prop.redactDataUrl ? redactDataUrlValue(this[prop.name]) : this[prop.name]
           return obj
         }, {}),
       } as SerializedGeneratedDecoratorNode<GeneratedDataset>
@@ -717,11 +784,11 @@ export function generateDecoratorNode<
     /* c8 ignore stop */
 
     /**
-     * Defines whether a node has an edit mode in the editor UI
+     * Defines whether a node has an edit mode in the editor UI — the
+     * options-bag fact, not a per-class override.
      */
     hasEditMode() {
-      // Most of our cards have an edit mode. Override if needed.
-      return true
+      return hasEditMode
     }
 
     /*
@@ -759,14 +826,30 @@ export function generateDecoratorNode<
    *
    * They can be used as `node.content` (getter) and `node.content = 'new value'` (setter)
    */
+  // the generated accessors' `this`, typed once: the class keeps a dynamic
+  // index signature for its spec-driven fields (see the class-body note)
+  interface FieldCarrier {
+    getLatest(): Record<string, unknown>
+    getWritable(): Record<string, unknown>
+  }
+
   internalProps.forEach((prop) => {
+    // the artifact slots this property's edits clear, resolved to their
+    // private names once (CONTEXT.md "artifact slot": edit-invalidates)
+    const invalidatedSlots = prop.invalidates?.map(
+      (name) => internalProps.find((candidate) => candidate.name === name)?.privateName ?? `__${name}`,
+    )
+
     Object.defineProperty(GeneratedDecoratorNode.prototype, prop.name, {
-      get: function () {
+      get: function (this: FieldCarrier) {
         const self = this.getLatest()
         return self[prop.privateName]
       },
-      set: function (newVal) {
+      set: function (this: FieldCarrier, newVal: unknown) {
         const writable = this.getWritable()
+        if (invalidatedSlots) {
+          applyArtifactSlotInvalidation(writable[prop.privateName] !== newVal, writable, invalidatedSlots)
+        }
         writable[prop.privateName] = newVal
       },
     })
