@@ -1,5 +1,8 @@
 import React from 'react'
 
+import type { HtmlNode } from '@/nodes/HtmlNode'
+
+import IndicatorIcon from '@/assets/icons/inkling-indicator-html.svg?react'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { HtmlCard } from '@/components/ui/cards/HtmlCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
@@ -26,4 +29,16 @@ export function HtmlNodeComponent({ nodeKey, html }: { nodeKey: string; html?: s
       <CardActionToolbar editDataTestId="edit-html" nodeKey={nodeKey} />
     </>
   )
+}
+
+// Html is the only card with an indicator icon; the declaration's
+// `decorateTarget.hasIndicatorIcon` flag gates its attachment.
+export { IndicatorIcon }
+
+/**
+ * Html's decorate render — the React-bearing half of its decorate-target,
+ * paired with the declaration by `@/nodes/cards/card-decorate`.
+ */
+export function renderHtmlCard(node: HtmlNode) {
+  return <HtmlNodeComponent html={node.html} nodeKey={node.getKey()} />
 }

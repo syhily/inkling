@@ -14,8 +14,8 @@ import { join, sep } from 'node:path'
  */
 
 // modules the registry layer must never VALUE-import: the wrapper
-// projections, the decorate tree, React, the components/plugins layer, and
-// the shim modules (named by prefix — '@/nodes/AudioNode' etc.)
+// projections, React, the components/plugins layer, and the shim modules
+// (named by prefix — '@/nodes/AudioNode' etc.)
 const WRAPPER_LAYER_SPECIFIERS = new Set([
   '@/nodes/cards/card-wrappers',
   '@/nodes/cards/card-decorate',
@@ -24,7 +24,7 @@ const WRAPPER_LAYER_SPECIFIERS = new Set([
   '@/nodes/cards/card-insert-commands',
   '@/nodes/decorate-card',
 ])
-const FORBIDDEN_PREFIXES = ['@/nodes/cards/decorate/', '@/components/', '@/hooks/', '@/plugins/']
+const FORBIDDEN_PREFIXES = ['@/components/', '@/hooks/', '@/plugins/']
 
 function listSourceFiles(dir: string): string[] {
   return readdirSync(dir, { recursive: true })
@@ -53,7 +53,10 @@ function wrapperLayerImportsOf(file: string): string[] {
       FORBIDDEN_PREFIXES.some((prefix) => specifier.startsWith(prefix)) ||
       // the shim modules: '@/nodes/<Card>Node' directly under src/nodes
       // (MinimalNodes/BasicNodes are node sets, not shims)
-      /^@\/nodes\/[A-Z][A-Za-z]*Node$/.test(specifier),
+      /^@\/nodes\/[A-Z][A-Za-z]*Node$/.test(specifier) ||
+      // the card components and their decorate renders:
+      // '@/nodes/<Card>NodeComponent', '@/nodes/header/HeaderNodeComponent'
+      /^@\/nodes\/([A-Z][A-Za-z]*NodeComponent|header\/HeaderNodeComponent)$/.test(specifier),
   )
 }
 

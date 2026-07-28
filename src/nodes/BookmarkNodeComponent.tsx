@@ -11,6 +11,8 @@ import {
 } from 'lexical'
 import React, { useCallback } from 'react'
 
+import type { BookmarkNode } from '@/nodes/BookmarkNode'
+
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
 import { useCardIsSelected } from '@/context/CardSelectionStoreContext'
@@ -162,5 +164,27 @@ export function BookmarkNodeComponent({
         visibleWhen={!!title && !!cardConfig.createSnippet}
       />
     </>
+  )
+}
+
+/**
+ * Bookmark's decorate render — the React-bearing half of its decorate-target,
+ * paired with the declaration by `@/nodes/cards/card-decorate`.
+ */
+export function renderBookmarkCard(node: BookmarkNode) {
+  return (
+    <BookmarkNodeComponent
+      author={node.author}
+      captionEditor={node.__captionEditor}
+      captionEditorInitialState={node.__captionEditorInitialState}
+      createdWithUrl={node.__createdWithUrl}
+      description={node.description}
+      icon={node.icon}
+      nodeKey={node.getKey()}
+      publisher={node.publisher}
+      thumbnail={node.thumbnail}
+      title={node.title}
+      url={node.url}
+    />
   )
 }

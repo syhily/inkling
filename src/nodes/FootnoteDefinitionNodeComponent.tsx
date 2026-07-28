@@ -3,6 +3,8 @@ import type { EditorState, LexicalEditor, NodeKey } from 'lexical'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import React from 'react'
 
+import type { FootnoteDefinitionNode } from '@/nodes/FootnoteDefinitionNode'
+
 import InklingNestedEditor from '@/components/InklingNestedEditor'
 import { useFootnoteHandle, useFootnoteHandleState } from '@/context/FootnoteHandleContext'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
@@ -84,5 +86,28 @@ export function FootnoteDefinitionNodeComponent({
         ×
       </button>
     </div>
+  )
+}
+
+/**
+ * The footnote definition's decorate render — the React-bearing half of its
+ * decorate-target, paired with the declaration by
+ * `@/nodes/cards/card-decorate`.
+ */
+export function renderFootnoteDefinitionCard(node: FootnoteDefinitionNode) {
+  // Same headless-round-trip invariant as toggle's nested editors: null only
+  // inside an editor that never reconciles decorators — guard so the field
+  // type stays honest.
+  if (!node.__contentEditor) {
+    return null
+  }
+
+  return (
+    <FootnoteDefinitionNodeComponent
+      contentEditor={node.__contentEditor}
+      contentEditorInitialState={node.__contentEditorInitialState}
+      nodeKey={node.getKey()}
+      targetKey={node.targetKey}
+    />
   )
 }

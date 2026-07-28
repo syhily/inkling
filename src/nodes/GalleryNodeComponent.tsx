@@ -1,6 +1,7 @@
 import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 
+import type { GalleryNode } from '@/nodes/GalleryNode'
 import type { GalleryImage } from '@/types/gallery'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
@@ -113,5 +114,19 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
         visibleWhen={!imageFilesDropper.isDraggedOver && !galleryReorder.isDraggedOver && images.length > 0}
       />
     </>
+  )
+}
+
+/**
+ * Gallery's decorate render — the React-bearing half of its decorate-target,
+ * paired with the declaration by `@/nodes/cards/card-decorate`.
+ */
+export function renderGalleryCard(node: GalleryNode) {
+  return (
+    <GalleryNodeComponent
+      captionEditor={node.__captionEditor}
+      captionEditorInitialState={node.__captionEditorInitialState}
+      nodeKey={node.getKey()}
+    />
   )
 }

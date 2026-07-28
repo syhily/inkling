@@ -2,6 +2,8 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { type NodeKey } from 'lexical'
 import React from 'react'
 
+import type { FileNode } from '@/nodes/FileNode'
+
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { FileCard } from '@/components/ui/cards/FileCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
@@ -125,3 +127,22 @@ function FileNodeComponent({
 }
 
 export default FileNodeComponent
+
+/**
+ * File's decorate render — the React-bearing half of its decorate-target,
+ * paired with the declaration by `@/nodes/cards/card-decorate`.
+ */
+export function renderFileCard(node: FileNode) {
+  return (
+    <FileNodeComponent
+      fileDesc={node.fileCaption}
+      fileName={node.fileName}
+      fileSize={node.formattedFileSize}
+      fileSrc={node.src}
+      fileTitle={node.fileTitle}
+      initialFile={node.__initialFile}
+      nodeKey={node.getKey()}
+      triggerFileDialog={node.__triggerFileDialog}
+    />
+  )
+}

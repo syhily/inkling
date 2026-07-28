@@ -2,6 +2,8 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import { useContext, useEffect } from 'react'
 
+import type { HeaderNode } from '@/nodes/HeaderNode'
+
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
@@ -200,3 +202,36 @@ function HeaderNodeComponent({
 }
 
 export default HeaderNodeComponent
+
+/**
+ * Header's decorate render — the React-bearing half of its decorate-target,
+ * paired with the declaration by `@/nodes/cards/card-decorate`.
+ */
+export function renderHeaderCard(node: HeaderNode) {
+  return (
+    <HeaderNodeComponent
+      accentColor={node.accentColor}
+      alignment={node.alignment}
+      backgroundColor={node.backgroundColor}
+      backgroundImageHeight={node.backgroundImageHeight}
+      backgroundImageSrc={node.backgroundImageSrc}
+      backgroundImageWidth={node.backgroundImageWidth}
+      backgroundSize={node.backgroundSize}
+      buttonColor={node.buttonColor}
+      buttonEnabled={node.buttonEnabled}
+      buttonText={node.buttonText}
+      buttonTextColor={node.buttonTextColor}
+      buttonUrl={node.buttonUrl}
+      header={node.header}
+      headerTextEditor={node.__headerTextEditor}
+      headerTextEditorInitialState={node.__headerTextEditorInitialState}
+      isSwapped={node.swapped}
+      layout={node.layout}
+      nodeKey={node.getKey()}
+      subheader={node.subheader}
+      subheaderTextEditor={node.__subheaderTextEditor}
+      subheaderTextEditorInitialState={node.__subheaderTextEditorInitialState}
+      textColor={node.textColor}
+    />
+  )
+}

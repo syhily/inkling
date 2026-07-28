@@ -20,8 +20,8 @@ export type HostCardMenuEntrySpec = Omit<CardMenuEntrySpec, 'icon'> & {
 /**
  * The host card declaration (CONTEXT.md: "host card") — every
  * `CardDeclaration` field except `menu`/`dragIcon`/`markdown`, plus the
- * React half the built-in cards attach one layer up (their
- * `src/nodes/cards/decorate/*.tsx` modules). Both halves are declared in one
+ * React half the built-in cards attach one layer up (the `render*Card`
+ * exports in their `*NodeComponent` files). Both halves are declared in one
  * spec here. Build the `baseNode` with `generateDecoratorNode`
  * (`@/nodes/base/generate-decorator-node`) so the node satisfies the
  * InklingDecoratorNode contract the selection protocol and `exportDOM` gate
@@ -31,7 +31,7 @@ export interface HostCardSpec<NodeType extends string = string> extends Omit<
   CardDeclaration<NodeType>,
   'menu' | 'dragIcon' | 'markdown'
 > {
-  /** the decorate render — the built-in cards' `src/nodes/cards/decorate/*.tsx` counterpart */
+  /** the decorate render — the built-in cards' `render*Card` counterpart */
   render(node: LexicalNode): ReactNode
   IndicatorIcon?: ComponentType<SVGProps<SVGSVGElement>>
   menu?: readonly HostCardMenuEntrySpec[]

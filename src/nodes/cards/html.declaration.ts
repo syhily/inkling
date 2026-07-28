@@ -9,7 +9,7 @@ export const htmlDeclaration = {
   baseNode: BaseHtmlNode,
   decorateTarget: {
     wrapperStyle: 'wide',
-    // the icon component attaches one layer up (`@/nodes/cards/decorate/html`)
+    // the icon component attaches one layer up (`@/nodes/HtmlNodeComponent`)
     hasIndicatorIcon: true,
   },
   menu: [

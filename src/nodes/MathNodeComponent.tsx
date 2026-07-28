@@ -1,6 +1,8 @@
 import { type NodeKey } from 'lexical'
 import React from 'react'
 
+import type { MathNode } from '@/nodes/MathNode'
+
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { MathCard } from '@/components/ui/cards/MathCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
@@ -45,4 +47,12 @@ export function MathNodeComponent({ nodeKey, tex, mathml, svg }: MathNodeCompone
       <CardActionToolbar editDataTestId="edit-math-card" nodeKey={nodeKey} />
     </>
   )
+}
+
+/**
+ * Math's decorate render — the React-bearing half of its decorate-target,
+ * paired with the declaration by `@/nodes/cards/card-decorate`.
+ */
+export function renderMathCard(node: MathNode) {
+  return <MathNodeComponent mathml={node.mathml} nodeKey={node.getKey()} svg={node.svg} tex={node.tex} />
 }

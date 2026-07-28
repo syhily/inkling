@@ -1,6 +1,8 @@
 import { type NodeKey } from 'lexical'
 import React from 'react'
 
+import type { ButtonNode } from '@/nodes/ButtonNode'
+
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { ButtonCard } from '@/components/ui/cards/ButtonCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
@@ -58,5 +60,20 @@ export function ButtonNodeComponent({
 
       <CardActionToolbar editDataTestId="edit-button-card" nodeKey={nodeKey} />
     </>
+  )
+}
+
+/**
+ * Button's decorate render — the React-bearing half of its decorate-target,
+ * paired with the declaration by `@/nodes/cards/card-decorate`.
+ */
+export function renderButtonCard(node: ButtonNode) {
+  return (
+    <ButtonNodeComponent
+      alignment={node.alignment}
+      buttonText={node.buttonText}
+      buttonUrl={node.buttonUrl}
+      nodeKey={node.getKey()}
+    />
   )
 }

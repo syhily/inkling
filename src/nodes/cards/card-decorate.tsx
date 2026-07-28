@@ -3,32 +3,31 @@ import type { ComponentType, ReactNode, SVGProps } from 'react'
 
 import type { DecorateTargetSpec } from '@/nodes/cards/card-declaration'
 
+import { renderHorizontalRuleCard } from '@/components/ui/cards/HorizontalRuleCard'
+import { renderAudioCard } from '@/nodes/AudioNodeComponent'
+import { renderBookmarkCard } from '@/nodes/BookmarkNodeComponent'
+import { renderButtonCard } from '@/nodes/ButtonNodeComponent'
+import { renderCalloutCard } from '@/nodes/CalloutNodeComponent'
 import { CARD_DECLARATIONS, type CardNodeType } from '@/nodes/cards'
 import { resolveCardFacts, type CardFacts } from '@/nodes/cards/card-facts'
-
-import { render as renderAudioCard } from './decorate/audio'
-import { render as renderBookmarkCard } from './decorate/bookmark'
-import { render as renderButtonCard } from './decorate/button'
-import { render as renderCalloutCard } from './decorate/callout'
-import { render as renderCodeBlockCard } from './decorate/codeblock'
-import { render as renderFileCard } from './decorate/file'
-import { render as renderFootnoteDefinitionCard } from './decorate/footnotedefinition'
-import { render as renderGalleryCard } from './decorate/gallery'
-import { render as renderHeaderCard } from './decorate/header'
-import { render as renderHorizontalRuleCard } from './decorate/horizontalrule'
-import { IndicatorIcon as HtmlIndicatorIcon, render as renderHtmlCard } from './decorate/html'
-import { render as renderImageCard } from './decorate/image'
-import { render as renderMathCard } from './decorate/math'
-import { render as renderToggleCard } from './decorate/toggle'
-import { render as renderVideoCard } from './decorate/video'
+import { renderCodeBlockCard } from '@/nodes/CodeBlockNodeComponent'
+import { renderFileCard } from '@/nodes/FileNodeComponent'
+import { renderFootnoteDefinitionCard } from '@/nodes/FootnoteDefinitionNodeComponent'
+import { renderGalleryCard } from '@/nodes/GalleryNodeComponent'
+import { renderHeaderCard } from '@/nodes/header/HeaderNodeComponent'
+import { IndicatorIcon as HtmlIndicatorIcon, renderHtmlCard } from '@/nodes/HtmlNodeComponent'
+import { renderImageCard } from '@/nodes/ImageNodeComponent'
+import { renderMathCard } from '@/nodes/MathNodeComponent'
+import { renderToggleCard } from '@/nodes/ToggleNodeComponent'
+import { renderVideoCard } from '@/nodes/VideoNodeComponent'
 
 /**
  * The React-bearing half of a card's decorate-target: the node→component
  * render (and the indicator icon, for the one card that has one). Each lives
- * in its per-card module under `@/nodes/cards/decorate` — it cannot live in
- * the declaration modules, which must stay React-free. Method-syntax `render`
- * keeps the per-card node parameter types (each module's `render` takes its
- * own wrapper node type) assignable here.
+ * beside its card component in the `*NodeComponent` files — it cannot live
+ * in the declaration modules, which must stay React-free. Method-syntax
+ * `render` keeps the per-card node parameter types (each card's `render`
+ * takes its own wrapper node type) assignable here.
  */
 interface CardDecorateModule {
   render(node: LexicalNode): ReactNode

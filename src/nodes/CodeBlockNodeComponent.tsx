@@ -1,6 +1,8 @@
 import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 
+import type { CodeBlockNode } from '@/nodes/CodeBlockNode'
+
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CodeBlockCard } from '@/components/ui/cards/CodeBlockCard'
 import { useCardIsEditing, useCardIsSelected } from '@/context/CardSelectionStoreContext'
@@ -64,5 +66,22 @@ export function CodeBlockNodeComponent({
       />
       <CardActionToolbar editDataTestId="edit-code-block-card" nodeKey={nodeKey} />
     </>
+  )
+}
+
+/**
+ * CodeBlock's decorate render — the React-bearing half of its
+ * decorate-target, paired with the declaration by
+ * `@/nodes/cards/card-decorate`.
+ */
+export function renderCodeBlockCard(node: CodeBlockNode) {
+  return (
+    <CodeBlockNodeComponent
+      captionEditor={node.__captionEditor}
+      captionEditorInitialState={node.__captionEditorInitialState}
+      code={node.code}
+      language={node.language}
+      nodeKey={node.getKey()}
+    />
   )
 }

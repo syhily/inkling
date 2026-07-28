@@ -2,6 +2,8 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { $createNodeSelection, $setSelection, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 
+import type { ImageNode } from '@/nodes/ImageNode'
+
 import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { CardActionToolbar, useCardToolbarLabel } from '@/components/ui/CardActionToolbar'
 import { ImageCard } from '@/components/ui/cards/ImageCard'
@@ -13,7 +15,7 @@ import { useCardWriter } from '@/hooks/useCardWriter'
 import useDropTarget from '@/hooks/useDropTarget'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
-import { isCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
+import { isCardWidth, normalizeCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 import { $isImageNode } from '@/nodes/ImageNode'
 import { applyImageCardDrop, isImageCardDropAllowed } from '@/plugins/behaviour/drop-surgery'
 import { backfillImageDimensions, clampImageCardWidth, migrateImageDataUrl } from '@/plugins/behaviour/image-lifecycle'
@@ -262,6 +264,36 @@ export function ImageNodeComponent({
         nodeKey={nodeKey}
         visibleWhen={!!src && !showLink}
       />
+    </>
+  )
+}
+
+/**
+ * Image's decorate render — the React-bearing half of its decorate-target,
+ * paired with the declaration by `@/nodes/cards/card-decorate`.
+ */
+export function renderImageCard(node: ImageNode) {
+  const Selector = node.__selector
+  const cardWidth = normalizeCardWidth(node.cardWidth) ?? 'regular'
+
+  return (
+    <>
+      {Selector && <Selector nodeKey={node.getKey()} />}
+
+      {!node.__isImageHidden && (
+        <ImageNodeComponent
+          altText={node.alt}
+          captionEditor={node.__captionEditor}
+          captionEditorInitialState={node.__captionEditorInitialState}
+          cardWidth={cardWidth}
+          href={node.href}
+          initialFile={node.__initialFile}
+          nodeKey={node.getKey()}
+          previewSrc={node.previewSrc ?? undefined}
+          src={node.src}
+          triggerFileDialog={node.__triggerFileDialog}
+        />
+      )}
     </>
   )
 }

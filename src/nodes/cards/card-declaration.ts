@@ -8,8 +8,8 @@ import type { CardWidth } from '@/nodes/base/utils/card-widths'
  * The card's decorate-target wrapper props (CONTEXT.md: "card spec") — the
  * React-free half of what a card's `decorate()` passes to
  * `InklingCardWrapper`. The component render and the `IndicatorIcon`
- * component attach one layer up in the per-card modules under
- * `@/nodes/cards/decorate` (paired with the declaration by
+ * component attach one layer up beside each card's component in the
+ * `*NodeComponent` files (paired with the declaration by
  * `@/nodes/cards/card-decorate`) because they are React-bearing; the shared
  * adapter (`@/nodes/decorate-card`) merges both halves. Cards with no wrapper props (Audio, Bookmark, Callout, File,
  * HorizontalRule) omit this entry.
@@ -132,8 +132,8 @@ export type CardUploadType = keyof NonNullable<FileUploader['fileTypes']>
  * the React-bearing decorate/menu pieces attach one layer up — the
  * declarations must never import wrappers, or the base barrel would close an
  * import cycle through the wrapper files. Menu icons and component renders
- * are therefore named by id (`CardIconId`) or attached in per-card modules
- * under `@/nodes/cards/decorate`.
+ * are therefore named by id (`CardIconId`) or attached beside each card's
+ * component in the `*NodeComponent` files.
  *
  * Declarations use `satisfies CardDeclaration<'<nodeType>'>` so the literal
  * node type survives on the declaration's type.
