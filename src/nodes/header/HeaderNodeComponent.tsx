@@ -12,7 +12,6 @@ import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { headerFieldWriter } from '@/nodes/header/header-field-writer'
 import { $isHeaderNode } from '@/nodes/HeaderNode'
-import { openFileSelection } from '@/utils/openFileSelection'
 import { headerBackgroundUploadIntent } from '@/utils/upload-intent'
 
 interface HeaderNodeComponentProps {
@@ -85,7 +84,7 @@ function HeaderNodeComponent({
     layout,
     backgroundImageSrc,
     write,
-    openFileDialog: () => openFileSelection({ fileInputRef }),
+    openFileDialog: () => fileInputRef.current?.click(),
   })
 
   // field-name-as-data write handlers (src/nodes/header/header-field-writer.ts)

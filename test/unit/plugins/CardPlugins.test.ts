@@ -12,8 +12,8 @@ import { INSERT_FILE_COMMAND } from '@/nodes/FileNode'
 import { INSERT_GALLERY_COMMAND } from '@/nodes/GalleryNode'
 import { INSERT_TOGGLE_COMMAND } from '@/nodes/ToggleNode'
 import { INSERT_VIDEO_COMMAND } from '@/nodes/VideoNode'
+import { INSERT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
-import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -107,7 +107,7 @@ describe('Card insert commands (CardInsertPlugin)', () => {
     editor = createTestEditor([ButtonNode])
     await setupPluginTest(editor)
 
-    const dispatched = Reflect.apply(editor.dispatchCommand, editor, [INSERT_BUTTON_COMMAND, null])
+    const dispatched = Reflect.apply(editor.dispatchCommand.bind(editor), editor, [INSERT_BUTTON_COMMAND, null])
     expect(dispatched).toBe(false)
   })
 

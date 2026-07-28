@@ -8,14 +8,6 @@ import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
 import { registerDefaultTransforms } from '@/transforms'
 
 import { getModifierState } from './behaviour/clipboard-protocol'
-import {
-  DELETE_CARD_COMMAND,
-  DESELECT_CARD_COMMAND,
-  EDIT_CARD_COMMAND,
-  INSERT_CARD_COMMAND,
-  PASTE_LINK_COMMAND,
-  SELECT_CARD_COMMAND,
-} from './behaviour/commands'
 import { registerCardCommands } from './behaviour/registerCardCommands'
 import { registerCardSelection } from './behaviour/registerCardSelection'
 import { registerClickAndCut } from './behaviour/registerClickAndCut'
@@ -23,15 +15,6 @@ import { registerKeyboardNavigation } from './behaviour/registerKeyboardNavigati
 import { registerLinkMatching } from './behaviour/registerLinkMatching'
 import { registerMouseEvents } from './behaviour/registerMouseEvents'
 import { registerPasteHandler } from './behaviour/registerPasteHandler'
-
-export {
-  DELETE_CARD_COMMAND,
-  DESELECT_CARD_COMMAND,
-  EDIT_CARD_COMMAND,
-  INSERT_CARD_COMMAND,
-  PASTE_LINK_COMMAND,
-  SELECT_CARD_COMMAND,
-}
 
 interface InklingBehaviourPluginProps {
   containerElem?: React.RefObject<HTMLElement | null>
@@ -106,13 +89,17 @@ export default function InklingBehaviourPlugin({
   // element, read lazily because it is null at first render and set on mount.
   // Scoping per editor keeps multi-editor pages from cross-scoping the
   // deselect, and no document access happens during render.
+  // the getter reads the editor lazily (outside render), so the memo itself
+  // has no reactive inputs — the composer editor is stable for the
+  // component's lifetime, hence the empty dep list
   const fallbackRef = React.useMemo<React.RefObject<HTMLElement | null>>(
     () => ({
       get current() {
         return editor.getRootElement()
       },
     }),
-    [editor],
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+    [],
   )
   return useInklingBehaviour({
     editor,

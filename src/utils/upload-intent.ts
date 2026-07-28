@@ -17,7 +17,13 @@ import {
 import { getAudioMetadata } from '@/utils/getAudioMetadata'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import prettifyFileName from '@/utils/prettifyFileName'
-import { revokePreviewUrl } from '@/utils/revokePreviewUrl'
+
+/** Releases a preview object URL; the `blob:` guard keeps real URLs untouched. */
+function revokePreviewUrl(url: string | null | undefined): void {
+  if (url?.startsWith('blob:')) {
+    URL.revokeObjectURL(url)
+  }
+}
 
 /**
  * The one upload-intent module (plan 045): file(s) + per-card metadata

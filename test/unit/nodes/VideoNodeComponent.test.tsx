@@ -15,14 +15,9 @@ import { VideoNode, $createVideoNode } from '@/nodes/VideoNode'
 import { VideoNodeComponent } from '@/nodes/VideoNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import extractVideoMetadata from '@/utils/extractVideoMetadata'
-import { openFileSelection } from '@/utils/openFileSelection'
 
 vi.mock('@/utils/extractVideoMetadata', () => ({
   default: vi.fn(),
-}))
-
-vi.mock('@/utils/openFileSelection', () => ({
-  openFileSelection: vi.fn(),
 }))
 
 function createTestEditor(): LexicalEditor {
@@ -35,7 +30,7 @@ function createTestEditor(): LexicalEditor {
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected and editing unless a test says otherwise
 function createSelection(
-  nodeKey: NodeKey | string = 'video-1',
+  nodeKey: NodeKey = 'video-1',
   { selected = true, editing = true }: { selected?: boolean; editing?: boolean } = {},
 ) {
   return createCardSelectionStoreWrapper({
@@ -370,6 +365,7 @@ describe('VideoNodeComponent', () => {
   })
 
   it('opens the file dialog once when triggerFileDialog is true', async () => {
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
     let nodeKey = ''
     await new Promise<void>((resolve) => {
       editor.update(
@@ -385,7 +381,7 @@ describe('VideoNodeComponent', () => {
     renderComponent(nodeKey, false, { triggerFileDialog: true, thumbnail: '' })
 
     await waitFor(() => {
-      expect(openFileSelection).toHaveBeenCalledTimes(1)
+      expect(clickSpy).toHaveBeenCalledTimes(1)
     })
 
     // the flag is cleared on the node so a re-render does not trigger it again

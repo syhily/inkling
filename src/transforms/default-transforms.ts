@@ -6,7 +6,6 @@ import { mergeRegister, $createParagraphNode, ParagraphNode } from 'lexical'
 
 import { ExtendedHeadingNode } from '@/nodes/base'
 import { registerTableCellGuard } from '@/nodes/table/table-cell-guard'
-/* c8 ignore start */
 import { registerDenestTransform } from '@/transforms/transforms/denest'
 import { registerMergeListNodesTransform } from '@/transforms/transforms/merge-list-nodes'
 import { registerRemoveAlignmentTransform } from '@/transforms/transforms/remove-alignment'
@@ -17,7 +16,6 @@ export * from '@/transforms/transforms/remove-alignment'
 
 // only used when rendering so not registered by default
 export * from '@/transforms/transforms/remove-at-link-nodes'
-/* c8 ignore stop */
 
 export interface DefaultTransformsOptions {
   /**
@@ -28,7 +26,6 @@ export interface DefaultTransformsOptions {
   alignment?: 'strip' | 'keep'
 }
 
-/* c8 ignore next */
 export function registerDefaultTransforms(editor: LexicalEditor, options?: DefaultTransformsOptions) {
   const alignment = options?.alignment ?? 'strip'
 

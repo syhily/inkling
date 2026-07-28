@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 
 import { Dropdown } from '@/components/ui/SnippetInput/Dropdown'
 import { Input } from '@/components/ui/SnippetInput/Input'
+import { initialSlot, nextSlot, previousSlot, slotToItemIndex } from '@/components/ui/SnippetInput/snippet-navigator'
 import { type SnippetItem } from '@/context/InklingHostIntegrationContext'
 
 interface SnippetInputProps {
@@ -22,22 +23,23 @@ export function SnippetInput({
   snippets = [],
 }: SnippetInputProps) {
   const snippetRef = useRef<HTMLDivElement | null>(null)
-  const [isCreateButtonActive, setIsCreateButtonActive] = useState(true)
-  const [activeMenuItem, setActiveMenuItem] = useState(-1)
-  const [suggestedList, setSuggestedList] = useState<SnippetItem[]>([])
+  // one slot ring (snippet-navigator): 0 is the create button, 1..N the items
+  const [activeSlot, setActiveSlot] = useState(0)
+  const isCreateButtonActive = activeSlot === 0
+  const activeMenuItem = slotToItemIndex(activeSlot)
+  // derived from the query and the snippet list — no state needed
+  const suggestedList = React.useMemo(
+    () => snippets.filter((snippet) => snippet.name.toLowerCase().includes(value.toLowerCase())),
+    [value, snippets],
+  )
 
-  // default to first snippet or create new button
-  React.useEffect(() => {
-    const newSuggestedList = snippets.filter((snippet) => snippet.name.toLowerCase().includes(value.toLowerCase()))
-    if (newSuggestedList.length === 0) {
-      setIsCreateButtonActive(true)
-      setActiveMenuItem(-1)
-    } else {
-      setIsCreateButtonActive(false)
-      setActiveMenuItem(0)
-    }
-    setSuggestedList(newSuggestedList)
-  }, [value, snippets])
+  // default to first snippet or create new button — adjusted during render
+  // when the query or snippet list changes
+  const [prevFilterInputs, setPrevFilterInputs] = useState({ value, snippets })
+  if (prevFilterInputs.value !== value || prevFilterInputs.snippets !== snippets) {
+    setPrevFilterInputs({ value, snippets })
+    setActiveSlot(initialSlot(suggestedList.length))
+  }
 
   // close snippets menu if clicked outside the input/dropdown
   React.useEffect(() => {
@@ -68,22 +70,7 @@ export function SnippetInput({
         return
       }
 
-      // handle first arrow down from input
-      if (activeMenuItem === -1 && !isCreateButtonActive) {
-        setIsCreateButtonActive(true)
-        return
-      }
-
-      const menuItemIndex = activeMenuItem + 1
-
-      // handle looping back to top of list
-      if (menuItemIndex > suggestedList.length - 1) {
-        setActiveMenuItem(-1)
-        setIsCreateButtonActive(true)
-      } else {
-        setActiveMenuItem(menuItemIndex)
-        setIsCreateButtonActive(false)
-      }
+      setActiveSlot(nextSlot(activeSlot, suggestedList.length))
     }
 
     if (event.key === 'ArrowUp' || event.key === 'Up') {
@@ -94,22 +81,7 @@ export function SnippetInput({
         return
       }
 
-      if (isCreateButtonActive) {
-        setActiveMenuItem(suggestedList.length - 1)
-        setIsCreateButtonActive(false)
-
-        return
-      }
-
-      const menuItemIndex = activeMenuItem - 1
-
-      if (menuItemIndex < 0) {
-        setActiveMenuItem(-1)
-        setIsCreateButtonActive(true)
-      } else {
-        setActiveMenuItem(menuItemIndex)
-        setIsCreateButtonActive(false)
-      }
+      setActiveSlot(previousSlot(activeSlot, suggestedList.length))
     }
 
     if (event.key === 'Enter') {

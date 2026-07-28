@@ -45,6 +45,7 @@ describe('FloatingFormatToolbar', () => {
         anchorElem={document.body}
         editor={editor}
         toolbarItemType="link"
+        toolbarRef={React.createRef<HTMLDivElement>()}
         onClose={onClose}
         onOpenLink={() => {}}
         onOpenSnippet={() => {}}

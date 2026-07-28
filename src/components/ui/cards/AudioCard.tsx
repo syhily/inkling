@@ -17,7 +17,6 @@ import {
   useFileInputRefTunnel,
 } from '@/components/ui/UploadChrome'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
-import { openFileSelection } from '@/utils/openFileSelection'
 
 interface AudioThumbnailProps {
   mimeTypes?: string[]
@@ -134,7 +133,7 @@ function AudioThumbnail({
           className="flex size-20 cursor-pointer items-center justify-center"
           data-testid="upload-thumbnail"
           type="button"
-          onClick={() => openFileSelection({ fileInputRef })}
+          onClick={() => fileInputRef.current?.click()}
         >
           {(isEditing && (
             <FilePlaceholderIcon className="ease-inx size-6 text-white transition-all duration-75 group-hover:scale-105" />

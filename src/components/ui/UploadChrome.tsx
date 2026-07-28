@@ -6,7 +6,6 @@ import type { PlaceholderIconName } from '@/components/ui/MediaPlaceholder'
 import { MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { cx } from '@/utils/cx'
-import { openFileSelection } from '@/utils/openFileSelection'
 
 /**
  * Upload chrome — the visual half of the media cards' upload UI (the headless
@@ -85,7 +84,7 @@ export function UploadFileInput({
 }
 
 export interface FileInputRefTunnel {
-  /** The chrome's own input ref — openFileSelection clicks this one. */
+  /** The chrome's own input ref — the file picker clicks this one. */
   fileInputRef: FileInputRef
   /** Ref to hand to UploadFileInput. */
   onFileInputRef: React.Ref<HTMLInputElement>
@@ -206,7 +205,7 @@ export function UploadPlaceholder({
         desc={desc}
         errorDataTestId={errorDataTestId}
         errors={errors}
-        filePicker={() => openFileSelection({ fileInputRef })}
+        filePicker={() => fileInputRef.current?.click()}
         icon={icon}
         isDraggedOver={dragHandler?.isDraggedOver}
         placeholderRef={dragHandler?.setRef}

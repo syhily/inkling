@@ -12,14 +12,9 @@ import InklingHostIntegrationContext, {
 import { AudioNode, $createAudioNode } from '@/nodes/AudioNode'
 import { AudioNodeComponent } from '@/nodes/AudioNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
-import { openFileSelection } from '@/utils/openFileSelection'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
-}))
-
-vi.mock('@/utils/openFileSelection', () => ({
-  openFileSelection: vi.fn(),
 }))
 
 function createTestEditor(): LexicalEditor {
@@ -35,7 +30,7 @@ function flushMacrotask(): Promise<void> {
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected and not editing unless a test says otherwise
 function createSelection(
-  nodeKey: NodeKey | string = 'audio-1',
+  nodeKey: NodeKey = 'audio-1',
   { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
 ) {
   return createCardSelectionStoreWrapper({
@@ -126,7 +121,7 @@ describe('AudioNodeComponent', () => {
     const {
       src = '/audio.mp3',
       triggerFileDialog = false,
-      initialFile = undefined,
+      initialFile,
       upload = vi.fn(() => Promise.resolve(undefined)),
       isLoading = false,
     } = options
@@ -159,12 +154,13 @@ describe('AudioNodeComponent', () => {
   })
 
   it('opens the file dialog once when triggerFileDialog is true', async () => {
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
     const nodeKey = await addTriggerAudioNode(editor)
 
     renderComponent(nodeKey, { src: '', triggerFileDialog: true })
 
     await waitFor(() => {
-      expect(openFileSelection).toHaveBeenCalledTimes(1)
+      expect(clickSpy).toHaveBeenCalledTimes(1)
     })
 
     // the flag is cleared on the node so a re-render does not trigger it again

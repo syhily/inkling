@@ -1,5 +1,7 @@
 import React from 'react'
 
+import { useInklingLabels } from '@/hooks/useInklingLabels'
+
 export interface LinkToolbarProps {
   href?: string
   onEdit?: () => void
@@ -8,6 +10,7 @@ export interface LinkToolbarProps {
 }
 
 export function LinkToolbar({ href, onEdit, onRemove, dataTestId = 'link-toolbar' }: LinkToolbarProps) {
+  const labels = useInklingLabels()
   return (
     <div className="flex items-center gap-2" data-testid={dataTestId}>
       <a
@@ -26,7 +29,7 @@ export function LinkToolbar({ href, onEdit, onRemove, dataTestId = 'link-toolbar
           type="button"
           onClick={onEdit}
         >
-          Edit
+          {labels['action.edit']}
         </button>
       )}
       {onRemove && (
@@ -36,7 +39,7 @@ export function LinkToolbar({ href, onEdit, onRemove, dataTestId = 'link-toolbar
           type="button"
           onClick={onRemove}
         >
-          Remove
+          {labels['action.remove']}
         </button>
       )}
     </div>

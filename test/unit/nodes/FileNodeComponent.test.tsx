@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
@@ -12,14 +12,9 @@ import InklingHostIntegrationContext, {
 import { FileNode, $createFileNode } from '@/nodes/FileNode'
 import FileNodeComponent from '@/nodes/FileNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
-import { openFileSelection } from '@/utils/openFileSelection'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
-}))
-
-vi.mock('@/utils/openFileSelection', () => ({
-  openFileSelection: vi.fn(),
 }))
 
 function createTestEditor(): LexicalEditor {
@@ -35,7 +30,7 @@ function flushMacrotask(): Promise<void> {
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected and not editing unless a test says otherwise
 function createSelection(
-  nodeKey: NodeKey | string = 'file-1',
+  nodeKey: NodeKey = 'file-1',
   { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
 ) {
   return createCardSelectionStoreWrapper({
@@ -89,6 +84,10 @@ describe('FileNodeComponent', () => {
     mockComposerContext(editor)
   })
 
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   interface RenderOptions {
     fileSrc?: string
     triggerFileDialog?: boolean
@@ -97,7 +96,7 @@ describe('FileNodeComponent', () => {
   }
 
   function renderComponent(nodeKey: NodeKey, options: RenderOptions = {}) {
-    const { fileSrc = '', triggerFileDialog = false, initialFile = undefined, upload } = options
+    const { fileSrc = '', triggerFileDialog = false, initialFile, upload } = options
     const composerValue = createComposerContext(upload)
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     return render(
@@ -129,12 +128,13 @@ describe('FileNodeComponent', () => {
   })
 
   it('opens the file dialog once when triggerFileDialog is true', async () => {
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
     const nodeKey = await addFileNode(editor, { triggerFileDialog: true })
 
     renderComponent(nodeKey, { triggerFileDialog: true })
 
     await waitFor(() => {
-      expect(openFileSelection).toHaveBeenCalledTimes(1)
+      expect(clickSpy).toHaveBeenCalledTimes(1)
     })
 
     // the flag is cleared on the node so a re-render does not trigger it again

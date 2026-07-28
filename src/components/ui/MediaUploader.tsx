@@ -11,7 +11,6 @@ import { MediaPlaceholder, isPlaceholderIconName } from '@/components/ui/MediaPl
 import { UploadFileInput, UploadingOverlay, useFileInputRefTunnel } from '@/components/ui/UploadChrome'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { cx } from '@/utils/cx'
-import { openFileSelection } from '@/utils/openFileSelection'
 
 export interface MediaUploaderProps {
   className?: string
@@ -89,7 +88,7 @@ export function MediaUploader({
           desc={isEditing ? (desc ?? '') : ''}
           errorDataTestId="media-upload-errors"
           errors={errors}
-          filePicker={() => openFileSelection({ fileInputRef })}
+          filePicker={() => fileInputRef.current?.click()}
           icon={isPlaceholderIconName(icon) ? icon : 'image'}
           isDraggedOver={dragHandler?.isDraggedOver}
           placeholderRef={dragHandler?.setRef}

@@ -12,14 +12,9 @@ import InklingHostIntegrationContext, {
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
 import { getImageDimensions } from '@/utils/getImageDimensions'
-import { openFileSelection } from '@/utils/openFileSelection'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
-}))
-
-vi.mock('@/utils/openFileSelection', () => ({
-  openFileSelection: vi.fn(),
 }))
 
 vi.mock('@/utils/getImageDimensions', () => ({
@@ -43,7 +38,7 @@ function flushMacrotask(): Promise<void> {
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected (its toolbar renders) and not editing unless a test says otherwise
 function createSelection(
-  nodeKey: NodeKey | string = 'img-1',
+  nodeKey: NodeKey = 'img-1',
   { selected = true, editing = false }: { selected?: boolean; editing?: boolean } = {},
 ) {
   return createCardSelectionStoreWrapper({
@@ -118,17 +113,19 @@ describe('ImageNodeComponent', () => {
   })
 
   it('opens the file dialog once when triggerFileDialog is true', async () => {
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
     const composerValue = createComposerContext({ image: { mimeTypes: ['image/png'] } })
     const { wrapper: CardSelectionStoreProvider } = createSelection()
     render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardSelectionStoreProvider>
-          <ImageNodeComponent cardWidth="regular" nodeKey="img-1" src="/image.png" triggerFileDialog />
+          {/* the insert flow: no src yet, so the empty card's hidden file input exists to click */}
+          <ImageNodeComponent cardWidth="regular" nodeKey="img-1" src="" triggerFileDialog />
         </CardSelectionStoreProvider>
       </InklingHostIntegrationContext.Provider>,
     )
 
-    await waitFor(() => expect(openFileSelection).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(clickSpy).toHaveBeenCalledTimes(1))
   })
 
   it('uploads the initial file when the card has no src', async () => {
@@ -189,7 +186,7 @@ describe('ImageNodeComponent', () => {
       selection: { selected?: boolean; editing?: boolean } = {},
       {
         src = '/image.png',
-        href = undefined,
+        href,
         cardConfig = {},
       }: { src?: string; href?: string; cardConfig?: Record<string, unknown> } = {},
     ) {

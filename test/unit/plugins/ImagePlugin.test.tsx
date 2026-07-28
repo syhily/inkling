@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockComposerContext } from '#/utils/composer-context'
 import { ImageNode, INSERT_IMAGE_COMMAND } from '@/nodes/ImageNode'
 import { INSERT_MEDIA_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
+import { INSERT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
-import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -94,7 +94,7 @@ describe('Image insert commands (CardInsertPlugin)', () => {
     const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
 
     await act(async () => {
-      Reflect.apply(editor.dispatchCommand, editor, [INSERT_IMAGE_COMMAND, 'not-an-object'])
+      Reflect.apply(editor.dispatchCommand.bind(editor), editor, [INSERT_IMAGE_COMMAND, 'not-an-object'])
     })
 
     // Only the original INSERT_IMAGE_COMMAND should have been dispatched

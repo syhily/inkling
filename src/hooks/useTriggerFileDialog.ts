@@ -2,7 +2,6 @@ import { type LexicalEditor, type LexicalNode, type NodeKey } from 'lexical'
 import React from 'react'
 
 import { $updateCardNode } from '@/nodes/base'
-import { openFileSelection } from '@/utils/openFileSelection'
 
 /** A card node carrying the transient `triggerFileDialog` flag (image, audio, video, file). */
 export interface TriggerFileDialogCardNode extends LexicalNode {
@@ -42,7 +41,7 @@ export function useTriggerFileDialog<TNode extends TriggerFileDialogCardNode>({
 
     const renderTimeout = setTimeout(() => {
       // trigger dialog
-      openFileSelection({ fileInputRef })
+      fileInputRef.current?.click()
 
       // clear the property on the node so we don't accidentally trigger anything with a re-render
       editor.update(() => {

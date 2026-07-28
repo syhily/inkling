@@ -1,9 +1,9 @@
-import { $generateNodesFromDOM } from '@lexical/html'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
-import { $getRoot, $insertNodes } from 'lexical'
+import { $getRoot } from 'lexical'
 import React from 'react'
 
+import { $insertHtmlDocument } from '@/html/html-to-lexical/insert-html'
 import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
 
 export const HtmlOutputPlugin = ({
@@ -60,19 +60,9 @@ export const HtmlOutputPlugin = ({
         const parser = new DOMParser()
         const dom = parser.parseFromString(html, 'text/html')
 
-        const nodes = $generateNodesFromDOM(editor, dom)
-
-        // There are few recent issues related to $generateNodesFromDOM
-        // https://github.com/facebook/lexical/issues/2807
-        // As a temporary fix, checking node content to remove additional spaces and br
-        const filteredNodes = nodes.filter((n) => n.getTextContent().trim())
-
-        // Select the root
-        $getRoot().select()
-        $getRoot().clear()
-
-        // Insert them at a selection.
-        $insertNodes(filteredNodes)
+        // The same import surgery the headless htmlToLexical importer runs —
+        // @lexical/clipboard's normalization covers the old #2807 filter.
+        $insertHtmlDocument(editor, dom)
       },
       { discrete: true },
     )

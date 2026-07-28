@@ -15,10 +15,10 @@ import CardContext from '@/context/CardContext'
 import { useTKHandle, useTKHandleState } from '@/context/TKHandleContext'
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
 import { $createTKNode, $isTKNode, ExtendedTextNode, TKNode } from '@/nodes/base'
+import { SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { nextTkNodeKey, resolveTkIndicatorPosition } from '@/plugins/behaviour/tk-indicator'
 import { getTKMatch } from '@/plugins/behaviour/tk-matcher'
 import { applyTkHoverHighlight, registerTkNodeTracking } from '@/plugins/behaviour/tk-tracking'
-import { SELECT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
 import { getEditorTheme } from '@/utils/lexical-internals'
 
 function TKIndicator({

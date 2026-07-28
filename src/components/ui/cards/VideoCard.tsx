@@ -117,7 +117,6 @@ function PopulatedVideoCard({
           <MediaUploadSetting
             alt={labels['alt.customThumbnail']}
             borderStyle={'simple'}
-            dataTestId="custom-thumbnail-replace"
             errors={customThumbnailUploader?.errors}
             icon="file"
             isDraggedOver={thumbnailDragHandler?.isDraggedOver}

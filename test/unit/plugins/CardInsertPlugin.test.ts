@@ -20,7 +20,6 @@ import { ImageNode, INSERT_IMAGE_COMMAND } from '@/nodes/ImageNode'
 import { ToggleNode, INSERT_TOGGLE_COMMAND } from '@/nodes/ToggleNode'
 import { VideoNode, INSERT_VIDEO_COMMAND } from '@/nodes/VideoNode'
 import { INSERT_MEDIA_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
-import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
 /**
  * The card insert registration matrix against the Step-2 registrar (plan
  * 043) — the same scenarios and expectations as the Step-1 characterization
@@ -29,7 +28,8 @@ import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
  * zero-drift proof; the header churn case flips here: the registrar's single
  * effect registers once per mount.
  */
-import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
+import { INSERT_CARD_COMMAND } from '@/plugins/behaviour/commands'
+import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),

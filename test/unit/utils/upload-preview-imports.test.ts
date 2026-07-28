@@ -3,9 +3,9 @@ import { join, sep } from 'node:path'
 
 /**
  * Plan 045 import guard: object-URL preview leases are owned by the upload
- * seam — src/utils/upload-intent.ts creates them, src/utils/revokePreviewUrl.ts
+ * seam — src/utils/upload-intent.ts is the one file that creates and
  * releases them. Card and plugin sources must not call URL.createObjectURL /
- * URL.revokeObjectURL directly — and since round 3 (C6) neither does
+ * URL.revokeObjectURL directly — and since round 3 (C6/C7) neither does
  * extractVideoMetadata, which leases its URL from the seam. The allowlists
  * below are the complete intentional exceptions and may only shrink: delete
  * an entry when a file stops touching object URLs.
@@ -17,9 +17,8 @@ const OBJECT_URL_CALL = /URL\.(?:createObjectURL|revokeObjectURL)\(/g
 // No exceptions: every card/plugin preview flows through the seam.
 const ALLOWED_DIRECT_CALLERS: string[] = []
 
-// The sanctioned object-URL callers across all of src: the lease owner and
-// the release helper.
-const ALLOWED_OBJECT_URL_FILES = ['src/utils/revokePreviewUrl.ts', 'src/utils/upload-intent.ts']
+// The sanctioned object-URL caller across all of src: the lease owner.
+const ALLOWED_OBJECT_URL_FILES = ['src/utils/upload-intent.ts']
 
 function listSourceFiles(dir: string): string[] {
   return readdirSync(dir, { recursive: true })
@@ -47,7 +46,7 @@ describe('upload preview import guard', () => {
     expect(offenders.sort()).toEqual(ALLOWED_DIRECT_CALLERS)
   })
 
-  it('the lease owner and release helper are the only object-URL callers', () => {
+  it('the lease owner is the only object-URL caller', () => {
     const callers = listSourceFiles('src')
       .map((name) => `src/${name.split(sep).join('/')}`)
       .filter(callsObjectUrl)

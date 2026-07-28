@@ -7,7 +7,7 @@ import { ColorOptionButtons } from '@/components/ui/ColorOptionButtons'
 import { ColorIndicator, type ColorSwatchData } from '@/components/ui/ColorPicker'
 import { Input } from '@/components/ui/Input'
 import { InputList, InputListItem } from '@/components/ui/InputList'
-import { MediaUploader } from '@/components/ui/MediaUploader'
+import { MediaUploader, type MediaUploaderProps } from '@/components/ui/MediaUploader'
 import { SettingDescription, SettingLabel } from '@/components/ui/SettingLabel'
 import { TabView } from '@/components/ui/TabView'
 import { Toggle } from '@/components/ui/Toggle'
@@ -374,92 +374,45 @@ export function ColorPickerSetting({
   )
 }
 
-interface MediaUploadSettingProps {
+interface MediaUploadSettingProps extends Omit<MediaUploaderProps, 'className' | 'dragHandler'> {
   className?: string
-  imgClassName?: string
   label?: string
   hideLabel?: boolean
-  onFileChange: (files: File[]) => void
+  stacked?: boolean
   isDraggedOver?: boolean
   placeholderRef?: DragHandlerLike['setRef']
-  src?: string
-  alt?: string
-  isLoading?: boolean
-  errors?: Error[] | { message?: string }[]
-  progress?: number
-  onRemoveMedia: () => void
-  icon?: string
-  desc?: string
-  size?: string
-  type?: string
-  stacked?: boolean
-  borderStyle?: 'simple' | 'heavy' | 'squared' | 'rounded'
-  mimeTypes?: string[]
-  isPinturaEnabled?: boolean
-  openImageEditor?: (options: { image: string; handleSave: (blob: Blob) => void }) => void
-  setFileInputRef?: (ref: React.RefObject<HTMLInputElement | null>) => void
-  dataTestId?: string
 }
 
 export function MediaUploadSetting({
-  dataTestId,
   className,
-  imgClassName,
   label,
   hideLabel,
-  onFileChange,
+  stacked,
   isDraggedOver,
   placeholderRef,
-  src,
-  alt,
-  isLoading,
   errors = [],
-  progress,
-  onRemoveMedia,
-  icon,
-  desc,
-  size,
+  src,
   type,
-  stacked,
-  borderStyle,
-  mimeTypes,
-  isPinturaEnabled,
-  openImageEditor,
-  setFileInputRef,
+  ...uploaderProps
 }: MediaUploadSettingProps) {
   return (
     <div className={cx(className, !stacked && 'flex justify-between gap-3')} data-testid="media-upload-setting">
-      <div
-        className={
-          hideLabel ? 'sr-only' : 'mb-2 shrink-0 text-sm font-medium tracking-normal text-grey-900 dark:text-grey-400'
-        }
-      >
-        {label}
-      </div>
+      {hideLabel ? (
+        <div className="sr-only">{label}</div>
+      ) : (
+        <SettingLabel className="mb-2 shrink-0">{label}</SettingLabel>
+      )}
       <MediaUploader
-        alt={alt}
-        borderStyle={borderStyle}
         className={cx(
           stacked && 'h-32',
           !stacked && src && 'h-[5.2rem]',
           !stacked && type !== 'button' && !src && 'h-[5.2rem] w-[7.2rem]',
         )}
-        desc={desc}
         dragHandler={placeholderRef ? { isDraggedOver: !!isDraggedOver, setRef: placeholderRef } : undefined}
         errors={errors}
-        icon={icon}
-        imgClassName={imgClassName}
-        isLoading={isLoading}
-        isPinturaEnabled={isPinturaEnabled}
-        mimeTypes={mimeTypes}
-        openImageEditor={openImageEditor}
-        progress={progress}
-        setFileInputRef={setFileInputRef}
-        size={size}
         src={src}
         type={type}
-        onFileChange={onFileChange}
-        onRemoveMedia={onRemoveMedia}
+        {...uploaderProps}
       />
     </div>
   )

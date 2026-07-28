@@ -1,16 +1,11 @@
 import type { CreateEditorArgs, SerializedEditorState } from 'lexical'
 
-import { $insertGeneratedNodes } from '@lexical/clipboard'
-import { $generateNodesFromDOM } from '@lexical/html'
-/* c8 ignore start -- V8 creates phantom branches for ESM imports */
-import { $createParagraphNode, $getRoot } from 'lexical'
-
 import type { ExportDOMDom } from '@/nodes/base'
 
 import { createHeadlessHtmlEditor } from '@/html/headless-editor'
+import { $insertHtmlDocument } from '@/html/html-to-lexical/insert-html'
 import { registerDefaultTransforms, type DefaultTransformsOptions } from '@/transforms'
 import { MINIMAL_DOCUMENT } from '@/utils/initial-document'
-/* c8 ignore stop */
 
 export interface htmlToLexicalOptions {
   /** Required DOM port — parse goes through `dom.window.document`, so the module itself never touches a global or jsdom. */
@@ -43,18 +38,7 @@ export function htmlToLexical(html: string, options: htmlToLexicalOptions): Seri
 
   editor.update(
     () => {
-      // add a paragraph to avoid insertNodes throwing errors
-      const paragraph = $createParagraphNode()
-      $getRoot().append(paragraph)
-
-      const nodes = $generateNodesFromDOM(editor, doc)
-
-      // use @lexical/clipboard as it has additional logic for normalizing nodes
-      const selection = $getRoot().select()
-      $insertGeneratedNodes(editor, nodes, selection)
-
-      // clean up the original empty paragraph
-      paragraph.remove()
+      $insertHtmlDocument(editor, doc)
     },
     { discrete: true },
   )

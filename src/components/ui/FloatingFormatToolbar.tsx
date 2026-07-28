@@ -8,8 +8,7 @@ import { LinkActionToolbarWithSearch } from '@/components/ui/LinkActionToolbarWi
 import { LinkInput } from '@/components/ui/LinkInput'
 import { SnippetActionToolbar } from '@/components/ui/SnippetActionToolbar'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { $applyLinkToSelection, createToolbarRevealFeed } from '@/plugins/behaviour/link-editing'
-import { debounce } from '@/utils'
+import { $applyLinkToSelection } from '@/plugins/behaviour/link-editing'
 
 export const toolbarItemTypes = {
   snippet: 'snippet',
@@ -23,6 +22,7 @@ export function FloatingFormatToolbar({
   href,
   isSnippetsEnabled,
   toolbarItemType,
+  toolbarRef,
   onClose,
   onOpenLink,
   onOpenSnippet,
@@ -33,6 +33,8 @@ export function FloatingFormatToolbar({
   href?: string
   isSnippetsEnabled?: boolean
   toolbarItemType?: string | null
+  /** Owned by FloatingToolbarPlugin, which runs the reveal-feed DOM subscription against it. */
+  toolbarRef: React.RefObject<HTMLDivElement | null>
   onClose: () => void
   onOpenLink: () => void
   onOpenSnippet: () => void
@@ -41,38 +43,7 @@ export function FloatingFormatToolbar({
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const isLinkSearchEnabled = typeof cardConfig?.searchLinks === 'function'
 
-  const toolbarRef = React.useRef<HTMLDivElement>(null)
-
   const isLinkSearchToolbarVisible = toolbarItemType === toolbarItemTypes.link && isLinkSearchEnabled
-
-  // toolbar opacity is 0 by default; the reveal feed flips it once the
-  // selection gesture completes (mouseup inside the selection, or a threshold
-  // mousemove) so the toolbar does not re-position while dragging
-  const reveal = React.useCallback(() => {
-    if (toolbarItemType && toolbarRef.current?.style.opacity === '0') {
-      toolbarRef.current.style.opacity = '1'
-    }
-  }, [toolbarItemType])
-
-  React.useEffect(() => {
-    const revealFeed = createToolbarRevealFeed(editor, { reveal })
-    const onRelease = (event: Event) => revealFeed.release(event.target)
-    const onMouseMove = debounce(
-      (event: MouseEvent) => revealFeed.move({ x: event.clientX, y: event.clientY }, event.buttons),
-      10,
-    )
-
-    document.addEventListener('mouseup', onRelease) // desktop
-    document.addEventListener('touchend', onRelease) // mobile
-    document.addEventListener('mousemove', onMouseMove)
-
-    return () => {
-      onMouseMove.cancel()
-      document.removeEventListener('mouseup', onRelease) // desktop
-      document.removeEventListener('touchend', onRelease) // mobile
-      document.removeEventListener('mousemove', onMouseMove)
-    }
-  }, [editor, reveal])
 
   const handleActionToolbarClose = onClose
 
@@ -97,7 +68,6 @@ export function FloatingFormatToolbar({
         controlOpacity={!isTextToolbar}
         editor={editor}
         isVisible={!!toolbarItemType}
-        onReposition={() => {}}
         shouldReposition={toolbarItemType !== toolbarItemTypes.text} // format toolbar shouldn't reposition when applying formats
         targetElem={null}
         toolbarRef={toolbarRef}

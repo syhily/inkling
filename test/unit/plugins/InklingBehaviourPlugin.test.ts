@@ -13,11 +13,8 @@ import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
-import InklingBehaviourPlugin, {
-  DESELECT_CARD_COMMAND,
-  INSERT_CARD_COMMAND,
-  SELECT_CARD_COMMAND,
-} from '@/plugins/InklingBehaviourPlugin'
+import { DESELECT_CARD_COMMAND, INSERT_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
+import InklingBehaviourPlugin from '@/plugins/InklingBehaviourPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),

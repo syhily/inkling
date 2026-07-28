@@ -6,7 +6,7 @@ import React from 'react'
 
 import { getCardInsertRegistrations, type CardInsertRegistration } from '@/nodes/cards/card-insert-commands'
 import { INSERT_MEDIA_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
-import { INSERT_CARD_COMMAND } from '@/plugins/InklingBehaviourPlugin'
+import { INSERT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 // command payloads cross an untyped runtime boundary (menu dispatch, external
 // consumers), so narrow before constructing the node
