@@ -28,6 +28,12 @@ export default defineConfig({
     'pnpm-lock.yaml',
     '**/*.html',
     'storybook-static/**',
+    // Packed-consumer type fixtures: they self-import '@inkling/editor'
+    // (resolves to dist via package exports), so the type-aware gate cannot
+    // see them without a build first — and their real gate is
+    // scripts/verify-packed-types.ts, which type-checks them against the
+    // packed tarball, @ts-expect-error directives included.
+    'test/typecheck-consumer/**',
   ],
   settings: {
     react: {

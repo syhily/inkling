@@ -1,7 +1,0 @@
-{
-  // Nearest-tsconfig shim for oxlint-tsgolint type discovery: tsgolint walks
-  // up from each linted file, and the root tsconfig excludes this directory.
-  // These consumers are typechecked by scripts/verify-packed-types.ts against
-  // the packed dist types; for lint purposes the unit-test environment applies.
-  "extends": "../../tsconfig.unit.json"
-}
