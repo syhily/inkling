@@ -1,16 +1,9 @@
 import { ListPlugin } from '@lexical/react/LexicalListPlugin'
 
-/* Types re-exported from bundled runtimes so consumers can name the shapes
- * that appear in public prop/command signatures without installing Lexical. */
-export type { Transformer } from '@lexical/markdown'
-export type { EditorState, LexicalEditor, SerializedEditorState } from 'lexical'
-
 /* Components */
-import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingComposer from '@/components/InklingComposer'
 import InklingEditor from '@/components/InklingEditor'
 import InklingNestedComposer from '@/components/InklingNestedComposer'
-import InklingSurface from '@/components/InklingSurface'
 /* Transformers */
 import {
   CODE_BLOCK as CODE_BLOCK_TRANSFORMER,
@@ -18,11 +11,8 @@ import {
   ELEMENT_TRANSFORMERS,
   HR as HR_TRANSFORMER,
 } from '@/markdown/transformers'
-import { BASIC_TRANSFORMERS, MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
 /* Nodes */
-import BASIC_NODES from '@/nodes/BasicNodes'
 import DEFAULT_NODES, { EDITOR_BASE_NODES } from '@/nodes/DefaultNodes'
-import MINIMAL_NODES from '@/nodes/MinimalNodes'
 /* Plugins */
 import CardInsertPlugin from '@/plugins/CardInsertPlugin'
 import CardMenuPlugin from '@/plugins/CardMenuPlugin'
@@ -43,46 +33,24 @@ import MarkdownShortcutPlugin from '@/plugins/MarkdownShortcutPlugin'
 import MathInlinePlugin from '@/plugins/MathInlinePlugin'
 import PlusCardMenuPlugin from '@/plugins/PlusCardMenuPlugin'
 import ReplacementStringsPlugin from '@/plugins/ReplacementStringsPlugin'
-import RestrictContentPlugin from '@/plugins/RestrictContentPlugin'
 import SlashCardMenuPlugin from '@/plugins/SlashCardMenuPlugin'
 import TKCountPlugin from '@/plugins/TKCountPlugin'
 import WordCountPlugin from '@/plugins/WordCountPlugin'
 
 /* Exports ------------------------------------------------------------------ */
 
-export type { InklingComposableEditorProps } from '@/components/InklingComposableEditor'
-export type { InklingComposerProps, InklingInitialEditorState } from '@/components/InklingComposer'
+/* The contract shared with the `./core` entry (Lexical runtime types,
+ * host-config types, labels, the library browser, the card-free composition
+ * pieces, version) is single-sourced in ./shared-exports — add shared names
+ * there, never here. */
+export * from './shared-exports'
+
+/* The defaulted composer's props are entry-specific: `nodes` is OPTIONAL
+ * here (defaults to DEFAULT_NODES), required on the `./core` variant. */
+export type { InklingComposerProps } from '@/components/InklingComposer'
 export type { InklingEditorProps } from '@/components/InklingEditor'
 export type { InklingNestedComposerProps } from '@/components/InklingNestedComposer'
-export type { InklingSurfaceProps } from '@/components/InklingSurface'
-export type { ExternalControlAPI } from '@/plugins/ExternalControlPlugin'
-
-/* Host-facing config types: the shapes a host names when wiring
- * <InklingComposer cardConfig={...} fileUploader={...}> and its callbacks. */
-export type {
-  BookmarkEmbedOptions,
-  BookmarkEmbedResponse,
-  CardConfig,
-  FileUploader,
-  FileUploaderInput,
-  GifSettings,
-  ImageLibrarySettings,
-  LibraryImageItem,
-  LibrarySettings,
-  LinkingSettings,
-  MathSettings,
-  SnippetItem,
-  SnippetSettings,
-  UploadSettings,
-} from '@/context/InklingHostIntegrationContext'
-export type { ListOptionItem, SearchResult } from '@/hooks/useSearchLinks'
 export type { PinturaConfig } from '@/hooks/usePinturaEditor'
-
-/* Labels (docs/kobato-fit-plan.md C7): the closed labels table a host
- * overrides through <InklingComposer labels={...}> — partial table in,
- * English fallback for missing keys. */
-export { DEFAULT_LABELS } from '@/labels/inkling-labels'
-export type { InklingLabels, InklingLabelsInput } from '@/labels/inkling-labels'
 
 export type { AudioNodeDataset } from '@/nodes/AudioNode'
 export { INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
@@ -131,19 +99,6 @@ export type {
 export { InklingDecoratorNode } from '@/nodes/base/InklingDecoratorNode'
 export type { CardNodeClass } from '@/nodes/assemble-card-node'
 
-/* Media library (docs/kobato-fit-plan.md C8): the headless state machine
- * behind the image-library picker, generic over the item shape so a host's
- * own library pickers (e.g. a music library on a host card) reuse the same
- * machine. `LibrarySelector`/`LibraryPlugin` stay internal — image-shaped
- * UI, not a public contract. */
-export { createLibraryBrowser } from '@/utils/services/library-browser'
-export type {
-  LibraryBrowser,
-  LibraryBrowserIntent,
-  LibraryBrowserSnapshot,
-  LibraryScheduler,
-} from '@/utils/services/library-browser'
-
 export * from '@/utils'
 export { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown'
 export type { MarkdownRoundTripOptions } from '@/markdown/round-trip'
@@ -161,11 +116,9 @@ export type {
 export type { ExportDOMDom } from '@/nodes/base'
 
 export {
-  InklingComposableEditor,
   InklingComposer,
   InklingEditor,
   InklingNestedComposer,
-  InklingSurface,
   DefaultFeaturePlugins,
   CardInsertPlugin,
   CardMenuPlugin,
@@ -186,20 +139,13 @@ export {
   MathInlinePlugin,
   PlusCardMenuPlugin,
   ReplacementStringsPlugin,
-  RestrictContentPlugin,
   SlashCardMenuPlugin,
   TKCountPlugin,
   WordCountPlugin,
   DEFAULT_NODES,
   EDITOR_BASE_NODES,
-  BASIC_NODES,
-  MINIMAL_NODES,
   ELEMENT_TRANSFORMERS,
   HR_TRANSFORMER,
   CODE_BLOCK_TRANSFORMER,
   DEFAULT_TRANSFORMERS,
-  BASIC_TRANSFORMERS,
-  MINIMAL_TRANSFORMERS,
 }
-
-export const version = __APP_VERSION__
