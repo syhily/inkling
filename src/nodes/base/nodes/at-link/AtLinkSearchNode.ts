@@ -2,6 +2,8 @@ import type { EditorConfig } from 'lexical'
 
 import { $applyNodeReplacement, TextNode } from 'lexical'
 
+import { themeClassList } from '@/themes/inkling-theme-classes'
+
 // Represents the search query string inside an AtLinkNode. Used in place of a
 // regular TextNode to allow for :after styling to be applied to work as a placeholder
 export class AtLinkSearchNode extends TextNode {
@@ -45,7 +47,7 @@ export class AtLinkSearchNode extends TextNode {
     } else {
       span.dataset.placeholder = this.__placeholder || ''
     }
-    span.classList.add(...(config.theme.atLinkSearch || '').split(' ').filter(Boolean))
+    span.classList.add(...themeClassList(config.theme, 'atLinkSearch'))
 
     return span
   }

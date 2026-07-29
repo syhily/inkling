@@ -1,6 +1,8 @@
 import type { EditorConfig } from 'lexical'
 
 import { $applyNodeReplacement, ElementNode } from 'lexical'
+
+import { themeClassList } from '@/themes/inkling-theme-classes'
 const linkSVG =
   '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M13.54 10.46c2.2 2.2 2.2 5.61 0 7.81l-3.08 3.08c-2.2 2.2-5.61 2.2-7.81 0-2.2-2.2-2.2-5.61 0-7.81L5.4 10.9"/> <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M10.46 13.54c-2.2-2.2-2.2-5.61 0-7.81l3.08-3.08c2.2-2.2 5.61-2.2 7.81 0 2.2 2.2 2.2 5.61 0 7.81L18.6 13.1"/> </svg>'
 // Container element for a link search query. Temporary node used only inside
@@ -41,8 +43,8 @@ export class AtLinkNode extends ElementNode {
 
   createDOM(config: EditorConfig) {
     const span = document.createElement('span')
-    const atLinkClasses = (config.theme.atLink || '').split(' ').filter(Boolean)
-    const atLinkIconClasses = (config.theme.atLinkIcon || '').split(' ').filter(Boolean)
+    const atLinkClasses = themeClassList(config.theme, 'atLink')
+    const atLinkIconClasses = themeClassList(config.theme, 'atLinkIcon')
 
     span.classList.add(...atLinkClasses)
 

@@ -2,6 +2,8 @@ import type { EditorConfig, SerializedTextNode } from 'lexical'
 
 import { $applyNodeReplacement, TextNode } from 'lexical'
 
+import { themeClassList } from '@/themes/inkling-theme-classes'
+
 export class TKNode extends TextNode {
   static getType() {
     return 'tk'
@@ -17,7 +19,7 @@ export class TKNode extends TextNode {
 
   createDOM(config: EditorConfig) {
     const element = super.createDOM(config)
-    const classes = config.theme.tk?.split(' ') || []
+    const classes = themeClassList(config.theme, 'tk')
     element.classList.add(...classes)
     element.dataset.inklingTk = 'true'
     return element
