@@ -111,13 +111,19 @@ describe('Published declarations (plan 028)', function () {
   })
 
   it('root declaration references only the React peer family as externals', function () {
+    // scan a comment-free copy: the bundle retains JSDoc from inlined
+    // packages, and prose like "import the types directly from
+    // 'trusted-types/lib'" would otherwise read as a module reference (the
+    // same guard scripts/build-types.ts applies to its own scan)
     const declaration = readDist('editor.d.ts')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|\s)\/\/.*$/gm, '')
     const externals = new Set<string>()
 
-    for (const match of declaration.matchAll(/from '([^']+)'/g)) {
+    for (const match of declaration.matchAll(/from ['"]([^'"]+)['"]/g)) {
       externals.add(match[1])
     }
-    for (const match of declaration.matchAll(/import\('([^']+)'\)/g)) {
+    for (const match of declaration.matchAll(/import\(['"]([^'"]+)['"]\)/g)) {
       externals.add(match[1])
     }
 

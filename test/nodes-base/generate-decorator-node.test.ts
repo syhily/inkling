@@ -8,7 +8,8 @@ import type {
 } from '@/nodes/base/generate-decorator-node'
 
 import { dom } from '#/nodes-base/test-utils/index'
-import { ensureLexicalNodeOwnMethods, utils, type ExportDOMOutput } from '@/nodes/base/index'
+import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
+import { ensureLexicalNodeOwnMethods, type ExportDOMOutput } from '@/nodes/base/index'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { populateNestedEditor } from '@/utils/nested-editors'
 
@@ -73,7 +74,7 @@ describe('Utils: generateDecoratorNode', function () {
     let $createNodeWithRender: (dataset?: Record<string, unknown>) => InstanceType<typeof NodeWithRender>
 
     beforeAll(function () {
-      NodeWithRender = utils.generateDecoratorNode({
+      NodeWithRender = generateDecoratorNode({
         nodeType: 'render-test',
         properties: [],
         defaultRenderFn: () => createRenderResult('div', 'default render'),
@@ -102,7 +103,7 @@ describe('Utils: generateDecoratorNode', function () {
       editorTestWithNodes(
         () =>
           [
-            utils.generateDecoratorNode({
+            generateDecoratorNode({
               nodeType: 'no-render-test',
               properties: [],
             }),
@@ -122,7 +123,7 @@ describe('Utils: generateDecoratorNode', function () {
     let $createFalsyAwareNode: (dataset?: Record<string, unknown>) => InstanceType<typeof FalsyAwareNode>
 
     beforeAll(function () {
-      FalsyAwareNode = utils.generateDecoratorNode({
+      FalsyAwareNode = generateDecoratorNode({
         nodeType: 'falsy-aware-test',
         properties: [
           { name: 'count', default: 10 },
@@ -171,7 +172,7 @@ describe('Utils: generateDecoratorNode', function () {
       { name: 'seed' },
     ]
 
-    class SpeclessNode extends utils.generateDecoratorNode({
+    class SpeclessNode extends generateDecoratorNode({
       nodeType: 'spec-contract-test',
       properties: [
         { name: 'caption', default: '' },

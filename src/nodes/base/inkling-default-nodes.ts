@@ -45,16 +45,6 @@ export * from '@/nodes/base/nodes/at-link/index'
 export * from '@/nodes/base/nodes/zwnj/ZWNJNode'
 export * from '@/nodes/base/nodes/footnotedefinition/FootnoteDefinitionNode'
 
-import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
-import { rgbToHex } from '@/nodes/base/utils/rgb-to-hex'
-import { html, oneline } from '@/nodes/base/utils/tagged-template-fns'
-// export utility functions that are useful in other packages or tests
-export const utils = {
-  generateDecoratorNode,
-  rgbToHex,
-  taggedTemplateFns: { oneline, html },
-}
-
 export const serializers = {
   linebreak: linebreakSerializers,
   paragraph: paragraphSerializers,

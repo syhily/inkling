@@ -5,9 +5,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import type { CardImportSpec } from '@/nodes/base/import-spec'
 
 import { createDocument } from '#/nodes-base/test-utils/index'
-import { utils } from '@/nodes/base/index'
-
-const { generateDecoratorNode } = utils
+import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
 
 const baseProperties = [
   { name: 'text', default: 'default-text' },
