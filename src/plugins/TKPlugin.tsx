@@ -1,24 +1,15 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import {
-  $getNodeByKey,
-  $getSelection,
-  $isDecoratorNode,
-  $isRangeSelection,
-  $isTextNode,
-  type LexicalEditor,
-  TextNode,
-} from 'lexical'
+import { type LexicalEditor, TextNode } from 'lexical'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import CardContext from '@/context/CardContext'
 import { useTKHandle, useTKHandleState } from '@/context/TKHandleContext'
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
-import { $createTKNode, $isTKNode, ExtendedTextNode, TKNode } from '@/nodes/base'
-import { SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
-import { nextTkNodeKey, resolveTkIndicatorPosition } from '@/plugins/behaviour/tk-indicator'
+import { $createTKNode, ExtendedTextNode, TKNode } from '@/nodes/base'
+import { resolveTkIndicatorPosition } from '@/plugins/behaviour/tk-indicator'
 import { getTKMatch } from '@/plugins/behaviour/tk-matcher'
-import { applyTkHoverHighlight, registerTkNodeTracking } from '@/plugins/behaviour/tk-tracking'
+import { $selectTkFromIndicator, applyTkHoverHighlight, registerTkNodeTracking } from '@/plugins/behaviour/tk-tracking'
 import { getEditorTheme } from '@/utils/lexical-internals'
 
 function TKIndicator({
@@ -77,26 +68,13 @@ function TKIndicator({
 
   // select the TK node when the indicator is clicked,
   // cycle selection through associated TK nodes when clicked multiple times
+  // (the surgery is headless in tk-tracking; the component keeps the DOM event)
   const onClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
 
     editor.update(() => {
-      if ($isDecoratorNode($getNodeByKey(parentKey))) {
-        editor.dispatchCommand(SELECT_CARD_COMMAND, { cardKey: parentKey })
-        return
-      }
-
-      // if there is a selection, and it is a TK node, select the next one
-      const selection = $getSelection()
-      const selectedNode = $isRangeSelection(selection) ? selection.getNodes()[0] : null
-      const currentKey = $isTKNode(selectedNode) ? selectedNode.getKey() : null
-
-      const nodeKeyToSelect = nextTkNodeKey(nodeKeys, currentKey)
-      const node = nodeKeyToSelect ? $getNodeByKey(nodeKeyToSelect) : null
-      if ($isTextNode(node)) {
-        node.select(0, node.getTextContentSize())
-      }
+      $selectTkFromIndicator(editor, parentKey, nodeKeys)
     })
   }
 

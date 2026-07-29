@@ -1,7 +1,6 @@
 import type { LexicalCommand, LexicalEditor } from 'lexical'
 
 import { TableNode } from '@lexical/table'
-import { $createParagraphNode, $getSelection, $isRangeSelection } from 'lexical'
 import React from 'react'
 
 import type { BuildCardMenuResult, CardMenuSource, ResolvedMenuItem } from '@/utils/buildCardMenu'
@@ -10,6 +9,7 @@ import InklingHostIntegrationContext from '@/context/InklingHostIntegrationConte
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { lookupLabel } from '@/labels/inkling-labels'
 import { TABLE_MENU_SOURCE } from '@/nodes/table/table-menu'
+import { $swapTriggerParagraph } from '@/plugins/behaviour/card-menu-trigger'
 import { buildCardMenu } from '@/utils/buildCardMenu'
 import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
 
@@ -82,28 +82,10 @@ export function useCardMenu(editor: LexicalEditor, query?: string, options: UseC
         return
       }
 
+      // the trigger-paragraph swap is headless in card-menu-trigger; the
+      // hook keeps only the type-erased dispatch
       editor.update(() => {
-        const selection = $getSelection()
-        if (!$isRangeSelection(selection)) {
-          return
-        }
-
-        const focusPNode = selection.focus.getNode().getTopLevelElement()
-
-        if (!focusPNode) {
-          return
-        }
-
-        // paragraphs at the beginning of the document will delete themselves
-        // via .collapseAtStart() if their contents are deleted so we create
-        // a new paragraph and delete the old one before the insert command
-        // replaces the selection with the new node
-        const paragraph = $createParagraphNode()
-        focusPNode.insertAfter(paragraph)
-        focusPNode.remove()
-        paragraph.select()
-
-        dispatch()
+        $swapTriggerParagraph(dispatch)
       })
     },
     [editor, commandParams, replaceTriggerParagraph],

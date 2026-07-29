@@ -1,18 +1,20 @@
-import type { LexicalEditor } from 'lexical'
+import type { LexicalEditor, NodeKey } from 'lexical'
 
-import { $getNodeByKey, $isDecoratorNode } from 'lexical'
+import { $getNodeByKey, $getSelection, $isDecoratorNode, $isRangeSelection, $isTextNode } from 'lexical'
 
 import type { TKHandle } from '@/plugins/behaviour/tkHandle'
 
-import { TKNode } from '@/nodes/base'
+import { $isTKNode, TKNode } from '@/nodes/base'
+import { SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
+import { nextTkNodeKey } from '@/plugins/behaviour/tk-indicator'
 
 // TK tracking — the headless half of TKPlugin: the mutation-listener →
 // handle bookkeeping (which TK node lives under which top-level node, per
-// editor) and the hover-highlight feed (the class swap across a top-level
-// node's TK elements). The plugin keeps the indicator component, the
-// positioning (tk-indicator), and the portal. Mirrors the
-// footnotes.ts/FootnotePlugin split: the behaviour registers against the
-// editor and the handle; React renders.
+// editor), the hover-highlight feed (the class swap across a top-level
+// node's TK elements), and the indicator click's selection surgery. The
+// plugin keeps the indicator component, the positioning (tk-indicator),
+// and the portal. Mirrors the footnotes.ts/FootnotePlugin split: the
+// behaviour registers against the editor and the handle; React renders.
 
 /**
  * Feeds the tk handle from the editor's TKNode mutations: a created/updated
@@ -89,4 +91,27 @@ export function applyTkHoverHighlight(
       element.classList.remove(...tkHighlightClasses)
     }
   })
+}
+
+/**
+ * The indicator click's selection surgery (the component keeps only the DOM
+ * event): a decorator parent selects the whole card; otherwise the
+ * selection cycles to the TK node after the currently selected one
+ * (nextTkNodeKey — first when none is selected). Runs inside editor.update.
+ */
+export function $selectTkFromIndicator(editor: LexicalEditor, parentKey: NodeKey, nodeKeys: NodeKey[]): void {
+  if ($isDecoratorNode($getNodeByKey(parentKey))) {
+    editor.dispatchCommand(SELECT_CARD_COMMAND, { cardKey: parentKey })
+    return
+  }
+
+  const selection = $getSelection()
+  const selectedNode = $isRangeSelection(selection) ? selection.getNodes()[0] : null
+  const currentKey = $isTKNode(selectedNode) ? selectedNode.getKey() : null
+
+  const nodeKeyToSelect = nextTkNodeKey(nodeKeys, currentKey)
+  const node = nodeKeyToSelect ? $getNodeByKey(nodeKeyToSelect) : null
+  if ($isTextNode(node)) {
+    node.select(0, node.getTextContentSize())
+  }
 }

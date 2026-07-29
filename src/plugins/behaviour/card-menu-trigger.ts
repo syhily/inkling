@@ -1,6 +1,6 @@
 import type { LexicalEditor } from 'lexical'
 
-import { $getSelection, $isParagraphNode, $isRangeSelection } from 'lexical'
+import { $createParagraphNode, $getSelection, $isParagraphNode, $isRangeSelection } from 'lexical'
 
 import { getSelectedNode } from '@/utils/getSelectedNode'
 
@@ -270,4 +270,32 @@ export function shouldHidePlusButtonOnSelectionChange(
   }
 
   return !anchorNode || !rootElement?.contains(anchorNode)
+}
+
+/**
+ * The slash-menu insert's trigger-paragraph swap (useCardMenu keeps the
+ * type-erased dispatch): paragraphs at the beginning of the document delete
+ * themselves via .collapseAtStart() when their contents are replaced, so
+ * the trigger paragraph is swapped for a fresh empty one — selected — and
+ * the insert command then replaces that selection with the new node. No-op
+ * without a range selection. Runs inside editor.update.
+ */
+export function $swapTriggerParagraph(dispatch: () => void): void {
+  const selection = $getSelection()
+  if (!$isRangeSelection(selection)) {
+    return
+  }
+
+  const focusPNode = selection.focus.getNode().getTopLevelElement()
+
+  if (!focusPNode) {
+    return
+  }
+
+  const paragraph = $createParagraphNode()
+  focusPNode.insertAfter(paragraph)
+  focusPNode.remove()
+  paragraph.select()
+
+  dispatch()
 }
