@@ -3,7 +3,6 @@ import type { ElementNode, Klass, LexicalEditor } from 'lexical'
 
 import { registerNodeTransformIfPresent } from '@/transforms/register-node-transform'
 
-/* c8 ignore next */
 export function removeAlignmentTransform(node: ElementNode) {
   // on element nodes format===text-align in Lexical
   if (node.getFormatType() !== '') {

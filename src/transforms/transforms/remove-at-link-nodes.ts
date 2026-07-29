@@ -4,6 +4,7 @@ import type { LexicalEditor } from 'lexical'
 import { $isTextNode } from 'lexical'
 
 import { AtLinkNode } from '@/nodes/base'
+import { registerNodeTransformIfPresent } from '@/transforms/register-node-transform'
 /* c8 ignore stop */
 
 // used when rendering to make sure we're not rendering the temporary
@@ -27,11 +28,8 @@ export function removeAtLinkNodesTransform(node: AtLinkNode) {
   node.remove()
 }
 
-/* c8 ignore next */
+// installs only when the editor registers AtLinkNode (the shared gate —
+// a ./core-style surface has no at-link nodes to remove)
 export function registerRemoveAtLinkNodesTransform(editor: LexicalEditor) {
-  if (editor.hasNodes([AtLinkNode])) {
-    return editor.registerNodeTransform(AtLinkNode, removeAtLinkNodesTransform)
-  }
-
-  return () => {}
+  return registerNodeTransformIfPresent(editor, AtLinkNode, removeAtLinkNodesTransform)
 }

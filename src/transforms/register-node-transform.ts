@@ -10,7 +10,6 @@ import type { Klass, LexicalEditor, LexicalNode } from 'lexical'
  * the gate crashes such surfaces. One home for the gate: the presence
  * check and the no-op teardown.
  */
-/* c8 ignore next 3 */
 export function registerNodeTransformIfPresent<T extends LexicalNode>(
   editor: LexicalEditor,
   klass: Klass<T>,

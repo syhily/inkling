@@ -6,7 +6,6 @@ import { $isListNode, ListNode } from '@lexical/list'
 import { registerNodeTransformIfPresent } from '@/transforms/register-node-transform'
 /* c8 ignore stop */
 
-/* c8 ignore next */
 export function mergeListNodesTransform(node: ListNode) {
   const nextSibling = node.getNextSibling()
 
