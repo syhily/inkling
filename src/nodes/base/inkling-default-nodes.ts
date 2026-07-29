@@ -8,9 +8,11 @@ import type { Klass, LexicalNode } from 'lexical'
 
 import { AsideNode } from '@/nodes/base/nodes/aside/AsideNode'
 import { AtLinkNode, AtLinkSearchNode } from '@/nodes/base/nodes/at-link/index'
-import { ExtendedHeadingNode, extendedHeadingNodeReplacement } from '@/nodes/base/nodes/ExtendedHeadingNode'
-import { ExtendedQuoteNode, extendedQuoteNodeReplacement } from '@/nodes/base/nodes/ExtendedQuoteNode'
-import { ExtendedTextNode, extendedTextNodeReplacement } from '@/nodes/base/nodes/ExtendedTextNode'
+import {
+  EXTENDED_HEADING_NODE_PAIR,
+  EXTENDED_QUOTE_NODE_PAIR,
+  EXTENDED_TEXT_NODE_PAIR,
+} from '@/nodes/base/nodes/extended-node-pairs'
 import { MarkdownNode } from '@/nodes/base/nodes/markdown/MarkdownNode'
 import { TKNode } from '@/nodes/base/nodes/TKNode'
 import { ZWNJNode } from '@/nodes/base/nodes/zwnj/ZWNJNode'
@@ -61,11 +63,10 @@ export const DEFAULT_CONFIG = {
 }
 
 // The named node runs every surface composes — the facts used to be spelled
-// per surface (FootnoteRefNode once had to be added to two lists). An
-// extended node and its replacement config travel as one pair.
-export const EXTENDED_TEXT_NODE_PAIR = [ExtendedTextNode, extendedTextNodeReplacement]
-export const EXTENDED_HEADING_NODE_PAIR = [ExtendedHeadingNode, extendedHeadingNodeReplacement]
-export const EXTENDED_QUOTE_NODE_PAIR = [ExtendedQuoteNode, extendedQuoteNodeReplacement]
+// per surface (FootnoteRefNode once had to be added to two lists). The
+// extended-node pairs live in a cycle-free leaf (extended-node-pairs.ts) so
+// MINIMAL_NODES can compose them; the barrel re-exports them here.
+export { EXTENDED_HEADING_NODE_PAIR, EXTENDED_QUOTE_NODE_PAIR, EXTENDED_TEXT_NODE_PAIR }
 
 /** The entity-node tail closing the editor's node sets. */
 export const ENTITY_TAIL_NODES = [TKNode, AtLinkNode, AtLinkSearchNode, ZWNJNode, MathInlineNode, FootnoteRefNode]
