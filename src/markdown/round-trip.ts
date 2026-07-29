@@ -213,7 +213,14 @@ const GFM_TABLE: MultilineElementTransformer = {
   type: 'multiline-element',
 }
 
-const TRANSFORMERS: Transformer[] = [...CARD_TRANSFORMERS, GFM_TABLE, CODE_FENCE, ...DEFAULT_TRANSFORMERS]
+// The one home of the transformer precedence rule: card fences (built-in,
+// then host) match before GFM_TABLE and CODE_FENCE, so an inkling:<card>
+// fence is always a card, never a code block.
+function buildTransformers(hostTransformers: Transformer[] = []): Transformer[] {
+  return [...CARD_TRANSFORMERS, ...hostTransformers, GFM_TABLE, CODE_FENCE, ...DEFAULT_TRANSFORMERS]
+}
+
+const TRANSFORMERS: Transformer[] = buildTransformers()
 
 /**
  * The options the round-trip pair accepts: `cards` composes host cards
@@ -244,7 +251,7 @@ function resolveTransformers(cards: readonly HostCard[]): Transformer[] {
     return TRANSFORMERS
   }
   const hostTransformers = cards.flatMap((card) => (card.markdownTransformer ? [card.markdownTransformer] : []))
-  return [...CARD_TRANSFORMERS, ...hostTransformers, GFM_TABLE, CODE_FENCE, ...DEFAULT_TRANSFORMERS]
+  return buildTransformers(hostTransformers)
 }
 
 /**
