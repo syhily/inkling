@@ -146,6 +146,35 @@ function str(value: unknown, field: string): string {
   return value
 }
 
+// GalleryImage's scalar fields, checked with the same str-style guards the
+// neighbouring payloads use — the object check alone used to let
+// {"src": 42} land a number in __images
+const GALLERY_IMAGE_STRING_FIELDS = ['src', 'fileName', 'alt', 'caption', 'href', 'previewSrc', 'title'] as const
+const GALLERY_IMAGE_NUMBER_FIELDS = ['width', 'height', 'row'] as const
+
+function galleryImageEntry(image: object, field: string, index: number): GalleryImage {
+  // object literals from JSON.parse are plain records; the const binding is
+  // the honest bridge (an assertion would warn, a binding does not)
+  const entry: Record<string, unknown> = { ...image }
+  for (const key of GALLERY_IMAGE_STRING_FIELDS) {
+    const value = entry[key]
+    if (value !== undefined && typeof value !== 'string') {
+      throw new TypeError(
+        `card markdown transformer: expected '${field}[${index}].${key}' to be a string, got ${describeValue(value)}`,
+      )
+    }
+  }
+  for (const key of GALLERY_IMAGE_NUMBER_FIELDS) {
+    const value = entry[key]
+    if (value !== undefined && typeof value !== 'number') {
+      throw new TypeError(
+        `card markdown transformer: expected '${field}[${index}].${key}' to be a number, got ${describeValue(value)}`,
+      )
+    }
+  }
+  return entry as GalleryImage
+}
+
 function galleryImages(value: unknown, field: string): GalleryImage[] {
   if (!Array.isArray(value)) {
     throw new TypeError(`card markdown transformer: expected '${field}' to be an array, got ${describeValue(value)}`)
@@ -156,7 +185,7 @@ function galleryImages(value: unknown, field: string): GalleryImage[] {
         `card markdown transformer: expected '${field}[${index}]' to be an object, got ${describeValue(image)}`,
       )
     }
-    return image as GalleryImage
+    return galleryImageEntry(image, field, index)
   })
 }
 
