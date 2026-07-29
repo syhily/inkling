@@ -3,7 +3,6 @@ import { vi } from 'vitest'
 
 import type { ListOptionItem } from '@/hooks/useSearchLinks'
 
-import { KeyboardSelection } from '@/components/ui/KeyboardSelection'
 import { KeyboardSelectionWithGroups } from '@/components/ui/KeyboardSelectionWithGroups'
 
 function EmptyIcon() {
@@ -13,42 +12,6 @@ function EmptyIcon() {
 function createListOptionItem(label: string, value: string | null): ListOptionItem {
   return { Icon: EmptyIcon, highlight: false, label, type: 'url', value }
 }
-
-describe('KeyboardSelection', () => {
-  it('lets Enter fall through when there is no selectable item', () => {
-    const onKeyDown = vi.fn()
-    const onSelect = vi.fn()
-
-    render(
-      <div onKeyDown={onKeyDown}>
-        <input aria-label="URL" />
-        <KeyboardSelection getItem={() => <></>} items={[]} onSelect={onSelect} />
-      </div>,
-    )
-
-    fireEvent.keyDown(screen.getByRole('textbox', { name: 'URL' }), { key: 'Enter' })
-
-    expect(onSelect).not.toHaveBeenCalled()
-    expect(onKeyDown).toHaveBeenCalledOnce()
-    expect(onKeyDown.mock.calls[0][0].defaultPrevented).toBe(false)
-  })
-
-  it('selects the current item on Enter when one exists', () => {
-    const onSelect = vi.fn()
-    const item = { value: 'https://example.com', label: 'Example' }
-
-    render(
-      <div>
-        <input aria-label="URL" />
-        <KeyboardSelection getItem={() => <></>} items={[item]} onSelect={onSelect} />
-      </div>,
-    )
-
-    fireEvent.keyDown(screen.getByRole('textbox', { name: 'URL' }), { key: 'Enter' })
-
-    expect(onSelect).toHaveBeenCalledWith(item)
-  })
-})
 
 describe('KeyboardSelectionWithGroups', () => {
   it('lets Enter fall through when there is no selectable item', () => {
@@ -118,6 +81,28 @@ describe('KeyboardSelectionWithGroups', () => {
     fireEvent.keyDown(screen.getByRole('textbox', { name: 'URL' }), { key: 'Enter' })
 
     expect(onSelect).toHaveBeenCalledWith(item)
+  })
+
+  it('never shows a null-valued placeholder selected, even when the index lands on it', () => {
+    const placeholder = createListOptionItem('No results', null)
+    const real = createListOptionItem('Example', 'https://example.com')
+
+    render(
+      <KeyboardSelectionWithGroups
+        getGroup={() => <></>}
+        getItem={(item, selected) => (
+          <li key={item.label} aria-selected={selected} role="option">
+            {item.label}
+          </li>
+        )}
+        groups={[{ label: '', items: [placeholder, real] }]}
+        onSelect={vi.fn()}
+      />,
+    )
+
+    // the default index is 0 — the placeholder — but it must not render selected
+    expect(screen.getByText('No results')).toHaveAttribute('aria-selected', 'false')
+    expect(screen.getByText('Example')).toHaveAttribute('aria-selected', 'false')
   })
 
   it('still lets Enter fall through a flagged link input before any navigation (inkling behavior)', () => {

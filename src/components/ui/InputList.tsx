@@ -3,7 +3,6 @@ import React from 'react'
 import { Delayed } from '@/components/ui/Delayed'
 import { DropdownContainer } from '@/components/ui/DropdownContainer'
 import { Input } from '@/components/ui/Input'
-import { KeyboardSelection } from '@/components/ui/KeyboardSelection'
 import { KeyboardSelectionWithGroups } from '@/components/ui/KeyboardSelectionWithGroups'
 import { Spinner } from '@/components/ui/Spinner'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
@@ -218,9 +217,11 @@ export function InputList<T extends InputListItemData = InputListItemData>({
                 onSelect={onSelectEvent}
               />
             ) : (
-              <KeyboardSelection
-                getItem={(item, selected) => getItem(item, selected, () => {}, false)}
-                items={listOptions ?? []}
+              // a flat option list is one degenerate group with no header
+              <KeyboardSelectionWithGroups
+                getGroup={() => <></>}
+                getItem={getItem}
+                groups={[{ label: '', items: listOptions ?? [] }]}
                 onSelect={onSelectEvent}
               />
             )}
