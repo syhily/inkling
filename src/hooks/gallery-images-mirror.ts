@@ -1,6 +1,7 @@
 import type { GalleryImage } from '@/types/gallery'
 
 import { ALLOWED_IMAGE_PROPS } from '@/nodes/base'
+import { createSnapshotStore } from '@/utils/services/snapshot-store'
 
 // Gallery images mirror — the headless module owning BOTH directions of the
 // gallery card's image list:
@@ -46,57 +47,51 @@ export function createGalleryImagesMirror({
   writeNodeImages,
   subscribeToNodeImages,
 }: GalleryImagesMirrorPorts) {
-  let nodeImages: GalleryImage[] = readNodeImages() ?? []
-  let overlay: GalleryImage[] | null = null
+  // the store holds the two state pieces; the published snapshot derives
+  // from them (overlay ?? nodeImages), so an emit that leaves the rendered
+  // list unchanged notifies listeners but cannot re-render React
+  const store = createSnapshotStore<{ nodeImages: GalleryImage[]; overlay: GalleryImage[] | null }>({
+    nodeImages: readNodeImages() ?? [],
+    overlay: null,
+  })
   let unsubscribeFromNode: (() => void) | null = null
-  const listeners = new Set<() => void>()
-
-  const emit = () => {
-    for (const listener of listeners) {
-      listener()
-    }
-  }
 
   const resyncFromNode = () => {
+    const { nodeImages, overlay } = store.getSnapshot()
     const fresh = readNodeImages() ?? []
     if (fresh === nodeImages) {
       // the node was touched without replacing its images (e.g. caption dirt)
       return
     }
-    nodeImages = fresh
     if (overlay !== null && samePersistedImages(fresh, overlay)) {
       // the echo of our own write: adopt the node's copy as the baseline but
       // keep the overlay — it still carries the in-flight preview props the
       // node deliberately strips, and the rendered list is unchanged
+      store.emit({ nodeImages: fresh })
       return
     }
     // an external change: the node wins wholesale
-    overlay = null
-    emit()
+    store.emit({ nodeImages: fresh, overlay: null })
   }
 
   return {
     /** The rendered list: the local overlay while one is set, else the node images. */
-    getSnapshot: () => overlay ?? nodeImages,
-
-    subscribe(listener: () => void) {
-      listeners.add(listener)
-      return () => {
-        listeners.delete(listener)
-      }
+    getSnapshot: () => {
+      const { nodeImages, overlay } = store.getSnapshot()
+      return overlay ?? nodeImages
     },
+
+    subscribe: store.subscribe,
 
     /** Local mutation: renders immediately, then writes the node through the seam port. */
     setImages(images: GalleryImage[]) {
-      overlay = images
-      emit()
+      store.emit({ overlay: images })
       writeNodeImages(images)
     },
 
     /** Preview overlay: renders immediately, never written to the node. */
     setPreviewImages(images: GalleryImage[]) {
-      overlay = images
-      emit()
+      store.emit({ overlay: images })
     },
 
     /** Begin the node subscription (adapter mount). */

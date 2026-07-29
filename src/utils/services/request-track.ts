@@ -1,17 +1,20 @@
 /**
  * The request track — the one home of the async-flow skeleton behind the
- * editor's debounced search flows (CONTEXT.md "request track"). Three
+ * editor's debounced search flows (CONTEXT.md "request track"). Two
  * primitives, each previously hand-copied per flow:
  *
  * - the scheduler port (`RequestScheduler` + `defaultScheduler`) — tests
  *   inject a manual one, so every race matrix below is a synchronous test
  *   table instead of renderHook + wall-clock sleeps;
- * - the snapshot store (`createSnapshotStore`) — one state owner, one
- *   publish: React subscribes to the snapshot and `emit` merges a partial;
  * - the latest-wins request guard (`createRequestTrack`) — a newer request
  *   supersedes every in-flight one, so a slow response can never overwrite
  *   newer results, plus the scheduled-dispatch cancellation and the dispose
  *   lifecycle (cancel pending + supersede in-flight).
+ *
+ * The snapshot store the flows publish through lives in its own module
+ * (src/utils/services/snapshot-store.ts) — it is shared with state modules
+ * that have no request line (the menu navigator, the gallery images
+ * mirror, the composer handle).
  *
  * The gif browser (src/utils/services/gif-browser.ts), the library browser
  * (src/utils/services/library-browser.ts), and the link-search coordinator
@@ -33,34 +36,6 @@ export const defaultScheduler: RequestScheduler = {
       clearTimeout(id)
     }
   },
-}
-
-export interface SnapshotStore<TSnapshot> {
-  getSnapshot: () => TSnapshot
-  subscribe: (listener: () => void) => () => void
-  /** Merge a partial snapshot and notify every listener. */
-  emit: (partial: Partial<TSnapshot>) => void
-}
-
-/** One state owner, one publish: the snapshot React subscribes to. */
-export function createSnapshotStore<TSnapshot extends object>(initial: TSnapshot): SnapshotStore<TSnapshot> {
-  let snapshot = initial
-  const listeners = new Set<() => void>()
-  return {
-    getSnapshot: () => snapshot,
-    subscribe(listener) {
-      listeners.add(listener)
-      return () => {
-        listeners.delete(listener)
-      }
-    },
-    emit(partial) {
-      snapshot = { ...snapshot, ...partial }
-      for (const listener of listeners) {
-        listener()
-      }
-    },
-  }
 }
 
 export interface RequestTrack {

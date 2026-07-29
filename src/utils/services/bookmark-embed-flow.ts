@@ -17,7 +17,8 @@ import { $getSelection, $setSelection } from 'lexical'
 import type { BookmarkEmbedResponse, LinkingSettings } from '@/context/InklingHostIntegrationContext'
 
 import { $isBookmarkNode, $updateCardNode } from '@/nodes/base'
-import { createRequestTrack, createSnapshotStore } from '@/utils/services/request-track'
+import { createRequestTrack } from '@/utils/services/request-track'
+import { createSnapshotStore } from '@/utils/services/snapshot-store'
 
 // Keep the runtime boundary defensive for untyped JavaScript hosts even though
 // TypeScript hosts now receive the closed bookmark response contract.

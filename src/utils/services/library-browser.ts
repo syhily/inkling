@@ -12,7 +12,8 @@
 // card) reuse the same machine. The React adapter is `useLibraryBrowser`;
 // `LibrarySelector` renders and dispatches intents.
 
-import { createRequestTrack, createSnapshotStore, type RequestScheduler } from '@/utils/services/request-track'
+import { createRequestTrack, type RequestScheduler } from '@/utils/services/request-track'
+import { createSnapshotStore } from '@/utils/services/snapshot-store'
 
 export const LIBRARY_SEARCH_DEBOUNCE_MS = 300
 

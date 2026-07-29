@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { createRequestTrack, createSnapshotStore, defaultScheduler } from '@/utils/services/request-track'
+import { createRequestTrack, defaultScheduler } from '@/utils/services/request-track'
 
 function createManualScheduler() {
   const pending = new Map<number, () => void>()
@@ -42,31 +42,6 @@ describe('defaultScheduler', () => {
     } finally {
       vi.useRealTimers()
     }
-  })
-})
-
-describe('createSnapshotStore', () => {
-  it('merges partials, keeps untouched fields, and notifies listeners', () => {
-    const store = createSnapshotStore({ items: [1], isLoading: false, error: null as string | null })
-    const listener = vi.fn()
-    const unsubscribe = store.subscribe(listener)
-
-    store.emit({ isLoading: true })
-    expect(store.getSnapshot()).toEqual({ items: [1], isLoading: true, error: null })
-    expect(listener).toHaveBeenCalledTimes(1)
-
-    store.emit({ error: 'boom', isLoading: false })
-    expect(store.getSnapshot()).toEqual({ items: [1], isLoading: false, error: 'boom' })
-    expect(listener).toHaveBeenCalledTimes(2)
-
-    // each emit publishes a fresh snapshot reference (useSyncExternalStore)
-    const before = store.getSnapshot()
-    store.emit({ isLoading: true })
-    expect(store.getSnapshot()).not.toBe(before)
-
-    unsubscribe()
-    store.emit({ items: [] })
-    expect(listener).toHaveBeenCalledTimes(3)
   })
 })
 

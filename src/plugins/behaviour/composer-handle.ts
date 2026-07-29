@@ -1,5 +1,7 @@
 import React from 'react'
 
+import { createSnapshotStore, type SnapshotListener } from '@/utils/services/snapshot-store'
+
 // Factory for the composer handle pattern (plans 038/047): a per-top-level-
 // composer, editor-side channel in the shape getState / setState(partial) /
 // subscribe. Non-React code (Lexical command handlers, plugins) reads state
@@ -9,8 +11,13 @@ import React from 'react'
 // render-only via useSyncExternalStore. Each top-level composer creates one
 // instance per channel in a provider — never a module singleton, so multiple
 // composers on one page cannot clobber each other.
+//
+// The handle IS the shared snapshot store (@/utils/services/snapshot-store)
+// with the keyed change guard: a setState that keeps every value identical
+// is swallowed, so subscribers are not notified (and React does not
+// re-render) for no-op writes.
 
-export type ComposerHandleListener<T> = (state: T) => void
+export type ComposerHandleListener<T> = SnapshotListener<T>
 
 export interface ComposerHandle<T> {
   getState: () => T
@@ -19,33 +26,13 @@ export interface ComposerHandle<T> {
 }
 
 export function createComposerHandle<T extends object>(initialState: T): ComposerHandle<T> {
-  let state = initialState
-  const listeners = new Set<ComposerHandleListener<T>>()
-
+  const store = createSnapshotStore<T>(initialState, {
+    changeGuard: (previous, next) => (Object.keys(next) as (keyof T)[]).some((key) => next[key] !== previous[key]),
+  })
   return {
-    getState: () => state,
-
-    setState: (partial) => {
-      const next = { ...state, ...partial }
-      // reference-equality change guard: swallow updates that keep every
-      // value identical, so subscribers are not notified (and React does not
-      // re-render) for no-op writes
-      const changed = (Object.keys(next) as (keyof T)[]).some((key) => next[key] !== state[key])
-      if (!changed) {
-        return
-      }
-      state = next
-      for (const listener of listeners) {
-        listener(state)
-      }
-    },
-
-    subscribe: (listener) => {
-      listeners.add(listener)
-      return () => {
-        listeners.delete(listener)
-      }
-    },
+    getState: store.getSnapshot,
+    setState: store.emit,
+    subscribe: store.subscribe,
   }
 }
 

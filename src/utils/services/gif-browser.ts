@@ -7,7 +7,8 @@ import {
   type GifProviderConfig,
   type GifResponse,
 } from '@/utils/services/gif'
-import { createRequestTrack, createSnapshotStore, type RequestScheduler } from '@/utils/services/request-track'
+import { createRequestTrack, type RequestScheduler } from '@/utils/services/request-track'
+import { createSnapshotStore } from '@/utils/services/snapshot-store'
 
 // Gif browser — the headless module behind the GIF selector: fetch/pagination
 // behind an injected port, column balancing, and the keyboard-navigation

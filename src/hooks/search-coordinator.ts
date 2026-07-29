@@ -1,7 +1,8 @@
 import React from 'react'
 
 import EarthIcon from '@/assets/icons/inkling-earth.svg?react'
-import { createRequestTrack, createSnapshotStore, type RequestScheduler } from '@/utils/services/request-track'
+import { createRequestTrack, type RequestScheduler } from '@/utils/services/request-track'
+import { createSnapshotStore } from '@/utils/services/snapshot-store'
 
 // Search coordinator — the headless module owning the link-search flow behind
 // useSearchLinks: two request tracks (the debounced query search and the

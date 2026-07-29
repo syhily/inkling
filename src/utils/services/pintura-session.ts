@@ -19,7 +19,8 @@
  * throwing (the pre-seam code crashed on them).
  */
 
-import { createRequestTrack, createSnapshotStore } from '@/utils/services/request-track'
+import { createRequestTrack } from '@/utils/services/request-track'
+import { createSnapshotStore } from '@/utils/services/snapshot-store'
 
 /**
  * Strips query/hash for the module import. A relative jsUrl resolves
