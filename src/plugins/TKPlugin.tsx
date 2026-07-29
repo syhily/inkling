@@ -10,7 +10,7 @@ import { $createTKNode, ExtendedTextNode, TKNode } from '@/nodes/base'
 import { resolveTkIndicatorPosition } from '@/plugins/behaviour/tk-indicator'
 import { getTKMatch } from '@/plugins/behaviour/tk-matcher'
 import { $selectTkFromIndicator, applyTkHoverHighlight, registerTkNodeTracking } from '@/plugins/behaviour/tk-tracking'
-import { type InklingThemeClasses } from '@/themes/inkling-theme-classes'
+import { themeClassList } from '@/themes/inkling-theme-classes'
 import { getEditorTheme } from '@/utils/lexical-internals'
 
 function TKIndicator({
@@ -26,10 +26,8 @@ function TKIndicator({
 }) {
   const theme = getEditorTheme(editor)
   // the custom keys are typed at the boundary in @/themes/inkling-theme-classes
-  const tk = (theme as InklingThemeClasses).tk
-  const tkHighlighted = (theme as InklingThemeClasses).tkHighlighted
-  const tkClasses = tk?.split(' ') || []
-  const tkHighlightClasses = tkHighlighted?.split(' ') || []
+  const tkClasses = themeClassList(theme, 'tk')
+  const tkHighlightClasses = themeClassList(theme, 'tkHighlighted')
 
   const containingElement = editor.getElementByKey(parentKey)
 

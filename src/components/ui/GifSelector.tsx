@@ -49,13 +49,19 @@ const GifSelector = ({ browser, onGifInsert, onClickOutside, provider }: GifSele
       return
     }
 
-    const resizeObserver = new ResizeObserver((entries) => {
+    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
       const [containerEntry] = entries
-      const contentBoxSize = Array.isArray(containerEntry.contentBoxSize)
-        ? containerEntry.contentBoxSize[0]
-        : containerEntry.contentBoxSize
+      if (!containerEntry) {
+        return
+      }
+      // one annotated read at the lib boundary: tsc's lib.dom types
+      // contentBoxSize as a readonly array, tsgolint's vendored lib leaves
+      // it any — the single-size-or-array union is the browser reality
+      const contentBoxSize = (
+        Array.isArray(containerEntry.contentBoxSize) ? containerEntry.contentBoxSize[0] : containerEntry.contentBoxSize
+      ) as ResizeObserverSize | undefined
 
-      const width = contentBoxSize.inlineSize
+      const width = contentBoxSize?.inlineSize ?? 0
 
       let columnsCount = 4
 

@@ -66,10 +66,16 @@ const EMOTICON_SEARCH_ALIASES: Record<string, string> = {
   '-(': 'frown',
 }
 
+// emoji-mart's SearchIndex.search returns any — one annotated cast at the
+// boundary; every call site goes through this
+async function searchEmojiIndex(query: string): Promise<EmojiSearchResult[]> {
+  return (await SearchIndex.search(query)) as EmojiSearchResult[]
+}
+
 // The typeahead menu's query policy.
 export async function searchEmojis(query: string): Promise<EmojiSearchResult[]> {
   const alias = EMOTICON_SEARCH_ALIASES[query]
-  return SearchIndex.search(alias ?? query)
+  return searchEmojiIndex(alias ?? query)
 }
 
 // Exact-match completion surgery: replace the `:id` shortcode ending at the
@@ -166,7 +172,7 @@ export function registerEmojiExactMatchCompletion(
       }
       void (async () => {
         // literal query, not searchEmojis — see the module header
-        const emojis: EmojiSearchResult[] = await SearchIndex.search(query)
+        const emojis = await searchEmojiIndex(query)
         if (emojis.length === 0) {
           return
         }
