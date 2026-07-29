@@ -10,8 +10,9 @@ import {
   type NodeKey,
 } from 'lexical'
 
+import type { BaseImageNode } from '@/nodes/base/nodes/image/ImageNode'
 import type { GalleryNode } from '@/nodes/GalleryNode'
-import type { ImageNode, ImageNodeDataset } from '@/nodes/ImageNode'
+import type { ImageNodeDataset } from '@/nodes/ImageNode'
 import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { $isImageNode } from '@/nodes/base/nodes/image/ImageNode'
@@ -77,7 +78,7 @@ export function $insertDraggedImage(
   dataset: ImageNodeDataset,
   droppables: HTMLElement[],
   insertIndex: number,
-): ImageNode | null {
+): BaseImageNode | null {
   const ImageNodeClass = getRegisteredNodeMap($getEditor()).get('image')?.klass
   if (!ImageNodeClass) {
     return null
@@ -88,7 +89,12 @@ export function $insertDraggedImage(
     return null
   }
 
-  const imageNode = new ImageNodeClass(dataset) as ImageNode
+  // a registry key could resolve to a non-image class (a host replaced it) —
+  // check the constructed node instead of asserting
+  const imageNode = new ImageNodeClass(dataset)
+  if (!$isImageNode(imageNode)) {
+    return null
+  }
   targetNode.insertBefore(imageNode)
 
   // select the newly inserted image card

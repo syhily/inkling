@@ -126,7 +126,7 @@ export function useCardMenuSession({ getSelection = () => document.getSelection(
     }
 
     const handleMousedown = (event: MouseEvent) => {
-      if (containerRef.current?.contains(event.target as Node)) {
+      if (event.target instanceof Node && containerRef.current?.contains(event.target)) {
         return
       }
       closeMenu()

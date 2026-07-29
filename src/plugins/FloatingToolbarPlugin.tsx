@@ -115,7 +115,7 @@ function useFloatingFormatToolbar(
   // clicked outside of the editor and the selection is lost
   React.useEffect(() => {
     const handleMousedown = (event: MouseEvent) => {
-      if (!anchorElem.contains(event.target as Node)) {
+      if (!(event.target instanceof Node) || !anchorElem.contains(event.target)) {
         session.close()
       }
     }

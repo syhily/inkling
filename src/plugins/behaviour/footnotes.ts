@@ -28,7 +28,7 @@
 // instance) and numbering never descends. kobato descends into
 // solution/twoColumn; the gap is documented for migration.
 
-import type { LexicalEditor, LexicalNode, NodeKey, RangeSelection } from 'lexical'
+import type { LexicalEditor, LexicalNode, NodeKey } from 'lexical'
 
 import { $isTableCellNode } from '@lexical/table'
 import { mergeRegister } from '@lexical/utils'
@@ -174,7 +174,15 @@ export function $syncFootnoteIndices(snapshot: FootnoteSnapshot = $collectFootno
 
   // reorder the definition run to citation order, keeping the run's anchor
   const byKey = new Map(definitions.map((definition) => [definition.targetKey, definition]))
-  const desired = order.map((key) => byKey.get(key) as BaseFootnoteDefinitionNode)
+  // every ref's targetKey resolves a definition — the sync is skipped when
+  // one doesn't, so a miss here names a broken invariant, never undefined
+  const desired = order.map((key) => {
+    const definition = byKey.get(key)
+    if (!definition) {
+      throw new Error(`[footnotes] ref targets missing definition '${key}' during reorder`)
+    }
+    return definition
+  })
   if (desired.every((definition, index) => definition === definitions[index])) {
     return
   }
@@ -287,7 +295,12 @@ function $scanFootnoteCaretTrigger(editor: LexicalEditor, handle: FootnoteHandle
   if (!$canInsertFootnoteRef(editor)) {
     return
   }
-  const selection = $getSelection() as RangeSelection
+  // $canInsertFootnoteRef just proved range+collapsed, but the compiler
+  // can't see it — guard locally instead of asserting
+  const selection = $getSelection()
+  if (!$isRangeSelection(selection)) {
+    return
+  }
   const anchorNode = selection.anchor.getNode()
   if (!$isTextNode(anchorNode) || $isFootnoteRefNode(anchorNode)) {
     return

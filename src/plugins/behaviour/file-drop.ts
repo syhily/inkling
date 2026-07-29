@@ -104,7 +104,7 @@ export function registerDragOverSuppression(editor: LexicalEditor): () => void {
   }
 
   const handleDragOver = (event: DragEvent) => {
-    const target = event.target as HTMLElement | null
+    const target = event.target instanceof HTMLElement ? event.target : null
     if (!event.dataTransfer || target?.closest('[data-inkling-card]')) {
       return
     }

@@ -3,9 +3,8 @@ import {
   extractErrorMessage,
   isInvalidKeyError,
   type GifData,
-  type GifErrorResponse,
   type GifProviderConfig,
-  type GifResponse,
+  isGifResponse,
 } from '@/utils/services/gif'
 import { createRequestTrack, type RequestScheduler } from '@/utils/services/request-track'
 import { createSnapshotStore } from '@/utils/services/snapshot-store'
@@ -330,12 +329,15 @@ export function reduceGifKey(state: GifNavState, event: GifKeyEventData, geometr
 const defaultFetchPage: GifFetchPage = async (url) => {
   const response = await fetch(url)
   if (response.status >= 200 && response.status < 300) {
-    const json = (await response.json()) as GifResponse
+    const json: unknown = await response.json()
+    if (!isGifResponse(json)) {
+      return { ok: false, message: 'Unexpected response from the gif provider' }
+    }
     return { ok: true, results: json.results, next: json.next ?? null }
   }
   const contentType = response.headers.get('content-type') || ''
   if (contentType.startsWith('application/json')) {
-    const json = (await response.json()) as GifErrorResponse
+    const json: unknown = await response.json()
     return { ok: false, message: extractErrorMessage(json) }
   }
   return { ok: false, message: await response.text() }

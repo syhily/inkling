@@ -131,14 +131,14 @@ const GifSelector = ({ browser, onGifInsert, onClickOutside, provider }: GifSele
     if (event.nativeEvent.isComposing) {
       return
     }
-    if (!selectorRef.current?.contains(event.target as Node)) {
+    if (!(event.target instanceof Node) || !selectorRef.current?.contains(event.target)) {
       return
     }
     if (event.ctrlKey || event.metaKey || event.altKey) {
       return
     }
 
-    const tagName = (event.target as HTMLElement).tagName
+    const tagName = event.target instanceof HTMLElement ? event.target.tagName : ''
     const target: GifKeyTarget = tagName === 'INPUT' ? 'input' : tagName === 'BUTTON' ? 'button' : 'other'
     const effects = browser.dispatch({ type: 'key', key: event.key, shiftKey: event.shiftKey, target }, geometry)
     // A keyboard-resolved highlight doubles as a focus request for its tile —

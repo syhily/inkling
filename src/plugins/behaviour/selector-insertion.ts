@@ -2,8 +2,9 @@ import type { LexicalEditor } from 'lexical'
 
 import { $getEditor, $getSelection, COMMAND_PRIORITY_LOW, createCommand, mergeRegister } from 'lexical'
 
-import type { ImageNode, ImageNodeDataset } from '@/nodes/ImageNode'
+import type { ImageNodeDataset } from '@/nodes/ImageNode'
 
+import { $isImageNode } from '@/nodes/base/nodes/image/ImageNode'
 import { INSERT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
@@ -34,7 +35,12 @@ export function $insertFromSelectorDataset(dataset: ImageNodeDataset): boolean {
     return false
   }
 
-  const imageNode = new ImageNodeClass(dataset) as ImageNode
+  // a registry key could resolve to a non-image class (a host replaced it) —
+  // check the constructed node instead of asserting
+  const imageNode = new ImageNodeClass(dataset)
+  if (!$isImageNode(imageNode)) {
+    return false
+  }
 
   const selection = $getSelection()
   if (!selection) {

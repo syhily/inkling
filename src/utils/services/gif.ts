@@ -42,15 +42,30 @@ export interface GifErrorResponse {
   errors?: { message?: string[] | string }
 }
 
-export function extractErrorMessage(json: GifErrorResponse | null | undefined): string {
-  const klipyMessage = json?.errors?.message
-  const err = json?.error
+export function extractErrorMessage(json: unknown): string {
+  if (typeof json !== 'object' || json === null) {
+    return 'Unknown error'
+  }
+  const err: unknown = 'error' in json ? json.error : undefined
+  const klipyMessage: unknown =
+    'errors' in json && typeof json.errors === 'object' && json.errors !== null && 'message' in json.errors
+      ? json.errors.message
+      : undefined
   return (
-    (typeof err === 'object' && err?.message) ||
+    (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' && err.message) ||
     (typeof err === 'string' ? err : '') ||
-    (Array.isArray(klipyMessage) ? klipyMessage[0] : klipyMessage) ||
+    (Array.isArray(klipyMessage) && typeof klipyMessage[0] === 'string'
+      ? klipyMessage[0]
+      : typeof klipyMessage === 'string'
+        ? klipyMessage
+        : undefined) ||
     'Unknown error'
   )
+}
+
+/** The provider's success payload — untyped network data is checked at the fetch boundary, not asserted. */
+export function isGifResponse(json: unknown): json is GifResponse {
+  return typeof json === 'object' && json !== null && 'results' in json && Array.isArray(json.results)
 }
 
 export function isInvalidKeyError(message: string | null | undefined): boolean {
