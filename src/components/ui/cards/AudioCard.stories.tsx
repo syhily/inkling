@@ -4,22 +4,15 @@ import React from 'react'
 
 import { AudioCard, type AudioCardProps } from '@/components/ui/cards/AudioCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
-
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-  Editing: { isSelected: true, isEditing: true },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 
 interface AudioCardStoryArgs extends Partial<AudioCardProps> {
-  display?: DisplayKey
+  display?: CardDisplayKey
   titlePlaceholder?: string
 }
 
 function AudioCardStory({ display = 'Default', titlePlaceholder, ...args }: AudioCardStoryArgs) {
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
   const componentProps = {
     updateTitle: () => {},
     onAudioFileChange: () => {},
@@ -45,19 +38,7 @@ const meta = {
   component: AudioCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-          Editing: 'Editing',
-        },
-        defaultValue: displayOptions.Default,
-      },
-    },
+    display: cardDisplayArgType(),
   },
   parameters: {
     status: {

@@ -4,21 +4,14 @@ import React from 'react'
 
 import { FileCard, type FileCardProps } from '@/components/ui/cards/FileCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
-
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-  Editing: { isSelected: true, isEditing: true },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 
 interface FileCardStoryArgs extends Partial<FileCardProps> {
-  display?: DisplayKey
+  display?: CardDisplayKey
 }
 
 function FileCardStory({ display = 'Default', ...args }: FileCardStoryArgs) {
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
   const componentProps = {
     fileDragHandler: { isDraggedOver: false, setRef: () => {} },
     onFileChange: () => {},
@@ -50,19 +43,7 @@ const meta = {
   component: FileCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-          Editing: 'Editing',
-        },
-        defaultValue: displayOptions.Default,
-      },
-    },
+    display: cardDisplayArgType(),
   },
   parameters: {
     status: {

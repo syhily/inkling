@@ -6,26 +6,20 @@ import React from 'react'
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import { MINIMAL_NODES } from '@/index'
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
-
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
 
 type BookmarkCardProps = React.ComponentProps<typeof BookmarkCard>
 
 interface BookmarkCardStoryArgs extends Partial<BookmarkCardProps> {
-  display?: DisplayKey
+  display?: CardDisplayKey
   caption?: string
 }
 
 function BookmarkCardStory({ display = 'Default', caption = '', ...args }: BookmarkCardStoryArgs) {
   const captionEditor = createEditor({ nodes: MINIMAL_NODES })
   populateEditor({ editor: captionEditor, initialHtml: caption })
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
   const componentProps = {
     handleClose: () => {},
     handlePasteAsLink: () => {},
@@ -56,18 +50,7 @@ const meta = {
   component: BookmarkCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-        },
-        defaultValue: displayOptions.Default,
-      },
-    },
+    display: cardDisplayArgType(['Default', 'Selected']),
   },
   parameters: {
     status: {

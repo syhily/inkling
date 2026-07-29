@@ -4,22 +4,16 @@ import React from 'react'
 
 import { HorizontalRuleCard } from '@/components/ui/cards/HorizontalRuleCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
-
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 
 type HorizontalRuleCardProps = React.ComponentProps<typeof HorizontalRuleCard>
 
 interface HorizontalRuleCardStoryArgs extends Partial<HorizontalRuleCardProps> {
-  display?: DisplayKey
+  display?: CardDisplayKey
 }
 
 function HorizontalRuleCardStory({ display = 'Default' }: HorizontalRuleCardStoryArgs) {
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
 
   return (
     <div className="inkling-prose">
@@ -37,18 +31,7 @@ const meta = {
   component: HorizontalRuleCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-        },
-        defaultValue: displayOptions.Default,
-      },
-    },
+    display: cardDisplayArgType(['Default', 'Selected']),
   },
   parameters: {
     status: {

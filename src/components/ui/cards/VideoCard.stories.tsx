@@ -7,18 +7,11 @@ import { VideoCard, type VideoCardProps } from '@/components/ui/cards/VideoCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import { MINIMAL_NODES } from '@/index'
 import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
 
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-  Editing: { isSelected: true, isEditing: true },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
-
 interface VideoCardStoryArgs extends Partial<VideoCardProps> {
-  display?: DisplayKey
+  display?: CardDisplayKey
   caption?: string
 }
 
@@ -26,7 +19,7 @@ function VideoCardStory({ display = 'Default', caption = '', ...args }: VideoCar
   const captionEditor = createEditor({ nodes: MINIMAL_NODES })
   populateEditor({ editor: captionEditor, initialHtml: caption })
   const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
   const componentProps = {
     captionEditorInitialState: undefined,
     fileInputRef,
@@ -67,19 +60,7 @@ const meta = {
   component: VideoCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-          Editing: 'Editing',
-        },
-        defaultValue: displayOptions.Default,
-      },
-    },
+    display: cardDisplayArgType(),
     cardWidth: {
       options: ['regular', 'wide', 'full'],
       control: { type: 'radio' },

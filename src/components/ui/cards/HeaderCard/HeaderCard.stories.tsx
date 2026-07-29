@@ -6,17 +6,9 @@ import React from 'react'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import { MINIMAL_NODES } from '@/index'
+import { MINIMAL_DOCUMENT } from '@/utils/initial-document'
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
-
-import { editorEmptyState } from '../../../../../.storybook/editorEmptyState'
-
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-  Editing: { isSelected: true, isEditing: true },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
 
 type HeaderCardProps = React.ComponentProps<typeof HeaderCard>
 
@@ -24,7 +16,7 @@ type HeaderCardProps = React.ComponentProps<typeof HeaderCard>
 // them onto the card's grouped seam
 type HeaderCardStoryArgs = Partial<HeaderCardProps['view']> &
   Partial<Pick<HeaderCardProps['editors'], 'headerTextEditorInitialState' | 'subheaderTextEditorInitialState'>> & {
-    display?: DisplayKey
+    display?: CardDisplayKey
     header?: string
     subheader?: string
   }
@@ -78,7 +70,7 @@ function HeaderCardStory({ display = 'Default', header = '', subheader = '', ...
   populateEditor({ editor: headerTextEditor, initialHtml: header })
   populateEditor({ editor: subheaderTextEditor, initialHtml: subheader })
 
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
   const componentProps = groupProps(args, { headerTextEditor, subheaderTextEditor })
 
   return (
@@ -97,19 +89,7 @@ const meta = {
   component: HeaderCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-          Editing: 'Editing',
-        },
-        defaultValue: displayOptions.Default,
-      },
-    },
+    display: cardDisplayArgType(),
     layout: {
       options: ['regular', 'wide', 'full', 'split'],
       control: { type: 'radio' },
@@ -140,8 +120,8 @@ export const Empty: Story = {
     backgroundColor: '#F3B389',
     textColor: '#000000',
     buttonUrl: '',
-    headerTextEditorInitialState: editorEmptyState,
-    subheaderTextEditorInitialState: editorEmptyState,
+    headerTextEditorInitialState: JSON.stringify(MINIMAL_DOCUMENT),
+    subheaderTextEditorInitialState: JSON.stringify(MINIMAL_DOCUMENT),
   },
 }
 

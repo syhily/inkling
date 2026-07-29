@@ -7,17 +7,11 @@ import { GalleryCard, type GalleryCardProps } from '@/components/ui/cards/Galler
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import CardContext from '@/context/CardContext'
 import { MINIMAL_NODES } from '@/index'
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
 
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
-
 interface GalleryCardStoryArgs extends Partial<GalleryCardProps> {
-  display?: DisplayKey
+  display?: CardDisplayKey
   caption?: string
 }
 
@@ -49,7 +43,7 @@ function GalleryCardStory({
 
   const fallbackFileInputRef = React.useRef<HTMLInputElement | null>(null)
   const fileInputRef = fileInputRefProp ?? fallbackFileInputRef
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
   const isSelected = isSelectedProp ?? displayState.isSelected
   const isEditing = displayState.isEditing
 
@@ -95,18 +89,7 @@ const meta = {
   component: GalleryCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-        },
-        defaultValue: displayOptions.Default,
-      },
-    },
+    display: cardDisplayArgType(['Default', 'Selected']),
   },
   parameters: {
     status: {

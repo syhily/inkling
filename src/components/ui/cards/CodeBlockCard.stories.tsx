@@ -6,27 +6,20 @@ import React from 'react'
 import { CodeBlockCard } from '@/components/ui/cards/CodeBlockCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import { MINIMAL_NODES } from '@/index'
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
-
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-  Editing: { isSelected: true, isEditing: true },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
 
 type CodeBlockCardProps = React.ComponentProps<typeof CodeBlockCard>
 
 interface CodeBlockCardStoryArgs extends Partial<CodeBlockCardProps> {
-  display?: DisplayKey
+  display?: CardDisplayKey
   caption?: string
 }
 
 function CodeBlockCardStory({ display = 'Default', caption = '', ...args }: CodeBlockCardStoryArgs) {
   const captionEditor = createEditor({ nodes: MINIMAL_NODES })
   populateEditor({ editor: captionEditor, initialHtml: caption })
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
 
   return (
     <div className="inkling-prose">
@@ -44,19 +37,7 @@ const meta = {
   component: CodeBlockCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-          Editing: 'Editing',
-        },
-        defaultValue: displayOptions.Default,
-      },
-    },
+    display: cardDisplayArgType(),
   },
   parameters: {
     status: {

@@ -5,20 +5,13 @@ import React from 'react'
 
 import { CalloutCard } from '@/components/ui/cards/CalloutCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
-
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-  Editing: { isSelected: true, isEditing: true },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
 
 type CalloutCardProps = React.ComponentProps<typeof CalloutCard>
 
 interface CalloutCardStoryArgs extends Partial<CalloutCardProps> {
-  display?: DisplayKey
+  display?: CardDisplayKey
   value?: string
   placeholder?: string
 }
@@ -26,7 +19,7 @@ interface CalloutCardStoryArgs extends Partial<CalloutCardProps> {
 function CalloutCardStory({ display = 'Default', value = '', placeholder, ...args }: CalloutCardStoryArgs) {
   const textEditor = createEditor()
   populateEditor({ editor: textEditor, initialHtml: value })
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
 
   return (
     <div className="inkling-prose">
@@ -50,19 +43,7 @@ const meta = {
   component: CalloutCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-          Editing: 'Editing',
-        },
-        defaultValue: displayOptions.Default,
-      },
-    },
+    display: cardDisplayArgType(),
   },
   parameters: {
     status: {

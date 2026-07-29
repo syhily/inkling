@@ -6,20 +6,13 @@ import React from 'react'
 import { ToggleCard } from '@/components/ui/cards/ToggleCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import { BASIC_NODES, MINIMAL_NODES } from '@/index'
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
-
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-  Editing: { isSelected: true, isEditing: true },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
 
 type ToggleCardProps = React.ComponentProps<typeof ToggleCard>
 
 interface ToggleCardStoryArgs extends Partial<ToggleCardProps> {
-  display?: DisplayKey
+  display?: CardDisplayKey
   heading?: string
   content?: string
 }
@@ -31,7 +24,7 @@ function ToggleCardStory({ display = 'Default', heading = '', content = '', ...a
   const contentEditor = createEditor({ nodes: BASIC_NODES })
   populateEditor({ editor: contentEditor, initialHtml: content })
 
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
   const componentProps = {
     ...args,
     contentEditor,
@@ -61,19 +54,7 @@ const meta = {
   component: ToggleCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-          Editing: 'Editing',
-        },
-        defaultValue: displayOptions.Default,
-      },
-    },
+    display: cardDisplayArgType(),
   },
   parameters: {
     status: {

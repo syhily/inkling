@@ -7,24 +7,18 @@ import { ImageCard, type ImageCardProps } from '@/components/ui/cards/ImageCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
 import { MINIMAL_NODES } from '@/index'
 import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 import populateEditor from '@/utils/storybook/populate-storybook-editor'
 
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
-
 interface ImageCardStoryArgs extends Partial<ImageCardProps> {
-  display?: DisplayKey
+  display?: CardDisplayKey
   caption?: string
 }
 
 function ImageCardStory({ display = 'Default', caption = '', ...args }: ImageCardStoryArgs) {
   const captionEditor = createEditor({ nodes: MINIMAL_NODES })
   populateEditor({ editor: captionEditor, initialHtml: caption })
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
   const componentProps = {
     onFileChange: () => {},
     setAltText: () => {},
@@ -48,18 +42,7 @@ const meta = {
   component: ImageCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-        },
-        defaultValue: displayOptions.Default,
-      },
-    },
+    display: cardDisplayArgType(['Default', 'Selected']),
     cardWidth: {
       options: ['regular', 'wide', 'full'],
       control: { type: 'radio' },

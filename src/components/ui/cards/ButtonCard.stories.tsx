@@ -4,23 +4,16 @@ import React from 'react'
 
 import { ButtonCard } from '@/components/ui/cards/ButtonCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
-
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-  Editing: { isSelected: true, isEditing: true },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 
 type ButtonCardProps = React.ComponentProps<typeof ButtonCard>
 
 interface ButtonCardStoryArgs extends Partial<ButtonCardProps> {
-  display?: DisplayKey
+  display?: CardDisplayKey
 }
 
 function ButtonCardStory({ display = 'Default', ...args }: ButtonCardStoryArgs) {
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
 
   return (
     <div className="inkling-prose">
@@ -38,19 +31,7 @@ const meta = {
   component: ButtonCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-          Editing: 'Editing',
-        },
-        defaultValue: displayOptions.Default,
-      },
-    },
+    display: cardDisplayArgType(),
     alignment: {
       options: ['left', 'center'],
       control: { type: 'radio' },

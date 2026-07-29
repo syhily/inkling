@@ -5,23 +5,16 @@ import React from 'react'
 import HtmlIndicatorIcon from '@/assets/icons/inkling-indicator-html.svg?react'
 import { HtmlCard } from '@/components/ui/cards/HtmlCard'
 import { CardWrapper } from '@/components/ui/CardWrapper'
-
-const displayOptions = {
-  Default: { isSelected: false, isEditing: false },
-  Selected: { isSelected: true, isEditing: false },
-  Editing: { isSelected: true, isEditing: true },
-} as const
-
-type DisplayKey = keyof typeof displayOptions
+import { CARD_DISPLAY_OPTIONS, cardDisplayArgType, type CardDisplayKey } from '@/utils/storybook/card-display'
 
 type HtmlCardProps = React.ComponentProps<typeof HtmlCard>
 
 interface HtmlCardStoryArgs extends Partial<HtmlCardProps> {
-  display?: DisplayKey
+  display?: CardDisplayKey
 }
 
 function HtmlCardStory({ display = 'Default', ...args }: HtmlCardStoryArgs) {
-  const displayState = displayOptions[display]
+  const displayState = CARD_DISPLAY_OPTIONS[display]
   const componentProps = {
     updateHtml: () => {},
     ...args,
@@ -43,18 +36,7 @@ const meta = {
   component: HtmlCardStory,
   subcomponents: { CardWrapper },
   argTypes: {
-    display: {
-      options: Object.keys(displayOptions),
-      mapping: displayOptions,
-      control: {
-        type: 'radio',
-        labels: {
-          Default: 'Default',
-          Selected: 'Selected',
-          Editing: 'Editing',
-        },
-      },
-    },
+    display: cardDisplayArgType(),
   },
   parameters: {
     status: {
