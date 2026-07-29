@@ -9,6 +9,7 @@ import {
   html,
   initialize,
   insertCard,
+  insertCardWithUpload,
   loadSerializedState,
 } from '#/utils/e2e'
 
@@ -84,7 +85,7 @@ test.describe('Audio card', () => {
 
   test('can upload an audio file', async function () {
     await focusEditor(page)
-    await uploadAudio(page)
+    await insertCardWithUpload(page, { cardName: 'audio', files: fixture('audio-sample.mp3') })
 
     // Check that audio file was uploaded
     await expect(page.getByTestId('audio-title')).toBeVisible()
@@ -104,14 +105,11 @@ test.describe('Audio card', () => {
 
   test('can upload dropped audio', async function () {
     const filePath = fixture('audio-sample.mp3')
-    const fileChooserPromise = page.waitForEvent('filechooser')
 
     await focusEditor(page)
 
     // Open audio card and dismiss files chooser to prepare card for audio dropping
-    await insertCard(page, { cardName: 'audio' })
-    const fileChooser = await fileChooserPromise
-    await fileChooser.setFiles([])
+    await insertCardWithUpload(page, { cardName: 'audio', files: [] })
 
     // Create and dispatch data transfer
     const dataTransfer = await createDataTransfer(page, [
@@ -131,7 +129,7 @@ test.describe('Audio card', () => {
 
   test('shows errors on failed audio upload', async function () {
     await focusEditor(page)
-    await uploadAudio(page, 'audio-sample-fail.mp3')
+    await insertCardWithUpload(page, { cardName: 'audio', files: fixture('audio-sample-fail.mp3') })
 
     // Check that errors are displayed
     await page.waitForSelector('[data-testid="audio-upload-errors"]')
@@ -140,14 +138,11 @@ test.describe('Audio card', () => {
 
   test('can show errors if was dropped a file with wrong extension to audio placeholder', async function () {
     const filePath = fixture('large-image.png')
-    const fileChooserPromise = page.waitForEvent('filechooser')
 
     await focusEditor(page)
 
     // Open audio card and dismiss files chooser to prepare card for audio dropping
-    await insertCard(page, { cardName: 'audio' })
-    const fileChooser = await fileChooserPromise
-    await fileChooser.setFiles([])
+    await insertCardWithUpload(page, { cardName: 'audio', files: [] })
 
     // Create and dispatch data transfer
     const dataTransfer = await createDataTransfer(page, [
@@ -179,7 +174,7 @@ test.describe('Audio card', () => {
 
   test('can change the title of the audio card', async function () {
     await focusEditor(page)
-    await uploadAudio(page)
+    await insertCardWithUpload(page, { cardName: 'audio', files: fixture('audio-sample.mp3') })
 
     // Change title
     await expect(page.getByTestId('audio-title')).toBeVisible()
@@ -194,7 +189,7 @@ test.describe('Audio card', () => {
     const thumbnailFilePath = fixture('large-image.jpeg')
 
     await focusEditor(page)
-    await uploadAudio(page)
+    await insertCardWithUpload(page, { cardName: 'audio', files: fixture('audio-sample.mp3') })
 
     // Upload thumbnail
     const thumbnailFileChooserPromise = page.waitForEvent('filechooser')
@@ -212,7 +207,7 @@ test.describe('Audio card', () => {
   test('can upload dropped thumbnail', async function () {
     const filePath = fixture('large-image.png')
     await focusEditor(page)
-    await uploadAudio(page)
+    await insertCardWithUpload(page, { cardName: 'audio', files: fixture('audio-sample.mp3') })
 
     // Check that audio file was uploaded
     await expect(page.getByTestId('media-duration')).toContainText('0:19')
@@ -236,7 +231,7 @@ test.describe('Audio card', () => {
   test('can show errors if was dropped a file with wrong extension to thumbnail', async function () {
     const filePath = fixture('video.mp4')
     await focusEditor(page)
-    await uploadAudio(page)
+    await insertCardWithUpload(page, { cardName: 'audio', files: fixture('audio-sample.mp3') })
 
     // Check that audio file was uploaded
     await expect(page.getByTestId('media-duration')).toContainText('0:19')
@@ -253,7 +248,7 @@ test.describe('Audio card', () => {
     const thumbnailFilePath = fixture('large-image-fail.jpeg')
 
     await focusEditor(page)
-    await uploadAudio(page)
+    await insertCardWithUpload(page, { cardName: 'audio', files: fixture('audio-sample.mp3') })
 
     // Upload thumbnail
     const thumbnailFileChooserPromise = page.waitForEvent('filechooser')
@@ -267,7 +262,7 @@ test.describe('Audio card', () => {
 
   test('renders audio card toolbar', async function () {
     await focusEditor(page)
-    await uploadAudio(page)
+    await insertCardWithUpload(page, { cardName: 'audio', files: fixture('audio-sample.mp3') })
 
     // Leave editing mode to display the toolbar
     await expect(page.getByTestId('audio-title')).toBeVisible()
@@ -279,7 +274,7 @@ test.describe('Audio card', () => {
 
   test('audio card toolbar has Edit button', async function () {
     await focusEditor(page)
-    await uploadAudio(page)
+    await insertCardWithUpload(page, { cardName: 'audio', files: fixture('audio-sample.mp3') })
 
     // Leave editing mode to display the toolbar
     await expect(page.getByTestId('audio-title')).toBeVisible()
@@ -305,7 +300,7 @@ test.describe('Audio card', () => {
 
   test('should not be available for editing in preview mode', async function () {
     await focusEditor(page)
-    await uploadAudio(page)
+    await insertCardWithUpload(page, { cardName: 'audio', files: fixture('audio-sample.mp3') })
 
     // Check that audio file was uploaded
     await expect(page.getByTestId('media-duration')).toContainText('0:19')
@@ -366,7 +361,7 @@ test.describe('Audio card', () => {
 
   test('can add snippet', async function () {
     await focusEditor(page)
-    await uploadAudio(page)
+    await insertCardWithUpload(page, { cardName: 'audio', files: fixture('audio-sample.mp3') })
 
     // Check that audio file was uploaded
     await expect(page.getByTestId('audio-title')).toBeVisible()
@@ -384,12 +379,3 @@ test.describe('Audio card', () => {
     await expect(page.locator('[data-inkling-card="audio"]')).toHaveCount(2)
   })
 })
-
-async function uploadAudio(page: Page, fileName = 'audio-sample.mp3') {
-  const filePath = fixture(fileName)
-
-  const fileChooserPromise = page.waitForEvent('filechooser')
-  await insertCard(page, { cardName: 'audio' })
-  const fileChooser = await fileChooserPromise
-  await fileChooser.setFiles([filePath])
-}

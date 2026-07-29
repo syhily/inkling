@@ -1,6 +1,16 @@
 import { expect, test, type Page } from '@playwright/test'
 
-import { assertHTML, ctrlOrCmd, fixture, focusEditor, html, initialize, insertCard, selectBackwards } from '#/utils/e2e'
+import {
+  assertHTML,
+  ctrlOrCmd,
+  fixture,
+  focusEditor,
+  html,
+  initialize,
+  insertCard,
+  insertCardWithUpload,
+  selectBackwards,
+} from '#/utils/e2e'
 
 test.describe('Floating format toolbar', () => {
   let page: Page
@@ -321,11 +331,7 @@ test.describe('Floating format toolbar', () => {
       await page.keyboard.type('First paragraph')
       await page.keyboard.press('Enter')
 
-      const [fileChooser] = await Promise.all([
-        page.waitForEvent('filechooser'),
-        insertCard(page, { cardName: 'image' }),
-      ])
-      await fileChooser.setFiles([filePath])
+      await insertCardWithUpload(page, { cardName: 'image', files: filePath })
 
       await expect(page.getByTestId('image-card-populated')).toBeVisible()
 
@@ -356,11 +362,7 @@ test.describe('Floating format toolbar', () => {
       await page.keyboard.type('First paragraph')
       await page.keyboard.press('Enter')
 
-      const [fileChooser] = await Promise.all([
-        page.waitForEvent('filechooser'),
-        insertCard(page, { cardName: 'audio' }),
-      ])
-      await fileChooser.setFiles([filePath])
+      await insertCardWithUpload(page, { cardName: 'audio', files: filePath })
 
       await page.keyboard.press('ArrowDown')
       await page.keyboard.type('Second paragraph')

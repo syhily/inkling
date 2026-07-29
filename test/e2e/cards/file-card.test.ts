@@ -8,6 +8,7 @@ import {
   html,
   initialize,
   insertCard,
+  insertCardWithUpload,
   loadSerializedState,
 } from '#/utils/e2e'
 
@@ -84,7 +85,7 @@ test.describe('File card', () => {
 
   test('can upload a file', async function () {
     await focusEditor(page)
-    await uploadFile(page)
+    await insertCardWithUpload(page, { cardName: 'file', files: fixture('print-img.pdf') })
 
     await assertHTML(
       page,
@@ -100,14 +101,11 @@ test.describe('File card', () => {
 
   test('can upload dropped file', async function () {
     const filePath = fixture('print-img.pdf')
-    const fileChooserPromise = page.waitForEvent('filechooser')
 
     await focusEditor(page)
 
     // Open file card and dismiss files chooser to prepare card for file dropping
-    await insertCard(page, { cardName: 'file' })
-    const fileChooser = await fileChooserPromise
-    await fileChooser.setFiles([])
+    await insertCardWithUpload(page, { cardName: 'file', files: [] })
 
     // Create and dispatch data transfer
     const dataTransfer = await createDataTransfer(page, [
@@ -146,14 +144,14 @@ test.describe('File card', () => {
 
   test('can edit file card title', async function () {
     await focusEditor(page)
-    await uploadFile(page)
+    await insertCardWithUpload(page, { cardName: 'file', files: fixture('print-img.pdf') })
     await page.locator('[data-inkling-file-card="fileTitle"]').fill('Free printable pdf')
     await expect(page.locator('[data-inkling-file-card="fileTitle"]')).toHaveValue('Free printable pdf')
   })
 
   test('can edit file card description', async function () {
     await focusEditor(page)
-    await uploadFile(page)
+    await insertCardWithUpload(page, { cardName: 'file', files: fixture('print-img.pdf') })
     await page.locator('[data-inkling-file-card="fileDescription"]').fill('Enjoy this free download of a puppy pdf')
     await expect(page.locator('[data-inkling-file-card="fileDescription"]')).toHaveValue(
       'Enjoy this free download of a puppy pdf',
@@ -162,18 +160,9 @@ test.describe('File card', () => {
 
   test('can show errors for failed file upload', async function () {
     await focusEditor(page)
-    await uploadFile(page, 'print-img-fail.pdf')
+    await insertCardWithUpload(page, { cardName: 'file', files: fixture('print-img-fail.pdf') })
 
     // Errors should be visible in the placeholder
     await expect(page.getByTestId('media-placeholder-errors')).toBeVisible()
   })
 })
-
-async function uploadFile(page: Page, fileName = 'print-img.pdf') {
-  const filePath = fixture(fileName)
-
-  const fileChooserPromise = page.waitForEvent('filechooser')
-  await insertCard(page, { cardName: 'file' })
-  const fileChooser = await fileChooserPromise
-  await fileChooser.setFiles([filePath])
-}

@@ -599,6 +599,15 @@ export function ctrlOrCmd(page: Page) {
 }
 
 // note: we always use lowercase for the cardName but we use start case for the menu item attribute
+/** Insert a card whose insert flow opens a file chooser, and answer the chooser with the given file path(s). */
+export async function insertCardWithUpload(
+  page: Page,
+  { cardName, files, nth = 0 }: { cardName: string; files: string | readonly string[]; nth?: number },
+) {
+  const [fileChooser] = await Promise.all([page.waitForEvent('filechooser'), insertCard(page, { cardName, nth })])
+  await fileChooser.setFiles(files)
+}
+
 export async function insertCard(page: Page, { cardName, nth = 0 }: { cardName: string; nth?: number }) {
   let card = startCase(cardName)
   await page.keyboard.type(`/${cardName}`)

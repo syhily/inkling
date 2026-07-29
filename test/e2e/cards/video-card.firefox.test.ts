@@ -10,6 +10,7 @@ import {
   html,
   initialize,
   insertCard,
+  insertCardWithUpload,
   waitForCardContentSynced,
   waitForHistoryGroupBoundary,
 } from '#/utils/e2e'
@@ -135,15 +136,12 @@ test.describe('Video card', () => {
   })
 
   test('can upload video file from slash menu', async function () {
-    const fileChooserPromise = page.waitForEvent('filechooser')
     const filePath = fixture('video.mp4')
 
     await focusEditor(page)
 
     // Upload video file
-    await insertCard(page, { cardName: 'video' })
-    const fileChooser = await fileChooserPromise
-    await fileChooser.setFiles([filePath])
+    await insertCardWithUpload(page, { cardName: 'video', files: filePath })
 
     // Check that video file was uploaded
     await expect(page.getByTestId('media-duration')).toContainText('0:04')
@@ -151,7 +149,7 @@ test.describe('Video card', () => {
 
   test('can upload video file from card menu', async function () {
     await focusEditor(page)
-    await uploadVideo(page)
+    await insertCardWithUpload(page, { cardName: 'video', files: fixture('video.mp4') })
 
     // Check that video file was uploaded
     await expect(page.getByTestId('media-duration')).toContainText('0:04')
@@ -159,7 +157,7 @@ test.describe('Video card', () => {
 
   test('can show errors for failed video upload', async function () {
     await focusEditor(page)
-    await uploadVideo(page, 'video-fail.mp4')
+    await insertCardWithUpload(page, { cardName: 'video', files: fixture('video-fail.mp4') })
 
     // Errors should be visible
     await expect(page.getByTestId('media-placeholder-errors')).toBeVisible()
@@ -167,7 +165,7 @@ test.describe('Video card', () => {
 
   test('can manage custom thumbnail', async function () {
     await focusEditor(page)
-    await uploadVideo(page)
+    await insertCardWithUpload(page, { cardName: 'video', files: fixture('video.mp4') })
 
     // Settings panel should be visible
     await expect(page.getByTestId('settings-panel')).toBeVisible()
@@ -194,7 +192,7 @@ test.describe('Video card', () => {
 
   test('can show errors for custom thumbnail', async function () {
     await focusEditor(page)
-    await uploadVideo(page)
+    await insertCardWithUpload(page, { cardName: 'video', files: fixture('video.mp4') })
 
     // Settings panel should be visible
     await expect(page.getByTestId('settings-panel')).toBeVisible()
@@ -218,14 +216,11 @@ test.describe('Video card', () => {
 
   test('can upload dropped video', async function () {
     const filePath = fixture('video.mp4')
-    const fileChooserPromise = page.waitForEvent('filechooser')
 
     await focusEditor(page)
 
     // Open video card and dismiss files chooser to prepare card for video dropping
-    await insertCard(page, { cardName: 'video' })
-    const fileChooser = await fileChooserPromise
-    await fileChooser.setFiles([])
+    await insertCardWithUpload(page, { cardName: 'video', files: [] })
 
     // Create and dispatch data transfer
     const dataTransfer = await createDataTransfer(page, [{ filePath, fileName: 'video.mp4', fileType: 'video/mp4' }])
@@ -243,14 +238,11 @@ test.describe('Video card', () => {
 
   test('can show errors if was dropped a file with wrong extension to video placeholder', async function () {
     const filePath = fixture('large-image.png')
-    const fileChooserPromise = page.waitForEvent('filechooser')
 
     await focusEditor(page)
 
     // Open video card and dismiss files chooser to prepare card for video dropping
-    await insertCard(page, { cardName: 'video' })
-    const fileChooser = await fileChooserPromise
-    await fileChooser.setFiles([])
+    await insertCardWithUpload(page, { cardName: 'video', files: [] })
 
     //  Drop file
     const dataTransfer = await createDataTransfer(page, [
@@ -267,7 +259,7 @@ test.describe('Video card', () => {
     const filePath = fixture('large-image.png')
 
     await focusEditor(page)
-    await uploadVideo(page)
+    await insertCardWithUpload(page, { cardName: 'video', files: fixture('video.mp4') })
 
     // Wait for custom thumbnail
     await page.waitForSelector('[data-testid="media-upload-placeholder"]')
@@ -292,7 +284,7 @@ test.describe('Video card', () => {
     const filePath = fixture('video.mp4')
 
     await focusEditor(page)
-    await uploadVideo(page)
+    await insertCardWithUpload(page, { cardName: 'video', files: fixture('video.mp4') })
 
     // Wait for custom thumbnail
     await page.waitForSelector('[data-testid="media-upload-placeholder"]')
@@ -309,7 +301,7 @@ test.describe('Video card', () => {
     await focusEditor(page)
 
     // Upload video
-    await uploadVideo(page)
+    await insertCardWithUpload(page, { cardName: 'video', files: fixture('video.mp4') })
     await page.waitForSelector('[data-testid="media-upload-placeholder"]')
 
     // Leave editing mode to display the toolbar
@@ -323,7 +315,7 @@ test.describe('Video card', () => {
     await focusEditor(page)
 
     // Upload video
-    await uploadVideo(page)
+    await insertCardWithUpload(page, { cardName: 'video', files: fixture('video.mp4') })
     await page.waitForSelector('[data-testid="media-upload-placeholder"]')
 
     // Leave editing mode to display the toolbar
@@ -391,7 +383,7 @@ test.describe('Video card', () => {
     await focusEditor(page)
 
     // Upload video
-    await uploadVideo(page)
+    await insertCardWithUpload(page, { cardName: 'video', files: fixture('video.mp4') })
     await page.waitForSelector('[data-testid="media-upload-placeholder"]')
 
     // create snippet
@@ -409,7 +401,7 @@ test.describe('Video card', () => {
   test('can undo/redo without losing nested editor content', async () => {
     await focusEditor(page)
     // Upload video
-    await uploadVideo(page)
+    await insertCardWithUpload(page, { cardName: 'video', files: fixture('video.mp4') })
     // Wait for the upload to fully complete (play button appears) before editing
     // the caption so that upload-related editor updates are done and won't land
     // in the history stack after the card is deleted.
@@ -511,12 +503,3 @@ test.describe('Video card', () => {
     )
   })
 })
-
-async function uploadVideo(page: Page, fileName = 'video.mp4') {
-  const filePath = fixture(fileName)
-
-  const fileChooserPromise = page.waitForEvent('filechooser')
-  await insertCard(page, { cardName: 'video' })
-  const fileChooser = await fileChooserPromise
-  await fileChooser.setFiles([filePath])
-}

@@ -18,7 +18,7 @@ import {
   getEditorStateJSON,
   html,
   initialize,
-  insertCard,
+  insertCardWithUpload,
   isMac,
   loadSerializedState,
   pasteHtml,
@@ -1184,19 +1184,11 @@ test.describe('Image card', () => {
     const filePath = fixture('large-image.png')
     await focusEditor(page)
 
-    const [fileChooser1] = await Promise.all([
-      page.waitForEvent('filechooser'),
-      insertCard(page, { cardName: 'image', nth: 0 }),
-    ])
-    await fileChooser1.setFiles([filePath])
+    await insertCardWithUpload(page, { cardName: 'image', files: filePath, nth: 0 })
 
     await page.keyboard.press('Enter')
 
-    const [fileChooser2] = await Promise.all([
-      page.waitForEvent('filechooser'),
-      insertCard(page, { cardName: 'image', nth: 1 }),
-    ])
-    await fileChooser2.setFiles([filePath])
+    await insertCardWithUpload(page, { cardName: 'image', files: filePath, nth: 1 })
 
     await assertHTML(
       page,
