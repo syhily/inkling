@@ -3,6 +3,8 @@ export interface CleanBasicHtmlOptions {
   firstChildInnerContent?: boolean
   removeCodeWrappers?: boolean
   createDocument?: (html: string) => Document
+  /** Parse within this document (an element's `ownerDocument`) — the port that makes headless jsdom import work. */
+  ownerDocument?: Document
 }
 
 function removeCodeWrappers(html: string): string {
@@ -11,6 +13,15 @@ function removeCodeWrappers(html: string): string {
 
 export function cleanBasicHtml(html: string = '', _options: CleanBasicHtmlOptions = {}): string {
   const options: CleanBasicHtmlOptions = { ..._options }
+
+  if (!options.createDocument && options.ownerDocument) {
+    const ownerDocument = options.ownerDocument
+    options.createDocument = (docHtml: string): Document => {
+      const newDoc = ownerDocument.implementation.createHTMLDocument()
+      newDoc.body.innerHTML = docHtml
+      return newDoc
+    }
+  }
 
   if (!options.createDocument) {
     const Parser =
