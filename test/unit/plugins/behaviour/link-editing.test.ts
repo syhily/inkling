@@ -10,6 +10,8 @@ import {
   $nodesOfType,
   COMMAND_PRIORITY_NORMAL,
   createEditor,
+  KEY_DOWN_COMMAND,
+  type LexicalCommand,
   type LexicalEditor,
 } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -31,6 +33,8 @@ import {
   createLinkHoverFeed,
   createToolbarRevealFeed,
   createToolbarSession,
+  isLinkShortcutPress,
+  registerToolbarCommands,
   registerToolbarSelectionSync,
   type HoveredLink,
   type ToolbarSession,
@@ -74,6 +78,18 @@ function selectText(editor: LexicalEditor, text: string): Promise<void> {
 function linkSelection(editor: LexicalEditor, url: string): Promise<void> {
   return update(editor, () => {
     $applyLinkToSelection(editor, url)
+  })
+}
+
+function dispatchAndCommit<T>(editor: LexicalEditor, command: LexicalCommand<T>, payload: T): Promise<boolean> {
+  return new Promise((resolve) => {
+    let result = false
+    editor.update(
+      () => {
+        result = editor.dispatchCommand(command, payload)
+      },
+      { onUpdate: () => resolve(result) },
+    )
   })
 }
 
@@ -790,5 +806,63 @@ describe('registerToolbarSelectionSync', () => {
     composing.mockRestore()
     dispatchNativeSelection(text, 0, text, 5)
     expect(session.handle.getState().type).toBe('text')
+  })
+})
+
+describe('isLinkShortcutPress', () => {
+  const press = (init: KeyboardEventInit) => new KeyboardEvent('keydown', init)
+
+  it('matches ctrl/cmd+K without shift', () => {
+    expect(isLinkShortcutPress(press({ code: 'KeyK', ctrlKey: true }))).toBe(true)
+    expect(isLinkShortcutPress(press({ code: 'KeyK', metaKey: true }))).toBe(true)
+  })
+
+  it('rejects shift, other keys, and no modifier', () => {
+    expect(isLinkShortcutPress(press({ code: 'KeyK', ctrlKey: true, shiftKey: true }))).toBe(false)
+    expect(isLinkShortcutPress(press({ code: 'KeyJ', ctrlKey: true }))).toBe(false)
+    expect(isLinkShortcutPress(press({ code: 'KeyK' }))).toBe(false)
+  })
+})
+
+describe('registerToolbarCommands', () => {
+  it('opens the link toolbar and swallows ctrl/cmd+K on a range selection', async () => {
+    const editor = createTestEditor()
+    await selectText(editor, 'hello')
+    const session = createToolbarSession()
+    const cleanup = registerToolbarCommands(editor, session)
+
+    const result = await dispatchAndCommit(
+      editor,
+      KEY_DOWN_COMMAND,
+      new KeyboardEvent('keydown', { code: 'KeyK', ctrlKey: true }),
+    )
+
+    expect(result).toBe(true)
+    expect(session.handle.getState().type).toBe('link')
+    cleanup()
+  })
+
+  it('does not open the link toolbar on a collapsed selection or shift+K', async () => {
+    const editor = createTestEditor()
+    await update(editor, () => {
+      const paragraph = $createParagraphNode()
+      paragraph.append($createTextNode('hello'))
+      $getRoot().append(paragraph)
+      paragraph.selectStart()
+    })
+    const session = createToolbarSession()
+    const cleanup = registerToolbarCommands(editor, session)
+
+    // the command chain's boolean is shared with Lexical's built-in
+    // handlers — the session is the reliable verdict
+    await dispatchAndCommit(editor, KEY_DOWN_COMMAND, new KeyboardEvent('keydown', { code: 'KeyK', ctrlKey: true }))
+    await dispatchAndCommit(
+      editor,
+      KEY_DOWN_COMMAND,
+      new KeyboardEvent('keydown', { code: 'KeyK', ctrlKey: true, shiftKey: true }),
+    )
+
+    expect(session.handle.getState().type).toBe('hidden')
+    cleanup()
   })
 })

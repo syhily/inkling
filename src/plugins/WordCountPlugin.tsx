@@ -3,12 +3,14 @@ import React from 'react'
 
 import { useWordCountHandle } from '@/context/WordCountHandleContext'
 import { createWordCounter } from '@/plugins/behaviour/word-counter'
-import { isNestedEditor } from '@/utils/lexical-internals'
+import { publishWordCountCallback } from '@/plugins/behaviour/wordCountHandle'
 
 // `language` selects the Intl.Segmenter word-granularity path in countWords
 // (docs/kobato-fit-plan.md C7 §3.4); without Segmenter the counter falls back
 // to the regex path. It is published on the composer handle alongside
-// onChange so nested composers count with the same language.
+// onChange so nested composers count with the same language — the
+// top-level-only publish gate lives in publishWordCountCallback beside the
+// handle (mirroring registerTkNodeTracking).
 export const WordCountPlugin = ({
   onChange,
   language = 'en',
@@ -21,22 +23,14 @@ export const WordCountPlugin = ({
       return
     }
 
-    // publish onChange on the composer handle so that InklingNestedComposer
-    // can mount a nested <WordCountPlugin /> with it reactively, without
-    // needing to pass onChange down
-    if (!isNestedEditor(editor)) {
-      wordCountHandle.setState({ onChange, language })
-    }
+    const unpublish = publishWordCountCallback(wordCountHandle, editor, { onChange, language })
 
     const counter = createWordCounter({ editor, onChange, language })
     counter.attach()
 
     return () => {
       counter.detach()
-
-      if (!isNestedEditor(editor)) {
-        wordCountHandle.setState({ onChange: null, language: null })
-      }
+      unpublish()
     }
   }, [editor, onChange, language, wordCountHandle])
   return null

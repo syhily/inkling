@@ -1,8 +1,9 @@
 import { renderHook } from '@testing-library/react'
+import { createEditor } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
 import { useWordCountHandle } from '@/context/WordCountHandleContext'
-import { createWordCountHandle } from '@/plugins/behaviour/wordCountHandle'
+import { createWordCountHandle, publishWordCountCallback } from '@/plugins/behaviour/wordCountHandle'
 
 // Thin per-instance suite: the generic handle semantics (partial setState,
 // change guard, subscribe/unsubscribe, fallback) live in
@@ -22,5 +23,31 @@ describe('WordCountHandleContext', () => {
     const { result } = renderHook(() => useWordCountHandle())
 
     expect(result.current.getState()).toEqual({ onChange: null, language: null })
+  })
+})
+
+describe('publishWordCountCallback', () => {
+  it('publishes on a top-level editor and unpublishes on teardown', () => {
+    const handle = createWordCountHandle()
+    const editor = createEditor({ namespace: 'test', onError: () => {} })
+    const onChange = () => {}
+
+    const unpublish = publishWordCountCallback(handle, editor, { onChange, language: 'en' })
+    expect(handle.getState()).toEqual({ onChange, language: 'en' })
+
+    unpublish()
+    expect(handle.getState()).toEqual({ onChange: null, language: null })
+  })
+
+  it('never publishes from a nested editor', () => {
+    const handle = createWordCountHandle()
+    const parent = createEditor({ namespace: 'parent', onError: () => {} })
+    const nested = createEditor({ namespace: 'nested', parentEditor: parent, onError: () => {} })
+
+    const unpublish = publishWordCountCallback(handle, nested, { onChange: () => {}, language: 'en' })
+    expect(handle.getState()).toEqual({ onChange: null, language: null })
+
+    unpublish()
+    expect(handle.getState()).toEqual({ onChange: null, language: null })
   })
 })

@@ -1,12 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import {
-  $getSelection,
-  $isRangeSelection,
-  COMMAND_PRIORITY_LOW,
-  DELETE_CHARACTER_COMMAND,
-  KEY_DOWN_COMMAND,
-  type LexicalEditor,
-} from 'lexical'
+import { COMMAND_PRIORITY_LOW, DELETE_CHARACTER_COMMAND, type LexicalEditor } from 'lexical'
 import React from 'react'
 
 import { FloatingFormatToolbar } from '@/components/ui/FloatingFormatToolbar'
@@ -16,6 +9,7 @@ import {
   createToolbarRevealFeed,
   createToolbarSession,
   LINK_HOVER_DEBOUNCE_MS,
+  registerToolbarCommands,
   registerToolbarSelectionSync,
   type ToolbarSession,
 } from '@/plugins/behaviour/link-editing'
@@ -111,24 +105,10 @@ function useFloatingFormatToolbar(
     )
   }, [editor, session])
 
+  // the link-shortcut registration (press grammar + range check) lives in
+  // the link-editing module beside the session
   React.useEffect(() => {
-    return editor.registerCommand(
-      KEY_DOWN_COMMAND,
-      (event: KeyboardEvent) => {
-        const { code, ctrlKey, metaKey, shiftKey } = event
-        // ctrl/cmd K with selected text should prompt for link insertion
-        if (!shiftKey && code === 'KeyK' && (ctrlKey || metaKey)) {
-          const selection = $getSelection()
-          if ($isRangeSelection(selection) && !selection.isCollapsed()) {
-            session.openLink()
-            event.preventDefault()
-            return true
-          }
-        }
-        return false
-      },
-      COMMAND_PRIORITY_LOW,
-    )
+    return registerToolbarCommands(editor, session)
   }, [editor, session])
 
   // use native mousedown event so the toolbar can close when something is

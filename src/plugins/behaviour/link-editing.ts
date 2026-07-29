@@ -7,6 +7,8 @@ import {
   $isRangeSelection,
   $isTextNode,
   $setSelection,
+  COMMAND_PRIORITY_LOW,
+  KEY_DOWN_COMMAND,
   type LexicalEditor,
 } from 'lexical'
 
@@ -386,4 +388,33 @@ export function createToolbarRevealFeed(editor: LexicalEditor, { reveal }: Toolb
       })
     },
   }
+}
+
+/** The link-shortcut press grammar: ctrl/cmd+K without shift. */
+export function isLinkShortcutPress(event: KeyboardEvent): boolean {
+  return !event.shiftKey && event.code === 'KeyK' && (event.ctrlKey || event.metaKey)
+}
+
+/**
+ * The floating toolbar's command registration: the link shortcut with a
+ * non-collapsed range selection opens the link toolbar and is swallowed;
+ * anything else falls through. The plugin keeps the feeds and the render.
+ */
+export function registerToolbarCommands(editor: LexicalEditor, session: ToolbarSession): () => void {
+  return editor.registerCommand(
+    KEY_DOWN_COMMAND,
+    (event: KeyboardEvent) => {
+      // ctrl/cmd K with selected text should prompt for link insertion
+      if (isLinkShortcutPress(event)) {
+        const selection = $getSelection()
+        if ($isRangeSelection(selection) && !selection.isCollapsed()) {
+          session.openLink()
+          event.preventDefault()
+          return true
+        }
+      }
+      return false
+    },
+    COMMAND_PRIORITY_LOW,
+  )
 }
