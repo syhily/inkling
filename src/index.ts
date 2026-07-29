@@ -52,15 +52,42 @@ export type { InklingEditorProps } from '@/components/InklingEditor'
 export type { InklingNestedComposerProps } from '@/components/InklingNestedComposer'
 export type { PinturaConfig } from '@/hooks/usePinturaEditor'
 
-export type { AudioNodeDataset } from '@/nodes/AudioNode'
-export { INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
-export type { CodeBlockNodeDataset } from '@/nodes/CodeBlockNode'
-export { INSERT_CODE_BLOCK_COMMAND } from '@/nodes/CodeBlockNode'
-export type { HtmlNodeDataset } from '@/nodes/HtmlNode'
-export { INSERT_HTML_COMMAND } from '@/nodes/HtmlNode'
-export { INSERT_HORIZONTAL_RULE_COMMAND } from '@/nodes/HorizontalRuleNode'
+/* The card family (declaration order): node classes, guards, factories,
+ * dataset and serialized types, and insert commands — everything CONTEXT.md's
+ * "editor surface" composition promise needs (subset surfaces join picked
+ * card classes with EDITOR_BASE_NODES). */
+export { CodeBlockNode, $createCodeBlockNode, $isCodeBlockNode, INSERT_CODE_BLOCK_COMMAND } from '@/nodes/CodeBlockNode'
+export type { CodeBlockNodeDataset, SerializedCodeBlockNode } from '@/nodes/CodeBlockNode'
+export { ImageNode, $createImageNode, $isImageNode, INSERT_IMAGE_COMMAND } from '@/nodes/ImageNode'
+export type { ImageNodeDataset, SerializedImageNode } from '@/nodes/ImageNode'
+export { VideoNode, $createVideoNode, $isVideoNode, INSERT_VIDEO_COMMAND } from '@/nodes/VideoNode'
+export type { SerializedVideoNode, VideoNodeDataset } from '@/nodes/VideoNode'
+export { AudioNode, $createAudioNode, $isAudioNode, INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
+export type { AudioNodeDataset, SerializedAudioNode } from '@/nodes/AudioNode'
+export { CalloutNode, $createCalloutNode, $isCalloutNode, INSERT_CALLOUT_COMMAND } from '@/nodes/CalloutNode'
+export type { CalloutNodeDataset, SerializedCalloutNode } from '@/nodes/CalloutNode'
+export {
+  $createHorizontalRuleNode,
+  $isHorizontalRuleNode,
+  HorizontalRuleNode,
+  INSERT_HORIZONTAL_RULE_COMMAND,
+} from '@/nodes/HorizontalRuleNode'
+export { HtmlNode, $createHtmlNode, $isHtmlNode, INSERT_HTML_COMMAND } from '@/nodes/HtmlNode'
+export type { HtmlNodeDataset, SerializedHtmlNode } from '@/nodes/HtmlNode'
+export { FileNode, $createFileNode, $isFileNode, INSERT_FILE_COMMAND } from '@/nodes/FileNode'
+export type { FileNodeDataset, SerializedFileNode } from '@/nodes/FileNode'
+export { ToggleNode, $createToggleNode, $isToggleNode, INSERT_TOGGLE_COMMAND } from '@/nodes/ToggleNode'
+export type { SerializedToggleNode, ToggleNodeDataset } from '@/nodes/ToggleNode'
+export { ButtonNode, $createButtonNode, $isButtonNode, INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
+export type { ButtonNodeDataset, SerializedButtonNode } from '@/nodes/ButtonNode'
+export { HeaderNode, $createHeaderNode, $isHeaderNode, INSERT_HEADER_COMMAND } from '@/nodes/HeaderNode'
+export type { HeaderNodeDataset } from '@/nodes/HeaderNode'
+export { BookmarkNode, $createBookmarkNode, $isBookmarkNode, INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
+export type { BookmarkNodeDataset, SerializedBookmarkNode } from '@/nodes/BookmarkNode'
+export { GalleryNode, $createGalleryNode, $isGalleryNode, INSERT_GALLERY_COMMAND } from '@/nodes/GalleryNode'
+export type { GalleryNodeDataset, SerializedGalleryNode } from '@/nodes/GalleryNode'
+export { MathNode, $createMathNode, $isMathNode, INSERT_MATH_COMMAND } from '@/nodes/MathNode'
 export type { MathNodeDataset } from '@/nodes/MathNode'
-export { INSERT_MATH_COMMAND } from '@/nodes/MathNode'
 
 /* Inline math (not a card — cards are block-level): the host owns the inline
  * editing UI and listens for EDIT_MATH_INLINE_COMMAND. */
