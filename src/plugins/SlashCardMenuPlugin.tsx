@@ -35,6 +35,7 @@ function useSlashCardMenu(editor: LexicalEditor) {
     commandParams,
     openMenu,
     closeMenu: closeSessionMenu,
+    insert: sessionInsert,
     applyTriggerVerdict,
   } = useCardMenuSession()
 
@@ -100,12 +101,12 @@ function useSlashCardMenu(editor: LexicalEditor) {
     replaceTriggerParagraph: true,
   })
 
+  // insert-and-close is the session's seam (it owns the close policy);
+  // this adapter only names the dispatch
   const insert = React.useCallback(
-    (insertCommand: unknown, params: { insertParams?: Record<string, unknown>; queryParams?: string[] } = {}) => {
-      insertCardItem(insertCommand, params)
-      closeSessionMenu()
-    },
-    [insertCardItem, closeSessionMenu],
+    (insertCommand: unknown, params: { insertParams?: Record<string, unknown>; queryParams?: string[] } = {}) =>
+      sessionInsert(() => insertCardItem(insertCommand, params)),
+    [sessionInsert, insertCardItem],
   )
 
   // the session applies the trigger's update verdicts: query tracking

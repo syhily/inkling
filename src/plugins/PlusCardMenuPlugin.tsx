@@ -54,6 +54,7 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
     isOpen: isShowingMenu,
     openMenu: openSessionMenu,
     closeMenu,
+    insert: sessionInsert,
     saveCursor,
     restoreCursor,
   } = useCardMenuSession()
@@ -111,12 +112,12 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
 
   const { cardMenu, insert: insertCardItem } = useCardMenu(editor)
 
+  // insert-and-close is the session's seam (it owns the close policy);
+  // this adapter only names the dispatch
   const insert = React.useCallback(
-    (insertCommand: unknown, params: { insertParams?: Record<string, unknown> } = {}): void => {
-      insertCardItem(insertCommand, params)
-      closeMenu()
-    },
-    [insertCardItem, closeMenu],
+    (insertCommand: unknown, params: { insertParams?: Record<string, unknown> } = {}): void =>
+      sessionInsert(() => insertCardItem(insertCommand, params)),
+    [sessionInsert, insertCardItem],
   )
 
   // the caret-based button verdicts arrive through the trigger registration
