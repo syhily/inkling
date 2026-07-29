@@ -16,17 +16,10 @@ const DERIVABLE_CARDS = ['audio', 'button', 'callout', 'file', 'horizontalrule',
 
 const STRUCTURAL_CARDS = ['bookmark', 'codeblock', 'footnotedefinition', 'gallery', 'header', 'html', 'math']
 
-type BaseNodeStatics = {
-  importSpec?: CardImportSpec
-  getPropertyDefaults(): Record<string, unknown>
-}
-
-function baseNodeStatics(declaration: CardDeclaration): BaseNodeStatics {
-  return declaration.baseNode as unknown as BaseNodeStatics
-}
-
 function baseNodeImportSpec(declaration: CardDeclaration): CardImportSpec | undefined {
-  return baseNodeStatics(declaration).importSpec
+  // declaration.baseNode is typed CardBaseNodeClass — the generated statics
+  // are on the field type, no cast
+  return declaration.baseNode.importSpec
 }
 
 describe('import spec classification', () => {
@@ -44,7 +37,7 @@ describe('import spec classification', () => {
 
   it('every read in every spec names a property of the base node', () => {
     CARD_DECLARATIONS.filter((declaration) => baseNodeImportSpec(declaration) !== undefined).forEach((declaration) => {
-      const defaults = baseNodeStatics(declaration).getPropertyDefaults()
+      const defaults = declaration.baseNode.getPropertyDefaults()
       const spec = baseNodeImportSpec(declaration) as CardImportSpec
 
       spec.conversions.forEach((conversion) => {

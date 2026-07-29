@@ -7,6 +7,7 @@ import type {
   NestedEditorSpec,
   TransientPropSpec,
 } from '@/nodes/base/generate-decorator-node'
+import type { CardImportSpec } from '@/nodes/base/import-spec'
 import type { CardDeclaration } from '@/nodes/cards/card-declaration'
 
 import { ensureLexicalNodeOwnMethods } from '@/nodes/base/ensure-node-own-methods'
@@ -31,10 +32,21 @@ export type CardNodeClass<TNode extends LexicalNode, D = unknown> = {
   [k in keyof typeof LexicalNode]: (typeof LexicalNode)[k]
 } & {
   // oxlint-disable-next-line typescript/no-explicit-any
-  new (...args: any[]): TNode & { decorate(): ReactNode } & CardSpecFieldMap<D> & CardSpecAccessorMap<D>
-  prototype: TNode & { decorate(): ReactNode } & CardSpecFieldMap<D> & CardSpecAccessorMap<D>
+  new (...args: any[]): TNode & { decorate(): ReactNode } & CardSpecFieldMap<D> &
+    CardSpecAccessorMap<D> & {
+      // inherited from the generateDecoratorNode base the assembled class
+      // extends (getDataset is an instance member, the statics below class-side)
+      getDataset(): Record<string, unknown>
+    }
+  prototype: TNode & { decorate(): ReactNode } & CardSpecFieldMap<D> &
+    CardSpecAccessorMap<D> & {
+      getDataset(): Record<string, unknown>
+    }
   readonly nestedEditors: readonly NestedEditorSpec[] | undefined
   readonly transientProps: readonly TransientPropSpec[] | undefined
+  getPropertyDefaults(): Record<string, unknown>
+  readonly importSpec?: CardImportSpec
+  readonly urlTransformMap: Record<string, string | Record<string, string>>
 }
 
 /**

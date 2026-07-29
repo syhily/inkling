@@ -1,5 +1,5 @@
 import { createHeadlessEditor } from '@lexical/headless'
-import { createCommand, type LexicalNode } from 'lexical'
+import { createCommand } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_LABELS } from '@/labels/inkling-labels'
@@ -37,7 +37,9 @@ import { VideoNode } from '@/nodes/VideoNode'
  * headless-editor update (node construction requires an active editor) and
  * collects one value per card, keyed by node type.
  */
-function collectFromConstructedCards<T>(collect: (node: LexicalNode) => T): Map<string, T> {
+function collectFromConstructedCards<T>(
+  collect: (node: InstanceType<(typeof CARD_WRAPPER_NODES)[number]['node']>) => T,
+): Map<string, T> {
   const editor = createHeadlessEditor({ nodes: CARD_WRAPPER_NODES.map((card) => card.node), onError: () => {} })
   const collected = new Map<string, T>()
   editor.update(() => {
@@ -190,9 +192,8 @@ describe('card declarations as the single source of truth', () => {
       const declaration: CardDeclaration | undefined = CARD_DECLARATIONS.find(
         (entry) => entry.nodeType === card.nodeType,
       )
-      const defaults = (
-        card.node as unknown as { getPropertyDefaults(): Record<string, unknown> }
-      ).getPropertyDefaults()
+      // the assembled class's type declares the inherited statics — no cast
+      const defaults = card.node.getPropertyDefaults()
       const expected = new Set([
         ...Object.keys(defaults).map((key) => `__${key}`),
         ...(declaration?.transientProps ?? []).map((spec) => spec.privateName ?? `__${spec.name}`),
@@ -206,9 +207,7 @@ describe('card declarations as the single source of truth', () => {
   })
 
   it('exposes exactly the getDataset keys its declaration spec names', () => {
-    const datasetsByCard = collectFromConstructedCards((node) =>
-      (node as unknown as { getDataset(): Record<string, unknown> }).getDataset(),
-    )
+    const datasetsByCard = collectFromConstructedCards((node) => node.getDataset())
     for (const card of CARD_WRAPPER_NODES) {
       const declaration: CardDeclaration | undefined = CARD_DECLARATIONS.find(
         (entry) => entry.nodeType === card.nodeType,
@@ -278,7 +277,7 @@ describe('built-in derived views with a host card present', () => {
     editor.update(() => {
       const node = new probe.node({})
       expect(node).toHaveProperty('__probeFlag')
-      const dataset = (node as unknown as { getDataset(): Record<string, unknown> }).getDataset()
+      const dataset = node.getDataset()
       expect(dataset).not.toHaveProperty('probeFlag')
     })
   })

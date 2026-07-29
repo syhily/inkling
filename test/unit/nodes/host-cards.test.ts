@@ -10,6 +10,7 @@ import { mockComposerContext } from '#/utils/composer-context'
 import { tick } from '#/utils/test-editor'
 import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
 import { $isInklingCard, InklingDecoratorNode } from '@/nodes/base/InklingDecoratorNode'
+import { type CardBaseNodeClass } from '@/nodes/cards/card-declaration'
 import { getCardDecorateTarget } from '@/nodes/cards/card-decorate'
 import { getCardToolbarLabel } from '@/nodes/cards/card-facts'
 import { getCardInsertRegistrations } from '@/nodes/cards/card-insert-commands'
@@ -125,7 +126,14 @@ describe('defineCard', () => {
     }
 
     expect(() =>
-      defineCard({ nodeType: 'notACard', baseNode: NotACardNode, toolbarLabel: 'not-a-card', render: () => null }),
+      // deliberately not a generateDecoratorNode product: the assertion is
+      // the fixture's own marker that this input is invalid BY CONSTRUCTION
+      defineCard({
+        nodeType: 'notACard',
+        baseNode: NotACardNode as unknown as CardBaseNodeClass,
+        toolbarLabel: 'not-a-card',
+        render: () => null,
+      }),
     ).toThrow(/InklingDecoratorNode/)
   })
 

@@ -2,7 +2,22 @@ import type { Klass, LexicalCommand, LexicalNode } from 'lexical'
 
 import type { CardConfig, FileUploader } from '@/context/InklingHostIntegrationContext'
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type { CardImportSpec } from '@/nodes/base/import-spec'
 import type { CardWidth } from '@/nodes/base/utils/card-widths'
+
+/**
+ * The class every declaration's baseNode is: a generateDecoratorNode
+ * product. The registry projections widen to Klass<LexicalNode> (the
+ * per-card dataset type is dropped there — see CARD_WRAPPER_NODES), but the
+ * generated statics are genuinely present on every built-in and host class;
+ * the field types them so readers reach importSpec/getPropertyDefaults
+ * without casting through unknown.
+ */
+export type CardBaseNodeClass = Klass<LexicalNode> & {
+  getPropertyDefaults(): Record<string, unknown>
+  readonly importSpec?: CardImportSpec
+  readonly urlTransformMap: Record<string, string | Record<string, string>>
+}
 
 /**
  * The card's decorate-target wrapper props (CONTEXT.md: "card spec") — the
@@ -140,7 +155,7 @@ export type CardUploadType = keyof NonNullable<FileUploader['fileTypes']>
  */
 export interface CardDeclaration<NodeType extends string = string> {
   nodeType: NodeType
-  baseNode: Klass<LexicalNode>
+  baseNode: CardBaseNodeClass
   /**
    * The card's nested editors (CONTEXT.md: "card spec"), for cards that keep
    * rich-text content in nested Lexical editors. The wrapper node class
