@@ -56,7 +56,15 @@ const musicPlayer = defineCard({
   ],
   dragIcon: CustomDragIcon,
   toolbarLabel: 'music-player',
-  render: () => null,
+  render: (node) => {
+    // the render's node is InstanceType of THIS baseNode — the declared
+    // properties are typed with no narrowing (positive pin)…
+    const src: string = node.src
+    expect(typeof src).toBe('string')
+    // @ts-expect-error …and undeclared properties are a compile error (negative pin)
+    void node.bpm
+    return null
+  },
 })
 
 // The minimal host card: required fields only — no menu, insert, decorate

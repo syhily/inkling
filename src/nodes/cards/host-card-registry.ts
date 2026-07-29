@@ -27,12 +27,18 @@ export type HostCardMenuEntrySpec = Omit<CardMenuEntrySpec, 'icon'> & {
  * InklingDecoratorNode contract the selection protocol and `exportDOM` gate
  * on.
  */
-export interface HostCardSpec<NodeType extends string = string> extends Omit<
+export interface HostCardSpec<NodeType extends string = string, TNode extends LexicalNode = LexicalNode> extends Omit<
   CardDeclaration<NodeType>,
   'menu' | 'dragIcon' | 'markdown'
 > {
-  /** the decorate render — the built-in cards' `render*Card` counterpart */
-  render(node: LexicalNode): ReactNode
+  /**
+   * the decorate render — the built-in cards' `render*Card` counterpart.
+   * defineCard types the node as InstanceType<typeof spec.baseNode>, so a
+   * generateDecoratorNode-built class checks the render body against the
+   * host's own declared properties (the internal pipeline's discipline —
+   * no narrowing cast); name the second type argument to pin it explicitly.
+   */
+  render(node: TNode): ReactNode
   IndicatorIcon?: ComponentType<SVGProps<SVGSVGElement>>
   menu?: readonly HostCardMenuEntrySpec[]
   dragIcon?: CardIconId | ComponentType<SVGProps<SVGSVGElement>>

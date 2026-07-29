@@ -1,7 +1,9 @@
 import type { MultilineElementTransformer } from '@lexical/markdown'
 import type { LexicalNode } from 'lexical'
+import type { ReactNode } from 'react'
 
 import type { CardNodeClass } from '@/nodes/assemble-card-node'
+import type { CardBaseNodeClass } from '@/nodes/cards/card-declaration'
 import type { HostCardSpec } from '@/nodes/cards/host-card-registry'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
@@ -42,7 +44,13 @@ export interface HostCard<NodeType extends string = string> {
  * is derived by the views through the same projectors the built-in
  * declarations flow through.
  */
-export function defineCard<NodeType extends string>(spec: HostCardSpec<NodeType>): HostCard<NodeType> {
+export function defineCard<NodeType extends string, B extends CardBaseNodeClass>(
+  spec: Omit<HostCardSpec<NodeType>, 'baseNode' | 'render'> & {
+    baseNode: B
+    /** the decorate render — its node is InstanceType of YOUR baseNode class (a generateDecoratorNode product carries the dataset-typed instance) */
+    render(node: InstanceType<B>): ReactNode
+  },
+): HostCard<NodeType> {
   // $isInklingCard gates on `instanceof InklingDecoratorNode` and the
   // exportDOM contract assumes the generated machinery — the honest boundary
   // is to require the base to extend it (build bases with
