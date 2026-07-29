@@ -1,6 +1,5 @@
-import type { LexicalEditor } from 'lexical'
-
 import {
+  type LexicalEditor,
   $getSelection,
   $isNodeSelection,
   $isRangeSelection,
@@ -9,6 +8,7 @@ import {
   KEY_ARROW_LEFT_COMMAND,
   KEY_ARROW_RIGHT_COMMAND,
   KEY_ARROW_UP_COMMAND,
+  type LexicalCommand,
 } from 'lexical'
 
 import { $isInklingCard } from '@/nodes/base'
@@ -20,18 +20,39 @@ import type { KeyboardNavigationDeps } from './types'
 import { $getLogicallyAdjacentCard, $getVisuallyAdjacentCard, editorOwnsFocus } from '../card-adjacency'
 import { $extendSelectionAcrossCardBoundary, $selectCardFromCaptionArrow } from './selection-extension'
 
-export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
+// The vertical-arrow pair shares one skeleton — shift-selection extension,
+// the caption-arrow gate, the focus gate, the node-selection sibling walk,
+// the collapsed-range visual probe (the same genus selection-extension
+// merged for the shift-arrow pair). The directions diverge in exactly two
+// one-sided policies, kept as data per direction:
+// - up exits the editor at the document start (cursorDidExitAtTop), from
+//   both the node-selection and the collapsed-range shapes;
+// - down ensures a trailing paragraph after a doc-end card.
+function registerVerticalArrowCommand(
+  editor: LexicalEditor,
+  deps: KeyboardNavigationDeps,
+  {
+    command,
+    direction,
+    logicalDirection,
+  }: {
+    command: LexicalCommand<KeyboardEvent | undefined>
+    direction: 'up' | 'down'
+    logicalDirection: 'previous' | 'next'
+  },
+): () => void {
   const { store, cursorDidExitAtTop } = deps
+  const isUp = direction === 'up'
 
   return editor.registerCommand(
-    KEY_ARROW_UP_COMMAND,
+    command,
     (event) => {
       const selection = $getSelection()
 
       // if a selection is being made, we need to handle it ourselves (lexical does not handle decorator nodes at this time)
       if (event?.shiftKey) {
         if ($isRangeSelection(selection)) {
-          return $extendSelectionAcrossCardBoundary('up', selection, event)
+          return $extendSelectionAcrossCardBoundary(direction, selection, event)
         }
         // use default behavior for other selection
         return false
@@ -53,36 +74,50 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
         if (!currentNode) {
           return false
         }
-        const previousSibling = currentNode.getPreviousSibling()
+        const sibling = isUp ? currentNode.getPreviousSibling() : currentNode.getNextSibling()
 
-        if (!previousSibling && cursorDidExitAtTop) {
-          selection.clear()
-          cursorDidExitAtTop()
+        if (!sibling) {
+          // up-only: leave the editor at the document start
+          if (isUp && cursorDidExitAtTop) {
+            selection.clear()
+            cursorDidExitAtTop()
+            return true
+          }
+          // down-only: create a new paragraph and select it if the selected card is at end of document
+          if (!isUp) {
+            $ensureParagraphAfterCard(currentNode, { select: true })
+            return true
+          }
+        }
+
+        // if the sibling is a card, select it (default Lexical behaviour skips over cards)
+        const adjacentCard = $getLogicallyAdjacentCard(logicalDirection, currentNode)
+        if (adjacentCard) {
+          $selectDecoratorNode(adjacentCard)
           return true
         }
 
-        const previousCard = $getLogicallyAdjacentCard('previous', currentNode)
-        if (previousCard) {
-          $selectDecoratorNode(previousCard)
-          return true
-        }
-
-        // move cursor to end of previous node
+        // move cursor to the sibling's near edge
         event?.preventDefault()
-        previousSibling?.selectEnd()
+        if (isUp) {
+          sibling?.selectEnd()
+        } else {
+          sibling?.selectStart()
+        }
         return true
       }
 
       if ($isRangeSelection(selection)) {
         if (selection.isCollapsed()) {
-          if (cursorDidExitAtTop && $isAtStartOfDocument(selection)) {
+          // up-only: leave the editor at the document start
+          if (isUp && cursorDidExitAtTop && $isAtStartOfDocument(selection)) {
             cursorDidExitAtTop()
             return true
           }
 
-          const previousCard = $getVisuallyAdjacentCard('up')
-          if (previousCard) {
-            $selectDecoratorNode(previousCard)
+          const adjacentCard = $getVisuallyAdjacentCard(direction)
+          if (adjacentCard) {
+            $selectDecoratorNode(adjacentCard)
             return true
           }
         }
@@ -94,74 +129,20 @@ export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavi
   )
 }
 
+export function registerArrowUpCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
+  return registerVerticalArrowCommand(editor, deps, {
+    command: KEY_ARROW_UP_COMMAND,
+    direction: 'up',
+    logicalDirection: 'previous',
+  })
+}
+
 export function registerArrowDownCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
-  const { store } = deps
-
-  return editor.registerCommand(
-    KEY_ARROW_DOWN_COMMAND,
-    (event) => {
-      const selection = $getSelection()
-
-      // if a selection is being made, we need to handle it ourselves (lexical does not handle decorator nodes at this time)
-      if (event?.shiftKey) {
-        if ($isRangeSelection(selection)) {
-          return $extendSelectionAcrossCardBoundary('down', selection, event)
-        }
-        // use default behavior for other selection
-        return false
-      }
-
-      // if we're in a nested editor, we need to move selection back to the parent editor
-      const { selectedCardKey } = store.getState()
-      if ($selectCardFromCaptionArrow(editor, selectedCardKey, event)) {
-        return true
-      }
-
-      // avoid processing card behaviours when an inner element has focus (e.g. nested editors)
-      if (!editorOwnsFocus(editor)) {
-        return true
-      }
-
-      if ($isNodeSelection(selection)) {
-        const currentNode = selection.getNodes()[0]
-        if (!currentNode) {
-          return false
-        }
-        const nextSibling = currentNode.getNextSibling()
-
-        // create a new paragraph and select it if selected card is at end of document
-        if (!nextSibling) {
-          $ensureParagraphAfterCard(currentNode, { select: true })
-          return true
-        }
-
-        // if next sibling is a card, select it (default Lexical behaviour skips over cards)
-        const nextCard = $getLogicallyAdjacentCard('next', currentNode)
-        if (nextCard) {
-          $selectDecoratorNode(nextCard)
-          return true
-        }
-
-        // move cursor to start of next node
-        event?.preventDefault()
-        nextSibling.selectStart()
-        return true
-      }
-
-      if ($isRangeSelection(selection)) {
-        if (selection.isCollapsed()) {
-          const nextCard = $getVisuallyAdjacentCard('down')
-          if (nextCard) {
-            $selectDecoratorNode(nextCard)
-            return true
-          }
-        }
-      }
-
-      return false
-    },
-    COMMAND_PRIORITY_LOW,
-  )
+  return registerVerticalArrowCommand(editor, deps, {
+    command: KEY_ARROW_DOWN_COMMAND,
+    direction: 'down',
+    logicalDirection: 'next',
+  })
 }
 
 export function registerArrowLeftCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
