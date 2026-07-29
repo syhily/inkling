@@ -2,8 +2,6 @@ import type { EditorState, LexicalEditor } from 'lexical'
 
 import { $getNodeByKey, $getSelection, $isNodeSelection } from 'lexical'
 
-import type { CardNode } from '@/types/lexical-internals'
-
 import { $isInklingCard } from '@/nodes/base'
 import { $selectDecoratorNode } from '@/utils'
 
@@ -47,11 +45,10 @@ export function registerCardSelection(editor: LexicalEditor, deps: CardSelection
     const { isCardSelected, cardKey, cardNode } = editorState.read(() => {
       const selection = $getSelection()
 
-      const hasCardSelection =
-        $isNodeSelection(selection) && selection.getNodes().length === 1 && $isInklingCard(selection.getNodes()[0])
+      const selectedNode =
+        $isNodeSelection(selection) && selection.getNodes().length === 1 ? selection.getNodes()[0] : null
 
-      if (hasCardSelection) {
-        const selectedNode = selection.getNodes()[0] as CardNode
+      if (selectedNode && $isInklingCard(selectedNode)) {
         return { isCardSelected: true, cardKey: selectedNode.getKey(), cardNode: selectedNode }
       } else {
         return { isCardSelected: false }
@@ -123,11 +120,14 @@ export function registerCardSelection(editor: LexicalEditor, deps: CardSelection
 
     // we have special-case cards that are inserted via markdown
     // expansions where we can't use editor commands to open in
-    // edit mode so we handle that here instead
-    if (isCardSelected && cardNode?.__openInEditMode) {
+    // edit mode so we handle that here instead. The transient flag exists
+    // only on the codeblock card — the `in` checks are the discriminator.
+    const openInEditMode = cardNode && '__openInEditMode' in cardNode ? cardNode.__openInEditMode : undefined
+    const clearOpenInEditMode = cardNode && 'clearOpenInEditMode' in cardNode ? cardNode.clearOpenInEditMode : undefined
+    if (isCardSelected && openInEditMode === true && typeof clearOpenInEditMode === 'function') {
       editor.update(
         () => {
-          cardNode.clearOpenInEditMode?.()
+          clearOpenInEditMode.call(cardNode)
         },
         { tag: 'history-merge' },
       ) // don't include a history entry for clearing the open in edit mode prop

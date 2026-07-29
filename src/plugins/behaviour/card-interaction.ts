@@ -1,10 +1,10 @@
-import type { LexicalEditor, LexicalNode, NodeKey } from 'lexical'
+import type { LexicalEditor, NodeKey } from 'lexical'
 
 import { $getNodeByKey, CLICK_COMMAND, COMMAND_PRIORITY_LOW } from 'lexical'
 
 import type { CardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
-import type { CardNode } from '@/types/lexical-internals'
 
+import { $isInklingCard } from '@/nodes/base'
 import { EDIT_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 // Card interaction — the headless select→edit choreography behind
@@ -19,15 +19,8 @@ import { EDIT_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/behaviour/comm
 // stable for the card's lifetime — no re-registration per render.
 
 // InklingCardWrapper is only rendered for generated card nodes (decorateCard
-// throws otherwise), but the type system can't see that — discriminate on the
-// base class's runtime marker instead of asserting.
-function $isCardNode(node: LexicalNode | null): node is CardNode {
-  if (node === null || !('isInklingCard' in node)) {
-    return false
-  }
-  const marker: unknown = node.isInklingCard
-  return typeof marker === 'function' && (marker as () => boolean).call(node) === true
-}
+// throws otherwise), but the type system can't see that — $isInklingCard's
+// runtime marker check is the discriminator (no asserting).
 
 export interface CardInteractionPorts {
   /** The composer card selection store — read at event time. */
@@ -103,7 +96,7 @@ export function registerCardInteraction(
       const target = event.target
       if (!skipClick && target instanceof Element && getContainer()?.contains(target)) {
         const node = $getNodeByKey(nodeKey)
-        const cardNode = $isCardNode(node) ? node : null
+        const cardNode = node && $isInklingCard(node) ? node : null
         const clickedDifferentEditor = cardNode === null
         // elements marked as click-through (captions, toolbars) handle their own
         // clicks and must not trigger the card's edit mode

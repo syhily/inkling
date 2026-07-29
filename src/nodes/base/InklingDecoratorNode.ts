@@ -19,6 +19,8 @@ export type InklingCard = InklingDecoratorNode & {
   isInklingCard(): true
   exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): ExportDOMOutput
   hasEditMode(): boolean
+  // every card class comes from generateDecoratorNode, which defines getDataset
+  getDataset(): Record<string, unknown>
   // optional: the generated card classes do not define isEmpty
   isEmpty?(): boolean
 }

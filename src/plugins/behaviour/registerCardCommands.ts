@@ -3,8 +3,7 @@ import type { LexicalEditor, LexicalNode } from 'lexical'
 import { mergeRegister } from '@lexical/utils'
 import { $getNodeByKey, $getSelection, $isNodeSelection, $isRangeSelection, COMMAND_PRIORITY_LOW } from 'lexical'
 
-import type { CardNode } from '@/types/lexical-internals'
-
+import { $isInklingCard } from '@/nodes/base'
 import { $ensureParagraphAfterCard } from '@/utils/$ensureParagraphAfterCard'
 import { $insertAndSelectNode } from '@/utils/$insertAndSelectNode'
 
@@ -62,8 +61,8 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
 
         // already selected, delete if empty as we're exiting edit mode
         if (selectedCardKey === cardKey && isEditingCard) {
-          const cardNode = $getNodeByKey(cardKey) as CardNode | null
-          if (cardNode?.isEmpty?.()) {
+          const cardNode = $getNodeByKey(cardKey)
+          if (cardNode && $isInklingCard(cardNode) && cardNode.isEmpty?.()) {
             editor.dispatchCommand(DELETE_CARD_COMMAND, { cardKey })
             return true
           }
@@ -92,8 +91,8 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
 
         store.setState({ selectedCardKey: cardKey })
 
-        const cardNode = $getNodeByKey(cardKey) as CardNode | null
-        if (cardNode?.hasEditMode?.()) {
+        const cardNode = $getNodeByKey(cardKey)
+        if (cardNode && $isInklingCard(cardNode) && cardNode.hasEditMode()) {
           store.setState({ isEditingCard: true })
         }
         return true
@@ -113,7 +112,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
     editor.registerCommand(
       DELETE_CARD_COMMAND,
       ({ cardKey, direction = 'forward' }) => {
-        const cardNode = $getNodeByKey(cardKey) as CardNode | null
+        const cardNode = $getNodeByKey(cardKey)
         if (!cardNode) {
           return false
         }

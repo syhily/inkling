@@ -11,8 +11,7 @@ import {
   $setSelection,
 } from 'lexical'
 
-import type { CardNode } from '@/types/lexical-internals'
-
+import { $isInklingCard } from '@/nodes/base'
 import { $isAtTopOfNode, getTopLevelNativeElement } from '@/utils'
 import { $ensureParagraphAfterCard } from '@/utils/$ensureParagraphAfterCard'
 
@@ -269,8 +268,8 @@ export function $selectCard(
 // remove empty cards when they are deselected
 // (cards without an isEmpty method are never auto-removed)
 export function $deselectCard(editor: LexicalEditor, nodeKey: string) {
-  const cardNode = $getNodeByKey(nodeKey) as CardNode | null
-  if (cardNode?.isEmpty?.()) {
+  const cardNode = $getNodeByKey(nodeKey)
+  if (cardNode && $isInklingCard(cardNode) && cardNode.isEmpty?.()) {
     $removeOrReplaceNodeWithParagraph(editor, cardNode)
   }
 }

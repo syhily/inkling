@@ -5,11 +5,11 @@ import { flushSync } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 
 import type { ImageNodeDataset } from '@/nodes/ImageNode'
-import type { CardNode } from '@/types/lexical-internals'
 
 import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import { useDragDropHandle, useDragDropHandleState } from '@/context/DragDropHandleContext'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { $isInklingCard } from '@/nodes/base'
 import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import {
   $insertDraggedImage,
@@ -51,12 +51,12 @@ function useDragDropReorder(editor: LexicalEditor): void {
 
         editor.update(() => {
           const nearestNode = $getNearestNodeFromDOMNode(draggableElement)
-          const cardNode = nearestNode as CardNode | null
 
           // draggableSelector matches top-level <div>s; a consumer-registered
-          // node rendering one is not a card and has no getDataset — treat it as
-          // non-draggable instead of crashing on the missing method
-          if (cardNode && typeof cardNode.getDataset === 'function') {
+          // node rendering one is not a card — treat it as non-draggable
+          // instead of crashing on the missing methods
+          if (nearestNode && $isInklingCard(nearestNode)) {
+            const cardNode = nearestNode
             draggableInfo = {
               type: 'card',
               nodeKey: cardNode.getKey(),
