@@ -25,9 +25,6 @@ export default defineConfig({
   },
   packageMode: {
     '@types/node': 'minor',
-    // The build scripts run on the repo's own TypeScript compiler API
-    // (scripts/build-types.ts); TS 7 ships no JS API, so stay within 6.x.
-    typescript: 'minor',
     // The packageManager field is checked as a dependency; keep pnpm on
     // stable releases only (mode 'latest' above would chase alphas).
     pnpm: 'stable',
