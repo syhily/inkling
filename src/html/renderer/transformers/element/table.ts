@@ -1,7 +1,7 @@
 import type { ElementNode } from 'lexical'
 
 /* c8 ignore start */
-import type { ExportChildren } from '@/html/renderer/transformers/index'
+import type { ElementTransformer, ExportChildren } from '@/html/renderer/transformers/index'
 
 import { getTableCellTag } from '@/nodes/table/table-facts'
 import { $isTableCellNode, $isTableNode, $isTableRowNode } from '@/nodes/table/TableNodes'
@@ -14,7 +14,7 @@ import { $isTableCellNode, $isTableNode, $isTableRowNode } from '@/nodes/table/T
 // header state; the GFM direction forges it). Cell children render inline:
 // the renderer's exportChildren flattens the cell's single paragraph into
 // the tag without wrapping it in <p>.
-export default {
+export const tableTransformer: ElementTransformer = {
   export(node: ElementNode, exportChildren: ExportChildren) {
     if (!$isTableNode(node)) {
       return null

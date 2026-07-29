@@ -3,9 +3,9 @@ import type { ElementNode } from 'lexical'
 
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import listTransformer from '@/html/renderer/transformers/element/list'
+import { listTransformer } from '@/html/renderer/transformers/element/list'
 import { simpleElementTransformers } from '@/html/renderer/transformers/element/simple-transformers'
-import tableTransformer from '@/html/renderer/transformers/element/table'
+import { tableTransformer } from '@/html/renderer/transformers/element/table'
 /* c8 ignore stop */
 
 export type ExportChildren = (node: ElementNode) => string

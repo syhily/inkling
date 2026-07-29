@@ -3,7 +3,7 @@ import type { ElementNode } from 'lexical'
 
 import { $isListNode, $isListItemNode } from '@lexical/list'
 
-import type { ExportChildren } from '@/html/renderer/transformers/index'
+import type { ElementTransformer, ExportChildren } from '@/html/renderer/transformers/index'
 
 const exportList = function (node: ElementNode, exportChildren: ExportChildren): string | null {
   if (!$isListNode(node)) {
@@ -69,8 +69,4 @@ const exportList = function (node: ElementNode, exportChildren: ExportChildren):
   }
 }
 
-export default {
-  export(node: ElementNode, exportChildren: ExportChildren) {
-    return exportList(node, exportChildren)
-  },
-}
+export const listTransformer: ElementTransformer = { export: exportList }

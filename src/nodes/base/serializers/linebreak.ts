@@ -1,6 +1,6 @@
 import type { DOMConversion } from 'lexical'
 
-export default {
+export const linebreakSerializers = {
   import: {
     br: (node: HTMLElement): DOMConversion | null => {
       const isGoogleDocs = !!node.closest('[id^="docs-internal-guid-"]')
