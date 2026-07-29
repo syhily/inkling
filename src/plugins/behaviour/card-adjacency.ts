@@ -292,7 +292,7 @@ export function $removeOrReplaceNodeWithParagraph(
   { focus = 'decorator-next' }: { focus?: CardRemovalFocus } = {},
 ) {
   if (focus === 'root-first') {
-    editor.getRootElement()?.focus({ preventScroll: true })
+    focusEditorRoot(editor)
   }
 
   if ($getRoot().getLastChild()?.is(node)) {

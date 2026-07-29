@@ -4,6 +4,7 @@ import React from 'react'
 
 import CardContext from '@/context/CardContext'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
+import { focusEditorRoot } from '@/plugins/behaviour/card-adjacency'
 import {
   isTypeaheadMenuOpen,
   markEventFromNested,
@@ -55,7 +56,7 @@ function InklingNestedEditorPlugin({
 
     if (shouldFocus) {
       editor.focus(() => {
-        editor.getRootElement()?.focus({ preventScroll: true })
+        focusEditorRoot(editor)
       })
     }
   }, [shouldFocus, editor, isParentCardEditing])

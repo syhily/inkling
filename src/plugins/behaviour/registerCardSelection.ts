@@ -1,10 +1,11 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 
-import { $createNodeSelection, $getNodeByKey, $getSelection, $isNodeSelection, $setSelection } from 'lexical'
+import { $getNodeByKey, $getSelection, $isNodeSelection } from 'lexical'
 
 import type { CardNode } from '@/types/lexical-internals'
 
 import { $isInklingCard } from '@/nodes/base'
+import { $selectDecoratorNode } from '@/utils'
 
 import type { CardSelectionStore } from './cardSelectionStore'
 
@@ -100,9 +101,7 @@ export function registerCardSelection(editor: LexicalEditor, deps: CardSelection
           () => {
             const node = $getNodeByKey(selectedCardKey)
             if (node) {
-              const selection = $createNodeSelection()
-              selection.add(selectedCardKey)
-              $setSelection(selection)
+              $selectDecoratorNode(node)
             } else {
               store.setState({ selectedCardKey: null, isEditingCard: false })
             }

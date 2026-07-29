@@ -12,6 +12,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { CardNode } from '@/types/lexical-internals'
 
+import { drainEnqueuedUpdates } from '#/utils/test-editor'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { createCardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
 import { registerCardSelection } from '@/plugins/behaviour/registerCardSelection'
@@ -58,17 +59,13 @@ function createSelectionHarness(
 
 // editor.update resolves its onUpdate before updates scheduled from inside
 // update listeners (the history-merge bookkeeping updates) have committed, so
-// settle one macrotask to let the nested passes land.
-function runUpdate(editor: LexicalEditor, updateFn: () => void, options?: { tag?: string }) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { ...options, onUpdate: () => setTimeout(resolve, 0) })
-  })
-}
+// the harness's drainEnqueuedUpdates settles one macrotask to let the nested
+// passes land.
 
 async function setupEditorWithCard() {
   const editor = createTestEditor()
   let cardKey = ''
-  await runUpdate(editor, () => {
+  await drainEnqueuedUpdates(editor, () => {
     const root = $getRoot()
     root.clear()
     const imageNode = $createImageNode({ src: '/image.png' })
@@ -79,7 +76,7 @@ async function setupEditorWithCard() {
 }
 
 function selectCard(editor: LexicalEditor, cardKey: string, options?: { tag?: string }) {
-  return runUpdate(
+  return drainEnqueuedUpdates(
     editor,
     () => {
       const selection = $createNodeSelection()
@@ -91,7 +88,7 @@ function selectCard(editor: LexicalEditor, cardKey: string, options?: { tag?: st
 }
 
 function clearSelection(editor: LexicalEditor, options?: { tag?: string }) {
-  return runUpdate(
+  return drainEnqueuedUpdates(
     editor,
     () => {
       $setSelection(null)
@@ -101,7 +98,7 @@ function clearSelection(editor: LexicalEditor, options?: { tag?: string }) {
 }
 
 function touchDocument(editor: LexicalEditor) {
-  return runUpdate(editor, () => {
+  return drainEnqueuedUpdates(editor, () => {
     $getRoot().append($createParagraphNode())
   })
 }
@@ -318,7 +315,7 @@ describe('registerCardSelection', () => {
     })
 
     let cardKey = ''
-    await runUpdate(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const root = $getRoot()
       root.clear()
       const imageNode = $createImageNode({ src: '/image.png' }) as CardNode

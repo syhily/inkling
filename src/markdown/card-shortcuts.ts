@@ -50,17 +50,16 @@
 // bodies no-op.
 
 import {
-  $createNodeSelection,
   $createParagraphNode,
   $getEditor,
   $getSelection,
   $isTextNode,
-  $setSelection,
   type ElementNode,
   type Klass,
   type LexicalNode,
 } from 'lexical'
 
+import { $selectDecoratorNode } from '@/utils'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
 /**
@@ -122,9 +121,8 @@ export function $insertCodeBlockForShortcut(topLevelElement: ElementNode, langua
   const replacementNode = topLevelElement.replace(new CodeBlockNodeClass({ language, _openInEditMode: true }))
 
   // select node when replacing so it immediately renders in editing mode
-  const replacementSelection = $createNodeSelection()
-  replacementSelection.add(replacementNode.getKey())
-  $setSelection(replacementSelection)
+  // (keyboard-triggered: the caller already owns focus — the 'never' leg)
+  $selectDecoratorNode(replacementNode)
   return true
 }
 
