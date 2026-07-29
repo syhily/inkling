@@ -3,6 +3,7 @@ import InklingNestedComposer from '@/components/InklingNestedComposer'
 import { BASIC_TRANSFORMERS, MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
 import BASIC_NODES from '@/nodes/BasicNodes'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
+import { type HiddenFormat } from '@/plugins/behaviour/format-toolbar'
 import { EmojiPickerPlugin } from '@/plugins/EmojiPickerPlugin'
 import InklingNestedEditorPlugin, { type FocusNextTarget } from '@/plugins/InklingNestedEditorPlugin'
 import RestrictContentPlugin from '@/plugins/RestrictContentPlugin'
@@ -34,7 +35,7 @@ interface InklingNestedEditorProps {
   singleParagraph?: boolean
   hasSettingsPanel?: boolean
   defaultInklingEnterBehaviour?: boolean
-  hiddenFormats?: string[]
+  hiddenFormats?: HiddenFormat[]
   useDefaultClasses?: boolean
   dataTestId?: string
   children?: React.ReactNode

@@ -4,6 +4,7 @@ import React from 'react'
 
 import { FloatingFormatToolbar } from '@/components/ui/FloatingFormatToolbar'
 import { FloatingLinkToolbar } from '@/components/ui/FloatingLinkToolbar'
+import { type HiddenFormat } from '@/plugins/behaviour/format-toolbar'
 import {
   createLinkHoverFeed,
   createToolbarRevealFeed,
@@ -22,7 +23,7 @@ export default function FloatingToolbarPlugin({
 }: {
   anchorElem?: HTMLElement
   isSnippetsEnabled?: boolean
-  hiddenFormats?: string[]
+  hiddenFormats?: HiddenFormat[]
 }) {
   const [editor] = useLexicalComposerContext()
   return useFloatingFormatToolbar(editor, anchorElem, isSnippetsEnabled, hiddenFormats)
@@ -32,7 +33,7 @@ function useFloatingFormatToolbar(
   editor: LexicalEditor,
   anchorElem: HTMLElement,
   isSnippetsEnabled?: boolean,
-  hiddenFormats: string[] = [],
+  hiddenFormats: HiddenFormat[] = [],
 ) {
   // the toolbar session (hidden | text | link | snippet, plus the hovered-link
   // slot) lives in the headless link-editing module; this hook only feeds it

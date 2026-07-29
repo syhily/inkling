@@ -18,6 +18,7 @@ import { EditorPlaceholder } from '@/components/ui/EditorPlaceholder'
 import { useDragDropHandle } from '@/context/DragDropHandleContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useSharedEditorStateContext } from '@/context/SharedEditorStateContext'
+import { type HiddenFormat } from '@/plugins/behaviour/format-toolbar'
 import DragDropPastePlugin from '@/plugins/DragDropPastePlugin'
 import DragDropReorderPlugin from '@/plugins/DragDropReorderPlugin'
 import { ExternalControlPlugin } from '@/plugins/ExternalControlPlugin'
@@ -48,7 +49,7 @@ export interface InklingComposableEditorProps {
   isDragEnabled?: boolean
   inheritStyles?: boolean
   isSnippetsEnabled?: boolean
-  hiddenFormats?: string[]
+  hiddenFormats?: HiddenFormat[]
   useDefaultClasses?: boolean
   dataTestId?: string
   /** Keep text alignment (`format`) instead of stripping it; set on surfaces that expose alignment controls. */

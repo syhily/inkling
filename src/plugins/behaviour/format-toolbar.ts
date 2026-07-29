@@ -164,13 +164,16 @@ export interface FormatToolbarVisibility {
  * create them, or inside a nested editor; bold hides when the surface
  * declares it in `hiddenFormats`.
  */
+/** The formats a surface can hide from the toolbar — 'bold' is the only honored value today; any other string was a silent no-op. */
+export type HiddenFormat = 'bold'
+
 export function resolveFormatToolbarVisibility(
   editor: LexicalEditor,
   {
     isSnippetsEnabled,
     canCreateSnippet,
     hiddenFormats = [],
-  }: { isSnippetsEnabled?: boolean; canCreateSnippet: boolean; hiddenFormats?: string[] },
+  }: { isSnippetsEnabled?: boolean; canCreateSnippet: boolean; hiddenFormats?: HiddenFormat[] },
 ): FormatToolbarVisibility {
   return {
     hideHeading: !editor.hasNodes([HeadingNode]),

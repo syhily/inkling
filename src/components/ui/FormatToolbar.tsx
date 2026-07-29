@@ -13,6 +13,7 @@ import {
   registerFormatToolbarState,
   resolveFormatToolbarVisibility,
   type FormatToolbarState,
+  type HiddenFormat,
 } from '@/plugins/behaviour/format-toolbar'
 import { altOrOption, ctrlOrCmdSymbol, ctrlOrSymbol } from '@/utils/shortcutSymbols'
 
@@ -32,7 +33,7 @@ interface FormatToolbarProps {
   isLinkSelected?: boolean
   onLinkClick?: () => void
   onSnippetClick?: () => void
-  hiddenFormats?: string[]
+  hiddenFormats?: HiddenFormat[]
 }
 
 // the selection classifier, the block-format surgeries, and the visibility

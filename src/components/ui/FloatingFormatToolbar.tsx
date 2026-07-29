@@ -8,6 +8,7 @@ import { LinkActionToolbarWithSearch } from '@/components/ui/LinkActionToolbarWi
 import { LinkInput } from '@/components/ui/LinkInput'
 import { SnippetActionToolbar } from '@/components/ui/SnippetActionToolbar'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { type HiddenFormat } from '@/plugins/behaviour/format-toolbar'
 import { $applyLinkToSelection } from '@/plugins/behaviour/link-editing'
 
 export const toolbarItemTypes = {
@@ -38,7 +39,7 @@ export function FloatingFormatToolbar({
   onClose: () => void
   onOpenLink: () => void
   onOpenSnippet: () => void
-  hiddenFormats?: string[]
+  hiddenFormats?: HiddenFormat[]
 }) {
   const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const isLinkSearchEnabled = typeof cardConfig?.searchLinks === 'function'
