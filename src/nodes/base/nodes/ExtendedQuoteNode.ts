@@ -36,7 +36,10 @@ export class ExtendedQuoteNode extends QuoteNode {
   }
 
   static importJSON(serializedNode: SerializedQuoteNode) {
-    return QuoteNode.importJSON(serializedNode)
+    // construct our own class (the sibling ExtendedHeadingNode pattern):
+    // delegating to QuoteNode.importJSON builds a genuine QuoteNode in any
+    // editor where the replacement registration is absent
+    return new ExtendedQuoteNode().updateFromJSON(serializedNode)
   }
 
   exportJSON() {

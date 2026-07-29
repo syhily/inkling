@@ -37,13 +37,18 @@ export function cleanDOM(
 ) {
   for (let i = 0; i < node.childNodes.length; i++) {
     const child = node.childNodes[i]
-    if (child.nodeType === 1 && !allowedTags.includes((child as Element).tagName)) {
+    // nodeType, not instanceof: the cleaned document may be another jsdom
+    // realm's, where instanceof fails (the casts below are its honest bridge)
+    if (child.nodeType !== 1) {
+      continue
+    }
+    if (!allowedTags.includes((child as Element).tagName)) {
       while (child.firstChild) {
         node.insertBefore(child.firstChild, child)
       }
       node.removeChild(child)
       i -= 1
-    } else if (child.nodeType === 1) {
+    } else {
       cleanAttributes(child as Element, allowedAttributes, context)
       cleanDOM(child as Element, allowedTags, context, allowedAttributes)
     }

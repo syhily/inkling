@@ -312,10 +312,10 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
     // React event handlers get added to the root element, so listeners added to
     // the panel directly would stopPropagation any React events on child nodes.
     // Instead the listeners live on the body and check the event target.
-    const startListener = (e: Event) => {
+    const startListener = (e: TouchEvent | MouseEvent) => {
       const target = e.target
       if (target instanceof Node && ref.current?.contains(target)) {
-        dragStart(e as TouchEvent | MouseEvent)
+        dragStart(e)
       }
     }
 

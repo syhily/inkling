@@ -70,11 +70,10 @@ export function createTKHandle(): TKHandle {
     ...handle,
 
     addEditorTkNode(editorKey, topLevelNodeKey, tkNodeKey) {
-      if (!editorTkNodeMap.has(editorKey)) {
-        editorTkNodeMap.set(editorKey, new Map())
-      }
+      const tkNodes = editorTkNodeMap.get(editorKey) ?? new Map()
+      editorTkNodeMap.set(editorKey, tkNodes)
 
-      editorTkNodeMap.get(editorKey)!.set(tkNodeKey, { topLevelNodeKey })
+      tkNodes.set(tkNodeKey, { topLevelNodeKey })
 
       updateTkNodeMap()
     },

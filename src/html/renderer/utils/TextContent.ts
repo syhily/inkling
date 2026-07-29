@@ -135,8 +135,14 @@ export default class TextContent {
         const nextNode = remainingNodes.find((n) => $isTextNode(n) || $isLinkNode(n))
         ;[...openFormats].forEach((format) => {
           if (!nextNode || $isLinkNode(nextNode) || (nextNode instanceof TextNode && !nextNode.hasFormat(format))) {
-            currentNode = currentNode.parentNode as HTMLElement
-            openFormats.pop()
+            // climb only while the parent chain stays elements (the root
+            // climb can meet a Document) — nodeType, not instanceof: the
+            // rendered tree may be another jsdom realm's
+            const parent = currentNode.parentNode
+            if (parent && parent.nodeType === 1) {
+              currentNode = parent as HTMLElement
+              openFormats.pop()
+            }
           }
         })
 

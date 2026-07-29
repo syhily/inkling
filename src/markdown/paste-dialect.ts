@@ -77,12 +77,15 @@ const namedHeaders = function ({ inklingVersion }: RenderOptions = {}) {
         env.usedHeaders = usedHeaders
       }
 
-      tokens[idx].attrs = tokens[idx].attrs || []
-      const title = tokens[idx + 1].children!.reduce(function (acc: string, t: Token) {
+      const attrs = tokens[idx].attrs || []
+      tokens[idx].attrs = attrs
+      // markdown-it emits heading_open → inline adjacently; children is the
+      // inline token's content array
+      const title = (tokens[idx + 1].children ?? []).reduce(function (acc: string, t: Token) {
         return acc + t.content
       }, '')
       const slug = generateSlug(title, usedHeaders)
-      tokens[idx].attrs!.push(['id', slug])
+      attrs.push(['id', slug])
       if (originalHeadingOpen) {
         return originalHeadingOpen.call(this, tokens, idx, options, env, self)
       } else {

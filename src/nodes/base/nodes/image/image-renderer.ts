@@ -107,7 +107,10 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
   )
 
   if (shouldRenderPicture) {
-    picture = document.createElement('picture')
+    // const-aliased so the closure below keeps the narrowing
+    // shouldRenderPicture established (its typeof check covers both)
+    const canTransformImageToFormat = context.canTransformImageToFormat
+    const pictureElement = document.createElement('picture')
     let sourcesAdded = false
 
     MODERN_IMAGE_FORMATS.forEach((format) => {
@@ -116,7 +119,7 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
         return
       }
 
-      if (!context.canTransformImageToFormat!(format)) {
+      if (!canTransformImageToFormat?.(format)) {
         return
       }
 
@@ -139,12 +142,13 @@ export function renderImageNode(node: ImageNodeData, context: RenderContext) {
         source.setAttribute('sizes', sizes)
       }
 
-      picture!.appendChild(source)
+      pictureElement.appendChild(source)
       sourcesAdded = true
     })
 
     if (sourcesAdded) {
-      picture.appendChild(img)
+      pictureElement.appendChild(img)
+      picture = pictureElement
     } else {
       picture = null
     }

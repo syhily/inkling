@@ -138,7 +138,14 @@ export function renderHeaderNodeV2(nodeData: HeaderV2NodeData, context: RenderCo
     }
   }
 
-  return { element: getFirstHtmlElement(element, 'renderHeaderV2Node') as HTMLDivElement, type: 'outer' as const }
+  const rootElement = getFirstHtmlElement(element, 'renderHeaderV2Node')
+  // getFirstHtmlElement validates the namespace, not the tag — tagName, not
+  // instanceof: the rendered tree may be another jsdom realm's
+  if (rootElement.tagName !== 'DIV') {
+    throw new Error('renderHeaderV2Node must render a div root element')
+  }
+
+  return { element: rootElement as HTMLDivElement, type: 'outer' as const }
 }
 
 export function getCardClasses(nodeData: HeaderV2NodeData) {

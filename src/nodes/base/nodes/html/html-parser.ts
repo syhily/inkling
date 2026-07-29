@@ -28,6 +28,8 @@ export function parseHtmlNode(BaseHtmlNode: new (data: Record<string, unknown>) 
               while (nextNode && !isHtmlEndComment(nextNode)) {
                 const currentNode = nextNode
                 nextNode = currentNode.nextSibling
+                // nodeType, not instanceof: the source document may be
+                // another jsdom realm's, where instanceof fails
                 if (currentNode.nodeType === 1) {
                   html.push((currentNode as Element).outerHTML)
                 } else if (currentNode.nodeType === 3 && currentNode.textContent) {

@@ -145,9 +145,9 @@ export default function TKPlugin() {
   }
 
   const editorRoot = editor.getRootElement()
-  const editorRootParent = editor.getRootElement()?.parentElement
+  const editorRootParent = editorRoot?.parentElement
 
-  if (!editorRootParent) {
+  if (!editorRoot || !editorRootParent) {
     return null
   }
 
@@ -165,7 +165,7 @@ export default function TKPlugin() {
           editor={editor}
           nodeKeys={nodeKeys}
           parentKey={parentKey}
-          rootElement={editorRoot!}
+          rootElement={editorRoot}
         />
       )
     })

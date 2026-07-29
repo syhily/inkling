@@ -3,6 +3,9 @@ import type { DOMConversion } from 'lexical'
 
 import { HeadingNode } from '@lexical/rich-text'
 
+// the aria-level → tag mapping as data: HEADING_TAGS[level - 1], no assertion
+const HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const satisfies readonly HeadingTagType[]
+
 // Since the HeadingNode is foundational to Lexical rich-text, only using a
 // custom HeadingNode is undesirable as it means every package would need to
 // be updated to work with the custom node. Instead we can use Lexical's node
@@ -72,11 +75,12 @@ function patchParagraphConversion(originalDOMConverter: DOMConverterFn) {
 
     if (hasAriaHeadingRole && hasAriaLevel) {
       const level = parseInt(hasAriaLevel, 10)
-      if (level > 0 && level < 7) {
+      const tag = HEADING_TAGS[level - 1]
+      if (level > 0 && level < 7 && tag) {
         return {
           conversion: () => {
             return {
-              node: new ExtendedHeadingNode(`h${level}` as HeadingTagType),
+              node: new ExtendedHeadingNode(tag),
             }
           },
           priority: 1 as const,
