@@ -1,15 +1,7 @@
 import type { LexicalEditor, LexicalNode } from 'lexical'
 
 import { mergeRegister } from '@lexical/utils'
-import {
-  $createNodeSelection,
-  $getNodeByKey,
-  $getSelection,
-  $isNodeSelection,
-  $isRangeSelection,
-  $setSelection,
-  COMMAND_PRIORITY_LOW,
-} from 'lexical'
+import { $getNodeByKey, $getSelection, $isNodeSelection, $isRangeSelection, COMMAND_PRIORITY_LOW } from 'lexical'
 
 import type { CardNode } from '@/types/lexical-internals'
 
@@ -132,9 +124,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
           // from-mode: cardNode comes from the payload, not the selection
           const previousCard = $getLogicallyAdjacentCard('previous', cardNode)
           if (previousCard) {
-            const nodeSelection = $createNodeSelection()
-            nodeSelection.add(previousCard.getKey())
-            $setSelection(nodeSelection)
+            $selectCard(editor, previousCard, { focus: 'always' })
           } else {
             previousSibling.selectEnd()
           }
@@ -142,9 +132,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
           // from-mode: cardNode comes from the payload, not the selection
           const nextCard = $getLogicallyAdjacentCard('next', cardNode)
           if (nextCard) {
-            const nodeSelection = $createNodeSelection()
-            nodeSelection.add(nextCard.getKey())
-            $setSelection(nodeSelection)
+            $selectCard(editor, nextCard, { focus: 'always' })
           } else {
             nextSibling.selectStart()
           }
@@ -155,10 +143,12 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
 
         cardNode.remove()
 
-        // ensure focus moves back to the editor if we lost it by selecting a card
+        // caret-selection paths: focus moves back to the editor by hand
+        // ($selectCard's 'always' leg already repaired it on the card paths;
+        // a second focus on the active element is a no-op)
         const rootElement = editor.getRootElement()
         if (rootElement) {
-          rootElement.focus()
+          rootElement.focus({ preventScroll: true })
         }
 
         store.setState({ selectedCardKey: null, isEditingCard: false })
