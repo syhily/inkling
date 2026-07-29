@@ -14,7 +14,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { updateEditor } from '#/utils/test-editor'
+import { tick, updateEditor } from '#/utils/test-editor'
 import { $isGalleryNode, GalleryNode } from '@/nodes/GalleryNode'
 import { $createImageNode, $isImageNode, ImageNode } from '@/nodes/ImageNode'
 import {
@@ -507,9 +507,7 @@ describe('the image-card-onto-image drop policy', () => {
     })
 
     applyImageCardDrop(editor, targetKey, info)
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0)
-    })
+    await tick()
 
     editor.getEditorState().read(() => {
       const children = $getRoot().getChildren()
@@ -526,9 +524,7 @@ describe('the image-card-onto-image drop policy', () => {
     })
 
     applyImageCardDrop(editor, 'target-key', draggableInfo({ type: 'image' }))
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0)
-    })
+    await tick()
 
     editor.getEditorState().read(() => {
       expect($getRoot().getChildrenSize()).toBe(1)

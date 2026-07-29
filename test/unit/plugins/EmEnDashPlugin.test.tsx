@@ -13,7 +13,7 @@ import {
 import React, { useMemo } from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { updateEditor } from '#/utils/test-editor'
+import { tick, updateEditor } from '#/utils/test-editor'
 import { EmEnDashPlugin } from '@/plugins/EmEnDashPlugin'
 
 function createTestEditor() {
@@ -41,9 +41,7 @@ async function typeText(editor: ReturnType<typeof createTestEditor>, text: strin
       editor.dispatchCommand(CONTROLLED_TEXT_INSERTION_COMMAND, char)
     })
     // Flush the listener-enqueued scan commit before the next keystroke.
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0)
-    })
+    await tick()
   }
 }
 

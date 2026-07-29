@@ -2,6 +2,7 @@ import { DRAG_DROP_PASTE } from '@lexical/rich-text'
 import { $getRoot, COMMAND_PRIORITY_LOW, createEditor, DROP_COMMAND, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { tick } from '#/utils/test-editor'
 import { ImageNode } from '@/nodes/ImageNode'
 import { INSERT_MEDIA_COMMAND, MIME_TEXT_HTML } from '@/plugins/behaviour/clipboard-protocol'
 import {
@@ -10,12 +11,6 @@ import {
   registerFileDropCommands,
   type FileDropPorts,
 } from '@/plugins/behaviour/file-drop'
-
-function flushUpdates() {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
 
 const PORTS: FileDropPorts = {
   hasUploader: () => true,
@@ -147,7 +142,7 @@ describe('file drop', () => {
 
     it('prevents the default on html drops and inserts the content', async () => {
       registerDragOverSuppression(editor)
-      await flushUpdates()
+      await tick()
 
       const event = new Event('drop', { bubbles: true, cancelable: true }) as DragEvent
       Object.defineProperty(event, 'dataTransfer', {
@@ -156,7 +151,7 @@ describe('file drop', () => {
       Object.defineProperty(event, 'target', { value: rootElement })
 
       rootElement.dispatchEvent(event)
-      await flushUpdates()
+      await tick()
 
       expect(event.defaultPrevented).toBe(true)
       editor.getEditorState().read(() => {

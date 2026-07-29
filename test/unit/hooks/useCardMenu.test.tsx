@@ -11,6 +11,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
+import { tick } from '#/utils/test-editor'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useCardMenu } from '@/hooks/useCardMenu'
@@ -170,9 +171,7 @@ describe('useCardMenu', () => {
     await act(async () => {
       result.current.insert(INSERT_TEST_COMMAND, { insertParams: { html: '<p>x</p>' } })
       // the insert's own update is not discrete; let its commit land
-      await new Promise<void>((resolve) => {
-        setTimeout(resolve, 0)
-      })
+      await tick()
     })
 
     expect(dispatchCommandSpy).toHaveBeenCalledWith(INSERT_TEST_COMMAND, { html: '<p>x</p>' })

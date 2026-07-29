@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { OpenCardInEditModePayload } from '@/plugins/behaviour/types'
 
 import { mockComposerContext } from '#/utils/composer-context'
-import { createTestEditor, updateEditor } from '#/utils/test-editor'
+import { createTestEditor, tick, updateEditor } from '#/utils/test-editor'
 import { AudioNode, INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
 import { BookmarkNode, INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
 import { ButtonNode, INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
@@ -39,9 +39,7 @@ async function mountRegistrar(editor: LexicalEditor) {
   mockComposerContext(editor)
   renderHook(() => CardInsertPlugin())
   // allow React effects to register commands
-  await new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
+  await tick()
 }
 
 /** Registers an INSERT_CARD_COMMAND capture listener; returns the captured

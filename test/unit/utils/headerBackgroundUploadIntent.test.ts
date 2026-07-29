@@ -2,7 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { updateEditor } from '#/utils/test-editor'
+import { tick, updateEditor } from '#/utils/test-editor'
 import { $createBaseHeaderNode, BaseHeaderNode } from '@/nodes/base/nodes/header/HeaderNode'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import { headerBackgroundUploadIntent } from '@/utils/upload-intent'
@@ -10,12 +10,6 @@ import { headerBackgroundUploadIntent } from '@/utils/upload-intent'
 vi.mock('@/utils/getImageDimensions', () => ({
   getImageDimensions: vi.fn(),
 }))
-
-function flushMacrotask(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
 
 describe('headerBackgroundUploadIntent', () => {
   let editor: LexicalEditor
@@ -67,7 +61,7 @@ describe('headerBackgroundUploadIntent', () => {
     })
 
     const resultUrl = await headerBackgroundUploadIntent({ files: [file], nodeKey, editor, upload })
-    await flushMacrotask()
+    await tick()
 
     expect(resultUrl).toBe('https://example.com/new.png')
     expect(upload).toHaveBeenCalledExactlyOnceWith([file])
@@ -86,7 +80,7 @@ describe('headerBackgroundUploadIntent', () => {
     const nodeKey = await createHeaderNodeInEditor()
 
     const resultUrl = await headerBackgroundUploadIntent({ files: [file], nodeKey, editor, upload })
-    await flushMacrotask()
+    await tick()
 
     expect(resultUrl).toBeUndefined()
     expect(getImageDimensions).not.toHaveBeenCalled()

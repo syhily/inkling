@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
-import { createTestEditor } from '#/utils/test-editor'
+import { createTestEditor, tick } from '#/utils/test-editor'
 import InklingHostIntegrationContext, {
   type CardConfig,
   type FileUploader,
@@ -17,12 +17,6 @@ import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function flushMacrotask(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
 
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected and not editing unless a test says otherwise
@@ -160,7 +154,7 @@ describe('FileNodeComponent', () => {
     renderComponent(nodeKey, { fileSrc: '/existing.pdf', initialFile: file, upload })
 
     // the mount effect runs synchronously; give any async work a chance to fire
-    await flushMacrotask()
+    await tick()
     expect(upload).not.toHaveBeenCalled()
   })
 

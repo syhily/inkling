@@ -3,19 +3,13 @@ import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type Lex
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
-import { createTestEditor, updateEditor } from '#/utils/test-editor'
+import { createTestEditor, tick, updateEditor } from '#/utils/test-editor'
 import { $createHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { ExternalControlPlugin } from '@/plugins/ExternalControlPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function flushUpdates() {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
 
 describe('ExternalControlPlugin', () => {
   let editor: LexicalEditor
@@ -83,7 +77,7 @@ describe('ExternalControlPlugin', () => {
     api.insertParagraphAtTop()
     api.insertParagraphAtBottom()
 
-    await flushUpdates()
+    await tick()
 
     editor.getEditorState().read(() => {
       expect($getRoot().getChildrenSize()).toBe(2)

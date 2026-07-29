@@ -3,15 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { TKHandle } from '@/plugins/behaviour/tkHandle'
 
+import { tick } from '#/utils/test-editor'
 import { $createTKNode, TKNode } from '@/nodes/base'
 import { $createHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { applyTkHoverHighlight, registerTkNodeTracking } from '@/plugins/behaviour/tk-tracking'
-
-function flushUpdates() {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
 
 function createFakeHandle() {
   return {
@@ -55,7 +50,7 @@ describe('registerTkNodeTracking', () => {
       tkKey = tk.getKey()
       paragraphKey = paragraph.getKey()
     })
-    await flushUpdates()
+    await tick()
 
     expect(handle.addEditorTkNode).toHaveBeenCalledWith(editor.getKey(), paragraphKey, tkKey)
   })
@@ -72,7 +67,7 @@ describe('registerTkNodeTracking', () => {
       $getRoot().append(paragraph)
       tkKey = tk.getKey()
     })
-    await flushUpdates()
+    await tick()
 
     // the card key wins over the node's own top-level element — the card's
     // indicator owns every TK inside it
@@ -91,12 +86,12 @@ describe('registerTkNodeTracking', () => {
       $getRoot().append(paragraph)
       tkKey = tk.getKey()
     })
-    await flushUpdates()
+    await tick()
 
     editor.update(() => {
       $getRoot().clear()
     })
-    await flushUpdates()
+    await tick()
 
     expect(handle.removeEditorTkNode).toHaveBeenCalledWith(editor.getKey(), tkKey)
   })
@@ -128,7 +123,7 @@ describe('applyTkHoverHighlight', () => {
       $getRoot().append(paragraph)
       keys = { paragraphKey: paragraph.getKey(), tkKey: tk.getKey() }
     })
-    await flushUpdates()
+    await tick()
     return keys
   }
 
@@ -158,7 +153,7 @@ describe('applyTkHoverHighlight', () => {
       $getRoot().append(rule)
       cardKey = rule.getKey()
     })
-    await flushUpdates()
+    await tick()
 
     // the parent is a decorator: the highlight must not touch the TK elements
     applyTkHoverHighlight(editor, cardKey, [tkKey], classes, true)

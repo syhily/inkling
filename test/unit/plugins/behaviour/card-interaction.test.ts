@@ -1,6 +1,7 @@
 import { $getRoot, CLICK_COMMAND, createEditor, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { tick } from '#/utils/test-editor'
 import { $createButtonNode, ButtonNode } from '@/nodes/ButtonNode'
 import { registerCardInteraction } from '@/plugins/behaviour/card-interaction'
 import { createCardSelectionStore, type CardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
@@ -38,9 +39,7 @@ describe('card interaction', () => {
       $getRoot().append(card)
       cardKey = card.getKey()
     })
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0)
-    })
+    await tick()
 
     container = document.createElement('div')
     target = document.createElement('span')

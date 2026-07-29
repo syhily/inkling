@@ -7,6 +7,7 @@ import { $createParagraphNode, $getRoot, createCommand, DecoratorNode } from 'le
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { tick } from '#/utils/test-editor'
 import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
 import { $isInklingCard, InklingDecoratorNode } from '@/nodes/base/InklingDecoratorNode'
 import { getCardDecorateTarget } from '@/nodes/cards/card-decorate'
@@ -226,18 +227,7 @@ describe('host card insert integration', () => {
     mockComposerContext(target)
     renderHook(() => CardInsertPlugin())
     // allow React effects to register commands
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0)
-    })
-  }
-
-  // Lexical 0.46 commits updates on a microtask — a macrotask wait drains the
-  // queue so assertions see the settled state (same idiom as
-  // test/unit/plugins/behaviour/at-link.test.ts).
-  function flushUpdates() {
-    return new Promise<void>((resolve) => {
-      setTimeout(resolve, 0)
-    })
+    await tick()
   }
 
   it('dispatches the host insert command and lands the node in the document', async () => {
@@ -250,10 +240,12 @@ describe('host card insert integration', () => {
       $getRoot().append(paragraph)
       paragraph.select()
     })
-    await flushUpdates()
+    // Lexical 0.46 commits updates on a microtask — tick() drains the queue so
+    // assertions see the settled state
+    await tick()
 
     expect(editor.dispatchCommand(INSERT_MUSIC_PLAYER_COMMAND, { src: 'https://example.com/song.mp3' })).toBe(true)
-    await flushUpdates()
+    await tick()
 
     editor.getEditorState().read(() => {
       const inserted = $getRoot()

@@ -27,6 +27,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { KeyboardNavigationDeps } from '@/plugins/behaviour/keyboard-navigation/types'
 
+import { tick } from '#/utils/test-editor'
 import { $isAsideNode, AsideNode } from '@/nodes/AsideNode'
 import { $createHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { createCardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
@@ -34,14 +35,6 @@ import { registerModifierCommand } from '@/plugins/behaviour/keyboard-navigation
 
 const deps: KeyboardNavigationDeps = {
   store: createCardSelectionStore(),
-}
-
-// Lexical 0.46 commits updates on a microtask — drain the queue after each
-// dispatch so state assertions see the settled editor.
-function flushUpdates() {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
 }
 
 function createTestEditor() {
@@ -139,7 +132,9 @@ describe('registerModifierCommand', () => {
       appendParagraphWithCaret(editor, 'hello')
 
       editor.dispatchCommand(KEY_DOWN_COMMAND, keyEvent({ key: '3', ctrlKey: true, altKey: true }))
-      await flushUpdates()
+      // Lexical 0.46 commits updates on a microtask — tick() drains the queue
+      // after each dispatch so state assertions see the settled editor
+      await tick()
 
       editor.getEditorState().read(() => {
         const first = $getRoot().getFirstChild()
@@ -157,7 +152,7 @@ describe('registerModifierCommand', () => {
 
       const cycle = async () => {
         editor.dispatchCommand(KEY_DOWN_COMMAND, keyEvent({ code: 'KeyQ', ctrlKey: true }))
-        await flushUpdates()
+        await tick()
         return editor.getEditorState().read(() => $getRoot().getFirstChild())
       }
 
@@ -207,7 +202,7 @@ describe('registerModifierCommand', () => {
       })
 
       editor.dispatchCommand(KEY_DOWN_COMMAND, keyEvent({ code: 'KeyL', ctrlKey: true }))
-      await flushUpdates()
+      await tick()
 
       editor.getEditorState().read(() => {
         const first = $getRoot().getFirstChild()
@@ -226,7 +221,7 @@ describe('registerModifierCommand', () => {
       })
 
       editor.dispatchCommand(KEY_DOWN_COMMAND, keyEvent({ key: 'ArrowDown', metaKey: true }))
-      await flushUpdates()
+      await tick()
 
       editor.getEditorState().read(() => {
         const selection = $getSelection()
@@ -243,7 +238,7 @@ describe('registerModifierCommand', () => {
       })
 
       editor.dispatchCommand(KEY_DOWN_COMMAND, keyEvent({ key: 'ArrowUp', metaKey: true }))
-      await flushUpdates()
+      await tick()
 
       editor.getEditorState().read(() => {
         const selection = $getSelection()

@@ -9,6 +9,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { tick } from '#/utils/test-editor'
 import { $isHorizontalRuleNode, HorizontalRuleNode, INSERT_HORIZONTAL_RULE_COMMAND } from '@/nodes/HorizontalRuleNode'
 import {
   $insertHorizontalRule,
@@ -16,12 +17,6 @@ import {
   registerHorizontalRuleScan,
   resolveDividerScanTarget,
 } from '@/plugins/behaviour/horizontal-rule'
-
-function flushUpdates() {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
 
 describe('horizontal-rule behaviour', () => {
   let editor: LexicalEditor
@@ -60,7 +55,7 @@ describe('horizontal-rule behaviour', () => {
       editor.update(() => {
         result = $insertHorizontalRule()
       })
-      await flushUpdates()
+      await tick()
 
       expect(result).toBe(true)
       editor.getEditorState().read(() => {
@@ -82,7 +77,7 @@ describe('horizontal-rule behaviour', () => {
       editor.update(() => {
         $insertHorizontalRule()
       })
-      await flushUpdates()
+      await tick()
 
       editor.getEditorState().read(() => {
         const types = $getRoot()
@@ -116,7 +111,7 @@ describe('horizontal-rule behaviour', () => {
       selectInFirstParagraph()
 
       expect(editor.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined)).toBe(true)
-      await flushUpdates()
+      await tick()
 
       editor.getEditorState().read(() => {
         expect($isHorizontalRuleNode($getRoot().getFirstChild())).toBe(true)
@@ -146,7 +141,7 @@ describe('horizontal-rule behaviour', () => {
       })
       selectInFirstParagraph(3)
       // let the paragraph render so the native caret can be set on its text
-      await flushUpdates()
+      await tick()
 
       // the guard reads the native caret — set it directly (jsdom's selection
       // reconciliation needs a focused editor, which unit editors are not)
@@ -206,7 +201,7 @@ describe('horizontal-rule behaviour', () => {
         $getRoot().append(paragraph)
         paragraph.select()
       })
-      await flushUpdates()
+      await tick()
 
       editor.update(() => {
         const paragraph = $getRoot().getFirstChild()
@@ -216,7 +211,7 @@ describe('horizontal-rule behaviour', () => {
           text.select(3, 3)
         }
       })
-      await flushUpdates()
+      await tick()
 
       editor.getEditorState().read(() => {
         expect($isHorizontalRuleNode($getRoot().getFirstChild())).toBe(true)

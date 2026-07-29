@@ -2,7 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { updateEditor } from '#/utils/test-editor'
+import { tick, updateEditor } from '#/utils/test-editor'
 import { ImageNode, $createImageNode, type ImageNode as ImageNodeType } from '@/nodes/ImageNode'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import { imageUploadIntent } from '@/utils/upload-intent'
@@ -10,12 +10,6 @@ import { imageUploadIntent } from '@/utils/upload-intent'
 vi.mock('@/utils/getImageDimensions', () => ({
   getImageDimensions: vi.fn(),
 }))
-
-function flushMacrotask(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
 
 describe('imageUploadIntent', () => {
   let editor: LexicalEditor
@@ -49,7 +43,7 @@ describe('imageUploadIntent', () => {
     const nodeKey = await createImageNodeInEditor()
 
     await imageUploadIntent({ files: [file], nodeKey, editor, upload })
-    await flushMacrotask()
+    await tick()
 
     expect(createObjectURLSpy).toHaveBeenCalledExactlyOnceWith(file)
     expect(revokeObjectURLSpy).toHaveBeenCalledExactlyOnceWith('blob://image-preview')

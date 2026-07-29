@@ -10,15 +10,9 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { updateEditor } from '#/utils/test-editor'
+import { tick, updateEditor } from '#/utils/test-editor'
 import { $createHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { focusEditorAt, insertParagraphAt, lastNodeIsDecorator } from '@/plugins/behaviour/external-control'
-
-function flushUpdates() {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
 
 describe('external-control', () => {
   let editor: LexicalEditor
@@ -44,7 +38,7 @@ describe('external-control', () => {
     })
 
     insertParagraphAt(editor, 'top')
-    await flushUpdates()
+    await tick()
 
     editor.getEditorState().read(() => {
       const children = $getRoot().getChildren()
@@ -57,7 +51,7 @@ describe('external-control', () => {
 
   it('insertParagraphAt top appends into an empty document', async () => {
     insertParagraphAt(editor, 'top', { focus: false })
-    await flushUpdates()
+    await tick()
 
     editor.getEditorState().read(() => {
       expect($getRoot().getChildren()).toHaveLength(1)
@@ -70,7 +64,7 @@ describe('external-control', () => {
     })
 
     insertParagraphAt(editor, 'bottom')
-    await flushUpdates()
+    await tick()
 
     editor.getEditorState().read(() => {
       expect($getRoot().getChildren()).toHaveLength(2)
@@ -97,7 +91,7 @@ describe('external-control', () => {
     })
 
     focusEditorAt(editor, { position: 'bottom' })
-    await flushUpdates()
+    await tick()
 
     editor.getEditorState().read(() => {
       const selection = $getSelection()

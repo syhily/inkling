@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createNodeSelection, $getRoot, $setSelection, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { tick } from '#/utils/test-editor'
 import { $isImageNode } from '@/nodes/base/nodes/image/ImageNode'
 import { $createImageNode, ImageNode, type ImageNode as ImageNodeInstance } from '@/nodes/ImageNode'
 import { createCardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
@@ -30,14 +31,6 @@ describe('selector-insertion', () => {
     registerSelectorInsertCommands(editor)
   })
 
-  // Lexical 0.46 commits updates on a microtask — a macrotask wait drains the
-  // queue so assertions see the settled state
-  function flushUpdates() {
-    return new Promise<void>((resolve) => {
-      setTimeout(resolve, 0)
-    })
-  }
-
   function insertPlaceholder(): string {
     let key = ''
     editor.update(() => {
@@ -53,11 +46,13 @@ describe('selector-insertion', () => {
 
   it('inserts the picked card and removes the placeholder (gif command)', async () => {
     const placeholderKey = insertPlaceholder()
-    await flushUpdates()
+    // Lexical 0.46 commits updates on a microtask — tick() drains the queue so
+    // assertions see the settled state
+    await tick()
 
     const picked = { src: 'https://example.com/picked.gif', fileName: 'picked.gif' }
     expect(editor.dispatchCommand(INSERT_FROM_GIF_COMMAND, picked)).toBe(true)
-    await flushUpdates()
+    await tick()
 
     editor.getEditorState().read(() => {
       // exactly one image card: the picked one — the placeholder is gone
@@ -72,11 +67,11 @@ describe('selector-insertion', () => {
 
   it('inserts the picked card and removes the placeholder (library command)', async () => {
     const placeholderKey = insertPlaceholder()
-    await flushUpdates()
+    await tick()
 
     const picked = { src: 'https://example.com/library.jpg', fileName: 'library.jpg' }
     expect(editor.dispatchCommand(INSERT_FROM_LIBRARY_COMMAND, picked)).toBe(true)
-    await flushUpdates()
+    await tick()
 
     editor.getEditorState().read(() => {
       const images = $getRoot().getChildren().filter($isImageNode)

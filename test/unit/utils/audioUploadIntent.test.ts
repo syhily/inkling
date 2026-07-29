@@ -2,7 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { updateEditor } from '#/utils/test-editor'
+import { tick, updateEditor } from '#/utils/test-editor'
 import { AudioNode, $createAudioNode, type AudioNode as AudioNodeType } from '@/nodes/AudioNode'
 import { getAudioMetadata } from '@/utils/getAudioMetadata'
 import { audioUploadIntent } from '@/utils/upload-intent'
@@ -10,12 +10,6 @@ import { audioUploadIntent } from '@/utils/upload-intent'
 vi.mock('@/utils/getAudioMetadata', () => ({
   getAudioMetadata: vi.fn(),
 }))
-
-function flushMacrotask(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
 
 describe('audioUploadIntent', () => {
   let editor: LexicalEditor
@@ -49,7 +43,7 @@ describe('audioUploadIntent', () => {
     const nodeKey = await createAudioNodeInEditor()
 
     await audioUploadIntent({ files: [file], nodeKey, editor, upload })
-    await flushMacrotask()
+    await tick()
 
     expect(createObjectURLSpy).toHaveBeenCalledExactlyOnceWith(file)
     expect(revokeObjectURLSpy).toHaveBeenCalledExactlyOnceWith('blob://audio-preview')

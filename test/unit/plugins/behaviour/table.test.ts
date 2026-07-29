@@ -12,6 +12,7 @@ import {
 } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
+import { tick } from '#/utils/test-editor'
 import { FootnoteRefNode, $createFootnoteRefNode } from '@/nodes/footnote/FootnoteRefNode'
 import { MathInlineNode, $createMathInlineNode } from '@/nodes/math/MathInlineNode'
 import {
@@ -54,9 +55,7 @@ function insertTable(editor: LexicalEditor, payload: Parameters<typeof $insertTa
 
 async function dispatch(editor: LexicalEditor, payload: object) {
   editor.dispatchCommand(INSERT_TABLE_COMMAND, payload)
-  await new Promise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
+  await tick()
 }
 
 function $firstTable(): TableNode {

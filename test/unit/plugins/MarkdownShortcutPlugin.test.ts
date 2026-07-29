@@ -19,7 +19,7 @@ import {
 } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
-import { createTestEditor } from '#/utils/test-editor'
+import { createTestEditor, tick } from '#/utils/test-editor'
 import { DEFAULT_TRANSFORMERS, ELEMENT_TRANSFORMERS } from '@/markdown/transformers'
 import { BASIC_TRANSFORMERS, MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
 import { $createCodeBlockNode, $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
@@ -169,9 +169,7 @@ describe('MarkdownShortcutPlugin transformers', () => {
       // headless editors defer non-discrete commits; flush per keystroke so
       // each one lands as its own update, the way real typing reaches the
       // markdown shortcut listener
-      await new Promise((resolve) => {
-        setTimeout(resolve, 0)
-      })
+      await tick()
     }
 
     editor.getEditorState().read(() => {

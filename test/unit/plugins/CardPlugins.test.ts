@@ -3,7 +3,7 @@ import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_CRITI
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
-import { createTestEditor, updateEditor } from '#/utils/test-editor'
+import { createTestEditor, tick, updateEditor } from '#/utils/test-editor'
 import { INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
 import { INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
 import { INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
@@ -23,9 +23,7 @@ async function setupPluginTest(editor: LexicalEditor) {
   mockComposerContext(editor)
   renderHook(() => CardInsertPlugin())
   // allow React effects to register commands
-  await new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
+  await tick()
 }
 
 describe('Card insert commands (CardInsertPlugin)', () => {
