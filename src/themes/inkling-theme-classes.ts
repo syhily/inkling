@@ -14,8 +14,13 @@ export interface InklingThemeClasses extends EditorThemeClasses {
   tkHighlighted?: string
 }
 
+export type InklingCustomThemeKey = 'atLink' | 'atLinkIcon' | 'atLinkSearch' | 'tk' | 'tkHighlighted'
+
 /** Reads one custom theme key's classes as a list (empty-string entries dropped — classList.add('') throws). */
-export function themeClassList(theme: EditorThemeClasses, key: keyof InklingThemeClasses): string[] {
+export function themeClassList(theme: EditorThemeClasses, key: InklingCustomThemeKey): string[] {
+  // the literal key union resolves through the NAMED members (the upstream
+  // index signature only poisons a general-string computed read — keyof
+  // InklingThemeClasses would be `string` and hand the read back to any)
   const value = (theme as InklingThemeClasses)[key]
   return (value || '').split(' ').filter(Boolean)
 }
