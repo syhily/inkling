@@ -5,6 +5,7 @@ import React from 'react'
 
 import { $insertHtmlDocument } from '@/html/html-to-lexical/insert-html'
 import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
+import { debounce } from '@/utils/timing'
 
 export const HtmlOutputPlugin = ({
   html = '',
@@ -17,7 +18,6 @@ export const HtmlOutputPlugin = ({
 }) => {
   const [editor] = useLexicalComposerContext()
   const isFirstRender = React.useRef(true)
-  const debounceTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const exportHtml = React.useCallback(() => {
     editor.read(() => {
@@ -35,13 +35,15 @@ export const HtmlOutputPlugin = ({
     })
   }, [editor, setHtml])
 
+  // trailing-edge debounce from the timing module (cancel on unmount),
+  // not a hand-rolled timer ref
+  const debouncedExportHtml = React.useMemo(() => debounce(exportHtml, debounceMs), [exportHtml, debounceMs])
+
   React.useEffect(() => {
     return () => {
-      if (debounceTimer.current !== null) {
-        clearTimeout(debounceTimer.current)
-      }
+      debouncedExportHtml.cancel()
     }
-  }, [])
+  }, [debouncedExportHtml])
 
   React.useLayoutEffect(() => {
     if (!isFirstRender.current) {
@@ -76,17 +78,11 @@ export const HtmlOutputPlugin = ({
 
   const onChange = React.useCallback(() => {
     if (debounceMs > 0) {
-      if (debounceTimer.current !== null) {
-        clearTimeout(debounceTimer.current)
-      }
-      debounceTimer.current = setTimeout(() => {
-        debounceTimer.current = null
-        exportHtml()
-      }, debounceMs)
+      debouncedExportHtml()
       return
     }
     exportHtml()
-  }, [debounceMs, exportHtml])
+  }, [debounceMs, debouncedExportHtml, exportHtml])
 
   return <OnChangePlugin onChange={onChange} />
 }
