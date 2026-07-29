@@ -10,14 +10,9 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $createHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { focusEditorAt, insertParagraphAt, lastNodeIsDecorator } from '@/plugins/behaviour/external-control'
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 function flushUpdates() {
   return new Promise<void>((resolve) => {

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { GifData, GifProviderConfig } from '@/utils/services/gif'
 
+import { tick } from '#/utils/test-editor'
 import {
   createGifBrowser,
   reduceGifKey,
@@ -502,13 +503,6 @@ function deferred<T>() {
     reject = rej
   })
   return { promise, resolve, reject }
-}
-
-/** Flush the microtask queue so settled promises land — no wall-clock sleeps. */
-function tick(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
 }
 
 function pageOutcome(gifs: GifData[], next: string | null = null): GifFetchOutcome {

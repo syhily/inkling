@@ -1,6 +1,5 @@
 import type { Klass, LexicalCommand, LexicalEditor, LexicalNode } from 'lexical'
 
-import { createHeadlessEditor } from '@lexical/headless'
 import { renderHook } from '@testing-library/react'
 import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_CRITICAL } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -8,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { OpenCardInEditModePayload } from '@/plugins/behaviour/types'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor, updateEditor } from '#/utils/test-editor'
 import { AudioNode, INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
 import { BookmarkNode, INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
 import { ButtonNode, INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
@@ -34,20 +34,6 @@ import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function createTestEditor(nodes: Array<Klass<LexicalNode> | object>) {
-  return createHeadlessEditor({
-    namespace: 'test',
-    nodes: nodes as Array<Klass<LexicalNode>>,
-    onError: () => {},
-  })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 async function mountRegistrar(editor: LexicalEditor) {
   mockComposerContext(editor)
@@ -155,7 +141,7 @@ describe('CardInsertPlugin', () => {
   it.each(INSERT_MATRIX)(
     '$card: a valid dataset returns true and fires INSERT_CARD_COMMAND with the wrapper node and matrix openInEditMode',
     async ({ node, command, dataset, openInEditMode, requiresRangeSelection }) => {
-      editor = createTestEditor([node])
+      editor = createTestEditor({ nodes: [node] })
       await mountRegistrar(editor)
 
       if (requiresRangeSelection) {
@@ -188,7 +174,7 @@ describe('CardInsertPlugin', () => {
   it.each(INSERT_MATRIX.filter(({ card }) => ['header', 'html', 'video'].includes(card)))(
     '$card: non-object payloads return false and never fire INSERT_CARD_COMMAND',
     async ({ node, command }) => {
-      editor = createTestEditor([node])
+      editor = createTestEditor({ nodes: [node] })
       await mountRegistrar(editor)
 
       const { ref, removeListener } = captureInsertCard(editor)
@@ -202,7 +188,7 @@ describe('CardInsertPlugin', () => {
   )
 
   it('bookmark: with no range selection the insert command returns false and never fires INSERT_CARD_COMMAND', async () => {
-    editor = createTestEditor([BookmarkNode])
+    editor = createTestEditor({ nodes: [BookmarkNode] })
     await mountRegistrar(editor)
 
     const { ref, removeListener } = captureInsertCard(editor)
@@ -214,7 +200,7 @@ describe('CardInsertPlugin', () => {
   })
 
   it("audio: claims INSERT_MEDIA_COMMAND for the 'audio' type and re-dispatches INSERT_AUDIO_COMMAND", async () => {
-    editor = createTestEditor([AudioNode])
+    editor = createTestEditor({ nodes: [AudioNode] })
     await mountRegistrar(editor)
 
     const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
@@ -226,7 +212,7 @@ describe('CardInsertPlugin', () => {
   })
 
   it("video: claims INSERT_MEDIA_COMMAND for the 'video' type and re-dispatches INSERT_VIDEO_COMMAND", async () => {
-    editor = createTestEditor([VideoNode])
+    editor = createTestEditor({ nodes: [VideoNode] })
     await mountRegistrar(editor)
 
     const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
@@ -238,7 +224,7 @@ describe('CardInsertPlugin', () => {
   })
 
   it("media: a 'file'-type payload is claimed by no handler (the File gap, pinned as current behavior)", async () => {
-    editor = createTestEditor([AudioNode, ImageNode, VideoNode])
+    editor = createTestEditor({ nodes: [AudioNode, ImageNode, VideoNode] })
     await mountRegistrar(editor)
 
     const file = new File([], 'test.pdf', { type: 'application/pdf' })
@@ -246,7 +232,7 @@ describe('CardInsertPlugin', () => {
   })
 
   it('header: registers its insert command once per mount, not once per render', async () => {
-    editor = createTestEditor([HeaderNode])
+    editor = createTestEditor({ nodes: [HeaderNode] })
     mockComposerContext(editor)
     const registerSpy = vi.spyOn(editor, 'registerCommand')
 

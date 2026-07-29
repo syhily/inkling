@@ -2,16 +2,11 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import { VideoNode, $createVideoNode, $isVideoNode, INSERT_VIDEO_COMMAND } from '@/nodes/VideoNode'
 
 const editorNodes = [VideoNode]
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 describe('VideoNode', () => {
   let editor: LexicalEditor

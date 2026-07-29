@@ -5,15 +5,12 @@ import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexica
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
+import { createTestEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { ToggleNode, $createToggleNode } from '@/nodes/ToggleNode'
 import { ToggleNodeComponent } from '@/nodes/ToggleNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
-
-function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes: [ToggleNode], onError: () => {} })
-}
 
 function createLexicalComposerContext(editor: LexicalEditor): [LexicalEditor, { getTheme: () => undefined }] {
   return [editor, { getTheme: () => undefined }]
@@ -62,7 +59,7 @@ describe('ToggleNodeComponent', () => {
   let contentEditor: LexicalEditor
 
   beforeEach(() => {
-    editor = createTestEditor()
+    editor = createTestEditor({ nodes: [ToggleNode], headless: false })
     headingEditor = createEditor({ namespace: 'toggle-heading', nodes: MINIMAL_NODES, onError: () => {} })
     contentEditor = createEditor({ namespace: 'toggle-content', nodes: MINIMAL_NODES, onError: () => {} })
   })

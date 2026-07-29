@@ -4,13 +4,13 @@ import {
   $createTextNode,
   $getRoot,
   COMMAND_PRIORITY_LOW,
-  createEditor,
   PASTE_COMMAND,
   type LexicalEditor,
 } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor, updateEditor } from '#/utils/test-editor'
 import { MIME_TEXT_HTML, MIME_TEXT_PLAIN, PASTE_MARKDOWN_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
 import { RestrictContentPlugin } from '@/plugins/RestrictContentPlugin'
 
@@ -22,25 +22,12 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function createTestEditor() {
-  return createEditor({
-    namespace: 'test',
-    onError: () => {},
-  })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
-
 describe('RestrictContentPlugin', () => {
   let editor: LexicalEditor
 
   beforeEach(() => {
     vi.clearAllMocks()
-    editor = createTestEditor()
+    editor = createTestEditor({ headless: false })
   })
 
   it('mount smoke: the registered transform applies the restriction on update', async () => {

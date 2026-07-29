@@ -1,9 +1,10 @@
 import { render, screen } from '@testing-library/react'
-import { $createTextNode, createEditor, type LexicalEditor, type LexicalNodeConfig } from 'lexical'
+import { $createTextNode, type LexicalEditor } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor } from '#/utils/test-editor'
 import CardContext, { type CardContextValue } from '@/context/CardContext'
 import { TKHandleContext } from '@/context/TKHandleContext'
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
@@ -18,10 +19,6 @@ vi.mock('@lexical/react/LexicalComposerContext', () => ({
 vi.mock('../../../src/hooks/useInklingTextEntity', () => ({
   useInklingTextEntity: vi.fn(),
 }))
-
-function createTestEditor(nodes: LexicalNodeConfig[] = []): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes, onError: () => {} })
-}
 
 function createCardContextValue(overrides: Partial<CardContextValue> = {}): CardContextValue {
   return {
@@ -57,7 +54,7 @@ describe('TKPlugin', () => {
   })
 
   it('throws when TKNode is not registered', () => {
-    editor = createTestEditor()
+    editor = createTestEditor({ headless: false })
     mockComposerEditor(editor)
 
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -71,7 +68,7 @@ describe('TKPlugin', () => {
   })
 
   it('returns null when in nested editor', () => {
-    editor = createTestEditor([TKNode, ExtendedTextNode])
+    editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
     mockComposerEditor(editor)
 
     const cardValue = createCardContextValue({ nodeKey: 'card-1' })
@@ -81,7 +78,7 @@ describe('TKPlugin', () => {
   })
 
   it('returns null when editor has no root parent', () => {
-    editor = createTestEditor([TKNode, ExtendedTextNode])
+    editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
     mockComposerEditor(editor)
 
     // Ensure getRootElement returns null
@@ -94,7 +91,7 @@ describe('TKPlugin', () => {
   })
 
   it('renders TK indicators for top-level editor', () => {
-    editor = createTestEditor([TKNode, ExtendedTextNode])
+    editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
 
@@ -123,7 +120,7 @@ describe('TKPlugin', () => {
   })
 
   it('does not render indicator when parent container is missing', () => {
-    editor = createTestEditor([TKNode, ExtendedTextNode])
+    editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
 
@@ -143,7 +140,7 @@ describe('TKPlugin', () => {
   })
 
   it('removes editor on unmount', () => {
-    editor = createTestEditor([TKNode, ExtendedTextNode])
+    editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
 
@@ -157,7 +154,7 @@ describe('TKPlugin', () => {
   })
 
   it('getTKMatch returns null for text without TK', () => {
-    editor = createTestEditor([TKNode, ExtendedTextNode])
+    editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
 
@@ -169,7 +166,7 @@ describe('TKPlugin', () => {
   })
 
   it('getTKMatch finds TK in text', () => {
-    editor = createTestEditor([TKNode, ExtendedTextNode])
+    editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
 
@@ -186,7 +183,7 @@ describe('TKPlugin', () => {
   })
 
   it('getTKMatch rejects TK preceded by word character', () => {
-    editor = createTestEditor([TKNode, ExtendedTextNode])
+    editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
 
@@ -198,7 +195,7 @@ describe('TKPlugin', () => {
   })
 
   it('createTKNode creates a TKNode with text content', async () => {
-    editor = createTestEditor([TKNode, ExtendedTextNode])
+    editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
 

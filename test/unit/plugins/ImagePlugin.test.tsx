@@ -1,8 +1,9 @@
 import { act, renderHook } from '@testing-library/react'
-import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
+import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor } from '#/utils/test-editor'
 import { ImageNode, INSERT_IMAGE_COMMAND } from '@/nodes/ImageNode'
 import { INSERT_MEDIA_COMMAND } from '@/plugins/behaviour/clipboard-protocol'
 import { INSERT_CARD_COMMAND } from '@/plugins/behaviour/commands'
@@ -12,20 +13,12 @@ vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
 
-function createTestEditor(): LexicalEditor {
-  return createEditor({
-    namespace: 'test',
-    nodes: [ImageNode],
-    onError: () => {},
-  })
-}
-
 describe('Image insert commands (CardInsertPlugin)', () => {
   let editor: LexicalEditor
 
   beforeEach(() => {
     vi.clearAllMocks()
-    editor = createTestEditor()
+    editor = createTestEditor({ nodes: [ImageNode], headless: false })
     mockComposerContext(editor)
   })
 

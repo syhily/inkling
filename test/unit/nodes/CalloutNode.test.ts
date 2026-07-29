@@ -2,16 +2,11 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { CalloutNode, $createCalloutNode, $isCalloutNode, INSERT_CALLOUT_COMMAND } from '@/nodes/CalloutNode'
 import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 
 const editorNodes = [CalloutNode]
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 describe('CalloutNode', () => {
   let editor: LexicalEditor

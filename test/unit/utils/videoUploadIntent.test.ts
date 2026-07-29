@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $createVideoNode, VideoNode, type VideoNode as VideoNodeType } from '@/nodes/VideoNode'
 import { getImageDimensions } from '@/utils/getImageDimensions'
 import {
@@ -15,12 +16,6 @@ import {
 vi.mock('@/utils/getImageDimensions', () => ({
   getImageDimensions: vi.fn(),
 }))
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 const META: VideoFlowMetadata = { duration: 12, width: 640, height: 360, mimeType: 'video/mp4' }
 const META_WITH_BLOB: VideoFlowMetadata = { ...META, thumbnailBlob: new Blob(['thumb'], { type: 'image/jpeg' }) }

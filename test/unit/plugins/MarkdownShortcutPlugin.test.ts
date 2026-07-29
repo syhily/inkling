@@ -1,6 +1,5 @@
 import type { LexicalEditor } from 'lexical'
 
-import { createHeadlessEditor } from '@lexical/headless'
 import { LinkNode } from '@lexical/link'
 import { $isListItemNode, $isListNode, ListItemNode, ListNode } from '@lexical/list'
 import {
@@ -20,22 +19,19 @@ import {
 } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
+import { createTestEditor } from '#/utils/test-editor'
 import { DEFAULT_TRANSFORMERS, ELEMENT_TRANSFORMERS } from '@/markdown/transformers'
 import { BASIC_TRANSFORMERS, MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
 import { $createCodeBlockNode, $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $isHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 
-function createTestEditor() {
-  return createHeadlessEditor({
+function importMarkdown(markdown: string, transformers: Transformer[] = DEFAULT_TRANSFORMERS): LexicalEditor {
+  const editor = createTestEditor({
     nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, CodeBlockNode, HorizontalRuleNode],
-    onError(error) {
+    onError: (error) => {
       throw error
     },
   })
-}
-
-function importMarkdown(markdown: string, transformers: Transformer[] = DEFAULT_TRANSFORMERS): LexicalEditor {
-  const editor = createTestEditor()
   editor.update(
     () => {
       $convertFromMarkdownString(markdown, transformers)
@@ -116,7 +112,12 @@ describe('MarkdownShortcutPlugin transformers', () => {
   })
 
   it('exports code blocks with their language', () => {
-    const editor = createTestEditor()
+    const editor = createTestEditor({
+      nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, CodeBlockNode, HorizontalRuleNode],
+      onError: (error) => {
+        throw error
+      },
+    })
     editor.update(
       () => {
         $getRoot().append($createCodeBlockNode({ code: 'const x = 1', language: 'js' }))
@@ -147,7 +148,12 @@ describe('MarkdownShortcutPlugin transformers', () => {
     // plan 052 Step 1: pins the transformer trigger semantics — the fence
     // fires on the space keystroke after ```lang, producing a code block in
     // edit mode with the language from the match capture
-    const editor = createTestEditor()
+    const editor = createTestEditor({
+      nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, CodeBlockNode, HorizontalRuleNode],
+      onError: (error) => {
+        throw error
+      },
+    })
     registerRichText(editor)
     const unregisterMarkdown = registerMarkdownShortcuts(editor, DEFAULT_TRANSFORMERS)
 

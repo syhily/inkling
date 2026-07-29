@@ -14,6 +14,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $isGalleryNode, GalleryNode } from '@/nodes/GalleryNode'
 import { $createImageNode, $isImageNode, ImageNode } from '@/nodes/ImageNode'
 import {
@@ -42,12 +43,6 @@ function createDomLinkedEditor(): { editor: LexicalEditor; rootElement: HTMLDivE
   document.body.appendChild(rootElement)
   editor.setRootElement(rootElement)
   return { editor, rootElement }
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
-  return new Promise((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
 }
 
 interface DocumentKeys {

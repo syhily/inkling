@@ -20,6 +20,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { drainEnqueuedUpdates, tick } from '#/utils/test-editor'
 import {
   $createAtLinkNode,
   $createAtLinkSearchNode,
@@ -124,25 +125,12 @@ function createTestEditor() {
 }
 
 // Lexical 0.46 commits updates on a microtask, and listener-triggered
-// cascade updates defer again — a macrotask wait drains the whole queue so
-// assertions see the settled state (the previous renderHook harness got the
-// same drain for free from act()).
-function flushUpdates() {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
-
-async function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  await new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-  await flushUpdates()
-}
-
+// cascade updates defer again — the drain/tick pair from the test-editor
+// harness drains the whole queue so assertions see the settled state (the
+// previous renderHook harness got the same drain for free from act()).
 async function dispatchCommand(editor: LexicalEditor, ...args: Parameters<LexicalEditor['dispatchCommand']>) {
   const result = editor.dispatchCommand(...args)
-  await flushUpdates()
+  await tick()
   return result
 }
 
@@ -240,7 +228,7 @@ async function buildSingleParagraph(
   segments: TextSegment[],
   caret: { segment: number; anchorOffset: number; focusOffset?: number } | 'element',
 ) {
-  await updateEditor(editor, () => {
+  await drainEnqueuedUpdates(editor, () => {
     const root = $getRoot()
     root.clear()
     const paragraph = $createParagraphNode()
@@ -264,7 +252,7 @@ async function buildSingleParagraph(
 // Builds 'hello ' + at-link(searchText) + ' world' in one paragraph with a
 // collapsed caret inside the search node, so the session focuses the at-link.
 async function buildAtLinkParagraph(editor: LexicalEditor, searchText = 'abc') {
-  await updateEditor(editor, () => {
+  await drainEnqueuedUpdates(editor, () => {
     const root = $getRoot()
     root.clear()
     const paragraph = $createParagraphNode()
@@ -331,7 +319,7 @@ describe('at-link behaviour (headless registrations)', () => {
     // update cycles don't read a stale DOM selection back (see harness
     // notes above).
     window.getSelection()?.removeAllRanges()
-    await flushUpdates()
+    await tick()
   }
 
   beforeEach(() => {
@@ -486,7 +474,7 @@ describe('at-link behaviour (headless registrations)', () => {
         await buildSingleParagraph(editor, [{ text: 'hello ', format }], { segment: 0, anchorOffset: 6 })
       }
       expect(await dispatchCommand(editor, CONTROLLED_TEXT_INSERTION_COMMAND, '@')).toBe(true)
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const atLinkNode = $nodesOfType(AtLinkNode)[0]
         const searchNode = atLinkNode.getChildAtIndex(1)
         if (searchNode instanceof AtLinkSearchNode) {
@@ -529,7 +517,7 @@ describe('at-link behaviour (headless registrations)', () => {
 
   describe('at-link shape transform', () => {
     it('inserts a missing ZWNJ first child', async () => {
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const root = $getRoot()
         root.clear()
         const paragraph = $createParagraphNode()
@@ -544,7 +532,7 @@ describe('at-link behaviour (headless registrations)', () => {
     })
 
     it('replaces a non-search child carrying text with a search node and consolidates', async () => {
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const root = $getRoot()
         root.clear()
         const paragraph = $createParagraphNode()
@@ -561,7 +549,7 @@ describe('at-link behaviour (headless registrations)', () => {
     })
 
     it('consolidates multiple search nodes into one with concatenated text', async () => {
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const root = $getRoot()
         root.clear()
         const paragraph = $createParagraphNode()
@@ -587,7 +575,7 @@ describe('at-link behaviour (headless registrations)', () => {
       expect(lastSession()?.focusedNode?.getKey()).toBe(focusedKey)
       expect(lastSession()?.query).toBe('')
 
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const searchNode = $nodesOfType(AtLinkNode)[0].getChildAtIndex(1)
         if (searchNode instanceof AtLinkSearchNode) {
           searchNode.setTextContent('abc')
@@ -600,7 +588,7 @@ describe('at-link behaviour (headless registrations)', () => {
     })
 
     it('removes the at-link when the selection moves outside it', async () => {
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const root = $getRoot()
         root.clear()
         const first = $createParagraphNode()
@@ -611,7 +599,7 @@ describe('at-link behaviour (headless registrations)', () => {
       })
       expect(await dispatchCommand(editor, CONTROLLED_TEXT_INSERTION_COMMAND, '@')).toBe(true)
 
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const first = $getRoot().getFirstChild()
         if ($isElementNode(first)) {
           const text = first.getFirstChild()
@@ -629,7 +617,7 @@ describe('at-link behaviour (headless registrations)', () => {
     })
 
     it('removes unfocused at-link nodes, keeping only the focused one', async () => {
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const root = $getRoot()
         root.clear()
         const first = $createParagraphNode()
@@ -656,7 +644,7 @@ describe('at-link behaviour (headless registrations)', () => {
     it('removes all at-link nodes when the selection is not a range selection', async () => {
       await buildSingleParagraph(editor, [], 'element')
       expect(await dispatchCommand(editor, CONTROLLED_TEXT_INSERTION_COMMAND, '@')).toBe(true)
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const searchNode = $nodesOfType(AtLinkNode)[0].getChildAtIndex(1)
         if (searchNode instanceof AtLinkSearchNode) {
           searchNode.setTextContent('abc')
@@ -664,7 +652,7 @@ describe('at-link behaviour (headless registrations)', () => {
         }
       })
 
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         $setSelection(null)
       })
 
@@ -679,7 +667,7 @@ describe('at-link behaviour (headless registrations)', () => {
       // editor.isComposing() is not reachable through jsdom composition
       // events — spy the bail condition directly
       const composing = vi.spyOn(editor, 'isComposing').mockReturnValue(true)
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const first = $getRoot().getFirstChild()
         if ($isElementNode(first)) {
           const text = first.getFirstChild()
@@ -695,7 +683,7 @@ describe('at-link behaviour (headless registrations)', () => {
       )
 
       composing.mockRestore()
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const first = $getRoot().getFirstChild()
         if ($isElementNode(first)) {
           const text = first.getFirstChild()
@@ -719,7 +707,7 @@ describe('at-link behaviour (headless registrations)', () => {
       // the normalization (see harness notes above).
       window.getSelection()?.setBaseAndExtent(document.body, 0, document.body, 0)
 
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const atLinkNode = $nodesOfType(AtLinkNode)[0]
         const zwnjNode = atLinkNode.getFirstChild()
         if (zwnjNode instanceof ZWNJNode) {
@@ -740,7 +728,7 @@ describe('at-link behaviour (headless registrations)', () => {
       // this isolates the listener's empty-search removal branch
       window.getSelection()?.setBaseAndExtent(document.body, 1, document.body, 1)
 
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const zwnjNode = $nodesOfType(AtLinkNode)[0].getFirstChild()
         if (zwnjNode instanceof ZWNJNode) {
           zwnjNode.select(0, 0)
@@ -760,7 +748,7 @@ describe('at-link behaviour (headless registrations)', () => {
       anchor: { segment: 'before' | 'search' | 'after'; offset: number },
       focus: { segment: 'before' | 'search' | 'after'; offset: number },
     ) {
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const atLinkNode = $nodesOfType(AtLinkNode)[0]
         const searchNode = atLinkNode.getChildAtIndex(1)
         const before = atLinkNode.getPreviousSibling()
@@ -841,7 +829,7 @@ describe('at-link behaviour (headless registrations)', () => {
     it('replaces an in-text at-link with a link node carrying the @ format, and resets the session', async () => {
       await buildSingleParagraph(editor, [{ text: 'hello ', format: 1 }], { segment: 0, anchorOffset: 6 })
       expect(await dispatchCommand(editor, CONTROLLED_TEXT_INSERTION_COMMAND, '@')).toBe(true)
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const searchNode = $nodesOfType(AtLinkNode)[0].getChildAtIndex(1)
         if (searchNode instanceof AtLinkSearchNode) {
           searchNode.setTextContent('Emo')
@@ -850,7 +838,7 @@ describe('at-link behaviour (headless registrations)', () => {
       })
 
       let result: AtLinkCommitResult | null = null
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         result = $commitAtLinkSelection($nodesOfType(AtLinkNode)[0], {
           label: 'Emoji autocomplete',
           value: 'https://example.com/emoji',
@@ -875,7 +863,7 @@ describe('at-link behaviour (headless registrations)', () => {
       expect(await dispatchCommand(editor, CONTROLLED_TEXT_INSERTION_COMMAND, '@')).toBe(true)
 
       let result: AtLinkCommitResult | null = null
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         result = $commitAtLinkSelection($nodesOfType(AtLinkNode)[0], {
           label: 'Inkling',
           value: 'https://inkling.local',
@@ -892,7 +880,7 @@ describe('at-link behaviour (headless registrations)', () => {
 
     it('returns null for a detached at-link node', async () => {
       let result: AtLinkCommitResult | null | 'unset' = 'unset'
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         result = $commitAtLinkSelection($createAtLinkNode(), { label: 'x', value: 'https://example.com' })
       })
 

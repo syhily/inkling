@@ -10,26 +10,13 @@ import {
 } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
+import { createTestEditor, updateEditor } from '#/utils/test-editor'
 import { $fireFenceKeyboardShortcut, $insertCodeBlockForShortcut } from '@/markdown/card-shortcuts'
 import { $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
 
 // Direct pins for the enter/tab fence trigger body (the card-shortcut seam).
 // The full keyboard dispatch paths — enter, tab, and the isNested guard — are
 // pinned in test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts.
-
-function createTestEditor(): LexicalEditor {
-  return createEditor({
-    namespace: 'test',
-    nodes: [CodeBlockNode],
-    onError: () => {},
-  })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 async function setupParagraph(editor: LexicalEditor, text: string) {
   await updateEditor(editor, () => {
@@ -55,7 +42,7 @@ function fireShortcut(editor: LexicalEditor, event: KeyboardEvent): Promise<bool
 
 describe('$fireFenceKeyboardShortcut', () => {
   it('replaces a fence paragraph with a selected code block in edit mode', async () => {
-    const editor = createTestEditor()
+    const editor = createTestEditor({ nodes: [CodeBlockNode], headless: false })
     await setupParagraph(editor, '```js')
     const event = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true })
 
@@ -76,7 +63,7 @@ describe('$fireFenceKeyboardShortcut', () => {
   })
 
   it('takes the full rest of the line as the language', async () => {
-    const editor = createTestEditor()
+    const editor = createTestEditor({ nodes: [CodeBlockNode], headless: false })
     await setupParagraph(editor, '```js extra')
 
     const result = await fireShortcut(editor, new KeyboardEvent('keydown', { key: 'Tab', cancelable: true }))
@@ -90,7 +77,7 @@ describe('$fireFenceKeyboardShortcut', () => {
   })
 
   it('fires on a bare fence with an empty language', async () => {
-    const editor = createTestEditor()
+    const editor = createTestEditor({ nodes: [CodeBlockNode], headless: false })
     await setupParagraph(editor, '```')
 
     const result = await fireShortcut(editor, new KeyboardEvent('keydown', { key: 'Enter', cancelable: true }))
@@ -104,7 +91,7 @@ describe('$fireFenceKeyboardShortcut', () => {
   })
 
   it('does not fire on a non-fence line', async () => {
-    const editor = createTestEditor()
+    const editor = createTestEditor({ nodes: [CodeBlockNode], headless: false })
     await setupParagraph(editor, 'hello')
     const event = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true })
 
@@ -120,7 +107,7 @@ describe('$fireFenceKeyboardShortcut', () => {
   })
 
   it('does not fire without a text-node selection', async () => {
-    const editor = createTestEditor()
+    const editor = createTestEditor({ nodes: [CodeBlockNode], headless: false })
     await updateEditor(editor, () => {
       $getRoot().append($createParagraphNode())
     })

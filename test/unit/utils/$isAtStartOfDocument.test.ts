@@ -9,13 +9,8 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $isAtStartOfDocument } from '@/utils/$isAtStartOfDocument'
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 describe('$isAtStartOfDocument', () => {
   let editor: LexicalEditor

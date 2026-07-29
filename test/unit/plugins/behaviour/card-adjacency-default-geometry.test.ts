@@ -1,6 +1,7 @@
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { $getVisuallyAdjacentCard } from '@/plugins/behaviour/card-adjacency'
 
@@ -17,12 +18,6 @@ function createTestEditor() {
     namespace: 'test',
     nodes: DEFAULT_GEOMETRY_TEST_NODES as [],
     onError: () => {},
-  })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
   })
 }
 

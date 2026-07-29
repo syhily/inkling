@@ -3,25 +3,13 @@ import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type Lex
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor, updateEditor } from '#/utils/test-editor'
 import { $createHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { ExternalControlPlugin } from '@/plugins/ExternalControlPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function createTestEditor() {
-  return createEditor({
-    namespace: 'test',
-    onError: () => {},
-  })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 function flushUpdates() {
   return new Promise<void>((resolve) => {
@@ -34,7 +22,7 @@ describe('ExternalControlPlugin', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    editor = createTestEditor()
+    editor = createTestEditor({ headless: false })
   })
 
   it('registers an API object via registerAPI', async () => {

@@ -10,6 +10,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { ImageNode } from '@/nodes/ImageNode'
 import { INSERT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { $insertSnippet, isSnippetDataset } from '@/plugins/behaviour/snippet-insertion'
@@ -20,12 +21,6 @@ const SNIPPET_TEST_NODES = [ImageNode]
 
 function createTestEditor(): LexicalEditor {
   return createEditor({ namespace: 'test', nodes: SNIPPET_TEST_NODES, onError: () => {} })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
-  return new Promise((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
 }
 
 function seedParagraph(editor: LexicalEditor, text = ''): Promise<void> {

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { tick } from '#/utils/test-editor'
 import { createSearchCoordinator, type SearchResult, type SearchScheduler } from '@/hooks/search-coordinator'
 
 function deferred<T>() {
@@ -14,13 +15,6 @@ function deferred<T>() {
 
 function resultsFor(label: string): SearchResult[] {
   return [{ label, items: [{ title: `${label} result`, url: `https://example.com/${label}` }] }]
-}
-
-/** Flush the microtask queue so settled promises land — no wall-clock sleeps. */
-function tick(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
 }
 
 interface ManualScheduler extends SearchScheduler {

@@ -11,6 +11,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { tick, updateEditor } from '#/utils/test-editor'
 import { AsideNode } from '@/nodes/AsideNode'
 import {
   $cycleQuoteBlock,
@@ -26,19 +27,6 @@ const TEST_NODES = [ListNode, ListItemNode, HeadingNode, QuoteNode, AsideNode]
 
 function createTestEditor(nodes = TEST_NODES): LexicalEditor {
   return createEditor({ namespace: 'test', nodes, onError: () => {} })
-}
-
-/** One macrotask — lets the update listener fire after a committed update. */
-function tick(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
-  return new Promise((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
 }
 
 async function buildParagraphWithSelection(editor: LexicalEditor, text = 'hello') {

@@ -9,6 +9,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { $ensureParagraphAfterCard } from '@/utils/$ensureParagraphAfterCard'
 
@@ -18,12 +19,6 @@ const TEST_NODES = [ImageNode]
 
 function createTestEditor(): LexicalEditor {
   return createEditor({ namespace: 'test', nodes: TEST_NODES, onError: () => {} })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
-  return new Promise((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
 }
 
 describe('$ensureParagraphAfterCard', () => {

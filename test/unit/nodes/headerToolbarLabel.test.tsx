@@ -5,16 +5,13 @@ import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexica
 import { describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
+import { createTestEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { CARD_DECLARATIONS } from '@/nodes/cards'
 import { getCardToolbarLabel } from '@/nodes/cards/card-facts'
 import HeaderNodeComponent from '@/nodes/header/HeaderNodeComponent'
 import { $createHeaderNode, HeaderNode } from '@/nodes/HeaderNode'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
-
-function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes: [HeaderNode], onError: () => {} })
-}
 
 function createLexicalComposerContext(editor: LexicalEditor): [LexicalEditor, { getTheme: () => undefined }] {
   return [editor, { getTheme: () => undefined }]
@@ -73,7 +70,7 @@ describe('card toolbar labels as a derived view over the declarations', () => {
   })
 
   it('renders the declaration label on the card toolbars ("header", not "signup")', async () => {
-    const editor = createTestEditor()
+    const editor = createTestEditor({ nodes: [HeaderNode], headless: false })
     const nodeKey = await addHeaderNode(editor)
     const collaborationValue = createCollaborationContext()
     const composerValue = createLexicalComposerContext(editor)

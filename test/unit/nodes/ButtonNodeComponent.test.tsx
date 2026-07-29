@@ -1,9 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
+import { $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { ButtonNode } from '@/nodes/ButtonNode'
 import { ButtonNodeComponent } from '@/nodes/ButtonNodeComponent'
@@ -21,10 +22,6 @@ class ResizeObserverMock {
 }
 
 global.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver
-
-function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes: [ButtonNode], onError: () => {} })
-}
 
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected and editing unless a test says otherwise
@@ -75,7 +72,7 @@ describe('ButtonNodeComponent', () => {
   let editor: LexicalEditor
 
   beforeEach(async () => {
-    editor = createTestEditor()
+    editor = createTestEditor({ nodes: [ButtonNode], headless: false })
     mockComposerContext(editor)
   })
 

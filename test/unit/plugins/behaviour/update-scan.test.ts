@@ -14,6 +14,7 @@ import {
 } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { drainEnqueuedUpdates } from '#/utils/test-editor'
 import { registerUpdateScan, type UpdateScanOptions } from '@/plugins/behaviour/update-scan'
 
 // Unit pins for the update-scan registration policy (@/plugins/behaviour/update-scan)
@@ -30,26 +31,13 @@ function createTestEditor(): LexicalEditor {
   })
 }
 
-// Awaits the outer commit, then drains the listener-enqueued scan commit:
-// a scan scheduled from the update listener begins only after the outer
-// commit's deferred callbacks (Lexical's $triggerEnqueuedUpdates tail) and
-// itself commits in a later microtask, so a macrotask hop flushes both.
-async function update(editor: LexicalEditor, updateFn: () => void, options?: { tag: string }): Promise<void> {
-  await new Promise<void>((resolve) => {
-    editor.update(updateFn, { ...options, onUpdate: () => resolve() })
-  })
-  await new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
-
 describe('registerUpdateScan', () => {
   let editor: LexicalEditor
   let textKey: NodeKey
 
   beforeEach(async () => {
     editor = createTestEditor()
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const paragraph = $createParagraphNode()
       const text = $createTextNode('initial')
       paragraph.append(text)
@@ -79,7 +67,7 @@ describe('registerUpdateScan', () => {
   it.each([HISTORIC_TAG, HISTORY_PUSH_TAG, HISTORY_MERGE_TAG])('skips commits tagged %s', async (tag) => {
     const { scan } = registerScan()
 
-    await update(editor, () => dirtyTheText('changed'), { tag })
+    await drainEnqueuedUpdates(editor, () => dirtyTheText('changed'), { tag })
 
     expect(scan).not.toHaveBeenCalled()
   })
@@ -87,7 +75,7 @@ describe('registerUpdateScan', () => {
   it('fires the scan on a clean typing commit, with the triggering commit’s dirty sets', async () => {
     const { scan } = registerScan()
 
-    await update(editor, () => dirtyTheText('changed'))
+    await drainEnqueuedUpdates(editor, () => dirtyTheText('changed'))
 
     expect(scan).toHaveBeenCalledTimes(1)
     const [dirtyLeaves] = scan.mock.calls[0] ?? []
@@ -97,7 +85,7 @@ describe('registerUpdateScan', () => {
   it('skips selection-only commits in leaves mode', async () => {
     const { scan } = registerScan({ dirty: 'leaves' })
 
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const paragraph = $getRoot().getFirstChild()
       if ($isParagraphNode(paragraph)) {
         paragraph.select(0, 0)
@@ -110,7 +98,7 @@ describe('registerUpdateScan', () => {
   it('skips selection-only commits in leaves-or-elements mode', async () => {
     const { scan } = registerScan({ dirty: 'leaves-or-elements' })
 
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const paragraph = $getRoot().getFirstChild()
       if ($isParagraphNode(paragraph)) {
         paragraph.select(0, 0)
@@ -124,7 +112,7 @@ describe('registerUpdateScan', () => {
     const { scan } = registerScan({ dirty: 'leaves' })
 
     // appending an empty paragraph dirties root (element) and no leaf
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $getRoot().append($createParagraphNode())
     })
 
@@ -134,7 +122,7 @@ describe('registerUpdateScan', () => {
   it('fires on element-only commits in leaves-or-elements mode', async () => {
     const { scan } = registerScan({ dirty: 'leaves-or-elements' })
 
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $getRoot().append($createParagraphNode())
     })
 
@@ -148,13 +136,13 @@ describe('registerUpdateScan', () => {
     vi.spyOn(editor, 'isComposing').mockReturnValue(true)
     const { scan } = registerScan()
 
-    await update(editor, () => dirtyTheText('composing'))
+    await drainEnqueuedUpdates(editor, () => dirtyTheText('composing'))
 
     expect(scan).not.toHaveBeenCalled()
 
     vi.restoreAllMocks()
 
-    await update(editor, () => dirtyTheText('done'))
+    await drainEnqueuedUpdates(editor, () => dirtyTheText('done'))
 
     expect(scan).toHaveBeenCalledTimes(1)
   })
@@ -179,7 +167,7 @@ describe('registerUpdateScan', () => {
       })
     })
 
-    await update(editor, () => dirtyTheText('changed'))
+    await drainEnqueuedUpdates(editor, () => dirtyTheText('changed'))
 
     expect(scan).toHaveBeenCalledTimes(1)
     // the trigger commit is untagged; the scan’s own commit carries the tag
@@ -194,7 +182,7 @@ describe('registerUpdateScan', () => {
     })
     const { scan } = registerScan()
 
-    await update(editor, () => dirtyTheText('changed'))
+    await drainEnqueuedUpdates(editor, () => dirtyTheText('changed'))
 
     expect(scan).toHaveBeenCalledTimes(1)
     expect(passes.flat().every((tag) => !tag.startsWith('history'))).toBe(true)
@@ -204,7 +192,7 @@ describe('registerUpdateScan', () => {
     const { scan, cleanup } = registerScan()
     cleanup()
 
-    await update(editor, () => dirtyTheText('changed'))
+    await drainEnqueuedUpdates(editor, () => dirtyTheText('changed'))
 
     expect(scan).not.toHaveBeenCalled()
   })

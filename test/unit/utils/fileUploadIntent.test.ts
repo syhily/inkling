@@ -2,14 +2,9 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { FileNode, $createFileNode, type FileNode as FileNodeType } from '@/nodes/FileNode'
 import { fileUploadIntent } from '@/utils/upload-intent'
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 describe('fileUploadIntent', () => {
   let editor: LexicalEditor

@@ -2,16 +2,11 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $getRoot, $createTextNode, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { BookmarkNode, $createBookmarkNode, $isBookmarkNode, INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
 import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 
 const editorNodes = [BookmarkNode]
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 describe('BookmarkNode', () => {
   let editor: LexicalEditor

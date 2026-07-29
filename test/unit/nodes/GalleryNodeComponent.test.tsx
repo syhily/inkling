@@ -1,11 +1,12 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
+import { $getNodeByKey, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { GalleryImage } from '@/types/gallery'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext, {
   type CardConfig,
   type FileUploader,
@@ -27,10 +28,6 @@ vi.mock('@/utils/getImageDimensions', () => ({
 vi.mock('../../../src/components/ui/CardCaptionEditor', () => ({
   CardCaptionEditor: () => null,
 }))
-
-function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes: [GalleryNode], onError: () => {} })
-}
 
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected and not editing unless a test says otherwise
@@ -88,7 +85,7 @@ describe('GalleryNodeComponent', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    editor = createTestEditor()
+    editor = createTestEditor({ nodes: [GalleryNode], headless: false })
     mockComposerContext(editor)
     vi.mocked(getImageDimensions).mockResolvedValue({ width: 100, height: 100 })
     previewCount = 0
@@ -110,7 +107,7 @@ describe('GalleryNodeComponent', () => {
       <InklingHostIntegrationContext.Provider value={composerValue}>
         <CardSelectionStoreProvider>
           <GalleryNodeComponent
-            captionEditor={createTestEditor()}
+            captionEditor={createTestEditor({ nodes: [GalleryNode], headless: false })}
             captionEditorInitialState={undefined}
             nodeKey={nodeKey}
           />
@@ -286,7 +283,7 @@ describe('GalleryNodeComponent', () => {
         <InklingHostIntegrationContext.Provider value={composerValue}>
           <CardSelectionStoreProvider>
             <GalleryNodeComponent
-              captionEditor={createTestEditor()}
+              captionEditor={createTestEditor({ nodes: [GalleryNode], headless: false })}
               captionEditorInitialState={undefined}
               nodeKey={nodeKey}
             />

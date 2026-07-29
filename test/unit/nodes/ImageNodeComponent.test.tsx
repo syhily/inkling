@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
+import { $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext, {
   type CardConfig,
   type FileUploader,
@@ -24,10 +25,6 @@ vi.mock('@/utils/getImageDimensions', () => ({
 vi.mock('../../../src/components/ui/CardCaptionEditor', () => ({
   CardCaptionEditor: () => null,
 }))
-
-function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes: [ImageNode], onError: () => {} })
-}
 
 function flushMacrotask(): Promise<void> {
   return new Promise((resolve) => {
@@ -73,7 +70,7 @@ describe('ImageNodeComponent', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    editor = createTestEditor()
+    editor = createTestEditor({ nodes: [ImageNode], headless: false })
     mockComposerContext(editor)
     vi.mocked(getImageDimensions).mockResolvedValue({ width: 100, height: 200 })
     createObjectURLSpy = vi.spyOn(globalThis.URL, 'createObjectURL').mockReturnValue('blob:image-preview')

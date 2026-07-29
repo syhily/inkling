@@ -13,6 +13,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { FootnoteHandle } from '@/plugins/behaviour/footnoteHandle'
 
+import { drainEnqueuedUpdates } from '#/utils/test-editor'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import { $createFootnoteRefNode, $isFootnoteRefNode } from '@/nodes/footnote/FootnoteRefNode'
 import { $createFootnoteDefinitionNode } from '@/nodes/FootnoteDefinitionNode'
@@ -40,17 +41,6 @@ function createTestEditor(nodes: typeof DEFAULT_NODES = DEFAULT_NODES): LexicalE
     onError: (error) => {
       throw error
     },
-  })
-}
-
-// Awaits the outer commit, then drains listener-enqueued scan commits (same
-// double hop as update-scan.test.ts).
-async function update(editor: LexicalEditor, updateFn: () => void): Promise<void> {
-  await new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-  await new Promise((resolve) => {
-    setTimeout(resolve, 0)
   })
 }
 
@@ -98,7 +88,7 @@ describe('$syncFootnoteIndices (the renumber engine)', () => {
   })
 
   it('numbers refs by first-citation order and reorders the definition run to match', async () => {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: [{ ref: '9', cites: 'keyB' }] },
         {
@@ -121,7 +111,7 @@ describe('$syncFootnoteIndices (the renumber engine)', () => {
   })
 
   it('tails orphan definitions after the cited ones, keeping their stored order', async () => {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: [{ ref: '9', cites: 'keyA' }] },
         { kind: 'def', targetKey: 'keyC' },
@@ -137,7 +127,7 @@ describe('$syncFootnoteIndices (the renumber engine)', () => {
   })
 
   it('skips the whole sync when a ref targets a missing definition', async () => {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: [{ ref: '9', cites: 'missing' }] },
         { kind: 'def', targetKey: 'keyA' },
@@ -151,7 +141,7 @@ describe('$syncFootnoteIndices (the renumber engine)', () => {
   })
 
   it('skips when there are no definitions at all', async () => {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([{ kind: 'p', parts: [{ ref: '3', cites: 'keyA' }] }])
       $syncFootnoteIndices()
     })
@@ -160,7 +150,7 @@ describe('$syncFootnoteIndices (the renumber engine)', () => {
   })
 
   it('keeps a synced document untouched (idempotent)', async () => {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: [{ ref: '1', cites: 'keyA' }, ' text ', { ref: '2', cites: 'keyB' }] },
         { kind: 'def', targetKey: 'keyA' },
@@ -187,7 +177,7 @@ describe('$footnoteSyncSignature (the short-circuit)', () => {
 
   it('is unchanged by renumber-irrelevant edits and flipped by relevant ones', async () => {
     let refAKey = ''
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: [{ ref: '1', cites: 'keyA' }, ' prose ', { ref: '2', cites: 'keyB' }] },
         { kind: 'def', targetKey: 'keyA' },
@@ -198,13 +188,13 @@ describe('$footnoteSyncSignature (the short-circuit)', () => {
     const base = await signature()
 
     // irrelevant: typing elsewhere in the prose
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $getRoot().getLastChild()?.insertBefore($createParagraphNode())
     })
     expect(await signature()).toBe(base)
 
     // relevant: a ref digit changed (e.g. a paste wrote its own number)
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const ref = $collectFootnoteSnapshot().refs.find((node) => node.getKey() === refAKey)
       ref?.setTextContent('7')
     })
@@ -212,7 +202,7 @@ describe('$footnoteSyncSignature (the short-circuit)', () => {
   })
 
   it('flips when citation order changes even with the same digits', async () => {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: [{ ref: '1', cites: 'keyA' }] },
         { kind: 'p', parts: [{ ref: '2', cites: 'keyB' }] },
@@ -224,7 +214,7 @@ describe('$footnoteSyncSignature (the short-circuit)', () => {
 
     // move the keyB paragraph ahead of the keyA one: same texts, same
     // definitions, different citation order
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const first = $getRoot().getFirstChild()
       const second = first?.getNextSibling()
       if (first && second) {
@@ -254,7 +244,7 @@ describe('the registered renumber scan', () => {
 
   it('publishes when the signature flips and short-circuits unchanged signatures', async () => {
     // the buildDoc commit settles the scan: first publish of the maps
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: [{ ref: '1', cites: 'keyA' }, ' prose'] },
         { kind: 'def', targetKey: 'keyA' },
@@ -265,7 +255,7 @@ describe('the registered renumber scan', () => {
     const publishSpy = vi.spyOn(handle, 'publishMaps')
 
     // a renumber-irrelevant commit: same signature → no re-publish
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const first = $getRoot().getFirstChild()
       if ($isParagraphNode(first)) {
         first.append($createTextNode('x'))
@@ -275,7 +265,7 @@ describe('the registered renumber scan', () => {
 
     // a relevant commit (a paste wrote its own digit): the engine runs and
     // re-publishes — the digit is renumbered straight back
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $collectFootnoteSnapshot().refs[0].setTextContent('7')
     })
     expect(publishSpy).toHaveBeenCalledTimes(1)
@@ -283,7 +273,7 @@ describe('the registered renumber scan', () => {
   })
 
   it('renumbers after a renumber-relevant commit', async () => {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: [{ ref: '1', cites: 'keyA' }] },
         { kind: 'def', targetKey: 'keyA' },
@@ -292,7 +282,7 @@ describe('the registered renumber scan', () => {
     })
 
     // cite keyB ahead of keyA: the scan's engine renumbers both rows
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const first = $getRoot().getFirstChild()
       const paragraph = $createParagraphNode()
       paragraph.append($createFootnoteRefNode('9', 'keyB'))
@@ -313,7 +303,7 @@ describe('the caret trigger scan', () => {
     editor = createTestEditor()
     handle = createFootnoteHandle()
     registerFootnotes(editor, handle)
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const paragraph = $createParagraphNode()
       paragraph.append($createTextNode('hello'))
       $getRoot().append(paragraph)
@@ -323,7 +313,7 @@ describe('the caret trigger scan', () => {
 
   // Types text at the current collapsed caret through the public selection API.
   async function typeText(text: string): Promise<void> {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const selection = $getSelection()
       if ($isRangeSelection(selection)) {
         selection.insertText(text)
@@ -357,7 +347,7 @@ describe('the caret trigger scan', () => {
 
   it('`^ ` at line start triggers', async () => {
     // a fresh empty paragraph: the caret sits at the line start
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const paragraph = $createParagraphNode()
       $getRoot().getFirstChild()?.insertAfter(paragraph)
       paragraph.select()
@@ -392,7 +382,7 @@ describe('the caret trigger scan', () => {
   })
 
   it('does not trigger inside a table cell', async () => {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const cell = $createTableCellNode(TableCellHeaderStates.NO_STATUS)
       const cellParagraph = $createParagraphNode()
       cellParagraph.append($createTextNode('in a cell'))
@@ -412,7 +402,7 @@ describe('the caret trigger scan', () => {
 
   it('assigns the next distinct index to a second footnote', async () => {
     await typeText(' ^ ')
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const paragraph = $createParagraphNode()
       paragraph.append($createTextNode('again'))
       // the fresh paragraph must land before the definition run
@@ -446,7 +436,7 @@ describe('the doc-end run transform', () => {
   }
 
   it('moves a mid-document definition back to the end', async () => {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: ['before'] },
         { kind: 'def', targetKey: 'keyA' },
@@ -458,14 +448,14 @@ describe('the doc-end run transform', () => {
   })
 
   it('pulls a paragraph appended after the run back before it', async () => {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: ['prose'] },
         { kind: 'def', targetKey: 'keyA' },
         { kind: 'def', targetKey: 'keyB' },
       ])
     })
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       const paragraph = $createParagraphNode()
       paragraph.append($createTextNode('trailing'))
       $getRoot().append(paragraph)
@@ -483,7 +473,7 @@ describe('$removeFootnote', () => {
   })
 
   it('removes the definition and every ref citing it, leaving other footnotes alone', async () => {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: [{ ref: '1', cites: 'keyA' }, ' and ', { ref: '2', cites: 'keyB' }] },
         { kind: 'p', parts: [{ ref: '1', cites: 'keyA' }] },
@@ -493,7 +483,7 @@ describe('$removeFootnote', () => {
     })
 
     let removed = false
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       removed = $removeFootnote('keyA')
     })
 
@@ -503,7 +493,7 @@ describe('$removeFootnote', () => {
   })
 
   it('returns false for an empty or unknown targetKey', async () => {
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: [{ ref: '1', cites: 'keyA' }] },
         { kind: 'def', targetKey: 'keyA' },
@@ -511,7 +501,7 @@ describe('$removeFootnote', () => {
     })
 
     const results: boolean[] = []
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       results.push($removeFootnote(''), $removeFootnote('nope'))
     })
 
@@ -531,7 +521,7 @@ describe('registration guards', () => {
     const handle = createFootnoteHandle()
     registerFootnotes(bare, handle)
 
-    await update(bare, () => {
+    await drainEnqueuedUpdates(bare, () => {
       const paragraph = $createParagraphNode()
       paragraph.append($createTextNode('plain ^ '))
       $getRoot().append(paragraph)
@@ -550,7 +540,7 @@ describe('registration guards', () => {
     const handle = createFootnoteHandle()
     registerFootnotes(nested, handle)
 
-    await update(nested, () => {
+    await drainEnqueuedUpdates(nested, () => {
       const paragraph = $createParagraphNode()
       paragraph.append($createTextNode('nested ^ '))
       $getRoot().append(paragraph)
@@ -563,7 +553,7 @@ describe('registration guards', () => {
 describe('word-count semantics', () => {
   it('the ref digit is text content — it counts, matching kobato', async () => {
     const editor = createTestEditor()
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([
         { kind: 'p', parts: ['hello', { ref: '1', cites: 'keyA' }] },
         { kind: 'def', targetKey: 'keyA' },
@@ -580,7 +570,7 @@ describe('word-count semantics', () => {
 describe('FootnoteRefNode entity behaviour', () => {
   it('is atomic: text cannot be typed into it, and it serializes its targetKey', async () => {
     const editor = createTestEditor()
-    await update(editor, () => {
+    await drainEnqueuedUpdates(editor, () => {
       $buildDoc([{ kind: 'p', parts: [{ ref: '1', cites: 'keyA' }] }])
     })
 

@@ -2,18 +2,13 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type EditorConfig, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { AsideNode, $createAsideNode, $isAsideNode } from '@/nodes/AsideNode'
 
 const editorNodes = [AsideNode]
 const asideEditorConfig: EditorConfig = {
   namespace: 'test',
   theme: { aside: 'inkling-aside' },
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
 }
 
 describe('AsideNode', () => {

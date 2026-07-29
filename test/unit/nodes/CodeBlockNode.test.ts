@@ -2,16 +2,11 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { CodeBlockNode, $createCodeBlockNode, $isCodeBlockNode } from '@/nodes/CodeBlockNode'
 
 const editorNodes = [CodeBlockNode]
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 describe('CodeBlockNode', () => {
   let editor: LexicalEditor

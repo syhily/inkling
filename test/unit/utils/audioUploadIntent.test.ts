@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { AudioNode, $createAudioNode, type AudioNode as AudioNodeType } from '@/nodes/AudioNode'
 import { getAudioMetadata } from '@/utils/getAudioMetadata'
 import { audioUploadIntent } from '@/utils/upload-intent'
@@ -9,12 +10,6 @@ import { audioUploadIntent } from '@/utils/upload-intent'
 vi.mock('@/utils/getAudioMetadata', () => ({
   getAudioMetadata: vi.fn(),
 }))
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 function flushMacrotask(): Promise<void> {
   return new Promise((resolve) => {

@@ -5,15 +5,12 @@ import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexica
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
+import { createTestEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import HeaderNodeComponent from '@/nodes/header/HeaderNodeComponent'
 import { $createHeaderNode, HeaderNode } from '@/nodes/HeaderNode'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
-
-function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes: [HeaderNode], onError: () => {} })
-}
 
 function createLexicalComposerContext(editor: LexicalEditor): [LexicalEditor, { getTheme: () => undefined }] {
   return [editor, { getTheme: () => undefined }]
@@ -62,7 +59,7 @@ describe('HeaderNodeComponent', () => {
   let subheaderTextEditor: LexicalEditor
 
   beforeEach(() => {
-    editor = createTestEditor()
+    editor = createTestEditor({ nodes: [HeaderNode], headless: false })
     headerTextEditor = createEditor({ namespace: 'header-text', nodes: MINIMAL_NODES, onError: () => {} })
     subheaderTextEditor = createEditor({ namespace: 'subheader-text', nodes: MINIMAL_NODES, onError: () => {} })
   })

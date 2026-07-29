@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $getNodeByKey, $getRoot, type LexicalEditor, type LexicalNode } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { AudioNode, $createAudioNode } from '@/nodes/AudioNode'
 import {
   $isAudioNode,
@@ -14,12 +15,6 @@ import {
 import { FileNode, $createFileNode } from '@/nodes/FileNode'
 import { ImageNode, $createImageNode } from '@/nodes/ImageNode'
 import { runUploadIntent, type RunUploadIntentOptions } from '@/utils/upload-intent'
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 describe('runUploadIntent', () => {
   let editor: LexicalEditor

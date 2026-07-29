@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
+import { $getNodeByKey, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext, {
   type CardConfig,
   type FileUploader,
@@ -16,10 +17,6 @@ import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes: [AudioNode], onError: () => {} })
-}
 
 function flushMacrotask(): Promise<void> {
   return new Promise((resolve) => {
@@ -99,7 +96,7 @@ describe('AudioNodeComponent', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    editor = createTestEditor()
+    editor = createTestEditor({ nodes: [AudioNode], headless: false })
     mockComposerContext(editor)
     createObjectURLSpy = vi.spyOn(globalThis.URL, 'createObjectURL').mockReturnValue('blob:audio-preview')
     revokeObjectURLSpy = vi.spyOn(globalThis.URL, 'revokeObjectURL').mockImplementation(() => {})

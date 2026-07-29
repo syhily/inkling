@@ -12,6 +12,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $createBookmarkNode, BookmarkNode } from '@/nodes/BookmarkNode'
 import { $replaceCardWithParagraph } from '@/plugins/behaviour/card-removal'
 
@@ -19,12 +20,6 @@ import { $replaceCardWithParagraph } from '@/plugins/behaviour/card-removal'
 // approach as the drop-surgery tests).
 function createTestEditor(): LexicalEditor {
   return createEditor({ namespace: 'test', nodes: [BookmarkNode, LinkNode], onError: () => {} })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
-  return new Promise((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
 }
 
 describe('$replaceCardWithParagraph', () => {

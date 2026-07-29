@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey } from 'lexical'
+import { $getNodeByKey, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext, {
   type CardConfig,
   type FileUploader,
@@ -16,10 +17,6 @@ import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes: [FileNode], onError: () => {} })
-}
 
 function flushMacrotask(): Promise<void> {
   return new Promise((resolve) => {
@@ -80,7 +77,7 @@ describe('FileNodeComponent', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    editor = createTestEditor()
+    editor = createTestEditor({ nodes: [FileNode], headless: false })
     mockComposerContext(editor)
   })
 

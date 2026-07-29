@@ -10,6 +10,7 @@ import {
 } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { DESELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { registerMouseEvents } from '@/plugins/behaviour/registerMouseEvents'
@@ -19,12 +20,6 @@ function createTestEditor() {
     namespace: 'test',
     nodes: [ImageNode],
     onError: () => {},
-  })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
   })
 }
 

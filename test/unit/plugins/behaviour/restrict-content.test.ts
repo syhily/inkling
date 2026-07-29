@@ -1,4 +1,3 @@
-import { createHeadlessEditor } from '@lexical/headless'
 import { $createListItemNode, $createListNode, ListItemNode, ListNode } from '@lexical/list'
 import { $createHeadingNode, HeadingNode } from '@lexical/rich-text'
 import {
@@ -14,6 +13,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { createTestEditor } from '#/utils/test-editor'
 import { $enforceParagraphRestriction } from '@/plugins/behaviour/restrict-content'
 
 // The paragraphs-only restriction policy — pins for each cleaning leg
@@ -46,16 +46,6 @@ class TestDecoratorNode extends DecoratorNode<null> {
 
 function $createTestDecoratorNode(): TestDecoratorNode {
   return new TestDecoratorNode()
-}
-
-function createTestEditor(): LexicalEditor {
-  return createHeadlessEditor({
-    namespace: 'test',
-    nodes: [ListNode, ListItemNode, HeadingNode, TestDecoratorNode],
-    onError: (error) => {
-      throw error
-    },
-  })
 }
 
 // Builds the root children, places a collapsed caret at the document end,
@@ -94,7 +84,12 @@ describe('$enforceParagraphRestriction', () => {
   let editor: LexicalEditor
 
   beforeEach(() => {
-    editor = createTestEditor()
+    editor = createTestEditor({
+      nodes: [ListNode, ListItemNode, HeadingNode, TestDecoratorNode],
+      onError: (error) => {
+        throw error
+      },
+    })
   })
 
   it('strips decorator nodes and keeps the surrounding paragraphs', async () => {

@@ -1,9 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
+import { $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { HtmlNode } from '@/nodes/HtmlNode'
 import { HtmlNodeComponent } from '@/nodes/HtmlNodeComponent'
@@ -12,10 +13,6 @@ import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes: [HtmlNode], onError: () => {} })
-}
 
 // the store equivalent of the old per-test CardContext factory: the card is
 // selected and not editing unless a test says otherwise
@@ -62,7 +59,7 @@ describe('HtmlNodeComponent', () => {
   let editor: LexicalEditor
 
   beforeEach(async () => {
-    editor = createTestEditor()
+    editor = createTestEditor({ nodes: [HtmlNode], headless: false })
     mockComposerContext(editor)
   })
 

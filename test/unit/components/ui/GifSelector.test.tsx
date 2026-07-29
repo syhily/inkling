@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { GifData } from '@/utils/services/gif'
 
+import { tick } from '#/utils/test-editor'
 import GifSelector from '@/components/ui/GifSelector'
 import {
   createGifBrowser,
@@ -59,12 +60,6 @@ function createManualScheduler(): ManualScheduler {
       }
     },
   }
-}
-
-function tick(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
 }
 
 interface RenderSelectorOptions {

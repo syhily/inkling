@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import type { GalleryImage } from '@/types/gallery'
 
+import { updateEditor } from '#/utils/test-editor'
 import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import {
   GalleryNode,
@@ -15,12 +16,6 @@ import {
 } from '@/nodes/GalleryNode'
 
 const editorNodes = [GalleryNode]
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 describe('GalleryNode', () => {
   let editor: LexicalEditor

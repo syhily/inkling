@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import {
   HorizontalRuleNode,
@@ -11,12 +12,6 @@ import {
 } from '@/nodes/HorizontalRuleNode'
 
 const editorNodes = [HorizontalRuleNode]
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 describe('HorizontalRuleNode', () => {
   let editor: LexicalEditor

@@ -31,6 +31,7 @@ import {
 } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { createCardSelectionStore, type CardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
@@ -46,12 +47,6 @@ function createTestEditor(nodes: LexicalNodeConfig[] = KEYBOARD_TEST_NODES) {
     namespace: 'test',
     nodes,
     onError: () => {},
-  })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
   })
 }
 

@@ -9,6 +9,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { drainEnqueuedUpdates } from '#/utils/test-editor'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 // Characterization pins for the card-menu trigger module
 // (src/plugins/behaviour/card-menu-trigger.ts): the slash valid-press
@@ -47,20 +48,8 @@ function createTestEditor(): LexicalEditor {
 }
 
 // Lexical 0.46 commits updates on a microtask, and listener-triggered
-// cascade updates defer again — a macrotask wait drains the whole queue so
-// assertions see the settled state.
-function flushUpdates() {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
-
-async function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  await new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-  await flushUpdates()
-}
+// cascade updates defer again — the harness's drainEnqueuedUpdates drains
+// the whole queue so assertions see the settled state.
 
 // Build a single top-level paragraph carrying `text` ('' → no text child),
 // with an optional selection: text-point offsets on the text node when the
@@ -70,7 +59,7 @@ async function buildParagraph(
   text: string,
   caret: { anchorOffset: number; focusOffset?: number } | null = null,
 ) {
-  await updateEditor(editor, () => {
+  await drainEnqueuedUpdates(editor, () => {
     const root = $getRoot()
     root.clear()
     const paragraph = $createParagraphNode()
@@ -94,7 +83,7 @@ async function buildParagraph(
 // caret inside it — the selected node's top-level element is the list, not a
 // paragraph.
 async function buildListItem(editor: LexicalEditor, text: string, caretOffset = 0) {
-  await updateEditor(editor, () => {
+  await drainEnqueuedUpdates(editor, () => {
     const root = $getRoot()
     root.clear()
     const textNode = $createTextNode(text)
@@ -223,7 +212,7 @@ describe('card-menu-trigger', () => {
 
     it('rejects / when there is no range selection', async () => {
       await buildParagraph(editor, '', { anchorOffset: 0 })
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         $setSelection(null)
       })
       expect(isSlashTriggerPress(editor, slashPress())).toBe(false)
@@ -257,7 +246,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(getEditorTextNode(rootElement), { anchorOffset: 14 })
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toHaveLength(1)
       const verdict = verdicts[0]
@@ -270,7 +259,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(getEditorTextNode(rootElement), { anchorOffset: 1 })
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([{ type: 'query', query: '', commandParams: [], cursorRange: expect.any(Range) }])
     })
@@ -280,7 +269,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(getEditorTextNode(rootElement), { anchorOffset: 2 })
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([{ type: 'close' }])
     })
@@ -290,7 +279,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(getEditorTextNode(rootElement), { anchorOffset: 2 })
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([{ type: 'close' }])
     })
@@ -301,7 +290,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(textNode, { anchorOffset: 0, focusNode: textNode, focusOffset: 2 })
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([{ type: 'close' }])
     })
@@ -311,7 +300,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(getEditorTextNode(rootElement), { anchorOffset: 2 })
       verdicts = []
 
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         $setSelection(null)
       })
 
@@ -327,7 +316,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(paragraph)
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([{ type: 'close' }])
     })
@@ -343,7 +332,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(outside.firstChild)
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([{ type: 'close' }])
     })
@@ -359,7 +348,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(span)
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([])
     })
@@ -370,7 +359,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(getEditorTextNode(rootElement), { anchorOffset: 2 })
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([])
       composing.mockRestore()
@@ -385,13 +374,13 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(getEditorTextNode(rootElement), { anchorOffset: 2 })
       extra = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
       expect(extra).toEqual([{ type: 'query', query: 'x', commandParams: [], cursorRange: expect.any(Range) }])
 
       unregister()
       extra = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
       expect(extra).toEqual([])
     })
   })
@@ -413,7 +402,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(paragraph)
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([{ type: 'show', paragraph }])
     })
@@ -423,7 +412,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(getEditorTextNode(rootElement), { anchorOffset: 2 })
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([{ type: 'hide' }])
     })
@@ -434,7 +423,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(textNode, { anchorOffset: 0, focusNode: textNode, focusOffset: 3 })
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([{ type: 'hide' }])
     })
@@ -443,7 +432,7 @@ describe('card-menu-trigger', () => {
       await buildParagraph(editor, '', { anchorOffset: 0 })
       verdicts = []
 
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         $setSelection(null)
       })
 
@@ -461,7 +450,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(paragraph.firstChild)
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([{ type: 'hide' }])
     })
@@ -473,7 +462,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(outside)
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([{ type: 'hide' }])
     })
@@ -483,7 +472,7 @@ describe('card-menu-trigger', () => {
       mockNativeSelection(null)
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([{ type: 'hide' }])
     })
@@ -493,7 +482,7 @@ describe('card-menu-trigger', () => {
       await buildParagraph(editor, 'hello', { anchorOffset: 2 })
       verdicts = []
 
-      await updateEditor(editor, () => {})
+      await drainEnqueuedUpdates(editor, () => {})
 
       expect(verdicts).toEqual([])
       composing.mockRestore()
@@ -536,7 +525,7 @@ describe('card-menu-trigger', () => {
     })
 
     it('falls back to the caret verdict when the hover lands on other editor content', async () => {
-      await updateEditor(editor, () => {
+      await drainEnqueuedUpdates(editor, () => {
         const root = $getRoot()
         root.clear()
         const first = $createParagraphNode()

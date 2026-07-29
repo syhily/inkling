@@ -1,33 +1,14 @@
 import { act, renderHook } from '@testing-library/react'
-import {
-  $createLineBreakNode,
-  $createParagraphNode,
-  $createTextNode,
-  $getRoot,
-  createEditor,
-  type LexicalEditor,
-} from 'lexical'
+import { $createLineBreakNode, $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor, updateEditor } from '#/utils/test-editor'
 import { HtmlOutputPlugin } from '@/plugins/HtmlOutputPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function createTestEditor() {
-  return createEditor({
-    namespace: 'test',
-    onError: () => {},
-  })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 describe('HtmlOutputPlugin', () => {
   let editor: LexicalEditor
@@ -35,7 +16,7 @@ describe('HtmlOutputPlugin', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    editor = createTestEditor()
+    editor = createTestEditor({ headless: false })
     setHtml = vi.fn<(html: string) => void>()
 
     mockComposerContext(editor)

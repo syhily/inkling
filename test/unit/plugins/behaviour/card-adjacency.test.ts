@@ -15,6 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { CardNode } from '@/types/lexical-internals'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $createMarkdownNode, MarkdownNode } from '@/nodes/base'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import {
@@ -40,12 +41,6 @@ function createTestEditor(nodes: unknown[] = CARD_ADJACENCY_TEST_NODES) {
     namespace: 'test',
     nodes: nodes as [],
     onError: () => {},
-  })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
   })
 }
 

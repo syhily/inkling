@@ -1,9 +1,9 @@
-import { createHeadlessEditor } from '@lexical/headless'
 import { renderHook } from '@testing-library/react'
 import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_CRITICAL, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { createTestEditor, updateEditor } from '#/utils/test-editor'
 import { INSERT_AUDIO_COMMAND } from '@/nodes/AudioNode'
 import { INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
 import { INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
@@ -18,20 +18,6 @@ import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function createTestEditor(nodes: NonNullable<Parameters<typeof createHeadlessEditor>[0]>['nodes']) {
-  return createHeadlessEditor({
-    namespace: 'test',
-    nodes,
-    onError: () => {},
-  })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 async function setupPluginTest(editor: LexicalEditor) {
   mockComposerContext(editor)
@@ -51,7 +37,7 @@ describe('Card insert commands (CardInsertPlugin)', () => {
 
   it('audio insert dispatches INSERT_CARD_COMMAND for an audio dataset', async () => {
     const { AudioNode } = await import('@/nodes/AudioNode')
-    editor = createTestEditor([AudioNode])
+    editor = createTestEditor({ nodes: [AudioNode] })
     await setupPluginTest(editor)
 
     let dispatchedCardNode
@@ -73,7 +59,7 @@ describe('Card insert commands (CardInsertPlugin)', () => {
 
   it('bookmark insert requires a range selection and dispatches INSERT_CARD_COMMAND', async () => {
     const { BookmarkNode } = await import('@/nodes/BookmarkNode')
-    editor = createTestEditor([BookmarkNode])
+    editor = createTestEditor({ nodes: [BookmarkNode] })
     await setupPluginTest(editor)
 
     await updateEditor(editor, () => {
@@ -104,7 +90,7 @@ describe('Card insert commands (CardInsertPlugin)', () => {
 
   it('button insert rejects non-object payloads', async () => {
     const { ButtonNode } = await import('@/nodes/ButtonNode')
-    editor = createTestEditor([ButtonNode])
+    editor = createTestEditor({ nodes: [ButtonNode] })
     await setupPluginTest(editor)
 
     const dispatched = Reflect.apply(editor.dispatchCommand.bind(editor), editor, [INSERT_BUTTON_COMMAND, null])
@@ -113,7 +99,7 @@ describe('Card insert commands (CardInsertPlugin)', () => {
 
   it('callout insert dispatches INSERT_CARD_COMMAND for a callout dataset', async () => {
     const { CalloutNode } = await import('@/nodes/CalloutNode')
-    editor = createTestEditor([CalloutNode])
+    editor = createTestEditor({ nodes: [CalloutNode] })
     await setupPluginTest(editor)
 
     let dispatchedCardNode
@@ -135,7 +121,7 @@ describe('Card insert commands (CardInsertPlugin)', () => {
 
   it('file insert dispatches INSERT_CARD_COMMAND for a file dataset', async () => {
     const { FileNode } = await import('@/nodes/FileNode')
-    editor = createTestEditor([FileNode])
+    editor = createTestEditor({ nodes: [FileNode] })
     await setupPluginTest(editor)
 
     let dispatchedCardNode
@@ -157,7 +143,7 @@ describe('Card insert commands (CardInsertPlugin)', () => {
 
   it('gallery insert dispatches INSERT_CARD_COMMAND for a gallery dataset', async () => {
     const { GalleryNode } = await import('@/nodes/GalleryNode')
-    editor = createTestEditor([GalleryNode])
+    editor = createTestEditor({ nodes: [GalleryNode] })
     await setupPluginTest(editor)
 
     let dispatchedCardNode
@@ -179,7 +165,7 @@ describe('Card insert commands (CardInsertPlugin)', () => {
 
   it('toggle insert dispatches INSERT_CARD_COMMAND for a toggle dataset', async () => {
     const { ToggleNode } = await import('@/nodes/ToggleNode')
-    editor = createTestEditor([ToggleNode])
+    editor = createTestEditor({ nodes: [ToggleNode] })
     await setupPluginTest(editor)
 
     let dispatchedCardNode
@@ -201,7 +187,7 @@ describe('Card insert commands (CardInsertPlugin)', () => {
 
   it('video insert dispatches INSERT_CARD_COMMAND for a video dataset', async () => {
     const { VideoNode } = await import('@/nodes/VideoNode')
-    editor = createTestEditor([VideoNode])
+    editor = createTestEditor({ nodes: [VideoNode] })
     await setupPluginTest(editor)
 
     let dispatchedCardNode

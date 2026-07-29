@@ -13,6 +13,7 @@ import {
 import React, { useMemo } from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { EmEnDashPlugin } from '@/plugins/EmEnDashPlugin'
 
 function createTestEditor() {
@@ -26,12 +27,6 @@ function createTestEditor() {
 
 function getEditorText(editor: ReturnType<typeof createTestEditor>): string {
   return editor.getEditorState().read(() => $getRoot().getTextContent())
-}
-
-async function updateEditor(editor: ReturnType<typeof createTestEditor>, updateFn: () => void): Promise<void> {
-  await new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
 }
 
 // Types each character as its own keystroke. The dash grammar itself is

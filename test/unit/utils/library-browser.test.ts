@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { tick } from '#/utils/test-editor'
 import {
   createLibraryBrowser,
   LIBRARY_SEARCH_DEBOUNCE_MS,
@@ -49,13 +50,6 @@ function deferred<T>() {
     reject = rej
   })
   return { promise, resolve, reject }
-}
-
-/** Flush the microtask queue so settled promises land — no wall-clock sleeps. */
-function tick(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
 }
 
 function setup({ search }: { search: (query: string) => Promise<TestItem[] | undefined> }) {

@@ -5,15 +5,12 @@ import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexica
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
+import { createTestEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { CalloutNode, $createCalloutNode } from '@/nodes/CalloutNode'
 import { CalloutNodeComponent } from '@/nodes/CalloutNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
-
-function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes: [CalloutNode], onError: () => {} })
-}
 
 function createLexicalComposerContext(editor: LexicalEditor): [LexicalEditor, { getTheme: () => undefined }] {
   return [editor, { getTheme: () => undefined }]
@@ -61,7 +58,7 @@ describe('CalloutNodeComponent', () => {
   let textEditor: LexicalEditor
 
   beforeEach(() => {
-    editor = createTestEditor()
+    editor = createTestEditor({ nodes: [CalloutNode], headless: false })
     textEditor = createEditor({ namespace: 'callout-text', nodes: MINIMAL_NODES, onError: () => {} })
   })
 

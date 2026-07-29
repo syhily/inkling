@@ -2,16 +2,11 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $getRoot, $getSelection, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { $selectDecoratorNode } from '@/utils/$selectDecoratorNode'
 
 const editorNodes = [HorizontalRuleNode]
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
-  })
-}
 
 describe('$selectDecoratorNode', () => {
   let editor: LexicalEditor

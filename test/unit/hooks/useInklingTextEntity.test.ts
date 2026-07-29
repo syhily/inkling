@@ -1,16 +1,9 @@
 import { renderHook } from '@testing-library/react'
-import {
-  $createParagraphNode,
-  $createTextNode,
-  $getRoot,
-  $isElementNode,
-  createEditor,
-  TextNode,
-  type LexicalEditor,
-} from 'lexical'
+import { $createParagraphNode, $createTextNode, $getRoot, $isElementNode, createEditor, TextNode } from 'lexical'
 import { describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { updateEditor } from '#/utils/test-editor'
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -36,12 +29,6 @@ function createTestEditor() {
     namespace: 'test',
     nodes: [MentionNode],
     onError: () => {},
-  })
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
   })
 }
 
