@@ -18,7 +18,9 @@ interface MenuItemBase {
   shortcut?: string
   isHidden?: (args: { config: CardConfig | undefined }) => boolean
   section?: string
-  type?: string
+  // closed discriminant: menu items are cards (the default) or snippets —
+  // CardMenu renders anything else as null, so a typo must not compile
+  type?: 'card' | 'snippet'
   onRemove?: () => void
   queryParams?: string[]
   dataTestId?: string
@@ -138,11 +140,9 @@ export function buildCardMenu(
     // the sections-mapping stage
     const section = resolvedItem.section || 'Primary'
 
-    if (!menu.has(section)) {
-      menu.set(section, [resolvedItem])
-    } else {
-      menu.get(section)?.push(resolvedItem)
-    }
+    const sectionItems = menu.get(section) ?? []
+    sectionItems.push(resolvedItem)
+    menu.set(section, sectionItems)
   }
 
   for (const [nodeType, source] of nodes) {

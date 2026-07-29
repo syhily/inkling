@@ -23,7 +23,6 @@ interface MousePosition {
 }
 
 export class ScrollHandler {
-  options: typeof defaultOptions
   currentMousePosition: MousePosition | null = null
   findScrollableElementFrame: number | null = null
   scrollableElement: HTMLElement | null = null
@@ -32,7 +31,6 @@ export class ScrollHandler {
   _documentScrollContainerSelector: string | null
 
   constructor(options?: ScrollHandlerOptions) {
-    this.options = Object.assign({}, defaultOptions)
     this._documentScrollContainerSelector = options?.documentScrollContainerSelector ?? null
 
     this._isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')
@@ -107,7 +105,7 @@ export class ScrollHandler {
       cancelAnimationFrame(this.scrollAnimationFrame)
     }
 
-    const { speed, sensitivity } = this.options
+    const { speed, sensitivity } = defaultOptions
 
     const rect = this.scrollableElement.getBoundingClientRect()
 

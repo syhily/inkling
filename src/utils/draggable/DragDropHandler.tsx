@@ -5,7 +5,7 @@ import {
   type DragSessionPoint,
   type DragStartSession,
 } from '@/utils/draggable/drag-session'
-import { DragDropContainer, type DraggableInfo } from '@/utils/draggable/DragDropContainer'
+import { DragDropContainer, type ContainerDragHandlers, type DraggableInfo } from '@/utils/draggable/DragDropContainer'
 import {
   CONTAINER_SELECTOR,
   DRAGGABLE_SELECTOR,
@@ -101,10 +101,7 @@ export class DragDropHandler {
 
   // interface ---------------------------------------------------------------
 
-  registerContainer(
-    element: HTMLElement,
-    options: ConstructorParameters<typeof DragDropContainer>[1],
-  ): DraggableContainerHandle {
+  registerContainer(element: HTMLElement, options: ContainerDragHandlers): DraggableContainerHandle {
     const container = new DragDropContainer(element, options)
     this.containers.push(container)
 

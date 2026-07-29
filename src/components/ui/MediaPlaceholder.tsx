@@ -65,7 +65,7 @@ const StandardContents = ({
     size === 'large' && 'size-20 text-grey',
     size === 'small' && 'size-14 text-grey',
     size === 'xsmall' && 'size-5 text-grey-700',
-    !['large', 'small', 'xsmall'].includes(size) && 'size-16 text-grey',
+    size === 'medium' && 'size-16 text-grey',
     size === 'xsmall' && desc && 'mr-3',
   )
 
@@ -82,6 +82,12 @@ const StandardContents = ({
     </>
   )
 }
+
+/** The placeholder's styled sizes ('medium' takes the default-style branch — it is the ErrorState story's size). */
+export type MediaPlaceholderSize = 'large' | 'medium' | 'small' | 'xsmall'
+
+/** The placeholder's style variants: 'button' restyles the container; 'image' (or absent) is the default. */
+export type MediaPlaceholderType = 'button' | 'image'
 
 export function MediaPlaceholder({
   desc,
@@ -101,8 +107,8 @@ export function MediaPlaceholder({
   desc: string
   icon: PlaceholderIconName
   filePicker: () => void
-  size: string
-  type?: string
+  size: MediaPlaceholderSize
+  type?: MediaPlaceholderType
   borderStyle?: 'squared' | 'rounded' | 'simple' | 'heavy'
   isDraggedOver?: boolean
   errors?: Error[] | { message?: string }[]

@@ -1,7 +1,7 @@
 import React from 'react'
 
 import type { DragHandlerLike, FileInputRef } from '@/components/ui/cards/card-ui-types'
-import type { PlaceholderIconName } from '@/components/ui/MediaPlaceholder'
+import type { MediaPlaceholderSize, PlaceholderIconName } from '@/components/ui/MediaPlaceholder'
 
 import { MediaPlaceholder } from '@/components/ui/MediaPlaceholder'
 import { ProgressBar } from '@/components/ui/ProgressBar'
@@ -157,7 +157,7 @@ export function UploadingOverlay({ progress, dataTestId, bgStyle = 'default', cl
 export interface UploadPlaceholderProps {
   icon: PlaceholderIconName
   desc: string
-  size: string
+  size: MediaPlaceholderSize
   /** The hidden input's `name` (see UploadFileInput). */
   inputName: string
   onFileChange: (files: File[]) => void

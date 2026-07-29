@@ -1,12 +1,13 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { DRAG_DROP_PASTE } from '@lexical/rich-text'
 import { $canShowPlaceholder } from '@lexical/text'
+import { type LexicalEditor } from 'lexical'
 import React from 'react'
 
 import { focusEditorAt, insertParagraphAt, lastNodeIsDecorator } from '@/plugins/behaviour/external-control'
 
 export interface ExternalControlAPI {
-  editorInstance: ReturnType<typeof useLexicalComposerContext>[0]
+  editorInstance: LexicalEditor
   serialize: () => string
   editorIsEmpty: () => boolean
   focusEditor: (options?: { position?: 'top' | 'bottom' }) => void

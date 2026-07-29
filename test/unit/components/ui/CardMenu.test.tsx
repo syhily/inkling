@@ -137,7 +137,7 @@ describe('CardMenu', () => {
         items: [
           {
             label: 'My Snippet',
-            type: 'snippet',
+            type: 'snippet' as const,
             onRemove,
           },
         ],
@@ -155,7 +155,7 @@ describe('CardMenu', () => {
   it('does not render dead inkling.local help links', () => {
     const sections = [
       { label: 'Primary', items: [{ label: 'Paragraph', name: 'paragraph', dataTestId: 'paragraph-item' }] },
-      { label: 'Snippets', items: [{ label: 'My Snippet', type: 'snippet' }] },
+      { label: 'Snippets', items: [{ label: 'My Snippet', type: 'snippet' as const }] },
     ]
 
     const { container } = render(<CardMenu insert={insert} sections={sections} closeMenu={closeMenu} />)
@@ -172,7 +172,7 @@ describe('CardMenu', () => {
         items: [
           {
             label: 'My Snippet',
-            type: 'snippet',
+            type: 'snippet' as const,
             Icon: SnippetIcon,
             dataTestId: 'snippet-menu-item',
           },
@@ -205,7 +205,7 @@ describe('CardMenu', () => {
   it('numbers item indexes across section boundaries', () => {
     const sections = [
       { label: 'Primary', items: [{ label: 'Paragraph', name: 'paragraph', dataTestId: 'paragraph-item' }] },
-      { label: 'Snippets', items: [{ label: 'My Snippet', type: 'snippet', dataTestId: 'snippet-item' }] },
+      { label: 'Snippets', items: [{ label: 'My Snippet', type: 'snippet' as const, dataTestId: 'snippet-item' }] },
     ]
 
     render(<CardMenu insert={insert} sections={sections} selectedItemIndex={1} closeMenu={closeMenu} />)

@@ -7,7 +7,12 @@ import type { DragHandlerLike } from '@/components/ui/cards/card-ui-types'
 import DeleteIcon from '@/assets/icons/inkling-trash.svg?react'
 import WandIcon from '@/assets/icons/inkling-wand.svg?react'
 import { IconButton } from '@/components/ui/IconButton'
-import { MediaPlaceholder, isPlaceholderIconName } from '@/components/ui/MediaPlaceholder'
+import {
+  type MediaPlaceholderSize,
+  type MediaPlaceholderType,
+  MediaPlaceholder,
+  isPlaceholderIconName,
+} from '@/components/ui/MediaPlaceholder'
 import { UploadFileInput, UploadingOverlay, useFileInputRefTunnel } from '@/components/ui/UploadChrome'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { cx } from '@/utils/cx'
@@ -19,8 +24,8 @@ export interface MediaUploaderProps {
   alt?: string
   desc?: string
   icon?: string
-  size?: string
-  type?: string
+  size?: MediaPlaceholderSize
+  type?: MediaPlaceholderType
   borderStyle?: 'squared' | 'rounded' | 'simple' | 'heavy'
   backgroundSize?: 'cover' | 'contain'
   mimeTypes?: string[]

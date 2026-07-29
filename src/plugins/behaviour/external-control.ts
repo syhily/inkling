@@ -1,6 +1,6 @@
-import type { LexicalEditor, LexicalNode } from 'lexical'
+import type { LexicalEditor } from 'lexical'
 
-import { $createParagraphNode, $getRoot, $isDecoratorNode } from 'lexical'
+import { $createParagraphNode, $getRoot, $isDecoratorNode, $isElementNode } from 'lexical'
 
 import { $selectCard } from '@/plugins/behaviour/card-adjacency'
 
@@ -10,10 +10,6 @@ import { $selectCard } from '@/plugins/behaviour/card-adjacency'
 // paragraph at either document end, and the last-node-is-decorator read.
 // The plugin keeps only API assembly; hosts driving the editor headlessly
 // (tests, server-side flows) can call these without a React mount.
-
-function hasSelectMethod(node: LexicalNode): node is LexicalNode & { select: () => void } {
-  return 'select' in node && typeof (node as Record<string, unknown>).select === 'function'
-}
 
 /**
  * Focuses the editor at a document end. Lexical does not automatically
@@ -44,7 +40,7 @@ export function focusEditorAt(
 
     if ($isDecoratorNode(lastChild)) {
       $selectCard(editor, lastChild, { focus: 'always' })
-    } else if (lastChild && hasSelectMethod(lastChild)) {
+    } else if ($isElementNode(lastChild)) {
       lastChild.select()
     }
   })

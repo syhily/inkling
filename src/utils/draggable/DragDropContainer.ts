@@ -71,7 +71,10 @@ export interface ContainerDragHandlers {
 }
 
 export interface DraggableInfo {
-  type?: string
+  // open discriminant: inkling's producers write 'card' (DragDropReorderPlugin)
+  // or 'image' (gallery reorder/merge) and every consumer compares exactly
+  // those literals; any other string is a host drag type consumers ignore
+  type?: 'card' | 'image' | (string & {})
   cardName?: string
   // the card node's key, set by the card drag producer (DragDropReorderPlugin)
   // and read back on drop (image→gallery merge, reorder)

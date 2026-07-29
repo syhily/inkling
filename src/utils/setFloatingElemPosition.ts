@@ -11,13 +11,7 @@ export function setFloatingElemPosition(
   anchorElem: HTMLElement,
   options: SetFloatingElemPositionOptions = {},
 ): void {
-  const resolvedOptions = Object.assign(
-    {
-      verticalGap: VERTICAL_GAP,
-      controlOpacity: false,
-    },
-    options,
-  )
+  const { verticalGap = VERTICAL_GAP, controlOpacity = false } = options
 
   const scrollerElem = anchorElem.parentElement
 
@@ -28,7 +22,7 @@ export function setFloatingElemPosition(
   const floatingElemRect = floatingElem.getBoundingClientRect()
   const editorScrollerRect = scrollerElem.getBoundingClientRect()
 
-  let top = targetRect.top - floatingElemRect.height - (resolvedOptions.verticalGap ?? VERTICAL_GAP)
+  let top = targetRect.top - floatingElemRect.height - verticalGap
   let left = targetRect.left + targetRect.width / 2 - floatingElemRect.width / 2
 
   if (left < editorScrollerRect.left) {
@@ -39,7 +33,7 @@ export function setFloatingElemPosition(
     left = editorScrollerRect.right - floatingElemRect.width
   }
 
-  if (resolvedOptions.controlOpacity) {
+  if (controlOpacity) {
     floatingElem.style.opacity = '1'
   }
   floatingElem.style.top = `${top}px`
