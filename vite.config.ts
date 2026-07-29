@@ -10,11 +10,8 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { createRequire } from 'node:module'
 import { resolve, sep } from 'node:path'
-import { esmExternalRequirePlugin, loadEnv } from 'vite'
+import { defineConfig, esmExternalRequirePlugin, loadEnv } from 'vite'
 import svgr from 'vite-plugin-svgr'
-// vitest/config's defineConfig augments the vite config type with the
-// `test` property (the plain vite one overloads it away)
-import { defineConfig } from 'vitest/config'
 
 import pkg from './package.json'
 
@@ -154,18 +151,6 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
-    },
-    test: {
-      globals: true, // required for @testing-library/jest-dom extensions
-      environment: 'jsdom',
-      setupFiles: './test/setup.ts',
-      include: ['./test/unit/**/*.test.{js,jsx,ts,tsx}'],
-      testTimeout: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 10000,
-      ...(process.env.CI && {
-        // https://github.com/vitest-dev/vitest/issues/1674
-        minThreads: 1,
-        maxThreads: 2,
-      }),
     },
   })
 })

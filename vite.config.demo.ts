@@ -36,25 +36,4 @@ export default defineConfig({
       },
     },
   },
-  test: {
-    globals: true, // required for @testing-library/jest-dom extensions
-    environment: 'jsdom',
-    setupFiles: './test/setup.ts',
-    include: [
-      './test/unit/**/*.test.{js,jsx,ts,tsx}',
-      './test/utils/**/*.test.{js,jsx,ts,tsx}',
-      './test/clean-basic-html/**/*.test.{js,jsx,ts,tsx}',
-      './test/html-to-lexical/**/*.test.{js,jsx,ts,tsx}',
-      './test/html-renderer/**/*.test.{js,jsx,ts,tsx}',
-      './test/markdown/**/*.test.{js,jsx,ts,tsx}',
-      './test/transforms/**/*.test.{js,jsx,ts,tsx}',
-      './test/nodes-base/**/*.test.{js,jsx,ts,tsx}',
-    ],
-    testTimeout: 10000,
-    ...(process.env.CI && {
-      // https://github.com/vitest-dev/vitest/issues/1674
-      minThreads: 1,
-      maxThreads: 2,
-    }),
-  },
 })
