@@ -1,17 +1,17 @@
 import type { LexicalEditor, SerializedParagraphNode } from 'lexical'
 
 import { HeadingNode } from '@lexical/rich-text'
-import { JSDOM } from 'jsdom'
 import { ParagraphNode } from 'lexical'
 
 import type { ExportDOMOptions } from '@/nodes/base'
 
 import { htmlToLexical } from '#/utils/html-to-lexical-with-dom'
+import { createTestDom } from '#/utils/render-live'
 import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import { lexicalStateToHtml } from '@/html/headless-html'
 import { BaseImageNode } from '@/nodes/base'
 
-const dom = new JSDOM()
+const dom = createTestDom()
 
 class CustomBlockNode extends ParagraphNode {
   static getType() {

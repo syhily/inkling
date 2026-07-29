@@ -4,14 +4,11 @@
 // The targetKey policy is import-is-a-new-entity: source anchor slugs only
 // correlate refs with their definitions WITHIN one import pass; the keys
 // themselves are always recast (see src/nodes/footnote/footnote-keys.ts).
-import { createEditor } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
 import { htmlToLexical as importWithDom } from '#/utils/html-to-lexical-with-dom'
-import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
-import DEFAULT_NODES from '@/nodes/DefaultNodes'
+import { renderLive } from '#/utils/render-live'
 import { markdownToSanitizedHtml } from '@/plugins/behaviour/markdownPaste'
-import defaultTheme from '@/themes/default'
 
 interface NodeJSON {
   type: string
@@ -40,23 +37,6 @@ function collect(nodes: NodeJSON[], type: string): NodeJSON[] {
     }
   }
   return found
-}
-
-function renderLive(serializedState: string): string {
-  const editor = createEditor({
-    namespace: 'test',
-    nodes: DEFAULT_NODES,
-    theme: defaultTheme,
-    onError: (error) => {
-      throw error
-    },
-  })
-  editor.setEditorState(editor.parseEditorState(serializedState))
-  let html = ''
-  editor.read(() => {
-    html = $convertToHtmlString(editor)
-  })
-  return html
 }
 
 const PASTE_MARKDOWN = 'note.[^1]\n\n[^1]: The **text**.'

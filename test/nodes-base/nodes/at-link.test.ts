@@ -1,8 +1,8 @@
 import type { LexicalEditor, EditorConfig } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
-import { JSDOM } from 'jsdom'
 
+import { createTestDom } from '#/utils/render-live'
 import {
   AtLinkNode,
   $createAtLinkNode,
@@ -34,7 +34,7 @@ describe('AtLinkNode', function () {
   beforeEach(function () {
     editor = createHeadlessEditor({ nodes: editorNodes })
 
-    const { window } = new JSDOM('<!doctype html><html><body></body></html>')
+    const { window } = createTestDom('<!doctype html><html><body></body></html>')
     global.document = window.document as unknown as Document
     global.window = window as unknown as Window & typeof globalThis
     global.DOMParser = window.DOMParser

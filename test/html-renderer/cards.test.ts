@@ -1,6 +1,6 @@
-import { JSDOM } from 'jsdom'
 import Prettier from 'prettier'
 
+import { createTestDom } from '#/utils/render-live'
 import { lexicalStateToHtml } from '@/html/headless-html'
 import { BaseImageNode, BaseHtmlNode } from '@/nodes/base'
 
@@ -43,7 +43,7 @@ describe('Cards', function () {
         },
       },
       createDocument() {
-        return new JSDOM().window.document
+        return createTestDom().window.document
       },
     }
   })

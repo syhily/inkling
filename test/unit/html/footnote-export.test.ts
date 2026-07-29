@@ -4,32 +4,9 @@
 // kobato SSR anchor contract cannot drift. Live path only (`renderLive` like
 // table-export.test.ts): an editor configured like InklingComposer
 // (DEFAULT_NODES + defaultTheme), a parsed state, `$convertToHtmlString`.
-import { createEditor } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
-import type { ExportDOMOptions } from '@/nodes/base/export-dom'
-
-import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
-import DEFAULT_NODES from '@/nodes/DefaultNodes'
-import defaultTheme from '@/themes/default'
-
-function renderLive(serializedState: string, options?: ExportDOMOptions): string {
-  const editor = createEditor({
-    namespace: 'test',
-    nodes: DEFAULT_NODES,
-    theme: defaultTheme,
-    onError: (error) => {
-      throw error
-    },
-  })
-  editor.setEditorState(editor.parseEditorState(serializedState))
-
-  let html = ''
-  editor.read(() => {
-    html = $convertToHtmlString(editor, options)
-  })
-  return html
-}
+import { renderLive } from '#/utils/render-live'
 
 const ref = (text: string, targetKey: string) => ({
   type: 'footnote-ref',

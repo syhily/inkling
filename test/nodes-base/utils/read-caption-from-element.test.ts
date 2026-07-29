@@ -1,10 +1,9 @@
-import { JSDOM } from 'jsdom'
-
+import { createTestDom } from '#/utils/render-live'
 import { readCaptionFromElement } from '@/nodes/base/utils/read-caption-from-element'
 
 describe('readCaptionFromElement', function () {
   it('skips empty cleaned caption fragments when joining captions', function () {
-    const document = new JSDOM(`
+    const document = createTestDom(`
             <figure>
                 <figcaption><p>First</p></figcaption>
                 <figcaption><p> </p></figcaption>

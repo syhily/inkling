@@ -1,7 +1,4 @@
-// Switch these lines once there are useful utils
-// import testUtils from './utils/index';
-import { JSDOM } from 'jsdom'
-
+import { createTestDom } from '#/utils/render-live'
 import { cleanBasicHtml } from '@/html/clean-basic-html/clean-basic-html'
 
 describe('cleanBasicHtml', function () {
@@ -10,7 +7,7 @@ describe('cleanBasicHtml', function () {
   beforeAll(function () {
     options = {
       createDocument(html: string) {
-        return new JSDOM(html).window.document
+        return createTestDom(html).window.document
       },
     }
   })

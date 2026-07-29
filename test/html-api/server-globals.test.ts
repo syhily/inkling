@@ -1,6 +1,4 @@
-import { JSDOM } from 'jsdom'
-
-import { lexicalStateToHtml } from '@/html/headless-html'
+import { renderHeadless } from '#/utils/render-live'
 
 // Server-globals suite: headless renders must not touch browser globals. The
 // sanitize legs used to read the global window/DOMParser at call time, so a
@@ -58,12 +56,7 @@ const VIDEO_STATE = stateOf({
 })
 
 function render(state: string): Promise<string> {
-  return lexicalStateToHtml(state, {
-    dom: new JSDOM(),
-    onError(error) {
-      throw error
-    },
-  })
+  return renderHeadless(state)
 }
 
 describe('headless render without browser globals', () => {

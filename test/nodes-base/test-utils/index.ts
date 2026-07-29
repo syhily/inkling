@@ -1,5 +1,9 @@
 import Prettier from '@prettier/sync'
-import { JSDOM } from 'jsdom'
+
+// The html tag here PRETTIFIES (parser 'html') — deliberately unlike the raw
+// concatenation tag in test/utils/e2e.ts: the two normalizers are different
+// policies, keep them separate.
+import { createTestDom } from '#/utils/render-live'
 
 export function html(partials: TemplateStringsArray, ...params: unknown[]) {
   let output = ''
@@ -13,7 +17,7 @@ export function html(partials: TemplateStringsArray, ...params: unknown[]) {
   return Prettier.format(output, { parser: 'html' })
 }
 
-export const dom = new JSDOM()
+export const dom = createTestDom()
 
 const parser = new dom.window.DOMParser()
 export function createDocument(htmlString: string) {

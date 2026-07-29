@@ -1,8 +1,7 @@
-import { JSDOM } from 'jsdom'
-
+import { createTestDom } from '#/utils/render-live'
 import { lexicalStateToHtml, type LexicalStateToHtmlOptions } from '@/html/headless-html'
 
-const dom = new JSDOM()
+const dom = createTestDom()
 
 interface ShouldRenderParams {
   input: string

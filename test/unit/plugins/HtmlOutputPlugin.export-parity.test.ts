@@ -8,9 +8,9 @@
  *   editor configured like `InklingComposer` (DEFAULT_NODES + defaultTheme);
  *   the plugin's remaining behaviour (empty-document guard, debounce) is
  *   covered by HtmlOutputPlugin.test.ts.
- * - HEADLESS: `LexicalHTMLRenderer` (src/html/renderer/LexicalHTMLRenderer.ts)
- *   renders a serialized state via the same `$convertToHtmlString` and
- *   transformers (src/html/renderer/transformers/element/).
+ * - HEADLESS: `lexicalStateToHtml` (src/html/headless-html.ts) renders a
+ *   serialized state via the same `$convertToHtmlString` and transformers
+ *   (src/html/renderer/transformers/element/).
  *
  * Both paths run ONE serializer, so their output is byte-identical for any
  * document content. Every case pins that single output and asserts the two
@@ -30,48 +30,13 @@
  * If it ever diverges, a card stopped sharing its exportDOM implementation.
  */
 
-import { JSDOM } from 'jsdom'
-import { createEditor } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
-import { lexicalStateToHtml } from '@/html/headless-html'
-import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
-import DEFAULT_NODES from '@/nodes/DefaultNodes'
-import defaultTheme from '@/themes/default'
-
-const dom = new JSDOM()
-
-// The HtmlOutputPlugin route: same node set and theme InklingComposer passes
-// to LexicalComposer, same $convertToHtmlString(editor) call the plugin makes
-// inside editor.read().
-function renderLivePath(serializedState: string): string {
-  const editor = createEditor({
-    namespace: 'test',
-    nodes: DEFAULT_NODES,
-    theme: defaultTheme,
-    onError: (error) => {
-      throw error
-    },
-  })
-  editor.setEditorState(editor.parseEditorState(serializedState))
-
-  let html = ''
-  editor.read(() => {
-    html = $convertToHtmlString(editor)
-  })
-  return html
-}
-
-// The headless route through the public seam, driven exactly as
-// test/html-renderer does.
-async function renderHeadlessPath(serializedState: string): Promise<string> {
-  return lexicalStateToHtml(serializedState, {
-    dom,
-    onError: (error: Error) => {
-      throw error
-    },
-  })
-}
+// The two render paths under comparison live in the shared harness:
+// renderLive drives the HtmlOutputPlugin route (same node set and theme
+// InklingComposer passes to LexicalComposer, same $convertToHtmlString call
+// inside editor.read()); renderHeadless goes through the public seam.
+import { renderHeadless, renderLive } from '#/utils/render-live'
 
 const text = (content: string, format = 0) => ({
   type: 'text',
@@ -282,8 +247,8 @@ const cases: ExportPathCase[] = [
 describe('HTML export path parity (HtmlOutputPlugin vs LexicalHTMLRenderer)', () => {
   for (const { name, input, output } of cases) {
     it(`pins both paths for: ${name}`, async () => {
-      const liveOutput = renderLivePath(input)
-      const headlessOutput = await renderHeadlessPath(input)
+      const liveOutput = renderLive(input)
+      const headlessOutput = await renderHeadless(input)
 
       expect(liveOutput).toBe(output)
       expect(headlessOutput).toBe(output)
@@ -297,8 +262,8 @@ describe('HTML export path parity (HtmlOutputPlugin vs LexicalHTMLRenderer)', ()
       block('heading', [text('Heading one')], { tag: 'h2' }),
     ])
 
-    const liveOutput = renderLivePath(input)
-    const headlessOutput = await renderHeadlessPath(input)
+    const liveOutput = renderLive(input)
+    const headlessOutput = await renderHeadless(input)
 
     // Both paths emit the same per-render-deduped heading ids.
     for (const html of [liveOutput, headlessOutput]) {

@@ -5,45 +5,9 @@
 // (DEFAULT_HTML_NODES includes INKLING_TABLE_NODES) — the kobato server-side
 // rendering path. One serializer backs both, so each case pins one string
 // and asserts the two legs agree byte-exactly.
-import { JSDOM } from 'jsdom'
-import { createEditor } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
-import { lexicalStateToHtml } from '@/html/headless-html'
-import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
-import DEFAULT_NODES from '@/nodes/DefaultNodes'
-import defaultTheme from '@/themes/default'
-
-const dom = new JSDOM()
-
-function renderLive(serializedState: string): string {
-  const editor = createEditor({
-    namespace: 'test',
-    nodes: DEFAULT_NODES,
-    theme: defaultTheme,
-    onError: (error) => {
-      throw error
-    },
-  })
-  editor.setEditorState(editor.parseEditorState(serializedState))
-
-  let html = ''
-  editor.read(() => {
-    html = $convertToHtmlString(editor)
-  })
-  return html
-}
-
-// The headless route through the public seam — no extra nodes, so the
-// default headless set carries the table family.
-async function renderHeadless(serializedState: string): Promise<string> {
-  return lexicalStateToHtml(serializedState, {
-    dom,
-    onError: (error) => {
-      throw error
-    },
-  })
-}
+import { renderHeadless, renderLive } from '#/utils/render-live'
 
 const text = (content: string, format = 0) => ({
   type: 'text',
