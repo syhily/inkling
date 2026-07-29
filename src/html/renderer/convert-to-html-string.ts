@@ -71,16 +71,28 @@ export default function $convertToHtmlString(editor: LexicalEditor, options: Exp
     const textContent = new TextContent(exportChildren, context)
 
     for (const child of node.getChildren()) {
-      // anything that is not text-flow content flushes the pending run:
-      // element markup splices in as outer HTML, never through TextContent
-      if (!textContent.isEmpty() && !$isLineBreakNode(child) && !$isTextNode(child) && !$isLinkNode(child)) {
+      // element/decorator children flush the pending text run — footnote
+      // refs are TextNodes and flush in their own branch below instead
+      if (
+        !textContent.isEmpty() &&
+        !$isFootnoteRefNode(child) &&
+        !$isLineBreakNode(child) &&
+        !$isTextNode(child) &&
+        !$isLinkNode(child)
+      ) {
         output.push(textContent.render())
         textContent.clear()
       }
 
       if ($isFootnoteRefNode(child)) {
         // A TextNode entity whose export is element markup (`<sup><a…>`), not
-        // text — splice the outer HTML like the inline-decorator branch below.
+        // text — flush the pending run here (the pre-loop flush never sees
+        // it: refs ARE TextNodes) and splice the outer HTML like the
+        // inline-decorator branch below.
+        if (!textContent.isEmpty()) {
+          output.push(textContent.render())
+          textContent.clear()
+        }
         output.push(getElementOuterHTML(child.exportDOM(editor, options).element))
       } else if ($isLineBreakNode(child) || $isTextNode(child) || $isLinkNode(child)) {
         textContent.addNode(child)
