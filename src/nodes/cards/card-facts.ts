@@ -64,7 +64,12 @@ export function resolveAllCardFacts(): CardFacts[] {
  * ("file-upload") deliberately diverge from their node types; the
  * divergence lives on the declarations as data, not in a transform here.
  */
-export function getCardToolbarLabel(nodeType: string): string | undefined {
+export function getCardToolbarLabel(nodeType: string | undefined | null): string | undefined {
+  // unknown is a first-class input, not a smuggled '' sentinel — a card
+  // whose type isn't known yet (mount-time context gap) gets no label
+  if (!nodeType) {
+    return undefined
+  }
   const facts = resolveCardFacts(nodeType)
   return facts?.source === 'builtin' ? facts.declaration.toolbarLabel : facts?.host.spec.toolbarLabel
 }

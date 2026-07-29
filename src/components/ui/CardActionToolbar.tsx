@@ -61,7 +61,7 @@ export function useCardToolbarLabel(nodeKey: NodeKey): string | undefined {
       ? null
       : editor.getEditorState().read(() => $getNodeByKey(nodeKey)?.getType() ?? null),
   )
-  return getCardToolbarLabel(cardType ?? fallbackType ?? '')
+  return getCardToolbarLabel(cardType ?? fallbackType)
 }
 
 export function CardActionToolbar({
