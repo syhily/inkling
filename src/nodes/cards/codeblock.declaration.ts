@@ -22,7 +22,7 @@ const transientProps = [
   {
     name: '_openInEditMode',
     privateName: '__openInEditMode',
-    initial: (dataset): boolean => (dataset._openInEditMode || false) as boolean,
+    initial: (dataset): boolean => Boolean(dataset._openInEditMode),
   },
 ] as const satisfies readonly TransientPropSpec[]
 

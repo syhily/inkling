@@ -2,7 +2,7 @@ import type { LexicalNode } from 'lexical'
 
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { nullableNestedEditor, transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
+import { fileOr, nullableNestedEditor, transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
 import { BaseVideoNode } from '@/nodes/base/nodes/video/VideoNode'
 import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
@@ -25,7 +25,7 @@ const nestedEditors = [
 
 const transientProps = [
   transientTriggerFileDialogProp,
-  { name: 'initialFile', initial: (dataset): File | null => (dataset.initialFile || null) as File | null },
+  { name: 'initialFile', initial: (dataset): File | null => fileOr(dataset.initialFile, null) },
 ] as const satisfies readonly TransientPropSpec[]
 
 export const videoDeclaration = {

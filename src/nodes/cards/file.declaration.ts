@@ -1,6 +1,6 @@
 import type { TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
+import { fileOr, transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
 import { BaseFileNode } from '@/nodes/base/nodes/file/FileNode'
 
 import type { CardDeclaration } from './card-declaration'
@@ -12,7 +12,7 @@ import { INSERT_FILE_COMMAND } from './card-commands'
 // (CardSpecFieldMap)
 const transientProps = [
   transientTriggerFileDialogProp,
-  { name: 'initialFile', initial: (dataset): File | undefined => dataset.initialFile as File | undefined },
+  { name: 'initialFile', initial: (dataset): File | undefined => fileOr(dataset.initialFile, undefined) },
 ] as const satisfies readonly TransientPropSpec[]
 
 export const fileDeclaration = {

@@ -3,7 +3,7 @@ import type { ComponentType } from 'react'
 
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
+import { fileOr, fnOr, strOr, transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
 import { BaseImageNode } from '@/nodes/base/nodes/image/ImageNode'
 import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
@@ -26,7 +26,7 @@ const nestedEditors = [
 const transientProps = [
   {
     name: 'previewSrc',
-    initial: (dataset): string | null => (dataset.previewSrc || '') as string,
+    initial: (dataset): string | null => strOr(dataset.previewSrc, ''),
     datasetKey: '__previewSrc',
     accessor: true,
   },
@@ -34,16 +34,20 @@ const transientProps = [
   // passed via INSERT_MEDIA_COMMAND on drag+drop or paste
   {
     name: 'initialFile',
-    initial: (dataset): File | undefined => (dataset.initialFile || undefined) as File | undefined,
+    initial: (dataset): File | undefined => fileOr(dataset.initialFile, undefined),
   },
   // selector overlay component (e.g. the GIF picker) and the flag that hides
   // the image while it is open — client-side only, never serialized
   {
     name: 'selector',
     initial: (dataset): ComponentType<{ nodeKey: NodeKey }> | undefined =>
-      dataset.selector as ComponentType<{ nodeKey: NodeKey }> | undefined,
+      fnOr<ComponentType<{ nodeKey: NodeKey }>>(dataset.selector),
   },
-  { name: 'isImageHidden', initial: (dataset): boolean | undefined => dataset.isImageHidden as boolean | undefined },
+  {
+    name: 'isImageHidden',
+    initial: (dataset): boolean | undefined =>
+      typeof dataset.isImageHidden === 'boolean' ? dataset.isImageHidden : undefined,
+  },
 ] as const satisfies readonly TransientPropSpec[]
 
 export const imageDeclaration = {
