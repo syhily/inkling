@@ -127,7 +127,7 @@ const selectRenderer = function (options: RenderOptions): MarkdownIt {
 }
 
 /** Render markdown to (unsanitized) HTML through the paste dialect's engine. */
-export function render(markdown: string, options: RenderOptions = {}): string {
+function render(markdown: string, options: RenderOptions = {}): string {
   return selectRenderer(options).render(markdown)
 }
 

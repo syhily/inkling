@@ -6,7 +6,7 @@ import { $isHeadingNode } from '@lexical/rich-text'
 import type { ExportChildren } from '@/html/renderer/transformers/index'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import generateId from '@/html/renderer/utils/generate-id'
+import { slugify } from '@/utils'
 /* c8 ignore stop */
 
 export default {
@@ -20,7 +20,7 @@ export default {
     // HtmlOutputPlugin runs this same transformer stack (via
     // $convertToHtmlString), and the per-render dedup tracking lives in the
     // render context, which every render pass builds fresh.
-    const id = generateId(node.getTextContent(), context)
+    const id = context.trackIdAttribute(slugify(node.getTextContent()))
 
     return `<${tag} id="${id}">${exportChildren(node)}</${tag}>`
   },
