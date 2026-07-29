@@ -2,7 +2,7 @@
 // sanitize → Lexical HTML import. The markdown-it → sanitize chain is the
 // headless `markdownToSanitizedHtml` (`@/plugins/behaviour/markdownPaste`);
 // this plugin keeps only the DataTransfer glue and command handling. See
-// `@/markdown/dialects` for the seam facts and the open merge question.
+// docs/markdown-api.md for the seam facts and the open merge question.
 import { $insertDataTransferForRichText } from '@lexical/clipboard'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_LOW } from 'lexical'

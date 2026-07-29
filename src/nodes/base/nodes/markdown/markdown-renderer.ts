@@ -2,7 +2,7 @@ import type { ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
 // The markdown card's HTML export speaks the paste dialect
-// (`@/markdown/paste-dialect`) — see `@/markdown/dialects`.
+// (`@/markdown/paste-dialect`) — see docs/markdown-api.md.
 import { pasteDialect } from '@/markdown/paste-dialect'
 
 interface MarkdownNodeData {

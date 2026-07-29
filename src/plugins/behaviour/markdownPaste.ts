@@ -4,7 +4,8 @@
 // composer or synthesizing a DataTransfer. The engine is `pasteDialect`
 // (`@/markdown/paste-dialect`) — the same dialect module the markdown card's
 // HTML export uses (`@/nodes/base/nodes/markdown/markdown-renderer`), so
-// "paste" names this pipeline, not a forked engine. See `@/markdown/dialects`.
+// "paste" names this pipeline, not a forked engine. See
+// docs/markdown-api.md (the two dialects, and the open merge question).
 import { pasteDialect } from '@/markdown/paste-dialect'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 
