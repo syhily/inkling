@@ -1,8 +1,10 @@
 import type { StorybookConfig } from '@storybook/react-vite'
 
 import { createRequire } from 'node:module'
-import path, { dirname, join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { mergeConfig } from 'vite'
+
+import { INKLING_ALIASES } from '../vite-aliases'
 
 const require = createRequire(import.meta.url)
 
@@ -14,10 +16,7 @@ const config: StorybookConfig = {
   viteFinal: async (viteConfig) => {
     return mergeConfig(viteConfig, {
       resolve: {
-        alias: {
-          '@/': path.resolve(import.meta.dirname, '../src') + path.sep,
-          '#/': path.resolve(import.meta.dirname, '../test') + path.sep,
-        },
+        alias: INKLING_ALIASES,
       },
       optimizeDeps: {
         include: ['@storybook/react'],

@@ -1,7 +1,8 @@
 import react from '@vitejs/plugin-react'
-import path from 'node:path'
 import svgr from 'vite-plugin-svgr'
 import { defineConfig } from 'vitest/config'
+
+import { INKLING_ALIASES } from './vite-aliases'
 
 export default defineConfig({
   plugins: [svgr(), react()],
@@ -9,10 +10,7 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify('development'),
   },
   resolve: {
-    alias: {
-      '@/': path.resolve(import.meta.dirname, 'src') + path.sep,
-      '#/': path.resolve(import.meta.dirname, 'test') + path.sep,
-    },
+    alias: INKLING_ALIASES,
   },
   test: {
     globals: true,

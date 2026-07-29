@@ -8,14 +8,12 @@ try {
 import mdx from '@mdx-js/rollup'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { createRequire } from 'node:module'
-import { resolve, sep } from 'node:path'
+import { resolve } from 'node:path'
 import { defineConfig, esmExternalRequirePlugin, loadEnv } from 'vite'
 import svgr from 'vite-plugin-svgr'
 
 import pkg from './package.json'
-
-const require = createRequire(import.meta.url)
+import { INKLING_ALIASES, INKLING_BUNDLE_WORKAROUND_ALIASES } from './vite-aliases'
 
 const outputFileName = pkg.name[0] === '@' ? pkg.name.slice(pkg.name.indexOf('/') + 1) : pkg.name
 
@@ -62,17 +60,7 @@ export default defineConfig(({ mode }) => {
       __APP_VERSION__: JSON.stringify(pkg.version),
     },
     resolve: {
-      alias: {
-        '@/': resolve(import.meta.dirname, 'src') + sep,
-        '#/': resolve(import.meta.dirname, 'test') + sep,
-        // markdown-it-image-lazy-loading → image-size → queue depends on
-        // Node's events module. Provide a browser-compatible EventEmitter
-        // so Vite does not replace it with an empty browser-external proxy.
-        events: require.resolve('eventemitter3'),
-        // required to prevent double-bundling of yjs due to cjs/esm mismatch
-        // (see https://github.com/facebook/lexical/issues/2153)
-        yjs: require.resolve('yjs/src/index.js'),
-      },
+      alias: { ...INKLING_ALIASES, ...INKLING_BUNDLE_WORKAROUND_ALIASES },
     },
     build: {
       minify: true,
