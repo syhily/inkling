@@ -11,9 +11,7 @@ import GifCardIcon from '@/assets/icons/inkling-card-type-gif.svg?react'
 import HeaderCardIcon from '@/assets/icons/inkling-card-type-header.svg?react'
 import HtmlCardIcon from '@/assets/icons/inkling-card-type-html.svg?react'
 import ImageCardIcon from '@/assets/icons/inkling-card-type-image.svg?react'
-import NftCardIcon from '@/assets/icons/inkling-card-type-nft.svg?react'
 import ToggleCardIcon from '@/assets/icons/inkling-card-type-toggle.svg?react'
-import TwitterCardIcon from '@/assets/icons/inkling-card-type-twitter.svg?react'
 import VideoCardIcon from '@/assets/icons/inkling-card-type-video.svg?react'
 import { CardMenu, CardMenuItem, CardMenuSection, CardSnippetItem } from '@/components/ui/CardMenu'
 
@@ -21,30 +19,6 @@ const meta = {
   title: 'Components/Card menu',
   component: CardMenu,
   subcomponents: { CardMenuSection, CardMenuItem, CardSnippetItem },
-  render: (args) => (
-    <CardMenu {...args}>
-      <CardMenuSection label="Primary" />
-      <CardMenuItem desc="Upload, or embed with /image [url]" Icon={ImageCardIcon} label="Image" />
-      <CardMenuItem desc="Insert a raw HTML card" Icon={HtmlCardIcon} label="HTML" />
-      <CardMenuItem desc="Create an image gallery" Icon={GalleryCardIcon} label="Gallery" />
-      <CardMenuItem desc="Insert a dividing line" Icon={DividerCardIcon} label="Divider" />
-      <CardMenuItem desc="Embed a link as a visual bookmark" Icon={BookmarkCardIcon} label="Bookmark" />
-      <CardMenuItem desc="Add a button to your post" Icon={ButtonCardIcon} label="Button" />
-      <CardMenuItem desc="Info boxes that stand out" Icon={CalloutCardIcon} label="Callout" />
-      <CardMenuItem desc="Search and embed gifs" Icon={GifCardIcon} label="GIF" />
-      <CardMenuItem desc="Add collapsible content" Icon={ToggleCardIcon} label="Toggle" />
-      <CardMenuItem desc="Upload and play a video" Icon={VideoCardIcon} label="Video" />
-      <CardMenuItem desc="Upload and play an audio file" Icon={AudioCardIcon} label="Audio" />
-      <CardMenuItem desc="Upload a downloadable file" Icon={FileCardIcon} label="File" />
-      <CardMenuItem desc="Add a bold section header" Icon={HeaderCardIcon} label="Header" />
-      <CardMenuSection label="Embed" />
-      <CardMenuItem desc="/twitter [tweet url]" Icon={TwitterCardIcon} label="Twitter" />
-      <CardMenuItem desc="/nft [opensea url]" Icon={NftCardIcon} label="NFT" />
-      <CardMenuSection label="Snippets" />
-      <CardSnippetItem label="Snippet one" />
-      <CardSnippetItem label="Snippet two" />
-    </CardMenu>
-  ),
 } satisfies Meta<typeof CardMenu>
 export default meta
 
@@ -69,13 +43,6 @@ export const Default: Story = {
           { label: 'Audio', desc: 'Upload and play an audio file', Icon: AudioCardIcon },
           { label: 'File', desc: 'Upload a downloadable file', Icon: FileCardIcon },
           { label: 'Header', desc: 'Add a bold section header', Icon: HeaderCardIcon },
-        ],
-      },
-      {
-        label: 'Embed',
-        items: [
-          { label: 'Twitter', desc: '/twitter [tweet url]', Icon: TwitterCardIcon },
-          { label: 'NFT', desc: '/nft [opensea url]', Icon: NftCardIcon },
         ],
       },
       {
