@@ -4,11 +4,12 @@ import { $createHeadingNode, $createQuoteNode } from '@lexical/rich-text'
 import { TableCellNode, TableNode, TableRowNode } from '@lexical/table'
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
 /**
- * One-off demo-content generator (not part of the suite — run manually):
- * builds the showcase document through the real node factories so the
- * serialized shapes are guaranteed valid, and writes demo/content/content.json.
+ * Demo-content regenerator — skipped in the suite; run manually with:
  *
- *   pnpm vitest run test/utils/gen-demo-content.test.ts
+ *   GENERATE_DEMO_CONTENT=1 pnpm vitest run test/utils/gen-demo-content.test.ts
+ *
+ * Builds the showcase document through the real node factories so the
+ * serialized shapes are guaranteed valid, and writes demo/content/content.json.
  */
 import { writeFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
@@ -40,7 +41,7 @@ function update(editor: LexicalEditor, fn: () => void): Promise<void> {
 }
 
 describe('gen-demo-content', () => {
-  it('writes demo/content/content.json', async () => {
+  it.skipIf(!process.env.GENERATE_DEMO_CONTENT)('writes demo/content/content.json', async () => {
     const editor = createEditor({
       namespace: 'gen',
       nodes: [...DEFAULT_NODES, musicPlayer.node],
