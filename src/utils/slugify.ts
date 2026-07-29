@@ -1,6 +1,7 @@
-interface SlugifyOptions {
+export interface SlugifyOptions {
   inklingVersion?: string
-  type?: string
+  /** The pre-4.0 format to reproduce — the only honored values (any other string silently took the mobiledoc branch). */
+  type?: 'mobiledoc' | 'markdown'
 }
 
 /** The slug policy version callers get when they don't pass one. */
@@ -15,7 +16,7 @@ export function isLegacyVersion(inklingVersion: string): boolean {
 }
 
 export default function slugify(
-  inputString: unknown = '',
+  inputString: string | null = '',
   { inklingVersion = DEFAULT_INKLING_VERSION, type = 'mobiledoc' }: SlugifyOptions = {},
 ): string {
   if (typeof inputString !== 'string' || inputString.trim() === '') {

@@ -1,9 +1,13 @@
 import slugify, { slugify as namedSlugify } from '@/utils/slugify'
 
 describe('slugify()', function () {
-  it('handles non-string input', function () {
+  it('handles empty input', function () {
     expect(slugify(null)).toEqual('')
     expect(slugify(undefined)).toEqual('')
+    expect(slugify('')).toEqual('')
+    // non-string input is a compile error, not a runtime case — the old
+    // `unknown` signature only existed to tolerate it
+    // @ts-expect-error the narrowed signature rejects non-strings
     expect(slugify({})).toEqual('')
   })
 
