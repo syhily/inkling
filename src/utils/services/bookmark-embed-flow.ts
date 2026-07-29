@@ -65,6 +65,8 @@ export interface BookmarkEmbedFlow {
   submitUrl: (href: string) => Promise<void>
   /** The init path (a card constructed with a bare url): applies the response's canonical url and rejects on fetch failure so the caller can paste-as-link. */
   fetchInitialMetadata: (href: string) => Promise<void>
+  /** Supersede every in-flight fetch (adapter teardown / recreation) — a late response then no-ops instead of patching the node. */
+  dispose: () => void
 }
 
 export function createBookmarkEmbedFlow({
@@ -155,5 +157,6 @@ export function createBookmarkEmbedFlow({
     },
     submitUrl: (href: string) => fetchAndApply(href, false),
     fetchInitialMetadata: (href: string) => fetchAndApply(href, true),
+    dispose: () => track.dispose(),
   }
 }

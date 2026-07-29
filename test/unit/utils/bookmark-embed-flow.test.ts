@@ -1,6 +1,7 @@
-import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor } from 'lexical'
+import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createTestEditor } from '#/utils/test-editor'
 import { $createBookmarkNode, $isBookmarkNode, BookmarkNode } from '@/nodes/BookmarkNode'
 import { createBookmarkEmbedFlow, isEmbedResponse, type BookmarkEmbedFlow } from '@/utils/services/bookmark-embed-flow'
 
@@ -14,10 +15,6 @@ const EMBED = {
     publisher: 'Publisher',
     thumbnail: 'https://cdn.example.com/thumb.png',
   },
-}
-
-function createTestEditor(): LexicalEditor {
-  return createEditor({ namespace: 'test', nodes: [BookmarkNode], onError: () => {} })
 }
 
 function deferred<T>() {
@@ -48,7 +45,7 @@ describe('createBookmarkEmbedFlow', () => {
   let flow: BookmarkEmbedFlow
 
   beforeEach(async () => {
-    editor = createTestEditor()
+    editor = createTestEditor({ nodes: [BookmarkNode], headless: false })
     editor.setRootElement(document.createElement('div'))
     await new Promise<void>((resolve) => {
       editor.update(
@@ -144,5 +141,17 @@ describe('createBookmarkEmbedFlow', () => {
     slow.reject(new Error('stale failure'))
     await expect(initPromise).resolves.toBeUndefined()
     expect(flow.getSnapshot()).toEqual({ loading: false, urlError: false })
+  })
+
+  it('dispose supersedes an in-flight fetch — a late response never patches the node', async () => {
+    const slow = deferred<typeof EMBED>()
+    flow = createBookmarkEmbedFlow({ editor, nodeKey, fetchEmbed: () => slow.promise })
+
+    const submitted = flow.submitUrl('https://typed.example.com')
+    flow.dispose()
+    slow.resolve(EMBED)
+    await submitted
+
+    expect(readNode()).toMatchObject({ url: '', title: '' })
   })
 })

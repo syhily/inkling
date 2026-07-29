@@ -38,6 +38,9 @@ export function useBookmarkMetadata({
     () => createBookmarkEmbedFlow({ editor, nodeKey, fetchEmbed }),
     [editor, nodeKey, fetchEmbed],
   )
+  // a recreated flow supersedes the old one's in-flight fetches, so a late
+  // response from the stale instance no-ops instead of patching the node
+  React.useEffect(() => () => flow.dispose(), [flow])
   const { loading, urlError } = React.useSyncExternalStore(flow.subscribe, flow.getSnapshot)
 
   return {
