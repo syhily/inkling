@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $getNodeByKey, $getRoot, type LexicalEditor, type NodeKey } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { tick, updateEditor } from '#/utils/test-editor'
 import { $isImageNode, type BaseImageNode } from '@/nodes/base/nodes/image/ImageNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { backfillImageDimensions, clampImageCardWidth, migrateImageDataUrl } from '@/plugins/behaviour/image-lifecycle'
@@ -84,15 +85,10 @@ describe('backfillImageDimensions', () => {
     })
     vi.mocked(getImageDimensions).mockResolvedValue({ width: 100, height: 50 })
     nodeKey = ''
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          const node = $createImageNode({ src: 'https://example.com/image.png' })
-          $getRoot().append(node)
-          nodeKey = node.getKey()
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      const node = $createImageNode({ src: 'https://example.com/image.png' })
+      $getRoot().append(node)
+      nodeKey = node.getKey()
     })
   })
 
@@ -133,9 +129,7 @@ describe('backfillImageDimensions', () => {
       node.height = 10
     })
     // let the microtask commit land before the backfill reads
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0)
-    })
+    await tick()
 
     const fired = await backfillImageDimensions(
       editor,

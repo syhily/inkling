@@ -17,6 +17,7 @@ import {
 import React, { useMemo } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { tick, updateEditor } from '#/utils/test-editor'
 import { $isHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { HorizontalRulePlugin } from '@/plugins/HorizontalRulePlugin'
 
@@ -100,22 +101,17 @@ describe('HorizontalRulePlugin shortcut listener', () => {
 
   async function setContent(texts: string[]): Promise<string[]> {
     const keys: string[] = []
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          for (const text of texts) {
-            const paragraph = $createParagraphNode()
-            paragraph.append($createTextNode(text))
-            $getRoot().append(paragraph)
-            keys.push(paragraph.getKey())
-          }
-          const first = $getRoot().getFirstChild()
-          if ($isParagraphNode(first)) {
-            first.select()
-          }
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      for (const text of texts) {
+        const paragraph = $createParagraphNode()
+        paragraph.append($createTextNode(text))
+        $getRoot().append(paragraph)
+        keys.push(paragraph.getKey())
+      }
+      const first = $getRoot().getFirstChild()
+      if ($isParagraphNode(first)) {
+        first.select()
+      }
     })
     return keys
   }
@@ -125,9 +121,7 @@ describe('HorizontalRulePlugin shortcut listener', () => {
       await act(async () => {
         editor.dispatchCommand(CONTROLLED_TEXT_INSERTION_COMMAND, char)
       })
-      await new Promise((resolve) => {
-        setTimeout(resolve, 0)
-      })
+      await tick()
     }
   }
 
@@ -229,9 +223,7 @@ describe('HorizontalRulePlugin shortcut listener', () => {
     await act(async () => {
       editor.dispatchCommand(UNDO_COMMAND, undefined)
     })
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0)
-    })
+    await tick()
 
     expect(rootChildTypes()).toEqual(['paragraph'])
     expect(editor.getEditorState().read(() => $getRoot().getTextContent())).toBe('---')

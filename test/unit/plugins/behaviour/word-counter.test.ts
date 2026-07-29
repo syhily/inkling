@@ -12,6 +12,7 @@ import {
 } from 'lexical'
 import { describe, expect, it, vi } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { createWordCounter, type WordCounterThrottle } from '@/plugins/behaviour/word-counter'
 import { countWords } from '@/utils'
 import { getTopLevelEditor } from '@/utils/lexical-internals'
@@ -52,12 +53,6 @@ function createTestEditor(overrides: { nodes?: LexicalNodeConfig[]; parentEditor
     { discrete: true },
   )
   return editor
-}
-
-function updateEditor(editor: LexicalEditor, updateFn: () => void) {
-  return new Promise<void>((resolve) => {
-    editor.update(updateFn, { discrete: true, onUpdate: () => resolve() })
-  })
 }
 
 class TestDecoratorNode extends DecoratorNode<null> {
@@ -115,11 +110,15 @@ describe('createWordCounter', () => {
 
   it('counts pre-existing content on attach', async () => {
     const editor = createTestEditor()
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello world foo')))
-    })
+    await updateEditor(
+      editor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append($createParagraphNode().append($createTextNode('Hello world foo')))
+      },
+      { discrete: true },
+    )
 
     const onChange = vi.fn()
     const counter = attachCounter(editor, onChange)
@@ -130,13 +129,17 @@ describe('createWordCounter', () => {
 
   it('passes language through to countWords (C7)', async () => {
     const editor = createTestEditor()
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append(
-        $createParagraphNode().append($createTextNode('我今天在家吃了好多好多好吃的，现在的我非常开心非常满足')),
-      )
-    })
+    await updateEditor(
+      editor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append(
+          $createParagraphNode().append($createTextNode('我今天在家吃了好多好多好吃的，现在的我非常开心非常满足')),
+        )
+      },
+      { discrete: true },
+    )
 
     const onChange = vi.fn()
     const counter = createWordCounter({ editor, onChange, language: 'zh', throttleFn: synchronousThrottle })
@@ -154,18 +157,26 @@ describe('createWordCounter', () => {
     const onChange = vi.fn()
     const counter = attachCounter(editor, onChange)
 
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello world')))
-    })
+    await updateEditor(
+      editor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append($createParagraphNode().append($createTextNode('Hello world')))
+      },
+      { discrete: true },
+    )
     expect(onChange).toHaveBeenLastCalledWith(2)
 
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello')))
-    })
+    await updateEditor(
+      editor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append($createParagraphNode().append($createTextNode('Hello')))
+      },
+      { discrete: true },
+    )
     expect(onChange).toHaveBeenLastCalledWith(1)
     counter.detach()
   })
@@ -175,22 +186,30 @@ describe('createWordCounter', () => {
     const onChange = vi.fn()
     const counter = attachCounter(editor, onChange)
 
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello world')))
-    })
+    await updateEditor(
+      editor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append($createParagraphNode().append($createTextNode('Hello world')))
+      },
+      { discrete: true },
+    )
     expect(onChange).toHaveBeenLastCalledWith(2)
     onChange.mockClear()
     vi.mocked(countWords).mockClear()
 
-    await updateEditor(editor, () => {
-      const textNode = $getRoot().getFirstDescendant()
-      if (!$isTextNode(textNode)) {
-        throw new Error('Expected the word-count fixture to contain a text node')
-      }
-      textNode.setFormat(1)
-    })
+    await updateEditor(
+      editor,
+      () => {
+        const textNode = $getRoot().getFirstDescendant()
+        if (!$isTextNode(textNode)) {
+          throw new Error('Expected the word-count fixture to contain a text node')
+        }
+        textNode.setFormat(1)
+      },
+      { discrete: true },
+    )
 
     // the flush ran (one block recomputed) but the count did not change
     expect(vi.mocked(countWords)).toHaveBeenCalledTimes(1)
@@ -200,30 +219,38 @@ describe('createWordCounter', () => {
 
   it('remaps dirty keys to their root children for a small edit in a long document', async () => {
     const editor = createTestEditor()
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      for (let i = 0; i < 100; i++) {
-        root.append($createParagraphNode().append($createTextNode(`Paragraph ${i} has several words to count`)))
-      }
-    })
+    await updateEditor(
+      editor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        for (let i = 0; i < 100; i++) {
+          root.append($createParagraphNode().append($createTextNode(`Paragraph ${i} has several words to count`)))
+        }
+      },
+      { discrete: true },
+    )
 
     const onChange = vi.fn()
     const counter = attachCounter(editor, onChange)
     expect(onChange).toHaveBeenLastCalledWith(700)
     vi.mocked(countWords).mockClear()
 
-    await updateEditor(editor, () => {
-      const firstParagraph = $getRoot().getFirstChild()
-      if (!$isElementNode(firstParagraph)) {
-        throw new Error('Expected the long-document fixture to start with a paragraph')
-      }
-      const firstText = firstParagraph.getFirstChild()
-      if (!$isTextNode(firstText)) {
-        throw new Error('Expected the first paragraph to contain a text node')
-      }
-      firstText.setTextContent('Paragraph zero has words')
-    })
+    await updateEditor(
+      editor,
+      () => {
+        const firstParagraph = $getRoot().getFirstChild()
+        if (!$isElementNode(firstParagraph)) {
+          throw new Error('Expected the long-document fixture to start with a paragraph')
+        }
+        const firstText = firstParagraph.getFirstChild()
+        if (!$isTextNode(firstText)) {
+          throw new Error('Expected the first paragraph to contain a text node')
+        }
+        firstText.setTextContent('Paragraph zero has words')
+      },
+      { discrete: true },
+    )
 
     // the dirty text node remaps to its root child, so only that one block is
     // recounted — a full recompute would call countWords once per block
@@ -234,22 +261,30 @@ describe('createWordCounter', () => {
 
   it('drops removed blocks from the count', async () => {
     const editor = createTestEditor()
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello world')))
-      root.append($createParagraphNode().append($createTextNode('foo bar')))
-    })
+    await updateEditor(
+      editor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append($createParagraphNode().append($createTextNode('Hello world')))
+        root.append($createParagraphNode().append($createTextNode('foo bar')))
+      },
+      { discrete: true },
+    )
 
     const onChange = vi.fn()
     const counter = attachCounter(editor, onChange)
     expect(onChange).toHaveBeenLastCalledWith(4)
 
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello world')))
-    })
+    await updateEditor(
+      editor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append($createParagraphNode().append($createTextNode('Hello world')))
+      },
+      { discrete: true },
+    )
 
     expect(onChange).toHaveBeenLastCalledWith(2)
     counter.detach()
@@ -261,12 +296,16 @@ describe('createWordCounter', () => {
 
     // Set up the top-level state before attaching so the initial full count
     // includes the top-level paragraph.
-    await updateEditor(topLevelEditor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello world')))
-      root.append($createTestDecoratorNode(nestedEditor))
-    })
+    await updateEditor(
+      topLevelEditor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append($createParagraphNode().append($createTextNode('Hello world')))
+        root.append($createTestDecoratorNode(nestedEditor))
+      },
+      { discrete: true },
+    )
 
     const onChange = vi.fn()
     const counter = attachCounter(nestedEditor, onChange)
@@ -274,11 +313,15 @@ describe('createWordCounter', () => {
     expect(onChange).toHaveBeenCalledWith(2)
     onChange.mockClear()
 
-    await updateEditor(nestedEditor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Nested content')))
-    })
+    await updateEditor(
+      nestedEditor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append($createParagraphNode().append($createTextNode('Nested content')))
+      },
+      { discrete: true },
+    )
 
     expect(onChange).toHaveBeenLastCalledWith(4)
     counter.detach()
@@ -291,11 +334,15 @@ describe('createWordCounter', () => {
 
     expect(getTopLevelEditor(grandchildEditor)).toBe(topLevelEditor)
 
-    await updateEditor(topLevelEditor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Top level words')))
-    })
+    await updateEditor(
+      topLevelEditor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append($createParagraphNode().append($createTextNode('Top level words')))
+      },
+      { discrete: true },
+    )
 
     const onChange = vi.fn()
     const counter = attachCounter(grandchildEditor, onChange)
@@ -309,11 +356,15 @@ describe('createWordCounter', () => {
     // nested-editor boundaries, so the grandchild text does not reach the
     // top-level count; we assert the callback is reached with the current
     // top-level count.
-    await updateEditor(grandchildEditor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Grandchild words')))
-    })
+    await updateEditor(
+      grandchildEditor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append($createParagraphNode().append($createTextNode('Grandchild words')))
+      },
+      { discrete: true },
+    )
 
     expect(onChange).toHaveBeenCalled()
     expect(onChange).toHaveBeenLastCalledWith(3)
@@ -335,11 +386,15 @@ describe('createWordCounter', () => {
     expect(cancel).toHaveBeenCalledTimes(2)
     onChange.mockClear()
 
-    await updateEditor(editor, () => {
-      const root = $getRoot()
-      root.clear()
-      root.append($createParagraphNode().append($createTextNode('Hello world')))
-    })
+    await updateEditor(
+      editor,
+      () => {
+        const root = $getRoot()
+        root.clear()
+        root.append($createParagraphNode().append($createTextNode('Hello world')))
+      },
+      { discrete: true },
+    )
 
     expect(onChange).not.toHaveBeenCalled()
   })

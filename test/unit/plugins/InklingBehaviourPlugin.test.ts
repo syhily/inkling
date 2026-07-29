@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { updateEditor } from '#/utils/test-editor'
 import { HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { DESELECT_CARD_COMMAND, INSERT_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
@@ -50,20 +51,15 @@ describe('InklingBehaviourPlugin', () => {
     // Smoke test: ensure the plugin registered the command listeners by
     // dispatching a few commands with valid editor state.
     let imageNode: ImageNode
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          const root = $getRoot()
-          root.clear()
-          const paragraph = $createParagraphNode()
-          paragraph.append($createTextNode('hello'))
-          root.append(paragraph)
-          paragraph.select()
+    await updateEditor(editor, () => {
+      const root = $getRoot()
+      root.clear()
+      const paragraph = $createParagraphNode()
+      paragraph.append($createTextNode('hello'))
+      root.append(paragraph)
+      paragraph.select()
 
-          imageNode = $createImageNode({ src: '/image.png' })
-        },
-        { onUpdate: () => resolve() },
-      )
+      imageNode = $createImageNode({ src: '/image.png' })
     })
 
     let insertedCardNode
@@ -112,26 +108,16 @@ describe('InklingBehaviourPlugin', () => {
     renderPlugin()
 
     let cardKey = ''
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          const image = $createImageNode({ src: '/image.png' })
-          $getRoot().append(image)
-          cardKey = image.getKey()
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      const image = $createImageNode({ src: '/image.png' })
+      $getRoot().append(image)
+      cardKey = image.getKey()
     })
     // select through the plugin's store-backed command, dispatched inside an
     // update so the node selection commits deterministically (the
     // dispatchAndCommit convention from registerKeyboardNavigation.test.ts)
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          editor.dispatchCommand(SELECT_CARD_COMMAND, { cardKey })
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      editor.dispatchCommand(SELECT_CARD_COMMAND, { cardKey })
     })
 
     // higher-priority observer so the deselect dispatch is recorded without

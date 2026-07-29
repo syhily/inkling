@@ -10,6 +10,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $replaceDashes } from '@/plugins/behaviour/em-en-dash'
 
 // Synchronous test table for the em/en dash grammar
@@ -45,18 +46,13 @@ async function runScan(
   editor: LexicalEditor,
   { input, caret = input.length, supportsHrShortcut = false }: Omit<ScanCase, 'name' | 'expected' | 'expectedCaret'>,
 ): Promise<{ text: string; caretOffset: number | null }> {
-  await new Promise<void>((resolve) => {
-    editor.update(
-      () => {
-        const paragraph = $createParagraphNode()
-        const text = $createTextNode(input)
-        paragraph.append(text)
-        $getRoot().append(paragraph)
-        text.select(caret, caret)
-        $replaceDashes(new Set([text.getKey()]), supportsHrShortcut)
-      },
-      { onUpdate: () => resolve() },
-    )
+  await updateEditor(editor, () => {
+    const paragraph = $createParagraphNode()
+    const text = $createTextNode(input)
+    paragraph.append(text)
+    $getRoot().append(paragraph)
+    text.select(caret, caret)
+    $replaceDashes(new Set([text.getKey()]), supportsHrShortcut)
   })
   return editor.getEditorState().read(() => {
     const selection = $getSelection()
@@ -166,34 +162,24 @@ describe('$replaceDashes', () => {
   })
 
   it('replaces dashes when there is no selection at all', async () => {
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          const paragraph = $createParagraphNode()
-          const text = $createTextNode('---')
-          paragraph.append(text)
-          $getRoot().append(paragraph)
-          $replaceDashes(new Set([text.getKey()]), false)
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      const paragraph = $createParagraphNode()
+      const text = $createTextNode('---')
+      paragraph.append(text)
+      $getRoot().append(paragraph)
+      $replaceDashes(new Set([text.getKey()]), false)
     })
     expect(editor.getEditorState().read(() => $getRoot().getTextContent())).toBe('—')
   })
 
   it('ignores dirty leaves that are not text nodes', async () => {
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          const paragraph = $createParagraphNode()
-          paragraph.append($createTextNode('---'))
-          $getRoot().append(paragraph)
-          if ($isParagraphNode(paragraph)) {
-            $replaceDashes(new Set([paragraph.getKey()]), false)
-          }
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      const paragraph = $createParagraphNode()
+      paragraph.append($createTextNode('---'))
+      $getRoot().append(paragraph)
+      if ($isParagraphNode(paragraph)) {
+        $replaceDashes(new Set([paragraph.getKey()]), false)
+      }
     })
     expect(editor.getEditorState().read(() => $getRoot().getTextContent())).toBe('---')
   })

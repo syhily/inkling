@@ -5,6 +5,7 @@ import { $createParagraphNode, $createTextNode, $getRoot, createEditor } from 'l
 import React from 'react'
 import { describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import InklingComposer from '@/components/InklingComposer'
 import InklingErrorBoundary from '@/components/InklingErrorBoundary'
 import InklingNestedComposer from '@/components/InklingNestedComposer'
@@ -20,15 +21,14 @@ describe('InklingNestedComposer', () => {
       onError: () => {},
     })
 
-    await new Promise<void>((resolve) => {
-      nestedEditor.update(
-        () => {
-          const root = $getRoot()
-          root.append($createParagraphNode().append($createTextNode('nested content')))
-        },
-        { discrete: true, onUpdate: () => resolve() },
-      )
-    })
+    await updateEditor(
+      nestedEditor,
+      () => {
+        const root = $getRoot()
+        root.append($createParagraphNode().append($createTextNode('nested content')))
+      },
+      { discrete: true },
+    )
 
     render(
       <InklingComposer>

@@ -1,7 +1,7 @@
 import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createTestEditor } from '#/utils/test-editor'
+import { createTestEditor, updateEditor } from '#/utils/test-editor'
 import { $createBookmarkNode, $isBookmarkNode, BookmarkNode } from '@/nodes/BookmarkNode'
 import { createBookmarkEmbedFlow, isEmbedResponse, type BookmarkEmbedFlow } from '@/utils/services/bookmark-embed-flow'
 
@@ -47,15 +47,10 @@ describe('createBookmarkEmbedFlow', () => {
   beforeEach(async () => {
     editor = createTestEditor({ nodes: [BookmarkNode], headless: false })
     editor.setRootElement(document.createElement('div'))
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          const node = $createBookmarkNode({ url: '' })
-          $getRoot().append(node)
-          nodeKey = node.getKey()
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      const node = $createBookmarkNode({ url: '' })
+      $getRoot().append(node)
+      nodeKey = node.getKey()
     })
   })
 

@@ -5,6 +5,7 @@ import { $createParagraphNode, $createTextNode, $getRoot, $isElementNode, create
 import React from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { tick, updateEditor } from '#/utils/test-editor'
 import CardContext from '@/context/CardContext'
 import { TKHandleContext } from '@/context/TKHandleContext'
 import { ExtendedTextNode, TKNode, extendedTextNodeReplacement, $isTKNode } from '@/nodes/base'
@@ -65,21 +66,14 @@ describe('TKPlugin in nested editors', () => {
     )
 
     // Wait for React effects to run so TKPlugin registers its transforms
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0)
-    })
+    await tick()
 
-    await new Promise<void>((resolve) => {
-      nestedEditor.update(
-        () => {
-          const root = $getRoot()
-          root.clear()
-          const paragraph = $createParagraphNode()
-          paragraph.append($createTextNode('TK'))
-          root.append(paragraph)
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(nestedEditor, () => {
+      const root = $getRoot()
+      root.clear()
+      const paragraph = $createParagraphNode()
+      paragraph.append($createTextNode('TK'))
+      root.append(paragraph)
     })
 
     nestedEditor.getEditorState().read(() => {

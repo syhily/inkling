@@ -4,6 +4,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { updateEditor } from '#/utils/test-editor'
 import { SnippetActionToolbar } from '@/components/ui/SnippetActionToolbar'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 
@@ -16,19 +17,14 @@ function createTestEditor(): LexicalEditor {
 }
 
 function selectText(editor: LexicalEditor, text: string): Promise<void> {
-  return new Promise((resolve) => {
-    editor.update(
-      () => {
-        const root = $getRoot()
-        root.clear()
-        const paragraph = $createParagraphNode()
-        const textNode = $createTextNode(text)
-        paragraph.append(textNode)
-        root.append(paragraph)
-        textNode.select(0, text.length)
-      },
-      { onUpdate: () => resolve() },
-    )
+  return updateEditor(editor, () => {
+    const root = $getRoot()
+    root.clear()
+    const paragraph = $createParagraphNode()
+    const textNode = $createTextNode(text)
+    paragraph.append(textNode)
+    root.append(paragraph)
+    textNode.select(0, text.length)
   })
 }
 

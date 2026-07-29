@@ -14,6 +14,7 @@ import {
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingComposer from '@/components/InklingComposer'
 import InklingNestedComposer from '@/components/InklingNestedComposer'
@@ -43,18 +44,17 @@ function createNestedEditor() {
 }
 
 async function setText(editor: LexicalEditor, text: string) {
-  await new Promise<void>((resolve) => {
-    editor.update(
-      () => {
-        const root = $getRoot()
-        root.clear()
-        root.append($createParagraphNode().append($createTextNode(text)))
-      },
-      // discrete commits synchronously; the push tag stops Lexical history
-      // from merging edits made within its merge-delay window
-      { discrete: true, tag: HISTORY_PUSH_TAG, onUpdate: () => resolve() },
-    )
-  })
+  // discrete commits synchronously; the push tag stops Lexical history
+  // from merging edits made within its merge-delay window
+  await updateEditor(
+    editor,
+    () => {
+      const root = $getRoot()
+      root.clear()
+      root.append($createParagraphNode().append($createTextNode(text)))
+    },
+    { discrete: true, tag: HISTORY_PUSH_TAG },
+  )
 }
 
 function getText(editor: LexicalEditor) {

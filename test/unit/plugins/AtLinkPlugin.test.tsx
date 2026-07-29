@@ -20,6 +20,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ListOptionItem, ListOptionSection } from '@/hooks/useSearchLinks'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { tick, updateEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { AtLinkNode, AtLinkSearchNode, ZWNJNode } from '@/nodes/base'
 import { AtLinkPlugin, InklingAtLinkPlugin } from '@/plugins/AtLinkPlugin'
@@ -105,17 +106,13 @@ describe('AtLinkPlugin', () => {
     // Lexical 0.46 defers commits (and listener cascades) to microtasks —
     // drain the queue inside act so assertions see the settled state
     await act(async () => {
-      await new Promise<void>((resolve) => {
-        setTimeout(resolve, 0)
-      })
+      await tick()
     })
   }
 
   async function actUpdate(updateFn: () => void) {
     await act(async () => {
-      await new Promise<void>((resolve) => {
-        editor.update(updateFn, { onUpdate: () => resolve() })
-      })
+      await updateEditor(editor, updateFn)
     })
     await actFlush()
   }

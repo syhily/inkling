@@ -5,6 +5,7 @@ import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey
 import { afterEach, beforeEach, describe, expect, it, vi, type MockedFunction } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
+import { tick, updateEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext, {
   type CardConfig,
   type FileUploader,
@@ -95,12 +96,6 @@ function addVideoNode(editor: LexicalEditor, loop: boolean) {
 
 function readLoop(editor: LexicalEditor, nodeKey: NodeKey) {
   return editor.getEditorState().read(() => ($getNodeByKey(nodeKey) as VideoNode | null)?.loop)
-}
-
-function flushMacrotask(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 0)
-  })
 }
 
 function readVideoFields(editor: LexicalEditor, nodeKey: NodeKey) {
@@ -296,21 +291,16 @@ describe('VideoNodeComponent', () => {
 
   it('keeps custom thumbnail dimensions when a custom thumbnail is set', async () => {
     let nodeKey = ''
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          const videoNode = $createVideoNode({
-            src: 'https://example.com/video.mp4',
-            thumbnailSrc: 'https://example.com/thumb.jpg',
-            customThumbnailSrc: 'https://example.com/custom.jpg',
-            thumbnailWidth: 111,
-            thumbnailHeight: 55,
-          })
-          $getRoot().append(videoNode)
-          nodeKey = videoNode.getKey()
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      const videoNode = $createVideoNode({
+        src: 'https://example.com/video.mp4',
+        thumbnailSrc: 'https://example.com/thumb.jpg',
+        customThumbnailSrc: 'https://example.com/custom.jpg',
+        thumbnailWidth: 111,
+        thumbnailHeight: 55,
+      })
+      $getRoot().append(videoNode)
+      nodeKey = videoNode.getKey()
     })
 
     const file = new File(['video'], 'clip.mp4', { type: 'video/mp4' })
@@ -367,15 +357,10 @@ describe('VideoNodeComponent', () => {
   it('opens the file dialog once when triggerFileDialog is true', async () => {
     const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
     let nodeKey = ''
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          const videoNode = $createVideoNode({ triggerFileDialog: true })
-          $getRoot().append(videoNode)
-          nodeKey = videoNode.getKey()
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      const videoNode = $createVideoNode({ triggerFileDialog: true })
+      $getRoot().append(videoNode)
+      nodeKey = videoNode.getKey()
     })
 
     renderComponent(nodeKey, false, { triggerFileDialog: true, thumbnail: '' })
@@ -410,7 +395,7 @@ describe('VideoNodeComponent', () => {
     renderComponent(nodeKey, false, { initialFile: file, uploads: { video: videoUpload } })
 
     // the mount effect runs synchronously; give any async work a chance to fire
-    await flushMacrotask()
+    await tick()
     expect(videoUpload.upload).not.toHaveBeenCalled()
     expect(extractVideoMetadata).not.toHaveBeenCalled()
   })

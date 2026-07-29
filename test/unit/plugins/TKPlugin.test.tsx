@@ -4,7 +4,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
-import { createTestEditor } from '#/utils/test-editor'
+import { createTestEditor, updateEditor } from '#/utils/test-editor'
 import CardContext, { type CardContextValue } from '@/context/CardContext'
 import { TKHandleContext } from '@/context/TKHandleContext'
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
@@ -205,14 +205,9 @@ describe('TKPlugin', () => {
     const [, , createTKNode] = vi.mocked(useInklingTextEntity).mock.calls[0]
 
     let textContent = ''
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          const tkNode = createTKNode($createTextNode('TK test'))
-          textContent = tkNode.getTextContent()
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      const tkNode = createTKNode($createTextNode('TK test'))
+      textContent = tkNode.getTextContent()
     })
 
     expect(textContent).toBe('TK test')

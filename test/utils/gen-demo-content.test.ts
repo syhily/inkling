@@ -2,7 +2,7 @@ import { $createLinkNode } from '@lexical/link'
 import { $createListItemNode, $createListNode } from '@lexical/list'
 import { $createHeadingNode, $createQuoteNode } from '@lexical/rich-text'
 import { TableCellNode, TableNode, TableRowNode } from '@lexical/table'
-import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
+import { $createParagraphNode, $createTextNode, $getRoot, createEditor } from 'lexical'
 /**
  * Demo-content regenerator — skipped in the suite; run manually with:
  *
@@ -14,6 +14,7 @@ import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type Lex
 import { writeFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $createAudioNode } from '@/nodes/AudioNode'
 import { $createBookmarkNode } from '@/nodes/BookmarkNode'
 import { $createButtonNode } from '@/nodes/ButtonNode'
@@ -34,12 +35,6 @@ import { $createVideoNode } from '@/nodes/VideoNode'
 
 import { musicPlayer } from '../../demo/components/MusicPlayerCard'
 
-function update(editor: LexicalEditor, fn: () => void): Promise<void> {
-  return new Promise((resolve) => {
-    editor.update(fn, { onUpdate: () => resolve() })
-  })
-}
-
 describe('gen-demo-content', () => {
   it.skipIf(!process.env.GENERATE_DEMO_CONTENT)('writes demo/content/content.json', async () => {
     const editor = createEditor({
@@ -50,7 +45,7 @@ describe('gen-demo-content', () => {
       },
     })
 
-    await update(editor, () => {
+    await updateEditor(editor, () => {
       const root = $getRoot()
 
       const h1 = $createHeadingNode('h1')

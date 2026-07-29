@@ -31,10 +31,14 @@ export function createTestEditor({ nodes = [], onError = () => {}, headless = tr
   return headless ? createHeadlessEditor({ nodes, onError }) : createEditor({ namespace: 'test', nodes, onError })
 }
 
-/** Await one committed editor update. */
-export function updateEditor(editor: LexicalEditor, updateFn: () => void): Promise<void> {
+/** Await one committed editor update; options (discrete, tag, …) pass through to editor.update. */
+export function updateEditor(
+  editor: LexicalEditor,
+  updateFn: () => void,
+  options?: EditorUpdateOptions,
+): Promise<void> {
   return new Promise<void>((resolve) => {
-    editor.update(updateFn, { onUpdate: () => resolve() })
+    editor.update(updateFn, { ...options, onUpdate: () => resolve() })
   })
 }
 
@@ -56,8 +60,6 @@ export async function drainEnqueuedUpdates(
   updateFn: () => void,
   options?: EditorUpdateOptions,
 ): Promise<void> {
-  await new Promise<void>((resolve) => {
-    editor.update(updateFn, { ...options, onUpdate: () => resolve() })
-  })
+  await updateEditor(editor, updateFn, options)
   await tick()
 }

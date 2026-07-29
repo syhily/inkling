@@ -11,6 +11,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import { $isBookmarkNode, BookmarkNode } from '@/nodes/BookmarkNode'
 import { ImageNode } from '@/nodes/ImageNode'
 import { INSERT_CARD_COMMAND, PASTE_LINK_COMMAND } from '@/plugins/behaviour/commands'
@@ -28,15 +29,10 @@ const PASTE_URL = 'https://example.com/article'
 const pasteLinkPayload = { linkMatch: [PASTE_URL, PASTE_URL] as readonly [string, string] }
 
 function placeCaretInBlankParagraph(editor: LexicalEditor): Promise<void> {
-  return new Promise((resolve) => {
-    editor.update(
-      () => {
-        const paragraph = $createParagraphNode()
-        $getRoot().clear().append(paragraph)
-        paragraph.select()
-      },
-      { onUpdate: () => resolve() },
-    )
+  return updateEditor(editor, () => {
+    const paragraph = $createParagraphNode()
+    $getRoot().clear().append(paragraph)
+    paragraph.select()
   })
 }
 
@@ -73,13 +69,8 @@ describe('registerLinkMatching bookmark card path', () => {
     await placeCaretInBlankParagraph(editor)
 
     let handled = false
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          handled = editor.dispatchCommand(PASTE_LINK_COMMAND, pasteLinkPayload)
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      handled = editor.dispatchCommand(PASTE_LINK_COMMAND, pasteLinkPayload)
     })
 
     expect(handled).toBe(true)
@@ -95,13 +86,8 @@ describe('registerLinkMatching bookmark card path', () => {
     await placeCaretInBlankParagraph(editor)
 
     let handled = false
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          handled = editor.dispatchCommand(PASTE_LINK_COMMAND, pasteLinkPayload)
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      handled = editor.dispatchCommand(PASTE_LINK_COMMAND, pasteLinkPayload)
     })
 
     expect(handled).toBe(true)

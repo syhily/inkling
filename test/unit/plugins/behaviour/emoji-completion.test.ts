@@ -13,6 +13,7 @@ import {
 } from 'lexical'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 
+import { drainEnqueuedUpdates, tick } from '#/utils/test-editor'
 // Behaviour pins for the headless half of the emoji picker
 // (src/plugins/behaviour/emoji-completion.ts): the query policy with the
 // emoticon alias table, the exact-match `:shortcode:` completion, and the two
@@ -59,12 +60,7 @@ function createTestEditor() {
 }
 
 // Lexical 0.46 commits listener-triggered work on microtasks — a macrotask
-// wait drains the search promise and the completion update.
-function flushUpdates() {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
-}
+// wait (tick) drains the search promise and the completion update.
 
 // Emulates the browser-side format sync Lexical does when reconciling the
 // native selection — programmatic node.select() leaves format at 0.
@@ -89,29 +85,23 @@ async function buildParagraph(
   caret: { segment: number; offset: number },
 ) {
   let nodes: TextNode[] = []
-  await new Promise<void>((resolve) => {
-    editor.update(
-      () => {
-        const root = $getRoot()
-        root.clear()
-        const paragraph = $createParagraphNode()
-        nodes = segments.map(({ text, format }) => {
-          const node = $createTextNode(text)
-          if (format) {
-            node.setFormat(format)
-          }
-          paragraph.append(node)
-          return node
-        })
-        root.append(paragraph)
-        const caretNode = nodes[caret.segment]
-        caretNode.select(caret.offset, caret.offset)
-        $syncSelectionFormat(caretNode)
-      },
-      { onUpdate: () => resolve() },
-    )
+  await drainEnqueuedUpdates(editor, () => {
+    const root = $getRoot()
+    root.clear()
+    const paragraph = $createParagraphNode()
+    nodes = segments.map(({ text, format }) => {
+      const node = $createTextNode(text)
+      if (format) {
+        node.setFormat(format)
+      }
+      paragraph.append(node)
+      return node
+    })
+    root.append(paragraph)
+    const caretNode = nodes[caret.segment]
+    caretNode.select(caret.offset, caret.offset)
+    $syncSelectionFormat(caretNode)
   })
-  await flushUpdates()
   return nodes
 }
 
@@ -180,7 +170,7 @@ describe('registerEmojiExactMatchCompletion', () => {
   async function dispatchColon(editor: LexicalEditor) {
     const event = colonKeydown()
     editor.dispatchCommand(KEY_DOWN_COMMAND, event)
-    await flushUpdates()
+    await tick()
     return event
   }
 
@@ -282,10 +272,9 @@ describe('$insertEmojiCompletion', () => {
     await buildParagraph(editor, [{ text: ':taco', format: 'bold' }], { segment: 0, offset: 5 })
 
     let committed: EmojiCommitResult | null = null
-    editor.update(() => {
+    await drainEnqueuedUpdates(editor, () => {
       committed = $insertEmojiCompletion(taco)
     })
-    await flushUpdates()
 
     expect(committed).toEqual({ id: 'taco', native: '🌮' })
     expect(rootText(editor)).toBe('🌮')
@@ -298,10 +287,9 @@ describe('$insertEmojiCompletion', () => {
     // would leave the leading ':' behind
     await buildParagraph(editor, [{ text: 'say :taco' }], { segment: 0, offset: 9 })
 
-    editor.update(() => {
+    await drainEnqueuedUpdates(editor, () => {
       $insertEmojiCompletion(taco)
     })
-    await flushUpdates()
 
     expect(rootText(editor)).toBe('say 🌮')
     // the caret ends up right after the inserted emoji
@@ -334,7 +322,7 @@ describe('$insertSelectedEmoji', () => {
     await buildParagraph(editor, [{ text: 'hello :ta', format: 'bold' }], { segment: 0, offset: 9 })
 
     let committed: EmojiCommitResult | null = null
-    editor.update(() => {
+    await drainEnqueuedUpdates(editor, () => {
       // split the query node out the way the typeahead's
       // selectOptionAndCleanUp does ($splitNodeContainingQuery) — the split
       // and the surgery share one update because same-format text nodes
@@ -350,7 +338,6 @@ describe('$insertSelectedEmoji', () => {
       const queryNode = anchorNode.splitText(6)[1]
       committed = $insertSelectedEmoji(taco, queryNode)
     })
-    await flushUpdates()
 
     expect(committed).toEqual({ id: 'taco', native: '🌮' })
     expect(rootText(editor)).toBe('hello 🌮')
@@ -362,10 +349,9 @@ describe('$insertSelectedEmoji', () => {
     await buildParagraph(editor, [{ text: 'hi ' }], { segment: 0, offset: 3 })
 
     let committed: EmojiCommitResult | null = null
-    editor.update(() => {
+    await drainEnqueuedUpdates(editor, () => {
       committed = $insertSelectedEmoji(taco, null)
     })
-    await flushUpdates()
 
     expect(committed).toEqual({ id: 'taco', native: '🌮' })
     expect(rootText(editor)).toBe('hi 🌮')

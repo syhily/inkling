@@ -16,6 +16,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { updateEditor } from '#/utils/test-editor'
 import {
   $createAtLinkNode,
   $createAtLinkSearchNode,
@@ -55,16 +56,10 @@ function createTestEditor(): LexicalEditor {
   return editor
 }
 
-function update(editor: LexicalEditor, fn: () => void): Promise<void> {
-  // Lexical defers the commit of non-discrete updates; await the commit so
-  // the following read sees the new state
-  return new Promise((resolve) => {
-    editor.update(fn, { onUpdate: () => resolve() })
-  })
-}
-
+// updateEditor (the shared harness) awaits the commit of a non-discrete
+// update so the following read sees the new state.
 function selectText(editor: LexicalEditor, text: string): Promise<void> {
-  return update(editor, () => {
+  return updateEditor(editor, () => {
     const root = $getRoot()
     root.clear()
     const paragraph = $createParagraphNode()
@@ -76,7 +71,7 @@ function selectText(editor: LexicalEditor, text: string): Promise<void> {
 }
 
 function linkSelection(editor: LexicalEditor, url: string): Promise<void> {
-  return update(editor, () => {
+  return updateEditor(editor, () => {
     $applyLinkToSelection(editor, url)
   })
 }
@@ -124,7 +119,7 @@ describe('$applyLinkToSelection', () => {
     await linkSelection(editor, 'https://example.com')
 
     // re-select the linked text and apply an empty url
-    await update(editor, () => {
+    await updateEditor(editor, () => {
       const link = $nodesOfType(LinkNode)[0]
       const text = link.getFirstChild()
       if (!$isTextNode(text)) {
@@ -156,7 +151,7 @@ describe('$getLinkHrefAtSelection', () => {
   })
 
   it('returns an empty string when the selection is not on a link', async () => {
-    await update(editor, () => {
+    await updateEditor(editor, () => {
       const paragraph = $createParagraphNode()
       paragraph.append($createTextNode('plain'))
       $getRoot().append(paragraph)
@@ -175,7 +170,7 @@ describe('$selectLinkText', () => {
     await selectText(editor, 'hello')
     await linkSelection(editor, 'https://example.com')
 
-    await update(editor, () => {
+    await updateEditor(editor, () => {
       const link = $nodesOfType(LinkNode)[0]
       expect($selectLinkText(link)).toBe(true)
     })
@@ -264,7 +259,7 @@ describe('$removeLink', () => {
     await selectText(editor, 'hello')
     await linkSelection(editor, 'https://example.com')
 
-    await update(editor, () => {
+    await updateEditor(editor, () => {
       $removeLink(editor, $nodesOfType(LinkNode)[0])
     })
 
@@ -377,7 +372,7 @@ function createDomLinkedEditor(): { editor: LexicalEditor; rootElement: HTMLDivE
 }
 
 function appendLinkAndPlainText(editor: LexicalEditor): Promise<void> {
-  return update(editor, () => {
+  return updateEditor(editor, () => {
     const root = $getRoot()
     root.clear()
     const linkParagraph = $createParagraphNode()
@@ -546,7 +541,7 @@ describe('createToolbarRevealFeed', () => {
 
   it('reveals on threshold crossing with a collapsed caret — the check is only $isRangeSelection', async () => {
     const editor = createTestEditor()
-    await update(editor, () => {
+    await updateEditor(editor, () => {
       const root = $getRoot()
       root.clear()
       const paragraph = $createParagraphNode()
@@ -696,7 +691,7 @@ describe('registerToolbarSelectionSync', () => {
     dispatchNativeSelection(text, 0, text, 5)
     expect(session.handle.getState().type).toBe('text')
 
-    await update(editor, () => {
+    await updateEditor(editor, () => {
       const paragraph = $getRoot().getFirstChild()
       if (!$isElementNode(paragraph)) {
         throw new Error('expected the paragraph')
@@ -716,7 +711,7 @@ describe('registerToolbarSelectionSync', () => {
 
   it('suppresses the toolbar while the selection is inside an at-link search node', async () => {
     let searchNodeKey = ''
-    await update(editor, () => {
+    await updateEditor(editor, () => {
       const root = $getRoot()
       root.clear()
       const paragraph = $createParagraphNode()
@@ -730,7 +725,7 @@ describe('registerToolbarSelectionSync', () => {
     })
 
     // liveness: a plain-text selection opens the toolbar through the same listener
-    await update(editor, () => {
+    await updateEditor(editor, () => {
       const paragraph = $getRoot().getFirstChild()
       if (!$isElementNode(paragraph)) {
         throw new Error('expected the paragraph')
@@ -746,7 +741,7 @@ describe('registerToolbarSelectionSync', () => {
     expect(session.handle.getState().type).toBe('text')
 
     // the same selected-text shape inside the at-link search node is suppressed
-    await update(editor, () => {
+    await updateEditor(editor, () => {
       const paragraph = $getRoot().getFirstChild()
       if (!$isElementNode(paragraph)) {
         throw new Error('expected the paragraph')
@@ -844,7 +839,7 @@ describe('registerToolbarCommands', () => {
 
   it('does not open the link toolbar on a collapsed selection or shift+K', async () => {
     const editor = createTestEditor()
-    await update(editor, () => {
+    await updateEditor(editor, () => {
       const paragraph = $createParagraphNode()
       paragraph.append($createTextNode('hello'))
       $getRoot().append(paragraph)

@@ -14,6 +14,7 @@ import {
 import React, { useMemo } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { tick, updateEditor } from '#/utils/test-editor'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import { createFootnoteHandle, type FootnoteHandle } from '@/plugins/behaviour/footnoteHandle'
 import { $collectFootnoteSnapshot, registerFootnotes } from '@/plugins/behaviour/footnotes'
@@ -73,16 +74,11 @@ describe('FootnotePlugin undo semantics', () => {
   }
 
   async function setContent(text: string) {
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          const paragraph = $createParagraphNode()
-          paragraph.append($createTextNode(text))
-          $getRoot().append(paragraph)
-          paragraph.selectEnd()
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      const paragraph = $createParagraphNode()
+      paragraph.append($createTextNode(text))
+      $getRoot().append(paragraph)
+      paragraph.selectEnd()
     })
   }
 
@@ -91,16 +87,8 @@ describe('FootnotePlugin undo semantics', () => {
       await act(async () => {
         editor.dispatchCommand(CONTROLLED_TEXT_INSERTION_COMMAND, char)
       })
-      await new Promise((resolve) => {
-        setTimeout(resolve, 0)
-      })
+      await tick()
     }
-  }
-
-  async function settle() {
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0)
-    })
   }
 
   function rootChildTypes(): string[] {
@@ -135,7 +123,7 @@ describe('FootnotePlugin undo semantics', () => {
     await act(async () => {
       editor.dispatchCommand(UNDO_COMMAND, undefined)
     })
-    await settle()
+    await tick()
 
     // the untagged conversion commit merges into the typing transaction
     // (kobato's addToHistory: false analogue): ONE undo reverts trigger text
@@ -146,7 +134,7 @@ describe('FootnotePlugin undo semantics', () => {
 
     // no resurrection on the historic commit itself (the gate's history-tag
     // skip is pinned at the gate level in update-scan.test.ts)
-    await settle()
+    await tick()
     expect(footnoteCounts()).toEqual({ refs: 0, definitions: 0 })
   })
 })

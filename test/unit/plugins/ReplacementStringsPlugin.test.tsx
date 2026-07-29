@@ -5,6 +5,7 @@ import { $createParagraphNode, $createTextNode, $getRoot, $isElementNode, $isTex
 import React from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { tick, updateEditor } from '#/utils/test-editor'
 import CardContext from '@/context/CardContext'
 import { TKHandleContext } from '@/context/TKHandleContext'
 import { ExtendedTextNode, TKNode, extendedTextNodeReplacement } from '@/nodes/base'
@@ -65,21 +66,14 @@ describe('ReplacementStringsPlugin in nested editors', () => {
     )
 
     // Wait for React effects to run so the transform is registered
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0)
-    })
+    await tick()
 
-    await new Promise<void>((resolve) => {
-      nestedEditor.update(
-        () => {
-          const root = $getRoot()
-          root.clear()
-          const paragraph = $createParagraphNode()
-          paragraph.append($createTextNode('Hello {first_name}!'))
-          root.append(paragraph)
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(nestedEditor, () => {
+      const root = $getRoot()
+      root.clear()
+      const paragraph = $createParagraphNode()
+      paragraph.append($createTextNode('Hello {first_name}!'))
+      root.append(paragraph)
     })
 
     nestedEditor.getEditorState().read(() => {

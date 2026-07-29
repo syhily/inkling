@@ -11,6 +11,7 @@ import {
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
+import { tick, updateEditor } from '#/utils/test-editor'
 import { FloatingFormatToolbar } from '@/components/ui/FloatingFormatToolbar'
 
 function createTestEditor(): LexicalEditor {
@@ -18,19 +19,14 @@ function createTestEditor(): LexicalEditor {
 }
 
 function selectText(editor: LexicalEditor, text: string): Promise<void> {
-  return new Promise((resolve) => {
-    editor.update(
-      () => {
-        const root = $getRoot()
-        root.clear()
-        const paragraph = $createParagraphNode()
-        const textNode = $createTextNode(text)
-        paragraph.append(textNode)
-        root.append(paragraph)
-        textNode.select(0, text.length)
-      },
-      { onUpdate: () => resolve() },
-    )
+  return updateEditor(editor, () => {
+    const root = $getRoot()
+    root.clear()
+    const paragraph = $createParagraphNode()
+    const textNode = $createTextNode(text)
+    paragraph.append(textNode)
+    root.append(paragraph)
+    textNode.select(0, text.length)
   })
 }
 
@@ -56,9 +52,7 @@ describe('FloatingFormatToolbar', () => {
     fireEvent.keyDown(screen.getByTestId('link-input'), { key: 'Enter' })
 
     // Lexical defers the commit of non-discrete updates to a microtask
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0)
-    })
+    await tick()
 
     editor.getEditorState().read(() => {
       const selection = $getSelection()

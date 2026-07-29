@@ -13,7 +13,7 @@ import {
 } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { createTestEditor } from '#/utils/test-editor'
+import { createTestEditor, updateEditor } from '#/utils/test-editor'
 import { $enforceParagraphRestriction } from '@/plugins/behaviour/restrict-content'
 
 // The paragraphs-only restriction policy — pins for each cleaning leg
@@ -51,17 +51,12 @@ function $createTestDecoratorNode(): TestDecoratorNode {
 // Builds the root children, places a collapsed caret at the document end,
 // and runs the policy — the same shape the plugin's transform sees.
 function enforce(editor: LexicalEditor, paragraphs: number, build: () => void): Promise<void> {
-  return new Promise<void>((resolve) => {
-    editor.update(
-      () => {
-        const root = $getRoot()
-        root.clear()
-        build()
-        root.selectEnd()
-        $enforceParagraphRestriction(root, paragraphs)
-      },
-      { onUpdate: () => resolve() },
-    )
+  return updateEditor(editor, () => {
+    const root = $getRoot()
+    root.clear()
+    build()
+    root.selectEnd()
+    $enforceParagraphRestriction(root, paragraphs)
   })
 }
 
@@ -196,34 +191,24 @@ describe('$enforceParagraphRestriction', () => {
   })
 
   it('no-ops against a non-collapsed selection', async () => {
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          const root = $getRoot()
-          root.clear()
-          const text = $createTextNode('title')
-          root.append($createHeadingNode('h1').append(text))
-          text.select(0, 3)
-          $enforceParagraphRestriction(root, 5)
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      const root = $getRoot()
+      root.clear()
+      const text = $createTextNode('title')
+      root.append($createHeadingNode('h1').append(text))
+      text.select(0, 3)
+      $enforceParagraphRestriction(root, 5)
     })
 
     expect(readDoc(editor)).toEqual(['heading:title'])
   })
 
   it('no-ops without a selection', async () => {
-    await new Promise<void>((resolve) => {
-      editor.update(
-        () => {
-          const root = $getRoot()
-          root.append($createHeadingNode('h1').append($createTextNode('title')))
-          expect($getSelection()).toBeNull()
-          $enforceParagraphRestriction(root, 5)
-        },
-        { onUpdate: () => resolve() },
-      )
+    await updateEditor(editor, () => {
+      const root = $getRoot()
+      root.append($createHeadingNode('h1').append($createTextNode('title')))
+      expect($getSelection()).toBeNull()
+      $enforceParagraphRestriction(root, 5)
     })
 
     expect(readDoc(editor)).toEqual(['heading:title'])
