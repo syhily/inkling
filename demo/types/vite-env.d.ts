@@ -8,6 +8,8 @@ declare global {
   interface ImportMetaEnv {
     readonly VITE_KLIPY_API_KEY?: string
     readonly VITE_TENOR_API_KEY?: string
+    readonly VITE_PINTURA_JS_URL?: string
+    readonly VITE_PINTURA_CSS_URL?: string
     readonly VITE_TEST?: string
   }
 

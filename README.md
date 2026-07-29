@@ -138,6 +138,15 @@ The editor runs in standalone mode via the demo app.
 
 Run `pnpm dev` to start the editor in standalone mode for development on http://localhost:5173. This command generates a demo site from the `index.html` file, which renders the demo app in `demo/demo.tsx`.
 
+The default surface (`/`) loads a showcase document containing one of every card — toggle, callout, header, image, gallery, video, audio, file, bookmark, button, code block, HTML, math, divider, table, the music-player host card, and a footnote pair (media cards start as upload placeholders so the upload flow is right there). The ✨ Features button (top right) lists every feature and how to trigger it. Other surfaces: `/basic`, `/minimal`, `/multiplayer` (needs `pnpm dev:multiplayer`), `/contentrestricted`, `/html-output`, `/designsandbox`.
+
+Demo-only query params and env vars:
+
+- `?imageLibrary=fixture` (or `fixture-upload`) — the fixture media library, no backend needed
+- `?renderMath=stub` — stubbed server-KaTeX preview channel for the math card
+- `?labels=zh` — Chinese label overrides · `?searchLinks=false` — no internal linking · `?darkMode=true` · `?content=false` — blank start
+- `VITE_PINTURA_JS_URL` + `VITE_PINTURA_CSS_URL` — point the demo at a licensed Pintura build to test image editing (the SDK is a runtime CDN import, never bundled)
+
 ### Specific card setup
 
 #### Gif card
@@ -168,7 +177,7 @@ The main module source. `/src/index.ts` is the entry point for the exposed modul
 
 **`/demo`**
 
-Used for developing/demoing the editor. Renders a blank editor with all features enabled.
+Used for developing/demoing the editor. Renders the showcase document with all features enabled (see "Standalone mode").
 
 ### Styling
 

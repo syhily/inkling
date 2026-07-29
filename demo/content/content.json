@@ -8,72 +8,27 @@
             "format": 0,
             "mode": "normal",
             "style": "",
-            "text": "There's a whole lot to discover in this editor. Let us help you settle in.",
-            "type": "text",
+            "text": "Every feature, one document",
+            "type": "extended-text",
             "version": 1
           }
         ],
-        "direction": "ltr",
+        "direction": null,
         "format": "",
         "indent": 0,
-        "type": "paragraph",
-        "version": 1
-      },
-      {
-        "children": [
-          {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": "Rich editing",
-            "type": "text",
-            "version": 1
-          }
-        ],
-        "direction": "ltr",
-        "format": "",
-        "indent": 0,
-        "type": "heading",
+        "type": "extended-heading",
         "version": 1,
-        "tag": "h3"
+        "tag": "h1"
       },
       {
         "children": [
           {
             "detail": 0,
-            "format": 0,
+            "format": 1,
             "mode": "normal",
             "style": "",
-            "text": "First things first. Select any text to format it. Simple as that.",
-            "type": "text",
-            "version": 1
-          }
-        ],
-        "direction": "ltr",
-        "format": "",
-        "indent": 0,
-        "type": "paragraph",
-        "version": 1
-      },
-      {
-        "altText": "",
-        "caption": "",
-        "src": "/inkling-editor-1.png",
-        "type": "image",
-        "cardWidth": "regular",
-        "width": 1480,
-        "height": 486
-      },
-      {
-        "children": [
-          {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": "For those of you who love markdown, we've got you covered. Any markdown typed directly is automatically parsed—*italic* results in ",
-            "type": "text",
+            "text": "This document exercises the full surface: ",
+            "type": "extended-text",
             "version": 1
           },
           {
@@ -81,17 +36,8 @@
             "format": 2,
             "mode": "normal",
             "style": "",
-            "text": "italic ",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": "(and so does ",
-            "type": "text",
+            "text": "every card, ",
+            "type": "extended-text",
             "version": 1
           },
           {
@@ -99,8 +45,17 @@
             "format": 16,
             "mode": "normal",
             "style": "",
-            "text": "ctrl/⌘",
-            "type": "text",
+            "text": "every plugin, ",
+            "type": "extended-text",
+            "version": 1
+          },
+          {
+            "detail": 0,
+            "format": 128,
+            "mode": "normal",
+            "style": "",
+            "text": "every shortcut",
+            "type": "extended-text",
             "version": 1
           },
           {
@@ -108,44 +63,28 @@
             "format": 0,
             "mode": "normal",
             "style": "",
-            "text": " + ",
-            "type": "text",
+            "text": ".",
+            "type": "extended-text",
             "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 16,
-            "mode": "normal",
-            "style": "",
-            "text": "I",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": "), **bold** results in ",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 1,
-            "mode": "normal",
-            "style": "",
-            "text": "bold",
-            "type": "text",
-            "version": 1
-          },
+          }
+        ],
+        "direction": null,
+        "format": "",
+        "indent": 0,
+        "type": "paragraph",
+        "version": 1,
+        "textFormat": 1,
+        "textStyle": ""
+      },
+      {
+        "children": [
           {
             "detail": 0,
             "format": 0,
             "mode": "normal",
             "style": "",
-            "text": ". You get the gist. For the full list of markdown references, check ",
-            "type": "text",
+            "text": "Inline link: ",
+            "type": "extended-text",
             "version": 1
           },
           {
@@ -155,72 +94,126 @@
                 "format": 0,
                 "mode": "normal",
                 "style": "",
-                "text": "inkling.local/changelog/markdown/",
-                "type": "text",
+                "text": "the Inkling platform",
+                "type": "extended-text",
                 "version": 1
               }
             ],
-            "direction": "ltr",
+            "direction": null,
             "format": "",
             "indent": 0,
             "type": "link",
             "version": 1,
             "rel": null,
             "target": null,
-            "url": "https://inkling.local/changelog/markdown/"
+            "title": null,
+            "url": "https://inkling.local/"
           },
           {
             "detail": 0,
             "format": 0,
             "mode": "normal",
             "style": "",
-            "text": ".",
-            "type": "text",
+            "text": ", a footnote ref",
+            "type": "extended-text",
             "version": 1
-          }
-        ],
-        "direction": "ltr",
-        "format": "",
-        "indent": 0,
-        "type": "paragraph",
-        "version": 1
-      },
-      {
-        "children": [
+          },
           {
             "detail": 0,
             "format": 0,
             "mode": "normal",
             "style": "",
-            "text": "One more nifty little trick: inserting a link doesn't need to be the hassle it once was. Copy any url, select your text, and paste it.",
-            "type": "text",
-            "version": 1
-          }
-        ],
-        "direction": "ltr",
-        "format": "",
-        "indent": 0,
-        "type": "paragraph",
-        "version": 1
-      },
-      {
-        "children": [
+            "text": "1",
+            "type": "footnote-ref",
+            "version": 1,
+            "targetKey": "demo-footnote-1"
+          },
           {
             "detail": 0,
             "format": 0,
             "mode": "normal",
             "style": "",
-            "text": "Using cards",
-            "type": "text",
+            "text": ", and more below.",
+            "type": "extended-text",
             "version": 1
           }
         ],
-        "direction": "ltr",
+        "direction": null,
         "format": "",
         "indent": 0,
-        "type": "heading",
+        "type": "paragraph",
         "version": 1,
-        "tag": "h3"
+        "textFormat": 0,
+        "textStyle": ""
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "detail": 0,
+                "format": 0,
+                "mode": "normal",
+                "style": "",
+                "text": "Slash menu (/)",
+                "type": "extended-text",
+                "version": 1
+              }
+            ],
+            "direction": null,
+            "format": "",
+            "indent": 0,
+            "type": "listitem",
+            "version": 1,
+            "value": 1
+          },
+          {
+            "children": [
+              {
+                "detail": 0,
+                "format": 0,
+                "mode": "normal",
+                "style": "",
+                "text": "Plus button (hover the left gutter)",
+                "type": "extended-text",
+                "version": 1
+              }
+            ],
+            "direction": null,
+            "format": "",
+            "indent": 0,
+            "type": "listitem",
+            "version": 1,
+            "value": 2
+          },
+          {
+            "children": [
+              {
+                "detail": 0,
+                "format": 0,
+                "mode": "normal",
+                "style": "",
+                "text": "Markdown shortcuts (##, ```, ---)",
+                "type": "extended-text",
+                "version": 1
+              }
+            ],
+            "direction": null,
+            "format": "",
+            "indent": 0,
+            "type": "listitem",
+            "version": 1,
+            "value": 3
+          }
+        ],
+        "direction": null,
+        "format": "",
+        "indent": 0,
+        "type": "list",
+        "version": 1,
+        "listType": "bullet",
+        "start": 1,
+        "tag": "ul"
       },
       {
         "children": [
@@ -229,209 +222,519 @@
             "format": 0,
             "mode": "normal",
             "style": "",
-            "text": "Any content other than text are what we call ",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 2,
-            "mode": "normal",
-            "style": "",
-            "text": "cards",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": ". Cards can be accessed by clicking the ➕ button or typing ",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 16,
-            "mode": "normal",
-            "style": "",
-            "text": "/",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": " at the beginning of a paragraph.",
-            "type": "text",
+            "text": "Quote blocks cycle quote → aside → paragraph with the toolbar button.",
+            "type": "extended-text",
             "version": 1
           }
         ],
-        "direction": "ltr",
+        "direction": null,
         "format": "",
         "indent": 0,
-        "type": "paragraph",
+        "type": "extended-quote",
         "version": 1
       },
       {
-        "children": [
-          {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": "Even better, continue typing to find the card you're looking for, hit ",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 16,
-            "mode": "normal",
-            "style": "",
-            "text": "enter",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": ", and avoid dragging your mouse altogether.",
-            "type": "text",
-            "version": 1
-          }
-        ],
-        "direction": "ltr",
-        "format": "",
-        "indent": 0,
-        "type": "paragraph",
-        "version": 1
+        "type": "toggle",
+        "version": 1,
+        "heading": "<span style=\"white-space: pre-wrap;\">Toggle title — click to expand</span>",
+        "content": "<p><span style=\"white-space: pre-wrap;\">Hidden toggle content with its own nested editor.</span></p>"
       },
       {
-        "altText": "",
-        "caption": "",
-        "src": "/inkling-editor-2.png",
+        "type": "callout",
+        "version": 1,
+        "calloutText": "<p><span style=\"white-space: pre-wrap;\">Callouts carry an emoji and rich text.</span></p>",
+        "calloutEmoji": "💡",
+        "backgroundColor": "blue"
+      },
+      {
+        "type": "header",
+        "version": 2,
+        "size": "small",
+        "style": "dark",
+        "buttonEnabled": true,
+        "buttonUrl": "https://inkling.local/",
+        "buttonText": "Read more",
+        "header": "<span style=\"white-space: pre-wrap;\">Header card</span>",
+        "subheader": "<span style=\"white-space: pre-wrap;\">With a subheader, alignment and button options in settings.</span>",
+        "backgroundImageSrc": "",
+        "accentColor": "#FF1A75",
+        "alignment": "center",
+        "backgroundColor": "#000000",
+        "backgroundImageWidth": null,
+        "backgroundImageHeight": null,
+        "backgroundSize": "cover",
+        "textColor": "#FFFFFF",
+        "buttonColor": "#ffffff",
+        "buttonTextColor": "#000000",
+        "layout": "full",
+        "swapped": false
+      },
+      {
         "type": "image",
-        "cardWidth": "regular",
-        "width": 1480,
-        "height": 486
-      },
-      {
-        "children": [
-          {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": "Some cards have a handy little shortcut, to keep you on track and in flow. Use ",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 16,
-            "mode": "normal",
-            "style": "",
-            "text": "---",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": " to divide your paragraphs with a line, or ",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 16,
-            "mode": "normal",
-            "style": "",
-            "text": "```",
-            "type": "text",
-            "version": 1
-          },
-          {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": " to add a code block. You can also drag and drop images directly into the editor to bypass the menu. ",
-            "type": "text",
-            "version": 1
-          }
-        ],
-        "direction": "ltr",
-        "format": "",
-        "indent": 0,
-        "type": "paragraph",
-        "version": 1
-      },
-      {
-        "children": [
-          {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": "That's it. ",
-            "type": "text",
-            "version": 1
-          }
-        ],
-        "direction": "ltr",
-        "format": "",
-        "indent": 0,
-        "type": "heading",
         "version": 1,
-        "tag": "h3"
+        "src": "/inkling-editor-1.png",
+        "width": 1480,
+        "height": 486,
+        "title": "",
+        "alt": "Inkling editor, light theme",
+        "caption": "<span style=\"white-space: pre-wrap;\">Image card with a caption editor.</span>",
+        "cardWidth": "regular",
+        "href": ""
+      },
+      {
+        "type": "gallery",
+        "version": 1,
+        "images": [
+          {
+            "src": "/inkling-editor-1.png",
+            "width": 1480,
+            "height": 486
+          },
+          {
+            "src": "/inkling-editor-2.png",
+            "width": 1480,
+            "height": 486
+          }
+        ],
+        "caption": "<p><span style=\"white-space: pre-wrap;\">Gallery card — drag images to reorder, drop more in.</span></p>"
+      },
+      {
+        "type": "video",
+        "version": 1,
+        "src": "",
+        "caption": "",
+        "fileName": "",
+        "mimeType": "",
+        "width": null,
+        "height": null,
+        "duration": 0,
+        "thumbnailSrc": "",
+        "customThumbnailSrc": "",
+        "thumbnailWidth": null,
+        "thumbnailHeight": null,
+        "cardWidth": "regular",
+        "loop": false
+      },
+      {
+        "type": "audio",
+        "version": 1,
+        "duration": 0,
+        "mimeType": "",
+        "src": "",
+        "title": "",
+        "thumbnailSrc": ""
+      },
+      {
+        "type": "file",
+        "version": 1,
+        "src": "",
+        "fileTitle": "",
+        "fileCaption": "",
+        "fileName": "",
+        "fileSize": 0
+      },
+      {
+        "type": "bookmark",
+        "version": 1,
+        "url": "https://inkling.local/",
+        "metadata": {
+          "icon": "",
+          "title": "",
+          "description": "",
+          "author": "",
+          "publisher": "",
+          "thumbnail": ""
+        },
+        "caption": ""
+      },
+      {
+        "type": "button",
+        "version": 1,
+        "buttonText": "Button card",
+        "alignment": "center",
+        "buttonUrl": "https://inkling.local/"
+      },
+      {
+        "type": "codeblock",
+        "version": 1,
+        "code": "import { createEditor } from 'lexical'\n\n// code blocks keep language + optional caption\nconst editor = createEditor()",
+        "language": "ts",
+        "caption": "<p><span style=\"white-space: pre-wrap;\">main.ts</span></p>",
+        "highlightedHtml": ""
+      },
+      {
+        "type": "html",
+        "version": 1,
+        "html": "<div style=\"padding: 12px; border: 1px solid currentColor;\">HTML card renders raw markup in an editable sandbox.</div>"
+      },
+      {
+        "type": "math",
+        "version": 1,
+        "tex": "e^{i\\pi} + 1 = 0",
+        "mathml": "",
+        "svg": ""
+      },
+      {
+        "type": "horizontalrule",
+        "version": 1
       },
       {
         "children": [
           {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": "You now know every secret there is to distraction-free, click-free editing with Inkling. Get started by clicking ",
-            "type": "text",
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "detail": 0,
+                        "format": 0,
+                        "mode": "normal",
+                        "style": "",
+                        "text": "Feature",
+                        "type": "extended-text",
+                        "version": 1
+                      }
+                    ],
+                    "direction": null,
+                    "format": "",
+                    "indent": 0,
+                    "type": "paragraph",
+                    "version": 1,
+                    "textFormat": 0,
+                    "textStyle": ""
+                  }
+                ],
+                "direction": null,
+                "format": "",
+                "indent": 0,
+                "type": "tablecell",
+                "version": 1,
+                "backgroundColor": null,
+                "colSpan": 1,
+                "headerState": 1,
+                "rowSpan": 1
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "detail": 0,
+                        "format": 0,
+                        "mode": "normal",
+                        "style": "",
+                        "text": "Where",
+                        "type": "extended-text",
+                        "version": 1
+                      }
+                    ],
+                    "direction": null,
+                    "format": "",
+                    "indent": 0,
+                    "type": "paragraph",
+                    "version": 1,
+                    "textFormat": 0,
+                    "textStyle": ""
+                  }
+                ],
+                "direction": null,
+                "format": "",
+                "indent": 0,
+                "type": "tablecell",
+                "version": 1,
+                "backgroundColor": null,
+                "colSpan": 1,
+                "headerState": 1,
+                "rowSpan": 1
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "detail": 0,
+                        "format": 0,
+                        "mode": "normal",
+                        "style": "",
+                        "text": "How to trigger",
+                        "type": "extended-text",
+                        "version": 1
+                      }
+                    ],
+                    "direction": null,
+                    "format": "",
+                    "indent": 0,
+                    "type": "paragraph",
+                    "version": 1,
+                    "textFormat": 0,
+                    "textStyle": ""
+                  }
+                ],
+                "direction": null,
+                "format": "",
+                "indent": 0,
+                "type": "tablecell",
+                "version": 1,
+                "backgroundColor": null,
+                "colSpan": 1,
+                "headerState": 1,
+                "rowSpan": 1
+              }
+            ],
+            "direction": null,
+            "format": "",
+            "indent": 0,
+            "type": "tablerow",
             "version": 1
           },
           {
-            "detail": 0,
-            "format": 16,
-            "mode": "normal",
-            "style": "",
-            "text": "Inkling editor",
-            "type": "text",
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "detail": 0,
+                        "format": 0,
+                        "mode": "normal",
+                        "style": "",
+                        "text": "Slash menu",
+                        "type": "extended-text",
+                        "version": 1
+                      }
+                    ],
+                    "direction": null,
+                    "format": "",
+                    "indent": 0,
+                    "type": "paragraph",
+                    "version": 1,
+                    "textFormat": 0,
+                    "textStyle": ""
+                  }
+                ],
+                "direction": null,
+                "format": "",
+                "indent": 0,
+                "type": "tablecell",
+                "version": 1,
+                "backgroundColor": null,
+                "colSpan": 1,
+                "headerState": 0,
+                "rowSpan": 1
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "detail": 0,
+                        "format": 0,
+                        "mode": "normal",
+                        "style": "",
+                        "text": "cards",
+                        "type": "extended-text",
+                        "version": 1
+                      }
+                    ],
+                    "direction": null,
+                    "format": "",
+                    "indent": 0,
+                    "type": "paragraph",
+                    "version": 1,
+                    "textFormat": 0,
+                    "textStyle": ""
+                  }
+                ],
+                "direction": null,
+                "format": "",
+                "indent": 0,
+                "type": "tablecell",
+                "version": 1,
+                "backgroundColor": null,
+                "colSpan": 1,
+                "headerState": 0,
+                "rowSpan": 1
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "detail": 0,
+                        "format": 0,
+                        "mode": "normal",
+                        "style": "",
+                        "text": "Type /",
+                        "type": "extended-text",
+                        "version": 1
+                      }
+                    ],
+                    "direction": null,
+                    "format": "",
+                    "indent": 0,
+                    "type": "paragraph",
+                    "version": 1,
+                    "textFormat": 0,
+                    "textStyle": ""
+                  }
+                ],
+                "direction": null,
+                "format": "",
+                "indent": 0,
+                "type": "tablecell",
+                "version": 1,
+                "backgroundColor": null,
+                "colSpan": 1,
+                "headerState": 0,
+                "rowSpan": 1
+              }
+            ],
+            "direction": null,
+            "format": "",
+            "indent": 0,
+            "type": "tablerow",
             "version": 1
           },
           {
-            "detail": 0,
-            "format": 0,
-            "mode": "normal",
-            "style": "",
-            "text": " in your bottom left corner!",
-            "type": "text",
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "detail": 0,
+                        "format": 0,
+                        "mode": "normal",
+                        "style": "",
+                        "text": "Table",
+                        "type": "extended-text",
+                        "version": 1
+                      }
+                    ],
+                    "direction": null,
+                    "format": "",
+                    "indent": 0,
+                    "type": "paragraph",
+                    "version": 1,
+                    "textFormat": 0,
+                    "textStyle": ""
+                  }
+                ],
+                "direction": null,
+                "format": "",
+                "indent": 0,
+                "type": "tablecell",
+                "version": 1,
+                "backgroundColor": null,
+                "colSpan": 1,
+                "headerState": 0,
+                "rowSpan": 1
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "detail": 0,
+                        "format": 0,
+                        "mode": "normal",
+                        "style": "",
+                        "text": "element family",
+                        "type": "extended-text",
+                        "version": 1
+                      }
+                    ],
+                    "direction": null,
+                    "format": "",
+                    "indent": 0,
+                    "type": "paragraph",
+                    "version": 1,
+                    "textFormat": 0,
+                    "textStyle": ""
+                  }
+                ],
+                "direction": null,
+                "format": "",
+                "indent": 0,
+                "type": "tablecell",
+                "version": 1,
+                "backgroundColor": null,
+                "colSpan": 1,
+                "headerState": 0,
+                "rowSpan": 1
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "detail": 0,
+                        "format": 0,
+                        "mode": "normal",
+                        "style": "",
+                        "text": "Slash menu → Table",
+                        "type": "extended-text",
+                        "version": 1
+                      }
+                    ],
+                    "direction": null,
+                    "format": "",
+                    "indent": 0,
+                    "type": "paragraph",
+                    "version": 1,
+                    "textFormat": 0,
+                    "textStyle": ""
+                  }
+                ],
+                "direction": null,
+                "format": "",
+                "indent": 0,
+                "type": "tablecell",
+                "version": 1,
+                "backgroundColor": null,
+                "colSpan": 1,
+                "headerState": 0,
+                "rowSpan": 1
+              }
+            ],
+            "direction": null,
+            "format": "",
+            "indent": 0,
+            "type": "tablerow",
             "version": 1
           }
         ],
-        "direction": "ltr",
+        "direction": null,
+        "format": "",
+        "indent": 0,
+        "type": "table",
+        "version": 1
+      },
+      {
+        "type": "musicPlayer",
+        "version": 1,
+        "src": ""
+      },
+      {
+        "type": "footnotedefinition",
+        "version": 1,
+        "content": "<p><span style=\"white-space: pre-wrap;\">The demo footnote: refs renumber in citation order.</span></p>",
+        "targetKey": "demo-footnote-1",
+        "index": 1
+      },
+      {
+        "children": [],
+        "direction": null,
         "format": "",
         "indent": 0,
         "type": "paragraph",
-        "version": 1
+        "version": 1,
+        "textFormat": 0,
+        "textStyle": ""
       }
     ],
-    "direction": "ltr",
+    "direction": null,
     "format": "",
     "indent": 0,
     "type": "root",

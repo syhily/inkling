@@ -26,6 +26,7 @@ import EarthIcon from '@/assets/icons/inkling-earth.svg?react'
 import DollarIcon from './assets/icons/inkling-dollar.svg?react'
 import LockIcon from './assets/icons/inkling-lock.svg?react'
 import DarkModeToggle from './components/DarkModeToggle'
+import FeatureChecklist from './components/FeatureChecklist'
 import FloatingButton from './components/FloatingButton'
 import InitialContentToggle from './components/InitialContentToggle'
 import { musicPlayer } from './components/MusicPlayerCard'
@@ -412,6 +413,12 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
     // e2e seam: `?imageLibrary=fixture[-upload]` installs the fixture adapter
     // (demo/utils/imageLibrary.ts); absent = no library menu entry
     imageLibrary: getDemoImageLibrary(searchParams.get('imageLibrary')),
+    // Pintura is a runtime CDN import — point the demo at a licensed build
+    // with VITE_PINTURA_JS_URL / VITE_PINTURA_CSS_URL to test image editing
+    pinturaConfig: {
+      jsUrl: import.meta.env.VITE_PINTURA_JS_URL || undefined,
+      cssUrl: import.meta.env.VITE_PINTURA_CSS_URL || undefined,
+    },
   }
 
   const fileUploader: FileUploader = { useFileUpload: useFileUpload({ isMultiplayer }), fileTypes }
@@ -441,6 +448,7 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
         />
       ) : null}
       <DarkModeToggle darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+      <FeatureChecklist />
       <div
         ref={containerRef}
         className="h-full overflow-auto overflow-x-hidden"
