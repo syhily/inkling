@@ -4,6 +4,7 @@ import React from 'react'
 
 import { SnippetInput } from '@/components/ui/SnippetInput'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { focusEditorRoot } from '@/plugins/behaviour/card-adjacency'
 
 export interface SnippetCreateToolbarProps {
   nodeKey: string
@@ -19,7 +20,7 @@ export function SnippetCreateToolbar({ nodeKey, onClose }: SnippetCreateToolbarP
     onClose()
     // return focus to the editor so subsequent keyboard actions (e.g. typing
     // a slash command) work without an explicit click
-    editor.getRootElement()?.focus({ preventScroll: true })
+    focusEditorRoot(editor)
   }, [editor, onClose])
 
   const handleCreateSnippet = React.useCallback(() => {

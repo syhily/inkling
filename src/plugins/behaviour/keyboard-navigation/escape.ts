@@ -6,6 +6,7 @@ import { getParentEditor } from '@/utils/lexical-internals'
 
 import type { KeyboardNavigationDeps } from './types'
 
+import { focusEditorRoot } from '../card-adjacency'
 import { SELECT_CARD_COMMAND } from '../commands'
 
 export function registerEscapeCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
@@ -26,7 +27,7 @@ export function registerEscapeCommand(editor: LexicalEditor, deps: KeyboardNavig
       }
 
       if (parentEditor) {
-        parentEditor.getRootElement()?.focus()
+        focusEditorRoot(parentEditor)
         handled = true
       }
 

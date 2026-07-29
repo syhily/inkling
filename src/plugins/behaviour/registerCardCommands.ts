@@ -10,7 +10,7 @@ import { $insertAndSelectNode } from '@/utils/$insertAndSelectNode'
 
 import type { CardSelectionStore } from './cardSelectionStore'
 
-import { $deselectCard, $getLogicallyAdjacentCard, $selectCard } from './card-adjacency'
+import { $deselectCard, $getLogicallyAdjacentCard, $selectCard, focusEditorRoot } from './card-adjacency'
 import {
   DELETE_CARD_COMMAND,
   DESELECT_CARD_COMMAND,
@@ -146,10 +146,7 @@ export function registerCardCommands(editor: LexicalEditor, deps: CardCommandDep
         // caret-selection paths: focus moves back to the editor by hand
         // ($selectCard's 'always' leg already repaired it on the card paths;
         // a second focus on the active element is a no-op)
-        const rootElement = editor.getRootElement()
-        if (rootElement) {
-          rootElement.focus({ preventScroll: true })
-        }
+        focusEditorRoot(editor)
 
         store.setState({ selectedCardKey: null, isEditingCard: false })
         return true

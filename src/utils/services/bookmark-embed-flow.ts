@@ -17,6 +17,7 @@ import { $getSelection, $setSelection } from 'lexical'
 import type { BookmarkEmbedResponse, LinkingSettings } from '@/context/InklingHostIntegrationContext'
 
 import { $isBookmarkNode, $updateCardNode } from '@/nodes/base'
+import { focusEditorRoot } from '@/plugins/behaviour/card-adjacency'
 import { createRequestTrack } from '@/utils/services/request-track'
 import { createSnapshotStore } from '@/utils/services/snapshot-store'
 
@@ -84,7 +85,7 @@ export function createBookmarkEmbedFlow({
   const fetchAndApply = async (href: string, init: boolean): Promise<void> => {
     const generation = track.next()
     if (!init) {
-      editor.getRootElement()?.focus({ preventScroll: true }) // focus editor before causing the input element to dismount
+      focusEditorRoot(editor) // focus editor before causing the input element to dismount
     }
     store.emit({ loading: true })
 
@@ -138,7 +139,7 @@ export function createBookmarkEmbedFlow({
       // pre-race-guard code got this second application for free from
       // StrictMode's double fetch; with exactly one patch it must be said.
       setTimeout(() => {
-        editor.getRootElement()?.focus({ preventScroll: true })
+        focusEditorRoot(editor)
         editor.update(() => {
           const selection = $getSelection()
           if (selection) {

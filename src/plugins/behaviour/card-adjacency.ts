@@ -224,6 +224,18 @@ export function dispatchSelectedCardDeletion(
 // Card selection operations — the commands half of the module; the queries above find the cards these act on.
 
 /**
+ * Focus the editor's root element by hand — the focus repair after
+ * selecting chrome-less UI or before a card's chrome dismounts. Never
+ * scrolls the viewport: focus repair must not yank it. $selectCard's
+ * policy legs run it internally; direct callers are the snippet toolbars,
+ * the bookmark flow's pre-dismount focus, nested-editor Escape, and the
+ * delete handler's caret-selection paths.
+ */
+export function focusEditorRoot(editor: LexicalEditor): void {
+  editor.getRootElement()?.focus({ preventScroll: true })
+}
+
+/**
  * The focus repair after selecting a card: a decorator selection has no
  * caret, so it does not move the window selection — focus must go to the
  * editor element by hand, and never scrolling (focus repair must not yank
@@ -250,7 +262,7 @@ export function $selectCard(
   $setSelection(selection)
   const rootElement = editor.getRootElement()
   if (rootElement && (focus === 'always' || (focus === 'if-blurred' && document.activeElement !== rootElement))) {
-    rootElement.focus({ preventScroll: true })
+    focusEditorRoot(editor)
   }
 }
 
