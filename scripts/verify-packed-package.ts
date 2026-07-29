@@ -10,62 +10,17 @@
 // optional jsdom peer both HTML directions reject with the named error while
 // lexicalStateToPlainText works, and the with-jsdom consumers pin the
 // byte-exact corpus round-trip. Invoked from `pnpm verify:package`.
-import { execFileSync, type ExecFileSyncOptionsWithStringEncoding } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, isAbsolute, join, resolve } from 'node:path'
+import { readFileSync, rmSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { createFailureLog, makeTempRoot, packTarball, scaffoldConsumer } from './lib/packed-consumer-harness.ts'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const NODE = process.execPath
 
-interface CommandFailure {
-  stdout?: string | Buffer
-  stderr?: string | Buffer
-  message?: string
-}
-
-const failures: { label: string; stdout?: string; stderr?: string }[] = []
-
-function phase(label: string): void {
-  console.log(`\n== ${label} ==`)
-}
-
-function recordFailure(label: string, error: CommandFailure): void {
-  const stdout = error?.stdout?.toString().trim()
-  const stderr = error?.stderr?.toString().trim()
-  failures.push({ label, stdout, stderr })
-  console.error(`FAILED: ${label}`)
-  if (stderr) {
-    console.error(stderr)
-  }
-  if (stdout && stdout !== stderr) {
-    console.error(stdout)
-  }
-  if (!stderr && !stdout && error?.message) {
-    console.error(error.message)
-  }
-}
-
-function run(
-  label: string,
-  command: string,
-  args: string[],
-  options: Omit<ExecFileSyncOptionsWithStringEncoding, 'encoding'> = {},
-): string | null {
-  try {
-    return execFileSync(command, args, {
-      cwd: REPO_ROOT,
-      encoding: 'utf8',
-      maxBuffer: 64 * 1024 * 1024,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      ...options,
-    })
-  } catch (error) {
-    recordFailure(label, error as CommandFailure)
-    return null
-  }
-}
+const log = createFailureLog(REPO_ROOT)
+const { phase, recordFailure, run } = log
 
 // Minimal DOM shim: the bundles inject their CSS at module evaluation via
 // document.createElement('style') + document.head.appendChild, and CodeMirror
@@ -226,24 +181,16 @@ async function assertHeadlessWithJsdom(mod) {
 }
 `
 
-const tempRoot = mkdtempSync(join(tmpdir(), 'inkling-pack-verify-'))
+const tempRoot = makeTempRoot('inkling-pack-verify-')
 
 try {
-  phase('pack')
-  const packOutput = run('pnpm pack', 'pnpm', ['pack', '--pack-destination', tempRoot, '--json'])
-  if (!packOutput) {
+  const pack = packTarball(log, tempRoot)
+  if (!pack) {
     throw new Error('pnpm pack failed; see errors above')
   }
-  const jsonStart = packOutput.indexOf('{')
-  const packJson = JSON.parse(jsonStart === -1 ? packOutput : packOutput.slice(jsonStart)) as {
-    filename: string
-    files?: { path: string }[]
-  }
-  const tarballPath = isAbsolute(packJson.filename) ? packJson.filename : join(tempRoot, packJson.filename)
-  console.log(`tarball: ${packJson.filename}`)
+  const { tarballPath, files } = pack
 
   phase('tarball contents')
-  const files = (packJson.files ?? []).map((file) => file.path)
   const mustInclude = [
     'package.json',
     'README.md',
@@ -307,18 +254,16 @@ try {
   ) {
     phase(label)
     const dir = join(tempRoot, label.replaceAll(' ', '-'))
-    mkdirSync(dir, { recursive: true })
-    writeFileSync(
-      join(dir, 'package.json'),
-      JSON.stringify({
+    const checkFile = options.module ? 'check.mjs' : 'check.cjs'
+    scaffoldConsumer(dir, {
+      packageJson: {
         name: `verify-${label.replaceAll(' ', '-')}`,
         private: true,
         ...(options.module ? { type: 'module' } : {}),
         dependencies: { ...JSON.parse(consumerDeps), ...options.extraDeps },
-      }),
-    )
-    const checkFile = options.module ? 'check.mjs' : 'check.cjs'
-    writeFileSync(join(dir, checkFile), options.check)
+      },
+      files: [{ name: checkFile, content: options.check }],
+    })
     if (run(`install ${label}`, 'pnpm', ['install', '--no-frozen-lockfile'], { cwd: dir })) {
       const output = run(`execute ${label}`, NODE, [checkFile], { cwd: dir })
       if (output) {
@@ -410,12 +355,6 @@ assertHeadlessWithJsdom(inkling).catch((error) => {
   rmSync(tempRoot, { recursive: true, force: true })
 }
 
-if (failures.length > 0) {
-  console.error(`\nverify:package FAILED (${failures.length} phase(s)):`)
-  for (const failure of failures) {
-    console.error(`  - ${failure.label}`)
-  }
-  process.exit(1)
-}
+log.exitIfFailed('verify:package')
 
 console.log('\nverify:package OK — packed ESM, CJS, and core entries load with only react/react-dom installed')

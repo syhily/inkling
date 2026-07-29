@@ -7,15 +7,20 @@
 // resolution. Feature runtimes (Lexical, CodeMirror, emoji-mart, markdown-it,
 // Yjs, etc.) are deliberately NOT installed — the published declaration must
 // own its own type graph.
-import { execFileSync, type ExecFileSyncOptionsWithStringEncoding } from 'node:child_process'
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, isAbsolute, join, resolve } from 'node:path'
+import { rmSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { createFailureLog, makeTempRoot, packTarball, scaffoldConsumer } from './lib/packed-consumer-harness.ts'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
+const log = createFailureLog(REPO_ROOT)
+const { phase, recordFailure, run } = log
+
 interface ConsumerFixture {
+  // the published entry this fixture exercises (labels every consumer phase)
+  name: string
   // fixture file under test/typecheck-consumer, copied into the consumer
   // project under `localName`
   source: string
@@ -30,89 +35,18 @@ interface ConsumerFixture {
 // broken-declaration negative check.
 const CONSUMER_FIXTURES: ConsumerFixture[] = [
   {
+    name: 'root',
     source: join(REPO_ROOT, 'test', 'typecheck-consumer', 'consumer.tsx'),
     localName: 'consumer.tsx',
     declaration: 'editor.d.ts',
   },
   {
+    name: 'core',
     source: join(REPO_ROOT, 'test', 'typecheck-consumer', 'consumer-core.tsx'),
     localName: 'consumer-core.tsx',
     declaration: 'core.d.ts',
   },
 ]
-
-interface CommandFailure {
-  stdout?: string | Buffer
-  stderr?: string | Buffer
-  message?: string
-}
-
-const failures: { label: string; stdout?: string; stderr?: string }[] = []
-
-function phase(label: string): void {
-  console.log(`\n== ${label} ==`)
-}
-
-function recordFailure(label: string, error: CommandFailure): void {
-  const stdout = error?.stdout?.toString().trim()
-  const stderr = error?.stderr?.toString().trim()
-  failures.push({ label, stdout, stderr })
-  console.error(`FAILED: ${label}`)
-  if (stderr) {
-    console.error(stderr)
-  }
-  if (stdout && stdout !== stderr) {
-    console.error(stdout)
-  }
-  if (!stderr && !stdout && error?.message) {
-    console.error(error.message)
-  }
-}
-
-function run(
-  label: string,
-  command: string,
-  args: string[],
-  options: Omit<ExecFileSyncOptionsWithStringEncoding, 'encoding'> = {},
-): string | null {
-  try {
-    return execFileSync(command, args, {
-      cwd: REPO_ROOT,
-      encoding: 'utf8',
-      maxBuffer: 64 * 1024 * 1024,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      ...options,
-    })
-  } catch (error) {
-    recordFailure(label, error as CommandFailure)
-    return null
-  }
-}
-
-type ExpectedFailureResult = { failed: true; error: unknown } | { failed: false; output: string }
-
-// Expected-failure variant of run(): a non-zero exit is the WANTED outcome,
-// so the error is returned to the caller instead of recorded as a failure.
-// Returns { failed: true, error } when the command fails as expected, and
-// { failed: false, output } when it unexpectedly succeeds.
-function runExpectingFailure(
-  command: string,
-  args: string[],
-  options: Omit<ExecFileSyncOptionsWithStringEncoding, 'encoding'> = {},
-): ExpectedFailureResult {
-  try {
-    const output = execFileSync(command, args, {
-      cwd: REPO_ROOT,
-      encoding: 'utf8',
-      maxBuffer: 64 * 1024 * 1024,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      ...options,
-    })
-    return { failed: false, output }
-  } catch (error) {
-    return { failed: true, error }
-  }
-}
 
 function makeTsconfig(module: string, moduleResolution: string, include: string[]): string {
   return JSON.stringify(
@@ -137,7 +71,7 @@ function makeTsconfig(module: string, moduleResolution: string, include: string[
   )
 }
 
-const tempRoot = mkdtempSync(join(tmpdir(), 'inkling-pack-types-'))
+const tempRoot = makeTempRoot('inkling-pack-types-')
 
 // Hermetic fixture deps pinned to the repo's exact versions: the gate must be
 // deterministic — floating `^` ranges made the outcome resolution-dependent
@@ -162,26 +96,20 @@ function checkConsumer(
   fixture: ConsumerFixture,
 ): boolean {
   phase(label)
-  mkdirSync(consumerDir, { recursive: true })
-  writeFileSync(
-    join(consumerDir, 'package.json'),
-    JSON.stringify(
-      {
-        name: `verify-types-${label.replaceAll(' ', '-')}`,
-        private: true,
-        type: 'module',
-        dependencies: {
-          '@inkling/editor': `file:${tarballPath}`,
-          ...CONSUMER_DEPENDENCIES,
-        },
-        devDependencies: { ...CONSUMER_DEV_DEPENDENCIES },
+  scaffoldConsumer(consumerDir, {
+    packageJson: {
+      name: `verify-types-${label.replaceAll(' ', '-')}`,
+      private: true,
+      type: 'module',
+      dependencies: {
+        '@inkling/editor': `file:${tarballPath}`,
+        ...CONSUMER_DEPENDENCIES,
       },
-      null,
-      2,
-    ),
-  )
-  copyFileSync(fixture.source, join(consumerDir, fixture.localName))
-  writeFileSync(join(consumerDir, 'tsconfig.json'), makeTsconfig(module, moduleResolution, [fixture.localName]))
+      devDependencies: { ...CONSUMER_DEV_DEPENDENCIES },
+    },
+    copies: [{ from: fixture.source, to: fixture.localName }],
+    files: [{ name: 'tsconfig.json', content: makeTsconfig(module, moduleResolution, [fixture.localName]) }],
+  })
 
   if (!run(`${label} install`, 'pnpm', ['install', '--no-frozen-lockfile'], { cwd: consumerDir })) {
     return false
@@ -203,19 +131,15 @@ function checkConsumer(
 let tarballPath = ''
 
 try {
-  phase('pack')
-  const packOutput = run('pnpm pack', 'pnpm', ['pack', '--pack-destination', tempRoot, '--json'])
-  if (!packOutput) {
+  const pack = packTarball(log, tempRoot)
+  if (!pack) {
     throw new Error('pnpm pack failed; see errors above')
   }
-  const jsonStart = packOutput.indexOf('{')
-  const packJson = JSON.parse(jsonStart === -1 ? packOutput : packOutput.slice(jsonStart)) as { filename: string }
-  tarballPath = isAbsolute(packJson.filename) ? packJson.filename : join(tempRoot, packJson.filename)
-  console.log(`tarball: ${packJson.filename}`)
+  tarballPath = pack.tarballPath
 
   const phaseResults: { fixture: ConsumerFixture; ok: boolean }[] = []
   for (const fixture of CONSUMER_FIXTURES) {
-    const fixtureName = fixture === CONSUMER_FIXTURES[0] ? 'root' : 'core'
+    const fixtureName = fixture.name
     const bundlerOk = checkConsumer(
       `${fixtureName} bundler consumer`,
       join(tempRoot, `consumer-${fixtureName}-bundler`),
@@ -237,31 +161,25 @@ try {
     if (!ok) {
       continue
     }
-    const fixtureName = fixture === CONSUMER_FIXTURES[0] ? 'root' : 'core'
+    const fixtureName = fixture.name
     phase(`negative check (${fixtureName})`)
     const brokenDir = join(tempRoot, `consumer-${fixtureName}-broken-decl`)
-    mkdirSync(brokenDir, { recursive: true })
     // Copy the Bundler consumer, then delete the emitted declaration to
     // prove the fixture is actually reading the package types and not the repo.
-    writeFileSync(
-      join(brokenDir, 'package.json'),
-      JSON.stringify(
-        {
-          name: `verify-types-${fixtureName}-broken-decl`,
-          private: true,
-          type: 'module',
-          dependencies: {
-            '@inkling/editor': `file:${tarballPath}`,
-            ...CONSUMER_DEPENDENCIES,
-          },
-          devDependencies: { ...CONSUMER_DEV_DEPENDENCIES },
+    scaffoldConsumer(brokenDir, {
+      packageJson: {
+        name: `verify-types-${fixtureName}-broken-decl`,
+        private: true,
+        type: 'module',
+        dependencies: {
+          '@inkling/editor': `file:${tarballPath}`,
+          ...CONSUMER_DEPENDENCIES,
         },
-        null,
-        2,
-      ),
-    )
-    copyFileSync(fixture.source, join(brokenDir, fixture.localName))
-    writeFileSync(join(brokenDir, 'tsconfig.json'), makeTsconfig('ESNext', 'Bundler', [fixture.localName]))
+        devDependencies: { ...CONSUMER_DEV_DEPENDENCIES },
+      },
+      copies: [{ from: fixture.source, to: fixture.localName }],
+      files: [{ name: 'tsconfig.json', content: makeTsconfig('ESNext', 'Bundler', [fixture.localName]) }],
+    })
 
     if (run(`broken-decl install (${fixtureName})`, 'pnpm', ['install', '--no-frozen-lockfile'], { cwd: brokenDir })) {
       const typesPath = join(brokenDir, 'node_modules', '@inkling', 'editor', 'dist', fixture.declaration)
@@ -269,7 +187,7 @@ try {
       console.log(`removed ${typesPath}`)
       // tsc MUST fail here — run it off the failure log so the expected
       // failure isn't recorded as one
-      const broken = runExpectingFailure('pnpm', ['exec', 'tsc', '--project', 'tsconfig.json'], {
+      const broken = log.runExpectingFailure('pnpm', ['exec', 'tsc', '--project', 'tsconfig.json'], {
         cwd: brokenDir,
       })
       if (!broken.failed) {
@@ -285,13 +203,7 @@ try {
   rmSync(tempRoot, { recursive: true, force: true })
 }
 
-if (failures.length > 0) {
-  console.error(`\nverify:types FAILED (${failures.length} phase(s)):`)
-  for (const failure of failures) {
-    console.error(`  - ${failure.label}`)
-  }
-  process.exit(1)
-}
+log.exitIfFailed('verify:types')
 
 console.log(
   '\nverify:types OK — packed declaration entries compile under Bundler and NodeNext with only peers installed',

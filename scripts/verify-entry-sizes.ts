@@ -10,7 +10,11 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
 
+import { createFailureLog } from './lib/packed-consumer-harness.ts'
+
 const DIST = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
+
+const log = createFailureLog(DIST)
 
 const KB = 1024
 
@@ -56,11 +60,9 @@ function formatKB(bytes: number): string {
   return `${(bytes / KB).toFixed(1)}KB`
 }
 
-const failures: string[] = []
-
 function expectBudget(label: string, actual: number, budget: number): void {
   if (actual > budget) {
-    failures.push(`${label} gzip ${formatKB(actual)} exceeds budget ${formatKB(budget)}`)
+    log.recordFailure(label, { message: `gzip ${formatKB(actual)} exceeds budget ${formatKB(budget)}` })
   }
 }
 
@@ -90,25 +92,22 @@ expectBudget('dist/core.js', core.gzip, BUDGETS.core)
 
 const entryDiff = editor.gzip - core.gzip
 if (entryDiff < BUDGETS.entryDiffMin) {
-  failures.push(
-    `editor.js − core.js gzip diff ${formatKB(entryDiff)} is below the ${formatKB(BUDGETS.entryDiffMin)} split floor`,
-  )
+  log.recordFailure('editor.js − core.js gzip diff', {
+    message: `${formatKB(entryDiff)} is below the ${formatKB(BUDGETS.entryDiffMin)} split floor`,
+  })
 }
 
 const editorCollabChunks = collabChunks.filter((chunk) => chunk.file.includes('editor-'))
 if (editorCollabChunks.length === 0) {
-  failures.push('no lazy collaboration chunk found for the editor entry (expected dist/chunks/editor-*.js)')
+  log.recordFailure('collaboration chunk', {
+    message: 'no lazy collaboration chunk found for the editor entry (expected dist/chunks/editor-*.js)',
+  })
 }
 for (const chunk of collabChunks) {
   expectBudget(chunk.file, chunk.gzip, BUDGETS.collabChunk)
 }
 
-if (failures.length > 0) {
-  for (const failure of failures) {
-    console.error(`verify:sizes FAILED: ${failure}`)
-  }
-  process.exit(1)
-}
+log.exitIfFailed('verify:sizes')
 
 console.log(
   `verify:sizes OK — editor ${formatKB(editor.gzip)} gzip, core ${formatKB(core.gzip)} gzip, ` +
