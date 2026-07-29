@@ -398,7 +398,12 @@ export interface GeneratedDecoratorNodeClass<
   ): GeneratedDecoratorNodeInstance<TDataset, TOutput>
   prototype: GeneratedDecoratorNodeInstance<TDataset, TOutput>
   getType(): string
-  clone(node: GeneratedDecoratorNodeInstance<TDataset, TOutput>): GeneratedDecoratorNodeInstance<TDataset, TOutput>
+  /**
+   * Polymorphic: the body constructs `new this(dataset, key)`, so cloning a
+   * card subclass yields that subclass — the fixed base-instance return was
+   * a type-level lie every card test cast around.
+   */
+  clone<T extends GeneratedDecoratorNodeInstance<TDataset, TOutput>>(node: T): T
   transform(): null
   getPropertyDefaults(): TDataset
   readonly nestedEditors?: readonly NestedEditorSpec[]

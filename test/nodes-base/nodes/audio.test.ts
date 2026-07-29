@@ -152,7 +152,7 @@ describe('BaseAudioNode', function () {
       editorTest(async function () {
         const audioNode = $createBaseAudioNode(dataset)
         const audioNodeDataset = audioNode.getDataset()
-        const clone = BaseAudioNode.clone(audioNode) as BaseAudioNode
+        const clone = BaseAudioNode.clone(audioNode)
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...audioNodeDataset })

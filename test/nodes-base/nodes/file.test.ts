@@ -134,7 +134,7 @@ describe('BaseFileNode', function () {
       editorTest(function () {
         const fileNode = $createBaseFileNode(dataset)
         const fileNodeDataset = fileNode.getDataset()
-        const clone = BaseFileNode.clone(fileNode) as BaseFileNode
+        const clone = BaseFileNode.clone(fileNode)
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...fileNodeDataset })

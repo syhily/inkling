@@ -137,7 +137,7 @@ describe('BaseHtmlNode', function () {
       editorTest(async function () {
         const htmlNode = $createBaseHtmlNode(dataset)
         const htmlNodeDataset = htmlNode.getDataset()
-        const clone = BaseHtmlNode.clone(htmlNode) as BaseHtmlNode
+        const clone = BaseHtmlNode.clone(htmlNode)
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...htmlNodeDataset })

@@ -104,7 +104,7 @@ describe('BaseCalloutNode', function () {
       editorTest(async function () {
         const calloutNode = $createBaseCalloutNode(dataset)
         const calloutNodeDataset = calloutNode.getDataset()
-        const clone = BaseCalloutNode.clone(calloutNode) as BaseCalloutNode
+        const clone = BaseCalloutNode.clone(calloutNode)
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...calloutNodeDataset })

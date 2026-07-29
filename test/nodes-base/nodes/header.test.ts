@@ -198,7 +198,7 @@ describe('BaseHeaderNode', function () {
         editorTest(function () {
           const headerNode = $createBaseHeaderNode(dataset)
           const headerNodeDataset = headerNode.getDataset()
-          const clone = BaseHeaderNode.clone(headerNode) as BaseHeaderNode
+          const clone = BaseHeaderNode.clone(headerNode)
           const cloneDataset = clone.getDataset()
           expect(cloneDataset).toEqual({ ...headerNodeDataset })
         }),

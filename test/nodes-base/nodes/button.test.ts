@@ -109,7 +109,7 @@ describe('BaseButtonNode', function () {
       editorTest(async function () {
         const buttonNode = $createBaseButtonNode(dataset)
         const buttonNodeDataset = buttonNode.getDataset()
-        const clone = BaseButtonNode.clone(buttonNode) as BaseButtonNode
+        const clone = BaseButtonNode.clone(buttonNode)
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...buttonNodeDataset })

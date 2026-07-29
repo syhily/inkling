@@ -205,7 +205,7 @@ describe('BaseMathNode', function () {
       'returns a copy of the current node',
       editorTest(async function () {
         const mathNode = $createBaseMathNode({ tex: 'x^2', mathml: '<math/>', svg: '<svg/>' })
-        const clone = BaseMathNode.clone(mathNode) as BaseMathNode
+        const clone = BaseMathNode.clone(mathNode)
 
         expect(clone.getDataset()).toEqual({ ...mathNode.getDataset() })
       }),

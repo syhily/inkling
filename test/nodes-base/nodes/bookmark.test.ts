@@ -145,7 +145,7 @@ describe('BaseBookmarkNode', function () {
       editorTest(async function () {
         const bookmarkNode = $createBaseBookmarkNode(dataset)
         const bookmarkNodeDataset = bookmarkNode.getDataset()
-        const clone = BaseBookmarkNode.clone(bookmarkNode) as BaseBookmarkNode
+        const clone = BaseBookmarkNode.clone(bookmarkNode)
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...bookmarkNodeDataset })

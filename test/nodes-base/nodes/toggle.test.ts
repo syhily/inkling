@@ -109,7 +109,7 @@ describe('BaseToggleNode', function () {
       editorTest(async function () {
         const toggleNode = $createBaseToggleNode(dataset)
         const toggleNodeDataset = toggleNode.getDataset()
-        const clone = BaseToggleNode.clone(toggleNode) as BaseToggleNode
+        const clone = BaseToggleNode.clone(toggleNode)
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...toggleNodeDataset })

@@ -311,7 +311,7 @@ describe('BaseCodeBlockNode', function () {
       editorTest(async function () {
         const codeBlockNode = $createBaseCodeBlockNode(dataset)
         const codeBlockNodeDataset = codeBlockNode.getDataset()
-        const clone = BaseCodeBlockNode.clone(codeBlockNode) as BaseCodeBlockNode
+        const clone = BaseCodeBlockNode.clone(codeBlockNode)
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...codeBlockNodeDataset })

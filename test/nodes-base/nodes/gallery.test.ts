@@ -188,7 +188,7 @@ describe('BaseGalleryNode', function () {
       editorTest(async function () {
         const galleryNode = $createBaseGalleryNode(dataset)
         const galleryNodeDataset = galleryNode.getDataset()
-        const clone = BaseGalleryNode.clone(galleryNode) as BaseGalleryNode
+        const clone = BaseGalleryNode.clone(galleryNode)
         const cloneDataset = clone.getDataset()
 
         expect(cloneDataset).toEqual({ ...galleryNodeDataset })
