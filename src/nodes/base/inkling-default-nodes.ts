@@ -4,6 +4,8 @@ export * from '@/nodes/base/export-dom'
 export { ensureLexicalNodeOwnMethods } from '@/nodes/base/ensure-node-own-methods'
 export { CARD_WIDTHS, isCardWidth, normalizeCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 
+import type { Klass, LexicalNode } from 'lexical'
+
 import { AsideNode } from '@/nodes/base/nodes/aside/AsideNode'
 import { AtLinkNode, AtLinkSearchNode } from '@/nodes/base/nodes/at-link/index'
 import { ExtendedHeadingNode, extendedHeadingNodeReplacement } from '@/nodes/base/nodes/ExtendedHeadingNode'
@@ -15,7 +17,6 @@ import { ZWNJNode } from '@/nodes/base/nodes/zwnj/ZWNJNode'
 import linebreakSerializers from '@/nodes/base/serializers/linebreak'
 import paragraphSerializers from '@/nodes/base/serializers/paragraph'
 import { CARD_DECLARATIONS } from '@/nodes/cards'
-import { orderCardNodes } from '@/nodes/cards/derive-card-nodes'
 import { FootnoteRefNode } from '@/nodes/footnote/FootnoteRefNode'
 import { MathInlineNode } from '@/nodes/math/MathInlineNode'
 
@@ -59,15 +60,31 @@ export const DEFAULT_CONFIG = {
   },
 }
 
-// The pre-declaration card order of DEFAULT_NODES — pinned so the derived
-// view stays identical to the pre-refactor array. Cards without a legacy
-// rank (declared later) keep declaration order and land after the pinned run.
-const LEGACY_DEFAULT_CARD_ORDER = [
+// The named node runs every surface composes — the facts used to be spelled
+// per surface (FootnoteRefNode once had to be added to two lists). An
+// extended node and its replacement config travel as one pair.
+export const EXTENDED_TEXT_NODE_PAIR = [ExtendedTextNode, extendedTextNodeReplacement]
+export const EXTENDED_HEADING_NODE_PAIR = [ExtendedHeadingNode, extendedHeadingNodeReplacement]
+export const EXTENDED_QUOTE_NODE_PAIR = [ExtendedQuoteNode, extendedQuoteNodeReplacement]
+
+/** The entity-node tail closing the editor's node sets. */
+export const ENTITY_TAIL_NODES = [TKNode, AtLinkNode, AtLinkSearchNode, ZWNJNode, MathInlineNode, FootnoteRefNode]
+
+// The pre-declaration order of the base DEFAULT_NODES as one ordered list:
+// card names resolve from the declarations, the two non-card slots from
+// their base classes (MarkdownNode and AsideNode are base-only nodes —
+// pinned in place). Cards without a legacy slot (declared later) keep
+// declaration order and land after the pinned run.
+const BASE_NODE_BY_SLOT: Record<string, Klass<LexicalNode>> = { markdown: MarkdownNode, aside: AsideNode }
+
+const LEGACY_DEFAULT_ORDER = [
   'codeblock',
   'image',
+  'markdown',
   'video',
   'audio',
   'callout',
+  'aside',
   'horizontalrule',
   'html',
   'file',
@@ -78,52 +95,32 @@ const LEGACY_DEFAULT_CARD_ORDER = [
   'gallery',
 ]
 
-const [
-  codeBlockCardNode,
-  imageCardNode,
-  videoCardNode,
-  audioCardNode,
-  calloutCardNode,
-  horizontalRuleCardNode,
-  htmlCardNode,
-  fileCardNode,
-  toggleCardNode,
-  buttonCardNode,
-  headerCardNode,
-  bookmarkCardNode,
-  galleryCardNode,
-  ...additionalCardNodes
-] = orderCardNodes(CARD_DECLARATIONS, LEGACY_DEFAULT_CARD_ORDER).map((card) => card.baseNode)
+const cardByType = new Map<string, (typeof CARD_DECLARATIONS)[number]>(
+  CARD_DECLARATIONS.map((card) => [card.nodeType, card]),
+)
+const slottedTypes = new Set<string>()
+const legacyOrderedNodes = LEGACY_DEFAULT_ORDER.map((slot) => {
+  const baseNode = BASE_NODE_BY_SLOT[slot]
+  if (baseNode) {
+    return baseNode
+  }
+  const card = cardByType.get(slot)
+  if (!card) {
+    throw new Error(`[inkling-default-nodes] legacy slot '${slot}' names no declared card`)
+  }
+  slottedTypes.add(slot)
+  return card.baseNode
+})
+const additionalCardNodes = CARD_DECLARATIONS.filter((card) => !slottedTypes.has(card.nodeType)).map(
+  (card) => card.baseNode,
+)
 
 // export convenience objects for use elsewhere
 export const DEFAULT_NODES = [
-  ExtendedTextNode,
-  extendedTextNodeReplacement,
-  ExtendedHeadingNode,
-  extendedHeadingNodeReplacement,
-  ExtendedQuoteNode,
-  extendedQuoteNodeReplacement,
-  codeBlockCardNode,
-  imageCardNode,
-  // MarkdownNode is a base-only node (not a card) — pinned in place.
-  MarkdownNode,
-  videoCardNode,
-  audioCardNode,
-  calloutCardNode,
-  AsideNode,
-  horizontalRuleCardNode,
-  htmlCardNode,
-  fileCardNode,
-  toggleCardNode,
-  buttonCardNode,
-  headerCardNode,
-  bookmarkCardNode,
-  galleryCardNode,
+  ...EXTENDED_TEXT_NODE_PAIR,
+  ...EXTENDED_HEADING_NODE_PAIR,
+  ...EXTENDED_QUOTE_NODE_PAIR,
+  ...legacyOrderedNodes,
   ...additionalCardNodes,
-  TKNode,
-  AtLinkNode,
-  AtLinkSearchNode,
-  ZWNJNode,
-  MathInlineNode,
-  FootnoteRefNode,
+  ...ENTITY_TAIL_NODES,
 ]
