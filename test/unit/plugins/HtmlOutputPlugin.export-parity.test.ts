@@ -107,7 +107,7 @@ const cases: ExportPathCase[] = [
   {
     name: 'heading',
     // Both paths add the generated id
-    // (src/html/renderer/transformers/element/heading.ts).
+    // (src/html/renderer/transformers/element/simple-transformers.ts).
     input: doc([block('heading', [text('Heading one')], { tag: 'h1' })]),
     output: '<h1 id="heading-one">Heading one</h1>',
   },
@@ -135,7 +135,7 @@ const cases: ExportPathCase[] = [
   {
     name: 'aside',
     // The aside transformer renders the alt blockquote and flattens the inner
-    // paragraph (transformers/element/aside.ts).
+    // paragraph (transformers/element/simple-transformers.ts).
     input: doc([block('aside', [block('paragraph', [text('An aside')])])]),
     output: '<blockquote class="inkling-blockquote-alt">An aside</blockquote>',
   },

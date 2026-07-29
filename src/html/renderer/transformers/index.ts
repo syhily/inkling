@@ -3,11 +3,8 @@ import type { ElementNode } from 'lexical'
 
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import asideTransformer from '@/html/renderer/transformers/element/aside'
-import blockquoteTransformer from '@/html/renderer/transformers/element/blockquote'
-import headingTransformer from '@/html/renderer/transformers/element/heading'
 import listTransformer from '@/html/renderer/transformers/element/list'
-import paragraphTransformer from '@/html/renderer/transformers/element/paragraph'
+import { simpleElementTransformers } from '@/html/renderer/transformers/element/simple-transformers'
 import tableTransformer from '@/html/renderer/transformers/element/table'
 /* c8 ignore stop */
 
@@ -16,13 +13,6 @@ export type ElementTransformer = {
   export: (node: ElementNode, exportChildren: ExportChildren, context: RenderContext) => string | null
 }
 
-const elementTransformers: ElementTransformer[] = [
-  paragraphTransformer,
-  headingTransformer,
-  listTransformer,
-  blockquoteTransformer,
-  asideTransformer,
-  tableTransformer,
-]
+const elementTransformers: ElementTransformer[] = [...simpleElementTransformers, listTransformer, tableTransformer]
 
 export default elementTransformers
