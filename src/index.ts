@@ -99,6 +99,9 @@ export type {
 } from '@/nodes/base/generate-decorator-node'
 export { InklingDecoratorNode } from '@/nodes/base/InklingDecoratorNode'
 export type { CardNodeClass } from '@/nodes/assemble-card-node'
+// the render-context seam hosts write card renderers against (defineCard
+// docs name it in prose; ExportDOMOutput flows through `@/nodes/base`)
+export type { RenderContext } from '@/nodes/base/render-context'
 
 export * from '@/utils'
 export { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown'

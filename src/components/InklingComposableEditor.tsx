@@ -40,6 +40,9 @@ export interface InklingComposableEditorProps {
   registerAPI?: (api: ExternalControlAPI | null) => void
   cursorDidExitAtTop?: () => void
   children?: React.ReactNode
+  // ReactElement, not ReactNode: upstream RichTextPlugin's placeholder
+  // contract is Element | ((isEditable) => Element | null) — widening the
+  // prop past it would fail at that boundary instead of here
   placeholder?: React.ReactElement
   singleParagraph?: boolean
   placeholderText?: string
