@@ -21,7 +21,6 @@ import type Token from 'markdown-it/lib/token.mjs'
 
 import MarkdownIt from 'markdown-it'
 import markdownItFootnote from 'markdown-it-footnote'
-import markdownItImageLazyLoading from 'markdown-it-image-lazy-loading'
 import markdownItLazyHeaders from 'markdown-it-lazy-headers'
 import markdownItMark from 'markdown-it-mark'
 import markdownItSub from 'markdown-it-sub'
@@ -93,6 +92,20 @@ const namedHeaders = function ({ inklingVersion }: RenderOptions = {}) {
   }
 }
 
+// Pasted images export `loading="lazy"` (the only feature the former
+// markdown-it-image-lazy-loading dependency provided — its image-size /
+// node:path legs pulled Node built-ins into the browser bundle and were
+// never used: the plugin was mounted with no options).
+function lazyLoadingImages(md: MarkdownIt): void {
+  const defaultImageRenderer = md.renderer.rules.image
+  md.renderer.rules.image = function (tokens, idx, options, env, self) {
+    tokens[idx].attrSet('loading', 'lazy')
+    return defaultImageRenderer
+      ? defaultImageRenderer(tokens, idx, options, env, self)
+      : self.renderToken(tokens, idx, options)
+  }
+}
+
 const selectRenderer = function (options: RenderOptions): MarkdownIt {
   // The slug policy is fixed by the version, so one cached engine per policy;
   // `namedHeaders(options)` closes over the per-version slug behaviour.
@@ -104,7 +117,7 @@ const selectRenderer = function (options: RenderOptions): MarkdownIt {
     .use(markdownItFootnote)
     .use(markdownItLazyHeaders)
     .use(markdownItMark)
-    .use(markdownItImageLazyLoading)
+    .use(lazyLoadingImages)
     .use(namedHeaders(options))
     .use(markdownItSub)
     .use(markdownItSup)
