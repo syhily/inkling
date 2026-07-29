@@ -377,9 +377,10 @@ export type DecoratorNodeData<Props extends readonly DecoratorNodeProperty[]> = 
 type GeneratedDecoratorNodeInstance<
   TDataset extends Record<string, unknown>,
   TOutput extends ExportDOMOutput = ExportDOMOutput,
+  TSerialized extends SerializedLexicalNode = SerializedGeneratedDecoratorNode<TDataset>,
 > = {
   exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): TOutput
-} & GeneratedDecoratorNodeBase &
+} & GeneratedDecoratorNodeBase<TDataset, TSerialized> &
   TDataset &
   PrivateDatasetFields<TDataset>
 
@@ -409,19 +410,20 @@ export type SerializedGeneratedDecoratorNode<TDataset extends Record<string, unk
 export interface GeneratedDecoratorNodeClass<
   TDataset extends Record<string, unknown>,
   TOutput extends ExportDOMOutput = ExportDOMOutput,
+  TSerialized extends SerializedLexicalNode = SerializedGeneratedDecoratorNode<TDataset>,
 > {
   new (
     data?: Partial<TDataset> | Record<string, unknown>,
     key?: string,
-  ): GeneratedDecoratorNodeInstance<TDataset, TOutput>
-  prototype: GeneratedDecoratorNodeInstance<TDataset, TOutput>
+  ): GeneratedDecoratorNodeInstance<TDataset, TOutput, TSerialized>
+  prototype: GeneratedDecoratorNodeInstance<TDataset, TOutput, TSerialized>
   getType(): string
   /**
    * Polymorphic: the body constructs `new this(dataset, key)`, so cloning a
    * card subclass yields that subclass — the fixed base-instance return was
    * a type-level lie every card test cast around.
    */
-  clone<T extends GeneratedDecoratorNodeInstance<TDataset, TOutput>>(node: T): T
+  clone<T extends GeneratedDecoratorNodeInstance<TDataset, TOutput, TSerialized>>(node: T): T
   transform(): null
   getPropertyDefaults(): TDataset
   readonly nestedEditors?: readonly NestedEditorSpec[]
@@ -429,7 +431,7 @@ export interface GeneratedDecoratorNodeClass<
   readonly urlTransformMap: Record<string, string | Record<string, string>>
   readonly importSpec: CardImportSpec | undefined
   importDOM(): DOMConversionMap | null
-  importJSON(serializedNode: Record<string, unknown>): GeneratedDecoratorNodeInstance<TDataset, TOutput>
+  importJSON(serializedNode: Record<string, unknown>): GeneratedDecoratorNodeInstance<TDataset, TOutput, TSerialized>
 }
 
 // Type-only view of the generated node's instance side, used in the instance
@@ -449,18 +451,27 @@ export interface GeneratedDecoratorNodeClass<
 // declare). The function-local class below keeps its own index signature for
 // its dynamic spec-driven assignments; it never reaches consumers because
 // the class is only exposed through the `GeneratedDecoratorNodeClass` cast.
-export interface GeneratedDecoratorNodeBase extends InklingDecoratorNode {
+export interface GeneratedDecoratorNodeBase<
+  TDataset extends Record<string, unknown> = Record<string, unknown>,
+  TSerialized extends SerializedLexicalNode = SerializedGeneratedDecoratorNode<TDataset>,
+> extends InklingDecoratorNode {
   getDataset(): Record<string, unknown>
   appendNestedEditorDataset<T extends Record<string, unknown>>(dataset: T): T
   appendTransientDataset<T extends Record<string, unknown>>(dataset: T): T
   serializeNestedEditorHtml<T extends Record<string, unknown>>(json: T): T
-  exportJSON(): { type: string; version: number; [key: string]: unknown }
+  // closed on typed instances (SerializedLexicalNode & TDataset); the
+  // default keeps the open bag for consumers holding a card without its
+  // concrete dataset type. Cards that remap on export (bookmark's nested
+  // metadata, the footnote definition's index) declare their own
+  // TSerialized — see the generator's third type parameter.
+  exportJSON(): TSerialized
   isInklingCard(): true
   hasEditMode(): boolean
 }
 
 export function generateDecoratorNode<
   Props extends readonly DecoratorNodeProperty[] = readonly [],
+  TSerialized extends SerializedLexicalNode = SerializedGeneratedDecoratorNode<DecoratorNodeValueMap<Props>>,
   TOutput extends ExportDOMOutput = ExportDOMOutput,
 >({
   nodeType,
@@ -475,12 +486,15 @@ export function generateDecoratorNode<
   // The render fn's declared node type is checked against the generated
   // instance shape: it must accept the instance, so every key it reads must
   // exist on the node's dataset at the dataset's true (widened) type.
-  defaultRenderFn?: RenderFn<GeneratedDecoratorNodeInstance<DecoratorNodeValueMap<Props>, TOutput>, TOutput>
+  defaultRenderFn?: RenderFn<
+    GeneratedDecoratorNodeInstance<DecoratorNodeValueMap<Props>, TOutput, TSerialized>,
+    TOutput
+  >
   version?: number
   importSpec?: CardImportSpec
   /** The edit-mode fact as data (most cards have one; image/gallery/horizontalrule/footnotedefinition don't). */
   hasEditMode?: boolean
-}): GeneratedDecoratorNodeClass<DecoratorNodeValueMap<Props>, TOutput> {
+}): GeneratedDecoratorNodeClass<DecoratorNodeValueMap<Props>, TOutput, TSerialized> {
   type GeneratedDataset = DecoratorNodeValueMap<Props>
 
   const nodeProperties = properties ?? []
@@ -726,7 +740,7 @@ export function generateDecoratorNode<
      * @extends DecoratorNode
      * @see https://lexical.dev/docs/concepts/serialization#lexicalnodeexportjson
      */
-    exportJSON(): SerializedGeneratedDecoratorNode<GeneratedDataset> {
+    exportJSON(): TSerialized {
       const dataset = {
         type: nodeType,
         version: version,
@@ -736,8 +750,11 @@ export function generateDecoratorNode<
           obj[prop.name] = prop.redactDataUrl ? redactDataUrlValue(this[prop.name]) : this[prop.name]
           return obj
         }, {}),
-      } as SerializedGeneratedDecoratorNode<GeneratedDataset>
-      return this.serializeNestedEditorHtml(dataset)
+      }
+      // the body builds the dataset-serialized shape (TSerialized's default);
+      // remapping subclasses override exportJSON wholesale — the cast is the
+      // bridge, like the class-to-interface one at the return site
+      return this.serializeNestedEditorHtml(dataset) as unknown as TSerialized
     }
 
     /**
@@ -774,7 +791,10 @@ export function generateDecoratorNode<
       // as the instance type (see the return-cast note below), but unlike the
       // old inferred TRenderNode the asserted shape is now TRUE of the
       // runtime object: the dataset keys at their widened types.
-      return defaultRenderFn(this as unknown as GeneratedDecoratorNodeInstance<GeneratedDataset, TOutput>, context)
+      return defaultRenderFn(
+        this as unknown as GeneratedDecoratorNodeInstance<GeneratedDataset, TOutput, TSerialized>,
+        context,
+      )
     }
 
     /* c8 ignore start */
@@ -878,5 +898,9 @@ export function generateDecoratorNode<
     })
   })
 
-  return GeneratedDecoratorNode as unknown as GeneratedDecoratorNodeClass<DecoratorNodeValueMap<Props>, TOutput>
+  return GeneratedDecoratorNode as unknown as GeneratedDecoratorNodeClass<
+    DecoratorNodeValueMap<Props>,
+    TOutput,
+    TSerialized
+  >
 }

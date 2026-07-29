@@ -1,3 +1,5 @@
+import type { SerializedLexicalNode } from 'lexical'
+
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
 import { generateDecoratorNode, type DecoratorNodeProperty } from '@/nodes/base/generate-decorator-node'
@@ -70,7 +72,26 @@ const bookmarkProperties = [
   { name: 'thumbnail', urlPath: 'metadata.thumbnail', default: '', urlType: 'url' },
 ] as const satisfies readonly DecoratorNodeProperty[]
 
-export class BaseBookmarkNode extends generateDecoratorNode({
+/**
+ * The bookmark's serialized shape — the flat dataset fields are REMAPPED on
+ * export (the metadata fields nest under `metadata`, so the serialized node
+ * is not SerializedGeneratedDecoratorNode<dataset>; the generator's third
+ * type parameter carries this instead).
+ */
+export interface SerializedBookmarkNode extends SerializedLexicalNode {
+  url: string
+  metadata: {
+    icon: string
+    title: string
+    description: string
+    author: string
+    publisher: string
+    thumbnail: string
+  }
+  caption: string
+}
+
+export class BaseBookmarkNode extends generateDecoratorNode<typeof bookmarkProperties, SerializedBookmarkNode>({
   nodeType: 'bookmark',
   properties: bookmarkProperties,
   defaultRenderFn: renderBookmarkNode,
@@ -142,7 +163,7 @@ export class BaseBookmarkNode extends generateDecoratorNode({
   }
 
   /* @override */
-  exportJSON() {
+  exportJSON(): SerializedBookmarkNode {
     // serializeNestedEditorHtml re-serializes the caption editor for wrapper
     // subclasses that adopt a `nestedEditors` spec; a no-op on this class
     return this.serializeNestedEditorHtml({
