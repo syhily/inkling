@@ -13,8 +13,8 @@
 
 import type { GalleryImage } from '@/types/gallery'
 
+import { getImageFilenameFromSrc } from '@/nodes/base/utils/content-image-url'
 import { adjustInsertIndexForRemoval } from '@/utils/draggable/reorder-rules'
-import { getImageFilenameFromSrc } from '@/utils/getImageFilenameFromSrc'
 
 export interface GalleryDragFacts {
   type?: string

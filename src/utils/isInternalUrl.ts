@@ -1,7 +1,7 @@
 // "Own URL" checks come in an input/export pair: `isInternalUrl` decides
 // whether a link points at our own site (at-link labeling); the export-side
 // counterpart is `isLocalContentImage`
-// (`@/nodes/base/utils/is-local-content-image`, behind the render context),
+// (`@/nodes/base/utils/content-image-url`, behind the render context),
 // which recognizes our own content images in exported markup.
 export function isInternalUrl(url: string, siteUrl?: string): boolean {
   if (!url || !siteUrl) {

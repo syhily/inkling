@@ -3,8 +3,8 @@ import DOMPurify, { type Config as DOMPurifyConfig, type WindowLike } from 'domp
 import type { ExportDOMDom, ExportDOMOptions, ImageOptimizationOptions } from '@/nodes/base/export-dom'
 
 import { cleanDOM } from '@/nodes/base/utils/clean-dom'
+import { isLocalContentImage as isLocalContentImageImpl } from '@/nodes/base/utils/content-image-url'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
-import { isLocalContentImage as isLocalContentImageImpl } from '@/nodes/base/utils/is-local-content-image'
 import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 

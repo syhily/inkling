@@ -1,8 +1,5 @@
+import { parseUrlPathname } from '@/nodes/base/utils/content-image-url'
+
 export function isGif(url: string): boolean {
-  try {
-    const pathname = new URL(url).pathname
-    return /\.(gif)$/i.test(pathname)
-  } catch {
-    return /\.(gif)$/i.test(url)
-  }
+  return /\.(gif)$/i.test(parseUrlPathname(url))
 }

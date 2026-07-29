@@ -1,4 +1,4 @@
-import { isLocalContentImage } from '@/nodes/base/utils/is-local-content-image'
+import { isLocalContentImage } from '@/nodes/base/utils/content-image-url'
 
 describe('Utils: isLocalContentImage', function () {
   it('returns true for local content image paths', function () {

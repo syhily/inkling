@@ -16,7 +16,7 @@ import type { GalleryImage } from '@/types/gallery'
 import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { $isImageNode } from '@/nodes/base/nodes/image/ImageNode'
-import { getImageFilenameFromSrc } from '@/utils/getImageFilenameFromSrc'
+import { getImageFilenameFromSrc } from '@/nodes/base/utils/content-image-url'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
 // Drop surgery — the headless $-surgeries behind DragDropReorderPlugin. The
