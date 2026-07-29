@@ -99,17 +99,19 @@ export interface DecoratorNodeProperty<Name extends string = string, Default = u
  * slots — the constructor and importJSON assign the private fields
  * directly, so a host-filled artifact survives deserialization and cloning.
  */
-export function applyArtifactSlotInvalidation(
+export function applyArtifactSlotInvalidation<K extends string>(
   changed: boolean,
-  writable: object,
-  slotPrivateNames: readonly string[],
+  writable: Record<K, unknown>,
+  slotPrivateNames: readonly K[],
 ): void {
   if (!changed) {
     return
   }
-  const target = writable as Record<string, unknown>
+  // the finite-key record is the true shape: the generated FieldCarrier
+  // (index signature) and the hand-written MathInlineNode (declared __*
+  // fields) are both structurally assignable — no cast at either call site
   for (const name of slotPrivateNames) {
-    target[name] = ''
+    writable[name] = ''
   }
 }
 
