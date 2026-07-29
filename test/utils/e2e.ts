@@ -182,31 +182,23 @@ export async function assertHTML(
     ignoreCardCaptionContents = false,
   }: AssertHTMLOptions = {},
 ) {
+  // one binding for both sides — an option added to only one side would
+  // silently compare mismatched normalizations
+  const prettyOptions = {
+    ignoreClasses,
+    ignoreInlineStyles,
+    ignoreInnerSVG,
+    getBase64FileFormat,
+    ignoreCardContents,
+    ignoreCardSettings,
+    ignoreCardToolbarContents,
+    ignoreDragDropAttrs,
+    ignoreDataTestId,
+    ignoreCardCaptionContents,
+  }
   const actualHtml = await page.$eval(selector, (e) => e.innerHTML)
-  const actual = prettifyHTML(actualHtml.replace(/\n/gm, ''), {
-    ignoreClasses,
-    ignoreInlineStyles,
-    ignoreInnerSVG,
-    getBase64FileFormat,
-    ignoreCardContents,
-    ignoreCardSettings,
-    ignoreCardToolbarContents,
-    ignoreDragDropAttrs,
-    ignoreDataTestId,
-    ignoreCardCaptionContents,
-  })
-  const expected = prettifyHTML(expectedHtml.replace(/\n/gm, ''), {
-    ignoreClasses,
-    ignoreInlineStyles,
-    ignoreInnerSVG,
-    getBase64FileFormat,
-    ignoreCardContents,
-    ignoreCardSettings,
-    ignoreCardToolbarContents,
-    ignoreDragDropAttrs,
-    ignoreDataTestId,
-    ignoreCardCaptionContents,
-  })
+  const actual = prettifyHTML(actualHtml.replace(/\n/gm, ''), prettyOptions)
+  const expected = prettifyHTML(expectedHtml.replace(/\n/gm, ''), prettyOptions)
   expect(actual).toEqual(expected)
 }
 
@@ -470,24 +462,7 @@ export async function pasteLexical(page: Page, content: string) {
 }
 
 export async function pasteFiles(page: Page, files: readonly FilePathPayload[]) {
-  const dataTransfer = await createDataTransfer(page, files)
-
-  await page.evaluate(async (clipboardData) => {
-    const activeElement = document.activeElement
-    if (!activeElement) {
-      throw new Error('Expected an active element before pasting files')
-    }
-
-    activeElement.dispatchEvent(
-      new ClipboardEvent('paste', {
-        clipboardData: clipboardData,
-        bubbles: true,
-        cancelable: true,
-      }),
-    )
-
-    clipboardData.clearData()
-  }, dataTransfer)
+  await pasteFilesWithText(page, files)
 }
 
 export async function pasteFilesWithText(
