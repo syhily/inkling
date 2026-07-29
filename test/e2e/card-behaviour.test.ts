@@ -5,6 +5,7 @@ import {
   assertSelection,
   ctrlOrCmd,
   focusEditor,
+  getBoundingBox,
   getScrollPosition,
   html,
   initialize,
@@ -761,10 +762,7 @@ test.describe('Card behaviour', () => {
       await page.keyboard.type('Third line of text')
 
       const paragraph = page.locator('[data-lexical-editor] > p').first()
-      const box = await paragraph.boundingBox()
-      if (!box) {
-        throw new Error('Expected paragraph bounding box')
-      }
+      const box = await getBoundingBox(paragraph)
       await page.mouse.click(box.x + 1, box.y + 5)
       await page.keyboard.press('ArrowUp')
 
@@ -962,10 +960,7 @@ test.describe('Card behaviour', () => {
 
       // place cursor at beginning of first line
       const pHandle = page.locator('[data-lexical-editor] > p').nth(0)
-      const pRect = await pHandle.boundingBox()
-      if (!pRect) {
-        throw new Error('Expected paragraph bounding box')
-      }
+      const pRect = await getBoundingBox(pHandle)
       await page.mouse.click(pRect.x + 5, pRect.y + 5)
 
       // sanity check

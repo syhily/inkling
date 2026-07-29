@@ -1,6 +1,15 @@
-import { test, type Locator, type Page } from '@playwright/test'
+import { test, type Page } from '@playwright/test'
 
-import { assertHTML, assertSelection, ctrlOrCmd, dragMouse, focusEditor, html, initialize } from '#/utils/e2e'
+import {
+  assertHTML,
+  assertSelection,
+  ctrlOrCmd,
+  dragMouse,
+  focusEditor,
+  getBoundingBox,
+  html,
+  initialize,
+} from '#/utils/e2e'
 
 test.describe('Selection behaviour', () => {
   let page: Page
@@ -133,12 +142,3 @@ test.describe('Selection behaviour', () => {
     // });
   })
 })
-
-async function getBoundingBox(locator: Locator) {
-  const boundingBox = await locator.boundingBox()
-  if (boundingBox === null) {
-    throw new Error('Expected the locator to be visible')
-  }
-
-  return boundingBox
-}

@@ -1,12 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-import { focusEditor, initialize, insertCard } from '#/utils/e2e'
+import { fixture, focusEditor, initialize, insertCard } from '#/utils/e2e'
 import { awaitMediaEvents, MEDIA_LOAD_TIMEOUT_MS } from '@/utils/awaitMediaEvents'
 import { getImageDimensions } from '@/utils/getImageDimensions'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 test.describe('Image card', () => {
   let page: Page
@@ -23,7 +19,7 @@ test.describe('Image card', () => {
   })
 
   test('can get image height and width', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const filePath = fixture('large-image.png')
 
     await focusEditor(page)
     const [fileChooser] = await Promise.all([page.waitForEvent('filechooser'), insertCard(page, { cardName: 'image' })])

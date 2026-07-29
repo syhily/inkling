@@ -1,6 +1,15 @@
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
-import { assertHTML, assertPosition, assertSelection, focusEditor, html, initialize, insertCard } from '#/utils/e2e'
+import {
+  assertHTML,
+  assertPosition,
+  assertSelection,
+  focusEditor,
+  getBoundingBox,
+  html,
+  initialize,
+  insertCard,
+} from '#/utils/e2e'
 
 test.describe('Plus button', () => {
   let page: Page
@@ -435,12 +444,3 @@ test.describe('Plus button', () => {
     })
   })
 })
-
-async function getBoundingBox(locator: Locator) {
-  const boundingBox = await locator.boundingBox()
-  if (boundingBox === null) {
-    throw new Error('Expected the locator to be visible')
-  }
-
-  return boundingBox
-}

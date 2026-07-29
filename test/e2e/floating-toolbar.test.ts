@@ -1,11 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-import { assertHTML, ctrlOrCmd, focusEditor, html, initialize, insertCard, selectBackwards } from '#/utils/e2e'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import { assertHTML, ctrlOrCmd, fixture, focusEditor, html, initialize, insertCard, selectBackwards } from '#/utils/e2e'
 
 test.describe('Floating format toolbar', () => {
   let page: Page
@@ -320,7 +315,7 @@ test.describe('Floating format toolbar', () => {
     })
 
     test('toggles all text when text+image cards are selected', async function () {
-      const filePath = path.relative(process.cwd(), __dirname + '/fixtures/large-image.png')
+      const filePath = fixture('large-image.png')
 
       await focusEditor(page)
       await page.keyboard.type('First paragraph')
@@ -355,7 +350,7 @@ test.describe('Floating format toolbar', () => {
     })
 
     test('toggles all text when text+audio cards are selected', async function () {
-      const filePath = path.relative(process.cwd(), __dirname + '/fixtures/large-image.png')
+      const filePath = fixture('large-image.png')
 
       await focusEditor(page)
       await page.keyboard.type('First paragraph')

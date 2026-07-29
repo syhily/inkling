@@ -1,10 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-import { assertHTML, createDataTransfer, focusEditor, html, initialize } from '#/utils/e2e'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import { assertHTML, createDataTransfer, fixture, focusEditor, html, initialize } from '#/utils/e2e'
 
 // Video card is tested in firefox
 // Need to get video thumbnail before uploading on the server; for this purpose, convert video to blob (see extractVideoMetadata.js)
@@ -26,7 +22,7 @@ test.describe('Drag Drop Paste Plugin Firefox', function () {
   test('can drag and drop a video file on the editor', async function () {
     await focusEditor(page)
 
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/video.mp4')
+    const filePath = fixture('video.mp4')
     const dataTransfer = await createDataTransfer(page, [{ filePath, fileName: 'video.mp4', fileType: 'video/mp4' }])
 
     await page.locator('.inkling-prose').dispatchEvent('dragenter', { dataTransfer })
@@ -38,8 +34,8 @@ test.describe('Drag Drop Paste Plugin Firefox', function () {
 
   test('can drag and drop multiple video files on the editor', async function () {
     await focusEditor(page)
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/video.mp4')
-    const filePath2 = path.relative(process.cwd(), __dirname + '/../fixtures/video.mp4')
+    const filePath = fixture('video.mp4')
+    const filePath2 = fixture('video.mp4')
     const dataTransfer = await createDataTransfer(page, [
       { filePath, fileName: 'video-1.mp4', fileType: 'video/mp4' },
       { filePath: filePath2, fileName: 'video-2.mp4', fileType: 'video/mp4' },
@@ -68,9 +64,9 @@ test.describe('Drag Drop Paste Plugin Firefox', function () {
 
   test('can drag and drop multiple different types of files on the editor', async function () {
     await focusEditor(page)
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
-    const filePath2 = path.relative(process.cwd(), __dirname + '/../fixtures/audio-sample.mp3')
-    const filePath3 = path.relative(process.cwd(), __dirname + '/../fixtures/video.mp4')
+    const filePath = fixture('large-image.png')
+    const filePath2 = fixture('audio-sample.mp3')
+    const filePath3 = fixture('video.mp4')
     const dataTransfer = await createDataTransfer(page, [
       { filePath, fileName: 'large-image.png', fileType: 'image/png' },
       { filePath: filePath2, fileName: 'audio-sample.mp3', fileType: 'audio/mp3' },

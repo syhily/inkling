@@ -1,10 +1,15 @@
 import { expect, test, type Page } from '@playwright/test'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-import { assertHTML, createDataTransfer, focusEditor, html, initialize, insertCard } from '#/utils/e2e'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import {
+  assertHTML,
+  createDataTransfer,
+  fixture,
+  focusEditor,
+  html,
+  initialize,
+  insertCard,
+  loadSerializedState,
+} from '#/utils/e2e'
 
 test.describe('File card', () => {
   let page: Page
@@ -21,29 +26,24 @@ test.describe('File card', () => {
   })
 
   test('can import serialized file card nodes', async function () {
-    await page.evaluate(() => {
-      const serializedState = JSON.stringify({
-        root: {
-          children: [
-            {
-              type: 'file',
-              src: '/content/images/2022/11/inkling-lexical.jpg',
-              fileTitle: 'This is a title',
-              fileCaption: 'This is a description',
-              fileName: 'inkling-lexical.jpg',
-              fileSize: '1.2 MB',
-            },
-          ],
-          direction: null,
-          format: '',
-          indent: 0,
-          type: 'root',
-          version: 1,
-        },
-      })
-      const editor = window.lexicalEditor
-      const editorState = editor.parseEditorState(serializedState)
-      editor.setEditorState(editorState)
+    await loadSerializedState(page, {
+      root: {
+        children: [
+          {
+            type: 'file',
+            src: '/content/images/2022/11/inkling-lexical.jpg',
+            fileTitle: 'This is a title',
+            fileCaption: 'This is a description',
+            fileName: 'inkling-lexical.jpg',
+            fileSize: '1.2 MB',
+          },
+        ],
+        direction: null,
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1,
+      },
     })
 
     // page.pause();
@@ -59,7 +59,7 @@ test.describe('File card', () => {
   })
 
   test('renders file card node', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/print-img.pdf')
+    const filePath = fixture('print-img.pdf')
 
     await focusEditor(page)
     const fileChooserPromise = page.waitForEvent('filechooser')
@@ -99,7 +99,7 @@ test.describe('File card', () => {
   })
 
   test('can upload dropped file', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/print-img.pdf')
+    const filePath = fixture('print-img.pdf')
     const fileChooserPromise = page.waitForEvent('filechooser')
 
     await focusEditor(page)
@@ -170,7 +170,7 @@ test.describe('File card', () => {
 })
 
 async function uploadFile(page: Page, fileName = 'print-img.pdf') {
-  const filePath = path.relative(process.cwd(), __dirname + `/../fixtures/${fileName}`)
+  const filePath = fixture(fileName)
 
   const fileChooserPromise = page.waitForEvent('filechooser')
   await insertCard(page, { cardName: 'file' })

@@ -1,10 +1,16 @@
-import { expect, test, type Locator, type Page } from '@playwright/test'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { expect, test, type Page } from '@playwright/test'
 
-import { assertHTML, dragMouse, focusEditor, html, initialize, insertCard } from '#/utils/e2e'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import {
+  assertHTML,
+  dragMouse,
+  fixture,
+  focusEditor,
+  getBoundingBox,
+  html,
+  initialize,
+  insertCard,
+  type BoundingBox,
+} from '#/utils/e2e'
 
 test.describe('Drag Drop Reorder Plugin', function () {
   let page: Page
@@ -21,7 +27,7 @@ test.describe('Drag Drop Reorder Plugin', function () {
   })
 
   test('can drag and drop a card between two other nodes', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const filePath = fixture('large-image.png')
 
     await focusEditor(page)
 
@@ -86,7 +92,7 @@ test.describe('Drag Drop Reorder Plugin', function () {
   })
 
   test('can drag and drop a card at the top of the editor', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const filePath = fixture('large-image.png')
 
     await focusEditor(page)
 
@@ -153,7 +159,7 @@ test.describe('Drag Drop Reorder Plugin', function () {
   })
 
   test('can drag and drop a card at the bottom of the editor', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const filePath = fixture('large-image.png')
 
     await focusEditor(page)
 
@@ -219,7 +225,7 @@ test.describe('Drag Drop Reorder Plugin', function () {
   })
 
   test('can display placeholder element while hovering between nodes', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const filePath = fixture('large-image.png')
 
     await focusEditor(page)
 
@@ -309,15 +315,4 @@ async function twoPhaseDragToBottom(page: Page, imageBBox: BoundingBox) {
   const shiftedParagraphBBox = await getBoundingBox(page.locator('p:not(figure p)'))
   const targetY = shiftedParagraphBBox.y + shiftedParagraphBBox.height * 0.75
   await page.mouse.move(imageBBox.x, targetY, { steps: 10 })
-}
-
-type BoundingBox = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>
-
-async function getBoundingBox(locator: Locator): Promise<BoundingBox> {
-  const boundingBox = await locator.boundingBox()
-  if (boundingBox === null) {
-    throw new Error('Expected the locator to be visible')
-  }
-
-  return boundingBox
 }

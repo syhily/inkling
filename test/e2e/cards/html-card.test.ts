@@ -7,6 +7,7 @@ import {
   focusEditor,
   html,
   initialize,
+  loadSerializedState,
   waitForCodeMirrorHistoryGroup,
 } from '#/utils/e2e'
 
@@ -25,25 +26,20 @@ test.describe('Html card', () => {
   })
 
   test('can import serialized html card nodes', async function () {
-    await page.evaluate(() => {
-      const serializedState = JSON.stringify({
-        root: {
-          children: [
-            {
-              type: 'html',
-              html: '<p>test content</p>',
-            },
-          ],
-          direction: null,
-          format: '',
-          indent: 0,
-          type: 'root',
-          version: 1,
-        },
-      })
-      const editor = window.lexicalEditor
-      const editorState = editor.parseEditorState(serializedState)
-      editor.setEditorState(editorState)
+    await loadSerializedState(page, {
+      root: {
+        children: [
+          {
+            type: 'html',
+            html: '<p>test content</p>',
+          },
+        ],
+        direction: null,
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1,
+      },
     })
 
     await assertHTML(
@@ -64,25 +60,20 @@ test.describe('Html card', () => {
   })
 
   test('renders without style elements and attributes', async function () {
-    await page.evaluate(() => {
-      const serializedState = JSON.stringify({
-        root: {
-          children: [
-            {
-              type: 'html',
-              html: '<div id="fullscreen"><span style="fullscreen-inner">Loading...</span></div><style>.fullscreen {position: fixed;}</style>',
-            },
-          ],
-          direction: null,
-          format: '',
-          indent: 0,
-          type: 'root',
-          version: 1,
-        },
-      })
-      const editor = window.lexicalEditor
-      const editorState = editor.parseEditorState(serializedState)
-      editor.setEditorState(editorState)
+    await loadSerializedState(page, {
+      root: {
+        children: [
+          {
+            type: 'html',
+            html: '<div id="fullscreen"><span style="fullscreen-inner">Loading...</span></div><style>.fullscreen {position: fixed;}</style>',
+          },
+        ],
+        direction: null,
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1,
+      },
     })
 
     await assertHTML(

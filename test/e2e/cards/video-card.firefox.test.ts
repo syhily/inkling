@@ -1,12 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import {
   assertHTML,
   createDataTransfer,
   createSnippet,
   ctrlOrCmd,
+  fixture,
   focusEditor,
   html,
   initialize,
@@ -14,8 +13,6 @@ import {
   waitForCardContentSynced,
   waitForHistoryGroupBoundary,
 } from '#/utils/e2e'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 // Video card is tested in firefox
 // Need to get video thumbnail before uploading on the server; for this purpose, convert video to blob (see extractVideoMetadata.js)
@@ -115,7 +112,7 @@ test.describe('Video card', () => {
 
   test('renders video card node', async function () {
     const fileChooserPromise = page.waitForEvent('filechooser')
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/video.mp4')
+    const filePath = fixture('video.mp4')
 
     await focusEditor(page)
     await insertCard(page, { cardName: 'video' })
@@ -139,7 +136,7 @@ test.describe('Video card', () => {
 
   test('can upload video file from slash menu', async function () {
     const fileChooserPromise = page.waitForEvent('filechooser')
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/video.mp4')
+    const filePath = fixture('video.mp4')
 
     await focusEditor(page)
 
@@ -180,7 +177,7 @@ test.describe('Video card', () => {
     await expect(emptyThumbnail).toBeVisible()
 
     // Upload thumbnail
-    const imagePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const imagePath = fixture('large-image.png')
     const fileChooserPromise = page.waitForEvent('filechooser')
     await emptyThumbnail.click()
     const fileChooser = await fileChooserPromise
@@ -209,7 +206,7 @@ test.describe('Video card', () => {
     const emptyThumbnail = page.getByTestId('media-upload-placeholder')
 
     // Upload thumbnail
-    const imagePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image-fail.jpeg')
+    const imagePath = fixture('large-image-fail.jpeg')
     const fileChooserPromise = page.waitForEvent('filechooser')
     await emptyThumbnail.click()
     const fileChooser = await fileChooserPromise
@@ -220,7 +217,7 @@ test.describe('Video card', () => {
   })
 
   test('can upload dropped video', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/video.mp4')
+    const filePath = fixture('video.mp4')
     const fileChooserPromise = page.waitForEvent('filechooser')
 
     await focusEditor(page)
@@ -245,7 +242,7 @@ test.describe('Video card', () => {
   })
 
   test('can show errors if was dropped a file with wrong extension to video placeholder', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const filePath = fixture('large-image.png')
     const fileChooserPromise = page.waitForEvent('filechooser')
 
     await focusEditor(page)
@@ -267,7 +264,7 @@ test.describe('Video card', () => {
   })
 
   test('can upload dropped custom thumbnail', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const filePath = fixture('large-image.png')
 
     await focusEditor(page)
     await uploadVideo(page)
@@ -292,7 +289,7 @@ test.describe('Video card', () => {
   })
 
   test('can show errors if was dropped a file with wrong extension to custom thumbnail', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/video.mp4')
+    const filePath = fixture('video.mp4')
 
     await focusEditor(page)
     await uploadVideo(page)
@@ -516,7 +513,7 @@ test.describe('Video card', () => {
 })
 
 async function uploadVideo(page: Page, fileName = 'video.mp4') {
-  const filePath = path.relative(process.cwd(), __dirname + `/../fixtures/${fileName}`)
+  const filePath = fixture(fileName)
 
   const fileChooserPromise = page.waitForEvent('filechooser')
   await insertCard(page, { cardName: 'video' })

@@ -1,20 +1,18 @@
 import { expect, test, type Page } from '@playwright/test'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import {
   assertHTML,
   createDataTransfer,
   ctrlOrCmd,
   dragMouse,
+  fixture,
   focusEditor,
+  getBoundingBox,
   getEditorState,
   html,
   initialize,
   insertCard,
 } from '#/utils/e2e'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 test.describe('Gallery card', () => {
   let page: Page
@@ -175,7 +173,7 @@ test.describe('Gallery card', () => {
 
   test('can upload images', async function () {
     const fileChooserPromise = page.waitForEvent('filechooser')
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.jpeg')
+    const filePath = fixture('large-image.jpeg')
 
     await focusEditor(page)
     await insertCard(page, { cardName: 'gallery' })
@@ -248,8 +246,8 @@ test.describe('Gallery card', () => {
   })
 
   test('can drop images when empty', async function () {
-    const firstImagePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.jpeg')
-    const secondImagePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const firstImagePath = fixture('large-image.jpeg')
+    const secondImagePath = fixture('large-image.png')
 
     await focusEditor(page)
     await insertCard(page, { cardName: 'gallery' })
@@ -272,11 +270,11 @@ test.describe('Gallery card', () => {
   })
 
   test('can drop images when populated', async function () {
-    const prePopulatedImagePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.jpeg')
+    const prePopulatedImagePath = fixture('large-image.jpeg')
     const fileChooserPromise = page.waitForEvent('filechooser')
 
-    const firstImagePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.jpeg')
-    const secondImagePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const firstImagePath = fixture('large-image.jpeg')
+    const secondImagePath = fixture('large-image.png')
 
     await focusEditor(page)
     await insertCard(page, { cardName: 'gallery' })
@@ -306,9 +304,7 @@ test.describe('Gallery card', () => {
   })
 
   test('limits uploads to 9 images', async function () {
-    const filePaths = Array.from(Array(10).keys()).map((n) =>
-      path.relative(process.cwd(), __dirname + `/../fixtures/large-image-${n}.png`),
-    )
+    const filePaths = Array.from(Array(10).keys()).map((n) => fixture(`large-image-${n}.png`))
     const fileChooserPromise = page.waitForEvent('filechooser')
 
     await focusEditor(page)
@@ -331,7 +327,7 @@ test.describe('Gallery card', () => {
     await focusEditor(page)
     await insertCard(page, { cardName: 'gallery' })
 
-    const firstImagePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.jpeg')
+    const firstImagePath = fixture('large-image.jpeg')
     const dataTransfer = await createDataTransfer(page, [
       { filePath: firstImagePath, fileName: 'first-dropped.jpg', fileType: 'image/jpeg' },
     ])
@@ -342,7 +338,7 @@ test.describe('Gallery card', () => {
     await expect(page.locator('[data-inkling-card-toolbar="gallery"]')).toBeVisible()
 
     const fileChooserPromise = page.waitForEvent('filechooser')
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image-1.png')
+    const filePath = fixture('large-image-1.png')
     await page.click('[data-inkling-card-toolbar="gallery"] [data-testid="add-gallery-image"]')
     const fileChooser = await fileChooserPromise
     await fileChooser.setFiles([filePath])
@@ -352,9 +348,7 @@ test.describe('Gallery card', () => {
 
   test('can undo/redo without losing nested editor content', async () => {
     await test.step('insert and upload images to gallery card', async () => {
-      const filePaths = Array.from(Array(2).keys()).map((n) =>
-        path.relative(process.cwd(), __dirname + `/../fixtures/large-image-${n}.png`),
-      )
+      const filePaths = Array.from(Array(2).keys()).map((n) => fixture(`large-image-${n}.png`))
       const fileChooserPromise = page.waitForEvent('filechooser')
 
       await focusEditor(page)
@@ -442,7 +436,7 @@ test.describe('Gallery card', () => {
     await page.keyboard.press('Enter')
     await insertCard(page, { cardName: 'image' })
 
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const filePath = fixture('large-image.png')
     const [fileChooser] = await Promise.all([
       page.waitForEvent('filechooser'),
       page.click('[data-inkling-card="image"] button[name="placeholder-button"]'),
@@ -464,11 +458,8 @@ test.describe('Gallery card', () => {
     // (Chrome for Testing keeps the card selected after upload)
     await page.click('p:not(figure p)')
 
-    const imageBBox = await page.locator('[data-inkling-card="image"]').nth(0).boundingBox()
-    const galleryBBox = await page.locator('[data-inkling-card="gallery"]').nth(0).boundingBox()
-    if (!imageBBox || !galleryBBox) {
-      throw new Error('Expected image and gallery bounding boxes')
-    }
+    const imageBBox = await getBoundingBox(page.locator('[data-inkling-card="image"]').nth(0))
+    const galleryBBox = await getBoundingBox(page.locator('[data-inkling-card="gallery"]').nth(0))
 
     await dragMouse(page, imageBBox, galleryBBox, 'middle', 'middle', true, 100, 100)
 
@@ -519,9 +510,7 @@ test.describe('Gallery card', () => {
     // (it keeps it's own state for easier handling of loading states, etc.)
 
     await test.step('insert and upload images to gallery card', async () => {
-      const filePaths = Array.from(Array(9).keys()).map((n) =>
-        path.relative(process.cwd(), __dirname + `/../fixtures/large-image-${n}.png`),
-      )
+      const filePaths = Array.from(Array(9).keys()).map((n) => fixture(`large-image-${n}.png`))
       const fileChooserPromise = page.waitForEvent('filechooser')
 
       await focusEditor(page)

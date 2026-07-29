@@ -1,10 +1,11 @@
 import type { EditorState, LexicalEditor } from 'lexical'
 import type { NavigateFunction } from 'react-router-dom'
 
-import { expect, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 import prettier from '@prettier/sync'
 import jsdom from 'jsdom'
 import fs from 'node:fs'
+import path from 'node:path'
 
 declare global {
   interface Window {
@@ -425,6 +426,26 @@ export async function assertRootChildren(page: Page, expectedState: string) {
   expect(actual).toEqual(expected)
 }
 
+/** Replace the document with a serialized editor state (a JSON string, or a state object serialized here). */
+export async function loadSerializedState(page: Page, state: string | object) {
+  const serialized = typeof state === 'string' ? state : JSON.stringify(state)
+  await page.evaluate((text) => {
+    const editor = window.lexicalEditor
+    editor.setEditorState(editor.parseEditorState(text))
+  }, serialized)
+}
+
+export type BoundingBox = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>
+
+/** The locator's bounding box, or a thrown expectation — the null-narrowing lives here, not per call site. */
+export async function getBoundingBox(locator: Locator): Promise<BoundingBox> {
+  const boundingBox = await locator.boundingBox()
+  if (boundingBox === null) {
+    throw new Error('Expected the locator to be visible')
+  }
+  return boundingBox
+}
+
 export async function paste(page: Page, data: Record<string, string>) {
   const setDataCommands = Object.keys(data).map((mimeType) => {
     return `
@@ -463,6 +484,24 @@ export async function pasteLexical(page: Page, content: string) {
 
 export async function pasteFiles(page: Page, files: readonly FilePathPayload[]) {
   await pasteFilesWithText(page, files)
+}
+
+/** Absolute path to a file in test/e2e/fixtures (subdirectories allowed: 'paste/office-com-headings.html'). */
+export function fixture(name: string): string {
+  return path.resolve(import.meta.dirname, '../e2e/fixtures', name)
+}
+
+/** A pasteFiles payload for a fixture file: the path resolved, the fileName taken from the fixture's base name. */
+export function fixtureFile(name: string, fileType: string): FilePathPayload {
+  return { filePath: fixture(name), fileName: path.basename(name), fileType }
+}
+
+/** Paste fixture files: one name + MIME type per entry, the path resolution and payload shape stay here. */
+export async function pasteFixtureFiles(page: Page, files: ReadonlyArray<{ name: string; fileType: string }>) {
+  await pasteFiles(
+    page,
+    files.map(({ name, fileType }) => fixtureFile(name, fileType)),
+  )
 }
 
 export async function pasteFilesWithText(
@@ -617,16 +656,9 @@ export async function expectUnchangedScrollPosition(page: Page, wrapper: () => P
   expect(start).toEqual(end)
 }
 
-interface BoundingBox {
-  height: number
-  width: number
-  x: number
-  y: number
-}
-
 type BoundingBoxPosition = 'end' | 'middle' | 'start'
 
-interface FilePathPayload {
+export interface FilePathPayload {
   fileName: string
   filePath: string
   fileType: string

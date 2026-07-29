@@ -1,11 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import { selectCustomColor, selectTitledColor } from '#/utils/color-select-helper'
-import { assertHTML, focusEditor, html, initialize } from '#/utils/e2e'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import { assertHTML, fixture, focusEditor, html, initialize } from '#/utils/e2e'
 
 async function createHeaderCard({ page }: { page: Page }) {
   await focusEditor(page)
@@ -220,7 +216,7 @@ test.describe('Header card V2', () => {
   })
 
   test('can switch between background image and color', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + `/../fixtures/large-image.jpeg`)
+    const filePath = fixture('large-image.jpeg')
     await createHeaderCard({ page })
     // Choose an image
     const fileChooserPromise = page.waitForEvent('filechooser')
@@ -273,7 +269,7 @@ test.describe('Header card V2', () => {
   })
 
   test('can add and remove background image in split layout', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + `/../fixtures/large-image.jpeg`)
+    const filePath = fixture('large-image.jpeg')
     const fileChooserPromise = page.waitForEvent('filechooser')
     await createHeaderCard({ page })
 
@@ -346,7 +342,7 @@ test.describe('Header card V2', () => {
   })
 
   test('can swap split layout sides on image', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + `/../fixtures/large-image.jpeg`)
+    const filePath = fixture('large-image.jpeg')
     await createHeaderCard({ page })
     // Mouse position from earlier test can mean a tooltip is covering the split layout button
     await page.mouse.move(0, 0)

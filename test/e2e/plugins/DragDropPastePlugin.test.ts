@@ -1,10 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-import { assertHTML, createDataTransfer, focusEditor, html, initialize } from '#/utils/e2e'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import { assertHTML, createDataTransfer, fixture, focusEditor, html, initialize } from '#/utils/e2e'
 
 test.describe('Drag Drop Paste Plugin', function () {
   let page: Page
@@ -23,7 +19,7 @@ test.describe('Drag Drop Paste Plugin', function () {
   test('can drag and drop an image on the editor', async function () {
     await focusEditor(page)
 
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const filePath = fixture('large-image.png')
     const dataTransfer = await createDataTransfer(page, [
       { filePath, fileName: 'large-image.png', fileType: 'image/png' },
     ])
@@ -59,8 +55,8 @@ test.describe('Drag Drop Paste Plugin', function () {
 
   test('can drag and drop multiple images on the editor', async function () {
     await focusEditor(page)
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
-    const filePath2 = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.jpeg')
+    const filePath = fixture('large-image.png')
+    const filePath2 = fixture('large-image.jpeg')
     const dataTransfer = await createDataTransfer(page, [
       { filePath, fileName: 'large-image.png', fileType: 'image/png' },
       { filePath: filePath2, fileName: 'large-image.jpeg', fileType: 'image/jpeg' },
@@ -90,7 +86,7 @@ test.describe('Drag Drop Paste Plugin', function () {
   test('can drag and drop an audio file on the editor', async function () {
     await focusEditor(page)
 
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/audio-sample.mp3')
+    const filePath = fixture('audio-sample.mp3')
     const dataTransfer = await createDataTransfer(page, [
       { filePath, fileName: 'audio-sample.mp3', fileType: 'audio/mp3' },
     ])
@@ -112,8 +108,8 @@ test.describe('Drag Drop Paste Plugin', function () {
 
   test('can drag and drop multiple audio files on the editor', async function () {
     await focusEditor(page)
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/audio-sample.mp3')
-    const filePath2 = path.relative(process.cwd(), __dirname + '/../fixtures/audio-sample.mp3')
+    const filePath = fixture('audio-sample.mp3')
+    const filePath2 = fixture('audio-sample.mp3')
 
     const dataTransfer = await createDataTransfer(page, [
       { filePath, fileName: 'audio-sample-1.mp3', fileType: 'audio/mp3' },

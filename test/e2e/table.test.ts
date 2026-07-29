@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-import { focusEditor, initialize } from '#/utils/e2e'
+import { focusEditor, initialize, loadSerializedState } from '#/utils/e2e'
 
 const cell = (headerState: number, content: string) => ({
   type: 'tablecell',
@@ -92,10 +92,7 @@ test.describe('Table', () => {
   test('header-cell state drives the th/td rendering', async function () {
     await initialize({ page, uri: '/#/?content=false' })
 
-    await page.evaluate((serialized) => {
-      const editor = window.lexicalEditor
-      editor.setEditorState(editor.parseEditorState(serialized))
-    }, TABLE_STATE)
+    await loadSerializedState(page, TABLE_STATE)
 
     const table = page.locator('.inkling-lexical table')
     await expect(table.locator('th')).toHaveCount(2)
@@ -122,10 +119,7 @@ test.describe('Table', () => {
   test('exports the table as <table> HTML through HtmlOutputPlugin', async function () {
     await initialize({ page, uri: '/#/html-output' })
 
-    await page.evaluate((serialized) => {
-      const editor = window.lexicalEditor
-      editor.setEditorState(editor.parseEditorState(serialized))
-    }, TABLE_STATE)
+    await loadSerializedState(page, TABLE_STATE)
 
     await expect(page.getByTestId('html-output')).toContainText(
       '<table><tr><th>h1</th><th>h2</th></tr><tr><td>a</td><td>b</td></tr></table>',

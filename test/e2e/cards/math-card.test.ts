@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-import { focusEditor, initialize } from '#/utils/e2e'
+import { focusEditor, initialize, loadSerializedState } from '#/utils/e2e'
 
 test.describe('Math card', () => {
   let page: Page
@@ -36,27 +36,23 @@ test.describe('Math card', () => {
   test('exports the stored svg artifact through HtmlOutputPlugin', async function () {
     await initialize({ page, uri: '/#/html-output' })
 
-    await page.evaluate(() => {
-      const serializedState = JSON.stringify({
-        root: {
-          children: [
-            {
-              type: 'math',
-              version: 1,
-              tex: 'x^2',
-              mathml: '',
-              svg: '<svg viewBox="0 0 10 10"><path d="M0 0z"/></svg>',
-            },
-          ],
-          direction: null,
-          format: '',
-          indent: 0,
-          type: 'root',
-          version: 1,
-        },
-      })
-      const editor = window.lexicalEditor
-      editor.setEditorState(editor.parseEditorState(serializedState))
+    await loadSerializedState(page, {
+      root: {
+        children: [
+          {
+            type: 'math',
+            version: 1,
+            tex: 'x^2',
+            mathml: '',
+            svg: '<svg viewBox="0 0 10 10"><path d="M0 0z"/></svg>',
+          },
+        ],
+        direction: null,
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1,
+      },
     })
 
     // The HTML serializer never self-closes svg children.

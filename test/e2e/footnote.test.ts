@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-import { focusEditor, initialize } from '#/utils/e2e'
+import { focusEditor, initialize, loadSerializedState } from '#/utils/e2e'
 
 // Footnotes (docs/kobato-fit-plan.md C4 §5 e2e): `^ ` triggers the insert,
 // focus hands off to the fresh definition row, edits renumber automatically,
@@ -93,10 +93,7 @@ test.describe('Footnotes', () => {
   test('deleting a ref renumbers the survivors and tails the orphan', async function () {
     await initialize({ page, uri: '/#/?content=false' })
 
-    await page.evaluate((serialized) => {
-      const editor = window.lexicalEditor
-      editor.setEditorState(editor.parseEditorState(serialized))
-    }, TWO_FOOTNOTE_STATE)
+    await loadSerializedState(page, TWO_FOOTNOTE_STATE)
 
     await expect(page.locator('.inkling-footnote-ref')).toHaveCount(2)
     await expect(definitionRows(page)).toHaveCount(2)
@@ -141,10 +138,7 @@ test.describe('Footnotes', () => {
   test('deleting a definition removes the refs citing it', async function () {
     await initialize({ page, uri: '/#/?content=false' })
 
-    await page.evaluate((serialized) => {
-      const editor = window.lexicalEditor
-      editor.setEditorState(editor.parseEditorState(serialized))
-    }, TWO_FOOTNOTE_STATE)
+    await loadSerializedState(page, TWO_FOOTNOTE_STATE)
 
     const rows = definitionRows(page)
     await expect(rows).toHaveCount(2)

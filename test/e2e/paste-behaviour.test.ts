@@ -1,24 +1,21 @@
 import { expect, test, type Page } from '@playwright/test'
 import fs from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import {
   assertHTML,
   ctrlOrCmd,
+  fixture,
   focusEditor,
   html,
   initialize,
   insertCard,
   paste,
-  pasteFiles,
   pasteFilesWithText,
+  pasteFixtureFiles,
   pasteHtml,
   pasteText,
   selectBackwards,
 } from '#/utils/e2e'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 test.describe('Paste behaviour', () => {
   let page: Page
@@ -359,7 +356,7 @@ test.describe('Paste behaviour', () => {
 
   test.describe('Office.com Word', function () {
     test('supports basic text formatting', async function () {
-      const copiedHtml = fs.readFileSync('test/e2e/fixtures/paste/office-com-text-formats.html', 'utf8')
+      const copiedHtml = fs.readFileSync(fixture('paste/office-com-text-formats.html'), 'utf8')
 
       await focusEditor(page)
       await pasteHtml(page, copiedHtml)
@@ -403,7 +400,7 @@ test.describe('Paste behaviour', () => {
     })
 
     test('supports headings', async function () {
-      const copiedHtml = fs.readFileSync('test/e2e/fixtures/paste/office-com-headings.html', 'utf8')
+      const copiedHtml = fs.readFileSync(fixture('paste/office-com-headings.html'), 'utf8')
 
       await focusEditor(page)
       await pasteHtml(page, copiedHtml)
@@ -422,7 +419,7 @@ test.describe('Paste behaviour', () => {
 
   test.describe('Google Docs', function () {
     test('ignores line breaks between paragraphs', async function () {
-      const copiedHtml = fs.readFileSync('test/e2e/fixtures/paste/google-docs-empty-paragraphs.html', 'utf8')
+      const copiedHtml = fs.readFileSync(fixture('paste/google-docs-empty-paragraphs.html'), 'utf8')
 
       await focusEditor(page)
       await pasteHtml(page, copiedHtml)
@@ -619,37 +616,31 @@ test.describe('Paste behaviour', () => {
 
   test.describe('Files', function () {
     test('pastes an .png file as Image card', async function () {
-      const filePath = path.relative(process.cwd(), __dirname + '/fixtures/large-image.png')
-
       await focusEditor(page)
-      await pasteFiles(page, [{ filePath, fileName: 'large-image.png', fileType: 'image/png' }])
+      await pasteFixtureFiles(page, [{ name: 'large-image.png', fileType: 'image/png' }])
 
       const imageCard = page.locator('[data-inkling-card="image"]')
       await expect(imageCard).toHaveCount(1)
     })
 
     test('pastes an .jpeg file as Image card', async function () {
-      const filePath = path.relative(process.cwd(), __dirname + '/fixtures/large-image.jpeg')
-
       await focusEditor(page)
-      await pasteFiles(page, [{ filePath, fileName: 'large-image.jpeg', fileType: 'image/jpeg' }])
+      await pasteFixtureFiles(page, [{ name: 'large-image.jpeg', fileType: 'image/jpeg' }])
 
       const imageCard = page.locator('[data-inkling-card="image"]')
       await expect(imageCard).toHaveCount(1)
     })
 
     test('pastes an .mp4 file as Video card', async function () {
-      const filePath = path.relative(process.cwd(), __dirname + '/fixtures/video.mp4')
-
       await focusEditor(page)
-      await pasteFiles(page, [{ filePath, fileName: 'video.mp4', fileType: 'video/mp4' }])
+      await pasteFixtureFiles(page, [{ name: 'video.mp4', fileType: 'video/mp4' }])
 
       const videoCard = page.locator('[data-inkling-card="video"]')
       await expect(videoCard).toHaveCount(1)
     })
 
     test('does not paste an image file if there is text/html content in the clipboard', async function () {
-      const filePath = path.relative(process.cwd(), __dirname + '/fixtures/large-image.png')
+      const filePath = fixture('large-image.png')
       const files = [{ filePath, fileName: 'large-image.png', fileType: 'image/png' }]
       const textHtml = { 'text/html': '<p>Some text</p>' }
 
@@ -666,7 +657,7 @@ test.describe('Paste behaviour', () => {
     // By default, Lexical dispatches the file paste command (DRAG_DROP_PASTE) only if there is no text content in the clipboard
     // We override this behaviour in InklingBehaviourPlugin > PASTE_COMMAND, to support copy/pasting files from e.g. Slack
     test('pastes a image file if the clipboard contains a single image file and text/html with a <img> tag', async function () {
-      const filePath = path.relative(process.cwd(), __dirname + '/fixtures/large-image.png')
+      const filePath = fixture('large-image.png')
       const files = [{ filePath, fileName: 'large-image.png', fileType: 'image/png' }]
       const textHtml = { 'text/html': '<img src="https://files.slack.com/foo-bar" />' }
 

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-import { assertHTML, createSnippet, focusEditor, html, initialize, insertCard } from '#/utils/e2e'
+import { assertHTML, createSnippet, focusEditor, html, initialize, insertCard, loadSerializedState } from '#/utils/e2e'
 
 test.describe('Button Card', () => {
   let page: Page
@@ -17,27 +17,22 @@ test.describe('Button Card', () => {
   })
 
   test('can import serialized button card nodes', async function () {
-    await page.evaluate(() => {
-      const serializedState = JSON.stringify({
-        root: {
-          children: [
-            {
-              type: 'button',
-              buttonUrl: 'http://someblog.com/somepost',
-              buttonText: 'button text',
-              alignment: 'center',
-            },
-          ],
-          direction: null,
-          format: '',
-          indent: 0,
-          type: 'root',
-          version: 1,
-        },
-      })
-      const editor = window.lexicalEditor
-      const editorState = editor.parseEditorState(serializedState)
-      editor.setEditorState(editorState)
+    await loadSerializedState(page, {
+      root: {
+        children: [
+          {
+            type: 'button',
+            buttonUrl: 'http://someblog.com/somepost',
+            buttonText: 'button text',
+            alignment: 'center',
+          },
+        ],
+        direction: null,
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1,
+      },
     })
 
     await assertHTML(

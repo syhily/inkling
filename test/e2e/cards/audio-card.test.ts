@@ -1,10 +1,16 @@
 import { expect, test, type Page } from '@playwright/test'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-import { assertHTML, createDataTransfer, createSnippet, focusEditor, html, initialize, insertCard } from '#/utils/e2e'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import {
+  assertHTML,
+  createDataTransfer,
+  createSnippet,
+  fixture,
+  focusEditor,
+  html,
+  initialize,
+  insertCard,
+  loadSerializedState,
+} from '#/utils/e2e'
 
 test.describe('Audio card', () => {
   let page: Page
@@ -21,29 +27,24 @@ test.describe('Audio card', () => {
   })
 
   test('can import serialized audio card nodes', async function () {
-    await page.evaluate(() => {
-      const serializedState = JSON.stringify({
-        root: {
-          children: [
-            {
-              type: 'audio',
-              src: '/content/images/2022/11/inkling-lexical.jpg',
-              title: 'This is a title',
-              duration: '',
-              mimeType: 'audio/mp3',
-              thumbnailSrc: '/content/images/2022/12/inkling-lexical.png',
-            },
-          ],
-          direction: null,
-          format: '',
-          indent: 0,
-          type: 'root',
-          version: 1,
-        },
-      })
-      const editor = window.lexicalEditor
-      const editorState = editor.parseEditorState(serializedState)
-      editor.setEditorState(editorState)
+    await loadSerializedState(page, {
+      root: {
+        children: [
+          {
+            type: 'audio',
+            src: '/content/images/2022/11/inkling-lexical.jpg',
+            title: 'This is a title',
+            duration: '',
+            mimeType: 'audio/mp3',
+            thumbnailSrc: '/content/images/2022/12/inkling-lexical.png',
+          },
+        ],
+        direction: null,
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1,
+      },
     })
 
     await assertHTML(
@@ -58,7 +59,7 @@ test.describe('Audio card', () => {
   })
 
   test('renders audio card node', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/audio-sample.mp3')
+    const filePath = fixture('audio-sample.mp3')
 
     await focusEditor(page)
     const fileChooserPromise = page.waitForEvent('filechooser')
@@ -102,7 +103,7 @@ test.describe('Audio card', () => {
   })
 
   test('can upload dropped audio', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/audio-sample.mp3')
+    const filePath = fixture('audio-sample.mp3')
     const fileChooserPromise = page.waitForEvent('filechooser')
 
     await focusEditor(page)
@@ -138,7 +139,7 @@ test.describe('Audio card', () => {
   })
 
   test('can show errors if was dropped a file with wrong extension to audio placeholder', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const filePath = fixture('large-image.png')
     const fileChooserPromise = page.waitForEvent('filechooser')
 
     await focusEditor(page)
@@ -190,7 +191,7 @@ test.describe('Audio card', () => {
   })
 
   test('can upload and remove a thumbnail image', async function () {
-    const thumbnailFilePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.jpeg')
+    const thumbnailFilePath = fixture('large-image.jpeg')
 
     await focusEditor(page)
     await uploadAudio(page)
@@ -209,7 +210,7 @@ test.describe('Audio card', () => {
   })
 
   test('can upload dropped thumbnail', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const filePath = fixture('large-image.png')
     await focusEditor(page)
     await uploadAudio(page)
 
@@ -233,7 +234,7 @@ test.describe('Audio card', () => {
   })
 
   test('can show errors if was dropped a file with wrong extension to thumbnail', async function () {
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/video.mp4')
+    const filePath = fixture('video.mp4')
     await focusEditor(page)
     await uploadAudio(page)
 
@@ -249,7 +250,7 @@ test.describe('Audio card', () => {
   })
 
   test('shows errors on a failed thumbnail upload', async function () {
-    const thumbnailFilePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image-fail.jpeg')
+    const thumbnailFilePath = fixture('large-image-fail.jpeg')
 
     await focusEditor(page)
     await uploadAudio(page)
@@ -313,7 +314,7 @@ test.describe('Audio card', () => {
     // Title input should be read only
     await expect(page.getByTestId('audio-title')).toHaveAttribute('readOnly', '')
 
-    const filePath = path.relative(process.cwd(), __dirname + '/../fixtures/large-image.png')
+    const filePath = fixture('large-image.png')
     // Create and dispatch data transfer
     const dataTransfer = await createDataTransfer(page, [
       { filePath, fileName: 'large-image.png', fileType: 'image/png' },
@@ -385,7 +386,7 @@ test.describe('Audio card', () => {
 })
 
 async function uploadAudio(page: Page, fileName = 'audio-sample.mp3') {
-  const filePath = path.relative(process.cwd(), __dirname + `/../fixtures/${fileName}`)
+  const filePath = fixture(fileName)
 
   const fileChooserPromise = page.waitForEvent('filechooser')
   await insertCard(page, { cardName: 'audio' })
