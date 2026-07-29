@@ -1,11 +1,10 @@
-import { $generateJSONFromSelectedNodes } from '@lexical/clipboard'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getSelection } from 'lexical'
 import React from 'react'
 
 import { SnippetInput } from '@/components/ui/SnippetInput'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { focusEditorRoot } from '@/plugins/behaviour/card-adjacency'
+import { createSnippetFromSource } from '@/plugins/behaviour/snippet-creation'
 
 export interface SnippetActionToolbarProps {
   onClose?: () => void
@@ -23,23 +22,13 @@ export function SnippetActionToolbar({ onClose }: SnippetActionToolbarProps) {
     focusEditorRoot(editor)
   }, [editor, onClose])
 
+  // the guard and the value derivation live in the headless snippet-creation
+  // module; a guard failure keeps the toolbar open
   const handleSnippetCreation = React.useCallback(
     (snippetName: string) => {
-      const createSnippet = cardConfig?.createSnippet
-      if (!createSnippet || !snippetName) {
-        return
+      if (createSnippetFromSource(editor, { kind: 'selection' }, snippetName, cardConfig?.createSnippet)) {
+        handleClose()
       }
-
-      editor.getEditorState().read(() => {
-        const selection = $getSelection()
-        if (!selection) {
-          return
-        }
-        const nodeJson = $generateJSONFromSelectedNodes(editor, selection)
-        void createSnippet({ name: snippetName, value: JSON.stringify(nodeJson) })
-      })
-
-      handleClose()
     },
     [cardConfig, editor, handleClose],
   )

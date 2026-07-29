@@ -1,10 +1,10 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $getNodeByKey } from 'lexical'
 import React from 'react'
 
 import { SnippetInput } from '@/components/ui/SnippetInput'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { focusEditorRoot } from '@/plugins/behaviour/card-adjacency'
+import { createSnippetFromSource } from '@/plugins/behaviour/snippet-creation'
 
 export interface SnippetCreateToolbarProps {
   nodeKey: string
@@ -23,22 +23,12 @@ export function SnippetCreateToolbar({ nodeKey, onClose }: SnippetCreateToolbarP
     focusEditorRoot(editor)
   }, [editor, onClose])
 
+  // the guard and the value derivation live in the headless snippet-creation
+  // module; a guard failure keeps the toolbar open
   const handleCreateSnippet = React.useCallback(() => {
-    const createSnippet = cardConfig?.createSnippet
-    if (!createSnippet || !name) {
-      return
+    if (createSnippetFromSource(editor, { kind: 'card', nodeKey }, name, cardConfig?.createSnippet)) {
+      handleClose()
     }
-
-    editor.getEditorState().read(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (!node) {
-        return
-      }
-      const value = JSON.stringify({ nodes: [node.exportJSON()] })
-      void createSnippet({ name, value })
-    })
-
-    handleClose()
   }, [cardConfig, editor, name, nodeKey, handleClose])
 
   return (
