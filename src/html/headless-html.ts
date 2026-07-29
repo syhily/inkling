@@ -5,10 +5,10 @@ import { $getRoot } from 'lexical'
 import type { ExportDOMDom, ExportDOMOptions } from '@/nodes/base'
 
 import { resolveHeadlessDom } from '@/html/headless-dom'
-import { createHeadlessHtmlEditor } from '@/html/headless-editor'
+import { prepareHeadlessRenderEditor } from '@/html/headless-editor'
 import { htmlToLexical } from '@/html/html-to-lexical/index'
 import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
-import { registerRemoveAtLinkNodesTransform, type DefaultTransformsOptions } from '@/transforms'
+import { type DefaultTransformsOptions } from '@/transforms'
 
 export { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 
@@ -38,11 +38,7 @@ export async function lexicalStateToHtml(
   const { nodes, onError, ...renderOptions } = options ?? {}
   const dom = await resolveHeadlessDom(renderOptions.dom)
 
-  const editor = createHeadlessHtmlEditor({ merge: 'additive', nodes, onError: onError ?? defaultOnError })
-  editor.setEditorState(editor.parseEditorState(state))
-
-  // register transforms that clean up state for rendering
-  registerRemoveAtLinkNodesTransform(editor)
+  const editor = prepareHeadlessRenderEditor(state, { nodes, onError: onError ?? defaultOnError })
 
   let html = ''
   editor.update(() => {
@@ -91,12 +87,7 @@ export function lexicalStateToPlainText(
   state: SerializedEditorState | string,
   options?: LexicalStateToPlainTextOptions,
 ): string {
-  const editor = createHeadlessHtmlEditor({ merge: 'additive', nodes: options?.nodes, onError: options?.onError })
-
-  editor.setEditorState(editor.parseEditorState(state))
-
-  // the same pre-render cleanup the headless HTML path runs
-  registerRemoveAtLinkNodesTransform(editor)
+  const editor = prepareHeadlessRenderEditor(state, { nodes: options?.nodes, onError: options?.onError })
 
   let text = ''
   editor.update(() => {

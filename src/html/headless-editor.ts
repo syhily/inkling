@@ -1,9 +1,10 @@
-import type { CreateEditorArgs, LexicalEditor, LexicalNodeConfig } from 'lexical'
+import type { CreateEditorArgs, LexicalEditor, LexicalNodeConfig, SerializedEditorState } from 'lexical'
 
 import { createHeadlessEditor } from '@lexical/headless'
 
 import { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 import { DEFAULT_CONFIG } from '@/nodes/base'
+import { registerRemoveAtLinkNodesTransform } from '@/transforms'
 
 // The one headless-editor factory for the HTML surface (CONTEXT.md:
 // "headless HTML surface"): the renderer, the plain-text leg, and the
@@ -34,4 +35,21 @@ export function createHeadlessHtmlEditor(spec: HeadlessEditorSpec): LexicalEdito
     html: DEFAULT_CONFIG.html,
   }
   return createHeadlessEditor(Object.assign({}, defaultEditorConfig, spec.editorConfig))
+}
+
+/**
+ * The pre-render recipe both render legs (HTML, plain text) run: an
+ * additive headless editor with the state loaded and the cleanup
+ * transforms registered — in-progress at-link search nodes never render.
+ * Kept here so a future cleanup transform lands for both legs at once
+ * (the parity used to be comment-carried between the two call sites).
+ */
+export function prepareHeadlessRenderEditor(
+  state: SerializedEditorState | string,
+  { nodes, onError }: { nodes?: LexicalNodeConfig[]; onError?: (error: Error) => void } = {},
+): LexicalEditor {
+  const editor = createHeadlessHtmlEditor({ merge: 'additive', nodes, onError })
+  editor.setEditorState(editor.parseEditorState(state))
+  registerRemoveAtLinkNodesTransform(editor)
+  return editor
 }
