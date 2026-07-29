@@ -13,7 +13,7 @@
 
 import type { GalleryImage } from '@/types/gallery'
 
-import { getImageFilenameFromSrc } from '@/nodes/base/utils/content-image-url'
+import { datasetToGalleryImage } from '@/nodes/base/utils/gallery-image-fill'
 import { adjustInsertIndexForRemoval } from '@/utils/draggable/reorder-rules'
 
 export interface GalleryDragFacts {
@@ -64,22 +64,12 @@ export function resolveGalleryDrop(
   const { dataset } = facts
 
   if (draggableIndex === -1) {
-    // external image being added
-    if (typeof dataset.src !== 'string') {
+    // external image being added: image card datasets may not have all of
+    // the details we need — the shared fill policy (filename fallback,
+    // probe natural size) completes them, and rejects a src-less dataset
+    const newImage = datasetToGalleryImage(dataset, { naturalSize: probe.naturalSize })
+    if (!newImage) {
       return null
-    }
-
-    // image card datasets may not have all of the details we need but we can fill them in
-    const newImage: GalleryImage = {
-      src: dataset.src,
-      fileName:
-        typeof dataset.fileName === 'string' && dataset.fileName
-          ? dataset.fileName
-          : getImageFilenameFromSrc(dataset.src),
-      row: typeof dataset.row === 'number' ? dataset.row : undefined,
-      width: typeof dataset.width === 'number' ? dataset.width : probe.naturalSize?.width,
-      height: typeof dataset.height === 'number' ? dataset.height : probe.naturalSize?.height,
-      caption: typeof dataset.caption === 'string' ? dataset.caption : undefined,
     }
 
     const updatedImages = [...images]

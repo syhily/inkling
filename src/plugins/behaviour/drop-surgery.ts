@@ -12,11 +12,11 @@ import {
 
 import type { GalleryNode } from '@/nodes/GalleryNode'
 import type { ImageNode, ImageNodeDataset } from '@/nodes/ImageNode'
-import type { GalleryImage } from '@/types/gallery'
 import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { $isImageNode } from '@/nodes/base/nodes/image/ImageNode'
 import { getImageFilenameFromSrc } from '@/nodes/base/utils/content-image-url'
+import { datasetToGalleryImage } from '@/nodes/base/utils/gallery-image-fill'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
 // Drop surgery — the headless $-surgeries behind DragDropReorderPlugin. The
@@ -98,30 +98,18 @@ export function $insertDraggedImage(
   return imageNode
 }
 
-// image card datasets allow null dimensions and carry card-only keys, while
-// GalleryImage keeps every field optional — map the fields addImages persists
-// (ALLOWED_IMAGE_PROPS) explicitly instead of casting the whole dataset
-function toGalleryImage(imageDataset: Record<string, unknown>): GalleryImage {
-  return {
-    src: typeof imageDataset.src === 'string' ? imageDataset.src : undefined,
-    fileName: typeof imageDataset.fileName === 'string' ? imageDataset.fileName : undefined,
-    width: typeof imageDataset.width === 'number' ? imageDataset.width : undefined,
-    height: typeof imageDataset.height === 'number' ? imageDataset.height : undefined,
-    alt: typeof imageDataset.alt === 'string' ? imageDataset.alt : undefined,
-    caption: typeof imageDataset.caption === 'string' ? imageDataset.caption : undefined,
-  }
-}
-
 /**
  * Merges an image card dropped onto another image card into a two-image
  * gallery: the gallery takes the target's slot (target image first, dragged
  * image second) and the dragged card's source node is removed. Image datasets
- * carry no fileName, so it is derived from the src when absent — the dragged
- * payload's dataset is patched in place, matching the drag producer's live
- * object. Returns false — leaving the tree untouched — when either key no
- * longer resolves to an image card, or when the editor doesn't register the
- * gallery card (the class comes from the registered-node map, not the shim,
- * so this module stays off the decorate tree).
+ * carry no fileName, so the dragged payload's dataset is patched in place
+ * with the src-derived one, matching the drag producer's live object (the
+ * shared fill policy applies the same fallback for the conversion itself).
+ * Returns false — leaving the tree untouched — when either key no longer
+ * resolves to an image card, when either dataset lacks a src, or when the
+ * editor doesn't register the gallery card (the class comes from the
+ * registered-node map, not the shim, so this module stays off the decorate
+ * tree).
  */
 export function $mergeImagesIntoGallery(
   targetImageKey: NodeKey,
@@ -145,13 +133,16 @@ export function $mergeImagesIntoGallery(
   // images don't contain the filename dataset property so we need to add it
   const draggedFileName = typeof draggedDataset.fileName === 'string' ? draggedDataset.fileName : undefined
   draggedDataset.fileName = draggedFileName || getImageFilenameFromSrc(String(draggedDataset.src))
-  const targetImageDataset = targetImageNode.getDataset()
-  const targetFileName = typeof targetImageDataset.fileName === 'string' ? targetImageDataset.fileName : undefined
-  targetImageDataset.fileName = targetFileName || getImageFilenameFromSrc(String(targetImageDataset.src))
 
-  // image datasets allow null dimensions while GalleryImage keeps them
-  // optional; the conversion only carries keys allowed by addImages
-  galleryNode.addImages([toGalleryImage(targetImageDataset), toGalleryImage(draggedDataset)])
+  // the shared fill policy carries the fields addImages persists
+  // (ALLOWED_IMAGE_PROPS) instead of casting the whole dataset; a src-less
+  // dataset is not an image and rejects the merge
+  const targetImage = datasetToGalleryImage(targetImageNode.getDataset())
+  const draggedImage = datasetToGalleryImage(draggedDataset)
+  if (!targetImage || !draggedImage) {
+    return false
+  }
+  galleryNode.addImages([targetImage, draggedImage])
 
   targetImageNode.replace(galleryNode)
   droppedImageNode.remove()
