@@ -640,7 +640,8 @@ describe('card-adjacency', () => {
         }
         expect($getNodeByKey(cardKey)).toBeNull()
       })
-      expect(focusSpy).toHaveBeenCalledWith()
+      // decorator-next focus repair, never scrolling the viewport
+      expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true })
     })
 
     it('selects the start of the next sibling when it is not a card', async () => {

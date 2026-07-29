@@ -2,7 +2,7 @@ import type { LexicalEditor, LexicalNode } from 'lexical'
 
 import { $createParagraphNode, $getRoot, $isDecoratorNode } from 'lexical'
 
-import { $selectDecoratorNode } from '@/utils/$selectDecoratorNode'
+import { $selectCard } from '@/plugins/behaviour/card-adjacency'
 
 // External control — the headless host-facing control surgeries behind
 // ExternalControlPlugin: focusing the editor at a document end (with the
@@ -17,10 +17,10 @@ function hasSelectMethod(node: LexicalNode): node is LexicalNode & { select: () 
 
 /**
  * Focuses the editor at a document end. Lexical does not automatically
- * select a decorator node, so when the end child is a card the node gets a
- * node selection and focus is moved to the root element by hand (a node
- * selection has no caret to focus); otherwise the end child selects itself
- * (bottom) or Lexical's rootStart default applies (top).
+ * select a decorator node, so when the end child is a card it goes through
+ * $selectCard's 'always' focus repair (a node selection has no caret to
+ * focus); otherwise the end child selects itself (bottom) or Lexical's
+ * rootStart default applies (top).
  */
 export function focusEditorAt(
   editor: LexicalEditor,
@@ -33,10 +33,7 @@ export function focusEditorAt(
       const firstChild = $getRoot().getFirstChild()
 
       if ($isDecoratorNode(firstChild)) {
-        $selectDecoratorNode(firstChild)
-        // selecting a decorator node does not change the window selection
-        // (there's no caret) so we need to manually move focus to the editor element
-        editor.getRootElement()?.focus()
+        $selectCard(editor, firstChild, { focus: 'always' })
       }
     })
     return
@@ -46,8 +43,7 @@ export function focusEditorAt(
     const lastChild = $getRoot().getLastChild()
 
     if ($isDecoratorNode(lastChild)) {
-      $selectDecoratorNode(lastChild)
-      editor.getRootElement()?.focus()
+      $selectCard(editor, lastChild, { focus: 'always' })
     } else if (lastChild && hasSelectMethod(lastChild)) {
       lastChild.select()
     }

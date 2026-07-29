@@ -13,7 +13,7 @@ import {
 
 import type { CardNode } from '@/types/lexical-internals'
 
-import { $isAtTopOfNode, $selectDecoratorNode, getTopLevelNativeElement } from '@/utils'
+import { $isAtTopOfNode, getTopLevelNativeElement } from '@/utils'
 import { $ensureParagraphAfterCard } from '@/utils/$ensureParagraphAfterCard'
 
 import type { CardSelectionStore } from './cardSelectionStore'
@@ -222,15 +222,34 @@ export function dispatchSelectedCardDeletion(
 }
 
 // Card selection operations — the commands half of the module; the queries above find the cards these act on.
-export function $selectCard(editor: LexicalEditor, nodeKey: string) {
+
+/**
+ * The focus repair after selecting a card: a decorator selection has no
+ * caret, so it does not move the window selection — focus must go to the
+ * editor element by hand, and never scrolling (focus repair must not yank
+ * the viewport).
+ *
+ * - 'if-blurred' (default): focus only when the editor is not already the
+ *   active element — pointer-driven selection (click, menu insert).
+ * - 'always': focus unconditionally — the caller just removed the focused
+ *   card's chrome, or a headless host asked for focus (removal,
+ *   external-control).
+ * - 'never': no focus repair — keyboard navigation already owns focus
+ *   (its callers use the bare `$selectDecoratorNode` primitive), or the
+ *   caller already repaired focus itself (root-first removal).
+ */
+export type CardSelectionFocus = 'if-blurred' | 'always' | 'never'
+
+export function $selectCard(
+  editor: LexicalEditor,
+  nodeOrKey: LexicalNode | string,
+  { focus = 'if-blurred' }: { focus?: CardSelectionFocus } = {},
+) {
   const selection = $createNodeSelection()
-  selection.add(nodeKey)
+  selection.add(typeof nodeOrKey === 'string' ? nodeOrKey : nodeOrKey.getKey())
   $setSelection(selection)
-  // selecting a decorator node does not change the
-  // window selection (there's no caret) so we need
-  // to manually move focus to the editor element
   const rootElement = editor.getRootElement()
-  if (rootElement && document.activeElement !== rootElement) {
+  if (rootElement && (focus === 'always' || (focus === 'if-blurred' && document.activeElement !== rootElement))) {
     rootElement.focus({ preventScroll: true })
   }
 }
@@ -269,16 +288,7 @@ export function $removeOrReplaceNodeWithParagraph(
   } else {
     const nextNode = node.getNextSibling()
     if (nextNode && $isDecoratorNode(nextNode)) {
-      $selectDecoratorNode(nextNode)
-      if (focus === 'decorator-next') {
-        // selecting a decorator node does not change the
-        // window selection (there's no caret) so we need
-        // to manually move focus to the editor element
-        const rootElement = editor.getRootElement()
-        if (rootElement) {
-          rootElement.focus()
-        }
-      }
+      $selectCard(editor, nextNode, { focus: focus === 'decorator-next' ? 'always' : 'never' })
     } else {
       nextNode?.selectStart()
     }
