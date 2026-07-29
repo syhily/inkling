@@ -1,6 +1,3 @@
-import type { MouseEvent as ReactMouseEvent } from 'react'
-
-import { $getRoot, $isDecoratorNode } from 'lexical'
 import React, { useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 
@@ -26,13 +23,11 @@ import EarthIcon from '@/assets/icons/inkling-earth.svg?react'
 import DollarIcon from './assets/icons/inkling-dollar.svg?react'
 import LockIcon from './assets/icons/inkling-lock.svg?react'
 import DarkModeToggle from './components/DarkModeToggle'
+import { DemoChrome, useDemoSidebar } from './components/DemoChrome'
 import FeatureChecklist from './components/FeatureChecklist'
-import FloatingButton from './components/FloatingButton'
 import InitialContentToggle from './components/InitialContentToggle'
 import { musicPlayer } from './components/MusicPlayerCard'
-import Sidebar from './components/Sidebar'
 import TitleTextBox from './components/TitleTextBox'
-import Watermark from './components/Watermark'
 import WordCount from './components/WordCount'
 import basicContent from './content/basic-content.json'
 import content from './content/content.json'
@@ -42,6 +37,7 @@ import { klipyConfig, tenorConfig } from './utils/gifConfig'
 import { getDemoImageLibrary } from './utils/imageLibrary'
 import { ZH_LABELS } from './utils/labels'
 import { fileTypes, useFileUpload } from './utils/useFileUpload'
+import { useFocusBelowCanvas } from './utils/useFocusBelowCanvas'
 import { useSnippets } from './utils/useSnippets'
 
 const url = new URL(window.location.href)
@@ -237,11 +233,8 @@ interface DemoComposerProps {
 
 function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: DemoComposerProps) {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [sidebarView, setSidebarView] = useState<'json' | 'tree'>('json')
+  const sidebar = useDemoSidebar()
   const { snippets, createSnippet, deleteSnippet } = useSnippets()
-
-  const skipFocusEditor = React.useRef(false)
 
   const darkMode = searchParams.get('darkMode') === 'true'
   const contentParam = searchParams.get('content')
@@ -272,93 +265,8 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
     setEditorAPI(api)
   }, [])
 
-  function openSidebar(view: 'json' | 'tree' = 'json') {
-    if (isSidebarOpen && sidebarView === view) {
-      return setIsSidebarOpen(false)
-    }
-    setSidebarView(view)
-    setIsSidebarOpen(true)
-  }
-
   function focusTitle() {
     titleRef.current?.focus()
-  }
-
-  // mousedown can select a node which can deselect another node meaning the
-  // mouseup/click event can occur outside of the initially clicked node, in
-  // which case we don't want to then "re-focus" the editor and cause unexpected
-  // selection changes
-  function maybeSkipFocusEditor(event: ReactMouseEvent<HTMLDivElement>) {
-    if (!(event.target instanceof Element)) {
-      return
-    }
-    const target = event.target
-    const clickedOnDecorator =
-      target.closest('[data-lexical-decorator]') !== null || target.hasAttribute('data-lexical-decorator')
-    const clickedOnSlashMenu =
-      target.closest('[data-inkling-slash-menu]') !== null || target.hasAttribute('data-inkling-slash-menu')
-    const clickedOnPortal =
-      target.closest('[data-inkling-portal]') !== null || target.hasAttribute('data-inkling-portal')
-
-    if (clickedOnDecorator || clickedOnSlashMenu || clickedOnPortal) {
-      skipFocusEditor.current = true
-    }
-  }
-
-  function focusEditor(event: ReactMouseEvent<HTMLDivElement>) {
-    if (!(event.target instanceof Element)) {
-      skipFocusEditor.current = false
-      return
-    }
-    const target = event.target
-    const clickedOnDecorator =
-      target.closest('[data-lexical-decorator]') !== null || target.hasAttribute('data-lexical-decorator')
-    const clickedOnSlashMenu =
-      target.closest('[data-inkling-slash-menu]') !== null || target.hasAttribute('data-inkling-slash-menu')
-    const clickedOnPortal =
-      target.closest('[data-inkling-portal]') !== null || target.hasAttribute('data-inkling-portal')
-
-    if (!skipFocusEditor.current && editorAPI && !clickedOnDecorator && !clickedOnSlashMenu && !clickedOnPortal) {
-      const rootElement = editorAPI.editorInstance.getRootElement()
-
-      // if a mousedown and subsequent mouseup occurs below the editor
-      // canvas, focus the editor and put the cursor at the end of the document
-      if (
-        rootElement &&
-        event.pageY > rootElement.getBoundingClientRect().bottom &&
-        event.clientY > rootElement.getBoundingClientRect().bottom
-      ) {
-        event.preventDefault()
-
-        // we should always have a visible cursor when focusing
-        // at the bottom so create an empty paragraph if last
-        // section is a card
-        let addLastParagraph = false
-
-        editorAPI.editorInstance.getEditorState().read(() => {
-          const nodes = $getRoot().getChildren()
-          const lastNode = nodes[nodes.length - 1]
-
-          if (lastNode && $isDecoratorNode(lastNode)) {
-            addLastParagraph = true
-          }
-        })
-
-        if (addLastParagraph) {
-          editorAPI.insertParagraphAtBottom()
-        }
-
-        // Focus the editor
-        editorAPI.focusEditor({ position: 'bottom' })
-
-        // scroll to the bottom of the container
-        if (containerRef.current) {
-          containerRef.current.scrollTop = containerRef.current.scrollHeight
-        }
-      }
-    }
-
-    skipFocusEditor.current = false
   }
 
   function toggleDarkMode() {
@@ -423,21 +331,18 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
 
   const fileUploader: FileUploader = { useFileUpload: useFileUpload({ isMultiplayer }), fileTypes }
 
+  // the focus-below-canvas choreography and the sidebar/chrome block live in
+  // the shared demo chrome (DemoChrome + useFocusBelowCanvas); the sidebar
+  // state stays here because the breakout adjustment reads it
+  const { onMouseDown, onClick } = useFocusBelowCanvas({ editorAPI, containerRef })
+
   // Sidebar uses useLexicalComposerContext so it must be inside a InklingComposer.
-  const demoChrome = (
-    <>
-      <Watermark editorType={editorType || 'full'} />
-      <div className="absolute z-20 flex h-full flex-col items-end sm:relative">
-        <Sidebar isOpen={isSidebarOpen} saveContent={saveContent} view={sidebarView} />
-        <FloatingButton isOpen={isSidebarOpen} onClick={openSidebar} />
-      </div>
-    </>
-  )
+  const demoChrome = <DemoChrome editorType={editorType || 'full'} saveContent={saveContent} sidebar={sidebar} />
 
   const demoLayout = (children: React.ReactNode) => (
     <div
       className={`inkling-demo relative h-full grow ${darkMode ? 'dark' : ''}`}
-      style={isSidebarOpen ? { '--inkling-breakout-adjustment': '440px' } : {}}
+      style={sidebar.isSidebarOpen ? { '--inkling-breakout-adjustment': '440px' } : {}}
     >
       {!isMultiplayer && contentParam !== 'false' ? (
         <InitialContentToggle
@@ -452,8 +357,8 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
       <div
         ref={containerRef}
         className="h-full overflow-auto overflow-x-hidden"
-        onClick={focusEditor}
-        onMouseDown={maybeSkipFocusEditor}
+        onClick={onClick}
+        onMouseDown={onMouseDown}
       >
         <div className="mx-auto max-w-[740px] px-6 py-[15vmin] lg:px-0">
           {showTitle ? <TitleTextBox ref={titleRef} editorAPI={editorAPI} setTitle={setTitle} title={title} /> : null}
