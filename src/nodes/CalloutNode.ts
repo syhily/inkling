@@ -6,6 +6,7 @@ import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { calloutDeclaration } from '@/nodes/cards/callout.declaration'
 
 export { $isCalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
+export type { SerializedCalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
 export { INSERT_CALLOUT_COMMAND } from '@/nodes/cards/card-commands'
 
 export type CalloutNodeDataset = CalloutData & {

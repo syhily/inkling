@@ -6,6 +6,7 @@ import {
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
+  type SerializedGeneratedDecoratorNode,
 } from '@/nodes/base/generate-decorator-node'
 import { renderImageNode } from '@/nodes/base/nodes/image/image-renderer'
 import { readImageAttributesFromElement } from '@/nodes/base/utils/read-image-attributes-from-element'
@@ -63,6 +64,8 @@ export const imageImportSpec = {
 } satisfies CardImportSpec
 
 export type ImageData = DecoratorNodeData<typeof imageProperties>
+
+export type SerializedImageNode = SerializedGeneratedDecoratorNode<DecoratorNodeValueMap<typeof imageProperties>>
 
 export interface BaseImageNode extends DecoratorNodeValueMap<typeof imageProperties> {}
 

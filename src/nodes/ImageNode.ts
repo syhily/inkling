@@ -8,6 +8,7 @@ import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { imageDeclaration } from '@/nodes/cards/image.declaration'
 
 export { $isImageNode } from '@/nodes/base/nodes/image/ImageNode'
+export type { SerializedImageNode } from '@/nodes/base/nodes/image/ImageNode'
 export { INSERT_IMAGE_COMMAND } from '@/nodes/cards/card-commands'
 
 export type ImageNodeDataset = ImageData &

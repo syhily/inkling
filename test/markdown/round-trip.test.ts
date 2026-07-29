@@ -1,6 +1,8 @@
 import { IS_HIGHLIGHT, IS_SUBSCRIPT, IS_SUPERSCRIPT, type SerializedEditorState } from 'lexical'
 import { describe, it } from 'vitest'
 
+import type { SerializedCodeBlockNode } from '@/nodes/CodeBlockNode'
+
 import { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown/round-trip'
 
 describe('Markdown round-trip', function () {
@@ -39,7 +41,7 @@ describe('Markdown round-trip', function () {
     const state = markdownToLexicalState(markdown)
     // the dialect's own CODE_FENCE transformer claims the fence on import —
     // no more literal paragraphs that export re-escapes to \`\`\`
-    expect((state.root.children[0] as unknown as { type: string }).type).toBe('codeblock')
+    expect((state.root.children[0] as SerializedCodeBlockNode).type).toBe('codeblock')
     expect(lexicalStateToMarkdown(state)).toBe(markdown)
   })
 

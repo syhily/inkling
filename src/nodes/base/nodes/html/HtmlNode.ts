@@ -3,6 +3,7 @@ import {
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
+  type SerializedGeneratedDecoratorNode,
 } from '@/nodes/base/generate-decorator-node'
 import { parseHtmlNode } from '@/nodes/base/nodes/html/html-parser'
 import { renderHtmlNode } from '@/nodes/base/nodes/html/html-renderer'
@@ -12,6 +13,8 @@ const htmlProperties = [
 ] as const satisfies readonly DecoratorNodeProperty[]
 
 export type HtmlData = DecoratorNodeData<typeof htmlProperties>
+
+export type SerializedHtmlNode = SerializedGeneratedDecoratorNode<DecoratorNodeValueMap<typeof htmlProperties>>
 
 export interface BaseHtmlNode extends DecoratorNodeValueMap<typeof htmlProperties> {}
 

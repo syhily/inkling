@@ -3,6 +3,7 @@ import {
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
+  type SerializedGeneratedDecoratorNode,
 } from '@/nodes/base/generate-decorator-node'
 import { parseCodeBlockNode } from '@/nodes/base/nodes/codeblock/codeblock-parser'
 import { renderCodeBlockNode } from '@/nodes/base/nodes/codeblock/codeblock-renderer'
@@ -20,6 +21,10 @@ const codeBlockProperties = [
 ] as const satisfies readonly DecoratorNodeProperty[]
 
 export type CodeBlockData = DecoratorNodeData<typeof codeBlockProperties>
+
+export type SerializedCodeBlockNode = SerializedGeneratedDecoratorNode<
+  DecoratorNodeValueMap<typeof codeBlockProperties>
+>
 
 export interface BaseCodeBlockNode extends DecoratorNodeValueMap<typeof codeBlockProperties> {}
 

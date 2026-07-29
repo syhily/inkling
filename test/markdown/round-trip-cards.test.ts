@@ -2,6 +2,18 @@ import type { LexicalNode } from 'lexical'
 
 import { describe, expect, it } from 'vitest'
 
+import type { SerializedAudioNode } from '@/nodes/AudioNode'
+import type { SerializedMarkdownNode } from '@/nodes/base/nodes/markdown/MarkdownNode'
+import type { SerializedBookmarkNode } from '@/nodes/BookmarkNode'
+import type { SerializedButtonNode } from '@/nodes/ButtonNode'
+import type { SerializedCalloutNode } from '@/nodes/CalloutNode'
+import type { SerializedFileNode } from '@/nodes/FileNode'
+import type { SerializedGalleryNode } from '@/nodes/GalleryNode'
+import type { SerializedHtmlNode } from '@/nodes/HtmlNode'
+import type { SerializedImageNode } from '@/nodes/ImageNode'
+import type { SerializedToggleNode } from '@/nodes/ToggleNode'
+import type { SerializedVideoNode } from '@/nodes/VideoNode'
+
 import { lexicalStateToMarkdown, markdownToLexicalState } from '@/markdown/round-trip'
 import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
 import { defineCard, type HostCard } from '@/nodes/cards/host-cards'
@@ -18,7 +30,7 @@ describe('Markdown round-trip for decorator cards', function () {
     const root = state.root
     expect(root.children).toHaveLength(1)
 
-    const imageNode = root.children[0] as unknown as { type: string; src: string; alt: string }
+    const imageNode = root.children[0] as SerializedImageNode
     expect(imageNode.type).toBe('image')
     expect(imageNode.src).toBe('https://example.com/mountain.jpg')
     expect(imageNode.alt).toBe('A mountain')
@@ -31,7 +43,7 @@ describe('Markdown round-trip for decorator cards', function () {
     const markdown = inklingCard('html', { html: '<iframe src="https://example.com"></iframe>' })
     const state = markdownToLexicalState(markdown)
 
-    const node = state.root.children[0] as unknown as { type: string; html: string }
+    const node = state.root.children[0] as SerializedHtmlNode
     expect(node.type).toBe('html')
     expect(node.html).toBe('<iframe src="https://example.com"></iframe>')
 
@@ -47,12 +59,7 @@ describe('Markdown round-trip for decorator cards', function () {
     })
     const state = markdownToLexicalState(markdown)
 
-    const node = state.root.children[0] as unknown as {
-      type: string
-      src: string
-      fileName: string
-      fileCaption: string
-    }
+    const node = state.root.children[0] as SerializedFileNode
     expect(node.type).toBe('file')
     expect(node.src).toBe('https://example.com/report.pdf')
     expect(node.fileName).toBe('report.pdf')
@@ -69,11 +76,7 @@ describe('Markdown round-trip for decorator cards', function () {
     })
     const state = markdownToLexicalState(markdown)
 
-    const node = state.root.children[0] as unknown as {
-      type: string
-      buttonUrl: string
-      buttonText: string
-    }
+    const node = state.root.children[0] as SerializedButtonNode
     expect(node.type).toBe('button')
     expect(node.buttonUrl).toBe('https://example.com')
     expect(node.buttonText).toBe('Click me')
@@ -89,11 +92,7 @@ describe('Markdown round-trip for decorator cards', function () {
     })
     const state = markdownToLexicalState(markdown)
 
-    const node = state.root.children[0] as unknown as {
-      type: string
-      src: string
-      title: string
-    }
+    const node = state.root.children[0] as SerializedAudioNode
     expect(node.type).toBe('audio')
     expect(node.src).toBe('https://example.com/audio.mp3')
     expect(node.title).toBe('Podcast episode')
@@ -110,12 +109,7 @@ describe('Markdown round-trip for decorator cards', function () {
     })
     const state = markdownToLexicalState(markdown)
 
-    const node = state.root.children[0] as unknown as {
-      type: string
-      src: string
-      caption: string
-      thumbnailSrc: string
-    }
+    const node = state.root.children[0] as SerializedVideoNode
     expect(node.type).toBe('video')
     expect(node.src).toBe('https://example.com/video.mp4')
     expect(node.caption).toContain('Demo video')
@@ -132,11 +126,7 @@ describe('Markdown round-trip for decorator cards', function () {
     })
     const state = markdownToLexicalState(markdown)
 
-    const node = state.root.children[0] as unknown as {
-      type: string
-      images: Array<{ src: string }>
-      caption: string
-    }
+    const node = state.root.children[0] as SerializedGalleryNode
     expect(node.type).toBe('gallery')
     expect(node.images).toHaveLength(2)
     expect(node.images[0].src).toBe('https://example.com/a.jpg')
@@ -155,11 +145,7 @@ describe('Markdown round-trip for decorator cards', function () {
     })
     const state = markdownToLexicalState(markdown)
 
-    const node = state.root.children[0] as unknown as {
-      type: string
-      url: string
-      metadata: { title: string; description: string }
-    }
+    const node = state.root.children[0] as SerializedBookmarkNode
     expect(node.type).toBe('bookmark')
     expect(node.url).toBe('https://example.com')
     expect(node.metadata.title).toBe('Example')
@@ -176,11 +162,7 @@ describe('Markdown round-trip for decorator cards', function () {
     })
     const state = markdownToLexicalState(markdown)
 
-    const node = state.root.children[0] as unknown as {
-      type: string
-      heading: string
-      content: string
-    }
+    const node = state.root.children[0] as SerializedToggleNode
     expect(node.type).toBe('toggle')
     expect(node.heading).toContain('Summary')
     expect(node.content).toContain('Hidden details')
@@ -196,11 +178,7 @@ describe('Markdown round-trip for decorator cards', function () {
     })
     const state = markdownToLexicalState(markdown)
 
-    const node = state.root.children[0] as unknown as {
-      type: string
-      calloutText: string
-      backgroundColor: string
-    }
+    const node = state.root.children[0] as SerializedCalloutNode
     expect(node.type).toBe('callout')
     expect(node.calloutText).toContain('Important note')
     expect(node.backgroundColor).toBe('green')
@@ -213,7 +191,7 @@ describe('Markdown round-trip for decorator cards', function () {
     const markdown = '```inkling:markdown\n# Inner heading\n\nSome **bold** text\n```'
     const state = markdownToLexicalState(markdown)
 
-    const node = state.root.children[0] as unknown as { type: string; markdown: string }
+    const node = state.root.children[0] as SerializedMarkdownNode
     expect(node.type).toBe('markdown')
     expect(node.markdown).toBe('# Inner heading\n\nSome **bold** text')
 
@@ -225,7 +203,7 @@ describe('Markdown round-trip for decorator cards', function () {
     const markdown = '```inkling:markdown\n\n```'
     const state = markdownToLexicalState(markdown)
 
-    const node = state.root.children[0] as unknown as { type: string; markdown: string }
+    const node = state.root.children[0] as SerializedMarkdownNode
     expect(node.type).toBe('markdown')
     expect(node.markdown).toBe('')
 

@@ -5,6 +5,7 @@ import {
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
+  type SerializedGeneratedDecoratorNode,
 } from '@/nodes/base/generate-decorator-node'
 import { parseGalleryNode } from '@/nodes/base/nodes/gallery/gallery-parser'
 import { renderGalleryNode } from '@/nodes/base/nodes/gallery/gallery-renderer'
@@ -24,6 +25,8 @@ const galleryProperties = [
 ] as const satisfies readonly DecoratorNodeProperty[]
 
 export type GalleryData = DecoratorNodeData<typeof galleryProperties>
+
+export type SerializedGalleryNode = SerializedGeneratedDecoratorNode<DecoratorNodeValueMap<typeof galleryProperties>>
 
 export interface BaseGalleryNode extends DecoratorNodeValueMap<typeof galleryProperties> {}
 

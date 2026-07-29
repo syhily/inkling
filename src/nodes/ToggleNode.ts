@@ -6,6 +6,7 @@ import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { toggleDeclaration } from '@/nodes/cards/toggle.declaration'
 
 export { $isToggleNode } from '@/nodes/base/nodes/toggle/ToggleNode'
+export type { SerializedToggleNode } from '@/nodes/base/nodes/toggle/ToggleNode'
 export { INSERT_TOGGLE_COMMAND } from '@/nodes/cards/card-commands'
 
 export type ToggleNodeDataset = ToggleData & {

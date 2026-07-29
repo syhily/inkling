@@ -4,6 +4,7 @@ import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { buttonDeclaration } from '@/nodes/cards/button.declaration'
 
 export { $isButtonNode } from '@/nodes/base/nodes/button/ButtonNode'
+export type { SerializedButtonNode } from '@/nodes/base/nodes/button/ButtonNode'
 export { INSERT_BUTTON_COMMAND } from '@/nodes/cards/card-commands'
 
 export type ButtonNodeDataset = ButtonData

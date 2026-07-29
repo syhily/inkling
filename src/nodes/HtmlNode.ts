@@ -4,6 +4,7 @@ import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { htmlDeclaration } from '@/nodes/cards/html.declaration'
 
 export { $isHtmlNode } from '@/nodes/base/nodes/html/HtmlNode'
+export type { SerializedHtmlNode } from '@/nodes/base/nodes/html/HtmlNode'
 export { INSERT_HTML_COMMAND } from '@/nodes/cards/card-commands'
 
 export type HtmlNodeDataset = HtmlData

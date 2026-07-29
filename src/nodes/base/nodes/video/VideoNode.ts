@@ -5,6 +5,7 @@ import {
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
+  type SerializedGeneratedDecoratorNode,
 } from '@/nodes/base/generate-decorator-node'
 import { formatVideoDuration } from '@/nodes/base/nodes/video/format-video-duration'
 import { renderVideoNode } from '@/nodes/base/nodes/video/video-renderer'
@@ -94,6 +95,8 @@ export const videoImportSpec = {
 } satisfies CardImportSpec
 
 export type VideoData = DecoratorNodeData<typeof videoProperties>
+
+export type SerializedVideoNode = SerializedGeneratedDecoratorNode<DecoratorNodeValueMap<typeof videoProperties>>
 
 export interface BaseVideoNode extends DecoratorNodeValueMap<typeof videoProperties> {}
 

@@ -2,7 +2,12 @@ import type { LexicalEditor } from 'lexical'
 
 import type { CardImportSpec } from '@/nodes/base/import-spec'
 
-import { generateDecoratorNode, type DecoratorNodeProperty } from '@/nodes/base/generate-decorator-node'
+import {
+  generateDecoratorNode,
+  type DecoratorNodeProperty,
+  type DecoratorNodeValueMap,
+  type SerializedGeneratedDecoratorNode,
+} from '@/nodes/base/generate-decorator-node'
 import { renderCalloutNode } from '@/nodes/base/nodes/callout/callout-renderer'
 
 export interface CalloutData {
@@ -27,6 +32,8 @@ const calloutProperties = [
   { name: 'calloutEmoji', default: '💡' },
   { name: 'backgroundColor', default: 'blue' },
 ] as const satisfies readonly DecoratorNodeProperty[]
+
+export type SerializedCalloutNode = SerializedGeneratedDecoratorNode<DecoratorNodeValueMap<typeof calloutProperties>>
 
 export const calloutImportSpec = {
   conversions: [

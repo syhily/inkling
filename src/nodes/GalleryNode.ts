@@ -11,6 +11,7 @@ export {
   MAX_PER_ROW,
   recalculateImageRows,
 } from '@/nodes/base/nodes/gallery/GalleryNode'
+export type { SerializedGalleryNode } from '@/nodes/base/nodes/gallery/GalleryNode'
 export { INSERT_GALLERY_COMMAND } from '@/nodes/cards/card-commands'
 
 export type GalleryNodeDataset = GalleryData & CaptionEditorDataset

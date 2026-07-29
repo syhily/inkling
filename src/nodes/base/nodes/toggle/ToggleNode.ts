@@ -9,6 +9,7 @@ import {
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
+  type SerializedGeneratedDecoratorNode,
 } from '@/nodes/base/generate-decorator-node'
 import { renderToggleNode } from '@/nodes/base/nodes/toggle/toggle-renderer'
 
@@ -32,6 +33,8 @@ export const toggleImportSpec = {
 } satisfies CardImportSpec
 
 export type ToggleData = DecoratorNodeData<typeof toggleProperties>
+
+export type SerializedToggleNode = SerializedGeneratedDecoratorNode<DecoratorNodeValueMap<typeof toggleProperties>>
 
 export interface BaseToggleNode extends DecoratorNodeValueMap<typeof toggleProperties> {}
 

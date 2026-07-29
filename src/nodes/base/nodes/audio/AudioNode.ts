@@ -5,6 +5,7 @@ import {
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
+  type SerializedGeneratedDecoratorNode,
 } from '@/nodes/base/generate-decorator-node'
 import { renderAudioNode } from '@/nodes/base/nodes/audio/audio-renderer'
 
@@ -54,6 +55,8 @@ export const audioImportSpec = {
 } satisfies CardImportSpec
 
 export type AudioData = DecoratorNodeData<typeof audioProperties>
+
+export type SerializedAudioNode = SerializedGeneratedDecoratorNode<DecoratorNodeValueMap<typeof audioProperties>>
 
 // Every base card class is named `Base*` (never the card's plain name, which
 // belongs to the spec-adopting wrapper/assembled class one layer up). The

@@ -3,6 +3,7 @@ import {
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
+  type SerializedGeneratedDecoratorNode,
 } from '@/nodes/base/generate-decorator-node'
 import { renderMarkdownNode } from '@/nodes/base/nodes/markdown/markdown-renderer'
 
@@ -11,6 +12,8 @@ const markdownProperties = [
 ] as const satisfies readonly DecoratorNodeProperty[]
 
 export type MarkdownData = DecoratorNodeData<typeof markdownProperties>
+
+export type SerializedMarkdownNode = SerializedGeneratedDecoratorNode<DecoratorNodeValueMap<typeof markdownProperties>>
 
 export interface MarkdownNode extends DecoratorNodeValueMap<typeof markdownProperties> {}
 

@@ -5,6 +5,7 @@ import {
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
+  type SerializedGeneratedDecoratorNode,
 } from '@/nodes/base/generate-decorator-node'
 import { renderFileNode } from '@/nodes/base/nodes/file/file-renderer'
 import { bytesToSize, sizeToBytes } from '@/nodes/base/utils/size-byte-converter'
@@ -39,6 +40,8 @@ export const fileImportSpec = {
 } satisfies CardImportSpec
 
 export type FileData = DecoratorNodeData<typeof fileProperties>
+
+export type SerializedFileNode = SerializedGeneratedDecoratorNode<DecoratorNodeValueMap<typeof fileProperties>>
 
 export interface BaseFileNode extends DecoratorNodeValueMap<typeof fileProperties> {}
 

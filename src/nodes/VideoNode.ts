@@ -5,6 +5,7 @@ import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { videoDeclaration } from '@/nodes/cards/video.declaration'
 
 export { $isVideoNode } from '@/nodes/base/nodes/video/VideoNode'
+export type { SerializedVideoNode } from '@/nodes/base/nodes/video/VideoNode'
 export { INSERT_VIDEO_COMMAND } from '@/nodes/cards/card-commands'
 
 export type VideoNodeDataset = VideoData &

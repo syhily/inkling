@@ -5,6 +5,7 @@ import {
   type DecoratorNodeData,
   type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
+  type SerializedGeneratedDecoratorNode,
 } from '@/nodes/base/generate-decorator-node'
 import { renderButtonNode } from '@/nodes/base/nodes/button/button-renderer'
 
@@ -31,6 +32,8 @@ export const buttonImportSpec = {
 } satisfies CardImportSpec
 
 export type ButtonData = DecoratorNodeData<typeof buttonProperties>
+
+export type SerializedButtonNode = SerializedGeneratedDecoratorNode<DecoratorNodeValueMap<typeof buttonProperties>>
 
 export interface BaseButtonNode extends DecoratorNodeValueMap<typeof buttonProperties> {}
 

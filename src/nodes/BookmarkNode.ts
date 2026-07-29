@@ -5,6 +5,7 @@ import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { bookmarkDeclaration } from '@/nodes/cards/bookmark.declaration'
 
 export { $isBookmarkNode } from '@/nodes/base/nodes/bookmark/BookmarkNode'
+export type { SerializedBookmarkNode } from '@/nodes/base/nodes/bookmark/BookmarkNode'
 export { INSERT_BOOKMARK_COMMAND } from '@/nodes/cards/card-commands'
 
 export type BookmarkNodeDataset = BookmarkData &
