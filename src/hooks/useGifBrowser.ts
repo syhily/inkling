@@ -2,6 +2,7 @@ import React from 'react'
 
 import type { GifProviderConfig } from '@/utils/services/gif'
 
+import { useDisposableStore } from '@/hooks/useDisposableStore'
 import { createGifBrowser, type GifBrowser, type GifFetchPage, type GifScheduler } from '@/utils/services/gif-browser'
 
 // React adapter over @/utils/services/gif-browser (the deep module — fetch
@@ -26,16 +27,8 @@ export function useGifBrowser({ config, fetchPage, scheduler, debounceMs }: UseG
     () => ({ provider, apiUrl, apiKey, contentFilter }),
     [provider, apiUrl, apiKey, contentFilter],
   )
-  const browser = React.useMemo(
+  return useDisposableStore(
     () => createGifBrowser({ config: memoConfig, fetchPage, scheduler, debounceMs }),
     [memoConfig, fetchPage, scheduler, debounceMs],
   )
-
-  React.useEffect(() => {
-    return () => {
-      browser.dispose()
-    }
-  }, [browser])
-
-  return browser
 }

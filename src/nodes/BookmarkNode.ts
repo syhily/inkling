@@ -1,19 +1,11 @@
-import type { BookmarkData } from '@/nodes/base/nodes/bookmark/BookmarkNode'
-import type { CaptionEditorDataset } from '@/types/card-node-datasets'
+import type { BookmarkNodeDataset } from '@/nodes/cards/card-commands'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { bookmarkDeclaration } from '@/nodes/cards/bookmark.declaration'
-
 export { $isBookmarkNode } from '@/nodes/base/nodes/bookmark/BookmarkNode'
 export type { SerializedBookmarkNode } from '@/nodes/base/nodes/bookmark/BookmarkNode'
 export { INSERT_BOOKMARK_COMMAND } from '@/nodes/cards/card-commands'
-
-export type BookmarkNodeDataset = BookmarkData &
-  CaptionEditorDataset & {
-    // AtLinkPlugin passes a top-level `title` alongside `url`; the base node
-    // constructor only reads `metadata.title`, so this is a tolerated no-op field.
-    title?: string
-  }
+export type { BookmarkNodeDataset } from '@/nodes/cards/card-commands'
 
 /**
  * The registered class is assembled once from the card declaration, and

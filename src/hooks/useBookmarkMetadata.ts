@@ -4,6 +4,7 @@ import React from 'react'
 
 import type { LinkingSettings } from '@/context/InklingHostIntegrationContext'
 
+import { useDisposableStore } from '@/hooks/useDisposableStore'
 import { createBookmarkEmbedFlow } from '@/utils/services/bookmark-embed-flow'
 
 interface UseBookmarkMetadataOptions {
@@ -34,13 +35,12 @@ export function useBookmarkMetadata({
   nodeKey,
   fetchEmbed,
 }: UseBookmarkMetadataOptions): UseBookmarkMetadataResult {
-  const flow = React.useMemo(
+  // a recreated flow supersedes the old one's in-flight fetches, so a late
+  // response from the stale instance no-ops instead of patching the node
+  const flow = useDisposableStore(
     () => createBookmarkEmbedFlow({ editor, nodeKey, fetchEmbed }),
     [editor, nodeKey, fetchEmbed],
   )
-  // a recreated flow supersedes the old one's in-flight fetches, so a late
-  // response from the stale instance no-ops instead of patching the node
-  React.useEffect(() => () => flow.dispose(), [flow])
   const { loading, urlError } = React.useSyncExternalStore(flow.subscribe, flow.getSnapshot)
 
   return {

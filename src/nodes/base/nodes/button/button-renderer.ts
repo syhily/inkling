@@ -1,6 +1,6 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { isSafeRenderableSource, renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface ButtonNodeData {
   buttonUrl: string
@@ -11,7 +11,7 @@ interface ButtonNodeData {
 export function renderButtonNode(node: ButtonNodeData, context: RenderContext) {
   const document = context.createDocument()
 
-  if (!node.buttonUrl || node.buttonUrl.trim() === '' || context.safeUrl('navigation', node.buttonUrl) === '') {
+  if (!isSafeRenderableSource(context, 'navigation', node.buttonUrl)) {
     return renderEmptyContainer(document)
   }
 

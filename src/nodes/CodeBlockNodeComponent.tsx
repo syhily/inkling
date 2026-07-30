@@ -7,7 +7,7 @@ import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CodeBlockCard } from '@/components/ui/cards/CodeBlockCard'
 import { useCardIsEditing, useCardIsSelected } from '@/context/CardSelectionStoreContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
-import { useCardWriter } from '@/hooks/useCardWriter'
+import { useCardChrome } from '@/hooks/useCardChrome'
 import { useReselectOnEscape } from '@/hooks/useReselectOnEscape'
 import { $isCodeBlockNode } from '@/nodes/CodeBlockNode'
 
@@ -26,29 +26,15 @@ export function CodeBlockNodeComponent({
   captionEditor,
   captionEditorInitialState,
 }: CodeBlockNodeComponentProps) {
-  const write = useCardWriter(nodeKey, $isCodeBlockNode)
+  const { setField } = useCardChrome(nodeKey, $isCodeBlockNode)
   const { darkMode } = React.useContext(InklingUiPrefsContext)
   const isSelected = useCardIsSelected(nodeKey)
   const isEditing = useCardIsEditing(nodeKey)
   const exitEditMode = useReselectOnEscape(nodeKey)
 
-  const updateCode = React.useCallback(
-    (value: string) => {
-      write((node) => {
-        node.code = value
-      })
-    },
-    [write],
-  )
+  const updateCode = setField('code')
 
-  const updateLanguage = React.useCallback(
-    (value: string) => {
-      write((node) => {
-        node.language = value
-      })
-    },
-    [write],
-  )
+  const updateLanguage = setField('language')
 
   return (
     <>

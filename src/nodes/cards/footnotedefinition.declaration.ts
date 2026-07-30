@@ -10,7 +10,7 @@ import type { CardDeclaration } from './card-declaration'
 // type — the `__*` field map derives both from them (CardSpecFieldMap). The
 // nested editor rides nullableNestedEditor's carrier: the headless
 // round-trip invariant detaches it (same shape as toggle's)
-const nestedEditors = [
+export const nestedEditors = [
   nullableNestedEditor({
     name: 'contentEditor',
     serializedKey: 'content',

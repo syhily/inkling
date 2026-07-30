@@ -1,16 +1,11 @@
-import type { FileData } from '@/nodes/base/nodes/file/FileNode'
+import type { FileNodeDataset } from '@/nodes/cards/card-commands'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { fileDeclaration } from '@/nodes/cards/file.declaration'
-
 export { $isFileNode } from '@/nodes/base/nodes/file/FileNode'
 export type { SerializedFileNode } from '@/nodes/base/nodes/file/FileNode'
 export { INSERT_FILE_COMMAND } from '@/nodes/cards/card-commands'
-
-export type FileNodeDataset = FileData & {
-  initialFile?: File
-  triggerFileDialog?: boolean
-}
+export type { FileNodeDataset } from '@/nodes/cards/card-commands'
 
 /**
  * The registered class is assembled from the card declaration, and

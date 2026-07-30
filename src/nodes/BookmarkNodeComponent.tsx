@@ -1,5 +1,4 @@
 import { $createLinkNode } from '@lexical/link'
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { $createTextNode, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React, { useCallback } from 'react'
 
@@ -8,9 +7,10 @@ import type { BookmarkNode } from '@/nodes/BookmarkNode'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
 import { useCardIsSelected } from '@/context/CardSelectionStoreContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useBookmarkMetadata } from '@/hooks/useBookmarkMetadata'
+import { useCardChrome } from '@/hooks/useCardChrome'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { $isBookmarkNode } from '@/nodes/base'
 import { $replaceCardWithParagraph } from '@/plugins/behaviour/card-removal'
 import trackEvent from '@/utils/analytics'
 import { isInternalUrl } from '@/utils/isInternalUrl'
@@ -42,10 +42,10 @@ export function BookmarkNodeComponent({
   captionEditorInitialState,
   createdWithUrl,
 }: BookmarkNodeComponentProps) {
-  const [editor] = useLexicalComposerContext()
+  const { editor, host } = useCardChrome(nodeKey, $isBookmarkNode)
+  const { cardConfig } = host
   const labels = useInklingLabels()
 
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
   const isSelected = useCardIsSelected(nodeKey)
   const [urlInputValue, setUrlInputValue] = React.useState<string>(url)
   const { loading, urlError, clearUrlError, submitUrl, fetchInitialMetadata } = useBookmarkMetadata({

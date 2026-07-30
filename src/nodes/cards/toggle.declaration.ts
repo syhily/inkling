@@ -13,7 +13,7 @@ import { INSERT_TOGGLE_COMMAND } from './card-commands'
 // type — the `__*` field map derives both from them (CardSpecFieldMap). Both
 // nested editors ride nullableNestedEditor's carrier: the markdown
 // round-trip detaches them
-const nestedEditors = [
+export const nestedEditors = [
   nullableNestedEditor({
     name: 'titleEditor',
     serializedKey: 'heading',

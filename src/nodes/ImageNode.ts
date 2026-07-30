@@ -1,27 +1,13 @@
 import type { NodeKey } from 'lexical'
-import type React from 'react'
 
-import type { ImageData } from '@/nodes/base/nodes/image/ImageNode'
-import type { CaptionEditorDataset } from '@/types/card-node-datasets'
+import type { ImageNodeDataset } from '@/nodes/cards/card-commands'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { imageDeclaration } from '@/nodes/cards/image.declaration'
-
 export { $isImageNode } from '@/nodes/base/nodes/image/ImageNode'
 export type { SerializedImageNode } from '@/nodes/base/nodes/image/ImageNode'
 export { INSERT_IMAGE_COMMAND } from '@/nodes/cards/card-commands'
-
-export type ImageNodeDataset = ImageData &
-  CaptionEditorDataset & {
-    previewSrc?: string
-    triggerFileDialog?: boolean
-    initialFile?: File
-    selector?: React.ComponentType<{ nodeKey: NodeKey }>
-    isImageHidden?: boolean
-    // image datasets also flow through drag-and-drop payloads that carry
-    // extra keys; keep the record open for those transient fields
-    [key: string]: unknown
-  }
+export type { ImageNodeDataset } from '@/nodes/cards/card-commands'
 
 /**
  * The registered class is assembled from the card declaration, and

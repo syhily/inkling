@@ -1,29 +1,29 @@
-import type { LexicalNode, NodeKey } from 'lexical'
+import type { NodeKey } from 'lexical'
 import type { ComponentType } from 'react'
 
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { fileOr, fnOr, strOr, transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
+import {
+  fnOr,
+  strOr,
+  transientInitialFileProp,
+  transientTriggerFileDialogProp,
+} from '@/nodes/base/generate-decorator-node'
 import { BaseImageNode } from '@/nodes/base/nodes/image/ImageNode'
-import { normalizeCardWidth } from '@/nodes/base/utils/card-widths'
-import MINIMAL_NODES from '@/nodes/MinimalNodes'
+import { decorateCardWidth } from '@/nodes/base/utils/card-widths'
 
 import type { CardDeclaration } from './card-declaration'
 
+import { captionEditorSpec } from './caption-editor-spec'
 import { INSERT_IMAGE_COMMAND, OPEN_GIF_SELECTOR_COMMAND, OPEN_IMAGE_LIBRARY_COMMAND } from './card-commands'
 
 // `as const` keeps the literal `name`s and value types on the declaration's
 // type — the `__*` field map derives both from them (CardSpecFieldMap)
-const nestedEditors = [
-  {
-    name: 'captionEditor',
-    serializedKey: 'caption',
-    nodes: MINIMAL_NODES,
-    cleanBasicHtml: { firstChildInnerContent: true },
-  },
+export const nestedEditors = [
+  captionEditorSpec({ cleanBasicHtml: { firstChildInnerContent: true } }),
 ] as const satisfies readonly NestedEditorSpec[]
 
-const transientProps = [
+export const transientProps = [
   {
     name: 'previewSrc',
     initial: (dataset): string | null => strOr(dataset.previewSrc, ''),
@@ -32,10 +32,7 @@ const transientProps = [
   },
   { ...transientTriggerFileDialogProp, datasetKey: '__triggerFileDialog' },
   // passed via INSERT_MEDIA_COMMAND on drag+drop or paste
-  {
-    name: 'initialFile',
-    initial: (dataset): File | undefined => fileOr(dataset.initialFile, undefined),
-  },
+  transientInitialFileProp,
   // selector overlay component (e.g. the GIF picker) and the flag that hides
   // the image while it is open — client-side only, never serialized
   {
@@ -56,7 +53,7 @@ export const imageDeclaration = {
   nestedEditors,
   transientProps,
   decorateTarget: {
-    width: (node: LexicalNode) => normalizeCardWidth((node as BaseImageNode).cardWidth) ?? 'regular',
+    width: decorateCardWidth,
   },
   menu: [
     {

@@ -1,23 +1,17 @@
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
 import { BaseBookmarkNode } from '@/nodes/base/nodes/bookmark/BookmarkNode'
-import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
 
+import { captionEditorSpec } from './caption-editor-spec'
 import { INSERT_BOOKMARK_COMMAND } from './card-commands'
 
 // `as const` keeps the literal `name`s and value types on the declaration's
 // type — the `__*` field map derives both from them (CardSpecFieldMap)
-const nestedEditors = [
-  {
-    name: 'captionEditor',
-    serializedKey: 'caption',
-    nodes: MINIMAL_NODES,
-  },
-] as const satisfies readonly NestedEditorSpec[]
+export const nestedEditors = [captionEditorSpec()] as const satisfies readonly NestedEditorSpec[]
 
-const transientProps = [
+export const transientProps = [
   // true only for a card constructed from a bare url before its metadata was
   // fetched — the component's metadata-fetch effect keys off it. The initial
   // value reads the dataset the base constructor forwards to the generated

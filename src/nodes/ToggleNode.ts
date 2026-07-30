@@ -1,24 +1,11 @@
-import type { EditorState, LexicalEditor } from 'lexical'
-
-import type { ToggleData } from '@/nodes/base/nodes/toggle/ToggleNode'
+import type { ToggleNodeDataset } from '@/nodes/cards/card-commands'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { toggleDeclaration } from '@/nodes/cards/toggle.declaration'
-
 export { $isToggleNode } from '@/nodes/base/nodes/toggle/ToggleNode'
 export type { SerializedToggleNode } from '@/nodes/base/nodes/toggle/ToggleNode'
 export { INSERT_TOGGLE_COMMAND } from '@/nodes/cards/card-commands'
-
-export type ToggleNodeDataset = ToggleData & {
-  titleEditor?: LexicalEditor
-  // accepted for getDataset/clone symmetry but not read by the constructor —
-  // `__titleEditorInitialState` is set internally when the editor is
-  // populated from its serialized HTML (src/utils/nested-editors.ts)
-  titleEditorInitialState?: EditorState
-  contentEditor?: LexicalEditor
-  // see titleEditorInitialState
-  contentEditorInitialState?: EditorState
-}
+export type { ToggleNodeDataset } from '@/nodes/cards/card-commands'
 
 /**
  * The registered class is assembled once from the card declaration, and

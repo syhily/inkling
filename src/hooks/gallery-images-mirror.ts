@@ -84,23 +84,23 @@ export function createGalleryImagesMirror({
     subscribe: store.subscribe,
 
     /** Local mutation: renders immediately, then writes the node through the seam port. */
-    setImages(images: GalleryImage[]) {
+    setImages: (images: GalleryImage[]) => {
       store.emit({ overlay: images })
       writeNodeImages(images)
     },
 
     /** Preview overlay: renders immediately, never written to the node. */
-    setPreviewImages(images: GalleryImage[]) {
+    setPreviewImages: (images: GalleryImage[]) => {
       store.emit({ overlay: images })
     },
 
     /** Begin the node subscription (adapter mount). */
-    start() {
+    start: () => {
       unsubscribeFromNode ??= subscribeToNodeImages(resyncFromNode)
     },
 
     /** End the node subscription (adapter unmount). */
-    dispose() {
+    dispose: () => {
       unsubscribeFromNode?.()
       unsubscribeFromNode = null
     },

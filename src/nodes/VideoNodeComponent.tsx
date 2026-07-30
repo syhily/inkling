@@ -1,4 +1,3 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React, { useState } from 'react'
 
@@ -7,9 +6,8 @@ import type { VideoNode } from '@/nodes/VideoNode'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { VideoCard } from '@/components/ui/cards/VideoCard'
 import { useCardIsEditing, useCardIsSelected } from '@/context/CardSelectionStoreContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { useCardWriter } from '@/hooks/useCardWriter'
-import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
+import { useCardChrome } from '@/hooks/useCardChrome'
+import { useMediaCardUpload, useMediaUploader } from '@/hooks/useMediaCardUpload'
 import { usePreviewLease } from '@/hooks/usePreviewLease'
 import { $isVideoNode } from '@/nodes/base'
 import { isCardWidth, normalizeCardWidth } from '@/nodes/base/utils/card-widths'
@@ -26,7 +24,7 @@ interface VideoNodeComponentProps {
   cardWidth: string
   triggerFileDialog: boolean
   isLoopChecked: boolean
-  initialFile: File | null
+  initialFile: File | undefined
 }
 
 interface VideoNodeMetadataError {
@@ -46,17 +44,14 @@ export function VideoNodeComponent({
   isLoopChecked,
   initialFile,
 }: VideoNodeComponentProps) {
-  const [editor] = useLexicalComposerContext()
-  const write = useCardWriter(nodeKey, $isVideoNode)
-  const { fileUploader } = React.useContext(InklingHostIntegrationContext)
+  const { editor, host, write, setField } = useCardChrome(nodeKey, $isVideoNode)
+  const { fileUploader } = host
   const isSelected = useCardIsSelected(nodeKey)
   const isEditing = useCardIsEditing(nodeKey)
   const [previewThumbnail, setThumbnailPreview] = usePreviewLease()
-  // host-provided hook seam: the composer contract requires useFileUpload to
-  // be identity-stable for the editor's lifetime, so this call is the same
-  // function every render (the compiler cannot verify context provenance)
-  // oxlint-disable-next-line react/react-compiler -- host-provided hook; identity is a composer contract
-  const thumbnailUploader = fileUploader.useFileUpload('mediaThumbnail')
+  // the synthesized-thumbnail sub-flow's bare upload channel (no
+  // input/drag/dialog wiring — the composition kicks it off itself)
+  const thumbnailUploader = useMediaUploader('mediaThumbnail')
   const [metadataExtractionErrors, setMetadataExtractionErrors] = useState<VideoNodeMetadataError[]>([])
 
   const videoMimeTypes: string[] = fileUploader.fileTypes?.video?.mimeTypes || ['video/*']
@@ -133,11 +128,7 @@ export function VideoNodeComponent({
     })
   }
 
-  const onLoopChange = (checked: boolean) => {
-    write((node) => {
-      node.loop = checked
-    })
-  }
+  const onLoopChange = setField('loop')
 
   const onCardWidthChange = (width: unknown) => {
     if (!isCardWidth(width)) {

@@ -25,9 +25,42 @@ export interface ComposerHandle<T> {
   subscribe: (listener: ComposerHandleListener<T>) => () => void
 }
 
-export function createComposerHandle<T extends object>(initialState: T): ComposerHandle<T> {
+export interface ComposerHandleOptions<T> {
+  /**
+   * State keys whose record values compare ENTRY-WISE (per-key reference
+   * compare) instead of by identity: a freshly built but content-equal
+   * record publish is swallowed like any other no-op, so channels whose
+   * feeds rebuild their maps each derivation (the footnote handle's
+   * indices/definitionNodeKeys) don't hand-roll a second change guard.
+   */
+  recordKeys?: readonly (keyof T)[]
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isSameRecord(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
+  const aKeys = Object.keys(a)
+  const bKeys = Object.keys(b)
+  return aKeys.length === bKeys.length && aKeys.every((key) => a[key] === b[key])
+}
+
+export function createComposerHandle<T extends object>(
+  initialState: T,
+  options?: ComposerHandleOptions<T>,
+): ComposerHandle<T> {
+  const recordKeys = new Set<keyof T>(options?.recordKeys ?? [])
   const store = createSnapshotStore<T>(initialState, {
-    changeGuard: (previous, next) => (Object.keys(next) as (keyof T)[]).some((key) => next[key] !== previous[key]),
+    changeGuard: (previous, next) =>
+      (Object.keys(next) as (keyof T)[]).some((key) => {
+        const before = previous[key]
+        const after = next[key]
+        if (recordKeys.has(key) && isPlainRecord(before) && isPlainRecord(after)) {
+          return !isSameRecord(before, after)
+        }
+        return before !== after
+      }),
   })
   return {
     getState: store.getSnapshot,

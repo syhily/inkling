@@ -7,9 +7,10 @@ import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { HtmlNode } from '@/nodes/HtmlNode'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -18,24 +19,6 @@ vi.mock('@lexical/react/LexicalComposerContext', () => ({
 
 function createTestEditor(): LexicalEditor {
   return createEditor({ namespace: 'test', nodes: [HtmlNode], onError: () => {} })
-}
-
-function createComposerContext(cardConfig: Record<string, unknown> = {}) {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload: vi.fn(() => Promise.resolve(undefined)),
-        errors: [],
-      }),
-      fileTypes: {},
-    },
-    cardConfig,
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
-    onError: vi.fn(),
-  }
 }
 
 function addHtmlNode(editor: LexicalEditor, dataset: Record<string, unknown> = {}) {
@@ -57,11 +40,8 @@ function SelectCard({ nodeKey }: { nodeKey: NodeKey }) {
   return null
 }
 
-function renderWrapper(
-  nodeKey: NodeKey,
-  { cardConfig, select }: { cardConfig?: Record<string, unknown>; select?: boolean } = {},
-) {
-  const composerValue = createComposerContext(cardConfig)
+function renderWrapper(nodeKey: NodeKey, { cardConfig, select }: { cardConfig?: CardConfig; select?: boolean } = {}) {
+  const composerValue = createHostIntegrationValue({ cardConfig })
   const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
   return render(
     <InklingHostIntegrationContext.Provider value={composerValue}>
@@ -76,7 +56,7 @@ function renderWrapper(
 }
 
 function renderWrapperWithWidth(nodeKey: NodeKey, width: CardWidth) {
-  const composerValue = createComposerContext()
+  const composerValue = createHostIntegrationValue()
   const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
   const tree = (nextWidth: CardWidth) => (
     <InklingHostIntegrationContext.Provider value={composerValue}>

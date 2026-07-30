@@ -4,8 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { ButtonNode } from '@/nodes/ButtonNode'
 import { ButtonNodeComponent } from '@/nodes/ButtonNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
@@ -32,24 +33,6 @@ function createSelection(
   return createCardSelectionStoreWrapper({
     initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
   })
-}
-
-function createComposerContext(cardConfig: Record<string, unknown> = {}) {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload: vi.fn(() => Promise.resolve(undefined)),
-        errors: [],
-      }),
-      fileTypes: {},
-    },
-    cardConfig,
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
-    onError: vi.fn(),
-  }
 }
 
 function addButtonNode(editor: LexicalEditor) {
@@ -79,7 +62,7 @@ describe('ButtonNodeComponent', () => {
   it('renders with aligned button card props', async () => {
     const nodeKey = await addButtonNode(editor)
 
-    const composerValue = createComposerContext()
+    const composerValue = createHostIntegrationValue()
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
@@ -101,7 +84,7 @@ describe('ButtonNodeComponent', () => {
   it('dispatches EDIT_CARD_COMMAND when the toolbar edit button is clicked', async () => {
     const nodeKey = await addButtonNode(editor)
     const dispatchSpy = vi.spyOn(editor, 'dispatchCommand')
-    const composerValue = createComposerContext()
+    const composerValue = createHostIntegrationValue()
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, { editing: false })
 
     render(
@@ -125,9 +108,9 @@ describe('ButtonNodeComponent', () => {
     function renderWithToolbar(
       nodeKey: NodeKey,
       selection: { selected?: boolean; editing?: boolean } = {},
-      cardConfig: Record<string, unknown> = {},
+      cardConfig: CardConfig = {},
     ) {
-      const composerValue = createComposerContext(cardConfig)
+      const composerValue = createHostIntegrationValue({ cardConfig })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>

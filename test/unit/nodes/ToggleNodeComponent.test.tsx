@@ -5,8 +5,9 @@ import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexica
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { ToggleNode, $createToggleNode } from '@/nodes/ToggleNode'
 import { ToggleNodeComponent } from '@/nodes/ToggleNodeComponent'
@@ -29,24 +30,6 @@ function createSelection(
   return createCardSelectionStoreWrapper({
     initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
   })
-}
-
-function createComposerContext(cardConfig: Record<string, unknown> = {}) {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload: vi.fn(() => Promise.resolve(undefined)),
-        errors: [],
-      }),
-      fileTypes: {},
-    },
-    cardConfig,
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
-    onError: vi.fn(),
-  }
 }
 
 function getToolbars(container: HTMLElement) {
@@ -79,11 +62,11 @@ describe('ToggleNodeComponent', () => {
   function renderComponent(
     nodeKey: NodeKey,
     selection: { selected?: boolean; editing?: boolean } = {},
-    cardConfig: Record<string, unknown> = {},
+    cardConfig: CardConfig = {},
   ) {
     const collaborationValue = createCollaborationContext()
     const composerValue = createLexicalComposerContext(editor)
-    const inklingComposerValue = createComposerContext(cardConfig)
+    const inklingComposerValue = createHostIntegrationValue({ cardConfig })
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
     return render(
       <CollaborationContext.Provider value={collaborationValue}>

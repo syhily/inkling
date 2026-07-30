@@ -4,11 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor, tick } from '#/utils/test-editor'
 import InklingHostIntegrationContext, {
   type CardConfig,
   type FileUploader,
-  type InklingHostIntegrationContextValue,
 } from '@/context/InklingHostIntegrationContext'
 import { FileNode, $createFileNode } from '@/nodes/FileNode'
 import FileNodeComponent from '@/nodes/FileNodeComponent'
@@ -29,23 +29,7 @@ function createSelection(
   })
 }
 
-function createComposerContext(
-  upload: ReturnType<FileUploader['useFileUpload']>['upload'] = vi.fn(() => Promise.resolve(undefined)),
-  cardConfig: CardConfig = {},
-): InklingHostIntegrationContextValue {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload,
-        errors: [],
-      }),
-      fileTypes: { file: { mimeTypes: ['application/pdf'] } },
-    },
-    cardConfig,
-    onError: vi.fn(),
-  }
-}
+const FILE_FILE_TYPES = { file: { mimeTypes: ['application/pdf'] } }
 
 function addFileNode(editor: LexicalEditor, dataset: { src?: string; triggerFileDialog?: boolean } = {}) {
   return new Promise<NodeKey>((resolve) => {
@@ -88,7 +72,7 @@ describe('FileNodeComponent', () => {
 
   function renderComponent(nodeKey: NodeKey, options: RenderOptions = {}) {
     const { fileSrc = '', triggerFileDialog = false, initialFile, upload } = options
-    const composerValue = createComposerContext(upload)
+    const composerValue = createHostIntegrationValue({ upload, fileTypes: FILE_FILE_TYPES })
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     return render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
@@ -168,9 +152,9 @@ describe('FileNodeComponent', () => {
     function renderWithToolbar(
       nodeKey: NodeKey,
       selection: { selected?: boolean; editing?: boolean } = {},
-      { populated = true, cardConfig = {} }: { populated?: boolean; cardConfig?: Record<string, unknown> } = {},
+      { populated = true, cardConfig = {} }: { populated?: boolean; cardConfig?: CardConfig } = {},
     ) {
-      const composerValue = createComposerContext(undefined, cardConfig)
+      const composerValue = createHostIntegrationValue({ cardConfig, fileTypes: FILE_FILE_TYPES })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       const fileProps = populated ? populatedProps : { fileName: '', fileSize: '', fileSrc: '' }
       return render(

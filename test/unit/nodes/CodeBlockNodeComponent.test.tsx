@@ -4,8 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { DEFAULT_LABELS } from '@/labels/inkling-labels'
 import { CodeBlockNode } from '@/nodes/CodeBlockNode'
@@ -31,23 +32,10 @@ function createSelection(
   })
 }
 
-function createComposerContext(darkMode: boolean, cardConfig: Record<string, unknown> = {}) {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload: vi.fn(() => Promise.resolve(undefined)),
-        errors: [],
-      }),
-      fileTypes: {},
-    },
-    cardConfig,
-    darkMode,
-    labels: DEFAULT_LABELS,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
-    onError: vi.fn(),
-  }
+// the code preview's dark/light styling reads the UI-prefs context, a
+// separate lifecycle from the host-integration value (plan 047)
+function createUiPrefsValue(darkMode: boolean) {
+  return { darkMode, labels: DEFAULT_LABELS }
 }
 
 function addCodeBlockNode(editor: LexicalEditor): Promise<NodeKey> {
@@ -63,11 +51,11 @@ function addCodeBlockNode(editor: LexicalEditor): Promise<NodeKey> {
 }
 
 function renderComponent(nodeKey: NodeKey, darkMode: boolean) {
-  const composerValue = createComposerContext(darkMode)
+  const composerValue = createHostIntegrationValue()
   const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
   return render(
     <InklingHostIntegrationContext.Provider value={composerValue}>
-      <InklingUiPrefsContext.Provider value={composerValue}>
+      <InklingUiPrefsContext.Provider value={createUiPrefsValue(darkMode)}>
         <CardSelectionStoreProvider>
           <CodeBlockNodeComponent code="const a = 1" language="javascript" nodeKey={nodeKey} />
         </CardSelectionStoreProvider>
@@ -115,13 +103,13 @@ describe('CodeBlockNodeComponent', () => {
     function renderWithToolbar(
       nodeKey: NodeKey,
       selection: { selected?: boolean; editing?: boolean } = {},
-      cardConfig: Record<string, unknown> = {},
+      cardConfig: CardConfig = {},
     ) {
-      const composerValue = createComposerContext(false, cardConfig)
+      const composerValue = createHostIntegrationValue({ cardConfig })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
-          <InklingUiPrefsContext.Provider value={composerValue}>
+          <InklingUiPrefsContext.Provider value={createUiPrefsValue(false)}>
             <CardSelectionStoreProvider>
               <CodeBlockNodeComponent code="const a = 1" language="javascript" nodeKey={nodeKey} />
             </CardSelectionStoreProvider>

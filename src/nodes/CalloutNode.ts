@@ -1,21 +1,11 @@
-import type { EditorState, LexicalEditor } from 'lexical'
-
-import type { CalloutData } from '@/nodes/base/nodes/callout/CalloutNode'
+import type { CalloutNodeDataset } from '@/nodes/cards/card-commands'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { calloutDeclaration } from '@/nodes/cards/callout.declaration'
-
 export { $isCalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
 export type { SerializedCalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
 export { INSERT_CALLOUT_COMMAND } from '@/nodes/cards/card-commands'
-
-export type CalloutNodeDataset = CalloutData & {
-  calloutTextEditor?: LexicalEditor
-  // accepted for getDataset/clone symmetry but not read by the constructor —
-  // `__calloutTextEditorInitialState` is set internally when the editor is
-  // populated from its serialized HTML (src/utils/nested-editors.ts)
-  calloutTextEditorInitialState?: EditorState
-}
+export type { CalloutNodeDataset } from '@/nodes/cards/card-commands'
 
 /**
  * The registered class is assembled from the card declaration, and

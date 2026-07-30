@@ -281,6 +281,33 @@ function resolveCreateDocument(options: ExportDOMOptions): () => Document {
 }
 
 /**
+ * The options copied verbatim onto the context (documented at their
+ * interface declarations): the pass-through half of the seam. The key list
+ * is the single enumeration the factory copies from — a new pass-through
+ * option joins the options type, the interface, and this list, and the
+ * factory body never changes.
+ */
+const VERBATIM_OPTION_KEYS = [
+  'canTransformImage',
+  'canTransformImageToFormat',
+  'inklingVersion',
+  'pictureImageFormats',
+  'resolveRenderMeta',
+] as const satisfies readonly (keyof ExportDOMOptions)[]
+
+type VerbatimOptions = Pick<RenderContext, (typeof VERBATIM_OPTION_KEYS)[number]>
+
+function pickVerbatimOptions(options: ExportDOMOptions): VerbatimOptions {
+  const picked: Record<string, unknown> = {}
+  for (const key of VERBATIM_OPTION_KEYS) {
+    // the key list is satisfies-checked against ExportDOMOptions, so the
+    // untyped write stays inside the seam
+    picked[key] = options[key]
+  }
+  return picked as VerbatimOptions
+}
+
+/**
  * Builds the read-only render context for one render pass.
  */
 export function createRenderContext(options: ExportDOMOptions): RenderContext {
@@ -316,12 +343,8 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
   let boundDOMPurify: ReturnType<typeof DOMPurify> | undefined
 
   const context: RenderContext = {
+    ...pickVerbatimOptions(options),
     imageOptimization,
-    canTransformImage: options.canTransformImage,
-    canTransformImageToFormat: options.canTransformImageToFormat,
-    inklingVersion: options.inklingVersion,
-    pictureImageFormats: options.pictureImageFormats,
-    resolveRenderMeta: options.resolveRenderMeta,
     createDocument,
     safeUrl(kind, value) {
       return (kind === 'media' ? isSafeMediaUrl(value) : isSafeUrl(value)) ? value : ''

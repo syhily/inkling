@@ -2,7 +2,7 @@ import type { RenderContext } from '@/nodes/base/render-context'
 
 import { SHIKI_HTML_CONFIG } from '@/nodes/base/render-context'
 import { appendCardCaption } from '@/nodes/base/utils/append-card-caption'
-import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { hasRenderableSource, renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface CodeBlockNodeData {
   code: string
@@ -14,7 +14,7 @@ interface CodeBlockNodeData {
 export function renderCodeBlockNode(node: CodeBlockNodeData, context: RenderContext) {
   const document = context.createDocument()
 
-  if (!node.code || node.code.trim() === '') {
+  if (!hasRenderableSource(node.code)) {
     return renderEmptyContainer(document)
   }
 

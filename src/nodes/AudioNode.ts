@@ -1,16 +1,11 @@
-import type { AudioData } from '@/nodes/base/nodes/audio/AudioNode'
+import type { AudioNodeDataset } from '@/nodes/cards/card-commands'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { audioDeclaration } from '@/nodes/cards/audio.declaration'
-
 export { $isAudioNode } from '@/nodes/base/nodes/audio/AudioNode'
 export type { SerializedAudioNode } from '@/nodes/base/nodes/audio/AudioNode'
 export { INSERT_AUDIO_COMMAND } from '@/nodes/cards/card-commands'
-
-export type AudioNodeDataset = AudioData & {
-  initialFile?: File
-  triggerFileDialog?: boolean
-}
+export type { AudioNodeDataset } from '@/nodes/cards/card-commands'
 
 /**
  * The registered class is assembled from the card declaration, and

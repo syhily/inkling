@@ -1,6 +1,6 @@
 import type { TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
-import { fileOr, transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
+import { transientInitialFileProp, transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
 import { BaseFileNode } from '@/nodes/base/nodes/file/FileNode'
 
 import type { CardDeclaration } from './card-declaration'
@@ -10,9 +10,9 @@ import { INSERT_FILE_COMMAND } from './card-commands'
 // `as const` keeps the literal `name`s and `initial` value types on the
 // declaration's type — the `__*` field map derives both from them
 // (CardSpecFieldMap)
-const transientProps = [
+export const transientProps = [
   transientTriggerFileDialogProp,
-  { name: 'initialFile', initial: (dataset): File | undefined => fileOr(dataset.initialFile, undefined) },
+  transientInitialFileProp,
 ] as const satisfies readonly TransientPropSpec[]
 
 export const fileDeclaration = {

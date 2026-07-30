@@ -9,7 +9,7 @@ import { INSERT_HEADER_COMMAND } from './card-commands'
 
 // `as const` keeps the literal `name`s and value types on the declaration's
 // type — the `__*` field map derives both from them (CardSpecFieldMap)
-const nestedEditors = [
+export const nestedEditors = [
   {
     name: 'headerTextEditor',
     serializedKey: 'header',

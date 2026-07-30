@@ -51,27 +51,14 @@ import {
  * constrained node set below.
  */
 
-// The pre-declaration markdown card order — pinned so the derived views stay
-// identical to the pre-refactor arrays (transformer order affects matching).
-// Cards without a legacy rank (declared later) keep declaration order and
-// land after the pinned run. MarkdownNode is a base-only node, not a card —
-// it and MARKDOWN_CARD_TRANSFORMER stay manual.
-const MARKDOWN_CARD_ORDER = [
-  'codeblock',
-  'horizontalrule',
-  'image',
-  'html',
-  'file',
-  'button',
-  'audio',
-  'video',
-  'gallery',
-  'bookmark',
-  'toggle',
-  'callout',
-]
-
-const MARKDOWN_CARDS = deriveCardNodes(CARD_MARKDOWN_DECLARATIONS, MARKDOWN_CARD_ORDER)
+// The markdown-eligible cards in declaration order — the same order the
+// node sets compose. Transformer order among cards is unobservable (each
+// card transformer's export matches only its own node type; the import
+// regexes are per-card distinct), so no legacy rank is preserved; the
+// pinned literal in test/unit/nodes/derived-node-sets.test.ts guards drift.
+// MarkdownNode is a base-only node, not a card — it and
+// MARKDOWN_CARD_TRANSFORMER stay manual.
+const MARKDOWN_CARDS = deriveCardNodes(CARD_MARKDOWN_DECLARATIONS)
 
 // Exported (not part of the public `@/markdown` barrel) so the node-set diff
 // test can pin the derived arrays against the pre-refactor literals.

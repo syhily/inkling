@@ -1,9 +1,7 @@
-import type { GalleryData } from '@/nodes/base/nodes/gallery/GalleryNode'
-import type { CaptionEditorDataset } from '@/types/card-node-datasets'
+import type { GalleryNodeDataset } from '@/nodes/cards/card-commands'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { galleryDeclaration } from '@/nodes/cards/gallery.declaration'
-
 export {
   ALLOWED_IMAGE_PROPS,
   $isGalleryNode,
@@ -13,8 +11,7 @@ export {
 } from '@/nodes/base/nodes/gallery/GalleryNode'
 export type { SerializedGalleryNode } from '@/nodes/base/nodes/gallery/GalleryNode'
 export { INSERT_GALLERY_COMMAND } from '@/nodes/cards/card-commands'
-
-export type GalleryNodeDataset = GalleryData & CaptionEditorDataset
+export type { GalleryNodeDataset } from '@/nodes/cards/card-commands'
 
 /**
  * The registered class is assembled from the card declaration, and

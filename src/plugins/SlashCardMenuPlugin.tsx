@@ -41,16 +41,13 @@ function useSlashCardMenu(editor: LexicalEditor) {
 
   // the keyboard-selection state machine (wrap-around index, scroll-request
   // latch, reset-on-rebuild) lives in the headless menu navigator — created
-  // once, read through its snapshot; the command handlers below call in
+  // once, read through its snapshot (its subscribe/getSnapshot are
+  // closure-bound, so they ride useSyncExternalStore directly); the command
+  // handlers below call in
   const [menuNavigator] = React.useState<MenuNavigator>(() => createMenuNavigator())
-  const subscribeNavigator = React.useCallback(
-    (listener: () => void) => menuNavigator.subscribe(listener),
-    [menuNavigator],
-  )
-  const getNavigatorSnapshot = React.useCallback(() => menuNavigator.getSnapshot(), [menuNavigator])
   const { selectedItemIndex, scrollToSelectedItem } = React.useSyncExternalStore(
-    subscribeNavigator,
-    getNavigatorSnapshot,
+    menuNavigator.subscribe,
+    menuNavigator.getSnapshot,
   )
 
   // anchor: the trigger paragraph (the selection's closest <p>); the

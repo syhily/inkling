@@ -6,7 +6,7 @@ import type { ButtonNode } from '@/nodes/ButtonNode'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { ButtonCard } from '@/components/ui/cards/ButtonCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
-import { useCardWriter } from '@/hooks/useCardWriter'
+import { useCardChrome } from '@/hooks/useCardChrome'
 import { $isButtonNode } from '@/nodes/base'
 
 export interface ButtonNodeComponentProps {
@@ -24,7 +24,7 @@ export function ButtonNodeComponent({
   buttonUrl,
   nodeKey,
 }: ButtonNodeComponentProps) {
-  const write = useCardWriter(nodeKey, $isButtonNode)
+  const { write, setField } = useCardChrome(nodeKey, $isButtonNode)
   const isEditing = useCardIsEditing(nodeKey)
 
   const handleButtonTextChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -33,17 +33,9 @@ export function ButtonNodeComponent({
     })
   }
 
-  const handleButtonUrlChange = (value: string): void => {
-    write((node) => {
-      node.buttonUrl = value
-    })
-  }
+  const handleButtonUrlChange = setField('buttonUrl')
 
-  const handleAlignmentChange = (name: string): void => {
-    write((node) => {
-      node.alignment = name
-    })
-  }
+  const handleAlignmentChange = setField('alignment')
 
   return (
     <>

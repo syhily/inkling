@@ -1,14 +1,11 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { type NodeKey } from 'lexical'
-import React from 'react'
 
 import type { AudioNode } from '@/nodes/AudioNode'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { AudioCard } from '@/components/ui/cards/AudioCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { useCardWriter } from '@/hooks/useCardWriter'
+import { useCardChrome } from '@/hooks/useCardChrome'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import { $isAudioNode } from '@/nodes/base'
 import { audioThumbnailUploadIntent, audioUploadIntent } from '@/utils/upload-intent'
@@ -32,9 +29,8 @@ export function AudioNodeComponent({
   title,
   triggerFileDialog,
 }: AudioNodeComponentProps) {
-  const [editor] = useLexicalComposerContext()
-  const write = useCardWriter(nodeKey, $isAudioNode)
-  const { fileUploader } = React.useContext(InklingHostIntegrationContext)
+  const { editor, host, write, setField } = useCardChrome(nodeKey, $isAudioNode)
+  const { fileUploader } = host
   const isEditing = useCardIsEditing(nodeKey)
 
   const {
@@ -65,11 +61,7 @@ export function AudioNodeComponent({
     onFiles: (files, upload) => audioThumbnailUploadIntent({ editor, nodeKey, upload, files }),
   })
 
-  const setTitle = (newTitle: string) => {
-    write((node) => {
-      node.title = newTitle
-    })
-  }
+  const setTitle = setField('title')
 
   const removeThumbnail = () => {
     write((node) => {

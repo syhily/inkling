@@ -1,6 +1,6 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { hasRenderableSource, renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { bytesToSize } from '@/nodes/base/utils/size-byte-converter'
 
 interface FileNodeData {
@@ -14,7 +14,7 @@ interface FileNodeData {
 export function renderFileNode(node: FileNodeData, context: RenderContext) {
   const document = context.createDocument()
 
-  if (!node.src || node.src.trim() === '') {
+  if (!hasRenderableSource(node.src)) {
     return renderEmptyContainer(document)
   }
 

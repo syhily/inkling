@@ -4,12 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor, tick } from '#/utils/test-editor'
-import InklingHostIntegrationContext, {
-  type CardConfig,
-  type FileUploader,
-  type InklingHostIntegrationContextValue,
-} from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
 import { getImageDimensions } from '@/utils/getImageDimensions'
@@ -37,26 +34,6 @@ function createSelection(
   })
 }
 
-function createComposerContext(
-  fileTypes: NonNullable<FileUploader['fileTypes']> = {},
-  upload: ReturnType<FileUploader['useFileUpload']>['upload'] = vi.fn(() => Promise.resolve(undefined)),
-  cardConfig: CardConfig = {},
-): InklingHostIntegrationContextValue {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload,
-        progress: 0,
-        errors: [],
-      }),
-      fileTypes,
-    },
-    cardConfig,
-    onError: vi.fn(),
-  }
-}
-
 describe('ImageNodeComponent', () => {
   let editor: LexicalEditor
   let createObjectURLSpy: ReturnType<typeof vi.spyOn>
@@ -76,7 +53,7 @@ describe('ImageNodeComponent', () => {
   })
 
   it('renders with typed refs when fileTypes is empty', () => {
-    const composerValue = createComposerContext({})
+    const composerValue = createHostIntegrationValue()
     const { wrapper: CardSelectionStoreProvider } = createSelection()
     render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
@@ -90,7 +67,9 @@ describe('ImageNodeComponent', () => {
   })
 
   it('renders when image mimeTypes are provided', () => {
-    const composerValue = createComposerContext({ image: { mimeTypes: ['image/png', 'image/jpeg'] } })
+    const composerValue = createHostIntegrationValue({
+      fileTypes: { image: { mimeTypes: ['image/png', 'image/jpeg'] } },
+    })
     const { wrapper: CardSelectionStoreProvider } = createSelection()
     render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
@@ -105,7 +84,7 @@ describe('ImageNodeComponent', () => {
 
   it('opens the file dialog once when triggerFileDialog is true', async () => {
     const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {})
-    const composerValue = createComposerContext({ image: { mimeTypes: ['image/png'] } })
+    const composerValue = createHostIntegrationValue({ fileTypes: { image: { mimeTypes: ['image/png'] } } })
     const { wrapper: CardSelectionStoreProvider } = createSelection()
     render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
@@ -121,7 +100,7 @@ describe('ImageNodeComponent', () => {
 
   it('uploads the initial file when the card has no src', async () => {
     const upload = vi.fn(() => Promise.resolve(undefined))
-    const composerValue = createComposerContext({ image: { mimeTypes: ['image/png'] } }, upload)
+    const composerValue = createHostIntegrationValue({ fileTypes: { image: { mimeTypes: ['image/png'] } }, upload })
     const { wrapper: CardSelectionStoreProvider } = createSelection()
     const file = new File(['image'], 'photo.png', { type: 'image/png' })
 
@@ -142,7 +121,7 @@ describe('ImageNodeComponent', () => {
 
   it('does not upload the initial file when the card already has a src', async () => {
     const upload = vi.fn(() => Promise.resolve(undefined))
-    const composerValue = createComposerContext({ image: { mimeTypes: ['image/png'] } }, upload)
+    const composerValue = createHostIntegrationValue({ fileTypes: { image: { mimeTypes: ['image/png'] } }, upload })
     const { wrapper: CardSelectionStoreProvider } = createSelection()
     const file = new File(['image'], 'photo.png', { type: 'image/png' })
 
@@ -175,13 +154,12 @@ describe('ImageNodeComponent', () => {
     function renderWithToolbar(
       nodeKey: NodeKey,
       selection: { selected?: boolean; editing?: boolean } = {},
-      {
-        src = '/image.png',
-        href,
-        cardConfig = {},
-      }: { src?: string; href?: string; cardConfig?: Record<string, unknown> } = {},
+      { src = '/image.png', href, cardConfig = {} }: { src?: string; href?: string; cardConfig?: CardConfig } = {},
     ) {
-      const composerValue = createComposerContext({ image: { mimeTypes: ['image/png'] } }, undefined, cardConfig)
+      const composerValue = createHostIntegrationValue({
+        fileTypes: { image: { mimeTypes: ['image/png'] } },
+        cardConfig,
+      })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>

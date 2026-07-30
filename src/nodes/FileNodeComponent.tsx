@@ -1,4 +1,3 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { type NodeKey } from 'lexical'
 import React from 'react'
 
@@ -7,7 +6,7 @@ import type { FileNode } from '@/nodes/FileNode'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { FileCard } from '@/components/ui/cards/FileCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
-import { useCardWriter } from '@/hooks/useCardWriter'
+import { useCardChrome } from '@/hooks/useCardChrome'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import { $isFileNode } from '@/nodes/base'
@@ -38,8 +37,7 @@ function FileNodeComponent({
   triggerFileDialog,
   initialFile,
 }: FileNodeComponentProps) {
-  const [editor] = useLexicalComposerContext()
-  const write = useCardWriter(nodeKey, $isFileNode)
+  const { editor, write } = useCardChrome(nodeKey, $isFileNode)
   const labels = useInklingLabels()
   // populated is a latch (below); a card MOUNTED with a complete file never
   // transitions, so the initial state must start populated

@@ -5,12 +5,9 @@ import { $getNodeByKey, $getRoot, createEditor, type LexicalEditor, type NodeKey
 import { afterEach, beforeEach, describe, expect, it, vi, type MockedFunction } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { tick, updateEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext, {
-  type CardConfig,
-  type FileUploader,
-  type InklingHostIntegrationContextValue,
-} from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, { type FileUploader } from '@/context/InklingHostIntegrationContext'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { VideoNode, $createVideoNode } from '@/nodes/VideoNode'
 import { VideoNodeComponent } from '@/nodes/VideoNodeComponent'
@@ -63,20 +60,7 @@ function createUploadMock(overrides: Partial<UploadMock> = {}): UploadMock {
   }
 }
 
-function createComposerContext(
-  uploads: Partial<Record<Parameters<FileUploader['useFileUpload']>[0], UploadMock>> = {},
-  cardConfig: CardConfig = {},
-): InklingHostIntegrationContextValue {
-  const defaultUpload = createUploadMock()
-  return {
-    fileUploader: {
-      useFileUpload: (type) => uploads[type] ?? defaultUpload,
-      fileTypes: { image: { mimeTypes: ['image/png'] }, video: { mimeTypes: ['video/mp4'] } },
-    },
-    cardConfig,
-    onError: vi.fn(),
-  }
-}
+const VIDEO_FILE_TYPES = { image: { mimeTypes: ['image/png'] }, video: { mimeTypes: ['video/mp4'] } }
 
 function addVideoNode(editor: LexicalEditor, loop: boolean) {
   return new Promise<NodeKey>((resolve) => {
@@ -146,7 +130,7 @@ describe('VideoNodeComponent', () => {
   })
 
   interface RenderOptions {
-    initialFile?: File | null
+    initialFile?: File
     thumbnail?: string
     customThumbnail?: string
     triggerFileDialog?: boolean
@@ -155,7 +139,7 @@ describe('VideoNodeComponent', () => {
 
   function renderComponent(nodeKey: NodeKey, isLoopChecked: boolean, options: RenderOptions = {}) {
     const {
-      initialFile = null,
+      initialFile,
       thumbnail = 'https://example.com/thumb.jpg',
       customThumbnail = '',
       triggerFileDialog = false,
@@ -163,7 +147,7 @@ describe('VideoNodeComponent', () => {
     } = options
     const collaborationValue = createCollaborationContext()
     const composerValue = createLexicalComposerContext(editor)
-    const inklingComposerValue = createComposerContext(uploads)
+    const inklingComposerValue = createHostIntegrationValue({ uploads, fileTypes: VIDEO_FILE_TYPES })
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
 
     return render(
@@ -408,7 +392,7 @@ describe('VideoNodeComponent', () => {
     ) {
       const collaborationValue = createCollaborationContext()
       const composerValue = createLexicalComposerContext(editor)
-      const inklingComposerValue = createComposerContext({}, cardConfig)
+      const inklingComposerValue = createHostIntegrationValue({ cardConfig, fileTypes: VIDEO_FILE_TYPES })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, { editing: false, ...selection })
 
       return render(
@@ -421,7 +405,7 @@ describe('VideoNodeComponent', () => {
                   captionEditorInitialState={undefined}
                   cardWidth="regular"
                   customThumbnail={customThumbnail}
-                  initialFile={null}
+                  initialFile={undefined}
                   isLoopChecked={false}
                   nodeKey={nodeKey}
                   thumbnail={thumbnail}

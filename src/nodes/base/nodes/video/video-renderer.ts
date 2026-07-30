@@ -1,8 +1,9 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { formatVideoDuration } from '@/nodes/base/nodes/video/format-video-duration'
+import { CARD_CAPTION_MARKER_CLASS, renderCardCaptionHtml } from '@/nodes/base/utils/append-card-caption'
 import { getFirstHtmlElement } from '@/nodes/base/utils/get-first-html-element'
-import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { isSafeRenderableSource, renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface VideoNodeData {
   src: string
@@ -27,7 +28,7 @@ function getPosterSpacerSrc(width: number, height: number) {
 export function renderVideoNode(node: VideoNodeData, context: RenderContext) {
   const document = context.createDocument()
 
-  if (!node.src || node.src.trim() === '' || context.safeUrl('media', node.src) === '') {
+  if (!isSafeRenderableSource(context, 'media', node.src)) {
     return renderEmptyContainer(document)
   }
 
@@ -57,7 +58,6 @@ export function cardTemplate({
   const safeThumbnailSrc = context.safeUrl('media', node.thumbnailSrc)
   const safeCustomThumbnailSrc = context.safeUrl('media', node.customThumbnailSrc)
   const thumbnailSrc = safeCustomThumbnailSrc || safeThumbnailSrc
-  const escapedCaption = node.caption ? context.escapeText(node.caption) : ''
   const hideControlsClass = node.loop ? ' inkling-video-hide' : ''
 
   return `
@@ -113,7 +113,7 @@ export function cardTemplate({
                     </div>
                 </div>
             </div>
-            ${escapedCaption ? `<figcaption>${escapedCaption}</figcaption>` : ''}
+            ${node.caption ? renderCardCaptionHtml(node.caption, context, 'escape') : ''}
         </figure>
     `
 }
@@ -125,7 +125,7 @@ export function getCardClasses(node: VideoNodeData) {
     cardClasses.push(`inkling-width-${node.cardWidth}`)
   }
   if (node.caption) {
-    cardClasses.push(`inkling-card-hascaption`)
+    cardClasses.push(CARD_CAPTION_MARKER_CLASS)
   }
 
   return cardClasses

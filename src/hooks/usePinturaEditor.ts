@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 
+import { useDisposableStore } from '@/hooks/useDisposableStore'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import trackEvent from '@/utils/analytics'
 import {
@@ -75,11 +76,10 @@ export default function usePinturaEditor({
 
   // the loader is recreated on jsUrl/cssUrl change; the old generation is
   // disposed so a stale in-flight load never flips the new loader's flags
-  const loader = useMemo(
+  const loader = useDisposableStore(
     () => createPinturaAssetLoader({ jsUrl: config?.jsUrl, cssUrl: config?.cssUrl }, createDomPorts()),
     [config?.jsUrl, config?.cssUrl],
   )
-  useEffect(() => () => loader.dispose(), [loader])
   const { scriptLoaded, cssLoaded, error: assetError } = useSyncExternalStore(loader.subscribe, loader.getSnapshot)
   // the editor's own loaderror channel (asset errors ride the loader's snapshot)
   const [editorError, setEditorError] = useState<Error | null>(null)

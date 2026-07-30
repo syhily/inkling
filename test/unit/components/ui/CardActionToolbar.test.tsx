@@ -5,32 +5,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { CardActionToolbar, type CardToolbarItem } from '@/components/ui/CardActionToolbar'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { ButtonNode } from '@/nodes/ButtonNode'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
-
-function createComposerContext(cardConfig: Record<string, unknown> = {}) {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload: vi.fn(() => Promise.resolve(undefined)),
-        errors: [],
-      }),
-      fileTypes: {},
-    },
-    cardConfig,
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
-    onError: vi.fn(),
-  }
-}
 
 function getToolbars(container: HTMLElement, card = 'button') {
   return container.querySelectorAll(`[data-inkling-card-toolbar="${card}"]`)
@@ -68,10 +51,10 @@ describe('CardActionToolbar', () => {
   }: {
     selected?: boolean
     editing?: boolean
-    cardConfig?: Record<string, unknown>
+    cardConfig?: CardConfig
     props?: Partial<Parameters<typeof CardActionToolbar>[0]>
   } = {}) {
-    const composerValue = createComposerContext(cardConfig)
+    const composerValue = createHostIntegrationValue({ cardConfig })
     const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper({
       initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
     })

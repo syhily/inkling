@@ -1,5 +1,4 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $createNodeSelection, $setSelection, type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
+import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
 import React from 'react'
 
 import type { ImageNode } from '@/nodes/ImageNode'
@@ -10,13 +9,13 @@ import { ImageCard } from '@/components/ui/cards/ImageCard'
 import { LinkInput } from '@/components/ui/LinkInput'
 import { UploadFileInput } from '@/components/ui/UploadChrome'
 import { useCardIsSelected } from '@/context/CardSelectionStoreContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { useCardWriter } from '@/hooks/useCardWriter'
+import { useCardChrome } from '@/hooks/useCardChrome'
 import useDropTarget from '@/hooks/useDropTarget'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { isCardWidth, normalizeCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
 import { $isImageNode } from '@/nodes/ImageNode'
+import { $selectCard } from '@/plugins/behaviour/card-adjacency'
 import { applyImageCardDrop, isImageCardDropAllowed } from '@/plugins/behaviour/drop-surgery'
 import { backfillImageDimensions, clampImageCardWidth, migrateImageDataUrl } from '@/plugins/behaviour/image-lifecycle'
 import { getAllowedImageCardWidths } from '@/utils/image-card-widths'
@@ -50,10 +49,9 @@ export function ImageNodeComponent({
   href,
   cardWidth,
 }: ImageNodeComponentProps) {
-  const [editor] = useLexicalComposerContext()
-  const write = useCardWriter(nodeKey, $isImageNode)
+  const { editor, host, write, setField } = useCardChrome(nodeKey, $isImageNode)
+  const { fileUploader, cardConfig, onError } = host
   const [showLink, setShowLink] = React.useState(false)
-  const { fileUploader, cardConfig, onError } = React.useContext(InklingHostIntegrationContext)
   const isSelected = useCardIsSelected(nodeKey)
   const toolbarFileInputRef = React.useRef<HTMLInputElement | null>(null)
 
@@ -133,17 +131,9 @@ export function ImageNodeComponent({
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const setHref = (newHref: string) => {
-    write((node) => {
-      node.href = newHref
-    })
-  }
+  const setHref = setField('href')
 
-  const setAltText = (newAltText: string) => {
-    write((node) => {
-      node.alt = newAltText
-    })
-  }
+  const setAltText = setField('alt')
 
   const handleImageCardResize = React.useCallback(
     (newWidth: unknown) => {
@@ -169,11 +159,12 @@ export function ImageNodeComponent({
     reselectImageCard()
   }
 
+  // selection repair after the link toolbar closes — through the one home
+  // of the select-a-card operation; focus stays untouched ('never': the
+  // toolbar's own close policy owns focus)
   const reselectImageCard = () => {
     editor.update(() => {
-      const nodeSelection = $createNodeSelection()
-      nodeSelection.add(nodeKey)
-      $setSelection(nodeSelection)
+      $selectCard(editor, nodeKey, { focus: 'never' })
     })
   }
 

@@ -1,7 +1,7 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { appendCardCaption } from '@/nodes/base/utils/append-card-caption'
-import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { isSafeRenderableSource, renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface BookmarkNodeData {
   url: string
@@ -24,7 +24,7 @@ function getSafeMediaUrls(node: BookmarkNodeData, context: RenderContext) {
 export function renderBookmarkNode(node: BookmarkNodeData, context: RenderContext) {
   const document = context.createDocument()
 
-  if (!node.url || node.url.trim() === '' || context.safeUrl('navigation', node.url) === '') {
+  if (!isSafeRenderableSource(context, 'navigation', node.url)) {
     return renderEmptyContainer(document)
   }
 

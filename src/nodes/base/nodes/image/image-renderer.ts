@@ -2,7 +2,7 @@ import type { RenderContext } from '@/nodes/base/render-context'
 
 import { appendCardCaption } from '@/nodes/base/utils/append-card-caption'
 import { getExportImageDimensions } from '@/nodes/base/utils/export-image-sizing'
-import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { isSafeRenderableSource, renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 import { getSrcsetAttribute, setSrcsetAttribute } from '@/nodes/base/utils/srcset-attribute'
 
 const MODERN_IMAGE_FORMATS = ['avif', 'webp']
@@ -30,7 +30,7 @@ interface ImageNodeData {
 export function renderImageNode(node: ImageNodeData, context: RenderContext) {
   const document = context.createDocument()
 
-  if (!node.src || node.src.trim() === '' || context.safeUrl('media', node.src) === '') {
+  if (!isSafeRenderableSource(context, 'media', node.src)) {
     return renderEmptyContainer(document)
   }
 

@@ -4,6 +4,7 @@ import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { updateEditor } from '#/utils/test-editor'
 import { SnippetActionToolbar } from '@/components/ui/SnippetActionToolbar'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
@@ -28,29 +29,13 @@ function selectText(editor: LexicalEditor, text: string): Promise<void> {
   })
 }
 
-function createComposerContext(createSnippet?: (args: { name: string; value: string }) => void) {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload: vi.fn(() => Promise.resolve(undefined)),
-        errors: [],
-      }),
-      fileTypes: {},
-    },
-    cardConfig: { createSnippet, snippets: [] as Array<{ name: string; value: string }> },
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
-    onError: vi.fn(),
-  }
-}
-
 function renderToolbar(
   createSnippet: ((args: { name: string; value: string }) => void) | undefined,
   onClose: () => void,
 ) {
-  const composerValue = createComposerContext(createSnippet)
+  const composerValue = createHostIntegrationValue({
+    cardConfig: { createSnippet, snippets: [] as Array<{ name: string; value: string }> },
+  })
   return render(
     <InklingHostIntegrationContext.Provider value={composerValue}>
       <SnippetActionToolbar onClose={onClose} />

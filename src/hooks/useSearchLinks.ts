@@ -40,9 +40,9 @@ export const useSearchLinks = (
     coordinator.setQuery(query)
   }, [coordinator, query])
 
-  const subscribe = React.useCallback((listener: () => void) => coordinator.subscribe(listener), [coordinator])
-  const getSnapshot = React.useCallback(() => coordinator.getSnapshot(), [coordinator])
-  const snapshot = React.useSyncExternalStore(subscribe, getSnapshot)
+  // the coordinator's subscribe/getSnapshot are closure-bound, so they ride
+  // useSyncExternalStore directly — a recreated coordinator re-subscribes
+  const snapshot = React.useSyncExternalStore(coordinator.subscribe, coordinator.getSnapshot)
 
   return {
     isSearching: snapshot.isSearching,

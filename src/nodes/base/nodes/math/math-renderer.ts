@@ -1,7 +1,7 @@
 import type { RenderContext } from '@/nodes/base/render-context'
 
 import { MATH_HTML_CONFIG } from '@/nodes/base/render-context'
-import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { hasRenderableSource, renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 import { resolveMathArtifact } from './math-artifacts'
 
@@ -14,7 +14,7 @@ interface MathNodeData {
 export function renderMathNode(node: MathNodeData, context: RenderContext) {
   const document = context.createDocument()
 
-  if (!node.tex || node.tex.trim() === '') {
+  if (!hasRenderableSource(node.tex)) {
     return renderEmptyContainer(document)
   }
 

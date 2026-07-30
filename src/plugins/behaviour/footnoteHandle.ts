@@ -22,33 +22,26 @@ export interface FootnoteHandleState {
 }
 
 export interface FootnoteHandle extends ComposerHandle<FootnoteHandleState> {
-  /** Publish fresh render-time maps; swallowed when nothing changed (per-key reference compare on both records). */
+  /** Publish fresh render-time maps; the factory's record-aware change guard swallows a content-equal publish. */
   publishMaps: (indices: Record<string, number>, definitionNodeKeys: Record<string, NodeKey>) => void
   /** File a focus handoff for a freshly inserted definition. */
   requestFocus: (targetKey: string) => void
 }
 
-function isSameMap<V>(a: Record<string, V>, b: Record<string, V>): boolean {
-  const aKeys = Object.keys(a)
-  const bKeys = Object.keys(b)
-  return aKeys.length === bKeys.length && aKeys.every((key) => a[key] === b[key])
-}
-
 export function createFootnoteHandle(): FootnoteHandle {
-  const handle = createComposerHandle<FootnoteHandleState>({
-    indices: {},
-    definitionNodeKeys: {},
-    focusRequest: null,
-  })
+  const handle = createComposerHandle<FootnoteHandleState>(
+    {
+      indices: {},
+      definitionNodeKeys: {},
+      focusRequest: null,
+    },
+    { recordKeys: ['indices', 'definitionNodeKeys'] },
+  )
 
   return {
     ...handle,
 
     publishMaps(indices, definitionNodeKeys) {
-      const current = handle.getState()
-      if (isSameMap(current.indices, indices) && isSameMap(current.definitionNodeKeys, definitionNodeKeys)) {
-        return
-      }
       handle.setState({ indices, definitionNodeKeys })
     },
 

@@ -4,12 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor, tick } from '#/utils/test-editor'
-import InklingHostIntegrationContext, {
-  type CardConfig,
-  type FileUploader,
-  type InklingHostIntegrationContextValue,
-} from '@/context/InklingHostIntegrationContext'
+import InklingHostIntegrationContext, { type FileUploader } from '@/context/InklingHostIntegrationContext'
 import { AudioNode, $createAudioNode } from '@/nodes/AudioNode'
 import { AudioNodeComponent } from '@/nodes/AudioNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
@@ -29,28 +26,7 @@ function createSelection(
   })
 }
 
-function createComposerContext({
-  upload = vi.fn(() => Promise.resolve(undefined)),
-  isLoading = false,
-  cardConfig = {},
-}: {
-  upload?: ReturnType<FileUploader['useFileUpload']>['upload']
-  isLoading?: boolean
-  cardConfig?: CardConfig
-} = {}): InklingHostIntegrationContextValue {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading,
-        upload,
-        errors: [],
-      }),
-      fileTypes: { audio: { mimeTypes: ['audio/mpeg'] }, image: { mimeTypes: ['image/png'] } },
-    },
-    cardConfig,
-    onError: vi.fn(),
-  }
-}
+const AUDIO_FILE_TYPES = { audio: { mimeTypes: ['audio/mpeg'] }, image: { mimeTypes: ['image/png'] } }
 
 function addAudioNode(editor: LexicalEditor) {
   return new Promise<NodeKey>((resolve) => {
@@ -116,7 +92,7 @@ describe('AudioNodeComponent', () => {
       upload = vi.fn(() => Promise.resolve(undefined)),
       isLoading = false,
     } = options
-    const composerValue = createComposerContext({ upload, isLoading })
+    const composerValue = createHostIntegrationValue({ upload, isLoading, fileTypes: AUDIO_FILE_TYPES })
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     return render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
@@ -206,7 +182,7 @@ describe('AudioNodeComponent', () => {
       selection: { selected?: boolean; editing?: boolean } = {},
       { src = '/audio.mp3', cardConfig = {} } = {},
     ) {
-      const composerValue = createComposerContext({ cardConfig })
+      const composerValue = createHostIntegrationValue({ cardConfig, fileTypes: AUDIO_FILE_TYPES })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>

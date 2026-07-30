@@ -1,17 +1,11 @@
-import type { CodeBlockData } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
-import type { CaptionEditorDataset } from '@/types/card-node-datasets'
+import type { CodeBlockNodeDataset } from '@/nodes/cards/card-commands'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { codeBlockDeclaration } from '@/nodes/cards/codeblock.declaration'
-
 export { $isCodeBlockNode } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
 export type { SerializedCodeBlockNode } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
 export { INSERT_CODE_BLOCK_COMMAND } from '@/nodes/cards/card-commands'
-
-export type CodeBlockNodeDataset = CodeBlockData &
-  CaptionEditorDataset & {
-    _openInEditMode?: boolean
-  }
+export type { CodeBlockNodeDataset } from '@/nodes/cards/card-commands'
 
 /**
  * The registered class is assembled from the card declaration, and

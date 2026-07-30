@@ -27,6 +27,21 @@ import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
 export type MediaUploadKind = 'image' | 'video' | 'audio' | 'file' | 'mediaThumbnail'
 export type MediaUploader = ReturnType<FileUploader['useFileUpload']>
 
+/**
+ * The bare host-uploader channel for one media kind — the one home of the
+ * host-hook identity contract (the composer requires `useFileUpload` to be
+ * identity-stable for the editor's lifetime, so this call returns the same
+ * function every render; the compiler cannot verify context provenance).
+ * Channels without input/drag/dialog wiring (video's main→thumbnail
+ * composition uploads its synthesized thumbnail through this) use it
+ * directly instead of re-typing the contract's lint suppression.
+ */
+export function useMediaUploader(kind: MediaUploadKind): MediaUploader {
+  const { fileUploader } = React.useContext(InklingHostIntegrationContext)
+  // oxlint-disable-next-line react/react-compiler -- host-provided hook; identity is a composer contract
+  return fileUploader.useFileUpload(kind)
+}
+
 /** Which entry point fired: the hidden input, a file drop, or the initial file. */
 export type MediaUploadSource = 'input' | 'drop' | 'initial'
 
@@ -69,11 +84,7 @@ export function useMediaCardUpload({
 }: UseMediaCardUploadOptions): UseMediaCardUploadResult {
   const [editor] = useLexicalComposerContext()
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
-  // host-provided hook seam: the composer contract requires useFileUpload to
-  // be identity-stable for the editor's lifetime, so this call is the same
-  // function every render (the compiler cannot verify context provenance)
-  // oxlint-disable-next-line react/react-compiler -- host-provided hook; identity is a composer contract
-  const uploader = fileUploader.useFileUpload(kind)
+  const uploader = useMediaUploader(kind)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
 
   const runFiles = React.useCallback(

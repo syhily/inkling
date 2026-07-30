@@ -1,14 +1,12 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { type EditorState, type LexicalEditor, type NodeKey } from 'lexical'
-import { useContext, useEffect } from 'react'
+import { useEffect } from 'react'
 
 import type { HeaderNode } from '@/nodes/HeaderNode'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { useCardWriter } from '@/hooks/useCardWriter'
+import { useCardChrome } from '@/hooks/useCardChrome'
 import { useHeaderBackgroundImage } from '@/hooks/useHeaderBackgroundImage'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
@@ -65,9 +63,8 @@ function HeaderNodeComponent({
   isSwapped,
   accentColor,
 }: HeaderNodeComponentProps) {
-  const [editor] = useLexicalComposerContext()
-  const write = useCardWriter(nodeKey, $isHeaderNode)
-  const { cardConfig } = useContext(InklingHostIntegrationContext)
+  const { editor, host, write } = useCardChrome(nodeKey, $isHeaderNode)
+  const { cardConfig } = host
   const isEditing = useCardIsEditing(nodeKey)
 
   const { isEnabled: isPinturaEnabled, openEditor: openImageEditor } = usePinturaEditor({

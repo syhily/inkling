@@ -5,6 +5,7 @@ import { createEditor, $getRoot, type LexicalEditor, type NodeKey } from 'lexica
 import { describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { CARD_DECLARATIONS } from '@/nodes/cards'
@@ -19,24 +20,6 @@ function createLexicalComposerContext(editor: LexicalEditor): [LexicalEditor, { 
 
 function createCollaborationContext() {
   return { color: '#000000', isCollabActive: false, name: 'test', yjsDocMap: new Map() }
-}
-
-function createComposerContext(cardConfig: Record<string, unknown> = {}) {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload: vi.fn(() => Promise.resolve(undefined)),
-        errors: [],
-      }),
-      fileTypes: { image: { mimeTypes: ['image/png'] } },
-    },
-    cardConfig,
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
-    onError: vi.fn(),
-  }
 }
 
 function addHeaderNode(editor: LexicalEditor) {
@@ -74,7 +57,10 @@ describe('card toolbar labels as a derived view over the declarations', () => {
     const nodeKey = await addHeaderNode(editor)
     const collaborationValue = createCollaborationContext()
     const composerValue = createLexicalComposerContext(editor)
-    const inklingComposerValue = createComposerContext({ createSnippet: vi.fn() })
+    const inklingComposerValue = createHostIntegrationValue({
+      cardConfig: { createSnippet: vi.fn() },
+      fileTypes: { image: { mimeTypes: ['image/png'] } },
+    })
     const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper({
       initialState: { selectedCardKey: nodeKey },
     })

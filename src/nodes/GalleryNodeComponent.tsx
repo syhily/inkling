@@ -7,7 +7,7 @@ import type { GalleryImage } from '@/types/gallery'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { GalleryCard } from '@/components/ui/cards/GalleryCard'
 import { useCardIsSelected } from '@/context/CardSelectionStoreContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useCardChrome } from '@/hooks/useCardChrome'
 import { useGalleryImages } from '@/hooks/useGalleryImages'
 import useGalleryReorder from '@/hooks/useGalleryReorder'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
@@ -22,7 +22,8 @@ export interface GalleryNodeComponentProps {
 }
 
 export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInitialState }: GalleryNodeComponentProps) {
-  const { fileUploader } = React.useContext(InklingHostIntegrationContext)
+  const { host } = useCardChrome(nodeKey, $isGalleryNode)
+  const { fileUploader } = host
   const isSelected = useCardIsSelected(nodeKey)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const { images, setImages, setPreviewImages } = useGalleryImages(nodeKey)

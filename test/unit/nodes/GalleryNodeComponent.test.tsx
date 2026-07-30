@@ -6,11 +6,11 @@ import type { GalleryImage } from '@/types/gallery'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor } from '#/utils/test-editor'
 import InklingHostIntegrationContext, {
   type CardConfig,
   type FileUploader,
-  type InklingHostIntegrationContextValue,
 } from '@/context/InklingHostIntegrationContext'
 import { $isGalleryNode } from '@/nodes/base'
 import { GalleryNode } from '@/nodes/GalleryNode'
@@ -40,23 +40,7 @@ function createSelection(
   })
 }
 
-function createComposerContext(
-  upload: ReturnType<FileUploader['useFileUpload']>['upload'] = vi.fn(() => Promise.resolve(undefined)),
-  cardConfig: CardConfig = {},
-): InklingHostIntegrationContextValue {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload,
-        errors: [],
-      }),
-      fileTypes: { image: { mimeTypes: ['image/png'] } },
-    },
-    cardConfig,
-    onError: vi.fn(),
-  }
-}
+const IMAGE_FILE_TYPES = { image: { mimeTypes: ['image/png'] } }
 
 function addGalleryNode(
   editor: LexicalEditor,
@@ -101,7 +85,7 @@ describe('GalleryNodeComponent', () => {
   })
 
   function renderComponent(nodeKey: NodeKey, upload?: ReturnType<FileUploader['useFileUpload']>['upload']) {
-    const composerValue = createComposerContext(upload)
+    const composerValue = createHostIntegrationValue({ upload, fileTypes: IMAGE_FILE_TYPES })
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     return render(
       <InklingHostIntegrationContext.Provider value={composerValue}>
@@ -275,9 +259,9 @@ describe('GalleryNodeComponent', () => {
     function renderWithToolbar(
       nodeKey: NodeKey,
       selection: { selected?: boolean; editing?: boolean } = {},
-      cardConfig: Record<string, unknown> = {},
+      cardConfig: CardConfig = {},
     ) {
-      const composerValue = createComposerContext(undefined, cardConfig)
+      const composerValue = createHostIntegrationValue({ cardConfig, fileTypes: IMAGE_FILE_TYPES })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>

@@ -6,7 +6,7 @@ import type { CalloutNode } from '@/nodes/CalloutNode'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { CALLOUT_COLORS, CalloutCard, type CalloutColorName } from '@/components/ui/cards/CalloutCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
-import { useCardWriter } from '@/hooks/useCardWriter'
+import { useCardChrome } from '@/hooks/useCardChrome'
 import { $isCalloutNode } from '@/nodes/base'
 
 // backgroundColor is a free string on the node — HTML import captures any
@@ -41,18 +41,11 @@ export function CalloutNodeComponent({
   calloutTextEditor,
   calloutTextEditorInitialState,
 }: CalloutNodeComponentProps) {
-  const write = useCardWriter(nodeKey, $isCalloutNode)
+  const { write, setField } = useCardChrome(nodeKey, $isCalloutNode)
   const isEditing = useCardIsEditing(nodeKey)
   const [showEmojiPicker, setShowEmojiPicker] = React.useState<boolean>(false)
 
-  const handleEmojiChange = React.useCallback(
-    (newEmoji: string): void => {
-      write((node) => {
-        node.calloutEmoji = newEmoji
-      })
-    },
-    [write],
-  )
+  const handleEmojiChange = setField('calloutEmoji')
 
   const handleEmojiSelect = React.useCallback(
     (newEmoji: unknown): void => {

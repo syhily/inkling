@@ -1,13 +1,11 @@
 import { type NodeKey } from 'lexical'
-import React from 'react'
 
 import type { MathNode } from '@/nodes/MathNode'
 
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { MathCard } from '@/components/ui/cards/MathCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
-import { useCardWriter } from '@/hooks/useCardWriter'
+import { useCardChrome } from '@/hooks/useCardChrome'
 import { useReselectOnEscape } from '@/hooks/useReselectOnEscape'
 import { $isMathNode } from '@/nodes/MathNode'
 
@@ -19,19 +17,12 @@ export interface MathNodeComponentProps {
 }
 
 export function MathNodeComponent({ nodeKey, tex, mathml, svg }: MathNodeComponentProps) {
-  const write = useCardWriter(nodeKey, $isMathNode)
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
+  const { host, setField } = useCardChrome(nodeKey, $isMathNode)
+  const { cardConfig } = host
   const isEditing = useCardIsEditing(nodeKey)
   const exitEditMode = useReselectOnEscape(nodeKey)
 
-  const updateTex = React.useCallback(
-    (value: string) => {
-      write((node) => {
-        node.tex = value
-      })
-    },
-    [write],
-  )
+  const updateTex = setField('tex')
 
   return (
     <>

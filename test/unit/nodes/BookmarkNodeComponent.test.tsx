@@ -15,7 +15,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { createHostIntegrationValue } from '#/utils/host-integration-context'
+import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { BookmarkNode, $createBookmarkNode, $isBookmarkNode } from '@/nodes/BookmarkNode'
 import { BookmarkNodeComponent } from '@/nodes/BookmarkNodeComponent'
 import trackEvent from '@/utils/analytics'
@@ -65,27 +66,7 @@ function createSelection(
   })
 }
 
-function createComposerContext(
-  overrides: Partial<React.ContextType<typeof InklingHostIntegrationContext>['cardConfig']> = {},
-) {
-  return {
-    fileUploader: {
-      useFileUpload: () => ({
-        isLoading: false,
-        upload: vi.fn(() => Promise.resolve(undefined)),
-        errors: [],
-      }),
-      fileTypes: { image: { mimeTypes: ['image/png'] } },
-    },
-    cardConfig: {
-      ...overrides,
-    },
-    darkMode: false,
-    enableMultiplayer: false,
-    createWebsocketProvider: vi.fn(),
-    onError: vi.fn(),
-  }
-}
+const IMAGE_FILE_TYPES = { image: { mimeTypes: ['image/png'] } }
 
 function addBookmarkNode(editor: LexicalEditor, url: string) {
   return new Promise<NodeKey>((resolve) => {
@@ -111,7 +92,7 @@ describe('BookmarkNodeComponent', () => {
     const fetchEmbed = vi.fn().mockRejectedValue(new Error('Network error'))
     const nodeKey = await addBookmarkNode(editor, 'https://example.com')
 
-    const composerValue = createComposerContext({ fetchEmbed })
+    const composerValue = createHostIntegrationValue({ cardConfig: { fetchEmbed }, fileTypes: IMAGE_FILE_TYPES })
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
 
     render(
@@ -144,9 +125,9 @@ describe('BookmarkNodeComponent', () => {
     function renderWithToolbar(
       nodeKey: NodeKey,
       selection: { selected?: boolean; editing?: boolean } = {},
-      { title = 'Example title', cardConfig = {} }: { title?: string; cardConfig?: Record<string, unknown> } = {},
+      { title = 'Example title', cardConfig = {} }: { title?: string; cardConfig?: CardConfig } = {},
     ) {
-      const composerValue = createComposerContext(cardConfig)
+      const composerValue = createHostIntegrationValue({ cardConfig, fileTypes: IMAGE_FILE_TYPES })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
         <InklingHostIntegrationContext.Provider value={composerValue}>
@@ -247,8 +228,8 @@ describe('BookmarkNodeComponent', () => {
       },
     }
 
-    function renderUrlInput(nodeKey: NodeKey, cardConfig: Record<string, unknown>, { withComposer = false } = {}) {
-      const composerValue = createComposerContext(cardConfig)
+    function renderUrlInput(nodeKey: NodeKey, cardConfig: CardConfig, { withComposer = false } = {}) {
+      const composerValue = createHostIntegrationValue({ cardConfig, fileTypes: IMAGE_FILE_TYPES })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
       const component = (
         <InklingHostIntegrationContext.Provider value={composerValue}>

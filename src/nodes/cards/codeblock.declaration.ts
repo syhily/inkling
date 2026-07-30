@@ -1,21 +1,16 @@
 import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
 
 import { BaseCodeBlockNode } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
-import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
 
+import { captionEditorSpec } from './caption-editor-spec'
+
 // `as const` keeps the literal `name`s and value types on the declaration's
 // type — the `__*` field map derives both from them (CardSpecFieldMap)
-const nestedEditors = [
-  {
-    name: 'captionEditor',
-    serializedKey: 'caption',
-    nodes: MINIMAL_NODES,
-  },
-] as const satisfies readonly NestedEditorSpec[]
+export const nestedEditors = [captionEditorSpec()] as const satisfies readonly NestedEditorSpec[]
 
-const transientProps = [
+export const transientProps = [
   // the `_openInEditMode` edit-mode flag is the same shape as the upload
   // cards' transient props: read from the construction dataset, never
   // serialized, cleared via the node's `clearOpenInEditMode`

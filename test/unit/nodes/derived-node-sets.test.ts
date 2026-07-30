@@ -47,13 +47,14 @@ function transformerSnapshot(transformers: readonly Transformer[]): string[] {
   })
 }
 
-// Plan 039 node-set diff guard. These literals capture the pre-refactor
-// registries (commit 1cad78b lineage, evaluated in `@/index`-first order) and
-// are the acceptance gate for Batches 1-5: every registry becomes a derived
-// view over the card declarations, and each derived array must stay identical
-// to its literal — order included. NEVER edit these to match drift; fix the
-// derivation instead.
-describe('derived node sets match the pre-refactor registries', () => {
+// Node-set drift guard. These literals pin the derived registries — every
+// registry is a derived view over the card declarations, composed in
+// declaration order (registration order carries no runtime semantics: node
+// types are unique and replacements ride the named pairs). The literals
+// guard against DRIFT from declaration order, not against history — when a
+// card is added or reordered in the declarations, update the literals to
+// the new derived order.
+describe('derived node sets match the pinned literals', () => {
   it('@/nodes/DefaultNodes (web editor node set)', () => {
     expect(nodeSetSnapshot(DEFAULT_NODES)).toEqual([
       'extended-text',
@@ -103,18 +104,18 @@ describe('derived node sets match the pre-refactor registries', () => {
       'replace:heading',
       'extended-quote',
       'replace:quote',
-      'codeblock',
-      'image',
       'markdown',
-      'video',
-      'audio',
-      'callout',
       'aside',
+      'codeblock',
       'horizontalrule',
+      'image',
+      'audio',
+      'video',
+      'callout',
       'html',
       'file',
-      'toggle',
       'button',
+      'toggle',
       'header',
       'bookmark',
       'gallery',
@@ -142,18 +143,18 @@ describe('derived node sets match the pre-refactor registries', () => {
       'replace:heading',
       'extended-quote',
       'replace:quote',
-      'codeblock',
-      'image',
       'markdown',
-      'video',
-      'audio',
-      'callout',
       'aside',
+      'codeblock',
       'horizontalrule',
+      'image',
+      'audio',
+      'video',
+      'callout',
       'html',
       'file',
-      'toggle',
       'button',
+      'toggle',
       'header',
       'bookmark',
       'gallery',
@@ -184,15 +185,15 @@ describe('derived node sets match the pre-refactor registries', () => {
       'codeblock',
       'horizontalrule',
       'image',
+      'audio',
+      'video',
+      'callout',
       'html',
       'file',
       'button',
-      'audio',
-      'video',
-      'gallery',
-      'bookmark',
       'toggle',
-      'callout',
+      'bookmark',
+      'gallery',
       'markdown',
     ])
   })
@@ -200,15 +201,15 @@ describe('derived node sets match the pre-refactor registries', () => {
   it('@/markdown/round-trip CARD_TRANSFORMERS (by card node type)', () => {
     expect(transformerSnapshot(CARD_TRANSFORMERS)).toEqual([
       'image',
+      'audio',
+      'video',
+      'callout',
       'html',
       'file',
       'button',
-      'audio',
-      'video',
-      'gallery',
-      'bookmark',
       'toggle',
-      'callout',
+      'bookmark',
+      'gallery',
       'markdown',
     ])
   })

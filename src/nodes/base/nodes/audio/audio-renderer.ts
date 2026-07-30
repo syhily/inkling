@@ -1,7 +1,7 @@
 import type { ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
-import { renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
+import { isSafeRenderableSource, renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface AudioNodeData {
   src: string
@@ -13,7 +13,7 @@ interface AudioNodeData {
 export function renderAudioNode(node: AudioNodeData, context: RenderContext): ExportDOMOutput {
   const document = context.createDocument()
 
-  if (!node.src || node.src.trim() === '' || context.safeUrl('media', node.src) === '') {
+  if (!isSafeRenderableSource(context, 'media', node.src)) {
     return renderEmptyContainer(document)
   }
 

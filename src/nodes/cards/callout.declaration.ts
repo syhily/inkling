@@ -12,7 +12,7 @@ import { INSERT_CALLOUT_COMMAND } from './card-commands'
 // type — the `__*` field map derives both from them (CardSpecFieldMap). The
 // nested editor rides nullableNestedEditor's carrier: the markdown
 // round-trip detaches it
-const nestedEditors = [
+export const nestedEditors = [
   nullableNestedEditor({
     name: 'calloutTextEditor',
     serializedKey: 'calloutText',

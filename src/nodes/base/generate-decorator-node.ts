@@ -259,6 +259,20 @@ export function fnOr<T>(value: unknown): T | undefined {
   return typeof value === 'function' ? (value as T) : undefined
 }
 
+/**
+ * The shared `initialFile` spec entry (the four upload cards'): the File a
+ * drag+drop/paste insert hands the card through INSERT_MEDIA_COMMAND so its
+ * upload starts on mount. Const-asserted like
+ * `transientTriggerFileDialogProp` so the literal `name` and value type
+ * survive into `CardSpecFieldMap` — one value type (`File | undefined`) for
+ * all four cards; video's former `File | null` divergence was drift, not
+ * behaviour.
+ */
+export const transientInitialFileProp = {
+  name: 'initialFile',
+  initial: (dataset: Record<string, unknown>): File | undefined => fileOr(dataset.initialFile, undefined),
+} as const satisfies TransientPropSpec
+
 const NO_TRANSIENT_PROPS: readonly TransientPropSpec[] = []
 
 /**
@@ -369,6 +383,33 @@ export type CardSpecFieldMap<D> = (D extends { transientProps: infer Specs exten
 export type CardSpecAccessorMap<D> = D extends { transientProps: infer Specs extends readonly TransientPropSpec[] }
   ? { [Spec in Specs[number] as Spec extends { accessor: true } ? Spec['name'] : never]: TransientPropValue<Spec> }
   : unknown
+
+/**
+ * The construction-dataset entries one transient-prop spec array drives,
+ * DERIVED from the same entries as `CardSpecFieldMap`: one optional key per
+ * entry at its `name` (the dataset carries pre-init values, so the type is
+ * the non-null half of the field's value type). Composed with the base node
+ * module's `*Data` type this types the card's insert-command payload and
+ * its public `*NodeDataset` (`card-commands.ts`), so the dataset's
+ * transient vocabulary can no longer drift from the spec: renaming or
+ * retyping a spec entry is a compile error at the command.
+ */
+export type CardSpecTransientDataset<Specs extends readonly TransientPropSpec[]> = {
+  [Spec in Specs[number] as Spec['name']]?: NonNullable<TransientPropValue<Spec>>
+}
+
+/**
+ * The construction-dataset entries one nested-editor spec array drives: one
+ * optional `<name>` / `<name>InitialState` pair per entry. The pair is
+ * unconditional because every card's dataset accepts the initial state for
+ * clone/getDataset symmetry, even when `exposeInitialStateInDataset: false`
+ * keeps it out of `getDataset`.
+ */
+export type CardSpecNestedEditorDataset<Specs extends readonly NestedEditorSpec[]> = {
+  [Spec in Specs[number] as Spec['name']]?: LexicalEditor
+} & {
+  [Spec in Specs[number] as `${Spec['name']}InitialState`]?: EditorState
+}
 
 export type DecoratorNodeValueMap<Props extends readonly DecoratorNodeProperty[]> = {
   [Prop in Props[number] as Prop['name']]: WidenLiteral<Prop['default']>

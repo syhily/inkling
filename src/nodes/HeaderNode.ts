@@ -1,24 +1,10 @@
-import type { EditorState, LexicalEditor } from 'lexical'
-
-import type { HeaderData } from '@/nodes/base/nodes/header/HeaderNode'
+import type { HeaderNodeDataset } from '@/nodes/cards/card-commands'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
 import { headerDeclaration } from '@/nodes/cards/header.declaration'
-
 export { $isHeaderNode } from '@/nodes/base/nodes/header/HeaderNode'
 export { INSERT_HEADER_COMMAND } from '@/nodes/cards/card-commands'
-
-export type HeaderNodeDataset = HeaderData & {
-  headerTextEditor?: LexicalEditor
-  // not read by the constructor, and the declaration sets
-  // `exposeInitialStateInDataset: false` so getDataset never emits them
-  // either — `__headerTextEditorInitialState` is set internally when the
-  // editor is populated from its serialized HTML (src/utils/nested-editors.ts)
-  headerTextEditorInitialState?: EditorState
-  subheaderTextEditor?: LexicalEditor
-  // see headerTextEditorInitialState
-  subheaderTextEditorInitialState?: EditorState
-}
+export type { HeaderNodeDataset } from '@/nodes/cards/card-commands'
 
 /**
  * The registered class is assembled once from the card declaration, and
