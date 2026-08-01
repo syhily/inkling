@@ -11,13 +11,13 @@ import {
 } from 'lexical'
 
 import type { BaseImageNode } from '@/nodes/base/nodes/image/ImageNode'
-import type { GalleryNode } from '@/nodes/GalleryNode'
 import type { ImageNodeDataset } from '@/nodes/ImageNode'
 import type { DraggableInfo } from '@/utils/draggable/DragDropContainer'
 
 import { $isImageNode } from '@/nodes/base/nodes/image/ImageNode'
 import { getImageFilenameFromSrc } from '@/nodes/base/utils/content-image-url'
 import { datasetToGalleryImage } from '@/nodes/base/utils/gallery-image-fill'
+import { $isGalleryNode } from '@/nodes/GalleryNode'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
 // Drop surgery — the headless $-surgeries behind DragDropReorderPlugin. The
@@ -36,12 +36,17 @@ import { getRegisteredNodeMap } from '@/utils/lexical-internals'
  * `insertIndex`, or after the last droppable when the index runs past the end
  * of the document. Clears the selection so no toolbar pops back up over the
  * moved card and the caret is not left stranded somewhere else in the
- * document. Returns false — leaving the tree untouched — when the node key
- * no longer resolves.
+ * document. Returns false — leaving the tree and the selection untouched —
+ * when the node key no longer resolves or the droppable scan came back empty
+ * (an empty scan has no slot to resolve; a no-op must not report success).
  */
 export function $relocateCard(nodeKey: NodeKey | undefined, droppables: HTMLElement[], insertIndex: number): boolean {
   const draggedNode = nodeKey ? $getNodeByKey(nodeKey) : null
   if (!draggedNode) {
+    return false
+  }
+
+  if (droppables.length === 0) {
     return false
   }
 
@@ -68,8 +73,8 @@ export function $relocateCard(nodeKey: NodeKey | undefined, droppables: HTMLElem
  * Inserts a new image card built from the dragged image's dataset before the
  * droppable at `insertIndex` and selects it (images can be dragged out of a
  * gallery). Returns the created node, or null when the slot does not resolve
- * to a node — the drop still counts as handled, so the caller's result
- * mapping does not branch on this. Also null when the editor doesn't
+ * to a node — the caller maps null to a failed drop (the source node stays).
+ * Also null when the editor doesn't
  * register the image card (the class comes from the registered-node map, not
  * the shim, so this module stays off the decorate tree; unreachable there in
  * practice — only gallery drags reach this path, and core has no gallery).
@@ -108,9 +113,9 @@ export function $insertDraggedImage(
  * Merges an image card dropped onto another image card into a two-image
  * gallery: the gallery takes the target's slot (target image first, dragged
  * image second) and the dragged card's source node is removed. Image datasets
- * carry no fileName, so the dragged payload's dataset is patched in place
- * with the src-derived one, matching the drag producer's live object (the
- * shared fill policy applies the same fallback for the conversion itself).
+ * carry no fileName, so a copy of the dragged payload's dataset gets the
+ * src-derived one (the shared fill policy applies the same fallback for the
+ * conversion itself).
  * Returns false — leaving the tree untouched — when either key no longer
  * resolves to an image card, when either dataset lacks a src, or when the
  * editor doesn't register the gallery card (the class comes from the
@@ -134,17 +139,28 @@ export function $mergeImagesIntoGallery(
     return false
   }
 
-  const galleryNode = new GalleryNodeClass({}) as GalleryNode
+  // a registry key could resolve to a non-gallery class (a host replaced
+  // it) — check the constructed node instead of asserting, like the image
+  // path in $insertDraggedImage
+  const galleryNode = new GalleryNodeClass({})
+  if (!$isGalleryNode(galleryNode)) {
+    return false
+  }
 
-  // images don't contain the filename dataset property so we need to add it
+  // images don't contain the filename dataset property so we need to add
+  // it — on a copy of the payload, not by mutating the caller's object (the
+  // shared fill policy applies the same fallback for the conversion itself)
   const draggedFileName = typeof draggedDataset.fileName === 'string' ? draggedDataset.fileName : undefined
-  draggedDataset.fileName = draggedFileName || getImageFilenameFromSrc(String(draggedDataset.src))
+  const filledDraggedDataset = {
+    ...draggedDataset,
+    fileName: draggedFileName || getImageFilenameFromSrc(String(draggedDataset.src)),
+  }
 
   // the shared fill policy carries the fields addImages persists
   // (ALLOWED_IMAGE_PROPS) instead of casting the whole dataset; a src-less
   // dataset is not an image and rejects the merge
   const targetImage = datasetToGalleryImage(targetImageNode.getDataset())
-  const draggedImage = datasetToGalleryImage(draggedDataset)
+  const draggedImage = datasetToGalleryImage(filledDraggedDataset)
   if (!targetImage || !draggedImage) {
     return false
   }

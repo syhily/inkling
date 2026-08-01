@@ -605,7 +605,7 @@ export async function galleryUploadIntent({
   const currentCount = images.length
   const allowedCount = MAX_IMAGES - currentCount
 
-  const strippedFiles = Array.from(files).slice(0, allowedCount)
+  const strippedFiles = Array.from(files).slice(0, Math.max(0, allowedCount))
   if (strippedFiles.length < files.length) {
     setErrorMessage('Galleries are limited to 9 images')
   }

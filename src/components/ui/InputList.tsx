@@ -182,7 +182,11 @@ export function InputList<T extends InputListItemData = InputListItemData>({
     if (item.value === null) {
       return
     }
-    ;(onSelect || onChange)(item.value, item.type)
+    if (onSelect) {
+      onSelect(item.value, item.type)
+    } else {
+      onChange(item.value)
+    }
   }
 
   const showSuggestions = (isLoading || (listOptions && !!listOptions.length)) && inputFocused

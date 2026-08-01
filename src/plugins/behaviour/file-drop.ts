@@ -1,4 +1,4 @@
-import type { BaseSelection, LexicalEditor } from 'lexical'
+import type { LexicalEditor } from 'lexical'
 
 import { $insertDataTransferForRichText } from '@lexical/clipboard'
 import { DRAG_DROP_PASTE } from '@lexical/rich-text'
@@ -134,7 +134,10 @@ export function registerDragOverSuppression(editor: LexicalEditor): () => void {
           $getRoot().selectEnd()
           selection = $getSelection()
         }
-        $insertDataTransferForRichText(dataTransfer, selection as BaseSelection, editor)
+        if (!selection) {
+          return
+        }
+        $insertDataTransferForRichText(dataTransfer, selection, editor)
       })
     }
   }

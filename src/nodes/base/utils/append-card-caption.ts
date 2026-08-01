@@ -41,7 +41,7 @@ export function appendCardCaption(
   context: RenderContext,
   policy: CardCaptionPolicy = 'sanitize',
 ): void {
-  figure.setAttribute('class', `${figure.getAttribute('class')} ${CARD_CAPTION_MARKER_CLASS}`)
+  figure.setAttribute('class', `${figure.getAttribute('class') ?? ''} ${CARD_CAPTION_MARKER_CLASS}`.trim())
   const figcaption = figure.ownerDocument.createElement('figcaption')
   figcaption.innerHTML = renderCaptionContent(caption, context, policy)
   figure.appendChild(figcaption)

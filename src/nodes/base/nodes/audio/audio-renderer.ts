@@ -1,6 +1,7 @@
 import type { ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
 
+import { formatVideoDuration } from '@/nodes/base/nodes/video/format-video-duration'
 import { isSafeRenderableSource, renderEmptyContainer } from '@/nodes/base/utils/render-empty-container'
 
 interface AudioNodeData {
@@ -136,7 +137,9 @@ function frontendTemplate(
   audioDurationTotal.textContent = '/'
   const audioDUrationNode = document.createElement('span')
   audioDUrationNode.setAttribute('class', 'inkling-audio-duration')
-  audioDUrationNode.textContent = String(node.duration)
+  // m:ss — the import spec parses this back with minutes*60+seconds, so a
+  // raw seconds count would reimport 60x too large (or zero on non-integers)
+  audioDUrationNode.textContent = formatVideoDuration(node.duration)
   audioDurationTotal.appendChild(audioDUrationNode)
   audioPlayer.appendChild(audioDurationTotal)
 

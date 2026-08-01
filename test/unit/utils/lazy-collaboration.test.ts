@@ -92,4 +92,24 @@ describe('createLazyProviderFactory', () => {
     expect(applySecond).toHaveBeenCalledTimes(1)
     expect(applyFirst).not.toHaveBeenCalled()
   })
+
+  it('a failed load stays inert and never rejects unhandled', async () => {
+    const session = createLazyProviderFactory(() => Promise.reject(new Error('chunk load failed')))
+    const apply = vi.fn()
+    const onUnhandled = vi.fn()
+    process.on('unhandledRejection', onUnhandled)
+
+    try {
+      session.start(apply)
+      await new Promise((resolve) => {
+        setTimeout(resolve, 0)
+      })
+      await Promise.resolve()
+
+      expect(apply).not.toHaveBeenCalled()
+      expect(onUnhandled).not.toHaveBeenCalled()
+    } finally {
+      process.off('unhandledRejection', onUnhandled)
+    }
+  })
 })

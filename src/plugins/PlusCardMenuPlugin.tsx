@@ -1,5 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $setSelection, type LexicalEditor } from 'lexical'
+import { $setSelection, type LexicalCommand, type LexicalEditor } from 'lexical'
 import React from 'react'
 
 import { CardMenu } from '@/components/ui/CardMenu'
@@ -115,8 +115,16 @@ function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
   // insert-and-close is the session's seam (it owns the close policy);
   // this adapter only names the dispatch
   const insert = React.useCallback(
-    (insertCommand: unknown, params: { insertParams?: Record<string, unknown> } = {}): void =>
-      sessionInsert(() => insertCardItem(insertCommand, params)),
+    (
+      insertCommand: LexicalCommand<unknown> | undefined,
+      params: { insertParams?: Record<string, unknown> } = {},
+    ): void => {
+      // a menu item without an insert command has nothing to dispatch
+      if (!insertCommand) {
+        return
+      }
+      sessionInsert(() => insertCardItem(insertCommand, params))
+    },
     [sessionInsert, insertCardItem],
   )
 

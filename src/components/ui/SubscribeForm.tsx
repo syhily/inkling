@@ -44,8 +44,9 @@ export function SubscribeForm({
           buttonSize === 'medium' && 'h-11 text-[1.6rem] leading-[4.4rem]',
           buttonSize === 'large' && 'h-12 text-lg leading-[4.8rem]',
         )}
-        defaultValue={value}
+        value={value}
         placeholder={placeholder}
+        disabled={disabled}
         tabIndex={disabled ? -1 : undefined}
         onBlur={onBlur}
         onChange={onChangeWrapper}

@@ -17,7 +17,7 @@ export interface htmlToLexicalOptions {
 
 /* c8 ignore next -- V8 creates a phantom branch for the export */
 export function htmlToLexical(html: string, options: htmlToLexicalOptions): SerializedEditorState {
-  if (!html) {
+  if (!html?.trim()) {
     return MINIMAL_DOCUMENT
   }
 

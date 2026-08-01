@@ -13,6 +13,9 @@ const TabView = ({
 }) => {
   const [activeTab, setActiveTab] = useState(defaultTab ?? tabs[0]?.id ?? '')
 
+  // The stored tab can go stale when the `tabs` prop changes; fall back to the first tab instead of rendering nothing.
+  const currentTab = tabs.some((tab) => tab.id === activeTab) ? activeTab : (tabs[0]?.id ?? '')
+
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId)
   }
@@ -28,7 +31,7 @@ const TabView = ({
             className={`-mb-px appearance-none pt-4 pb-3 text-sm font-semibold whitespace-nowrap transition-all ${
               tabs.length > 1 ? 'cursor-pointer border-b-2' : 'cursor-default'
             } ${
-              activeTab === tab.id
+              currentTab === tab.id
                 ? 'border-black text-black dark:border-white dark:text-white'
                 : 'border-transparent text-grey-600 hover:border-grey-500 dark:text-grey-500 dark:hover:border-grey-500'
             }`}
@@ -40,8 +43,8 @@ const TabView = ({
           </button>
         ))}
       </div>
-      <div className="flex flex-col gap-3 p-6 pt-4" data-testid={`tab-contents-${activeTab}`}>
-        {tabContent[activeTab]}
+      <div className="flex flex-col gap-3 p-6 pt-4" data-testid={`tab-contents-${currentTab}`}>
+        {tabContent[currentTab]}
       </div>
     </>
   )

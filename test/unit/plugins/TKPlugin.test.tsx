@@ -9,6 +9,7 @@ import CardContext, { type CardContextValue } from '@/context/CardContext'
 import { TKHandleContext } from '@/context/TKHandleContext'
 import { useInklingTextEntity } from '@/hooks/useInklingTextEntity'
 import { ExtendedTextNode, TKNode } from '@/nodes/base'
+import { getTKMatch } from '@/plugins/behaviour/tk-matcher'
 import { createTKHandle, type TKHandle } from '@/plugins/behaviour/tkHandle'
 import TKPlugin from '@/plugins/TKPlugin'
 
@@ -153,7 +154,7 @@ describe('TKPlugin', () => {
     expect(removeEditor).toHaveBeenCalledWith(editor.getKey())
   })
 
-  it('getTKMatch returns null for text without TK', () => {
+  it('wires the real TK matcher and node classes into useInklingTextEntity', () => {
     editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
@@ -161,11 +162,17 @@ describe('TKPlugin', () => {
     const cardValue = createCardContextValue()
     renderTKPlugin(handle, cardValue)
 
-    const [getTKMatch] = vi.mocked(useInklingTextEntity).mock.calls[0]
-    expect(getTKMatch('hello world')).toBeNull()
+    // the hook is mocked, so the honest assertion is on the plugin's call
+    // arguments; the matcher's offset behaviour itself is pinned by
+    // test/unit/plugins/behaviour/tk-matcher.test.ts
+    const [getMatch, targetNode, createNode, nodeType] = vi.mocked(useInklingTextEntity).mock.calls[0]
+    expect(getMatch).toBe(getTKMatch)
+    expect(targetNode).toBe(TKNode)
+    expect(createNode).toBeInstanceOf(Function)
+    expect(nodeType).toBe(ExtendedTextNode)
   })
 
-  it('getTKMatch finds TK in text', () => {
+  it('the createTKNode passed to the hook builds a TKNode with the text content', async () => {
     editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
     editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
     mockComposerEditor(editor)
@@ -173,43 +180,19 @@ describe('TKPlugin', () => {
     const cardValue = createCardContextValue()
     renderTKPlugin(handle, cardValue)
 
-    const [getTKMatch] = vi.mocked(useInklingTextEntity).mock.calls[0]
-    const match = getTKMatch('hello TK')
-    if (!match) {
-      throw new Error('Expected TK entity match')
-    }
-    expect(match.start).toBe(6)
-    expect(match.end).toBe(8)
-  })
-
-  it('getTKMatch rejects TK preceded by word character', () => {
-    editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
-    editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
-    mockComposerEditor(editor)
-
-    const cardValue = createCardContextValue()
-    renderTKPlugin(handle, cardValue)
-
-    const [getTKMatch] = vi.mocked(useInklingTextEntity).mock.calls[0]
-    expect(getTKMatch('wordTK')).toBeNull()
-  })
-
-  it('createTKNode creates a TKNode with text content', async () => {
-    editor = createTestEditor({ nodes: [TKNode, ExtendedTextNode], headless: false })
-    editor.setRootElement(document.querySelector('[data-lexical-editor]') as HTMLElement)
-    mockComposerEditor(editor)
-
-    const cardValue = createCardContextValue()
-    renderTKPlugin(handle, cardValue)
-
+    // third call argument is the plugin's createTKNode closure — invoke it
+    // directly to pin what the plugin hands to the entity transform
     const [, , createTKNode] = vi.mocked(useInklingTextEntity).mock.calls[0]
 
+    let isTKNode = false
     let textContent = ''
     await updateEditor(editor, () => {
       const tkNode = createTKNode($createTextNode('TK test'))
+      isTKNode = tkNode instanceof TKNode
       textContent = tkNode.getTextContent()
     })
 
+    expect(isTKNode).toBe(true)
     expect(textContent).toBe('TK test')
   })
 })

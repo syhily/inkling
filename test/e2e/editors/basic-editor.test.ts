@@ -83,7 +83,7 @@ test.describe('Koening Editor with basic nodes', function () {
 
       await selectBackwards(page, 'for selection'.length)
 
-      expect(page.locator('[data-inkling-floating-toolbar]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-floating-toolbar]')).toBeVisible()
     })
 
     test('does not has heading buttons', async function () {
@@ -94,10 +94,10 @@ test.describe('Koening Editor with basic nodes', function () {
 
       await selectBackwards(page, 'for selection'.length)
 
-      expect(page.locator('[data-inkling-floating-toolbar]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-floating-toolbar]')).toBeVisible()
 
       const boldButtonSelector = `[data-inkling-floating-toolbar] [data-inkling-toolbar-button="bold"] button`
-      expect(page.locator(boldButtonSelector)).not.toBeNull()
+      await expect(page.locator(boldButtonSelector)).toBeVisible()
 
       const h2ButtonSelector = `[data-inkling-floating-toolbar] [data-inkling-toolbar-button="h2"] button`
       await expect(page.locator(h2ButtonSelector)).toHaveCount(0)

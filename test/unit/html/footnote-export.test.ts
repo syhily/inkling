@@ -110,6 +110,36 @@ describe('footnote HTML export (live path)', () => {
     expect(hostile).toContain('<h3 id="footnotes-section-heading">Footnotes &amp; &lt;References&gt;</h3>')
   })
 
+  it('suppresses the trailing empty paragraph sitting before the definition run', () => {
+    // Inkling's kept blank paragraph is no longer the last child once the
+    // doc-end definition run exists — the suppression must look past the run
+    const html = renderLive(
+      footnoteDoc([paragraph([text('see'), ref('1', 'keyA')]), paragraph([]), definition('keyA', '<p>First note</p>')]),
+    )
+
+    expect(html).toBe(
+      '<p>see<sup id="user-content-fnref-1"><a href="#user-content-fn-1">1</a></sup></p>' +
+        '<section class="footnotes" data-footnotes="" aria-labelledby="footnotes-section-heading">' +
+        '<h3 id="footnotes-section-heading">Footnotes</h3>' +
+        '<ol><li id="user-content-fn-1"><p>First note</p>' +
+        '<a data-footnote-backref="" href="#user-content-fnref-1">↩</a></li></ol></section>',
+    )
+  })
+
+  it('still suppresses the trailing empty paragraph without footnotes', () => {
+    const html = renderLive(footnoteDoc([paragraph([text('plain')]), paragraph([])]))
+    expect(html).toBe('<p>plain</p>')
+  })
+
+  it('skips anchor indexing for a non-numeric ref label instead of leaking NaN', () => {
+    const html = renderLive(
+      footnoteDoc([paragraph([text('see'), ref('a', 'keyA')]), definition('keyA', '<p>First note</p>')]),
+    )
+
+    expect(html).not.toContain('NaN')
+    expect(html).toContain('<p>see<sup><a>a</a></sup></p>')
+  })
+
   it('emits no section when the document has no definitions', () => {
     const html = renderLive(footnoteDoc([paragraph([text('plain')])]))
     expect(html).toBe('<p>plain</p>')

@@ -3,6 +3,7 @@ import type { ElementNode, LexicalEditor } from 'lexical'
 import { createHeadlessEditor } from '@lexical/headless'
 import { $getRoot } from 'lexical'
 
+import { editorTest } from '#/utils/test-editor'
 import { TKNode, $createTKNode, $isTKNode } from '@/nodes/base/index'
 
 const editorNodes = [TKNode]
@@ -10,66 +11,63 @@ const editorNodes = [TKNode]
 describe('TKNode', function () {
   let editor: LexicalEditor
 
-  // NOTE: all tests should use this function, without it you need manual
-  // try/catch and done handling to avoid assertion failures not triggering
-  // failed tests
-  const editorTest = (testFn: () => void) => () =>
-    new Promise<void>((resolve, reject) => {
-      editor.update(() => {
-        try {
-          testFn()
-          resolve()
-        } catch (e) {
-          reject(e)
-        }
-      })
-    })
-
   beforeEach(function () {
     editor = createHeadlessEditor({ nodes: editorNodes })
   })
 
   it(
     'matches node with $isTKNode',
-    editorTest(function () {
-      const tkNode = $createTKNode('TK')
-      expect($isTKNode(tkNode)).toBe(true)
-    }),
+    editorTest(
+      () => editor,
+      function () {
+        const tkNode = $createTKNode('TK')
+        expect($isTKNode(tkNode)).toBe(true)
+      },
+    ),
   )
 
   it(
     'is a text entity',
-    editorTest(function () {
-      const tkNode = $createTKNode('TK')
-      expect((tkNode as TKNode).isTextEntity()).toBe(true)
-    }),
+    editorTest(
+      () => editor,
+      function () {
+        const tkNode = $createTKNode('TK')
+        expect((tkNode as TKNode).isTextEntity()).toBe(true)
+      },
+    ),
   )
 
   it(
     'can not insert text before',
-    editorTest(function () {
-      const tkNode = $createTKNode('TK')
-      expect((tkNode as TKNode).canInsertTextBefore()).toBe(false)
-    }),
+    editorTest(
+      () => editor,
+      function () {
+        const tkNode = $createTKNode('TK')
+        expect((tkNode as TKNode).canInsertTextBefore()).toBe(false)
+      },
+    ),
   )
 
   describe('exportJSON', function () {
     it(
       'contains all data',
-      editorTest(function () {
-        const tkNode = $createTKNode('TK')
-        const json = tkNode.exportJSON()
+      editorTest(
+        () => editor,
+        function () {
+          const tkNode = $createTKNode('TK')
+          const json = tkNode.exportJSON()
 
-        expect(json).toEqual({
-          detail: 0,
-          format: 0,
-          mode: 'normal',
-          style: '',
-          type: 'tk',
-          version: 1,
-          text: 'TK',
-        })
-      }),
+          expect(json).toEqual({
+            detail: 0,
+            format: 0,
+            mode: 'normal',
+            style: '',
+            type: 'tk',
+            version: 1,
+            text: 'TK',
+          })
+        },
+      ),
     )
   })
 
@@ -124,12 +122,15 @@ describe('TKNode', function () {
 
   it(
     'can clone',
-    editorTest(function () {
-      const tkNode = $createTKNode('TK')
-      const clonedNode = TKNode.clone(tkNode as TKNode)
+    editorTest(
+      () => editor,
+      function () {
+        const tkNode = $createTKNode('TK')
+        const clonedNode = TKNode.clone(tkNode as TKNode)
 
-      expect(clonedNode).not.toBe(tkNode)
-      expect(clonedNode.getTextContent()).toBe(tkNode.getTextContent())
-    }),
+        expect(clonedNode).not.toBe(tkNode)
+        expect(clonedNode.getTextContent()).toBe(tkNode.getTextContent())
+      },
+    ),
   )
 })

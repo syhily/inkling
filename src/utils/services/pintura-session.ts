@@ -174,6 +174,11 @@ export interface PinturaOptionsLabels {
  * and the locale merge — the labels table's `pintura.*` entries first, the
  * host's `pinturaConfig.locale` ON TOP (docs/kobato-fit-plan.md C7), so a
  * host can patch any Pintura string the labels table does not cover.
+ *
+ * The `Record<string, unknown>` return is deliberate: Pintura is a
+ * host-loaded commercial package with no dependency (or types) in this repo,
+ * so the options contract can't be imported — a hand-written interface would
+ * just be an unmaintained copy of their schema.
  */
 export function buildPinturaOptions({
   imageSrc,

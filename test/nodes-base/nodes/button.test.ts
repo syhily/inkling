@@ -6,6 +6,7 @@ import { $getRoot } from 'lexical'
 
 import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
+import { editorTest } from '#/utils/test-editor'
 import { BaseButtonNode, $createBaseButtonNode, $isButtonNode } from '@/nodes/base/index'
 
 const editorNodes = [BaseButtonNode]
@@ -14,21 +15,6 @@ describe('BaseButtonNode', function () {
   let editor: LexicalEditor
   let dataset: { buttonText: string; buttonUrl: string; alignment: string }
   let exportOptions: Record<string, unknown>
-
-  // NOTE: all tests should use this function, without it you need manual
-  // try/catch and done handling to avoid assertion failures not triggering
-  // failed tests
-  const editorTest = (testFn: () => Promise<void> | void) => () =>
-    new Promise<void>((resolve, reject) => {
-      editor.update(() => {
-        try {
-          const result = testFn()
-          Promise.resolve(result).then(resolve).catch(reject)
-        } catch (e) {
-          reject(e)
-        }
-      })
-    })
 
   beforeEach(function () {
     editor = createHeadlessEditor({ nodes: editorNodes })
@@ -44,175 +30,214 @@ describe('BaseButtonNode', function () {
 
   it(
     'matches node with $isButtonNode',
-    editorTest(async function () {
-      const buttonNode = $createBaseButtonNode(dataset)
-      expect($isButtonNode(buttonNode)).toBe(true)
-    }),
+    editorTest(
+      () => editor,
+      async function () {
+        const buttonNode = $createBaseButtonNode(dataset)
+        expect($isButtonNode(buttonNode)).toBe(true)
+      },
+    ),
   )
 
   describe('data access', function () {
     it(
       'has getters for all properties',
-      editorTest(async function () {
-        const buttonNode = $createBaseButtonNode(dataset)
+      editorTest(
+        () => editor,
+        async function () {
+          const buttonNode = $createBaseButtonNode(dataset)
 
-        expect(buttonNode.buttonUrl).toBe(dataset.buttonUrl)
-        expect(buttonNode.buttonText).toBe(dataset.buttonText)
-        expect(buttonNode.alignment).toBe(dataset.alignment)
-      }),
+          expect(buttonNode.buttonUrl).toBe(dataset.buttonUrl)
+          expect(buttonNode.buttonText).toBe(dataset.buttonText)
+          expect(buttonNode.alignment).toBe(dataset.alignment)
+        },
+      ),
     )
 
     it(
       'has setters for all properties',
-      editorTest(async function () {
-        const buttonNode = $createBaseButtonNode()
+      editorTest(
+        () => editor,
+        async function () {
+          const buttonNode = $createBaseButtonNode()
 
-        expect(buttonNode.buttonUrl).toBe('')
-        buttonNode.buttonUrl = 'http://someblog.com/somepost'
-        expect(buttonNode.buttonUrl).toBe('http://someblog.com/somepost')
+          expect(buttonNode.buttonUrl).toBe('')
+          buttonNode.buttonUrl = 'http://someblog.com/somepost'
+          expect(buttonNode.buttonUrl).toBe('http://someblog.com/somepost')
 
-        expect(buttonNode.buttonText).toBe('')
-        buttonNode.buttonText = 'button text'
-        expect(buttonNode.buttonText).toBe('button text')
+          expect(buttonNode.buttonText).toBe('')
+          buttonNode.buttonText = 'button text'
+          expect(buttonNode.buttonText).toBe('button text')
 
-        expect(buttonNode.alignment).toBe('center')
-        buttonNode.alignment = 'left'
-        expect(buttonNode.alignment).toBe('left')
-      }),
+          expect(buttonNode.alignment).toBe('center')
+          buttonNode.alignment = 'left'
+          expect(buttonNode.alignment).toBe('left')
+        },
+      ),
     )
 
     it(
       'has getDataset() convenience method',
-      editorTest(async function () {
-        const buttonNode = $createBaseButtonNode(dataset)
-        const buttonNodeDataset = buttonNode.getDataset()
+      editorTest(
+        () => editor,
+        async function () {
+          const buttonNode = $createBaseButtonNode(dataset)
+          const buttonNodeDataset = buttonNode.getDataset()
 
-        expect(buttonNodeDataset).toEqual({
-          ...dataset,
-        })
-      }),
+          expect(buttonNodeDataset).toEqual({
+            ...dataset,
+          })
+        },
+      ),
     )
   })
 
   describe('getType', function () {
     it(
       'returns the correct node type',
-      editorTest(async function () {
-        expect(BaseButtonNode.getType()).toBe('button')
-      }),
+      editorTest(
+        () => editor,
+        async function () {
+          expect(BaseButtonNode.getType()).toBe('button')
+        },
+      ),
     )
   })
 
   describe('clone', function () {
     it(
       'returns a copy of the current node',
-      editorTest(async function () {
-        const buttonNode = $createBaseButtonNode(dataset)
-        const buttonNodeDataset = buttonNode.getDataset()
-        const clone = BaseButtonNode.clone(buttonNode)
-        const cloneDataset = clone.getDataset()
+      editorTest(
+        () => editor,
+        async function () {
+          const buttonNode = $createBaseButtonNode(dataset)
+          const buttonNodeDataset = buttonNode.getDataset()
+          const clone = BaseButtonNode.clone(buttonNode)
+          const cloneDataset = clone.getDataset()
 
-        expect(cloneDataset).toEqual({ ...buttonNodeDataset })
-      }),
+          expect(cloneDataset).toEqual({ ...buttonNodeDataset })
+        },
+      ),
     )
   })
 
   describe('urlTransformMap', function () {
     it(
       'contains the expected URL mapping',
-      editorTest(async function () {
-        expect(BaseButtonNode.urlTransformMap).toEqual({
-          buttonUrl: 'url',
-        })
-      }),
+      editorTest(
+        () => editor,
+        async function () {
+          expect(BaseButtonNode.urlTransformMap).toEqual({
+            buttonUrl: 'url',
+          })
+        },
+      ),
     )
   })
 
   describe('hasEditMode', function () {
     it(
       'returns true',
-      editorTest(async function () {
-        const buttonNode = $createBaseButtonNode(dataset)
-        expect(buttonNode.hasEditMode()).toBe(true)
-      }),
+      editorTest(
+        () => editor,
+        async function () {
+          const buttonNode = $createBaseButtonNode(dataset)
+          expect(buttonNode.hasEditMode()).toBe(true)
+        },
+      ),
     )
   })
 
   describe('exportDOM', function () {
     it(
       'creates a button card',
-      editorTest(async function () {
-        const buttonNode = $createBaseButtonNode(dataset)
-        const result = buttonNode.exportDOM(editor, exportOptions)
-        const element = result.element as HTMLElement
+      editorTest(
+        () => editor,
+        async function () {
+          const buttonNode = $createBaseButtonNode(dataset)
+          const result = buttonNode.exportDOM(editor, exportOptions)
+          const element = result.element as HTMLElement
 
-        await expectPrettifiedHtml(
-          element.outerHTML,
-          html`<div class="inkling-card inkling-button-card inkling-align-center">
-            <a href="http://blog.com/post1" class="inkling-btn inkling-btn-accent">click me</a>
-          </div>`,
-        )
-      }),
+          await expectPrettifiedHtml(
+            element.outerHTML,
+            html`<div class="inkling-card inkling-button-card inkling-align-center">
+              <a href="http://blog.com/post1" class="inkling-btn inkling-btn-accent">click me</a>
+            </div>`,
+          )
+        },
+      ),
     )
 
     it(
       'renders an empty span with a missing buttonUrl',
-      editorTest(async function () {
-        const buttonNode = $createBaseButtonNode()
-        const result = buttonNode.exportDOM(editor, exportOptions)
-        const element = result.element as HTMLElement
+      editorTest(
+        () => editor,
+        async function () {
+          const buttonNode = $createBaseButtonNode()
+          const result = buttonNode.exportDOM(editor, exportOptions)
+          const element = result.element as HTMLElement
 
-        expect(element.outerHTML).toBe('<span></span>')
-      }),
+          expect(element.outerHTML).toBe('<span></span>')
+        },
+      ),
     )
 
     it(
       'rejects an unsafe button URL',
-      editorTest(function () {
-        const buttonNode = $createBaseButtonNode({
-          buttonText: 'click me',
-          buttonUrl: 'javascript:alert(1)',
-          alignment: 'center',
-        })
-        const result = buttonNode.exportDOM(editor, exportOptions)
-        const element = result.element as HTMLElement
+      editorTest(
+        () => editor,
+        function () {
+          const buttonNode = $createBaseButtonNode({
+            buttonText: 'click me',
+            buttonUrl: 'javascript:alert(1)',
+            alignment: 'center',
+          })
+          const result = buttonNode.exportDOM(editor, exportOptions)
+          const element = result.element as HTMLElement
 
-        expect(element.outerHTML).toBe('<span></span>')
-      }),
+          expect(element.outerHTML).toBe('<span></span>')
+        },
+      ),
     )
 
     it(
       'escapes button text markup',
-      editorTest(function () {
-        const buttonNode = $createBaseButtonNode({
-          buttonText: '<script>alert(1)</script>',
-          buttonUrl: 'https://example.com/',
-          alignment: 'center',
-        })
-        const result = buttonNode.exportDOM(editor, exportOptions)
-        const element = result.element as HTMLElement
+      editorTest(
+        () => editor,
+        function () {
+          const buttonNode = $createBaseButtonNode({
+            buttonText: '<script>alert(1)</script>',
+            buttonUrl: 'https://example.com/',
+            alignment: 'center',
+          })
+          const result = buttonNode.exportDOM(editor, exportOptions)
+          const element = result.element as HTMLElement
 
-        expect(element.innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
-        expect(element.innerHTML).not.toContain('<script>alert(1)</script>')
-      }),
+          expect(element.innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
+          expect(element.innerHTML).not.toContain('<script>alert(1)</script>')
+        },
+      ),
     )
   })
 
   describe('exportJSON', function () {
     it(
       'contains all data',
-      editorTest(async function () {
-        const buttonNode = $createBaseButtonNode(dataset)
-        const json = buttonNode.exportJSON()
+      editorTest(
+        () => editor,
+        async function () {
+          const buttonNode = $createBaseButtonNode(dataset)
+          const json = buttonNode.exportJSON()
 
-        expect(json).toEqual({
-          type: 'button',
-          version: 1,
-          buttonUrl: dataset.buttonUrl,
-          buttonText: dataset.buttonText,
-          alignment: dataset.alignment,
-        })
-      }),
+          expect(json).toEqual({
+            type: 'button',
+            version: 1,
+            buttonUrl: dataset.buttonUrl,
+            buttonText: dataset.buttonText,
+            alignment: dataset.alignment,
+          })
+        },
+      ),
     )
   })
 
@@ -257,66 +282,81 @@ describe('BaseButtonNode', function () {
   describe('static properties', function () {
     it(
       'getType',
-      editorTest(async function () {
-        expect(BaseButtonNode.getType()).toBe('button')
-      }),
+      editorTest(
+        () => editor,
+        async function () {
+          expect(BaseButtonNode.getType()).toBe('button')
+        },
+      ),
     )
 
     it(
       'urlTransformMap',
-      editorTest(async function () {
-        expect(BaseButtonNode.urlTransformMap).toEqual({
-          buttonUrl: 'url',
-        })
-      }),
+      editorTest(
+        () => editor,
+        async function () {
+          expect(BaseButtonNode.urlTransformMap).toEqual({
+            buttonUrl: 'url',
+          })
+        },
+      ),
     )
   })
 
   describe('importDOM', function () {
     it(
       'parses button card',
-      editorTest(async function () {
-        const document = createDocument(html`
-          <div class="inkling-card inkling-button-card inkling-align-center">
-            <a href="http://someblog.com/somepost" class="inkling-btn inkling-btn-accent">click me</a>
-          </div>
-        `)
-        const nodes = $generateNodesFromDOM(editor, document) as BaseButtonNode[]
-        expect(nodes.length).toBe(1)
-        expect(nodes[0].buttonUrl).toBe('http://someblog.com/somepost')
-        expect(nodes[0].buttonText).toBe('click me')
-        expect(nodes[0].alignment).toBe('center')
-      }),
+      editorTest(
+        () => editor,
+        async function () {
+          const document = createDocument(html`
+            <div class="inkling-card inkling-button-card inkling-align-center">
+              <a href="http://someblog.com/somepost" class="inkling-btn inkling-btn-accent">click me</a>
+            </div>
+          `)
+          const nodes = $generateNodesFromDOM(editor, document) as BaseButtonNode[]
+          expect(nodes.length).toBe(1)
+          expect(nodes[0].buttonUrl).toBe('http://someblog.com/somepost')
+          expect(nodes[0].buttonText).toBe('click me')
+          expect(nodes[0].alignment).toBe('center')
+        },
+      ),
     )
 
     it(
       'preserves relative urls in content',
-      editorTest(async function () {
-        const document = createDocument(html`
-          <div class="inkling-card inkling-button-card inkling-align-center">
-            <a href="#/portal/signup" class="inkling-btn inkling-btn-accent">Subscribe 1</a>
-          </div>
-        `)
-        const nodes = $generateNodesFromDOM(editor, document) as BaseButtonNode[]
-        expect(nodes.length).toBe(1)
-        expect(nodes[0].buttonUrl).toBe('#/portal/signup')
-        expect(nodes[0].buttonText).toBe('Subscribe 1')
-        expect(nodes[0].alignment).toBe('center')
-      }),
+      editorTest(
+        () => editor,
+        async function () {
+          const document = createDocument(html`
+            <div class="inkling-card inkling-button-card inkling-align-center">
+              <a href="#/portal/signup" class="inkling-btn inkling-btn-accent">Subscribe 1</a>
+            </div>
+          `)
+          const nodes = $generateNodesFromDOM(editor, document) as BaseButtonNode[]
+          expect(nodes.length).toBe(1)
+          expect(nodes[0].buttonUrl).toBe('#/portal/signup')
+          expect(nodes[0].buttonText).toBe('Subscribe 1')
+          expect(nodes[0].alignment).toBe('center')
+        },
+      ),
     )
   })
 
   describe('getTextContent', function () {
     it(
       'returns contents',
-      editorTest(async function () {
-        const node = $createBaseButtonNode()
-        node.buttonText = 'Testing'
-        node.buttonUrl = 'http://someblog.com/somepost'
+      editorTest(
+        () => editor,
+        async function () {
+          const node = $createBaseButtonNode()
+          node.buttonText = 'Testing'
+          node.buttonUrl = 'http://someblog.com/somepost'
 
-        // button nodes don't have text content
-        expect(node.getTextContent()).toBe('')
-      }),
+          // button nodes don't have text content
+          expect(node.getTextContent()).toBe('')
+        },
+      ),
     )
   })
 })

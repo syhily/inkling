@@ -119,20 +119,35 @@ export default function $convertToHtmlString(editor: LexicalEditor, options: Exp
 
   const output: string[] = []
   const children: LexicalNode[] = $getRoot().getChildren()
+  // null results (bare inline nodes as root children, :65) never reach
+  // output, so children indices and output indices diverge — keep the map
+  // for the trailing-paragraph splice below. Dev Lexical rejects such trees
+  // at RootNode.splice, but prod builds strip that guard, so a malformed
+  // headless import can still produce them there.
+  const outputIndexByChild: number[] = []
 
   for (const child of children) {
     const result = exportTopLevelElementOrDecorator(child)
 
+    outputIndexByChild.push(result === null ? -1 : output.length)
     if (result !== null) {
       output.push(result)
     }
   }
 
   // Inkling keeps a blank paragraph at the end of a doc but we want to
-  // make sure it doesn't get rendered
-  const lastChild = children[children.length - 1]
-  if (lastChild && $isParagraphNode(lastChild) && lastChild.getTextContent().trim() === '') {
-    output.pop()
+  // make sure it doesn't get rendered. The doc-end footnote definition run
+  // (the behaviour module's run transform) sits after it, so walk back past
+  // the definitions to the last prose element before checking.
+  let lastProseIndex = children.length - 1
+  while (lastProseIndex >= 0 && $isFootnoteDefinitionNode(children[lastProseIndex])) {
+    lastProseIndex -= 1
+  }
+  const lastProse = children[lastProseIndex]
+  if (lastProse && $isParagraphNode(lastProse) && lastProse.getTextContent().trim() === '') {
+    // splice by the output-side index — a paragraph always exports non-null,
+    // so its mapped index is the entry to remove
+    output.splice(outputIndexByChild[lastProseIndex], 1)
   }
 
   // The footnotes-section wrap (docs/kobato-fit-plan.md C4 §3.2(e)): the

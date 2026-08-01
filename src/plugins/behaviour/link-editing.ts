@@ -197,7 +197,7 @@ export function createToolbarSession(
     },
 
     close() {
-      handle.setState({ type: 'hidden' })
+      handle.setState({ type: 'hidden', hoveredLink: null })
     },
   }
 }

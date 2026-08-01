@@ -31,14 +31,27 @@ function defaultTelemetryHandler(eventName: string, props: Record<string, unknow
 
 let handler: TelemetryHandler = defaultTelemetryHandler
 
+// Every live registration, most recent last. Multiple composers can share a
+// page, so unmounting one must not clobber the others: the active handler is
+// always the latest registration that has not been torn down yet.
+const handlerStack: TelemetryHandler[] = []
+
 /**
- * Registers the host's telemetry handler (undefined restores the default
- * plausible/posthog adapter). Returns a teardown that restores the default.
+ * Registers the host's telemetry handler (undefined registers the default
+ * plausible/posthog adapter). Returns a teardown that unregisters it again,
+ * restoring whichever handler was active before it — registrations unwind in
+ * any order, and the channel falls back to the default once none are left.
  */
 export function setTelemetryHandler(custom: TelemetryHandler | undefined): () => void {
-  handler = custom ?? defaultTelemetryHandler
+  const registered = custom ?? defaultTelemetryHandler
+  handlerStack.push(registered)
+  handler = registered
   return () => {
-    handler = defaultTelemetryHandler
+    const index = handlerStack.lastIndexOf(registered)
+    if (index !== -1) {
+      handlerStack.splice(index, 1)
+    }
+    handler = handlerStack.length > 0 ? handlerStack[handlerStack.length - 1] : defaultTelemetryHandler
   }
 }
 

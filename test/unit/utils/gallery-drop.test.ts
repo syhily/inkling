@@ -107,25 +107,63 @@ describe('resolveGalleryDrop', () => {
     ])
   })
 
-  it('rejects an internal reorder when the dragged image no longer exists', () => {
+  it('rejects an internal reorder when the dragged index is out of range', () => {
     const images: GalleryImage[] = [{ src: 'https://example.com/one.jpg' }]
 
-    expect(resolveGalleryDrop(images, facts({ src: 'https://example.com/removed-remotely.jpg' }), 0, 1)).toBeNull()
+    expect(resolveGalleryDrop(images, facts({ src: 'https://example.com/one.jpg' }), 1, 0)).toBeNull()
+  })
+
+  it('reorders the instance at the dragged index when srcs are duplicated', () => {
+    const images: GalleryImage[] = [
+      { src: 'https://example.com/same.jpg', fileName: 'first.jpg' },
+      { src: 'https://example.com/same.jpg', fileName: 'second.jpg' },
+      { src: 'https://example.com/other.jpg' },
+    ]
+
+    // dragging index 1 (the second copy) to slot 0 must move that copy, not
+    // the first one a src-value find would have grabbed
+    const result = resolveGalleryDrop(images, facts({ src: 'https://example.com/same.jpg' }), 1, 0)
+
+    expect(result?.map((i) => i.fileName)).toEqual(['second.jpg', 'first.jpg', undefined])
+  })
+
+  it('reorders preview-phase images whose src is still undefined by position', () => {
+    const images: GalleryImage[] = [
+      { previewSrc: 'blob:one' },
+      { previewSrc: 'blob:two' },
+      { src: 'https://example.com/three.jpg' },
+    ]
+
+    // dragging index 1: a src-value find would grab index 0 (the first
+    // undefined src) instead
+    const result = resolveGalleryDrop(images, facts({}), 1, 0)
+
+    expect(result?.map((i) => i.previewSrc ?? i.src)).toEqual(['blob:two', 'blob:one', 'https://example.com/three.jpg'])
   })
 })
 
 describe('resolveGallerySourceRemoval', () => {
-  it('removes the dragged image', () => {
+  it('removes the dragged image by index', () => {
     const images: GalleryImage[] = [{ src: 'https://example.com/one.jpg' }, { src: 'https://example.com/two.jpg' }]
 
-    expect(resolveGallerySourceRemoval(images, 'https://example.com/one.jpg')).toEqual([
-      { src: 'https://example.com/two.jpg' },
+    expect(resolveGallerySourceRemoval(images, 0)).toEqual([{ src: 'https://example.com/two.jpg' }])
+  })
+
+  it('removes the instance at the index when srcs are duplicated', () => {
+    const images: GalleryImage[] = [
+      { src: 'https://example.com/same.jpg', fileName: 'first.jpg' },
+      { src: 'https://example.com/same.jpg', fileName: 'second.jpg' },
+    ]
+
+    expect(resolveGallerySourceRemoval(images, 1)).toEqual([
+      { src: 'https://example.com/same.jpg', fileName: 'first.jpg' },
     ])
   })
 
-  it('returns null when the src is not in the gallery', () => {
+  it('returns null when the index is out of range', () => {
     const images: GalleryImage[] = [{ src: 'https://example.com/one.jpg' }]
 
-    expect(resolveGallerySourceRemoval(images, 'https://example.com/other.jpg')).toBeNull()
+    expect(resolveGallerySourceRemoval(images, 1)).toBeNull()
+    expect(resolveGallerySourceRemoval(images, -1)).toBeNull()
   })
 })

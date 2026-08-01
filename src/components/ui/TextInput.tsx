@@ -29,12 +29,15 @@ export function TextInput({
   'data-testid': dataTestId,
   ...props
 }: TextInputProps) {
+  // Empty/absent maxLength means no cap; anything non-numeric must not reach the DOM as NaN
+  const parsedMaxLength = maxLength === undefined || maxLength === '' ? undefined : Number(maxLength)
+
   return (
     <input
       className={className}
       data-testid={dataTestId}
       disabled={disabled}
-      maxLength={maxLength ? Number(maxLength) : undefined}
+      maxLength={parsedMaxLength !== undefined && Number.isFinite(parsedMaxLength) ? parsedMaxLength : undefined}
       name={name}
       placeholder={placeholder}
       readOnly={readOnly}

@@ -115,6 +115,10 @@ export default function usePinturaEditor({
           }),
         )
 
+        // no unsubscribe: Pintura's public API only exposes `on` (no
+        // `off`/unsub in the @pqina/pintura type declarations), and each
+        // openDefaultEditor call creates a fresh modal instance that auto
+        // destructs on close — the listeners die with the instance
         editor.on('loaderror', (err) => {
           setEditorError(err instanceof Error ? err : new Error('Pintura editor load error'))
         })

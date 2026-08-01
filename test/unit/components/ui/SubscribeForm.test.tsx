@@ -24,4 +24,20 @@ describe('SubscribeForm', () => {
     const { container } = render(<SubscribeForm buttonSize="large" />)
     expect(container.firstChild).toHaveClass('p-[3px]')
   })
+
+  it('disables the input when disabled is set', () => {
+    render(<SubscribeForm disabled />)
+
+    const input = screen.getByRole('textbox')
+    expect(input).toBeDisabled()
+    expect(input).toHaveAttribute('tabIndex', '-1')
+  })
+
+  it('updates the input when the value prop changes', () => {
+    const { rerender } = render(<SubscribeForm value="me@example.com" />)
+    expect(screen.getByDisplayValue('me@example.com')).toBeInTheDocument()
+
+    rerender(<SubscribeForm value="you@example.com" />)
+    expect(screen.getByDisplayValue('you@example.com')).toBeInTheDocument()
+  })
 })

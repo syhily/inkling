@@ -179,12 +179,7 @@ describe('gen-demo-content', () => {
       }
       root.append(table)
 
-      const music = musicPlayer.node
-        ? new (musicPlayer.node as unknown as new (dataset: Record<string, unknown>) => never)({ src: '' })
-        : null
-      if (music) {
-        root.append(music as never)
-      }
+      root.append(new musicPlayer.node({ src: '' }))
 
       root.append(
         $createFootnoteDefinitionNode({

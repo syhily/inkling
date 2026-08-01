@@ -68,7 +68,10 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
             if ($isLinkNode(linkNode)) {
               const lastDescendent = linkNode.getLastDescendant()
               if ($isTextNode(lastDescendent)) {
-                lastDescendent.spliceText(lastDescendent.getTextContentSize(), 1, '', true)
+                // spliceText keeps slice(0, offset) + slice(offset + delCount), so deleting
+                // the last character means offsetting one before the end; an empty text node
+                // passes -1, which lexical clamps to a no-op
+                lastDescendent.spliceText(lastDescendent.getTextContentSize() - 1, 1, '', true)
                 return true
               }
             }

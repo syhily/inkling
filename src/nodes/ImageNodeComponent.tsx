@@ -7,7 +7,6 @@ import { ActionToolbar } from '@/components/ui/ActionToolbar'
 import { CardActionToolbar, useCardToolbarLabel } from '@/components/ui/CardActionToolbar'
 import { ImageCard } from '@/components/ui/cards/ImageCard'
 import { LinkInput } from '@/components/ui/LinkInput'
-import { UploadFileInput } from '@/components/ui/UploadChrome'
 import { useCardIsSelected } from '@/context/CardSelectionStoreContext'
 import { useCardChrome } from '@/hooks/useCardChrome'
 import useDropTarget from '@/hooks/useDropTarget'
@@ -50,10 +49,9 @@ export function ImageNodeComponent({
   cardWidth,
 }: ImageNodeComponentProps) {
   const { editor, host, write, setField } = useCardChrome(nodeKey, $isImageNode)
-  const { fileUploader, cardConfig, onError } = host
+  const { cardConfig, onError } = host
   const [showLink, setShowLink] = React.useState(false)
   const isSelected = useCardIsSelected(nodeKey)
-  const toolbarFileInputRef = React.useRef<HTMLInputElement | null>(null)
 
   const {
     uploader: imageUploader,
@@ -204,15 +202,6 @@ export function ImageNodeComponent({
       </ActionToolbar>
 
       <CardActionToolbar
-        beforeMenu={
-          <UploadFileInput
-            fileInputRef={toolbarFileInputRef}
-            mimeTypes={fileUploader.fileTypes?.image?.mimeTypes ?? []}
-            name="image-input"
-            stopClickPropagation={true}
-            onFileChange={onFileChange}
-          />
-        }
         hideWhileEditing={false}
         items={[
           {

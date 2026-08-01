@@ -34,7 +34,7 @@ test.describe('Floating format toolbar', () => {
 
     await selectBackwards(page, 'for selection'.length)
 
-    expect(page.locator('[data-inkling-floating-toolbar]')).not.toBeNull()
+    await expect(page.locator('[data-inkling-floating-toolbar]')).toBeVisible()
   })
 
   test('appears on paragraph selection', async function () {
@@ -69,7 +69,7 @@ test.describe('Floating format toolbar', () => {
     await page.keyboard.type('text for selection')
     await selectBackwards(page, 1)
 
-    expect(page.locator('[data-inkling-floating-toolbar]')).not.toBeNull()
+    await expect(page.locator('[data-inkling-floating-toolbar]')).toBeVisible()
 
     await page.keyboard.press('ArrowRight')
 

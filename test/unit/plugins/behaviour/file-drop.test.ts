@@ -2,6 +2,26 @@ import { DRAG_DROP_PASTE } from '@lexical/rich-text'
 import { $getRoot, COMMAND_PRIORITY_LOW, createEditor, DROP_COMMAND, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+const selectionMock = vi.hoisted(() => ({ forceNull: false }))
+vi.mock('lexical', async (importOriginal) => {
+  const original = await importOriginal<typeof import('lexical')>()
+  return {
+    ...original,
+    // lets a test pin the selection to null even after selectEnd()
+    $getSelection: () => (selectionMock.forceNull ? null : original.$getSelection()),
+  }
+})
+vi.mock('@lexical/clipboard', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@lexical/clipboard')>()
+  return {
+    ...original,
+    // spied so a test can prove the insert is skipped without a selection
+    $insertDataTransferForRichText: vi.fn(original.$insertDataTransferForRichText),
+  }
+})
+
+import { $insertDataTransferForRichText } from '@lexical/clipboard'
+
 import { tick } from '#/utils/test-editor'
 import { ImageNode } from '@/nodes/ImageNode'
 import { INSERT_MEDIA_COMMAND, MIME_TEXT_HTML } from '@/plugins/behaviour/clipboard-protocol'
@@ -29,6 +49,8 @@ describe('file drop', () => {
   let mediaClaims: Array<{ type: string; file: File }>
 
   beforeEach(() => {
+    selectionMock.forceNull = false
+    vi.mocked($insertDataTransferForRichText).mockClear()
     document.body.innerHTML = ''
     rootElement = document.createElement('div')
     rootElement.contentEditable = 'true'
@@ -156,6 +178,27 @@ describe('file drop', () => {
       expect(event.defaultPrevented).toBe(true)
       editor.getEditorState().read(() => {
         expect($getRoot().getTextContent()).toContain('dropped html')
+      })
+    })
+
+    it('skips the insert when no selection can be established', async () => {
+      registerDragOverSuppression(editor)
+      await tick()
+      selectionMock.forceNull = true
+
+      const event = new Event('drop', { bubbles: true, cancelable: true }) as DragEvent
+      Object.defineProperty(event, 'dataTransfer', {
+        value: { getData: (mime: string) => (mime === MIME_TEXT_HTML ? '<p>dropped html</p>' : '') },
+      })
+      Object.defineProperty(event, 'target', { value: rootElement })
+
+      rootElement.dispatchEvent(event)
+      await tick()
+
+      expect(event.defaultPrevented).toBe(true)
+      expect(vi.mocked($insertDataTransferForRichText)).not.toHaveBeenCalled()
+      editor.getEditorState().read(() => {
+        expect($getRoot().getTextContent()).toBe('')
       })
     })
 

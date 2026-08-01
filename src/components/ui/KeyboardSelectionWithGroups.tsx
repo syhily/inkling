@@ -44,7 +44,7 @@ export function KeyboardSelectionWithGroups<T extends { value: string | null } =
       {groups.map((group, groupIndex) => (
         <React.Fragment key={group.label}>
           {getGroup(group, { showSpinner: groupIndex === 0 && isLoading })}
-          {(group.items || []).map((item, index) => {
+          {group.items.map((item, index) => {
             const itemsBefore = groups.slice(0, groupIndex).reduce((sum, prevGroup) => sum + prevGroup.items.length, 0)
             const absoluteIndex = itemsBefore + index
             const isSelected = absoluteIndex === selectedIndex && !!item.value

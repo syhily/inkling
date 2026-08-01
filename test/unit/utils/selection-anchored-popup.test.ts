@@ -130,4 +130,33 @@ describe('resolveAnchoredPopupPlacement — absolute mode', () => {
 
     expect(placement).toEqual({ top: 120, left: 0, flipped: false })
   })
+
+  it('measured judges the overflow in viewport coordinates when the parent is offset from the viewport top', () => {
+    // parent top 300: the parent-relative below position (420 + 300 = 720) fits, but the
+    // viewport-relative one (720 + 300 = 1020 > 1000) overflows — the flip must fire
+    const placement = absolute({
+      anchorRect: rect(700, 0, 100, 20),
+      containerRect: rect(300, 0, 700, 2000),
+      viewportHeight: 1000,
+      absoluteEdge: 'below',
+      absoluteFlip: 'measured',
+    })
+
+    expect(placement).toEqual({ bottom: 2000 - (700 - 300), left: 0, flipped: true })
+  })
+
+  it('measured stays below at the exact viewport boundary with an offset parent', () => {
+    // 720 + 280 = 1000 fits exactly — no flip, even though the offset parent would
+    // change the parent-relative comparison
+    const placement = absolute({
+      anchorRect: rect(700, 0, 100, 20),
+      containerRect: rect(300, 0, 700, 2000),
+      popupHeight: 280,
+      viewportHeight: 1000,
+      absoluteEdge: 'below',
+      absoluteFlip: 'measured',
+    })
+
+    expect(placement).toEqual({ top: 700 - 300 + 20, left: 0, flipped: false })
+  })
 })

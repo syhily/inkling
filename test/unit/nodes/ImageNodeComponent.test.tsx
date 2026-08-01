@@ -197,17 +197,13 @@ describe('ImageNodeComponent', () => {
       expect(getToolbars(container)).toHaveLength(1)
     })
 
-    it('renders width, link, and snippet items with the upload form before the menu', async () => {
+    it('renders width, link, and snippet items in the menu toolbar', async () => {
       const nodeKey = await addImageNode(editor)
       const { container } = renderWithToolbar(nodeKey, { selected: true }, { cardConfig: { createSnippet: vi.fn() } })
 
       const toolbars = getToolbars(container)
       expect(toolbars).toHaveLength(1)
       const toolbar = toolbars[0]
-
-      // the UploadFileInput renders inside the toolbar before the menu
-      expect(toolbar.firstElementChild?.tagName).toBe('FORM')
-      expect(toolbar.querySelector('form input[type="file"]')).toBeTruthy()
 
       expect(toolbar.querySelectorAll('li')).toHaveLength(7)
       const labels = Array.from(toolbar.querySelectorAll('button')).map((button) => button.getAttribute('aria-label'))

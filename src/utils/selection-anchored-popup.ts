@@ -123,8 +123,9 @@ export function resolveAnchoredPopupPlacement({
     }
 
     // below the anchor; the measured flip fires only when below overflows
-    // the viewport and the popup fits above
-    const belowOverflowsViewport = anchorRect.bottom - containerRect.top + popupHeight > viewportHeight
+    // the viewport and the popup fits above — both judged in the anchor
+    // rect's native viewport coordinates
+    const belowOverflowsViewport = anchorRect.bottom + popupHeight > viewportHeight
     const fitsAbove = anchorRect.top - popupHeight >= 0
     if (absoluteFlip === 'measured' && belowOverflowsViewport && fitsAbove) {
       return { bottom: containerRect.height - anchorTop, left: 0, flipped: true }

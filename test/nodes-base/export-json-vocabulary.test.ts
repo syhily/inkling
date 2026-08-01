@@ -3,6 +3,7 @@ import type { LexicalEditor } from 'lexical'
 import { createHeadlessEditor } from '@lexical/headless'
 import { describe, expect, it } from 'vitest'
 
+import { editorTest } from '#/utils/test-editor'
 import { $createBaseFileNode, BaseFileNode } from '@/nodes/base/nodes/file/FileNode'
 import { $createBaseImageNode, BaseImageNode } from '@/nodes/base/nodes/image/ImageNode'
 import { $createBaseVideoNode, BaseVideoNode } from '@/nodes/base/nodes/video/VideoNode'
@@ -20,63 +21,69 @@ import { $createBaseVideoNode, BaseVideoNode } from '@/nodes/base/nodes/video/Vi
 
 const editor: LexicalEditor = createHeadlessEditor({ nodes: [BaseImageNode, BaseVideoNode, BaseFileNode] })
 
-function inEditor<T>(fn: () => T): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    editor.update(() => {
-      try {
-        resolve(fn())
-      } catch (error) {
-        reject(error)
-      }
-    })
-  })
-}
-
 function declaredPropertyNames(nodeClass: { getPropertyDefaults(): Record<string, unknown> }): string[] {
   return Object.keys(nodeClass.getPropertyDefaults())
 }
 
 describe('card exportJSON vocabulary', function () {
-  it('video exportJSON keys are exactly the declared properties, in declared order', () =>
-    inEditor(() => {
-      const json = $createBaseVideoNode().exportJSON()
-      expect(Object.keys(json)).toEqual(['type', 'version', ...declaredPropertyNames(BaseVideoNode)])
-    }))
+  it(
+    'video exportJSON keys are exactly the declared properties, in declared order',
+    editorTest(
+      () => editor,
+      () => {
+        const json = $createBaseVideoNode().exportJSON()
+        expect(Object.keys(json)).toEqual(['type', 'version', ...declaredPropertyNames(BaseVideoNode)])
+      },
+    ),
+  )
 
-  it('file exportJSON keys are exactly the declared properties, in declared order', () =>
-    inEditor(() => {
-      const json = $createBaseFileNode().exportJSON()
-      expect(Object.keys(json)).toEqual(['type', 'version', ...declaredPropertyNames(BaseFileNode)])
-    }))
+  it(
+    'file exportJSON keys are exactly the declared properties, in declared order',
+    editorTest(
+      () => editor,
+      () => {
+        const json = $createBaseFileNode().exportJSON()
+        expect(Object.keys(json)).toEqual(['type', 'version', ...declaredPropertyNames(BaseFileNode)])
+      },
+    ),
+  )
 
-  it('image exportJSON keys are exactly the declared properties, in the historical persisted order', () =>
-    inEditor(() => {
-      const json = $createBaseImageNode().exportJSON()
-      // the persisted key order differs from `imageProperties` order and
-      // must not change — payloads stay byte-identical
-      expect(Object.keys(json)).toEqual([
-        'type',
-        'version',
-        'src',
-        'width',
-        'height',
-        'title',
-        'alt',
-        'caption',
-        'cardWidth',
-        'href',
-      ])
-      expect(Object.keys(json).sort()).toEqual(['type', 'version', ...declaredPropertyNames(BaseImageNode)].sort())
-    }))
+  it(
+    'image exportJSON keys are exactly the declared properties, in the historical persisted order',
+    editorTest(
+      () => editor,
+      () => {
+        const json = $createBaseImageNode().exportJSON()
+        // the persisted key order differs from `imageProperties` order and
+        // must not change — payloads stay byte-identical
+        expect(Object.keys(json)).toEqual([
+          'type',
+          'version',
+          'src',
+          'width',
+          'height',
+          'title',
+          'alt',
+          'caption',
+          'cardWidth',
+          'href',
+        ])
+        expect(Object.keys(json).sort()).toEqual(['type', 'version', ...declaredPropertyNames(BaseImageNode)].sort())
+      },
+    ),
+  )
 
   it.each([
     { card: 'image', create: $createBaseImageNode },
     { card: 'video', create: $createBaseVideoNode },
     { card: 'file', create: $createBaseFileNode },
   ])('$card exportJSON persists the placeholder for a data-string src', ({ create }) =>
-    inEditor(() => {
-      const json = create({ src: 'data:image/png;base64,iVBORw0KGgo=' }).exportJSON()
-      expect(json.src).toBe('<base64String>')
-    }),
+    editorTest(
+      () => editor,
+      () => {
+        const json = create({ src: 'data:image/png;base64,iVBORw0KGgo=' }).exportJSON()
+        expect(json.src).toBe('<base64String>')
+      },
+    )(),
   )
 })

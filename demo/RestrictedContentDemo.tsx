@@ -22,7 +22,12 @@ interface RestrictedContentDemoProps {
 
 function RestrictedContentDemo({ paragraphs: propParagraphs }: RestrictedContentDemoProps) {
   const query = useQuery()
-  const paragraphs = propParagraphs ?? (Number(query.get('paragraphs')) || 1)
+  const queryParagraphs = query.get('paragraphs')
+  // null means the param is absent (Number(null) would be 0, not NaN); a present
+  // value is trusted like the prop path, so an explicit `?paragraphs=0` is kept —
+  // but a garbage value still falls back to 1 instead of leaking NaN downstream
+  const parsed = queryParagraphs === null ? 1 : Number(queryParagraphs)
+  const paragraphs = propParagraphs ?? (Number.isFinite(parsed) ? parsed : 1)
 
   return (
     <DemoEditorShell nodes={RESTRICTED_DEMO_NODES}>

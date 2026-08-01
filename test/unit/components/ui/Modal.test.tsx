@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -32,7 +33,7 @@ describe('Modal', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
-  it('calls onClose when the close icon is clicked', () => {
+  it('calls onClose when the close button is clicked', () => {
     const onClose = vi.fn()
     render(
       <Modal isOpen onClose={onClose}>
@@ -40,10 +41,39 @@ describe('Modal', () => {
       </Modal>,
     )
 
-    const closeIcon = screen.getByLabelText('Close dialog').querySelector('svg')
-    expect(closeIcon).toBeTruthy()
-    fireEvent.click(closeIcon!)
+    fireEvent.click(screen.getByLabelText('Close dialog'))
     expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls onClose when the close button is activated with Enter', async () => {
+    const onClose = vi.fn()
+    render(
+      <Modal isOpen onClose={onClose}>
+        content
+      </Modal>,
+    )
+
+    screen.getByLabelText('Close dialog').focus()
+    await userEvent.keyboard('{Enter}')
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not swallow key presses inside children', async () => {
+    const onKeyDown = vi.fn()
+    document.addEventListener('keydown', onKeyDown)
+
+    render(
+      <Modal isOpen onClose={() => {}}>
+        <input aria-label="note" />
+      </Modal>,
+    )
+
+    const input = screen.getByLabelText('note')
+    await userEvent.type(input, 'hello')
+    expect(input).toHaveValue('hello')
+    expect(onKeyDown).toHaveBeenCalled()
+
+    document.removeEventListener('keydown', onKeyDown)
   })
 
   it('calls onClose when Escape is pressed', () => {

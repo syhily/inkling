@@ -70,6 +70,16 @@ describe('clampWithinSpacing', () => {
     // y + origin.y = 60 < top spacing 66 → y = 66 - 40
     expect(clamp(100, 20, { origin: cardOrigin })).toEqual({ x: 100, y: 26 })
   })
+
+  it('detects a left-offscreen panel when a wide card bleeds the origin left', () => {
+    // wide card origin sits 100px left of the window: rendered left edge 50-100 = -50 < 20 → clamped to 20 rendered
+    expect(clamp(50, 100, { origin: { x: -100, y: 0 } })).toEqual({ x: 120, y: 100 })
+  })
+
+  it('does not clamp a left-bleeding local x when the origin keeps the rendered edge onscreen', () => {
+    // rendered left edge 5+100 = 105 ≥ 20 → untouched
+    expect(clamp(5, 100, { origin: { x: 100, y: 0 } })).toEqual({ x: 5, y: 100 })
+  })
 })
 
 describe('clampOnDrag', () => {

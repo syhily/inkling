@@ -22,6 +22,12 @@ export function getTableCellTag(cell: TableCellNode): 'th' | 'td' {
  * cells' header state.
  */
 export function resolveGfmPipeTableLines(rows: TableRowNode[], cellText: (cell: TableCellNode) => string): string[] {
+  // a rowless table has no pipe-table shape — Math.max over zero rows would
+  // be -Infinity and lines[0] undefined
+  if (rows.length === 0) {
+    return []
+  }
+
   const lines = rows.map((row) => {
     const cells = row
       .getChildren()

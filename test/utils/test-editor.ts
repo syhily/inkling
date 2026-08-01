@@ -10,6 +10,9 @@ import { createEditor, type LexicalEditor } from 'lexical'
 //   keep their own createEditor calls — this factory owns only the
 //   common nodes + onError shape.
 // - updateEditor: await one committed update.
+// - editorTest: the `it` body wrapper that runs the body inside
+//   editor.update and rejects on a body-thrown error; async bodies
+//   resolve/reject on the returned promise.
 // - tick: one macrotask hop — the flush React effect registration and
 //   listener-enqueued work need.
 // - drainEnqueuedUpdates: the double hop — await the outer commit, then
@@ -40,6 +43,30 @@ export function updateEditor(
   return new Promise<void>((resolve) => {
     editor.update(updateFn, { ...options, onUpdate: () => resolve() })
   })
+}
+
+/**
+ * Vitest `it` body wrapper: runs testFn inside editor.update, resolving when
+ * the body completes and rejecting on a body-thrown error (without the
+ * try/catch, an assertion failure would surface only through onError). An
+ * async body's returned promise is awaited — its continuations run after the
+ * update callback returns, matching the per-spec copies this replaced. The
+ * editor is read lazily through getEditor because `it` bodies are collected
+ * before the spec's beforeEach assigns the editor.
+ */
+export function editorTest(getEditor: () => LexicalEditor, testFn: () => void | Promise<void>): () => Promise<void> {
+  return function (): Promise<void> {
+    return new Promise((resolve, reject) => {
+      getEditor().update(() => {
+        try {
+          const result = testFn()
+          Promise.resolve(result).then(resolve).catch(reject)
+        } catch (error) {
+          reject(error)
+        }
+      })
+    })
+  }
 }
 
 /** One macrotask hop: flushes React effect registration and listener-enqueued work. */

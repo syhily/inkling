@@ -106,7 +106,19 @@ export function createCardTransformer({
     regExpStart: new RegExp('^```inkling:' + card + '\\s*$'),
     replace: (rootNode, _children, _startMatch, _endMatch, linesInBetween, _isImport) => {
       const raw = linesInBetween?.join('\n') ?? ''
-      const data: Record<string, unknown> = raw.trim() ? JSON.parse(raw) : {}
+      const parsed: unknown = raw.trim() ? JSON.parse(raw) : {}
+      // JSON.parse hands back any JSON value; the payload guards below only
+      // describe wrong-typed FIELDS on an object, so a non-object body (fence
+      // `null`, `42`) must fail here — naming the card — instead of surfacing
+      // a bare "Cannot read properties of null" TypeError from `data.<field>`
+      if (typeof parsed !== 'object' || parsed === null) {
+        throw new TypeError(
+          `card markdown transformer: expected '${card}' fence body to be a JSON object, got ${describeValue(parsed)}`,
+        )
+      }
+      // object literals from JSON.parse are plain records; the const binding
+      // is the honest bridge (an assertion would warn, a binding does not)
+      const data: Record<string, unknown> = { ...parsed }
       const node = createNode(data)
       $detachNestedEditorsForRoundTrip(node)
       rootNode.append(node)

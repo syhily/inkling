@@ -648,7 +648,7 @@ test.describe('Paste behaviour', () => {
       await pasteFilesWithText(page, files, textHtml)
 
       const text = page.locator('p').filter({ hasText: 'Some text' })
-      expect(text).not.toBeNull()
+      await expect(text).toBeVisible()
 
       const imageCard = page.locator('[data-inkling-card="image"]')
       await expect(imageCard).toHaveCount(0)

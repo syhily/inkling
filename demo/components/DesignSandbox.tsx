@@ -250,10 +250,7 @@ const DesignSandbox = () => {
 
     if (isActive) {
       return (
-        <div
-          className={`border border-transparent ${isActive ? 'shadow-[0_0_0_2px_#30cf43]' : 'hover:shadow-[0_0_0_1px_#30cf43]'}`}
-          onClick={toggleActive}
-        >
+        <div className="border border-transparent shadow-[0_0_0_2px_#30cf43]" onClick={toggleActive}>
           <MediaPlaceholder desc="Click to select an image" Icon={ImgPlaceholderIcon} />
           <CaptionEditor placeholder="Type caption for image (optional)" />
           <button
@@ -267,10 +264,7 @@ const DesignSandbox = () => {
       )
     }
     return (
-      <div
-        className={`border border-transparent ${isActive ? 'shadow-[0_0_0_2px_#30cf43]' : 'hover:shadow-[0_0_0_1px_#30cf43]'}`}
-        onClick={toggleActive}
-      >
+      <div className="border border-transparent hover:shadow-[0_0_0_1px_#30cf43]" onClick={toggleActive}>
         <MediaPlaceholder desc="Click to select an image" Icon={ImgPlaceholderIcon} />
       </div>
     )

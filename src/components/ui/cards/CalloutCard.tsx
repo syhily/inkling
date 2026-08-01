@@ -154,11 +154,7 @@ export function CalloutCard({
                 {calloutEmoji}
               </button>
               {isEditing && showEmojiPicker && (
-                <EmojiPickerPortal
-                  positionRef={emojiButtonRef}
-                  togglePortal={toggleEmojiPicker}
-                  onEmojiClick={changeEmoji}
-                />
+                <EmojiPickerPortal positionRef={emojiButtonRef} onEmojiClick={changeEmoji} />
               )}
             </>
           )}

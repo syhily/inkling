@@ -28,7 +28,7 @@ test.describe('Plus button', () => {
   test.describe('with caret', function () {
     test('appears on empty editor', async function () {
       await focusEditor(page)
-      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-button]')).toBeVisible()
     })
 
     test('moves when selection moves between empty paragraphs', async function () {
@@ -56,7 +56,7 @@ test.describe('Plus button', () => {
 
     test('disappears when starting to type', async function () {
       await focusEditor(page)
-      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-button]')).toBeVisible()
 
       await page.keyboard.type('t')
       await expect(page.locator('[data-inkling-plus-button]')).toHaveCount(0)
@@ -94,7 +94,7 @@ test.describe('Plus button', () => {
       await page.keyboard.press('Backspace')
       await page.waitForSelector('p > br', { state: 'attached' })
 
-      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-button]')).toBeVisible()
     })
   })
 
@@ -105,7 +105,7 @@ test.describe('Plus button', () => {
       const pHandle = page.locator('[data-lexical-editor] > p')
       await pHandle.hover()
 
-      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-button]')).toBeVisible()
     })
 
     test('moves when mouse moves', async function () {
@@ -136,7 +136,7 @@ test.describe('Plus button', () => {
       const firstPHandle = page.locator('[data-lexical-editor] > p').nth(0)
       await firstPHandle.hover()
 
-      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-button]')).toBeVisible()
 
       const secondPHandle = page.locator('[data-lexical-editor] > p:nth-of-type(2)')
       await secondPHandle.hover()
@@ -148,7 +148,7 @@ test.describe('Plus button', () => {
       await focusEditor(page)
       await page.keyboard.press('Enter')
 
-      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-button]')).toBeVisible()
 
       await page.keyboard.type('- ')
 
@@ -157,7 +157,7 @@ test.describe('Plus button', () => {
       const pHandle = page.locator('[data-lexical-editor] > p')
       await pHandle.hover()
 
-      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-button]')).toBeVisible()
 
       const listHandle = page.locator('[data-lexical-editor] li')
       await listHandle.hover()
@@ -172,7 +172,7 @@ test.describe('Plus button', () => {
       const firstPHandle = page.locator('[data-lexical-editor] > p').nth(0)
       await firstPHandle.hover()
 
-      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-button]')).toBeVisible()
 
       await page.keyboard.type('T')
 
@@ -220,13 +220,13 @@ test.describe('Plus button', () => {
       await focusEditor(page)
       await expect(page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
       await page.click('[data-inkling-plus-button]')
-      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-menu]')).toBeVisible()
     })
 
     test('closes on click outside', async function () {
       await focusEditor(page)
       await page.click('[data-inkling-plus-button]')
-      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-menu]')).toBeVisible()
       await page.click('.inkling-lexical')
       await expect(page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
     })
@@ -235,13 +235,13 @@ test.describe('Plus button', () => {
       await focusEditor(page)
       await page.click('[data-inkling-plus-button]')
       await page.click('[data-inkling-plus-menu] [role="separator"] > span')
-      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-menu]')).toBeVisible()
     })
 
     test('closes on escape', async function () {
       await focusEditor(page)
       await page.click('[data-inkling-plus-button]')
-      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-menu]')).toBeVisible()
       await page.keyboard.press('Escape')
       await expect(page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
     })
@@ -262,7 +262,7 @@ test.describe('Plus button', () => {
       // menu opens asynchronously after the click
       await page.waitForSelector('[data-inkling-plus-menu]')
 
-      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-menu]')).toBeVisible()
       await assertPosition(page, '[data-inkling-plus-menu]', { y: p3Box.y }, { threshold: 5 })
 
       await p1.hover()
@@ -297,7 +297,7 @@ test.describe('Plus button', () => {
     test('closes when typing', async function () {
       await focusEditor(page)
       await page.click('[data-inkling-plus-button]')
-      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-menu]')).toBeVisible()
 
       await page.keyboard.type('Test')
       await expect(page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
@@ -316,7 +316,7 @@ test.describe('Plus button', () => {
       await focusEditor(page)
       await page.keyboard.press('Enter')
       await page.click('[data-inkling-plus-button]')
-      expect(page.locator('[data-inkling-plus-menu]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-menu]')).toBeVisible()
 
       await assertSelection(page, {
         anchorOffset: 0,
@@ -330,7 +330,7 @@ test.describe('Plus button', () => {
       await page.waitForTimeout(50)
 
       await expect(page.locator('[data-inkling-plus-menu]')).toHaveCount(0)
-      expect(page.locator('[data-inkling-plus-button]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-plus-button]')).toBeVisible()
 
       await assertSelection(page, {
         anchorOffset: 0,

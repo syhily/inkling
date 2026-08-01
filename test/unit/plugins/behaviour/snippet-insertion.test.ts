@@ -174,6 +174,50 @@ describe('$insertSnippet', () => {
     })
   })
 
+  it('no-ops when the node list contains non-node entries', async () => {
+    // { nodes: [42] } slips past an Array.isArray-only guard and throws inside
+    // $generateNodesFromSerializedNodes — a malformed snippet must no-op
+    // silently instead of surfacing an editor error
+    const errors: Error[] = []
+    const strictEditor = createEditor({
+      namespace: 'test',
+      nodes: SNIPPET_TEST_NODES,
+      onError: (error) => errors.push(error),
+    })
+    await seedParagraph(strictEditor, 'keep')
+
+    const inserted = await insertSnippet(strictEditor, { name: 'broken', value: '{"nodes":[42]}' })
+
+    expect(inserted).toBe(false)
+    expect(errors).toEqual([])
+    strictEditor.getEditorState().read(() => {
+      expect($getRoot().getTextContent()).toBe('keep')
+      expect($getRoot().getChildrenSize()).toBe(1)
+    })
+  })
+
+  it('no-ops when a node entry carries an unregistered type', async () => {
+    // a string type passes the shape guard but fails generation when the
+    // editor has no class registered for it (dev warns, then throws on the
+    // missing registeredNode) — host data must no-op, not surface an error
+    const errors: Error[] = []
+    const strictEditor = createEditor({
+      namespace: 'test',
+      nodes: SNIPPET_TEST_NODES,
+      onError: (error) => errors.push(error),
+    })
+    await seedParagraph(strictEditor, 'keep')
+
+    const inserted = await insertSnippet(strictEditor, { name: 'broken', value: '{"nodes":[{"type":"no-such-node"}]}' })
+
+    expect(inserted).toBe(false)
+    expect(errors).toEqual([])
+    strictEditor.getEditorState().read(() => {
+      expect($getRoot().getTextContent()).toBe('keep')
+      expect($getRoot().getChildrenSize()).toBe(1)
+    })
+  })
+
   it('no-ops when the value parses but carries no node list', async () => {
     await seedParagraph(editor, 'keep')
 

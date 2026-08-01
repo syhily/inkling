@@ -127,19 +127,12 @@ test.describe('File card', () => {
   test('file input opens immediately when added via card menu', async function () {
     await focusEditor(page)
     await page.click('[data-inkling-plus-button]')
-    const [fileChooser] = await Promise.all([
-      page.waitForEvent('filechooser'),
-      page.click('[data-inkling-card-menu-item="File"]'),
-    ])
-
-    expect(fileChooser).not.toBeNull()
+    await Promise.all([page.waitForEvent('filechooser'), page.click('[data-inkling-card-menu-item="File"]')])
   })
 
   test('file input opens immediately when added via slash menu', async function () {
     await focusEditor(page)
-    const [fileChooser] = await Promise.all([page.waitForEvent('filechooser'), insertCard(page, { cardName: 'file' })])
-
-    expect(fileChooser).not.toBeNull()
+    await Promise.all([page.waitForEvent('filechooser'), insertCard(page, { cardName: 'file' })])
   })
 
   test('can edit file card title', async function () {

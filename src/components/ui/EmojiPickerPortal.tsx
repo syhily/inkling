@@ -1,35 +1,16 @@
 import defaultData from '@emoji-mart/data'
 import React from 'react'
 
-import Picker from '@/components/ui/EmojiPicker'
+import Picker, { type EmojiMartPickerOptions } from '@/components/ui/EmojiPicker'
 import Portal from '@/components/ui/Portal'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 
-interface EmojiPickerPortalProps {
+interface EmojiPickerPortalProps extends Omit<EmojiMartPickerOptions, 'data' | 'onEmojiSelect'> {
   // emoji-mart's onEmojiSelect delivers its (untyped upstream) emoji object;
   // consumers read the `native` character off it
   onEmojiClick: (emoji: { native?: string }) => void
   positionRef: React.RefObject<HTMLElement | null>
   data?: unknown
-  autoFocus?: boolean
-  dynamicWidth?: boolean
-  emojiButtonRadius?: string
-  emojiButtonSize?: number
-  emojiSize?: number
-  icons?: 'auto' | 'outline' | 'solid'
-  locale?: string
-  maxFrequentRows?: number
-  navPosition?: 'top' | 'bottom' | 'none'
-  noCountryFlags?: boolean
-  noResultsEmoji?: string
-  perLine?: number
-  previewEmoji?: string | null
-  previewPosition?: 'top' | 'bottom' | 'none'
-  searchPosition?: 'sticky' | 'static' | 'none'
-  set?: 'native' | 'apple' | 'facebook' | 'google' | 'twitter'
-  skin?: 1 | 2 | 3 | 4 | 5 | 6
-  skinTonePosition?: 'preview' | 'search' | 'none'
-  [key: string]: unknown
 }
 
 interface PickerPosition {
@@ -59,7 +40,6 @@ const EmojiPickerPortal = ({
   set = 'native',
   skin = 1,
   skinTonePosition = 'preview',
-  ...props
 }: EmojiPickerPortalProps) => {
   const [position, setPosition] = React.useState<PickerPosition | null>(null)
   const { darkMode } = React.useContext(InklingUiPrefsContext)
@@ -68,18 +48,17 @@ const EmojiPickerPortal = ({
   const handleScroll = React.useCallback(() => {
     if (positionRef.current) {
       const rect = positionRef.current.getBoundingClientRect()
-      const scrollX = document.documentElement.scrollLeft
-      const scrollY = document.documentElement.scrollTop
       const windowHeight = window.innerHeight
       const pickerHeight = 352 // Approximate height of the emoji picker, adjust if needed
 
-      let adjustedTop = rect.top + scrollY
+      // position: fixed uses viewport coordinates, so use rect values directly
+      let adjustedTop = rect.top
 
       if (adjustedTop + pickerHeight > windowHeight) {
-        adjustedTop = rect.top - pickerHeight - shiftPixels + scrollY
+        adjustedTop = rect.top - pickerHeight - shiftPixels
       }
 
-      setPosition({ x: (rect.left + scrollX) / 1.5, y: adjustedTop })
+      setPosition({ x: rect.left, y: adjustedTop })
     }
   }, [positionRef])
 
@@ -107,7 +86,7 @@ const EmojiPickerPortal = ({
   }
 
   // https://github.com/missive/emoji-mart#options--props
-  const defaultPickerProps = {
+  const defaultPickerProps: Omit<EmojiMartPickerOptions, 'data' | 'onEmojiSelect'> = {
     theme: darkMode ? 'dark' : 'light',
     autoFocus,
     dynamicWidth,
@@ -129,8 +108,6 @@ const EmojiPickerPortal = ({
     skinTonePosition,
   }
 
-  const pickerProps = { ...defaultPickerProps, ...props }
-
   return (
     <Portal>
       <div
@@ -143,7 +120,7 @@ const EmojiPickerPortal = ({
           <Picker // https://github.com/missive/emoji-mart#-picker
             data={data}
             onEmojiSelect={onEmojiClick}
-            {...pickerProps}
+            {...defaultPickerProps}
           />
         </div>
       </div>

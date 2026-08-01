@@ -112,33 +112,5 @@ test.describe('Selection behaviour', () => {
         focusOffset: 0,
       })
     })
-
-    // // not sure why this is returning 0 for the focus offset.. this test DOES work, but offset should be 3
-    // // TODO: may be related to why we don't see text selection while first and last nodes are cards/decorators?
-    // //  if we spy on window.selection() we can see that the selection is correct (offset = 3), just not in the test
-    // test.only('works with first and end nodes being cards', async function () {
-    //     await focusEditor(page);
-    //     await page.keyboard.type('``` ');
-    //     await page.keyboard.type('Some code');
-    //     await page.keyboard.press('Meta+Enter');
-
-    //     await page.keyboard.type('Some text');
-    //     await page.keyboard.press('Enter');
-
-    //     await page.keyboard.type('``` ');
-    //     await page.keyboard.type('Some code');
-    //     await page.keyboard.press('Meta+Enter');
-
-    //     await page.keyboard.down('Meta');
-    //     await page.keyboard.press('a');
-    //     await page.keyboard.up('Meta');
-
-    //     await assertSelection(page, {
-    //         anchorPath: [],
-    //         anchorOffset: 0,
-    //         focusPath: [],
-    //         focusOffset: 0
-    //     });
-    // });
   })
 })

@@ -72,7 +72,7 @@ export class BaseCalloutNode extends generateDecoratorNode({
     // assigned here.
     super({ calloutText, calloutTextEditor }, key)
     this.__calloutEmoji = calloutEmoji ?? '💡'
-    this.__backgroundColor = backgroundColor || 'blue'
+    this.__backgroundColor = backgroundColor ?? 'blue'
   }
 }
 

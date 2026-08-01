@@ -68,5 +68,33 @@ describe('the telemetry channel', () => {
 
       expect(plausible).toHaveBeenCalled()
     })
+
+    it('keeps the surviving handler when stacked composers unmount out of order', () => {
+      const firstHandler = vi.fn()
+      const secondHandler = vi.fn()
+      const restoreFirst = setTelemetryHandler(firstHandler)
+      const restoreSecond = setTelemetryHandler(secondHandler)
+
+      restoreFirst()
+      trackEvent('test-event', { foo: 'bar' })
+
+      expect(secondHandler).toHaveBeenCalledWith('test-event', { foo: 'bar' })
+      expect(firstHandler).not.toHaveBeenCalled()
+
+      restoreSecond()
+    })
+
+    it('restores the default adapter once every stacked composer has unmounted', () => {
+      const plausible = vi.fn()
+      window.plausible = plausible as unknown as typeof window.plausible
+      const restoreFirst = setTelemetryHandler(vi.fn())
+      const restoreSecond = setTelemetryHandler(vi.fn())
+
+      restoreFirst()
+      restoreSecond()
+      trackEvent('test-event', { foo: 'bar' })
+
+      expect(plausible).toHaveBeenCalled()
+    })
   })
 })

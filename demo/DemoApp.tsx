@@ -294,7 +294,7 @@ function DemoComposer({ editorType, isMultiplayer, setWordCount, setTKCount }: D
     }
 
     const handleFileDrop = (event: DragEvent) => {
-      if (event.dataTransfer?.files.length && event.dataTransfer.files.length > 0 && editorAPI) {
+      if (event.dataTransfer && event.dataTransfer.files.length > 0 && editorAPI) {
         event.preventDefault()
         editorAPI.insertFiles(Array.from(event.dataTransfer.files))
       }

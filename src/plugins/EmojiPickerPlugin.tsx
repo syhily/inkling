@@ -100,15 +100,31 @@ export function EmojiPickerPlugin() {
     })
   }, [editor])
 
+  // latest-wins: a slow response from a superseded query must not overwrite
+  // the newer query's results — compared against a ref, not state, so the
+  // guard never closes over a stale query
+  const latestQueryRef = React.useRef<string | null>(null)
+
   React.useEffect(() => {
     if (!queryString) {
       return
     }
     const query = queryString
+    latestQueryRef.current = query
 
-    void searchEmojis(query).then((emojis) => {
-      setSearchResults(emojis.map((emoji) => new EmojiOption(emoji)))
-    })
+    void searchEmojis(query)
+      .then((emojis) => {
+        if (latestQueryRef.current !== query) {
+          return
+        }
+        setSearchResults(emojis.map((emoji) => new EmojiOption(emoji)))
+      })
+      .catch(() => {
+        // a failed search shows no suggestions instead of rejecting unhandled
+        if (latestQueryRef.current === query) {
+          setSearchResults(null)
+        }
+      })
   }, [queryString])
 
   const onEmojiSelect = React.useCallback(

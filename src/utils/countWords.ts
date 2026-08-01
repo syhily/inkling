@@ -56,11 +56,13 @@ export default function countWords(text: string | SafeStringLike | null | undefi
 
   const RTLPattern = /([\u0600-\u06ff]+|[\u0591-\u05F4]+)/g
 
-  const match = normalizedText.match(pattern) || normalizedText.match(RTLPattern)
+  // Both patterns must run: a text mixing e.g. Latin and Arabic matches both,
+  // and picking only the first hit would drop every RTL word.
+  const match = [...(normalizedText.match(pattern) ?? []), ...(normalizedText.match(RTLPattern) ?? [])]
 
   let count = 0
 
-  if (match === null) {
+  if (match.length === 0) {
     return count
   }
 

@@ -35,6 +35,11 @@ describe('countWords', function () {
     expect(countWords(html)).toBe(4)
   })
 
+  it('counts mixed Latin and RTL words together', function () {
+    expect(countWords('hello مرحبا world')).toBe(3)
+    expect(countWords('שלום friend مرحبا')).toBe(3)
+  })
+
   it('returns 0 for empty / falsy input', function () {
     expect(countWords('')).toBe(0)
     expect(countWords(null)).toBe(0)

@@ -347,6 +347,15 @@ describe('createToolbarSession hovered link', () => {
     expect(session.handle.getState().hoveredLink).toBeNull()
   })
 
+  it('clears the hovered link on close — the outside-click close must unmount the hover toolbar', () => {
+    const session = createToolbarSession()
+    session.syncHover(createHoveredLink())
+    expect(session.handle.getState().hoveredLink).not.toBeNull()
+
+    session.close()
+    expect(session.handle.getState()).toEqual({ type: 'hidden', href: '', hoveredLink: null })
+  })
+
   it('swallows re-feeds of the same link over the same element', () => {
     const session = createToolbarSession()
     const hovered = createHoveredLink()

@@ -36,7 +36,9 @@ test.describe('Snippet Plugin', function () {
     // Wait for snippet to appear in slash menu before pressing Enter
     await expect(page.locator('[data-inkling-cardmenu-selected="true"]').filter({ hasText: 'planes' })).toBeVisible()
     await page.keyboard.press('Enter')
-    await page.waitForSelector('[data-inkling-card="image"]')
-    expect(await page.$('[data-inkling-card="image"]')).not.toBeNull()
+    // the 'planes' snippet holds two image nodes — assert both cards mount
+    // (the old toBeNull check hid that the bare locator matches 2 elements,
+    // which makes toBeVisible fail strict mode)
+    await expect(page.locator('[data-inkling-card="image"]')).toHaveCount(2)
   })
 })

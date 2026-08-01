@@ -92,6 +92,21 @@ describe('galleryUploadIntent', () => {
     expect(previewBatch).toHaveLength(9)
   })
 
+  it('rejects every file when the gallery already exceeds the 9-image limit', async () => {
+    const upload = vi.fn().mockResolvedValue([])
+    const images: GalleryImage[] = Array.from({ length: 10 }, (_, index) => ({
+      src: `https://example.com/${index}.jpg`,
+    }))
+    const files = [new File(['a'], 'a.jpg', { type: 'image/jpeg' }), new File(['b'], 'b.jpg', { type: 'image/jpeg' })]
+
+    await runIntent({ upload, files, images })
+
+    expect(setErrorMessage).toHaveBeenCalledExactlyOnceWith('Galleries are limited to 9 images')
+    expect(upload).not.toHaveBeenCalled()
+    expect(setPreviewImages).not.toHaveBeenCalled()
+    expect(setImages).not.toHaveBeenCalled()
+  })
+
   it('cleans up previews and reports the failure when the upload resolves undefined', async () => {
     const upload = vi.fn().mockResolvedValue(undefined)
     const files = [new File(['a'], 'a.jpg', { type: 'image/jpeg' })]

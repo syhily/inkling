@@ -61,6 +61,15 @@ describe('card interaction', () => {
     element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
   }
 
+  function mouseup() {
+    document.dispatchEvent(new MouseEvent('mouseup'))
+  }
+
+  const flushDeferral = () =>
+    new Promise<void>((resolve) => {
+      setTimeout(resolve, 0)
+    })
+
   it('selects an unselected card on mousedown and swallows the follow-up click', () => {
     register()
 
@@ -130,6 +139,34 @@ describe('card interaction', () => {
     expect(clickOn(target)).toBe(true)
     expect(store.getState().selectedCardKey).toBe(cardKey)
     expect(store.getState().isEditingCard).toBe(false)
+  })
+
+  it('swallows the click that follows the selecting mousedown in the same gesture', () => {
+    register()
+
+    mousedownOn(target)
+    // the gesture ends (mouseup) and the click is dispatched in the same
+    // task — the deferred reset must not outrun it
+    mouseup()
+
+    expect(clickOn(target)).toBe(true)
+    expect(store.getState().isEditingCard).toBe(false)
+  })
+
+  it('does not swallow the next real click when the mousedown click never arrives', async () => {
+    register()
+
+    // drag path: mousedown selects and arms skipClick, but the gesture is
+    // released elsewhere and no click ever follows
+    mousedownOn(target)
+    expect(store.getState().selectedCardKey).toBe(cardKey)
+    mouseup()
+    await flushDeferral()
+
+    // a later, genuine click must behave normally: selected card, missed the
+    // click-through zones → edit mode, not swallowed by the stale flag
+    expect(clickOn(target)).toBe(true)
+    expect(store.getState().isEditingCard).toBe(true)
   })
 
   it('lets mousedown move focus into inputs inside the card', () => {

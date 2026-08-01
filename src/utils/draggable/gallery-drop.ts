@@ -77,25 +77,27 @@ export function resolveGalleryDrop(
     return updatedImages
   }
 
-  // internal image being re-ordered
-  const draggedImage = images.find((i) => i.src === dataset.src)
+  // internal image being re-ordered: located by position, not by src value —
+  // duplicate srcs (or preview-phase images whose src is still undefined)
+  // would make a value find grab the wrong instance
+  const draggedImage = images[draggableIndex]
   if (!draggedImage) {
     return null
   }
-  const filtered = images.filter((i) => i !== draggedImage)
+  const filtered = images.filter((_, index) => index !== draggableIndex)
   filtered.splice(adjustInsertIndexForRemoval(draggableIndex, slot), 0, draggedImage)
   return filtered
 }
 
 /**
  * The drag-out source removal: the dragged image leaves the gallery's list
- * when its drop succeeded in another container. Returns the new list, or
- * null when the src is not in this gallery.
+ * when its drop succeeded in another container. Located by position (the same
+ * draggableIndex ordinal as the reorder path) for the same duplicate-src
+ * reason. Returns the new list, or null when the index is out of range.
  */
-export function resolveGallerySourceRemoval(images: GalleryImage[], src: unknown): GalleryImage[] | null {
-  const image = images.find((i) => i.src === src)
-  if (!image) {
+export function resolveGallerySourceRemoval(images: GalleryImage[], draggableIndex: number): GalleryImage[] | null {
+  if (draggableIndex < 0 || draggableIndex >= images.length) {
     return null
   }
-  return images.filter((i) => i !== image)
+  return images.filter((_, index) => index !== draggableIndex)
 }

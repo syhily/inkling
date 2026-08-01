@@ -252,3 +252,40 @@ describe('Markdown round-trip for host cards', function () {
     expect(node.type).not.toBe('musicPlayer')
   })
 })
+
+describe('Malformed card fence payloads', function () {
+  // The fence body passes through JSON.parse unchecked for shape: only a
+  // plain object can carry the card's fields. A scalar/null body must throw a
+  // descriptive TypeError naming the card at the transformer boundary — the
+  // same idiom as the per-field str() guards — not a bare "Cannot read
+  // properties of null" from `data.<field>` inside createNode.
+
+  it('throws a descriptive TypeError naming the card when the fence body is null', function () {
+    const markdown = '```inkling:html\nnull\n```'
+    expect(() => markdownToLexicalState(markdown)).toThrow(TypeError)
+    expect(() => markdownToLexicalState(markdown)).toThrow(
+      "card markdown transformer: expected 'html' fence body to be a JSON object, got null",
+    )
+  })
+
+  it('throws a descriptive TypeError naming the card when the fence body is a number', function () {
+    const markdown = '```inkling:html\n42\n```'
+    expect(() => markdownToLexicalState(markdown)).toThrow(TypeError)
+    expect(() => markdownToLexicalState(markdown)).toThrow(
+      "card markdown transformer: expected 'html' fence body to be a JSON object, got number",
+    )
+  })
+
+  it('throws a descriptive TypeError naming the card and field when the fence body is an array', function () {
+    const markdown = '```inkling:html\n[]\n```'
+    expect(() => markdownToLexicalState(markdown)).toThrow(TypeError)
+    expect(() => markdownToLexicalState(markdown)).toThrow("card markdown transformer: expected 'html.html'")
+  })
+
+  it('still imports a valid JSON object fence body', function () {
+    const state = markdownToLexicalState(inklingCard('html', { html: '<b>hi</b>' }))
+    const node = state.root.children[0] as SerializedHtmlNode
+    expect(node.type).toBe('html')
+    expect(node.html).toBe('<b>hi</b>')
+  })
+})

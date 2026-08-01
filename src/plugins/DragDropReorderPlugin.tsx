@@ -78,7 +78,10 @@ function useDragDropReorder(editor: LexicalEditor): void {
         const { cardName } = draggableInfo
         const { Icon } = draggableInfo
 
-        if (!cardName || cardName === 'image') {
+        // cardName always resolves here (the producer above sets it from the
+        // card's getType()); image cards fall through to the container's own
+        // image preview
+        if (cardName === 'image') {
           return
         }
 
@@ -187,10 +190,14 @@ function useDragDropReorder(editor: LexicalEditor): void {
             return
           }
 
-          // insert new image node on image drops
+          // insert new image node on image drops — only an actual insert
+          // counts as handled; a failed insert reports failure so the source
+          // node stays put
           if (draggableInfo.type === 'image') {
-            $insertDraggedImage(draggableInfo.dataset as ImageNodeDataset, droppables, insertIndex)
-            result = true
+            // untyped drag boundary: DraggableInfo.dataset is Record<string,
+            // unknown>; an 'image'-type drag carries a gallery-picked image
+            // dataset (useGalleryReorder), narrowed here to the closed type
+            result = $insertDraggedImage(draggableInfo.dataset as ImageNodeDataset, droppables, insertIndex) !== null
           }
         })
 

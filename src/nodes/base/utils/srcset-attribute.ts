@@ -69,7 +69,10 @@ export const setSrcsetAttribute = function (
   image: { src: string; width: number },
   context: RenderContext,
 ) {
-  if (!elem || !['IMG', 'SOURCE'].includes(elem.tagName) || !elem.getAttribute('src')) {
+  // both call sites (image-renderer, gallery-renderer) pass an <img>; a
+  // <source> in picture context carries srcset, not src, so the guard
+  // narrows to IMG only
+  if (!elem || elem.tagName !== 'IMG' || !elem.getAttribute('src')) {
     return
   }
 

@@ -112,7 +112,7 @@ export function clampWithinSpacing({
   const topIsOffscreen = y + origin.y < top
   const bottomIsOffscreen = viewport.height - panelBottom < bottom
   const rightIsOffscreen = viewport.width - panelRight < right
-  const leftIsOffscreen = x < left
+  const leftIsOffscreen = x + origin.x < left
 
   let yAdjustment = 0
   let xAdjustment = 0

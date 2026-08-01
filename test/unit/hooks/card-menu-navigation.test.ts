@@ -50,15 +50,16 @@ describe('createMenuNavigator', () => {
     expect(menuNavigator.getSnapshot().selectedItemIndex).toBe(0)
   })
 
-  it('mirrors the plugin arithmetic on an empty menu (maxItemIndex -1)', () => {
-    // an empty list never yielded a special case: moveDown from 0 steps to 1
-    // (0 !== -1), and Enter resolution then finds no item
+  it('keeps the selection on index 0 on an empty menu (maxItemIndex -1)', () => {
+    // an empty menu has no selectable item: both directions are no-ops instead
+    // of letting the index transiently leave the list (-1 from moveUp, 1 from
+    // moveDown), and Enter resolution still finds no item
     const menuNavigator = createMenuNavigator()
     menuNavigator.moveDown(-1)
-    expect(menuNavigator.getSnapshot().selectedItemIndex).toBe(1)
+    expect(menuNavigator.getSnapshot()).toEqual({ selectedItemIndex: 0, scrollToSelectedItem: false })
     expect(menuNavigator.selectedItem([])).toBeUndefined()
     menuNavigator.moveUp(-1)
-    expect(menuNavigator.getSnapshot().selectedItemIndex).toBe(0)
+    expect(menuNavigator.getSnapshot()).toEqual({ selectedItemIndex: 0, scrollToSelectedItem: false })
   })
 
   it('notifies subscribers on a move until unsubscribed', () => {

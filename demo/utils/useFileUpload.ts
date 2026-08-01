@@ -168,23 +168,39 @@ export function useFileUpload({ isMultiplayer = false }: UseFileUploadOptions = 
       if (isMultiplayer) {
         // multiplayer needs to store the whole file data inline so it can be transferred
         // and stored in the shared document, otherwise images etc won't appear across browsers
-        for (const file of Array.from(files)) {
-          const reader = new FileReader()
-          const url = await new Promise<string>((resolve) => {
-            reader.addEventListener(
-              'load',
-              () => {
-                resolve(reader.result as string)
-              },
-              false,
-            )
-            reader.readAsDataURL(file)
-          })
+        try {
+          for (const file of Array.from(files)) {
+            const reader = new FileReader()
+            const url = await new Promise<string>((resolve, reject) => {
+              reader.addEventListener('load', () => {
+                // readAsDataURL produces a string result; anything else means the read failed
+                if (typeof reader.result === 'string') {
+                  resolve(reader.result)
+                } else {
+                  reject(new FileUploadError(file.name, `Failed to read ${file.name}`))
+                }
+              })
+              reader.addEventListener('error', () => {
+                reject(new FileUploadError(file.name, `Failed to read ${file.name}`))
+              })
+              reader.addEventListener('abort', () => {
+                reject(new FileUploadError(file.name, `Reading ${file.name} was aborted`))
+              })
+              reader.readAsDataURL(file)
+            })
 
-          uploadResult.push({
-            url,
-            fileName: file.name,
-          })
+            uploadResult.push({
+              url,
+              fileName: file.name,
+            })
+          }
+        } catch (error) {
+          // a rejected read must not leave isLoading stuck — mirror the
+          // validation-failure path above (errors set, loading reset)
+          setErrors([error instanceof Error ? error : new Error(String(error))])
+          setLoading(false)
+          setProgress(100)
+          return undefined
         }
       } else {
         // for non-multiplayer editors, use blob urls as they are much shorter meaning they

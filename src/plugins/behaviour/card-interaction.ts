@@ -90,6 +90,20 @@ export function registerCardInteraction(
 
   getContainer()?.addEventListener('mousedown', handleMousedown)
 
+  // skipClick may only swallow the click that immediately follows its
+  // mousedown; when that click never comes (drag aborted, released
+  // elsewhere) the flag would stick and swallow a later, unrelated click.
+  // Release it on mouseup — deferred, because the gesture's own click is
+  // dispatched right after mouseup and must still be swallowed.
+  const releaseSkipClick = () => {
+    if (skipClick) {
+      setTimeout(() => {
+        skipClick = false
+      }, 0)
+    }
+  }
+  document.addEventListener('mouseup', releaseSkipClick)
+
   const unregisterCommand = editor.registerCommand(
     CLICK_COMMAND,
     (event: MouseEvent) => {
@@ -137,6 +151,7 @@ export function registerCardInteraction(
   return () => {
     unregisterCommand()
     document.removeEventListener('mousedown', snapshotSelection, { capture: true })
+    document.removeEventListener('mouseup', releaseSkipClick)
     getContainer()?.removeEventListener('mousedown', handleMousedown)
   }
 }

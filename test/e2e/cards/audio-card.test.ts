@@ -157,19 +157,14 @@ test.describe('Audio card', () => {
   test('file input opens immediately when added via card menu', async function () {
     await focusEditor(page)
     await page.click('[data-inkling-plus-button]')
-    const [fileChooser] = await Promise.all([
-      page.waitForEvent('filechooser'),
-      page.click('[data-inkling-card-menu-item="Audio"]'),
-    ])
-
-    expect(fileChooser).not.toBeNull()
+    // waitForEvent rejects on timeout, so its resolution is the assertion
+    await Promise.all([page.waitForEvent('filechooser'), page.click('[data-inkling-card-menu-item="Audio"]')])
   })
 
   test('file input opens immediately when added via slash menu', async function () {
     await focusEditor(page)
-    const [fileChooser] = await Promise.all([page.waitForEvent('filechooser'), insertCard(page, { cardName: 'audio' })])
-
-    expect(fileChooser).not.toBeNull()
+    // waitForEvent rejects on timeout, so its resolution is the assertion
+    await Promise.all([page.waitForEvent('filechooser'), insertCard(page, { cardName: 'audio' })])
   })
 
   test('can change the title of the audio card', async function () {
@@ -197,11 +192,11 @@ test.describe('Audio card', () => {
     const thumbnailFileChooser = await thumbnailFileChooserPromise
     await thumbnailFileChooser.setFiles([thumbnailFilePath])
 
-    expect(page.getByTestId('audio-thumbnail')).not.toBeNull()
+    await expect(page.getByTestId('audio-thumbnail')).toBeVisible()
 
     // Remove thumbnail
     await page.getByTestId('remove-thumbnail').click()
-    expect(page.getByTestId('upload-thumbnail')).not.toBeNull()
+    await expect(page.getByTestId('upload-thumbnail')).toBeVisible()
   })
 
   test('can upload dropped thumbnail', async function () {
@@ -269,7 +264,7 @@ test.describe('Audio card', () => {
     await page.keyboard.press('Escape')
 
     // Check that the toolbar is displayed
-    expect(page.locator('[data-inkling-card-toolbar="audio"]')).not.toBeNull()
+    await expect(page.locator('[data-inkling-card-toolbar="audio"]')).toBeVisible()
   })
 
   test('audio card toolbar has Edit button', async function () {
@@ -281,7 +276,7 @@ test.describe('Audio card', () => {
     await page.keyboard.press('Escape')
 
     // Check that the toolbar is displayed
-    expect(page.locator('[data-inkling-card-toolbar="audio"]')).not.toBeNull()
+    await expect(page.locator('[data-inkling-card-toolbar="audio"]')).toBeVisible()
 
     await page.waitForSelector('[data-inkling-card-toolbar="audio"] button[aria-label="Edit"]')
     await page.locator('[data-inkling-card-toolbar="audio"] button[aria-label="Edit"]').click()

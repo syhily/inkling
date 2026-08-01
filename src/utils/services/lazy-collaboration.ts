@@ -32,7 +32,9 @@ export interface LazyProviderFactorySession {
   /**
    * Kick the lazy load. `apply` receives the chunk's factory builder only
    * when this load is still the latest at resolve time — a superseded load
-   * (restart with new config, disable, unmount) never applies.
+   * (restart with new config, disable, unmount) never applies. A rejected
+   * import (network/chunk error) never applies either: the session stays
+   * inert and the rejection is swallowed, never unhandled.
    */
   start: (apply: (createFactory: CollaborationChunk['createWebsocketProviderFactory']) => void) => void
   /** Supersede every in-flight load (disable, unmount, config change). */
@@ -46,11 +48,15 @@ export function createLazyProviderFactory(
   return {
     start(apply) {
       const generation = track.next()
-      void load().then(({ createWebsocketProviderFactory }) => {
-        if (track.isLatest(generation)) {
-          apply(createWebsocketProviderFactory)
-        }
-      })
+      void load()
+        .then(({ createWebsocketProviderFactory }) => {
+          if (track.isLatest(generation)) {
+            apply(createWebsocketProviderFactory)
+          }
+        })
+        // A failed chunk import (network/chunk error) leaves the factory
+        // inert — never an unhandled rejection.
+        .catch(() => {})
     },
     cancel: () => track.dispose(),
   }

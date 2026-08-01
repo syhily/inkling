@@ -39,9 +39,6 @@ export interface CardActionToolbarProps {
   // testid for the default items' edit entry — passing it keeps the default
   // item list while stamping the card's own `edit-X` testid
   editDataTestId?: string
-  // extra content rendered inside the menu toolbar before the menu itself
-  // (image's UploadFileInput)
-  beforeMenu?: React.ReactNode
 }
 
 const DEFAULT_ITEMS: CardToolbarItem[] = [{ kind: 'edit' }, { kind: 'separator' }, { kind: 'snippet' }]
@@ -70,7 +67,6 @@ export function CardActionToolbar({
   hideWhileEditing = true,
   items,
   editDataTestId,
-  beforeMenu,
 }: CardActionToolbarProps) {
   const resolvedItems: CardToolbarItem[] =
     items ??
@@ -160,7 +156,6 @@ export function CardActionToolbar({
         data-inkling-card-toolbar={toolbarLabel}
         isVisible={isSelected && !(hideWhileEditing && isEditing) && !showSnippetToolbar && visibleWhen}
       >
-        {beforeMenu}
         <ToolbarMenu>{resolvedItems.map(renderItem)}</ToolbarMenu>
       </ActionToolbar>
     </>

@@ -77,6 +77,13 @@ describe('HTMLtoLexical', function () {
       })
     })
 
+    it('can convert whitespace-only document', function () {
+      const lexical = htmlToLexical('   \n\t  ', options)
+
+      // whitespace-only HTML must follow the same MINIMAL_DOCUMENT path as an empty import
+      assert.deepEqual(lexical, htmlToLexical('', options))
+    })
+
     it('can convert without options', function () {
       const lexical = htmlToLexical('<p>Hello World</p>')
 

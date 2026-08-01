@@ -1,3 +1,5 @@
+import type { LexicalCommand } from 'lexical'
+
 import type { CardConfig, SnippetItem } from '@/context/InklingHostIntegrationContext'
 
 import SnippetCardIcon from '@/assets/icons/inkling-card-type-snippet.svg?react'
@@ -12,7 +14,7 @@ interface MenuItemBase {
   labelKey?: string
   desc?: string
   Icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
-  insertCommand?: unknown
+  insertCommand?: LexicalCommand<unknown>
   matches?: ((query: string, label: string) => boolean) | string[]
   priority?: number
   shortcut?: string

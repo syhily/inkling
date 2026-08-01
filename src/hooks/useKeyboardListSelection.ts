@@ -61,7 +61,7 @@ export function useKeyboardListSelection<T>({
         event.stopPropagation()
         setHasNavigated(true)
         setSelectedIndex((i) => {
-          return Math.min(i + 1, items.length - 1)
+          return Math.max(0, Math.min(i + 1, items.length - 1))
         })
         setScrollSelectedIntoView(true)
       }

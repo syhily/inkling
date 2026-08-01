@@ -428,7 +428,7 @@ test.describe('Image card', () => {
     await fileChooser.setFiles([filePath])
     await page.click('[data-inkling-card="image"]')
 
-    expect(page.locator('[data-inkling-card-toolbar="image"]')).not.toBeNull()
+    await expect(page.locator('[data-inkling-card-toolbar="image"]')).toBeVisible()
   })
 
   test('image card toolbar has Regular button', async function () {
@@ -443,7 +443,7 @@ test.describe('Image card', () => {
     await fileChooser.setFiles([filePath])
     await page.click('[data-inkling-card="image"]')
 
-    expect(page.locator('[data-inkling-card-toolbar="image"] button[aria-label="Regular"]')).not.toBeNull()
+    await expect(page.locator('[data-inkling-card-toolbar="image"] button[aria-label="Regular width"]')).toBeVisible()
   })
 
   test('image card toolbar has Wide button', async function () {
@@ -458,7 +458,7 @@ test.describe('Image card', () => {
     await fileChooser.setFiles([filePath])
     await page.click('[data-inkling-card="image"]')
 
-    expect(page.locator('[data-inkling-card-toolbar="image"] button[aria-label="Wide"]')).not.toBeNull()
+    await expect(page.locator('[data-inkling-card-toolbar="image"] button[aria-label="Wide width"]')).toBeVisible()
   })
 
   test('image card toolbar has Full button', async function () {
@@ -473,7 +473,7 @@ test.describe('Image card', () => {
     await fileChooser.setFiles([filePath])
     await page.click('[data-inkling-card="image"]')
 
-    expect(page.locator('[data-inkling-card-toolbar="image"] button[aria-label="Full"]')).not.toBeNull()
+    await expect(page.locator('[data-inkling-card-toolbar="image"] button[aria-label="Full width"]')).toBeVisible()
   })
 
   test('image card toolbar has Link button', async function () {
@@ -488,22 +488,7 @@ test.describe('Image card', () => {
     await fileChooser.setFiles([filePath])
     await page.click('[data-inkling-card="image"]')
 
-    expect(page.locator('[data-inkling-card-toolbar="image"] button[aria-label="Link"]')).not.toBeNull()
-  })
-
-  test('image card toolbar has Replace button', async function () {
-    const filePath = fixture('large-image.png')
-
-    await insertEmptyImageCard(page)
-
-    const [fileChooser] = await Promise.all([
-      page.waitForEvent('filechooser'),
-      page.click('button[name="placeholder-button"]'),
-    ])
-    await fileChooser.setFiles([filePath])
-    await page.click('[data-inkling-card="image"]')
-
-    expect(page.locator('[data-inkling-card-toolbar="image"] button[aria-label="Replace"]')).not.toBeNull()
+    await expect(page.locator('[data-inkling-card-toolbar="image"] button[aria-label="Link"]')).toBeVisible()
   })
 
   test('image card toolbar has Snippet button', async function () {
@@ -518,7 +503,8 @@ test.describe('Image card', () => {
     await fileChooser.setFiles([filePath])
     await page.click('[data-inkling-card="image"]')
 
-    expect(page.locator('[data-inkling-card-toolbar="image"] button[aria-label="Snippet"]')).not.toBeNull()
+    // The snippet item's aria-label is the 'toolbar.saveAsSnippet' label ('Save as snippet')
+    await expect(page.locator('[data-inkling-card-toolbar="image"] button[aria-label="Save as snippet"]')).toBeVisible()
   })
 
   test('toolbar can toggle image sizes', async function () {
@@ -540,16 +526,18 @@ test.describe('Image card', () => {
 
     await page.click('[data-inkling-card="image"]')
 
-    expect(page.locator('[data-inkling-card-toolbar="image"]')).not.toBeNull()
+    await expect(page.locator('[data-inkling-card-toolbar="image"]')).toBeVisible()
 
     await page.click('[data-inkling-card-toolbar="image"] button[aria-label="Wide width"]')
-    expect(page.locator('[data-inkling-card-width="wide"]')).not.toBeNull()
+    // data-inkling-card-width is stamped on both the decorator wrapper div and
+    // the inner figure — scope to the figure to avoid a strict-mode violation
+    await expect(page.locator('figure[data-inkling-card-width="wide"]')).toBeVisible()
 
     await page.click('[data-inkling-card-toolbar="image"] button[aria-label="Full width"]')
-    expect(page.locator('[data-inkling-card-width="full"]')).not.toBeNull()
+    await expect(page.locator('figure[data-inkling-card-width="full"]')).toBeVisible()
 
     await page.click('[data-inkling-card-toolbar="image"] button[aria-label="Regular width"]')
-    expect(page.locator('[data-inkling-card-width="regular"]')).not.toBeNull()
+    await expect(page.locator('figure[data-inkling-card-width="regular"]')).toBeVisible()
   })
 
   test('toolbar does not disappear on click', async function () {
@@ -573,25 +561,20 @@ test.describe('Image card', () => {
 
     await page.click('[data-inkling-card-toolbar="image"] button[aria-label="Regular width"]')
 
-    expect(page.locator('[data-inkling-card-toolbar="image"]')).not.toBeNull()
+    await expect(page.locator('[data-inkling-card-toolbar="image"]')).toBeVisible()
   })
 
   test('file input opens immediately when added via card menu', async function () {
     await focusEditor(page)
     await page.click('[data-inkling-plus-button]')
-    const [fileChooser] = await Promise.all([
-      page.waitForEvent('filechooser'),
-      page.click('[data-inkling-card-menu-item="Image"]'),
-    ])
-
-    expect(fileChooser).not.toBeNull()
+    await Promise.all([page.waitForEvent('filechooser'), page.click('[data-inkling-card-menu-item="Image"]')])
   })
 
   test('can handle drag over & leave', async function () {
     await insertEmptyImageCard(page)
 
     const imageCard = page.locator('[data-inkling-card="image"]')
-    expect(imageCard).not.toBeNull()
+    await expect(imageCard).toBeVisible()
 
     const filePath = fixture('large-image.png')
     const dataTransfer = await createDataTransfer(page, [
@@ -602,7 +585,7 @@ test.describe('Image card', () => {
       .locator('[data-inkling-card="image"] [data-testid="media-placeholder"]')
       .dispatchEvent('dragenter', { dataTransfer })
 
-    expect(page.locator('[data-inkling-card-drag-text="true"]')).not.toBeNull()
+    await expect(page.locator('[data-inkling-card-drag-text="true"]')).toBeVisible()
 
     await page
       .locator('[data-inkling-card="image"] [data-testid="media-placeholder"]')
@@ -1436,11 +1419,21 @@ function tenorTestData() {
 }
 
 const tenorUrl = /https:\/\/tenor\.googleapis\.com\/v2\//
+const tenorMediaUrl = /^https:\/\/media\.tenor\.com\//
 async function mockTenorApi(page: Page, { status = 200 }: { status?: number } = {}) {
   await page.route(tenorUrl, (route: Route) =>
     route.fulfill({
       status,
       body: JSON.stringify(tenorTestData()),
+    }),
+  )
+  // the fixture payload points tiles and the inserted card at the provider's
+  // media CDN — fulfill those locally too, so no request leaves the runner
+  await page.route(tenorMediaUrl, (route: Route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'image/gif',
+      body: readFileSync(fixture('sample.gif')),
     }),
   )
 }
@@ -1481,11 +1474,20 @@ function klipyTestData() {
 }
 
 const klipyUrl = /https:\/\/api\.klipy\.com\/v2\//
+const klipyMediaUrl = /^https:\/\/static\.klipy\.com\//
 async function mockKlipyApi(page: Page, { status = 200 }: { status?: number } = {}) {
   await page.route(klipyUrl, (route: Route) =>
     route.fulfill({
       status,
       body: JSON.stringify(klipyTestData()),
+    }),
+  )
+  // same media-CDN coverage as mockTenorApi — the runner never goes online
+  await page.route(klipyMediaUrl, (route: Route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'image/gif',
+      body: readFileSync(fixture('sample.gif')),
     }),
   )
 }
@@ -1512,8 +1514,9 @@ test.describe('Image card - Klipy GIF provider', () => {
     await expect(page.locator('[data-gif-index="0"]')).toBeVisible()
     await page.click('[data-gif-index="0"]')
 
-    // toBeAttached rather than toBeVisible: the fixture GIF URL is not
-    // network-loaded in tests, so visibility would depend on an external fetch
+    // toBeAttached rather than toBeVisible: the fixture GIF is fulfilled with
+    // a 1x1 local stand-in, so a visibility assert would pin the stand-in's
+    // rendered size rather than the card's insertion behaviour
     await expect(page.getByTestId('image-card-populated')).toBeAttached()
 
     await assertHTML(

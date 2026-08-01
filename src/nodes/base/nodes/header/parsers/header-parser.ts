@@ -1,7 +1,9 @@
 // Survives hand-written (no import spec, CONTEXT.md: "import spec"): the
-// payload is derived, not read — layout from backgroundImageSrc presence,
-// buttonEnabled from element presence, two-source backgroundColor, and the
-// version: 2 constant.
+// payload is derived, not read — buttonEnabled from element presence,
+// two-source backgroundColor, and the version: 2 constant. layout/swapped/
+// backgroundSize are read back from the classes the renderer emits
+// (header-renderer.ts getCardClasses); hand-written markup has no layout
+// classes, so it keeps the backgroundImageSrc-presence fallback for layout.
 import type { LexicalNode } from 'lexical'
 
 export function parseHeaderNode(BaseHeaderNode: new (data: Record<string, unknown>) => LexicalNode) {
@@ -22,7 +24,16 @@ export function parseHeaderNode(BaseHeaderNode: new (data: Record<string, unknow
               ? 'center'
               : ''
             const backgroundImageSrc = div.querySelector('.inkling-header-card-image')?.getAttribute('src')
-            const layout = backgroundImageSrc ? 'split' : ''
+            const isSplitLayout = div.classList.contains('inkling-layout-split')
+            // split also emits inkling-width-full, so the split check wins;
+            // hand-written markup has no layout classes and falls back to the
+            // image-presence heuristic
+            const exportedWidth = Array.from(div.classList)
+              .find((cls) => cls.startsWith('inkling-width-'))
+              ?.slice('inkling-width-'.length)
+            const layout = isSplitLayout ? 'split' : exportedWidth || (backgroundImageSrc ? 'split' : '')
+            const swapped = div.classList.contains('inkling-swapped')
+            const backgroundSize = isSplitLayout && div.classList.contains('inkling-content-wide') ? 'contain' : 'cover'
             const backgroundColor = div.classList.contains('inkling-style-accent')
               ? 'accent'
               : div.getAttribute('data-background-color')
@@ -41,6 +52,8 @@ export function parseHeaderNode(BaseHeaderNode: new (data: Record<string, unknow
               alignment,
               backgroundImageSrc,
               layout,
+              swapped,
+              backgroundSize,
               textColor,
               header,
               subheader,

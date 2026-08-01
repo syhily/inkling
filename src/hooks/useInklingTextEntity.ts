@@ -47,7 +47,7 @@ function registerExtendedTextEntity<T extends TextNode = TextNode>(
     const prevSibling = node.getPreviousSibling()
     let text = node.getTextContent()
     let currentNode: TextNode | null = node
-    let match
+    let match: ReturnType<typeof getMatch>
 
     if ($isTextNode(prevSibling)) {
       const previousText = prevSibling.getTextContent()

@@ -533,10 +533,13 @@ export function createGifBrowser({
   }
 
   const setColumnCount = (count: number): void => {
-    if (count === columnCount) {
+    // zero or negative counts leave no column for addGifToColumns to push
+    // into (Math.min over an empty height list indexes column -1)
+    const nextCount = Math.max(1, count)
+    if (nextCount === columnCount) {
       return
     }
-    columnCount = count
+    columnCount = nextCount
     rebuildColumns()
     store.emit({ columns })
   }

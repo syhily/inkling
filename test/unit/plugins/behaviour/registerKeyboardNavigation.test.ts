@@ -1,4 +1,4 @@
-import { $createLinkNode, LinkNode } from '@lexical/link'
+import { $createLinkNode, $isLinkNode, LinkNode } from '@lexical/link'
 import { ListItemNode, ListNode } from '@lexical/list'
 import {
   $createLineBreakNode,
@@ -252,6 +252,31 @@ describe('registerKeyboardNavigation', () => {
     cleanup()
   })
 
+  it('does not intercept enter when the selected card has been removed', async () => {
+    let cardKey = ''
+    await updateEditor(editor, () => {
+      const root = $getRoot()
+      const image = $createImageNode({ src: '/image.png' })
+      root.append(image)
+      cardKey = image.getKey()
+    })
+
+    // remove the card while the store still points at its key
+    await updateEditor(editor, () => {
+      $getNodeByKey(cardKey)?.remove()
+    })
+
+    mounted = mountEditor(editor)
+    const cleanup = registerWithCardKey(cardKey)
+
+    const event = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true })
+    const result = await dispatchAndCommit(editor, KEY_ENTER_COMMAND, event)
+    expect(result).toBe(false)
+    expect(event.defaultPrevented).toBe(false)
+
+    cleanup()
+  })
+
   it('toggles card edit mode on meta+enter when a card is selected', async () => {
     const { $createCodeBlockNode } = await import('@/nodes/CodeBlockNode')
     let cardKey = ''
@@ -309,6 +334,39 @@ describe('registerKeyboardNavigation', () => {
       expect($isNodeSelection(selection)).toBe(true)
       const selectedNode = selection?.getNodes()[0]
       expect(selectedNode?.getKey()).toBe(cardKey)
+    })
+
+    cleanup()
+  })
+
+  it('deletes the last character of a preceding link on backspace (firefox workaround)', async () => {
+    await updateEditor(editor, () => {
+      const root = $getRoot()
+      const paragraph = $createParagraphNode()
+      const link = $createLinkNode('https://example.com')
+      link.append($createTextNode('link text'))
+      const textNode = $createTextNode('after')
+      paragraph.append(link)
+      paragraph.append(textNode)
+      root.append(paragraph)
+      textNode.select(0, 0)
+    })
+
+    mounted = mountEditor(editor)
+    const cleanup = registerWithCardKey(null)
+
+    const result = await dispatchAndCommit(
+      editor,
+      KEY_BACKSPACE_COMMAND,
+      new KeyboardEvent('keydown', { key: 'Backspace' }),
+    )
+    expect(result).toBe(true)
+
+    editor.getEditorState().read(() => {
+      const paragraph = $getRoot().getFirstChild()
+      const link = $isParagraphNode(paragraph) ? paragraph.getFirstChild() : null
+      expect($isLinkNode(link)).toBe(true)
+      expect(link?.getTextContent()).toBe('link tex')
     })
 
     cleanup()
@@ -413,7 +471,7 @@ describe('registerKeyboardNavigation', () => {
 
     const nestedEditor = createEditor({
       namespace: 'nested',
-      nodes: KEYBOARD_TEST_NODES as [],
+      nodes: KEYBOARD_TEST_NODES,
       parentEditor,
       onError: () => {},
     })

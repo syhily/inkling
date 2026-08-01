@@ -585,10 +585,6 @@ export function isMac(): boolean {
 }
 
 export function ctrlOrCmd(page: Page) {
-  if (!page) {
-    return isMac() ? 'Meta' : 'Control'
-  }
-
   const modifier = browserCtrlOrCmdMap.get(page)
 
   if (!modifier) {

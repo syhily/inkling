@@ -61,15 +61,17 @@ export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNaviga
       }
 
       // if a card is selected, insert a new paragraph after it
+      // the selected key may point at a card that has since been removed —
+      // only intercept enter when the card actually still exists
       if (!isNested && selectedCardKey) {
-        event?.preventDefault()
         const cardNode = $getNodeByKey(selectedCardKey)
-        const paragraphNode = $createParagraphNode()
         if ($isInklingCard(cardNode)) {
+          event?.preventDefault()
+          const paragraphNode = $createParagraphNode()
           cardNode.insertAfter(paragraphNode)
           paragraphNode.select()
+          return true
         }
-        return true
       }
 
       // code card shortcut — trigger only; the regex, language extraction, and

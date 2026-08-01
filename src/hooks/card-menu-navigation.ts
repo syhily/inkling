@@ -23,6 +23,11 @@ export function createMenuNavigator() {
 
     /** Arrow up/left: step back one item, wrapping to the last from the first. Latches a scroll request. */
     moveUp(maxItemIndex: number) {
+      // an empty menu (maxItemIndex -1) has no selectable item — stay on 0
+      // instead of wrapping to -1
+      if (maxItemIndex < 0) {
+        return
+      }
       store.emit({
         scrollToSelectedItem: true,
         selectedItemIndex:
@@ -32,6 +37,11 @@ export function createMenuNavigator() {
 
     /** Arrow down/right: step forward one item, wrapping to the first from the last. Latches a scroll request. */
     moveDown(maxItemIndex: number) {
+      // an empty menu (maxItemIndex -1) has no selectable item — stay on 0
+      // instead of stepping to 1
+      if (maxItemIndex < 0) {
+        return
+      }
       store.emit({
         scrollToSelectedItem: true,
         selectedItemIndex:

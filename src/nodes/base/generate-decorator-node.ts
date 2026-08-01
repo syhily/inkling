@@ -9,6 +9,7 @@ import type {
 } from 'lexical'
 
 import { $generateHtmlFromNodes } from '@lexical/html'
+import { isLexicalEditor } from 'lexical'
 
 import type { ExportDOMOptions, ExportDOMOutput } from '@/nodes/base/export-dom'
 import type { RenderContext } from '@/nodes/base/render-context'
@@ -619,17 +620,22 @@ export function generateDecoratorNode<
       // instance was passed in
       getNestedEditorSpecs(this).forEach((spec) => {
         const editorProperty = `__${spec.name}`
+        // Payloads crossing the constructor are untrusted (see the importJSON
+        // trust-boundary note): adopt a nested editor only when it really is
+        // a LexicalEditor instance — a truthy non-editor value falls back to
+        // a fresh editor rather than being asserted into setupNestedEditor
+        const passedEditor = dataset[spec.name]
         const nestedEditor = setupNestedEditor({
-          editor: dataset[spec.name] as LexicalEditor | undefined,
+          editor: isLexicalEditor(passedEditor) ? passedEditor : undefined,
           nodes: spec.nodes,
         })
         this[editorProperty] = nestedEditor
 
         const serialized = dataset[spec.serializedKey]
-        if (!dataset[spec.name] && serialized) {
+        if (!isLexicalEditor(passedEditor) && typeof serialized === 'string' && serialized) {
           // store the initial state separately as it's passed in to
           // `<CollaborationPlugin />` when no YJS document exists
-          this[`${editorProperty}InitialState`] = populateNestedEditor(nestedEditor, serialized as string)
+          this[`${editorProperty}InitialState`] = populateNestedEditor(nestedEditor, serialized)
         }
       })
 
@@ -774,7 +780,10 @@ export function generateDecoratorNode<
       // Trust boundary: payloads are trusted to match the declared prop types
       // (same model as Lexical's own importJSON and upstream koenig). Only
       // BookmarkNode validates its payload; a corrupt payload lands wrong-typed
-      // values in `__` fields and fails later at read/export time.
+      // values in `__` fields and fails later at read/export time. The
+      // constructor does guard the nested-editor slots (real LexicalEditor
+      // instance, string HTML), where a wrong-typed value would crash setup
+      // immediately instead of failing later.
       return new this(data as Partial<DecoratorNodeValueMap<Props>>)
     }
 

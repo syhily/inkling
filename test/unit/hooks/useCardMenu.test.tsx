@@ -149,6 +149,22 @@ describe('useCardMenu', () => {
     expect(dispatchCommandSpy).toHaveBeenCalledWith(INSERT_TEST_COMMAND, { src: 'a.png', tag: 'Nature' })
   })
 
+  it('passes an empty-string command param through instead of dropping it', () => {
+    const editor = createTestEditor()
+    const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
+    const { result } = renderHook(() => useCardMenu(editor, 'image', { commandParams: [''] }), {
+      wrapper: createWrapper(),
+    })
+
+    act(() => {
+      result.current.insert(INSERT_TEST_COMMAND, { queryParams: ['tag'] })
+    })
+
+    // a typed-but-empty param is a legal value; only `undefined` (no param
+    // typed at all) may be skipped
+    expect(dispatchCommandSpy).toHaveBeenCalledWith(INSERT_TEST_COMMAND, { tag: '' })
+  })
+
   it('replaces the trigger paragraph before dispatching when replaceTriggerParagraph is set', async () => {
     const editor = createTestEditor()
     const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')

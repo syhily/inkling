@@ -5,15 +5,42 @@ import React, { useEffect, useRef } from 'react'
 // update() method — emoji-mart ships dist/index.d.ts, but its types are `any`
 // throughout, so the instance shape we rely on is declared here
 interface EmojiMartInstance extends HTMLElement {
-  update: (props: Record<string, unknown>) => void
+  update: (props: EmojiMartPickerOptions) => void
+}
+
+// the options we pass through to emoji-mart's Picker, per
+// https://github.com/missive/emoji-mart#options--props — emoji-mart's own
+// types are `any` throughout, so these are declared here with no index
+// signature: a misspelled option fails typecheck instead of leaking silently
+export type EmojiMartPickerOptions = {
+  data: unknown
+  onEmojiSelect?: (emoji: { native?: string }) => void
+  theme?: 'auto' | 'light' | 'dark'
+  autoFocus?: boolean
+  dynamicWidth?: boolean
+  emojiButtonRadius?: string
+  emojiButtonSize?: number
+  emojiSize?: number
+  icons?: 'auto' | 'outline' | 'solid'
+  locale?: string
+  maxFrequentRows?: number
+  navPosition?: 'top' | 'bottom' | 'none'
+  noCountryFlags?: boolean
+  noResultsEmoji?: string
+  perLine?: number
+  previewEmoji?: string | null
+  previewPosition?: 'top' | 'bottom' | 'none'
+  searchPosition?: 'sticky' | 'static' | 'none'
+  set?: 'native' | 'apple' | 'facebook' | 'google' | 'twitter'
+  skin?: 1 | 2 | 3 | 4 | 5 | 6
+  skinTonePosition?: 'preview' | 'search' | 'none'
 }
 
 export default function EmojiPicker({
   setInstanceRef,
   ...props
-}: {
+}: EmojiMartPickerOptions & {
   setInstanceRef?: (instance: EmojiMartInstance | null) => void
-  [key: string]: unknown
 }) {
   const ref = useRef<HTMLDivElement | null>(null)
 

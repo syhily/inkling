@@ -17,13 +17,21 @@ export function readImageAttributesFromElement(element: Element): Record<string,
   if (element.width) {
     attrs.width = element.width
   } else if (element.dataset && element.dataset.width) {
-    attrs.width = parseInt(element.dataset.width, 10)
+    // garbage data-width values must not surface as NaN — the
+    // data-image-dimensions path below enforces the same no-NaN rule
+    const width = parseInt(element.dataset.width, 10)
+    if (!Number.isNaN(width)) {
+      attrs.width = width
+    }
   }
 
   if (element.height) {
     attrs.height = element.height
   } else if (element.dataset && element.dataset.height) {
-    attrs.height = parseInt(element.dataset.height, 10)
+    const height = parseInt(element.dataset.height, 10)
+    if (!Number.isNaN(height)) {
+      attrs.height = height
+    }
   }
 
   if (!element.width && !element.height) {

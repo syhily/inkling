@@ -178,19 +178,30 @@ describe('useGalleryReorder', () => {
   })
 
   it('rejects an internal drop when the dragged image no longer exists', async () => {
-    const images: GalleryImage[] = [{ src: 'https://example.com/one.jpg' }, { src: 'https://example.com/two.jpg' }]
-    const { options, container, updateImages } = await getRegisteredOptions(images)
+    // positional lookup (§3-25): the source is located by the dragged
+    // element's slot among the container's droppables — so the "removed
+    // remotely" divergence is built directly: the DOM still renders two
+    // slots while the hook's images data only holds one, and slot 1
+    // resolves past the end of the data
+    const { result, updateImages } = await renderGalleryHook([{ src: 'https://example.com/one.jpg' }])
+    const container = createImageContainer([
+      { src: 'https://example.com/one.jpg' },
+      { src: 'https://example.com/two.jpg' },
+    ])
+    await act(async () => {
+      result.current.setContainerRef(container)
+    })
+    const [, options] = registerContainer.mock.calls[0]
 
-    const draggableElement = container.children[0] as HTMLElement
     const draggableInfo: DraggableInfo = {
       type: 'image',
-      element: draggableElement,
+      element: container.children[1] as HTMLElement,
       target: null,
       mousePosition: { x: 0, y: 0 },
-      dataset: { src: 'https://example.com/removed-remotely.jpg' },
+      dataset: { src: 'https://example.com/two.jpg' },
     }
 
-    const success = options.droppable.onDrop(draggableInfo, { insertIndex: 2 })
+    const success = options.droppable.onDrop(draggableInfo, { insertIndex: 0 })
 
     expect(success).toBe(false)
     expect(updateImages).not.toHaveBeenCalled()
@@ -225,18 +236,19 @@ describe('useGalleryReorder', () => {
 
   it('removes an image when it is dropped outside the gallery', async () => {
     const images: GalleryImage[] = [{ src: 'https://example.com/one.jpg' }, { src: 'https://example.com/two.jpg' }]
-    const { onDropEnd, updateImages } = await getRegisteredOptions(images)
+    const { onDropEnd, container, updateImages } = await getRegisteredOptions(images)
 
     const draggableInfo: DraggableInfo = {
       type: 'image',
-      element: null,
+      element: container.children[0] as HTMLElement,
       target: null,
       mousePosition: { x: 0, y: 0 },
       dataset: { src: 'https://example.com/one.jpg' },
     }
 
     // dropped elsewhere: this gallery's onDrop never ran, so the handler
-    // reports sourceHandled=false and the source image is removed
+    // reports sourceHandled=false and the source image is removed — located
+    // by the dragged element's slot among the droppables
     onDropEnd(draggableInfo, true, false)
 
     expect(updateImages).toHaveBeenCalledWith([{ src: 'https://example.com/two.jpg' }])

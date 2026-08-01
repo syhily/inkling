@@ -153,7 +153,7 @@ test.describe('Card behaviour', () => {
       await page.click('div[data-inkling-card="codeblock"]')
       await page.click('div[data-inkling-card="codeblock"]')
 
-      expect(page.locator('[data-inkling-card-editing="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-editing="true"]')).toBeVisible()
     })
 
     test('single clicking on a selected card puts it into edit mode', async function () {
@@ -165,7 +165,7 @@ test.describe('Card behaviour', () => {
       // Click to edit
       await page.click('div[data-inkling-card="codeblock"]')
 
-      expect(page.locator('[data-inkling-card-editing="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-editing="true"]')).toBeVisible()
     })
 
     test('clicking outside the edit mode card switches back to display mode', async function () {
@@ -175,14 +175,21 @@ test.describe('Card behaviour', () => {
       await page.keyboard.press('Enter')
       await page.keyboard.press('Enter')
       await page.keyboard.type('```javascript ')
+      await page.waitForSelector('[data-inkling-card="codeblock"] [contenteditable="true"]')
+      // clicking outside an EMPTY edit-mode card removes it instead of
+      // switching it to display mode ($deselectCard in card-adjacency.ts
+      // removes cards whose isEmpty() is true — the empty case is covered by
+      // 'clicking outside the empty edit mode card removes the card' below),
+      // so this test gives the card content first
+      await page.keyboard.type('import React from "react"')
 
       await page.click('div[data-inkling-card="codeblock"]')
       await page.click('div[data-inkling-card="codeblock"]')
 
-      expect(page.locator('[data-inkling-card-editing="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-editing="true"]')).toBeVisible()
 
       await page.click('p')
-      expect(page.locator('[data-inkling-card-editing="false"]'))
+      await expect(page.locator('[data-inkling-card-editing="false"]')).toBeVisible()
     })
 
     test('clicking outside the editor and then on a card focuses the editor', async function () {
@@ -205,7 +212,7 @@ test.describe('Card behaviour', () => {
       await focusEditor(page)
       await page.keyboard.type('```javascript ')
 
-      expect(page.locator('[data-inkling-card-editing="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-editing="true"]')).toBeVisible()
 
       await page.click('.inkling-lexical')
       await assertHTML(page, html` <p><br /></p> `)
@@ -257,8 +264,8 @@ test.describe('Card behaviour', () => {
       await page.click('div[data-inkling-card-selected="true"]')
 
       // Now the first card should be editing and the second card should not be
-      expect(page.locator('[data-inkling-card-editing="true"]')).not.toBeNull()
-      expect(page.locator('[data-inkling-card-editing="false"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-editing="true"]')).toBeVisible()
+      await expect(page.locator('[data-inkling-card-editing="false"]')).toBeVisible()
 
       // Click the card that's not currently editing (second card)
       await page.click('div[data-inkling-card-editing="false"]')
@@ -666,7 +673,7 @@ test.describe('Card behaviour', () => {
       )
 
       await page.click('[data-inkling-card="horizontalrule"]')
-      expect(page.locator('[data-inkling-card-selected="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-selected="true"]')).toBeVisible()
 
       await page.keyboard.press('ArrowUp')
 
@@ -1867,13 +1874,37 @@ test.describe('Card behaviour', () => {
       await page.keyboard.type('---')
       await page.click('hr')
 
-      expect(page.locator('[data-inkling-card-selected="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-selected="true"]')).toBeVisible()
 
       await page.keyboard.press('Meta+Enter')
 
-      // card does not enter edit mode
-      expect(page.locator('[data-inkling-card-selected="true"]')).not.toBeNull()
-      expect(page.locator('[data-inkling-card-editing="false"]')).not.toBeNull()
+      // a horizontal rule has no edit mode (its spec sets hasEditMode: false),
+      // so cmd+enter cannot toggle it — the press falls through to the
+      // selected-card Enter branch in keyboard-navigation/enter.ts, which
+      // inserts a fresh paragraph after the card and moves the caret into it,
+      // deselecting the card
+      await assertHTML(
+        page,
+        html`
+          <div data-lexical-decorator="true" contenteditable="false">
+            <div
+              data-inkling-card-editing="false"
+              data-inkling-card-selected="false"
+              data-inkling-card="horizontalrule"
+            >
+              <hr />
+            </div>
+          </div>
+          <p><br /></p>
+          <p><br /></p>
+        `,
+      )
+      await assertSelection(page, {
+        anchorOffset: 0,
+        anchorPath: [1],
+        focusOffset: 0,
+        focusPath: [1],
+      })
     })
 
     test('with an edit-mode card selected', async function () {
@@ -1883,20 +1914,20 @@ test.describe('Card behaviour', () => {
       await page.keyboard.type('import React from "react"')
       await page.click('[data-inkling-card="codeblock"]')
 
-      expect(page.locator('[data-inkling-card-selected="true"]')).not.toBeNull()
-      expect(page.locator('[data-inkling-card-editing="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-selected="true"]')).toBeVisible()
+      await expect(page.locator('[data-inkling-card-editing="true"]')).toBeVisible()
 
       await page.keyboard.press('Meta+Enter')
 
       // card exits edit mode
-      expect(page.locator('[data-inkling-card-selected="true"]')).not.toBeNull()
-      expect(page.locator('[data-inkling-card-editing="false"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-selected="true"]')).toBeVisible()
+      await expect(page.locator('[data-inkling-card-editing="false"]')).toBeVisible()
 
       await page.keyboard.press('Meta+Enter')
 
       // card enters edit mode
-      expect(page.locator('[data-inkling-card-selected="true"]')).not.toBeNull()
-      expect(page.locator('[data-inkling-card-editing="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-selected="true"]')).toBeVisible()
+      await expect(page.locator('[data-inkling-card-editing="true"]')).toBeVisible()
     })
 
     test('cursor position when deselecting empty card with nested editor', async function () {
@@ -1926,20 +1957,20 @@ test.describe('Card behaviour', () => {
       await page.waitForSelector('[data-inkling-card="codeblock"]')
       await page.keyboard.type('import React from "react"')
 
-      expect(page.locator('[data-inkling-card-selected="true"]')).not.toBeNull()
-      expect(page.locator('[data-inkling-card-editing="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-selected="true"]')).toBeVisible()
+      await expect(page.locator('[data-inkling-card-editing="true"]')).toBeVisible()
 
       await page.keyboard.press('Escape')
 
       // card exits edit mode
-      expect(page.locator('[data-inkling-card-selected="true"]')).not.toBeNull()
-      expect(page.locator('[data-inkling-card-editing="false"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-selected="true"]')).toBeVisible()
+      await expect(page.locator('[data-inkling-card-editing="false"]')).toBeVisible()
 
       // card is still able to re-enter edit mode with CMD+ENTER
       await page.keyboard.press('Meta+Enter')
 
-      expect(page.locator('[data-inkling-card-selected="true"]')).not.toBeNull()
-      expect(page.locator('[data-inkling-card-editing="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-selected="true"]')).toBeVisible()
+      await expect(page.locator('[data-inkling-card-editing="true"]')).toBeVisible()
     })
 
     test('with an edit mode card that is empty', async function () {
@@ -1947,8 +1978,8 @@ test.describe('Card behaviour', () => {
       await page.keyboard.type('``` ')
       await page.waitForSelector('[data-inkling-card="codeblock"]')
 
-      expect(page.locator('[data-inkling-card-selected="true"]')).not.toBeNull()
-      expect(page.locator('[data-inkling-card-editing="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-selected="true"]')).toBeVisible()
+      await expect(page.locator('[data-inkling-card-editing="true"]')).toBeVisible()
 
       await page.keyboard.press('Escape')
 
@@ -1972,8 +2003,8 @@ test.describe('Card behaviour', () => {
       await page.keyboard.type('``` ')
       await page.waitForSelector('[data-inkling-card="codeblock"]')
 
-      expect(page.locator('[data-inkling-card-selected="true"]')).not.toBeNull()
-      expect(page.locator('[data-inkling-card-editing="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-selected="true"]')).toBeVisible()
+      await expect(page.locator('[data-inkling-card-editing="true"]')).toBeVisible()
 
       await page.keyboard.press('Escape')
 
@@ -1998,8 +2029,8 @@ test.describe('Card behaviour', () => {
       await page.keyboard.type('``` ')
       await page.waitForSelector('[data-inkling-card="codeblock"]')
 
-      expect(page.locator('[data-inkling-card-selected="true"]')).not.toBeNull()
-      expect(page.locator('[data-inkling-card-editing="true"]')).not.toBeNull()
+      await expect(page.locator('[data-inkling-card-selected="true"]')).toBeVisible()
+      await expect(page.locator('[data-inkling-card-editing="true"]')).toBeVisible()
 
       await page.keyboard.press('Escape')
 

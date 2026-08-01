@@ -45,11 +45,11 @@ export function useMediaUploader(kind: MediaUploadKind): MediaUploader {
 /** Which entry point fired: the hidden input, a file drop, or the initial file. */
 export type MediaUploadSource = 'input' | 'drop' | 'initial'
 
-export interface UseMediaCardUploadOptions {
+export interface UseMediaCardUploadOptions<TNode> {
   kind: MediaUploadKind
   nodeKey: NodeKey
   /** The card-node type guard the dialog trigger narrows with (e.g. `$isImageNode`). */
-  guard: (node: unknown) => boolean
+  guard: (node: unknown) => node is TNode
   /** The card's intent call, given the channel's upload fn and the firing source. */
   onFiles: (files: FileList | File[] | null, upload: UploadFn, source: MediaUploadSource) => unknown
   /** Insert-time initial file (media cards constructed from a paste/drop). */
@@ -72,7 +72,7 @@ export interface UseMediaCardUploadResult {
   mimeTypes: string[] | undefined
 }
 
-export function useMediaCardUpload({
+export function useMediaCardUpload<TNode>({
   kind,
   nodeKey,
   guard,
@@ -81,7 +81,7 @@ export function useMediaCardUpload({
   isReady,
   triggerFileDialog,
   dragDisabled = false,
-}: UseMediaCardUploadOptions): UseMediaCardUploadResult {
+}: UseMediaCardUploadOptions<TNode>): UseMediaCardUploadResult {
   const [editor] = useLexicalComposerContext()
   const { fileUploader } = React.useContext(InklingHostIntegrationContext)
   const uploader = useMediaUploader(kind)
@@ -108,6 +108,11 @@ export function useMediaCardUpload({
   useTriggerFileDialog({
     editor,
     nodeKey,
+    // bridge cast: the options boundary already verifies `guard` is a real
+    // predicate, but `TNode` can't be constrained to `TriggerFileDialogCardNode`
+    // — gallery/header guards narrow to node types without `triggerFileDialog`,
+    // and the cards' `triggerFileDialog?: boolean | undefined` property isn't
+    // assignable to the interface's write-only setter under strict mode
     guard: guard as (node: unknown) => node is TriggerFileDialogCardNode,
     fileInputRef,
     triggerFileDialog,

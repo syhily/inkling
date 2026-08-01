@@ -1,4 +1,4 @@
-import type { LexicalEditor } from 'lexical'
+import type { LexicalCommand, LexicalEditor } from 'lexical'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
@@ -101,8 +101,16 @@ function useSlashCardMenu(editor: LexicalEditor) {
   // insert-and-close is the session's seam (it owns the close policy);
   // this adapter only names the dispatch
   const insert = React.useCallback(
-    (insertCommand: unknown, params: { insertParams?: Record<string, unknown>; queryParams?: string[] } = {}) =>
-      sessionInsert(() => insertCardItem(insertCommand, params)),
+    (
+      insertCommand: LexicalCommand<unknown> | undefined,
+      params: { insertParams?: Record<string, unknown>; queryParams?: string[] } = {},
+    ): void => {
+      // a menu item without an insert command has nothing to dispatch
+      if (!insertCommand) {
+        return
+      }
+      sessionInsert(() => insertCardItem(insertCommand, params))
+    },
     [sessionInsert, insertCardItem],
   )
 
@@ -153,7 +161,7 @@ function useSlashCardMenu(editor: LexicalEditor) {
       // insert from the flat item list — the same data CardMenu renders — so
       // selection never depends on the menu's DOM
       const item = menuNavigator.selectedItem(cardMenu.items)
-      if (item) {
+      if (item?.insertCommand) {
         insert(item.insertCommand, item)
         trackEvent('Card Added', { card: item.label ?? 'unknown' })
       }

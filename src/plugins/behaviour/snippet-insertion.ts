@@ -37,6 +37,13 @@ export function isSnippetDataset(dataset: unknown): dataset is SnippetDataset {
   )
 }
 
+// A serialized node minimally needs a string `type` for
+// $generateNodesFromSerializedNodes to resolve its registered class — a
+// shallower entry would throw inside the editor update.
+function isSerializedNodeShape(node: unknown): node is SerializedLexicalNode {
+  return typeof node === 'object' && node !== null && 'type' in node && typeof node.type === 'string'
+}
+
 // The snippet value is host-supplied data, so a malformed one no-ops silently
 // instead of throwing inside the editor update.
 function parseSnippetNodes(value: string): SerializedLexicalNode[] | null {
@@ -49,7 +56,11 @@ function parseSnippetNodes(value: string): SerializedLexicalNode[] | null {
   if (typeof parsed !== 'object' || parsed === null || !Array.isArray((parsed as { nodes?: unknown }).nodes)) {
     return null
   }
-  return (parsed as { nodes: SerializedLexicalNode[] }).nodes
+  const nodes: unknown[] = (parsed as { nodes: unknown[] }).nodes
+  if (!nodes.every(isSerializedNodeShape)) {
+    return null
+  }
+  return nodes
 }
 
 /**
@@ -58,7 +69,8 @@ function parseSnippetNodes(value: string): SerializedLexicalNode[] | null {
  * handler already runs in the dispatch update, and headless callers wrap the
  * call themselves. Returns false — and leaves the editor untouched — when the
  * payload is not a snippet dataset, the value does not parse to a serialized
- * node list, or there is no selection to insert at.
+ * node list, node generation fails (e.g. an unregistered `type`), or there is
+ * no selection to insert at.
  */
 export function $insertSnippet(editor: LexicalEditor, dataset: unknown): boolean {
   if (!isSnippetDataset(dataset)) {
@@ -68,7 +80,15 @@ export function $insertSnippet(editor: LexicalEditor, dataset: unknown): boolean
   if (!serializedNodes) {
     return false
   }
-  const nodes = $generateNodesFromSerializedNodes(serializedNodes)
+  // an entry with a string type can still fail generation — an unregistered
+  // type warns in dev and then throws on the missing registeredNode. The
+  // same host-data contract applies: no-op instead of throwing in the update.
+  let nodes: ReturnType<typeof $generateNodesFromSerializedNodes>
+  try {
+    nodes = $generateNodesFromSerializedNodes(serializedNodes)
+  } catch (_e) {
+    return false
+  }
   const firstNode = nodes.length === 1 && nodes[0]
   const lastNode = !!nodes.length && nodes[nodes.length - 1]
 

@@ -14,10 +14,9 @@ export function Modal({
   const labels = useInklingLabels()
 
   const controlByKeys = (event: React.KeyboardEvent) => {
-    event.stopPropagation()
-    event.preventDefault()
-
     if (event.key === 'Escape') {
+      event.stopPropagation()
+      event.preventDefault()
       onClose()
     }
   }
@@ -41,8 +40,9 @@ export function Modal({
             className="absolute top-6 right-6 cursor-pointer"
             type="button"
             autoFocus
+            onClick={onClose}
           >
-            <CloseIcon className="size-4 stroke-2 text-grey-400" onClick={onClose} />
+            <CloseIcon className="size-4 stroke-2 text-grey-400" />
           </button>
           {children}
         </div>

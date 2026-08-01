@@ -8,6 +8,7 @@ import {
   $isParagraphNode,
   $isTextNode,
   createEditor,
+  ParagraphNode,
   type EditorState,
   type LexicalEditor,
   type NodeKey,
@@ -151,6 +152,23 @@ describe('$relocateCard', () => {
     expect(relocated).toBe(false)
     expect(relocatedWithoutKey).toBe(false)
     expect(readTopLevelKeys(editor)).toEqual(before)
+  })
+
+  it('returns false and keeps the tree and selection untouched when the droppable scan is empty', async () => {
+    const keys = await buildDocument(editor)
+    const before = readTopLevelKeys(editor)
+
+    let relocated = true
+    await updateEditor(editor, () => {
+      relocated = $relocateCard(keys.imageAKey, [], 0)
+    })
+
+    expect(relocated).toBe(false)
+    expect(readTopLevelKeys(editor)).toEqual(before)
+    // buildDocument left the caret inside "intro" — a failed drop must not clear it
+    editor.getEditorState().read(() => {
+      expect($getSelection()).not.toBeNull()
+    })
   })
 
   it('still reports handled and clears the selection when the target droppable does not resolve to a node', async () => {
@@ -363,7 +381,7 @@ describe('$mergeImagesIntoGallery', () => {
     })
   })
 
-  it('derives a missing fileName from the src and patches the dragged dataset in place', async () => {
+  it('derives a missing fileName from the src without mutating the dragged dataset', async () => {
     const editor = createMergeEditor()
     const keys = await buildImagePair(editor)
     const draggedDataset: Record<string, unknown> = { src: 'https://cdn.example.com/payload-shot.jpg' }
@@ -372,7 +390,9 @@ describe('$mergeImagesIntoGallery', () => {
       $mergeImagesIntoGallery(keys.targetKey, keys.draggedKey, draggedDataset)
     })
 
-    expect(draggedDataset.fileName).toBe('payload-shot.jpg')
+    // the caller's payload is not the surgery's to mutate — the derived
+    // fileName lives on the copy handed to the fill policy
+    expect(draggedDataset).toEqual({ src: 'https://cdn.example.com/payload-shot.jpg' })
     editor.getEditorState().read(() => {
       const gallery = $getRoot().getFirstChild()
       if (!$isGalleryNode(gallery)) {
@@ -433,6 +453,32 @@ describe('$mergeImagesIntoGallery', () => {
 
   it('returns false and leaves the tree untouched when the gallery card is not registered', async () => {
     const editor = createTestEditor()
+    const keys = await buildImagePair(editor)
+    const before = readTopLevelKeys(editor)
+
+    let merged = true
+    await updateEditor(editor, () => {
+      merged = $mergeImagesIntoGallery(keys.targetKey, keys.draggedKey, { src: 'https://cdn.example.com/x.png' })
+    })
+
+    expect(merged).toBe(false)
+    expect(readTopLevelKeys(editor)).toEqual(before)
+  })
+
+  it('returns false instead of crashing when a host replaced the gallery class with a non-gallery node', async () => {
+    // the class comes from the registered-node map, so a host can register
+    // any class under the 'gallery' type — the constructed node must be
+    // checked ($isGalleryNode) rather than asserted
+    class HostReplacementNode extends ParagraphNode {
+      static getType(): string {
+        return 'gallery'
+      }
+
+      static clone(node: HostReplacementNode): HostReplacementNode {
+        return new HostReplacementNode(node.__key)
+      }
+    }
+    const editor = createEditor({ namespace: 'test', nodes: [ImageNode, HostReplacementNode], onError: () => {} })
     const keys = await buildImagePair(editor)
     const before = readTopLevelKeys(editor)
 

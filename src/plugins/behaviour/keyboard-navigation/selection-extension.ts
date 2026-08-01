@@ -1,6 +1,6 @@
 import type { LexicalEditor, RangeSelection } from 'lexical'
 
-import { $isDecoratorNode, $isRootNode, $isTextNode } from 'lexical'
+import { $isDecoratorNode, $isRootNode } from 'lexical'
 
 import { $selectCard } from '../card-adjacency'
 import { getEventProvenance } from '../nested-editor-protocol'
@@ -39,11 +39,7 @@ export function $extendSelectionAcrossCardBoundary(
     anchorNode = topLevelAnchor
     const focusNode = selection.focus.getNode().getTopLevelElement()
 
-    // treat text nodes as normal
     const boundarySibling = direction === 'up' ? focusNode?.getPreviousSibling() : focusNode?.getNextSibling()
-    if ($isTextNode(focusNode) && $isTextNode(boundarySibling)) {
-      return false
-    }
     // if on or about to move to decorator node selection, select the entire current node using root node offsets
     if (focusNode && boundarySibling && ($isDecoratorNode(anchorNode) || $isDecoratorNode(boundarySibling))) {
       const anchorIndex = anchorNode.getIndexWithinParent()

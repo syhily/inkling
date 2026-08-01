@@ -211,16 +211,4 @@ describe('CardActionToolbar', () => {
       expect(toolbar.querySelectorAll('li')).toHaveLength(2)
     })
   })
-
-  describe('beforeMenu', () => {
-    it('renders extra content inside the menu toolbar before the menu', () => {
-      const { container } = renderToolbar({
-        props: { beforeMenu: <form data-testid="upload-form" /> },
-      })
-
-      const toolbar = getToolbars(container)[0]
-      expect(toolbar.firstElementChild?.tagName).toBe('FORM')
-      expect(screen.getByTestId('upload-form')).toBeTruthy()
-    })
-  })
 })

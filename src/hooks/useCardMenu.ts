@@ -15,7 +15,7 @@ import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
 
 export type CardMenuInsertParams = Pick<ResolvedMenuItem, 'insertParams' | 'queryParams'>
 
-export type CardMenuInsert = (insertCommand: unknown, params?: CardMenuInsertParams) => void
+export type CardMenuInsert = (insertCommand: LexicalCommand<unknown>, params?: CardMenuInsertParams) => void
 
 export interface UseCardMenuOptions {
   /** Typed `/card param` values, merged into the dispatch dataset under the
@@ -64,7 +64,9 @@ export function useCardMenu(editor: LexicalEditor, query?: string, options: UseC
       const dataset = { ...insertParams }
 
       for (let i = 0; i < queryParams.length; i++) {
-        if (commandParams[i]) {
+        // `!== undefined`, not truthiness: a typed-but-empty param ('') is a
+        // legal value and must reach the dataset
+        if (commandParams[i] !== undefined) {
           const key = queryParams[i]
           const value = commandParams[i]
           dataset[key] = value
@@ -75,7 +77,7 @@ export function useCardMenu(editor: LexicalEditor, query?: string, options: UseC
       // command/payload pairs built from each card's declaration-derived menu
       // data, so the specific payload type is erased here. Each plugin handler
       // re-narrows the payload with its own dataset type guard.
-      const dispatch = () => editor.dispatchCommand(insertCommand as LexicalCommand<unknown>, dataset)
+      const dispatch = () => editor.dispatchCommand(insertCommand, dataset)
 
       if (!replaceTriggerParagraph) {
         dispatch()

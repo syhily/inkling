@@ -38,7 +38,12 @@ export default defineConfig({
       slowMo: parseInt(process.env.PLAYWRIGHT_SLOWMO ?? '') || 0,
       // force GPU hardware acceleration
       // (even in headless mode)
-      args: ['--use-gl=egl'],
+      args: [
+        '--use-gl=egl',
+        // PLAYWRIGHT_OFFLINE=1 fails every non-localhost DNS lookup inside the
+        // browser — the egress gate proving a spec is network-free
+        ...(process.env.PLAYWRIGHT_OFFLINE ? ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost'] : []),
+      ],
     },
     headless: process.env.PLAYWRIGHT_HEADED ? false : true,
   },
@@ -59,7 +64,11 @@ export default defineConfig({
   webServer: {
     command: `pnpm dev:test`,
     url: `http://localhost:${E2E_PORT}`,
-    reuseExistingServer: !process.env.CI,
+    // Reusing a stale server that dies mid-run surfaces as a late page.goto
+    // ERR_CONNECTION_REFUSED (the Klipy GIF spec is the suite's only late
+    // full-page navigation, so it takes the hit). PLAYWRIGHT_NO_REUSE=1
+    // forces a fresh server for bulletproof local runs.
+    reuseExistingServer: process.env.PLAYWRIGHT_NO_REUSE ? false : !process.env.CI,
     timeout: 120000,
   },
 })

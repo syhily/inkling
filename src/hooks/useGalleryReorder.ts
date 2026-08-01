@@ -74,7 +74,12 @@ export default function useGalleryReorder({
       return
     }
 
-    const updatedImages = resolveGallerySourceRemoval(images, draggableInfo.dataset.src)
+    // positional lookup, same ordinal as the drop path: the dragged element's
+    // slot among the gallery's droppables (a src-value find would grab the
+    // wrong instance on duplicate or still-undefined preview srcs)
+    const droppables = createReorderGeometry(containerElement, '[data-image]').getDroppables()
+    const draggableIndex = draggableInfo.element ? droppables.indexOf(draggableInfo.element) : -1
+    const updatedImages = resolveGallerySourceRemoval(images, draggableIndex)
     if (updatedImages) {
       updateImages(updatedImages)
       container.refresh()

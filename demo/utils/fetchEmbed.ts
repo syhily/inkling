@@ -10,10 +10,10 @@ export async function fetchEmbed(
   options: BookmarkEmbedOptions,
 ): Promise<BookmarkEmbedResponse | undefined> {
   void options
-  new URL(url)
   await delay(process.env.NODE_ENV === 'test' ? 50 : 1500)
 
   try {
+    new URL(url)
     const returnData: BookmarkEmbedResponse = {
       url: 'https://inkling.local/',
       metadata: {

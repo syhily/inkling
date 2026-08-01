@@ -1,3 +1,8 @@
+import type { InitialEditorStateType } from '@lexical/react/LexicalComposer'
+import type { EditorThemeClasses, LexicalEditor } from 'lexical'
+
+import React from 'react'
+
 import InklingComposableEditor from '@/components/InklingComposableEditor'
 import InklingNestedComposer from '@/components/InklingNestedComposer'
 import { BASIC_TRANSFORMERS, MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
@@ -16,11 +21,6 @@ const Placeholder = ({ text = 'Type here', className = '' }) => {
     </div>
   )
 }
-
-import type { InitialEditorStateType } from '@lexical/react/LexicalComposer'
-import type { EditorThemeClasses, LexicalEditor } from 'lexical'
-
-import React from 'react'
 
 interface InklingNestedEditorProps {
   initialEditor: LexicalEditor

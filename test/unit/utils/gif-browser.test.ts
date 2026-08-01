@@ -745,6 +745,23 @@ describe('createGifBrowser: pages and columns', () => {
 
     expect(listener).not.toHaveBeenCalled()
   })
+
+  it('clamps a zero or negative column count to one, so adding gifs never crashes', async () => {
+    const fetchPage = vi.fn<(url: string) => Promise<GifFetchOutcome>>(() =>
+      Promise.resolve(pageOutcome([makeGif('g0'), makeGif('g1')])),
+    )
+    const { browser, scheduler } = setup({ fetchPage })
+
+    browser.dispatch({ type: 'set-column-count', count: 0 })
+    browser.dispatch({ type: 'search', term: '' })
+    scheduler.flush()
+    await tick()
+
+    expect(browser.getSnapshot().columns.map((column) => column.map((gif) => gif.id))).toEqual([['g0', 'g1']])
+
+    browser.dispatch({ type: 'set-column-count', count: -3 })
+    expect(browser.getSnapshot().columns.map((column) => column.map((gif) => gif.id))).toEqual([['g0', 'g1']])
+  })
 })
 
 describe('createGifBrowser: loading and error states', () => {

@@ -99,10 +99,26 @@ export const INSERT_HTML_COMMAND = createCommand<HtmlNodeDataset>()
 
 export type ImageNodeDataset = ImageData &
   CardSpecNestedEditorDataset<typeof imageNestedEditors> &
-  CardSpecTransientDataset<typeof imageTransientProps> &
-  // image datasets also flow through drag-and-drop payloads that carry
-  // extra keys; keep the record open for those transient fields
-  Record<string, unknown>
+  CardSpecTransientDataset<typeof imageTransientProps> & {
+    // Drag-and-drop payload extras (formerly covered by a Record<string,
+    // unknown> opening). Gallery drags carry the GalleryImage keys
+    // useGalleryReorder picks into DraggableInfo.dataset — the image→gallery
+    // merge (`@/plugins/behaviour/drop-surgery`) reads fileName back, row
+    // just rides along from the pick.
+    fileName?: string
+    row?: number
+    // Image-library picks map host-schema pass-through keys onto the insert
+    // dataset (`@/components/ui/LibraryPlugin`.toImageDataset); the stock
+    // declaration ignores them, a host card's own properties persist them.
+    thumbhash?: string
+    storagePath?: string
+    imageId?: string
+    // A dragged image CARD's payload is its getDataset(), which re-exposes
+    // the datasetKey'd transient fields (generate-decorator-node's
+    // appendTransientDataset), so they ride the drag payload too.
+    __previewSrc?: string | null
+    __triggerFileDialog?: boolean
+  }
 export const INSERT_IMAGE_COMMAND = createCommand<ImageNodeDataset>()
 
 export type MathNodeDataset = MathData
