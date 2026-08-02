@@ -36,13 +36,13 @@ export type {
 } from '@/context/InklingHostIntegrationContext'
 export type { ListOptionItem, SearchResult } from '@/hooks/useSearchLinks'
 
-/* Labels (docs/kobato-fit-plan.md C7): the closed labels table a host
+/* Labels: the closed labels table a host
  * overrides through <InklingComposer labels={...}> — `labels` is a composer
  * prop on both entries. */
 export { DEFAULT_LABELS } from '@/labels/inkling-labels'
 export type { InklingLabels, InklingLabelsInput } from '@/labels/inkling-labels'
 
-/* Media library (docs/kobato-fit-plan.md C8): the picker's headless state
+/* Media library: the picker's headless state
  * machine rides both entries — a host building its own library-backed card
  * (e.g. music) on either composer reuses it. */
 export { createLibraryBrowser } from '@/utils/services/library-browser'
@@ -56,6 +56,8 @@ export type {
 /* Card-free composition pieces shared by both entries. */
 export { default as InklingComposableEditor } from '@/components/InklingComposableEditor'
 export { default as InklingSurface } from '@/components/InklingSurface'
+export { CORE_PLUGINS, default as CorePlugins } from '@/plugins/CorePlugins'
+export type { CorePluginEntry, CorePluginScope } from '@/plugins/CorePlugins'
 export { default as RestrictContentPlugin } from '@/plugins/RestrictContentPlugin'
 export { default as BASIC_NODES } from '@/nodes/BasicNodes'
 export { default as MINIMAL_NODES } from '@/nodes/MinimalNodes'

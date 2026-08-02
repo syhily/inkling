@@ -1,9 +1,9 @@
+import type { DecoratorNodeProperty } from '@/nodes/base/card-specs'
 import type { GalleryImage } from '@/types/gallery'
 
 import {
   generateDecoratorNode,
   type DecoratorNodeData,
-  type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
   type SerializedGeneratedDecoratorNode,
 } from '@/nodes/base/generate-decorator-node'
@@ -76,7 +76,8 @@ export class BaseGalleryNode extends generateDecoratorNode({
   // node (plan 039, Batch 5): the registered card class is assembled from the
   // declaration and inherits them; renderer surfaces never invoke them.
   // TODO: move to inkling-default-nodes? — packaging decision about where
-  // `setImages` lives (tracked in docs/tech-debt-triage.md).
+  // `setImages` lives (its view→node writes are mirrored through
+  // src/hooks/gallery-images-mirror.ts).
   setImages(images: GalleryImage[]) {
     const datasetImages = images.slice(0, MAX_IMAGES).map((image) => pick(image, ALLOWED_IMAGE_PROPS))
 

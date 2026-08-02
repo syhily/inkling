@@ -5,9 +5,9 @@ import { $getNodeByKey } from 'lexical'
 import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
 import { $isImageNode, type BaseImageNode } from '@/nodes/base/nodes/image/ImageNode'
+import { getDefaultImageCardWidth } from '@/nodes/base/utils/image-card-widths'
 import { dataSrcToFile } from '@/utils/dataSrcToFile'
 import { getImageDimensions } from '@/utils/getImageDimensions'
-import { getDefaultImageCardWidth } from '@/utils/image-card-widths'
 
 // Image lifecycle — the image card's mount-time document-migration
 // policies, headless so they are jsdom-testable through real editors

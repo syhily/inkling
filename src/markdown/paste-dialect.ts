@@ -6,9 +6,11 @@
 // (`@/nodes/base/nodes/markdown/markdown-renderer`).
 //
 // What the dialect speaks: footnotes, ==mark==, ~sub~, ^sup^ — and no
-// card-fence grammar. The engine — markdown-it with its plugin stack, the
-// cached per-slug-policy instances, and the legacy `inklingVersion` slug
-// branching — is the module's hidden implementation below.
+// card-fence grammar. The inline delimiters are declared once in the shared
+// grammar table (`@/markdown/grammar`); the engine — markdown-it with its
+// plugin stack, the cached per-slug-policy instances, and the legacy
+// `inklingVersion` slug branching — is the module's hidden implementation
+// below.
 //
 // Where the dialects meet: the round-trip dialect's own export does not
 // survive this dialect — a pasted ```inkling:*``` fence renders as
@@ -27,6 +29,7 @@ import markdownItSub from 'markdown-it-sub'
 import markdownItSup from 'markdown-it-sup'
 
 import { DEFAULT_INKLING_VERSION, isLegacyVersion, slugify } from '@/utils'
+import { createHeadingIdTracker } from '@/utils/heading-id-tracker'
 
 const renderers: Partial<Record<'<4.x' | 'latest', MarkdownIt>> = {}
 
@@ -34,23 +37,15 @@ interface RenderOptions {
   inklingVersion?: string
 }
 
-// The named-headers dedup map carried on the per-render env: slug → count.
-function isUsedHeaders(value: unknown): value is Record<string, number> {
-  return typeof value === 'object' && value !== null && Object.values(value).every((count) => typeof count === 'number')
+// The per-render heading-id tracker carried on the markdown-it env: the
+// shared dedup policy (`@/utils/heading-id-tracker`) — base id on first
+// use, `<base>-<n>` on repeats, the same numbering the HTML renderer's
+// `trackIdAttribute` emits.
+function isHeadingIdTracker(value: unknown): value is (base: string) => string {
+  return typeof value === 'function'
 }
 
 const namedHeaders = function ({ inklingVersion }: RenderOptions = {}) {
-  const generateSlug = function (inputString: string, usedHeaders: Record<string, number>) {
-    let slug = slugify(inputString, { inklingVersion, type: 'markdown' })
-    if (usedHeaders[slug]) {
-      usedHeaders[slug] += 1
-      slug += usedHeaders[slug]
-    } else {
-      usedHeaders[slug] = 1
-    }
-    return slug
-  }
-
   return function (md: MarkdownIt) {
     const originalHeadingOpen = md.renderer.rules.heading_open
 
@@ -66,15 +61,15 @@ const namedHeaders = function ({ inklingVersion }: RenderOptions = {}) {
       // Dedup state must live on the per-render `env` (markdown-it creates a
       // fresh env object for every render() call) — keeping it in a closure
       // would leak heading ids across renders of the cached MarkdownIt
-      // instance, while a fresh object per heading would never dedupe. The
+      // instance, while a fresh tracker per heading would never dedupe. The
       // slot is validated rather than asserted: env is caller-controlled, so
-      // a foreign value must reset the map instead of corrupting it.
-      let usedHeaders: Record<string, number>
-      if (isUsedHeaders(env.usedHeaders)) {
-        usedHeaders = env.usedHeaders
+      // a foreign value must reset the tracker instead of corrupting it.
+      let trackHeadingId: (base: string) => string
+      if (isHeadingIdTracker(env.headingIdTracker)) {
+        trackHeadingId = env.headingIdTracker
       } else {
-        usedHeaders = {}
-        env.usedHeaders = usedHeaders
+        trackHeadingId = createHeadingIdTracker()
+        env.headingIdTracker = trackHeadingId
       }
 
       const attrs = tokens[idx].attrs || []
@@ -84,7 +79,7 @@ const namedHeaders = function ({ inklingVersion }: RenderOptions = {}) {
       const title = (tokens[idx + 1].children ?? []).reduce(function (acc: string, t: Token) {
         return acc + t.content
       }, '')
-      const slug = generateSlug(title, usedHeaders)
+      const slug = trackHeadingId(slugify(title, { inklingVersion, type: 'markdown' }))
       attrs.push(['id', slug])
       if (originalHeadingOpen) {
         return originalHeadingOpen.call(this, tokens, idx, options, env, self)
@@ -116,6 +111,10 @@ const selectRenderer = function (options: RenderOptions): MarkdownIt {
   if (renderers[key]) {
     return renderers[key]
   }
+  // markdown-it-mark/sub/sup are this engine's projection of the shared
+  // grammar table's inline delimiters (`@/markdown/grammar`'s
+  // INLINE_DELIMITERS) — the plugins hardcode ==/~/^, and
+  // test/markdown/grammar.test.ts pins the engines agreeing.
   const markdownIt = new MarkdownIt({ html: true, breaks: true, linkify: true })
     .use(markdownItFootnote)
     .use(markdownItLazyHeaders)

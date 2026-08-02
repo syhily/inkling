@@ -4,11 +4,11 @@ import type { Klass, LexicalNode } from 'lexical'
 import type { GalleryImage } from '@/types/gallery'
 
 import { $createAudioNode, type AudioNode } from '@/nodes/AudioNode'
-import { getNestedEditorSpecs } from '@/nodes/base/generate-decorator-node'
+import { getNestedEditorSpecs } from '@/nodes/base/card-specs'
 import { $createBookmarkNode, type BookmarkNode } from '@/nodes/BookmarkNode'
 import { $createButtonNode, type ButtonNode } from '@/nodes/ButtonNode'
 import { $createCalloutNode, type CalloutNode } from '@/nodes/CalloutNode'
-import { type CardNodeType } from '@/nodes/cards'
+import { type CARD_DECLARATIONS, type CardNodeType } from '@/nodes/cards'
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
 import { $createFileNode, type FileNode } from '@/nodes/FileNode'
 import { $createGalleryNode, type GalleryNode } from '@/nodes/GalleryNode'
@@ -20,11 +20,15 @@ import { $createVideoNode, type VideoNode } from '@/nodes/VideoNode'
 /**
  * The per-card markdown transformer vocabulary, attached to the card
  * declarations one layer up (mirroring `@/nodes/cards/card-wrappers`): a
- * payload table keyed by card node type, projected into the card transformers
- * by `CARD_MARKDOWN_DECLARATIONS` below.
+ * payload table keyed EXHAUSTIVELY by the fence-eligible declarations' node
+ * types (`FenceCardNodeType` below — derived from the declarations'
+ * `markdown: { kind: 'fence' }` entries), projected into the card
+ * transformers by `CARD_MARKDOWN_DECLARATIONS` below. Eligibility and
+ * exemption are declaration data (`CardMarkdownSpec`); this module holds
+ * only the payload vocabulary.
  *
- * It cannot live in the declaration modules: the markdown round-trip
- * editor registers the wrapper node classes — `DEFAULT_TRANSFORMERS`' `HR`
+ * The payloads cannot live in the declaration modules: the markdown
+ * round-trip editor registers the wrapper node classes — `DEFAULT_TRANSFORMERS`' `HR`
  * and `CODE_BLOCK` construct wrapper instances, and Lexical requires every
  * node constructed inside an editor to match the registered class exactly —
  * so each transformer's `createNode`/`replace` must construct the wrapper
@@ -212,7 +216,16 @@ function galleryImages(value: unknown, field: string): GalleryImage[] {
   })
 }
 
-const CARD_FENCE_PAYLOADS: Partial<Record<CardNodeType, CardFencePayload>> = {
+/**
+ * The fence-eligible card node types, DERIVED from the declarations'
+ * `markdown: { kind: 'fence' }` entries — the payload table below is keyed
+ * by this union with an exhaustive `Record`, so declaring a card
+ * fence-eligible without its payload (or retiring a fence without removing
+ * the payload) is a compile error here, not a silent drift.
+ */
+type FenceCardNodeType = Extract<(typeof CARD_DECLARATIONS)[number], { markdown: { kind: 'fence' } }>['nodeType']
+
+const CARD_FENCE_PAYLOADS: Record<FenceCardNodeType, CardFencePayload> = {
   audio: {
     getData: (node: AudioNode) => ({
       src: node.src,
@@ -317,19 +330,6 @@ const CARD_FENCE_PAYLOADS: Partial<Record<CardNodeType, CardFencePayload>> = {
 }
 
 /**
- * The markdown-eligible cards with no `inkling:<card>` fence payload:
- * `codeblock` and `horizontalrule` speak plain markdown (the dialect's own
- * CODE_FENCE in `@/markdown/round-trip`; `HR` in `@/markdown/transformers`),
- * and `image` speaks standard `![alt](src)` syntax via the hand-written
- * IMAGE_CARD_TRANSFORMER above.
- */
-export const MARKDOWN_EXEMPT: ReadonlySet<CardNodeType> = new Set<CardNodeType>([
-  'codeblock',
-  'horizontalrule',
-  'image',
-])
-
-/**
  * Wrapper-layer projection of the card declarations: each declaration paired
  * with its wrapper node class and (for markdown-eligible cards whose markdown
  * form is not covered by `DEFAULT_TRANSFORMERS`) its card transformer.
@@ -339,21 +339,32 @@ export const MARKDOWN_EXEMPT: ReadonlySet<CardNodeType> = new Set<CardNodeType>(
  * The fence tag and node class are derived by construction — the projection
  * passes the declaration's own `nodeType` and wrapper class to
  * `createCardTransformer`, so the table above states only the per-card
- * payload vocabulary. A markdown-eligible card with neither a fence payload
- * nor a named exemption throws here at module init rather than drifting
- * silently.
+ * payload vocabulary. Eligibility and exemption are the declaration's own
+ * `markdown` spec (`CardMarkdownSpec`); the throw below is the runtime
+ * backstop behind the payload table's exhaustive-`Record` compile-time
+ * guarantee. Image's `![alt](src)` transformer is the named exception
+ * among the exemptions — the only exempt card with a hand-written
+ * transformer.
  */
 export const CARD_MARKDOWN_DECLARATIONS = CARD_WRAPPER_NODES.map((card) => {
-  const payload = CARD_FENCE_PAYLOADS[card.nodeType]
-  if (card.markdown && !payload && !MARKDOWN_EXEMPT.has(card.nodeType)) {
+  // `in` narrows the union to the declarations carrying the optional markdown entry
+  const markdown = 'markdown' in card ? card.markdown : undefined
+  // the exhaustive Record is keyed by the fence-eligible subset; indexing
+  // with an arbitrary card node type widens through Partial — the kind
+  // check below is the authoritative gate
+  const payload = (CARD_FENCE_PAYLOADS as Partial<Record<CardNodeType, CardFencePayload>>)[card.nodeType]
+  if (markdown?.kind === 'fence' && payload === undefined) {
     throw new Error(
-      `[card-markdown-transformers] '${card.nodeType}' is markdown-eligible but has no fence payload or named exemption`,
+      `[card-markdown-transformers] '${card.nodeType}' is fence-eligible but has no fence payload in CARD_FENCE_PAYLOADS`,
     )
   }
-  const markdownTransformer = payload
-    ? createCardTransformer({ card: card.nodeType, nodeClass: card.node, ...payload })
-    : card.nodeType === 'image'
-      ? IMAGE_CARD_TRANSFORMER
-      : undefined
+  const markdownTransformer =
+    markdown === undefined
+      ? undefined
+      : payload !== undefined
+        ? createCardTransformer({ card: card.nodeType, nodeClass: card.node, ...payload })
+        : card.nodeType === 'image'
+          ? IMAGE_CARD_TRANSFORMER
+          : undefined
   return { ...card, markdownTransformer }
 })

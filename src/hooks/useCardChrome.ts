@@ -1,17 +1,11 @@
 import type { LexicalEditor, LexicalNode, NodeKey } from 'lexical'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import React from 'react'
 
-import type { InklingHostIntegrationContextValue } from '@/context/InklingHostIntegrationContext'
-
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
 import { useCardWriter } from '@/hooks/useCardWriter'
 
 export interface CardChrome<T extends LexicalNode> {
   editor: LexicalEditor
-  /** The host integration context (CONTEXT.md: "host config"). */
-  host: InklingHostIntegrationContextValue
   /** The card write seam's React binding (CONTEXT.md: "card write seam"). */
   write: (update: (node: T) => void) => void
   /**
@@ -25,9 +19,14 @@ export interface CardChrome<T extends LexicalNode> {
 
 /**
  * The card components' chrome prologue: one hook returning the editor, the
- * host integration context, the card's write seam, and the field-writer
- * factory — the quartet every editable card component used to wire by hand
- * (`useLexicalComposerContext` + `useCardWriter` + `useContext`).
+ * card's write seam, and the field-writer factory — the trio every editable
+ * card component used to wire by hand (`useLexicalComposerContext` +
+ * `useCardWriter`).
+ *
+ * Host config is deliberately NOT folded in (plan C4): cards subscribe to
+ * the per-feature channels they actually read (`useInklingUploadSettings`,
+ * `useInklingMathSettings`, …), so one feature config's identity change
+ * re-renders only that feature's cards instead of every card.
  *
  * Selection truth is deliberately NOT folded in: `useCardIsSelected` /
  * `useCardIsEditing` stay the named subscription bindings — a folded
@@ -39,7 +38,6 @@ export function useCardChrome<T extends LexicalNode>(
   guard: (node: unknown) => node is T,
 ): CardChrome<T> {
   const [editor] = useLexicalComposerContext()
-  const host = React.useContext(InklingHostIntegrationContext)
   const write = useCardWriter(nodeKey, guard)
 
   const setField = <K extends keyof T>(field: K) => {
@@ -50,5 +48,5 @@ export function useCardChrome<T extends LexicalNode>(
     }
   }
 
-  return { editor, host, write, setField }
+  return { editor, write, setField }
 }

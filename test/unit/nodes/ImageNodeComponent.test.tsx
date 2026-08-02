@@ -6,7 +6,7 @@ import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor, tick } from '#/utils/test-editor'
-import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider, type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
 import { ImageNodeComponent } from '@/nodes/ImageNodeComponent'
 import { getImageDimensions } from '@/utils/getImageDimensions'
@@ -56,11 +56,11 @@ describe('ImageNodeComponent', () => {
     const composerValue = createHostIntegrationValue()
     const { wrapper: CardSelectionStoreProvider } = createSelection()
     render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           <ImageNodeComponent cardWidth="regular" nodeKey="img-1" src="/image.png" />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
 
     expect(screen.getByTestId('image-card-populated')).toBeTruthy()
@@ -72,11 +72,11 @@ describe('ImageNodeComponent', () => {
     })
     const { wrapper: CardSelectionStoreProvider } = createSelection()
     render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           <ImageNodeComponent cardWidth="regular" nodeKey="img-1" src="/image.png" altText="Alt text" />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
 
     expect(screen.getByTestId('image-card-populated')).toBeTruthy()
@@ -87,12 +87,12 @@ describe('ImageNodeComponent', () => {
     const composerValue = createHostIntegrationValue({ fileTypes: { image: { mimeTypes: ['image/png'] } } })
     const { wrapper: CardSelectionStoreProvider } = createSelection()
     render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           {/* the insert flow: no src yet, so the empty card's hidden file input exists to click */}
           <ImageNodeComponent cardWidth="regular" nodeKey="img-1" src="" triggerFileDialog />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
 
     await waitFor(() => expect(clickSpy).toHaveBeenCalledTimes(1))
@@ -105,11 +105,11 @@ describe('ImageNodeComponent', () => {
     const file = new File(['image'], 'photo.png', { type: 'image/png' })
 
     render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           <ImageNodeComponent cardWidth="regular" nodeKey="img-1" src="" initialFile={file} />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
 
     await waitFor(() => expect(upload).toHaveBeenCalledWith([file]))
@@ -126,11 +126,11 @@ describe('ImageNodeComponent', () => {
     const file = new File(['image'], 'photo.png', { type: 'image/png' })
 
     render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           <ImageNodeComponent cardWidth="regular" nodeKey="img-1" src="/image.png" initialFile={file} />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
 
     // the mount effect runs synchronously; give any async work a chance to fire
@@ -162,11 +162,11 @@ describe('ImageNodeComponent', () => {
       })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
-        <InklingHostIntegrationContext.Provider value={composerValue}>
+        <InklingHostIntegrationProvider value={composerValue}>
           <CardSelectionStoreProvider>
             <ImageNodeComponent cardWidth="regular" href={href} nodeKey={nodeKey} src={src} />
           </CardSelectionStoreProvider>
-        </InklingHostIntegrationContext.Provider>,
+        </InklingHostIntegrationProvider>,
       )
     }
 

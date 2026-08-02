@@ -1,12 +1,11 @@
-import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/card-specs'
 
-import { transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
+import { transientTriggerFileDialogProp } from '@/nodes/base/card-specs'
 import { BaseGalleryNode } from '@/nodes/base/nodes/gallery/GalleryNode'
 
 import type { CardDeclaration } from './card-declaration'
 
 import { captionEditorSpec } from './caption-editor-spec'
-import { INSERT_GALLERY_COMMAND } from './card-commands'
 
 // `as const` keeps the literal `name`s and value types on the declaration's
 // type — the `__*` field map derives both from them (CardSpecFieldMap). The
@@ -32,7 +31,7 @@ export const galleryDeclaration = {
       labelKey: 'gallery',
       desc: 'Create an image gallery',
       icon: 'gallery',
-      command: INSERT_GALLERY_COMMAND,
+      command: 'insert',
       insertParams: {
         triggerFileDialog: true,
       },
@@ -41,7 +40,8 @@ export const galleryDeclaration = {
       shortcut: '/gallery',
     },
   ],
-  insert: { command: INSERT_GALLERY_COMMAND },
+  // presence is the opt-in — no flags
+  insert: {},
   toolbarLabel: 'gallery',
-  markdown: true,
+  markdown: { kind: 'fence' },
 } satisfies CardDeclaration<'gallery'>

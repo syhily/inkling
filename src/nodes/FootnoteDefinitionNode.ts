@@ -12,7 +12,7 @@ export type FootnoteDefinitionNodeDataset = FootnoteDefinitionData & {
   contentEditor?: LexicalEditor
   // accepted for getDataset/clone symmetry but not read by the constructor —
   // `__contentEditorInitialState` is set internally when the editor is
-  // populated from its serialized HTML (src/utils/nested-editors.ts)
+  // populated from its serialized HTML (src/nodes/nested-editors.ts)
   contentEditorInitialState?: EditorState
 }
 

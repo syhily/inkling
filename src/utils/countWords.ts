@@ -10,7 +10,7 @@ export interface SafeStringLike {
   string: string
 }
 
-// Segmenter path (docs/kobato-fit-plan.md C7 §3.4): when the caller names a
+// Segmenter path: when the caller names a
 // language and the runtime provides Intl.Segmenter, word-granularity segments
 // counted by `isWordLike` give dictionary-aware counts for CJK text (the
 // regex fallback below counts every CJK character as one word). One segmenter

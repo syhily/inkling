@@ -3,8 +3,9 @@ import { type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { attachCaptionEditorWithText } from '#/utils/caption-editor'
+import { getCardMenu } from '#/utils/card-menu'
 import { updateEditor } from '#/utils/test-editor'
-import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { VideoNode, $createVideoNode, $isVideoNode, INSERT_VIDEO_COMMAND } from '@/nodes/VideoNode'
 
 const editorNodes = [VideoNode]

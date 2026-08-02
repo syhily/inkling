@@ -15,8 +15,7 @@
  * Both paths run ONE serializer, so their output is byte-identical for any
  * document content. Every case pins that single output and asserts the two
  * paths agree exactly. The suite fails if either path's output changes — an
- * intentional change means updating the pinned strings and docs/html-api.md
- * deliberately.
+ * intentional change means updating the pinned strings deliberately.
  *
  * One input-dependent exception, by design: the headless renderer registers a
  * pre-render transform that removes temporary AtLinkNodes (mid-search link

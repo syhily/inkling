@@ -12,7 +12,7 @@ import { SettingDescription, SettingLabel } from '@/components/ui/SettingLabel'
 import { TabView } from '@/components/ui/TabView'
 import { Toggle } from '@/components/ui/Toggle'
 import CardContext from '@/context/CardContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingLinkingSettings } from '@/context/InklingHostIntegrationContext'
 import useFloatingPanel from '@/hooks/useFloatingPanel'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { cx } from '@/utils/cx'
@@ -173,18 +173,17 @@ interface InputUrlSettingProps {
 }
 
 export function InputUrlSetting({ dataTestId, label, value, onChange }: InputUrlSettingProps) {
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
+  const { fetchAutocompleteLinks } = useInklingLinkingSettings()
   const labels = useInklingLabels()
   const [listOptions, setListOptions] = React.useState<ListOption[]>([])
 
   React.useEffect(() => {
-    if (cardConfig?.fetchAutocompleteLinks) {
-      const fetchAutocompleteLinks = cardConfig.fetchAutocompleteLinks
+    if (fetchAutocompleteLinks) {
       let cancelled = false
       fetchAutocompleteLinks()
         .then((links) => {
-          // the component unmounted or cardConfig changed before the request
-          // resolved — don't update state with stale results
+          // the component unmounted or the linking settings changed before
+          // the request resolved — don't update state with stale results
           if (cancelled) {
             return
           }
@@ -204,7 +203,7 @@ export function InputUrlSetting({ dataTestId, label, value, onChange }: InputUrl
         cancelled = true
       }
     }
-  }, [cardConfig])
+  }, [fetchAutocompleteLinks])
 
   const filteredSuggestedUrls = listOptions.filter((u) => {
     return u.label.toLocaleLowerCase().includes(value.toLocaleLowerCase())

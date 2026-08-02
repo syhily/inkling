@@ -6,7 +6,7 @@ import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider, type CardConfig } from '@/context/InklingHostIntegrationContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { DEFAULT_LABELS } from '@/labels/inkling-labels'
 import { CodeBlockNode } from '@/nodes/CodeBlockNode'
@@ -54,13 +54,13 @@ function renderComponent(nodeKey: NodeKey, darkMode: boolean) {
   const composerValue = createHostIntegrationValue()
   const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
   return render(
-    <InklingHostIntegrationContext.Provider value={composerValue}>
+    <InklingHostIntegrationProvider value={composerValue}>
       <InklingUiPrefsContext.Provider value={createUiPrefsValue(darkMode)}>
         <CardSelectionStoreProvider>
           <CodeBlockNodeComponent code="const a = 1" language="javascript" nodeKey={nodeKey} />
         </CardSelectionStoreProvider>
       </InklingUiPrefsContext.Provider>
-    </InklingHostIntegrationContext.Provider>,
+    </InklingHostIntegrationProvider>,
   )
 }
 
@@ -108,13 +108,13 @@ describe('CodeBlockNodeComponent', () => {
       const composerValue = createHostIntegrationValue({ cardConfig })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
-        <InklingHostIntegrationContext.Provider value={composerValue}>
+        <InklingHostIntegrationProvider value={composerValue}>
           <InklingUiPrefsContext.Provider value={createUiPrefsValue(false)}>
             <CardSelectionStoreProvider>
               <CodeBlockNodeComponent code="const a = 1" language="javascript" nodeKey={nodeKey} />
             </CardSelectionStoreProvider>
           </InklingUiPrefsContext.Provider>
-        </InklingHostIntegrationContext.Provider>,
+        </InklingHostIntegrationProvider>,
       )
     }
 

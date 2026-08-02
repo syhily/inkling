@@ -1,7 +1,7 @@
 import type { LexicalEditor } from 'lexical'
 
 import type { CleanBasicHtmlOptions } from '@/html/clean-basic-html'
-import type { NestedEditorSpec, NestedEditorValueCarrier } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec, NestedEditorValueCarrier } from '@/nodes/base/card-specs'
 
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 

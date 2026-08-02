@@ -3,31 +3,26 @@ import type { LexicalEditor, NodeKey } from 'lexical'
 import { LexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { useCallback, useContext, useId, useLayoutEffect, useRef, type RefObject } from 'react'
 
-import { debounce } from '@/utils'
-import {
-  clampOnDrag,
-  clampOnResize,
-  createDragSession,
-  driftTowardsInitial,
-  isMobileViewport,
-  resolveCardOrigin,
-  resolveCardWidthTransition,
-  resolveInitialPanelPosition,
-  type PanelPosition,
-  type PanelSpacing,
-  type PanelViewport,
-} from '@/utils/floating-panel'
-import { getScrollAncestor } from '@/utils/scroll-ancestor'
+import type { PanelPosition, PanelSpacing, PanelViewport } from '@/utils/floating-panel'
 
-// React adapter over @/utils/floating-panel (the deep module): owns the DOM
-// ports — body-level pointer listeners, the user-select stylesheet, click
-// suppression, the ResizeObservers — and the settings-panel layout effects
-// (initial placement, viewport-resize drift, wide-card origin shift). Position
-// and constraints go in, the committed position comes out as the element's
-// transform. Replaces the former useMovable/useSettingsPanelReposition stack:
-// both were single-consumer seams over this behaviour, and the drag session no
-// longer captures its adjust callbacks mount-only, so the resolveCardElementRef
-// dance is gone — every callback reads the latest resolver through latestRef.
+import { createPanelDomWiring } from '@/utils/panel-resize-choreography'
+import { createPanelSuppression } from '@/utils/panel-suppression'
+
+// React adapter over the floating panel's headless modules
+// (@/utils/floating-panel's layout math, @/utils/panel-drag-session's
+// grab/listener choreography, @/utils/panel-resize-choreography's re-clamp
+// resolutions AND its DOM assembly createPanelDomWiring, @/utils/panel-
+// suppression's drag side effects): this hook keeps the refs (position
+// state slots, viewport/card-width transition memory), the measurement
+// closures (element/viewport/position read-write), and the effect triggers;
+// every DOM consequence — body-level pointer listeners, the user-select
+// stylesheet, click suppression, the ResizeObservers, the wide-card origin
+// shift — lives in the wiring. Position and constraints go in, the committed
+// position comes out as the element's transform. Replaces the former
+// useMovable/useSettingsPanelReposition stack: both were single-consumer
+// seams over this behaviour, and the drag session no longer captures its
+// adjust callbacks mount-only, so the resolveCardElementRef dance is gone —
+// every callback reads the latest resolver through the wiring ports.
 
 interface UseFloatingPanelOptions {
   positionToRef?: RefObject<HTMLElement | null>
@@ -44,16 +39,6 @@ function findCardElement(editor: LexicalEditor, cardKey: NodeKey): HTMLElement |
     return null
   }
   return decoratorElement.querySelector('[data-inkling-card]') ?? decoratorElement
-}
-
-function eventPoint(e: Event): PanelPosition | null {
-  if (e instanceof TouchEvent) {
-    return { x: e.touches[0].clientX, y: e.touches[0].clientY }
-  }
-  if (e instanceof MouseEvent) {
-    return { x: e.clientX, y: e.clientY }
-  }
-  return null
 }
 
 export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>({
@@ -76,10 +61,20 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
   // so clamps can keep negative spacing when the user placed the panel offscreen
   const lastSpacing = useRef<PanelSpacing | null>(null)
 
-  const originalOverflow = useRef<string>('')
   // the drag stylesheet id only needs document uniqueness — React's useId
   // supplies it without a module counter (replaces the ember-port guidFor shim)
   const stylesheetId = `inkling-floating-panel-drag-${useId()}`
+
+  // transition-memory slots read by the wiring (viewport drift, wide-card
+  // origin); cardWidth rides a ref so the wiring stays stable across width
+  // changes — only the transition effect re-fires
+  const previousViewport = useRef<PanelViewport>({ width: window.innerWidth, height: window.innerHeight })
+  const previousCardWidth = useRef<string>(cardWidth)
+  const previousCardOrigin = useRef<PanelPosition>({ x: 0, y: 0 })
+  const cardWidthRef = useRef(cardWidth)
+  useLayoutEffect(() => {
+    cardWidthRef.current = cardWidth
+  }, [cardWidth])
 
   // the card that renders the panel is the positioning anchor — resolve its
   // element from the node key (CardContext) instead of querying global DOM
@@ -128,106 +123,51 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
     }
   }, [])
 
-  // --- declared drag side effects (the drag session's effect ports) ---
-
-  const cancelClick = useCallback((e: Event) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }, [])
-
-  const disableScroll = useCallback(() => {
-    if (!ref.current) {
-      return
-    }
-    originalOverflow.current = ref.current.style.overflow
-    ref.current.style.overflow = 'hidden'
-  }, [])
-
-  const enableScroll = useCallback(() => {
-    if (ref.current) {
-      ref.current.style.overflow = originalOverflow.current
+  const getCommittedPosition = useCallback(() => {
+    return {
+      x: currentX.current,
+      y: currentY.current,
+      lastSpacing: lastSpacing.current,
     }
   }, [])
 
-  const disableSelection = useCallback(() => {
-    window.getSelection()?.removeAllRanges()
-
-    const stylesheet = document.createElement('style')
-    stylesheet.id = stylesheetId
-    document.head.appendChild(stylesheet)
-    stylesheet.sheet?.insertRule('* { user-select: none !important; }', 0)
-  }, [stylesheetId])
-
-  const enableSelection = useCallback(() => {
-    document.getElementById(stylesheetId)?.remove()
-  }, [stylesheetId])
-
-  // disabling pointer events prevents inputs being activated when drag finishes,
-  // preventing clicks stops any event handlers that may otherwise result in the
-  // panel being closed when the drag finishes
-  const disablePointerEvents = useCallback(() => {
-    if (ref.current) {
-      ref.current.style.pointerEvents = 'none'
-    }
-    window.addEventListener('click', cancelClick, { capture: true, passive: false })
-  }, [cancelClick])
-
-  const enablePointerEvents = useCallback(() => {
-    if (ref.current) {
-      ref.current.style.pointerEvents = ''
-    }
-    window.removeEventListener('click', cancelClick, { capture: true })
-  }, [cancelClick])
-
-  const activateEffects = useCallback(() => {
-    disableScroll()
-    disableSelection()
-    disablePointerEvents()
-  }, [disableScroll, disableSelection, disablePointerEvents])
-
-  const deactivateEffects = useCallback(() => {
-    // Removing click suppression immediately re-enables the click behind in the
-    // same event loop, losing the suppression when dragging out of the canvas.
-    // The next tick stops the immediate click event firing when finishing drag.
-    setTimeout(() => {
-      window.removeEventListener('click', cancelClick, { capture: true })
-    }, 1)
-
-    enableScroll()
-    enableSelection()
-
-    // timeout required so immediate events stay blocked until the drag end has fully realised
-    setTimeout(() => {
-      enablePointerEvents()
-    }, 5)
-  }, [cancelClick, enableScroll, enableSelection, enablePointerEvents])
-
-  // --- drag session (headless core) + its DOM pointer wiring ---
-
-  // the session reads every changing input through refs, so no callback is
-  // captured mount-only and no resolver dance is needed
-  const latest = useRef({ resolveCardElement, getViewport })
-  useLayoutEffect(() => {
-    latest.current = { resolveCardElement, getViewport }
-  }, [resolveCardElement, getViewport])
-
-  // the one settle-clamp assembly: measure the panel (default the committed
-  // element), the viewport, and the card origin, then clampOnResize. Every
-  // re-clamp below (panel resize, viewport drift, width transition) is a
-  // one-line call; the math itself lives in @/utils/floating-panel.
-  const clampSettled = useCallback(
-    (position: PanelPosition, spacing: PanelSpacing | null = null, panelElem: HTMLElement | null = ref.current) =>
-      clampOnResize({
-        ...position,
-        panelSize: panelElem ? { width: panelElem.offsetWidth, height: panelElem.offsetHeight } : null,
-        viewport: latest.current.getViewport(),
-        origin: resolveCardOrigin(latest.current.resolveCardElement()),
-        lastSpacing: spacing,
-      }),
+  // ref-reading ports lifted to useCallback so the effect that assembles the
+  // wiring never touches a ref during render (the reads happen at call time)
+  const getPanelElement = useCallback(() => ref.current, [])
+  const isPanelElement = useCallback((element: unknown) => element === ref.current, [])
+  const getCommittedCardWidth = useCallback(() => cardWidthRef.current, [])
+  const isInteractiveElement = useCallback(
+    (element: unknown) => element instanceof Element && element.matches('input, .ember-basic-dropdown-trigger'),
     [],
   )
 
+  // the wiring (drag session + suppression + DOM assembly) is created in the
+  // mount effect — matching the former session-in-effect pattern — and held in
+  // a ref; the other effects trigger its methods, so the factory never runs
+  // during render
+  const wiringRef = useRef<ReturnType<typeof createPanelDomWiring> | null>(null)
+
+  // mount: mark the panel draggable, then hand the DOM assembly the body
+  // listeners, drag session, and ResizeObservers
   useLayoutEffect(() => {
+    const suppression = createPanelSuppression({ getElement: getPanelElement, stylesheetId })
+    const wiring = createPanelDomWiring({
+      getElement: getPanelElement,
+      resolveCardElement,
+      getCommittedPosition,
+      getPosition,
+      setPosition,
+      getViewport,
+      getCardWidth: getCommittedCardWidth,
+      previousCardWidth,
+      previousCardOrigin,
+      previousViewport,
+      isPanel: isPanelElement,
+      isInteractive: isInteractiveElement,
+      suppression,
+    })
+    wiringRef.current = wiring
+
     const elem = ref.current
     if (!elem) {
       return
@@ -235,255 +175,36 @@ export default function useFloatingPanel<T extends HTMLElement = HTMLDivElement>
     elem.setAttribute('draggable', 'true')
     elem.classList.add('inkling-card-movable')
 
-    // created once at mount alongside the wiring that consumes it (a pure
-    // closure-based state object — no cleanup of its own)
-    const session = createDragSession({
-      getPosition,
-      setPosition,
-      adjustOnDrag: (position) => {
-        const cardElement = latest.current.resolveCardElement()
-        return clampOnDrag({
-          ...position,
-          panelSize: { width: elem.offsetWidth, height: elem.offsetHeight },
-          viewport: latest.current.getViewport(),
-          origin: resolveCardOrigin(cardElement),
-        })
-      },
-      activateEffects,
-      deactivateEffects,
-    })
-
-    const onMove = (e: Event) => {
-      const point = eventPoint(e)
-      if (point) {
-        session.move(point)
-      }
-    }
-    const onEnd = () => {
-      removeActiveEventListeners()
-      session.end()
-    }
-    const addActiveEventListeners = () => {
-      window.addEventListener('touchend', onEnd, { capture: true, passive: true })
-      window.addEventListener('touchmove', onMove, { capture: true, passive: true })
-      window.addEventListener('mouseup', onEnd, { capture: true, passive: true })
-      window.addEventListener('mousemove', onMove, { capture: true, passive: true })
-    }
-    function removeActiveEventListeners() {
-      window.removeEventListener('touchend', onEnd, { capture: true })
-      window.removeEventListener('touchmove', onMove, { capture: true })
-      window.removeEventListener('mouseup', onEnd, { capture: true })
-      window.removeEventListener('mousemove', onMove, { capture: true })
-
-      // deferred for the same reason as the drag-end click suppression
-      setTimeout(() => {
-        window.removeEventListener('click', cancelClick, { capture: true })
-      }, 1)
-    }
-
-    const dragStart = (e: TouchEvent | MouseEvent) => {
-      e.stopPropagation()
-
-      if (e.type !== 'touchstart' && !(e instanceof MouseEvent && e.button === 0)) {
-        return
-      }
-
-      const point = eventPoint(e)
-      if (!point) {
-        return
-      }
-      session.start(point)
-
-      const path = e.composedPath?.() ?? []
-      for (const element of path) {
-        if (!(element instanceof Element)) {
-          continue
-        }
-        if (element.matches('input, .ember-basic-dropdown-trigger')) {
-          break
-        }
-        if (element === elem) {
-          addActiveEventListeners()
-          break
-        }
-      }
-    }
-
-    // React event handlers get added to the root element, so listeners added to
-    // the panel directly would stopPropagation any React events on child nodes.
-    // Instead the listeners live on the body and check the event target.
-    const startListener = (e: TouchEvent | MouseEvent) => {
-      const target = e.target
-      if (target instanceof Node && ref.current?.contains(target)) {
-        dragStart(e)
-      }
-    }
-
-    document.body.addEventListener('touchstart', startListener, false)
-    document.body.addEventListener('mousedown', startListener, false)
-
-    // panel resize: re-clamp the settled position and shift the session's grab
-    // offset so a resize mid-drag (e.g. a collapsible section toggled from a
-    // panel button) doesn't jump the drag position
-    const panelResizeObserver = new ResizeObserver(() => {
-      const x = currentX.current
-      const y = currentY.current
-      if (x === undefined || y === undefined) {
-        return
-      }
-
-      const position = clampSettled({ x, y }, lastSpacing.current, elem)
-
-      if (position.x !== x || position.y !== y) {
-        session.adjustOffset(position.x - x, position.y - y)
-        setPosition(position)
-      }
-    })
-    panelResizeObserver.observe(elem)
-
+    wiring.start()
     return () => {
-      document.body.removeEventListener('touchstart', startListener, false)
-      document.body.removeEventListener('mousedown', startListener, false)
-      removeActiveEventListeners()
-      panelResizeObserver.disconnect()
-      enableSelection()
+      wiring.destroy()
     }
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // --- settings-panel layout effects ---
-
-  const getInitialPosition = useCallback(
-    (panelElem: HTMLElement): PanelPosition | undefined => {
-      const cardElement = resolveCardElement()
-      if (!cardElement) {
-        return
-      }
-      const cardRect = cardElement.getBoundingClientRect()
-      const viewport = getViewport()
-      const panelSize = { width: panelElem.offsetWidth, height: panelElem.offsetHeight }
-      return resolveInitialPanelPosition({
-        cardRect,
-        panelSize,
-        viewport,
-        origin: resolveCardOrigin(cardElement),
-        mobile: isMobileViewport({ width: window.innerWidth, height: window.innerHeight }),
-      })
-    },
-    [resolveCardElement, getViewport],
-  )
-
-  // initial value matches getViewport() at mount (the panel ref is still null,
-  // so the breakout adjustment is 0) — reading the ref itself here would be a
-  // render-time ref access
-  const previousViewport = useRef<PanelViewport>({ width: window.innerWidth, height: window.innerHeight })
-  const previousCardWidth = useRef<string>(cardWidth)
-  const previousCardOrigin = useRef<PanelPosition>({ x: 0, y: 0 })
-
-  const onResize = useCallback(
-    (panelElem: HTMLElement | null) => {
-      const { x, y, lastSpacing: spacing } = getPosition()
-
-      const viewport = getViewport()
-      const drifted = driftTowardsInitial(
-        { x, y },
-        panelElem ? getInitialPosition(panelElem) : undefined,
-        previousViewport.current,
-        viewport,
-      )
-
-      setPosition(clampSettled(drifted, spacing, panelElem))
-
-      previousViewport.current = viewport
-    },
-    [getPosition, getViewport, getInitialPosition, setPosition, clampSettled],
-  )
-
-  // reposition on scroll container resize, covers two cases:
-  // 1. window is resized
-  // 2. sidebar is opened/closed
-  useLayoutEffect(() => {
-    if (!ref.current) {
-      return
-    }
-
-    const container = getScrollAncestor(ref.current) || document.body
-    let prevWidth = 0
-
-    const panelRepositionDebounced = debounce(
-      (newWidth: number) => {
-        prevWidth = newWidth
-        onResize(ref.current)
-      },
-      100,
-      { leading: true, trailing: true },
-    )
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const firstSize = entry.contentBoxSize?.[0]
-        if (firstSize) {
-          const width = firstSize.inlineSize
-          if (typeof width === 'number' && width !== prevWidth) {
-            panelRepositionDebounced(width)
-          }
-        }
-      }
-    })
-
-    resizeObserver.observe(container)
-
-    return () => {
-      panelRepositionDebounced.cancel()
-      resizeObserver.disconnect()
-    }
-  }, [onResize])
+  }, [
+    getPanelElement,
+    stylesheetId,
+    resolveCardElement,
+    getCommittedPosition,
+    getPosition,
+    setPosition,
+    getViewport,
+    getCommittedCardWidth,
+    isPanelElement,
+    isInteractiveElement,
+  ])
 
   // position on first render (and re-position if the card anchor changes)
   useLayoutEffect(() => {
-    if (!ref.current) {
-      return
-    }
-    try {
-      const initialPosition = getInitialPosition(ref.current)
-      if (initialPosition) {
-        setPosition(initialPosition)
-      }
-    } catch {
-      // positioning is best-effort
-    }
-    previousViewport.current = getViewport()
-  }, [getInitialPosition, setPosition, getViewport])
+    wiringRef.current?.placeInitial(ref.current)
+  }, [wiringRef, resolveCardElement])
 
-  // account for wide cards using a transform so we need to adjust the origin position
-  // previousCardWidth starts at cardWidth so the first render never shifts the origin.
-  // The transition policy (origin re-base + settle clamp) lives in
-  // @/utils/floating-panel's resolveCardWidthTransition; this effect only measures.
+  // account for wide cards using a transform so we need to adjust the origin
+  // position. previousCardWidth starts at cardWidth so the first render never
+  // shifts the origin. The transition policy (origin re-base + settle clamp)
+  // lives in @/utils/floating-panel's resolveCardWidthTransition; this effect
+  // only re-fires it when the committed width changes.
   useLayoutEffect(() => {
-    const cardElement = resolveCardElement()
-    if (cardWidth === 'wide' && previousCardWidth.current !== 'wide' && !cardElement) {
-      // no card element yet — leave previousCardWidth so the shift can apply later
-      return
-    }
-    const cardRect = cardElement?.getBoundingClientRect() ?? null
-    const transition = resolveCardWidthTransition({
-      position: getPosition(),
-      previousOrigin: previousCardOrigin.current,
-      cardRect: cardRect ? { left: cardRect.left, top: cardRect.top } : null,
-      panelSize: ref.current ? { width: ref.current.offsetWidth, height: ref.current.offsetHeight } : null,
-      viewport: getViewport(),
-      origin: resolveCardOrigin(cardElement),
-      from: previousCardWidth.current,
-      to: cardWidth,
-    })
-    if (transition) {
-      previousCardOrigin.current = transition.cardOrigin
-      if (ref.current) {
-        setPosition(transition.position)
-      }
-    }
-    previousCardWidth.current = cardWidth
-  }, [cardWidth, getPosition, resolveCardElement, setPosition, getViewport])
+    wiringRef.current?.applyCardWidthTransition()
+  }, [wiringRef, cardWidth])
 
   return { ref }
 }

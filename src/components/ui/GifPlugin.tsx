@@ -4,7 +4,7 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import React from 'react'
 
 import GifSelector from '@/components/ui/GifSelector'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingGifSettings } from '@/context/InklingHostIntegrationContext'
 import { useGifBrowser } from '@/hooks/useGifBrowser'
 import { useSelectorPlaceholderLifecycle } from '@/hooks/useSelectorPlaceholderLifecycle'
 import { INSERT_FROM_GIF_COMMAND } from '@/plugins/InklingSelectorPlugin'
@@ -15,8 +15,8 @@ interface GifPluginProps {
 }
 
 const GifPlugin = ({ nodeKey }: GifPluginProps) => {
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
-  const providerConfig = getGifProviderConfig(cardConfig)
+  const gifSettings = useInklingGifSettings()
+  const providerConfig = getGifProviderConfig(gifSettings)
 
   // a host can enable the GIF menu item with a config object whose keys are
   // all missing (e.g. `{ tenor: {} }`), which resolves to no provider

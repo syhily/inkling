@@ -132,6 +132,13 @@ export class FootnoteRefNode extends TextNode {
   isTextEntity() {
     return true
   }
+
+  // The string layer splices this node's exportDOM markup (`<sup><a…>`)
+  // into the text flow instead of adding it to the pending text run — the
+  // inline-markup-entity protocol (`@/nodes/base/export-dom`).
+  isInlineMarkupEntity() {
+    return true
+  }
 }
 
 function parseFootnoteRefSup(node: HTMLElement): { slug: string; label: string } | null {

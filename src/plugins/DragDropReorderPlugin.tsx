@@ -8,7 +8,7 @@ import type { ImageNodeDataset } from '@/nodes/ImageNode'
 
 import { useCardSelectionState } from '@/context/CardSelectionStoreContext'
 import { useDragDropHandle, useDragDropHandleState } from '@/context/DragDropHandleContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingDragScrollContainerSelector } from '@/context/InklingHostIntegrationContext'
 import { $isInklingCard } from '@/nodes/base'
 import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import {
@@ -222,7 +222,7 @@ function useDragDropReorder(editor: LexicalEditor): void {
     },
   })
 
-  const { dragScrollContainerSelector } = React.useContext(InklingHostIntegrationContext)
+  const dragScrollContainerSelector = useInklingDragScrollContainerSelector()
 
   React.useEffect(() => {
     if (!containerElement || !editor.getRootElement()) {

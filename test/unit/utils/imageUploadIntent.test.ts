@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { tick, updateEditor } from '#/utils/test-editor'
 import { ImageNode, $createImageNode, type ImageNode as ImageNodeType } from '@/nodes/ImageNode'
+import { imageUploadIntent } from '@/nodes/upload-intent'
 import { getImageDimensions } from '@/utils/getImageDimensions'
-import { imageUploadIntent } from '@/utils/upload-intent'
 
 vi.mock('@/utils/getImageDimensions', () => ({
   getImageDimensions: vi.fn(),

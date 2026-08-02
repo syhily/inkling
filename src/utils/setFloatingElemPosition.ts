@@ -1,4 +1,9 @@
-const VERTICAL_GAP = 10
+// Floating element placement — the floating toolbar's "always above the
+// target, horizontally centered, clamped into the scroller" positioning,
+// projected onto @/utils/fit-rect's 'clamp-above' policy. The DOM edge
+// (measuring the element/scroller rects, writing the styles) stays here.
+
+import { ANCHOR_POPUP_GAP, fitRectWithin } from '@/utils/fit-rect'
 
 interface SetFloatingElemPositionOptions {
   verticalGap?: number
@@ -11,7 +16,7 @@ export function setFloatingElemPosition(
   anchorElem: HTMLElement,
   options: SetFloatingElemPositionOptions = {},
 ): void {
-  const { verticalGap = VERTICAL_GAP, controlOpacity = false } = options
+  const { verticalGap = ANCHOR_POPUP_GAP, controlOpacity = false } = options
 
   const scrollerElem = anchorElem.parentElement
 
@@ -22,20 +27,17 @@ export function setFloatingElemPosition(
   const floatingElemRect = floatingElem.getBoundingClientRect()
   const editorScrollerRect = scrollerElem.getBoundingClientRect()
 
-  let top = targetRect.top - floatingElemRect.height - verticalGap
-  let left = targetRect.left + targetRect.width / 2 - floatingElemRect.width / 2
-
-  if (left < editorScrollerRect.left) {
-    left = editorScrollerRect.left
-  }
-
-  if (left + floatingElemRect.width > editorScrollerRect.right) {
-    left = editorScrollerRect.right - floatingElemRect.width
-  }
+  const fitted = fitRectWithin({
+    bounds: { top: 0, left: editorScrollerRect.left, right: editorScrollerRect.right, bottom: 0 },
+    rect: targetRect,
+    size: { width: floatingElemRect.width, height: floatingElemRect.height },
+    gap: verticalGap,
+    policy: 'clamp-above',
+  })
 
   if (controlOpacity) {
     floatingElem.style.opacity = '1'
   }
-  floatingElem.style.top = `${top}px`
-  floatingElem.style.left = `${left}px`
+  floatingElem.style.top = `${fitted.top}px`
+  floatingElem.style.left = `${fitted.left}px`
 }

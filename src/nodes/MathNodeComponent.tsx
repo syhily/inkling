@@ -5,6 +5,7 @@ import type { MathNode } from '@/nodes/MathNode'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { MathCard } from '@/components/ui/cards/MathCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
+import { useInklingMathSettings } from '@/context/InklingHostIntegrationContext'
 import { useCardChrome } from '@/hooks/useCardChrome'
 import { useReselectOnEscape } from '@/hooks/useReselectOnEscape'
 import { $isMathNode } from '@/nodes/MathNode'
@@ -17,8 +18,8 @@ export interface MathNodeComponentProps {
 }
 
 export function MathNodeComponent({ nodeKey, tex, mathml, svg }: MathNodeComponentProps) {
-  const { host, setField } = useCardChrome(nodeKey, $isMathNode)
-  const { cardConfig } = host
+  const { setField } = useCardChrome(nodeKey, $isMathNode)
+  const { renderMath } = useInklingMathSettings()
   const isEditing = useCardIsEditing(nodeKey)
   const exitEditMode = useReselectOnEscape(nodeKey)
 
@@ -29,7 +30,7 @@ export function MathNodeComponent({ nodeKey, tex, mathml, svg }: MathNodeCompone
       <MathCard
         isEditing={isEditing}
         mathml={mathml}
-        renderMath={cardConfig.renderMath}
+        renderMath={renderMath}
         svg={svg}
         tex={tex}
         updateTex={updateTex}

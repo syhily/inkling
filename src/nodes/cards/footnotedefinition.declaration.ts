@@ -1,6 +1,6 @@
-import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec } from '@/nodes/base/card-specs'
 
-import { nullableNestedEditor } from '@/nodes/base/generate-decorator-node'
+import { nullableNestedEditor } from '@/nodes/base/card-specs'
 import { BaseFootnoteDefinitionNode } from '@/nodes/base/nodes/footnotedefinition/FootnoteDefinitionNode'
 import BASIC_NODES from '@/nodes/BasicNodes'
 
@@ -31,7 +31,6 @@ export const footnoteDefinitionDeclaration = {
   // writer never inserts one from the slash menu (CodeBlock's menu-less
   // precedent).
   toolbarLabel: 'footnote',
-  // Not in the markdown round-trip (docs/kobato-fit-plan.md C4 §3.2(g)) —
+  // Not in the markdown round-trip —
   // kobato interop goes through the wire dialect, not public markdown.
-  markdown: false,
 } satisfies CardDeclaration<'footnotedefinition'>

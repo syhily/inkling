@@ -1,7 +1,7 @@
 import { htmlToLexicalState, lexicalStateToHtml, lexicalStateToPlainText } from '@/html/headless-html'
 import { MINIMAL_DOCUMENT } from '@/utils/initial-document'
 
-// Public headless HTML surface (docs/html-api.md), exercised through the
+// Public headless HTML surface, exercised through the
 // barrel-facing functions with no dom passed — the vitest jsdom globals feed
 // the port's global leg. Option semantics are pinned by reference in the
 // characterization suites: renderer additive override in

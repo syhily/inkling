@@ -7,6 +7,7 @@ import type { BookmarkNode } from '@/nodes/BookmarkNode'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { BookmarkCard } from '@/components/ui/cards/BookmarkCard'
 import { useCardIsSelected } from '@/context/CardSelectionStoreContext'
+import { useInklingLinkingSettings, useInklingSnippetSettings } from '@/context/InklingHostIntegrationContext'
 import { useBookmarkMetadata } from '@/hooks/useBookmarkMetadata'
 import { useCardChrome } from '@/hooks/useCardChrome'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
@@ -42,8 +43,9 @@ export function BookmarkNodeComponent({
   captionEditorInitialState,
   createdWithUrl,
 }: BookmarkNodeComponentProps) {
-  const { editor, host } = useCardChrome(nodeKey, $isBookmarkNode)
-  const { cardConfig } = host
+  const { editor } = useCardChrome(nodeKey, $isBookmarkNode)
+  const { fetchEmbed, siteUrl, searchLinks } = useInklingLinkingSettings()
+  const { createSnippet } = useInklingSnippetSettings()
   const labels = useInklingLabels()
 
   const isSelected = useCardIsSelected(nodeKey)
@@ -51,7 +53,7 @@ export function BookmarkNodeComponent({
   const { loading, urlError, clearUrlError, submitUrl, fetchInitialMetadata } = useBookmarkMetadata({
     editor,
     nodeKey,
-    fetchEmbed: cardConfig.fetchEmbed,
+    fetchEmbed,
   })
 
   const handleUrlChange = (value: string): void => {
@@ -66,7 +68,7 @@ export function BookmarkNodeComponent({
       })
     }
     if (type === 'url') {
-      const target = isInternalUrl(href, cardConfig.siteUrl ?? '') ? 'internal' : 'external'
+      const target = isInternalUrl(href, siteUrl ?? '') ? 'internal' : 'external'
       trackEvent('Link dropdown: URL entered', { context: 'bookmark', target })
     }
 
@@ -106,7 +108,7 @@ export function BookmarkNodeComponent({
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const searchEnabled = typeof cardConfig.searchLinks === 'function'
+  const searchEnabled = typeof searchLinks === 'function'
 
   return (
     <>
@@ -136,7 +138,7 @@ export function BookmarkNodeComponent({
         hideWhileEditing={false}
         items={[{ kind: 'snippet' }]}
         nodeKey={nodeKey}
-        visibleWhen={!!title && !!cardConfig.createSnippet}
+        visibleWhen={!!title && !!createSnippet}
       />
     </>
   )

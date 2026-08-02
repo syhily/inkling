@@ -1,4 +1,4 @@
-import type { LexicalEditor } from 'lexical'
+import type { LexicalEditor, LexicalNode } from 'lexical'
 
 import { $isLinkNode } from '@lexical/link'
 import { $isListItemNode } from '@lexical/list'
@@ -6,7 +6,6 @@ import { $isQuoteNode } from '@lexical/rich-text'
 import {
   $createParagraphNode,
   $getSelection,
-  $isParagraphNode,
   $isRangeSelection,
   $isTextNode,
   COMMAND_PRIORITY_LOW,
@@ -15,17 +14,41 @@ import {
 } from 'lexical'
 
 import { $isAsideNode } from '@/nodes/AsideNode'
-import { $selectDecoratorNode } from '@/utils'
 
 import type { KeyboardNavigationDeps } from './types'
 
-import { $getLogicallyAdjacentCard, dispatchSelectedCardDeletion, editorOwnsFocus } from '../card-adjacency'
+import {
+  $removeEmptyBlockAndSelectCard,
+  $removeLogicallyAdjacentCard,
+  dispatchSelectedCardDeletion,
+  editorOwnsFocus,
+} from '../card-adjacency'
+import { $unwrapSpecialMarkupFormat } from '../markdown-unwrap'
 
-const SPECIAL_MARKUPS = {
-  code: '`',
-  superscript: '^',
-  subscript: '~',
-  strikethrough: '~~',
+// Convert a top-level list item to a paragraph when backspace lands at the
+// item's start boundary — two anchor shapes, one policy:
+// - the cursor sits directly in an EMPTY item (no text node exists, so the
+//   selection anchor IS the item): ride Lexical's INSERT_PARAGRAPH_COMMAND so
+//   the surrounding list structure stays correct;
+// - the cursor is at the start of a POPULATED item (the anchor is the item's
+//   child): replace the item with a paragraph carrying its children.
+// Placed AFTER the firefox-workaround and empty-block checks in the handler:
+// neither applies to a ListItemNode anchor, so the merge preserves the exact
+// evaluation order the two former branches had.
+function $convertListItemToParagraph(anchorNode: LexicalNode, editor: LexicalEditor): boolean {
+  if ($isListItemNode(anchorNode) && anchorNode.getIndent() === 0 && anchorNode.isEmpty()) {
+    editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND, undefined)
+    return true
+  }
+
+  const listItemNode = anchorNode.getParent()
+  if ($isListItemNode(listItemNode) && listItemNode.getIndent() === 0) {
+    const paragraphNode = $createParagraphNode()
+    paragraphNode.append(...listItemNode.getChildren())
+    listItemNode.replace(paragraphNode)
+    return true
+  }
+  return false
 }
 
 export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
@@ -50,16 +73,8 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
         if (selection.isCollapsed()) {
           const anchor = selection.anchor
           const anchorNode = anchor.getNode()
-          const topLevelElement = anchorNode.getTopLevelElement()
 
           const atStartOfElement = selection.anchor.offset === 0 && selection.focus.offset === 0
-
-          // convert empty top level list items to paragraphs
-          if (atStartOfElement && $isListItemNode(anchorNode) && anchorNode.getIndent() === 0 && anchorNode.isEmpty()) {
-            event.preventDefault()
-            editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND, undefined)
-            return true
-          }
 
           // see https://github.com/facebook/lexical/issues/5226
           // upstream bug with firefox only
@@ -78,23 +93,15 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
           }
 
           // delete empty paragraphs and select card if preceded by card
-          const previousCardSibling = topLevelElement ? $getLogicallyAdjacentCard('previous', topLevelElement) : null
-          if ($isParagraphNode(anchorNode) && anchorNode.isEmpty() && previousCardSibling) {
-            topLevelElement?.remove()
-            $selectDecoratorNode(previousCardSibling)
+          if ($removeEmptyBlockAndSelectCard('previous', 'paragraph-is-empty')) {
             return true
           }
 
-          // convert populated top level list items to paragraphs when cursor is at beginning
-          if (atStartOfElement && $isListItemNode(anchorNode.getParent())) {
-            const listItemNode = anchorNode.getParent()
-            if (listItemNode && listItemNode.getIndent() === 0) {
-              event.preventDefault()
-              const paragraphNode = $createParagraphNode()
-              paragraphNode.append(...listItemNode.getChildren())
-              listItemNode.replace(paragraphNode)
-              return true
-            }
+          // convert top level list items to paragraphs when cursor is at beginning
+          // (empty and populated items — see $convertListItemToParagraph)
+          if (atStartOfElement && $convertListItemToParagraph(anchorNode, editor)) {
+            event.preventDefault()
+            return true
           }
 
           const anchorNodeParent = anchorNode.getParent()
@@ -116,15 +123,9 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
           }
 
           // delete any previous card keeping caret in place
-          // (selection-mode 'previous' is gated on exactly atStartOfElement above)
-          const previousCard = $getLogicallyAdjacentCard('previous')
-          if (
-            previousCard &&
-            anchorNodeParent === topLevelElement && // handles lists, where the parent node is not the paragraph
-            anchorNodeParent?.getFirstChild()?.is(anchorNode) // handles child nodes in paragraphs, e.g. LinkNode and HorizontalRule
-          ) {
+          // (selection-mode 'previous' is gated on exactly atStartOfElement inside the surgery)
+          if ($removeLogicallyAdjacentCard('previous')) {
             event.preventDefault()
-            previousCard.remove()
             return true
           }
 
@@ -133,31 +134,9 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
             selection.anchor.offset === anchorNodeLength && selection.focus.offset === anchorNodeLength
 
           // undo any markdown special formats when deleting at the end of a formatted text node
-          if (atEndOfElement && $isTextNode(anchorNode)) {
-            const textContent = anchorNode.getTextContent()
-
-            for (const tag of Object.keys(SPECIAL_MARKUPS) as Array<keyof typeof SPECIAL_MARKUPS>) {
-              if (anchorNode.hasFormat(tag)) {
-                const markup = SPECIAL_MARKUPS[tag]
-                // for replacement strings e.g. {{variable}} we shouldn't add the markup (assumes use of ReplacementStringsPlugin)
-                let newText = textContent
-                if (tag === 'code' && textContent.match(/{.*?}(?![A-Za-z\s])/)) {
-                  newText = newText.slice(0, -1)
-                } else {
-                  newText = markup + newText + markup
-                  newText = newText.slice(0, -1) // remove last markup character
-                }
-
-                // manually clear formatting and push offset to accommodate for the added markup
-                anchorNode.setFormat(0)
-                anchorNode.setTextContent(newText)
-                selection.anchor.offset = selection.anchor.offset + newText.length - textContent.length
-                selection.focus.offset = selection.focus.offset + newText.length - textContent.length
-
-                event.preventDefault()
-                return true
-              }
-            }
+          if (atEndOfElement && $isTextNode(anchorNode) && $unwrapSpecialMarkupFormat(anchorNode, selection)) {
+            event.preventDefault()
+            return true
           }
         }
       }

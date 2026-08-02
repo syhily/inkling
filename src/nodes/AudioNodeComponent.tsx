@@ -5,10 +5,11 @@ import type { AudioNode } from '@/nodes/AudioNode'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { AudioCard } from '@/components/ui/cards/AudioCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
+import { useInklingHostEssentials } from '@/context/InklingHostIntegrationContext'
 import { useCardChrome } from '@/hooks/useCardChrome'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import { $isAudioNode } from '@/nodes/base'
-import { audioThumbnailUploadIntent, audioUploadIntent } from '@/utils/upload-intent'
+import { audioThumbnailUploadIntent, audioUploadIntent } from '@/nodes/upload-intent'
 
 interface AudioNodeComponentProps {
   duration: number
@@ -29,8 +30,8 @@ export function AudioNodeComponent({
   title,
   triggerFileDialog,
 }: AudioNodeComponentProps) {
-  const { editor, host, write, setField } = useCardChrome(nodeKey, $isAudioNode)
-  const { fileUploader } = host
+  const { editor, write, setField } = useCardChrome(nodeKey, $isAudioNode)
+  const { fileUploader } = useInklingHostEssentials()
   const isEditing = useCardIsEditing(nodeKey)
 
   const {

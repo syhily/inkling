@@ -1,7 +1,7 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import React from 'react'
 
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingHostEssentials } from '@/context/InklingHostIntegrationContext'
 import { registerDragOverSuppression, registerFileDropCommands } from '@/plugins/behaviour/file-drop'
 
 // The drop policies (claim flow, cursor suppression, html fallback, the
@@ -9,7 +9,7 @@ import { registerDragOverSuppression, registerFileDropCommands } from '@/plugins
 // keeps only the uploader context and mounts the registrations.
 function DragDropPastePlugin() {
   const [editor] = useLexicalComposerContext()
-  const { fileUploader } = React.useContext(InklingHostIntegrationContext)
+  const { fileUploader } = useInklingHostEssentials()
 
   const hasUploader = React.useCallback(() => !!fileUploader, [fileUploader])
   const fileTypes = React.useCallback(() => fileUploader?.fileTypes, [fileUploader])

@@ -16,7 +16,7 @@ import DEFAULT_NODES, { EDITOR_BASE_NODES } from '@/nodes/DefaultNodes'
 /* Plugins */
 import CardInsertPlugin from '@/plugins/CardInsertPlugin'
 import CardMenuPlugin from '@/plugins/CardMenuPlugin'
-import DefaultFeaturePlugins from '@/plugins/DefaultFeaturePlugins'
+import DefaultFeaturePlugins, { DEFAULT_FEATURE_PLUGINS } from '@/plugins/DefaultFeaturePlugins'
 import DragDropPastePlugin from '@/plugins/DragDropPastePlugin'
 import DragDropReorderPlugin from '@/plugins/DragDropReorderPlugin'
 import EmEnDashPlugin from '@/plugins/EmEnDashPlugin'
@@ -51,6 +51,7 @@ export type { InklingComposerProps } from '@/components/InklingComposer'
 export type { InklingEditorProps } from '@/components/InklingEditor'
 export type { InklingNestedComposerProps } from '@/components/InklingNestedComposer'
 export type { PinturaConfig } from '@/hooks/usePinturaEditor'
+export type { FeaturePluginEntry } from '@/plugins/DefaultFeaturePlugins'
 
 /* The card family (declaration order): node classes, guards, factories,
  * dataset and serialized types, and insert commands — everything CONTEXT.md's
@@ -123,7 +124,7 @@ export type {
   DecoratorNodeProperty,
   NestedEditorSpec,
   TransientPropSpec,
-} from '@/nodes/base/generate-decorator-node'
+} from '@/nodes/base/card-specs'
 export { InklingDecoratorNode } from '@/nodes/base/InklingDecoratorNode'
 export type { CardNodeClass } from '@/nodes/assemble-card-node'
 // the render-context seam hosts write card renderers against (defineCard
@@ -144,13 +145,14 @@ export type {
   LexicalStateToHtmlOptions,
   LexicalStateToPlainTextOptions,
 } from '@/html/headless-html'
-export type { ExportDOMDom } from '@/nodes/base'
+export type { ExportDOMDom, ExportPolicyKey } from '@/nodes/base'
 
 export {
   InklingComposer,
   InklingEditor,
   InklingNestedComposer,
   DefaultFeaturePlugins,
+  DEFAULT_FEATURE_PLUGINS,
   CardInsertPlugin,
   CardMenuPlugin,
   DragDropPastePlugin,

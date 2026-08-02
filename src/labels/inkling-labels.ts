@@ -1,5 +1,5 @@
 /**
- * The labels table (docs/kobato-fit-plan.md C7) — every user-visible string
+ * The labels table — every user-visible string
  * the editor chrome renders, as one flat, closed table of dotted keys with
  * English defaults. A host overrides a subset through
  * `<InklingComposer labels={...}>`; missing keys fall back to the English
@@ -103,7 +103,7 @@ export interface InklingLabels {
   'gif.error.common': string
   'gif.error.invalidApiKey': string
 
-  /* Image-library picker (docs/kobato-fit-plan.md C8) */
+  /* Image-library picker */
   'library.search.placeholder': string
   'library.upload': string
   'library.empty': string

@@ -13,9 +13,17 @@
  * where they already had them.
  *
  * Listeners receive the new snapshot; a `() => void` listener (what
- * useSyncExternalStore passes) simply ignores it. The request track
- * (src/utils/services/request-track.ts) composes this store with its
- * scheduler port and latest-wins guard; the menu navigator
+ * useSyncExternalStore passes) simply ignores it. The unsubscribe contract
+ * is two-layered: `subscribe`'s returned function detaches ONE listener
+ * (what React's effect cleanup calls), and `dispose` drops every listener
+ * at owner teardown — a service's dispose stops its request track and its
+ * store together (src/utils/services/service-machine.ts). Like the track,
+ * the store stays usable after dispose (StrictMode remounts reuse the
+ * instance and re-subscribe); dispose is a listener reset, not a death
+ * sentence.
+ *
+ * The request track (src/utils/services/request-track.ts) composes this
+ * store with its scheduler port and latest-wins guard; the menu navigator
  * (src/hooks/card-menu-navigation.ts), the gallery images mirror
  * (src/hooks/gallery-images-mirror.ts), and the composer handle share the
  * skeleton without a request line.
@@ -25,9 +33,12 @@ export type SnapshotListener<TSnapshot> = (snapshot: TSnapshot) => void
 
 export interface SnapshotStore<TSnapshot> {
   getSnapshot: () => TSnapshot
+  /** Attach a listener; the returned function detaches it (React's effect cleanup path). */
   subscribe: (listener: SnapshotListener<TSnapshot>) => () => void
   /** Merge a partial snapshot and notify every listener (unless the change guard swallows the emit). */
   emit: (partial: Partial<TSnapshot>) => void
+  /** Drop every listener (owner teardown). The store stays usable — a reused instance re-subscribes. */
+  dispose: () => void
 }
 
 export interface SnapshotStoreOptions<TSnapshot> {
@@ -59,6 +70,9 @@ export function createSnapshotStore<TSnapshot extends object>(
       for (const listener of listeners) {
         listener(snapshot)
       }
+    },
+    dispose() {
+      listeners.clear()
     },
   }
 }

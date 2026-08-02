@@ -1,21 +1,16 @@
 import type { NodeKey } from 'lexical'
 import type { ComponentType } from 'react'
 
-import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/card-specs'
 
-import {
-  fnOr,
-  strOr,
-  transientInitialFileProp,
-  transientTriggerFileDialogProp,
-} from '@/nodes/base/generate-decorator-node'
+import { transientInitialFileProp, transientTriggerFileDialogProp } from '@/nodes/base/card-specs'
 import { BaseImageNode } from '@/nodes/base/nodes/image/ImageNode'
 import { decorateCardWidth } from '@/nodes/base/utils/card-widths'
+import { fnOr, strOr } from '@/utils/value-guards'
 
 import type { CardDeclaration } from './card-declaration'
 
 import { captionEditorSpec } from './caption-editor-spec'
-import { INSERT_IMAGE_COMMAND, OPEN_GIF_SELECTOR_COMMAND, OPEN_IMAGE_LIBRARY_COMMAND } from './card-commands'
 
 // `as const` keeps the literal `name`s and value types on the declaration's
 // type — the `__*` field map derives both from them (CardSpecFieldMap)
@@ -29,7 +24,7 @@ export const transientProps = [
     // the `string | null` annotation is the type source for the `__previewSrc`
     // field (CardSpecFieldMap) — `strOr` itself returns string, but the field
     // must stay nullable because the upload lifecycle clears it by writing
-    // `node.previewSrc = null` (src/utils/upload-intent.ts)
+    // `node.previewSrc = null` (src/nodes/upload-intent.ts)
     initial: (dataset): string | null => strOr(dataset.previewSrc, ''),
     datasetKey: '__previewSrc',
     accessor: true,
@@ -65,7 +60,7 @@ export const imageDeclaration = {
       labelKey: 'image',
       desc: 'Upload, or embed with /image [url]',
       icon: 'image',
-      command: INSERT_IMAGE_COMMAND,
+      command: 'insert',
       insertParams: {
         triggerFileDialog: true,
       },
@@ -79,7 +74,7 @@ export const imageDeclaration = {
       labelKey: 'gif',
       desc: 'Search and embed gifs',
       icon: 'gif',
-      command: OPEN_GIF_SELECTOR_COMMAND,
+      command: 'openGifSelector',
       insertParams: {
         triggerFileDialog: false,
       },
@@ -94,7 +89,7 @@ export const imageDeclaration = {
       labelKey: 'imageLibrary',
       desc: 'Pick from your media library',
       icon: 'image',
-      command: OPEN_IMAGE_LIBRARY_COMMAND,
+      command: 'openImageLibrary',
       insertParams: {
         triggerFileDialog: false,
       },
@@ -104,8 +99,11 @@ export const imageDeclaration = {
       shortcut: '/library',
     },
   ],
-  insert: { command: INSERT_IMAGE_COMMAND, claimsMediaInsert: true },
+  insert: { claimsMediaInsert: true },
   uploadType: 'image',
   toolbarLabel: 'image',
-  markdown: true,
+  // Markdown-eligible with no card fence: image speaks standard `![alt](src)`
+  // syntax via the hand-written IMAGE_CARD_TRANSFORMER
+  // (`@/nodes/cards/card-markdown-transformers`).
+  markdown: { kind: 'exempt' },
 } satisfies CardDeclaration<'image'>

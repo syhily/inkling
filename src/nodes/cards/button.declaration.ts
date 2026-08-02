@@ -2,8 +2,6 @@ import { BaseButtonNode } from '@/nodes/base/nodes/button/ButtonNode'
 
 import type { CardDeclaration } from './card-declaration'
 
-import { INSERT_BUTTON_COMMAND } from './card-commands'
-
 export const buttonDeclaration = {
   nodeType: 'button',
   baseNode: BaseButtonNode,
@@ -17,14 +15,14 @@ export const buttonDeclaration = {
       labelKey: 'button',
       desc: 'Call-to-action button',
       icon: 'button',
-      command: INSERT_BUTTON_COMMAND,
+      command: 'insert',
       insertParams: {},
       matches: ['button', 'btn'],
       priority: 16,
       shortcut: '/button',
     },
   ],
-  insert: { command: INSERT_BUTTON_COMMAND, openInEditMode: true },
+  insert: { openInEditMode: true },
   toolbarLabel: 'button',
-  markdown: true,
+  markdown: { kind: 'fence' },
 } satisfies CardDeclaration<'button'>

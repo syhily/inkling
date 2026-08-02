@@ -6,17 +6,17 @@ import React from 'react'
 import type { ImageNodeDataset } from '@/nodes/ImageNode'
 
 import LibrarySelector from '@/components/ui/LibrarySelector'
-import InklingHostIntegrationContext, {
+import {
   type ImageLibrarySettings,
   type LibraryImageItem,
+  useInklingLibrarySettings,
 } from '@/context/InklingHostIntegrationContext'
 import { useLibraryBrowser } from '@/hooks/useLibraryBrowser'
 import { useSelectorPlaceholderLifecycle } from '@/hooks/useSelectorPlaceholderLifecycle'
 import { INSERT_FROM_LIBRARY_COMMAND } from '@/plugins/InklingSelectorPlugin'
 
 /**
- * The only field-mapping point of the library flow (docs/kobato-fit-plan.md
- * C8 §3.4): library item → insert dataset. The three host-schema keys are
+ * The only field-mapping point of the library flow: library item → insert dataset. The three host-schema keys are
  * included only when present; the stock image declaration silently ignores
  * them (its property set is fixed), and they persist only when the host
  * declares them as properties on its own card declaration.
@@ -41,8 +41,7 @@ interface LibraryPluginProps {
 // transient `selector` component (the GifPlugin precedent): the overlay is
 // open while the node exists; Escape / click-outside delete the placeholder.
 const LibraryPlugin = ({ nodeKey }: LibraryPluginProps) => {
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
-  const imageLibrary = cardConfig.imageLibrary
+  const { imageLibrary } = useInklingLibrarySettings()
 
   // the menu entry is gated on the same config key, so an absent library
   // config means there is nothing to browse — render nothing

@@ -2,8 +2,9 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { getCardMenu } from '#/utils/card-menu'
 import { updateEditor } from '#/utils/test-editor'
-import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import {
   HorizontalRuleNode,
   $createHorizontalRuleNode,

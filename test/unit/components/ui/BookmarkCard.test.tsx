@@ -6,11 +6,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SearchLinksFn } from '@/hooks/useSearchLinks'
 
 import { BookmarkCard, BookmarkIcon } from '@/components/ui/cards/BookmarkCard'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider } from '@/context/InklingHostIntegrationContext'
 
 function renderWithSearchLinks(searchLinks: SearchLinksFn, ui: React.ReactElement) {
   return render(
-    <InklingHostIntegrationContext.Provider
+    <InklingHostIntegrationProvider
       value={{
         fileUploader: { useFileUpload: () => ({ upload: () => Promise.resolve(undefined) }) },
         cardConfig: { searchLinks },
@@ -18,7 +18,7 @@ function renderWithSearchLinks(searchLinks: SearchLinksFn, ui: React.ReactElemen
       }}
     >
       {ui}
-    </InklingHostIntegrationContext.Provider>,
+    </InklingHostIntegrationProvider>,
   )
 }
 

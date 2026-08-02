@@ -2,6 +2,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { createCommand } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
+import { getCardMenu } from '#/utils/card-menu'
 import { DEFAULT_LABELS } from '@/labels/inkling-labels'
 import { AudioNode } from '@/nodes/AudioNode'
 import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
@@ -9,10 +10,11 @@ import { BookmarkNode } from '@/nodes/BookmarkNode'
 import { ButtonNode } from '@/nodes/ButtonNode'
 import { CalloutNode } from '@/nodes/CalloutNode'
 import { CARD_DECLARATIONS, type CardDeclaration, type CardNodeType } from '@/nodes/cards'
+import { resolveCardInsertCommand, resolveCardMenuCommand } from '@/nodes/cards/card-commands'
 import { CARD_DECORATE_TARGETS, getCardDecorateTarget } from '@/nodes/cards/card-decorate'
 import { getCardToolbarLabel } from '@/nodes/cards/card-facts'
 import { CARD_INSERT_COMMANDS, getCardInsertRegistrations } from '@/nodes/cards/card-insert-commands'
-import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
 import { defineCard } from '@/nodes/cards/host-cards'
 import { CodeBlockNode } from '@/nodes/CodeBlockNode'
@@ -67,19 +69,17 @@ describe('card declarations as the single source of truth', () => {
     }
   })
 
-  it('names the insert command on the declaration insert spec', () => {
+  it('derives the insert command from the declaration node type', () => {
     const insertNodeTypes = CARD_DECLARATIONS.filter((card) => 'insert' in card && card.insert !== undefined).map(
       (card) => card.nodeType,
     )
 
-    // every insert-bearing declaration's registration dispatches exactly the
-    // command its spec names — menu entry order carries no command semantics
+    // every insert-bearing declaration joins exactly one insert command,
+    // derived from its node type — the spec carries only flags, so a
+    // registration can never drift from the card it inserts
     expect(CARD_INSERT_COMMANDS.map((registration) => registration.nodeType).sort()).toEqual(insertNodeTypes.sort())
     for (const registration of CARD_INSERT_COMMANDS) {
-      const declaration = CARD_DECLARATIONS.find((card) => card.nodeType === registration.nodeType)
-      const insert = declaration && 'insert' in declaration ? declaration.insert : undefined
-      expect(insert).toBeDefined()
-      expect(registration.command).toBe(insert?.command)
+      expect(registration.command).toBe(resolveCardInsertCommand(registration.nodeType))
     }
   })
 
@@ -97,8 +97,12 @@ describe('card declarations as the single source of truth', () => {
       }
 
       expect(resolved?.map((item) => item.label)).toEqual(menu.map((entry) => entry.label))
-      // each resolved entry dispatches the command its spec entry names
-      expect(resolved?.map((item) => item.insertCommand)).toEqual(menu.map((entry) => entry.command))
+      // each resolved entry dispatches the command its spec entry NAMES —
+      // the string resolves through the same card-commands view the registrar
+      // reads, so menu dispatch and registration name one object
+      expect(resolved?.map((item) => item.insertCommand)).toEqual(
+        menu.map((entry) => resolveCardMenuCommand(entry.command, declaration.nodeType)),
+      )
       // and the icon id resolved to a component
       for (const item of resolved ?? []) {
         expect(typeof item.Icon).toBe('function')
@@ -124,6 +128,29 @@ describe('card declarations as the single source of truth', () => {
     const tableEntry = Array.isArray(tableMenu) ? tableMenu[0] : tableMenu
     expect(DEFAULT_LABELS[`menu.${tableEntry?.labelKey}.label` as keyof typeof DEFAULT_LABELS]).toBe(tableEntry?.label)
     expect(DEFAULT_LABELS[`menu.${tableEntry?.labelKey}.desc` as keyof typeof DEFAULT_LABELS]).toBe(tableEntry?.desc)
+  })
+
+  it('carries no menu.* labels-table key without a menu entry naming it (and vice versa)', () => {
+    // the reverse direction of the resolution leg above: the labels table is
+    // closed, so a stale `menu.*` key whose labelKey no declaration (or the
+    // table pseudo-source) names is drift, and a new menu entry without its
+    // table entry fails the resolution leg above
+    const declaredLabelKeys = new Set<string>()
+    for (const declaration of CARD_DECLARATIONS) {
+      const menu = 'menu' in declaration ? declaration.menu : undefined
+      for (const entry of menu ?? []) {
+        declaredLabelKeys.add(entry.labelKey)
+      }
+    }
+    declaredLabelKeys.add('table')
+
+    const tableLabelKeys = new Set(
+      Object.keys(DEFAULT_LABELS)
+        .filter((key) => key.startsWith('menu.') && !key.startsWith('menu.section.'))
+        .map((key) => /^menu\.([^.]+)\.(label|desc)$/.exec(key)?.[1]),
+    )
+
+    expect(tableLabelKeys).toEqual(declaredLabelKeys)
   })
 
   it('resolves a drag icon for every draggable card', () => {

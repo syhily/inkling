@@ -53,4 +53,22 @@ describe('createSnapshotStore', () => {
     expect(store.getSnapshot()).toEqual({ count: 1, label: 'a' })
     expect(listener).toHaveBeenCalledTimes(1)
   })
+
+  it('dispose drops every listener but keeps the store usable (StrictMode remount re-subscribes)', () => {
+    const store = createSnapshotStore({ count: 0 })
+    const listener = vi.fn()
+    store.subscribe(listener)
+
+    store.dispose()
+    store.emit({ count: 1 })
+    expect(listener).not.toHaveBeenCalled()
+    // the snapshot itself still moves — a late emit is a no-op only for listeners
+    expect(store.getSnapshot()).toEqual({ count: 1 })
+
+    // a reused instance re-subscribes and keeps receiving emits
+    store.subscribe(listener)
+    store.emit({ count: 2 })
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({ count: 2 })
+  })
 })

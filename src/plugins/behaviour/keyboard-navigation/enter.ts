@@ -7,7 +7,7 @@ import { $isInklingCard } from '@/nodes/base'
 
 import type { KeyboardNavigationDeps } from './types'
 
-import { $removeOrReplaceNodeWithParagraph, $selectCard } from '../card-adjacency'
+import { $removeOrReplaceNodeWithParagraph, $selectCard, editorOwnsFocus } from '../card-adjacency'
 import { getEventProvenance } from '../nested-editor-protocol'
 
 export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
@@ -52,11 +52,7 @@ export function registerEnterCommand(editor: LexicalEditor, deps: KeyboardNaviga
 
       // let the browser handle selection when in a card inner element (e.g. nested editor)
       // NOTE: must come after ctrl/cmd+enter because that always toggles no matter the selection
-      if (
-        event &&
-        getEventProvenance(event) !== 'nested-editor' &&
-        document.activeElement !== editor.getRootElement()
-      ) {
+      if (event && getEventProvenance(event) !== 'nested-editor' && !editorOwnsFocus(editor)) {
         return true
       }
 

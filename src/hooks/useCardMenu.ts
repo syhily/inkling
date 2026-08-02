@@ -3,15 +3,24 @@ import type { LexicalCommand, LexicalEditor } from 'lexical'
 import { TableNode } from '@lexical/table'
 import React from 'react'
 
-import type { BuildCardMenuResult, CardMenuSource, ResolvedMenuItem } from '@/utils/buildCardMenu'
+import type {
+  BuildCardMenuResult,
+  CardMenuSource,
+  MenuBuildConfig,
+  ResolvedMenuItem,
+} from '@/nodes/cards/card-menu-build'
 
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import {
+  useInklingGifSettings,
+  useInklingLibrarySettings,
+  useInklingSnippetSettings,
+} from '@/context/InklingHostIntegrationContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { lookupLabel } from '@/labels/inkling-labels'
+import { buildCardMenu } from '@/nodes/cards/card-menu-build'
+import { getEditorCardNodes } from '@/nodes/cards/editor-card-nodes'
 import { TABLE_MENU_SOURCE } from '@/nodes/table/table-menu'
 import { $swapTriggerParagraph } from '@/plugins/behaviour/card-menu-trigger'
-import { buildCardMenu } from '@/utils/buildCardMenu'
-import { getEditorCardNodes } from '@/utils/getEditorCardNodes'
 
 export type CardMenuInsertParams = Pick<ResolvedMenuItem, 'insertParams' | 'queryParams'>
 
@@ -36,11 +45,34 @@ export interface UseCardMenu {
 /** The card menu as data: the registered card nodes plus the host's
  * cardConfig resolved through buildCardMenu, and the single type-erased
  * insert dispatch shared by the slash and plus menus. Trigger and
- * positioning semantics stay in the plugins. */
+ * positioning semantics stay in CardMenuPopup. */
 export function useCardMenu(editor: LexicalEditor, query?: string, options: UseCardMenuOptions = {}): UseCardMenu {
   const { commandParams = [], replaceTriggerParagraph = false } = options
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
+  const gifSettings = useInklingGifSettings()
+  const snippetSettings = useInklingSnippetSettings()
+  const librarySettings = useInklingLibrarySettings()
   const { labels } = React.useContext(InklingUiPrefsContext)
+
+  // the menu is a cross-feature surface: buildCardMenu gates card entries on
+  // the gif/library configs and lists the host's snippets, so the flat
+  // `MenuBuildConfig` it consumes is composed from exactly those three
+  // channels — an upload/math/linking slice changing never rebuilds the menu
+  const menuConfig = React.useMemo<MenuBuildConfig>(
+    () => ({
+      tenor: gifSettings.tenor,
+      klipy: gifSettings.klipy,
+      snippets: snippetSettings.snippets,
+      deleteSnippet: snippetSettings.deleteSnippet,
+      imageLibrary: librarySettings.imageLibrary,
+    }),
+    [
+      gifSettings.tenor,
+      gifSettings.klipy,
+      snippetSettings.snippets,
+      snippetSettings.deleteSnippet,
+      librarySettings.imageLibrary,
+    ],
+  )
 
   // rebuild the menu when the registered nodes, query, host config, or labels
   // change — buildCardMenu is pure, so the menu is computed during render (no
@@ -56,8 +88,8 @@ export function useCardMenu(editor: LexicalEditor, query?: string, options: UseC
       ? [...cardNodes, TABLE_MENU_SOURCE]
       : cardNodes
     const resolveLabel = (key: string, fallback: string) => lookupLabel(labels, key, fallback)
-    return buildCardMenu(nodes, { query, config: cardConfig, resolveLabel })
-  }, [editor, query, cardConfig, labels])
+    return buildCardMenu(nodes, { query, config: menuConfig, resolveLabel })
+  }, [editor, query, menuConfig, labels])
 
   const insert = React.useCallback<CardMenuInsert>(
     (insertCommand, { insertParams = {}, queryParams = [] } = {}) => {

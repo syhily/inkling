@@ -8,18 +8,19 @@ import { CardActionToolbar, useCardToolbarLabel } from '@/components/ui/CardActi
 import { ImageCard } from '@/components/ui/cards/ImageCard'
 import { LinkInput } from '@/components/ui/LinkInput'
 import { useCardIsSelected } from '@/context/CardSelectionStoreContext'
+import { useInklingHostEssentials, useInklingUploadSettings } from '@/context/InklingHostIntegrationContext'
 import { useCardChrome } from '@/hooks/useCardChrome'
 import useDropTarget from '@/hooks/useDropTarget'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { isCardWidth, normalizeCardWidth, type CardWidth } from '@/nodes/base/utils/card-widths'
+import { getAllowedImageCardWidths } from '@/nodes/base/utils/image-card-widths'
 import { $isImageNode } from '@/nodes/ImageNode'
+import { imageUploadIntent } from '@/nodes/upload-intent'
 import { $selectCard } from '@/plugins/behaviour/card-adjacency'
 import { applyImageCardDrop, isImageCardDropAllowed } from '@/plugins/behaviour/drop-surgery'
 import { backfillImageDimensions, clampImageCardWidth, migrateImageDataUrl } from '@/plugins/behaviour/image-lifecycle'
-import { getAllowedImageCardWidths } from '@/utils/image-card-widths'
 import { isGif } from '@/utils/isGif'
-import { imageUploadIntent } from '@/utils/upload-intent'
 
 export interface ImageNodeComponentProps {
   nodeKey: NodeKey
@@ -48,8 +49,9 @@ export function ImageNodeComponent({
   href,
   cardWidth,
 }: ImageNodeComponentProps) {
-  const { editor, host, write, setField } = useCardChrome(nodeKey, $isImageNode)
-  const { cardConfig, onError } = host
+  const { editor, write, setField } = useCardChrome(nodeKey, $isImageNode)
+  const { onError } = useInklingHostEssentials()
+  const uploadSettings = useInklingUploadSettings()
   const [showLink, setShowLink] = React.useState(false)
   const isSelected = useCardIsSelected(nodeKey)
 
@@ -96,12 +98,12 @@ export function ImageNodeComponent({
   })
 
   const { isEnabled: isPinturaEnabled, openEditor: openImageEditor } = usePinturaEditor({
-    config: cardConfig.pinturaConfig,
+    config: uploadSettings.pinturaConfig,
   })
 
   const allowedImageCardWidths = React.useMemo(() => {
-    return getAllowedImageCardWidths(cardConfig.image?.allowedWidths)
-  }, [cardConfig.image?.allowedWidths])
+    return getAllowedImageCardWidths(uploadSettings.image?.allowedWidths)
+  }, [uploadSettings.image?.allowedWidths])
   const hasMultipleImageCardWidths = allowedImageCardWidths.length > 1
 
   // the mount-time document migrations (data:-URL upload, dimension

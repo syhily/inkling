@@ -12,7 +12,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { tick } from '#/utils/test-editor'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider } from '@/context/InklingHostIntegrationContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useCardMenu } from '@/hooks/useCardMenu'
 import { resolveLabels, type InklingLabelsInput } from '@/labels/inkling-labels'
@@ -32,20 +32,20 @@ function createTestEditor(): LexicalEditor {
 function createWrapper(cardConfig = {}) {
   const value = createHostIntegrationValue({ cardConfig })
   return function Wrapper({ children }: { children: React.ReactNode }) {
-    return <InklingHostIntegrationContext.Provider value={value}>{children}</InklingHostIntegrationContext.Provider>
+    return <InklingHostIntegrationProvider value={value}>{children}</InklingHostIntegrationProvider>
   }
 }
 
-// the labels seam (docs/kobato-fit-plan.md C7): prefs context carries the
+// the labels seam: prefs context carries the
 // composer's merged table; useCardMenu is the single menu-build injection point
 function createLabelsWrapper(labels: InklingLabelsInput) {
   const hostValue = createHostIntegrationValue({ cardConfig: {} })
   return function Wrapper({ children }: { children: React.ReactNode }) {
     const prefsValue = React.useMemo(() => ({ darkMode: false, labels: resolveLabels(labels) }), [])
     return (
-      <InklingHostIntegrationContext.Provider value={hostValue}>
+      <InklingHostIntegrationProvider value={hostValue}>
         <InklingUiPrefsContext.Provider value={prefsValue}>{children}</InklingUiPrefsContext.Provider>
-      </InklingHostIntegrationContext.Provider>
+      </InklingHostIntegrationProvider>
     )
   }
 }

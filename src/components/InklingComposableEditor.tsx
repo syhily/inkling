@@ -4,32 +4,17 @@ import type { EditorState, SerializedEditorState } from 'lexical'
 
 import { useCollaborationContext } from '@lexical/react/LexicalCollaborationContext'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { ContentEditable } from '@lexical/react/LexicalContentEditable'
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin'
-import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin'
-import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
-import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
-import { BLUR_COMMAND, FOCUS_COMMAND } from 'lexical'
 import React from 'react'
 
+import type { CorePluginScope } from '@/plugins/CorePlugins'
 import type { ExternalControlAPI } from '@/plugins/ExternalControlPlugin'
 
-import InklingErrorBoundary from '@/components/InklingErrorBoundary'
 import { EditorPlaceholder } from '@/components/ui/EditorPlaceholder'
 import { useDragDropHandle } from '@/context/DragDropHandleContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useSharedEditorStateContext } from '@/context/SharedEditorStateContext'
 import { type HiddenFormat } from '@/plugins/behaviour/format-toolbar'
-import DragDropPastePlugin from '@/plugins/DragDropPastePlugin'
-import DragDropReorderPlugin from '@/plugins/DragDropReorderPlugin'
-import { ExternalControlPlugin } from '@/plugins/ExternalControlPlugin'
-import FloatingToolbarPlugin from '@/plugins/FloatingToolbarPlugin'
-import InklingBehaviourPlugin from '@/plugins/InklingBehaviourPlugin'
-import { InklingEditorEventPlugin } from '@/plugins/InklingEditorEventPlugin'
-import MarkdownPastePlugin from '@/plugins/MarkdownPastePlugin'
-import MarkdownShortcutPlugin from '@/plugins/MarkdownShortcutPlugin'
-import RestrictContentPlugin from '@/plugins/RestrictContentPlugin'
-import TKPlugin from '@/plugins/TKPlugin'
+import CorePlugins from '@/plugins/CorePlugins'
 import { getParentEditor } from '@/utils/lexical-internals'
 
 export interface InklingComposableEditorProps {
@@ -136,6 +121,33 @@ const InklingComposableEditor = ({
     }
   }
 
+  // The core plugin set is data (src/plugins/CorePlugins.tsx): every mount
+  // below — conditions included — is one entry in CORE_PLUGINS, so the
+  // default surface is enumerable as CORE_PLUGINS + DEFAULT_FEATURE_PLUGINS.
+  const corePluginScope: CorePluginScope = {
+    contentEditableRef: onContentEditableRef,
+    contentEditableClassName: useDefaultClasses ? 'inkling-prose' : '',
+    readOnly,
+    placeholder: placeholder || <EditorPlaceholder className={placeholderClassName} text={placeholderText} />,
+    onEditorChange: _onChange,
+    historyState,
+    isCollabActive,
+    containerElem: editorContainerRef,
+    cursorDidExitAtTop,
+    isNested,
+    alignment,
+    markdownTransformers,
+    floatingAnchorElem,
+    hiddenFormats,
+    isSnippetsEnabled,
+    registerAPI,
+    isDragReorderEnabled,
+    singleParagraph,
+    onBlur,
+    onFocus,
+    isTKEnabled,
+  }
+
   return (
     <div
       ref={onWrapperRef}
@@ -143,41 +155,7 @@ const InklingComposableEditor = ({
       data-inkling-dnd-disabled={!isDragEnabled}
       data-testid={dataTestId}
     >
-      <RichTextPlugin
-        contentEditable={
-          <div ref={onContentEditableRef} data-inkling="editor">
-            <ContentEditable className={useDefaultClasses ? 'inkling-prose' : ''} readOnly={readOnly} />
-          </div>
-        }
-        ErrorBoundary={InklingErrorBoundary}
-        placeholder={placeholder || <EditorPlaceholder className={placeholderClassName} text={placeholderText} />}
-      />
-      <LinkPlugin />
-      <OnChangePlugin ignoreHistoryMergeTagChange={false} ignoreSelectionChange={true} onChange={_onChange} />
-      {!isCollabActive && <HistoryPlugin externalHistoryState={historyState} />}
-      {/* adds undo/redo, in multiplayer that's handled by yjs */}
-      <InklingBehaviourPlugin
-        containerElem={editorContainerRef}
-        cursorDidExitAtTop={cursorDidExitAtTop}
-        isNested={isNested}
-        alignment={alignment}
-      />
-      <MarkdownShortcutPlugin transformers={markdownTransformers} />
-      {floatingAnchorElem && (
-        <FloatingToolbarPlugin
-          anchorElem={floatingAnchorElem}
-          hiddenFormats={hiddenFormats}
-          isSnippetsEnabled={isSnippetsEnabled}
-        />
-      )}
-      <DragDropPastePlugin />
-      {registerAPI ? <ExternalControlPlugin registerAPI={registerAPI} /> : null}
-      {isDragReorderEnabled && <DragDropReorderPlugin />}
-      {singleParagraph && <RestrictContentPlugin paragraphs={1} />}
-      {onBlur && <InklingEditorEventPlugin command={BLUR_COMMAND} onEvent={onBlur} />}
-      {onFocus && <InklingEditorEventPlugin command={FOCUS_COMMAND} onEvent={onFocus} />}
-      <MarkdownPastePlugin />
-      {isTKEnabled && <TKPlugin />}
+      <CorePlugins scope={corePluginScope} />
       {children}
     </div>
   )

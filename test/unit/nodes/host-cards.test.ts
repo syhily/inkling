@@ -6,21 +6,23 @@ import { renderHook } from '@testing-library/react'
 import { $createParagraphNode, $getRoot, createCommand, DecoratorNode } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { getCardMenu } from '#/utils/card-menu'
 import { mockComposerContext } from '#/utils/composer-context'
 import { tick } from '#/utils/test-editor'
 import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
 import { $isInklingCard, InklingDecoratorNode } from '@/nodes/base/InklingDecoratorNode'
+import { resolveCardInsertCommand } from '@/nodes/cards/card-commands'
 import { type CardBaseNodeClass } from '@/nodes/cards/card-declaration'
 import { getCardDecorateTarget } from '@/nodes/cards/card-decorate'
 import { getCardToolbarLabel } from '@/nodes/cards/card-facts'
 import { getCardInsertRegistrations } from '@/nodes/cards/card-insert-commands'
-import { getCardDragIcon, getCardMenu, resolveCardIcon } from '@/nodes/cards/card-menus'
+import { getCardDragIcon, resolveCardIcon } from '@/nodes/cards/card-menus'
+import { getRegisteredCardNodes } from '@/nodes/cards/editor-card-nodes'
 import { getHostCard, getHostCards } from '@/nodes/cards/host-card-registry'
 import { defineCard } from '@/nodes/cards/host-cards'
 import { createCardSelectionStore } from '@/plugins/behaviour/cardSelectionStore'
 import { registerCardCommands } from '@/plugins/behaviour/registerCardCommands'
 import { CardInsertPlugin } from '@/plugins/CardInsertPlugin'
-import { getRegisteredCardNodes } from '@/utils/getEditorCardNodes'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -28,13 +30,20 @@ vi.mock('@lexical/react/LexicalComposerContext', () => ({
 
 const INSERT_MUSIC_PLAYER_COMMAND = createCommand('INSERT_MUSIC_PLAYER_COMMAND')
 
+// The host card's own insert command is derived from its node type, exactly
+// like a built-in card's — resolved through the same memoized resolver the
+// menu projection and the insert registrar read, so all three name one object
+const DERIVED_MUSIC_PLAYER_INSERT = resolveCardInsertCommand('musicPlayer')
+
 const CustomMenuIcon: ComponentType<SVGProps<SVGSVGElement>> = () => null
 const CustomDragIcon: ComponentType<SVGProps<SVGSVGElement>> = () => null
 const CustomIndicatorIcon: ComponentType<SVGProps<SVGSVGElement>> = () => null
 
-// The rich host card: menu (both icon paths), insert spec, decorate target
-// with an indicator icon, explicit drag icon. Registered at module top level,
-// mirroring the host idiom (defineCard before any composer mounts).
+// The rich host card: menu (both icon paths, both command forms — the
+// derived `'insert'` name and a raw host-defined LexicalCommand), insert
+// spec, decorate target with an indicator icon, explicit drag icon.
+// Registered at module top level, mirroring the host idiom (defineCard
+// before any composer mounts).
 const musicPlayer = defineCard({
   nodeType: 'musicPlayer',
   baseNode: generateDecoratorNode({
@@ -43,9 +52,9 @@ const musicPlayer = defineCard({
   }),
   decorateTarget: { hasIndicatorIcon: true },
   IndicatorIcon: CustomIndicatorIcon,
-  insert: { command: INSERT_MUSIC_PLAYER_COMMAND },
+  insert: {},
   menu: [
-    { label: 'Music', labelKey: 'music', icon: 'audio', command: INSERT_MUSIC_PLAYER_COMMAND, matches: ['music'] },
+    { label: 'Music', labelKey: 'music', icon: 'audio', command: 'insert', matches: ['music'] },
     {
       label: 'Music (legacy)',
       labelKey: 'musicLegacy',
@@ -172,8 +181,9 @@ describe('host cards in the derived views', () => {
     // the id path resolves through the built-in icon table; a component passes through
     expect(menu?.[0]?.Icon).toBe(resolveCardIcon('audio'))
     expect(menu?.[1]?.Icon).toBe(CustomMenuIcon)
-    // each resolved entry dispatches the command its spec entry names
-    expect(menu?.map((item) => item.insertCommand)).toEqual([INSERT_MUSIC_PLAYER_COMMAND, INSERT_MUSIC_PLAYER_COMMAND])
+    // the 'insert' name resolves to the card's derived insert command; a raw
+    // host-defined command passes through
+    expect(menu?.map((item) => item.insertCommand)).toEqual([DERIVED_MUSIC_PLAYER_INSERT, INSERT_MUSIC_PLAYER_COMMAND])
 
     expect(getCardMenu('hostWidget')).toBeUndefined()
   })
@@ -199,7 +209,7 @@ describe('host cards in the derived views', () => {
     const hostRegistration = registrations.find((registration) => registration.nodeType === 'musicPlayer')
 
     expect(hostRegistration?.node).toBe(musicPlayer.node)
-    expect(hostRegistration?.command).toBe(INSERT_MUSIC_PLAYER_COMMAND)
+    expect(hostRegistration?.command).toBe(DERIVED_MUSIC_PLAYER_INSERT)
     // the minimal card carries no insert spec and drops out
     expect(registrations.some((registration) => registration.nodeType === 'hostWidget')).toBe(false)
   })
@@ -260,7 +270,7 @@ describe('host card insert integration', () => {
     // assertions see the settled state
     await tick()
 
-    expect(editor.dispatchCommand(INSERT_MUSIC_PLAYER_COMMAND, { src: 'https://example.com/song.mp3' })).toBe(true)
+    expect(editor.dispatchCommand(DERIVED_MUSIC_PLAYER_INSERT, { src: 'https://example.com/song.mp3' })).toBe(true)
     await tick()
 
     editor.getEditorState().read(() => {
@@ -276,6 +286,6 @@ describe('host card insert integration', () => {
     editor = createHostEditor([])
     await mountRegistrar(editor)
 
-    expect(editor.dispatchCommand(INSERT_MUSIC_PLAYER_COMMAND, { src: 'https://example.com/song.mp3' })).toBe(false)
+    expect(editor.dispatchCommand(DERIVED_MUSIC_PLAYER_INSERT, { src: 'https://example.com/song.mp3' })).toBe(false)
   })
 })

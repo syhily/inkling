@@ -26,7 +26,7 @@ import {
   registerFootnotes,
 } from '@/plugins/behaviour/footnotes'
 
-// The footnote behaviour module (docs/kobato-fit-plan.md C4 §3.2(d)) — pins
+// The footnote behaviour module — pins
 // for the renumber engine (kobato's footnote-sync matrix, table-driven), the
 // signature short-circuit, the caret trigger (with backslash suppression and
 // the table-cell guard), the doc-end-run transform, and `$removeFootnote`.

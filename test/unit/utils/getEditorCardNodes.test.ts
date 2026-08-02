@@ -2,8 +2,8 @@ import { createEditor, DecoratorNode } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
 import { INSERT_IMAGE_COMMAND } from '@/nodes/cards/card-commands'
+import { getEditorCardNodes, getRegisteredCardNodes } from '@/nodes/cards/editor-card-nodes'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
-import { getEditorCardNodes, getRegisteredCardNodes } from '@/utils/getEditorCardNodes'
 
 // a card-shaped node with no matching declaration: the declarations are the
 // source of truth, so looking like a card does not make a node a card
@@ -95,7 +95,7 @@ describe('getRegisteredCardNodes', () => {
     expect(cards.get('file')?.uploadType).toBe('file')
     expect(cards.get('bookmark')?.uploadType).toBeUndefined()
 
-    // resolved through getCardMenu: the icon id and command are already bound
+    // resolved through resolveCardMenuEntries: the icon id and command are already bound
     expect(cards.get('image')?.cardMenu?.[0]?.label).toBe('Image')
     expect(cards.get('image')?.cardMenu?.[0]?.insertCommand).toBe(INSERT_IMAGE_COMMAND)
   })

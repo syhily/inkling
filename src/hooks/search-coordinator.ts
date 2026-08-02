@@ -2,6 +2,7 @@ import React from 'react'
 
 import EarthIcon from '@/assets/icons/inkling-earth.svg?react'
 import { createRequestTrack, type RequestScheduler } from '@/utils/services/request-track'
+import { runTrackedRequest } from '@/utils/services/service-machine'
 import { createSnapshotStore } from '@/utils/services/snapshot-store'
 
 // Search coordinator — the headless module owning the link-search flow behind
@@ -11,8 +12,12 @@ import { createSnapshotStore } from '@/utils/services/snapshot-store'
 // cross-track waiting. The churn (stale responses, superseded queries,
 // rejections, cancellation) lives here behind injected ports — the scheduler
 // and the searchLinks promise factory — so the race matrix is a synchronous
-// test table instead of renderHook + wall-clock sleeps. The React adapter is
-// useSearchLinks (~40 lines): position and constraints in, a snapshot out.
+// test table instead of renderHook + wall-clock sleeps. The query track's
+// async core is the shared tracked-request skeleton
+// (src/utils/services/service-machine.ts); the surface stays method-style
+// (setQuery/start) rather than the dispatch protocol — a lifecycle `start`
+// is not an intent. The React adapter is useSearchLinks (~40 lines):
+// position and constraints in, a snapshot out.
 
 export const SEARCH_DEBOUNCE_MS = 100
 
@@ -164,36 +169,34 @@ export function createSearchCoordinator({
   let defaultOptionsLoaded = false
 
   const runSearch = async (id: number, term: string): Promise<void> => {
+    // a scheduled dispatch that fires after a newer query never starts —
+    // the newer request owns the searching flag
     if (!queryTrack.isLatest(id)) {
       return
     }
 
     store.emit({ isSearching: true })
-    try {
-      // a missing search function resolves like a cancelled search: keep the
-      // current options and leave the searching state
-      const results = searchLinks ? await searchLinks(term) : undefined
 
-      // a newer query superseded this one while we were awaiting — don't
-      // let a slow older response overwrite the newer results
-      if (!queryTrack.isLatest(id)) {
-        return
-      }
+    // a missing search function resolves like a cancelled search: keep the
+    // current options and leave the searching state
+    const outcome = await runTrackedRequest(queryTrack, id, () =>
+      searchLinks ? searchLinks(term) : Promise.resolve(undefined),
+    )
 
-      // undefined means the search was cancelled: keep the current options
-      // instead of flashing "no results" while a later search is in flight
-      if (results !== undefined) {
-        store.emit({
-          listOptions: convertSearchResultsToListOptions(results, term, { noResultOptions: fallbackNoResultOptions }),
-        })
-      }
-    } catch {
-      // Search is best-effort. Preserve the last options when the host
-      // rejects, and always leave the searching state below.
-    } finally {
-      if (queryTrack.isLatest(id)) {
-        store.emit({ isSearching: false })
-      }
+    // undefined means the search was cancelled (or a newer query superseded
+    // this one): keep the current options instead of flashing "no results"
+    // while a later search is in flight. A rejection is best-effort too —
+    // preserve the last options. Either way the latest request always
+    // leaves the searching state.
+    if (outcome?.ok && outcome.value !== undefined) {
+      store.emit({
+        listOptions: convertSearchResultsToListOptions(outcome.value, term, {
+          noResultOptions: fallbackNoResultOptions,
+        }),
+      })
+    }
+    if (outcome) {
+      store.emit({ isSearching: false })
     }
   }
 
@@ -271,11 +274,12 @@ export function createSearchCoordinator({
       void startDefaultOptionsFetch()
     },
 
-    /** Invalidate every in-flight request (adapter unmount / recreation). */
+    /** Invalidate every in-flight request (adapter unmount / recreation) and drop the store's listeners. */
     dispose() {
       queryTrack.dispose()
       defaultTrack.dispose()
       defaultRequest = null
+      store.dispose()
     },
   }
 }

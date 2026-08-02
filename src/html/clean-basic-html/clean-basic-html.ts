@@ -1,14 +1,9 @@
 export interface CleanBasicHtmlOptions {
   allowBr?: boolean
   firstChildInnerContent?: boolean
-  removeCodeWrappers?: boolean
   createDocument?: (html: string) => Document
   /** Parse within this document (an element's `ownerDocument`) — the port that makes headless jsdom import work. */
   ownerDocument?: Document
-}
-
-function removeCodeWrappers(html: string): string {
-  return html.replace(/<code\b[^>]*>((.*?){.*?}(.*?))<\/code>/gi, '$1')
 }
 
 export function cleanBasicHtml(html: string = '', options: CleanBasicHtmlOptions = {}): string {
@@ -43,10 +38,6 @@ export function cleanBasicHtml(html: string = '', options: CleanBasicHtmlOptions
 
   if (!resolvedOptions.allowBr || cleanHtml === '<br>') {
     cleanHtml = cleanHtml.replace(/<br\s?\/?>/g, ' ')
-  }
-
-  if (resolvedOptions.removeCodeWrappers) {
-    cleanHtml = removeCodeWrappers(cleanHtml)
   }
 
   cleanHtml = cleanHtml

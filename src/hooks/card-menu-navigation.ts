@@ -5,8 +5,8 @@ import { createSnapshotStore } from '@/utils/services/snapshot-store'
 // and the reset-on-rebuild. Same shape as `@/hooks/search-coordinator`: the
 // shared snapshot store (@/utils/services/snapshot-store) publishes the
 // state, so the wrap/reset/enter-resolution matrix is a synchronous test
-// table. SlashCardMenuPlugin keeps the Lexical command registrations and
-// calls in; CardMenu renders the snapshot as-is.
+// table. CardMenuPopup keeps the Lexical command registrations and calls in;
+// CardMenu renders the snapshot as-is.
 
 export interface MenuNavigatorSnapshot {
   selectedItemIndex: number

@@ -1,7 +1,8 @@
+import type { DecoratorNodeProperty } from '@/nodes/base/card-specs'
+
 import {
   generateDecoratorNode,
   type DecoratorNodeData,
-  type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
   type SerializedGeneratedDecoratorNode,
 } from '@/nodes/base/generate-decorator-node'

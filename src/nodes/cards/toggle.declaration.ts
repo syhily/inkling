@@ -1,13 +1,11 @@
-import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec } from '@/nodes/base/card-specs'
 
-import { nullableNestedEditor } from '@/nodes/base/generate-decorator-node'
+import { nullableNestedEditor } from '@/nodes/base/card-specs'
 import { BaseToggleNode } from '@/nodes/base/nodes/toggle/ToggleNode'
 import BASIC_NODES from '@/nodes/BasicNodes'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
-
-import { INSERT_TOGGLE_COMMAND } from './card-commands'
 
 // `as const` keeps the literal `name`s and value types on the declaration's
 // type — the `__*` field map derives both from them (CardSpecFieldMap). Both
@@ -41,14 +39,14 @@ export const toggleDeclaration = {
       labelKey: 'toggle',
       desc: 'Collapsible content block',
       icon: 'toggle',
-      command: INSERT_TOGGLE_COMMAND,
+      command: 'insert',
       insertParams: {},
       matches: ['toggle', 'collapsible', 'accordion'],
       priority: 16,
       shortcut: '/toggle',
     },
   ],
-  insert: { command: INSERT_TOGGLE_COMMAND, openInEditMode: true },
+  insert: { openInEditMode: true },
   toolbarLabel: 'toggle',
-  markdown: true,
+  markdown: { kind: 'fence' },
 } satisfies CardDeclaration<'toggle'>

@@ -75,29 +75,6 @@ describe('cleanBasicHtml', function () {
 
     expect(result).toBe('')
   })
-
-  describe('options.removeCodeWrappers', function () {
-    it('removes any <code> wrappers around replacement strings {foo}', function () {
-      const html = '<code>{foo}</code>'
-      const result = cleanBasicHtml(html, { ...options, removeCodeWrappers: true })
-
-      expect(result).toBe('{foo}')
-    })
-
-    it('removes any <code> wrappers around replacement strings <span>{foo}</span>', function () {
-      const html = '<code><span>{foo}</span></code>'
-      const result = cleanBasicHtml(html, { ...options, removeCodeWrappers: true })
-
-      expect(result).toBe('<span>{foo}</span>')
-    })
-
-    it('removes any <code> wrappers around replacement strings {foo, "default"}', function () {
-      const html = '<p>Hey <code>{first_name, "there"}</code>,</p>'
-      const result = cleanBasicHtml(html, { ...options, removeCodeWrappers: true })
-
-      expect(result).toBe('<p>Hey {first_name, "there"},</p>')
-    })
-  })
 })
 
 describe('options.ownerDocument', function () {

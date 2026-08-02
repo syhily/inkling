@@ -18,6 +18,9 @@
 // regex is also not end-anchored, so its `(\w{1,10})` group caps nothing — a
 // fence line whose language exceeds 10 word chars still transforms on
 // enter/tab (pinned in test/unit/plugins/behaviour/registerKeyboardNavigation.test.ts).
+// The regexes themselves are owned by the shared grammar table
+// (`@/markdown/grammar`: keyboard / transformer / import policies), and
+// re-exported below for this seam's historical import sites.
 //
 // Language extraction differs per trigger too: the keyboard trigger body
 // takes the FULL rest of the line (`textContent.replace(/^```/, '')` — 'js
@@ -59,6 +62,7 @@ import {
   type LexicalNode,
 } from 'lexical'
 
+import { FENCE_KEYBOARD_REGEXP } from '@/markdown/grammar'
 import { $selectDecoratorNode } from '@/utils'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
@@ -98,13 +102,8 @@ export function stripFenceLines(linesInBetween: string[] | null | undefined): st
 
 /** enter/tab trigger: fires on the key regardless of trailing space. NOT
  * end-anchored, so the `(\w{1,10})` group does not cap the language length
- * on this trigger (see module comment). */
-export const FENCE_KEYBOARD_REGEXP = /^```(\w{1,10})?/
-
-/** markdown transformer trigger: the trailing `\s` makes the fence fire on
- * the space keystroke after ```lang while typing — and keeps markdown import
- * from claiming bare fences. */
-export const FENCE_TRANSFORMER_REGEXP = /^```(\w{1,10})?\s/
+ * on this trigger (see module comment). The regex itself is single-sourced
+ * in the shared grammar table (`@/markdown/grammar`). */
 
 /**
  * Replace the fence paragraph with a code block card and put a NodeSelection

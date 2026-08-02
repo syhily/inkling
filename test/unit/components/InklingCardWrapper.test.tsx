@@ -10,7 +10,7 @@ import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import InklingCardWrapper from '@/components/InklingCardWrapper'
 import { useCardSelectionStore } from '@/context/CardSelectionStoreContext'
-import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider, type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { HtmlNode } from '@/nodes/HtmlNode'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -44,14 +44,14 @@ function renderWrapper(nodeKey: NodeKey, { cardConfig, select }: { cardConfig?: 
   const composerValue = createHostIntegrationValue({ cardConfig })
   const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
   return render(
-    <InklingHostIntegrationContext.Provider value={composerValue}>
+    <InklingHostIntegrationProvider value={composerValue}>
       <CardSelectionStoreProvider>
         {select ? <SelectCard nodeKey={nodeKey} /> : null}
         <InklingCardWrapper nodeKey={nodeKey}>
           <div data-testid="card-content">card content</div>
         </InklingCardWrapper>
       </CardSelectionStoreProvider>
-    </InklingHostIntegrationContext.Provider>,
+    </InklingHostIntegrationProvider>,
   )
 }
 
@@ -59,13 +59,13 @@ function renderWrapperWithWidth(nodeKey: NodeKey, width: CardWidth) {
   const composerValue = createHostIntegrationValue()
   const { wrapper: CardSelectionStoreProvider } = createCardSelectionStoreWrapper()
   const tree = (nextWidth: CardWidth) => (
-    <InklingHostIntegrationContext.Provider value={composerValue}>
+    <InklingHostIntegrationProvider value={composerValue}>
       <CardSelectionStoreProvider>
         <InklingCardWrapper nodeKey={nodeKey} width={nextWidth}>
           <div data-testid="card-content">card content</div>
         </InklingCardWrapper>
       </CardSelectionStoreProvider>
-    </InklingHostIntegrationContext.Provider>
+    </InklingHostIntegrationProvider>
   )
   const result = render(tree(width))
   return { ...result, rerenderWidth: (nextWidth: CardWidth) => result.rerender(tree(nextWidth)) }

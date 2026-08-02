@@ -6,8 +6,10 @@ import { CardWrapper } from '@/components/ui/CardWrapper'
 import CardContext from '@/context/CardContext'
 import { useCardSelectionState, useCardSelectionStore } from '@/context/CardSelectionStoreContext'
 import { useDragDropHandleState } from '@/context/DragDropHandleContext'
+import { useSharedEditorStateContext } from '@/context/SharedEditorStateContext'
 import { type CardWidth } from '@/nodes/base/utils/card-widths'
 import { registerCardInteraction } from '@/plugins/behaviour/card-interaction'
+import { purgeDeadEditorHistoryEntries } from '@/plugins/behaviour/history-purge'
 
 interface InklingCardWrapperProps {
   nodeKey: NodeKey
@@ -23,6 +25,7 @@ interface InklingCardWrapperProps {
 // dataset marker.
 const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, children }: InklingCardWrapperProps) => {
   const [editor] = useLexicalComposerContext()
+  const { historyState } = useSharedEditorStateContext()
   const [cardType, setCardType] = React.useState<string | null>(null)
   const [captionHasFocus, setCaptionHasFocus] = React.useState(false)
   const normalizedWidth = width ?? 'regular'
@@ -52,6 +55,16 @@ const InklingCardWrapper = ({ nodeKey, width, wrapperStyle, IndicatorIcon, child
       getContainer: () => containerRef.current,
     })
   }, [editor, nodeKey, cardSelectionStore])
+
+  React.useEffect(() => {
+    // On card removal, drop history entries owned by the card's dying nested
+    // editors so the next undo cannot pop an entry that applies nowhere.
+    // Their root elements are already detached when this cleanup runs; on a
+    // StrictMode effect replay the roots stay attached and this is a no-op.
+    return () => {
+      purgeDeadEditorHistoryEntries(historyState, editor)
+    }
+  }, [editor, historyState])
 
   React.useEffect(() => {
     // add a property to the parent element that's added directly by Lexical

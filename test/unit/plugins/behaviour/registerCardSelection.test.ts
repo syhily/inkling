@@ -10,7 +10,7 @@ import {
 } from 'lexical'
 import { describe, expect, it, vi } from 'vitest'
 
-import type { CardNode } from '@/types/lexical-internals'
+import type { CardNode } from '#/utils/card-node'
 
 import { drainEnqueuedUpdates } from '#/utils/test-editor'
 import { $createImageNode, ImageNode } from '@/nodes/ImageNode'
@@ -54,7 +54,7 @@ function createSelectionHarness(
     setIsEditingCard(state.isEditingCard)
   })
   const dispose = registerCardSelection(editor, { store, isNested: initial.isNested })
-  return { setSelectedCardKey, setIsEditingCard, dispose }
+  return { setSelectedCardKey, setIsEditingCard, store, dispose }
 }
 
 // editor.update resolves its onUpdate before updates scheduled from inside
@@ -155,37 +155,53 @@ describe('registerCardSelection', () => {
     harness.dispose()
   })
 
-  it('re-selects a protected selection exactly once after a transient clear, then allows deselection', async () => {
-    const { editor, cardKey } = await setupEditorWithCard()
-    const harness = createSelectionHarness(editor, { selectedCardKey: cardKey })
-    const tagLog = recordUpdateTags(editor)
+  it('keeps the protected store truth across repeated transient clears within the window, then allows deselection after it expires', async () => {
+    vi.useFakeTimers({ toFake: ['performance'] })
+    try {
+      const { editor, cardKey } = await setupEditorWithCard()
+      const harness = createSelectionHarness(editor, { selectedCardKey: cardKey })
+      const tagLog = recordUpdateTags(editor)
 
-    await selectCard(editor, cardKey, { tag: 'historic' })
+      await selectCard(editor, cardKey, { tag: 'historic' })
 
-    // the transient clear (decorator reconciliation side-effect after undo)
-    await clearSelection(editor)
+      // transient clear #1 (decorator reconciliation side-effect after undo):
+      // the store keeps the card selected — no re-select update is issued
+      // (re-selecting feeds the reconciliation cycle) and no setter fires
+      await clearSelection(editor)
 
-    // exactly one re-selection, delivered as a history-merge update; the
-    // deselection setters were not called
-    expect(harness.setSelectedCardKey).not.toHaveBeenCalled()
-    expect(harness.setIsEditingCard).not.toHaveBeenCalled()
-    expect(countHistoryMergeUpdates(tagLog)).toBe(1)
-    expect(readSelectedCardKeys(editor)).toEqual([cardKey])
+      expect(harness.setSelectedCardKey).not.toHaveBeenCalled()
+      expect(harness.setIsEditingCard).not.toHaveBeenCalled()
+      expect(countHistoryMergeUpdates(tagLog)).toBe(0)
+      expect(readSelectedCardKeys(editor)).toBeNull()
 
-    // the guard was consumed by that one use: a further clear is a legitimate
-    // deselection and goes through the deselect path exactly once
-    await clearSelection(editor)
+      // transient clear #2 — under load the reconciliation can cycle more
+      // than once; the time-windowed guard survives it (a one-shot ref would
+      // release on the first clear and let this one win)
+      await clearSelection(editor)
 
-    expect(harness.setSelectedCardKey).toHaveBeenCalledTimes(1)
-    expect(harness.setSelectedCardKey).toHaveBeenCalledWith(null)
-    expect(harness.setIsEditingCard).toHaveBeenCalledTimes(1)
-    expect(harness.setIsEditingCard).toHaveBeenCalledWith(false)
-    expect(readSelectedCardKeys(editor)).toBeNull()
-    // the deselect bookkeeping update changes nothing, so it is not delivered
-    // to update listeners and no second history-merge entry appears
-    expect(countHistoryMergeUpdates(tagLog)).toBe(1)
+      expect(harness.setSelectedCardKey).not.toHaveBeenCalled()
+      expect(harness.setIsEditingCard).not.toHaveBeenCalled()
+      expect(countHistoryMergeUpdates(tagLog)).toBe(0)
 
-    harness.dispose()
+      // the store (the behavioural truth) still holds the card
+      expect(harness.store.getState()).toEqual({ selectedCardKey: cardKey, isEditingCard: false })
+
+      // once the protection window elapses, a clear is a legitimate
+      // deselection and goes through the deselect path exactly once
+      vi.advanceTimersByTime(1001)
+      await clearSelection(editor)
+
+      expect(harness.setSelectedCardKey).toHaveBeenCalledTimes(1)
+      expect(harness.setSelectedCardKey).toHaveBeenCalledWith(null)
+      expect(harness.setIsEditingCard).toHaveBeenCalledTimes(1)
+      expect(harness.setIsEditingCard).toHaveBeenCalledWith(false)
+      expect(readSelectedCardKeys(editor)).toBeNull()
+      expect(countHistoryMergeUpdates(tagLog)).toBe(0)
+
+      harness.dispose()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('does not protect a deselection without a preceding historic update', async () => {
@@ -206,33 +222,51 @@ describe('registerCardSelection', () => {
     harness.dispose()
   })
 
-  it('clears the guard without re-selecting when a non-historic update keeps the card selected', async () => {
-    const { editor, cardKey } = await setupEditorWithCard()
-    const harness = createSelectionHarness(editor, { selectedCardKey: cardKey })
-    const tagLog = recordUpdateTags(editor)
+  it('survives the confirm grace, then clears the guard when a non-historic update keeps the card selected', async () => {
+    vi.useFakeTimers({ toFake: ['performance'] })
+    try {
+      const { editor, cardKey } = await setupEditorWithCard()
+      const harness = createSelectionHarness(editor, { selectedCardKey: cardKey })
+      const tagLog = recordUpdateTags(editor)
 
-    await selectCard(editor, cardKey, { tag: 'historic' })
+      await selectCard(editor, cardKey, { tag: 'historic' })
 
-    // reconciliation succeeds without a transient deselection: a plain update
-    // arrives with the card still selected and the guard is dropped silently
-    await touchDocument(editor)
+      // an untagged update within the confirm grace carries the card selected
+      // but is still part of the reconciliation — the guard must survive it,
+      // which the following clear proves: the store keeps the card, it is not
+      // allowed through the deselect path
+      await touchDocument(editor)
+      await clearSelection(editor)
 
-    expect(harness.setSelectedCardKey).not.toHaveBeenCalled()
-    expect(harness.setIsEditingCard).not.toHaveBeenCalled()
-    expect(readSelectedCardKeys(editor)).toEqual([cardKey])
+      expect(harness.setSelectedCardKey).not.toHaveBeenCalled()
+      expect(harness.setIsEditingCard).not.toHaveBeenCalled()
+      expect(harness.store.getState()).toEqual({ selectedCardKey: cardKey, isEditingCard: false })
+      expect(countHistoryMergeUpdates(tagLog)).toBe(0)
 
-    // a later deselection is therefore not blocked (contrast with the
-    // protected case above, where this clear would be re-selected)
-    await clearSelection(editor)
+      // once the grace elapsed, an untagged update with the card still
+      // selected is a genuine confirm and drops the guard silently
+      vi.advanceTimersByTime(201)
+      await selectCard(editor, cardKey)
 
-    expect(harness.setSelectedCardKey).toHaveBeenCalledTimes(1)
-    expect(harness.setSelectedCardKey).toHaveBeenCalledWith(null)
-    expect(harness.setIsEditingCard).toHaveBeenCalledTimes(1)
-    expect(harness.setIsEditingCard).toHaveBeenCalledWith(false)
-    expect(readSelectedCardKeys(editor)).toBeNull()
-    expect(countHistoryMergeUpdates(tagLog)).toBe(0)
+      expect(harness.setSelectedCardKey).not.toHaveBeenCalled()
+      expect(harness.setIsEditingCard).not.toHaveBeenCalled()
+      expect(readSelectedCardKeys(editor)).toEqual([cardKey])
 
-    harness.dispose()
+      // a later deselection is therefore not blocked (contrast with the
+      // protected case above, where this clear would be kept)
+      await clearSelection(editor)
+
+      expect(harness.setSelectedCardKey).toHaveBeenCalledTimes(1)
+      expect(harness.setSelectedCardKey).toHaveBeenCalledWith(null)
+      expect(harness.setIsEditingCard).toHaveBeenCalledTimes(1)
+      expect(harness.setIsEditingCard).toHaveBeenCalledWith(false)
+      expect(readSelectedCardKeys(editor)).toBeNull()
+      expect(countHistoryMergeUpdates(tagLog)).toBe(0)
+
+      harness.dispose()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('ignores collaboration and card-export tagged updates', async () => {

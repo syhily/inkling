@@ -1,6 +1,6 @@
 import React from 'react'
 
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingHostEssentials } from '@/context/InklingHostIntegrationContext'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 
 interface InklingErrorBoundaryInnerProps {
@@ -32,7 +32,7 @@ class InklingErrorBoundaryInner extends React.Component<InklingErrorBoundaryInne
 }
 
 export default function InklingErrorBoundary({ children }: { children: React.ReactNode }) {
-  const { onError } = React.useContext(InklingHostIntegrationContext)
+  const { onError } = useInklingHostEssentials()
   const labels = useInklingLabels()
 
   return (

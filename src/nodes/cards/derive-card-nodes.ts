@@ -1,6 +1,8 @@
 interface DerivableCard {
   nodeType: string
-  markdown: boolean
+  /** the declaration's markdown eligibility (`CardMarkdownSpec`); absent
+   * means the card sits out the round-trip */
+  markdown?: { kind: string }
 }
 
 /**

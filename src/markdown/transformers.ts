@@ -21,8 +21,8 @@ import {
   $insertHorizontalRuleForMarkdownTrigger,
   codeBlockFence,
   DIVIDER_REGEXP,
-  FENCE_TRANSFORMER_REGEXP,
 } from '@/markdown/card-shortcuts'
+import { FENCE_TRANSFORMER_REGEXP } from '@/markdown/grammar'
 import { CUSTOM_TEXT_FORMAT_TRANSFORMERS } from '@/markdown/transformers-core'
 import { $isCodeBlockNode, CodeBlockNode } from '@/nodes/CodeBlockNode'
 import { $isHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
@@ -51,8 +51,9 @@ export const CODE_BLOCK = {
     // transformer's variance is the text source (getTextContent)
     return codeBlockFence(node.language, node.getTextContent())
   },
-  // trigger only: the regex lives in the card-shortcut seam, and the trailing
-  // `\s` there is what makes the fence fire on the space keystroke
+  // trigger only: the regex lives in the shared grammar table
+  // (`@/markdown/grammar`), and the trailing `\s` there is what makes the
+  // fence fire on the space keystroke
   regExp: FENCE_TRANSFORMER_REGEXP,
   replace: (parentNode: ElementNode, _children: LexicalNode[], match: string[]) => {
     $insertCodeBlockForShortcut(parentNode, match[1])

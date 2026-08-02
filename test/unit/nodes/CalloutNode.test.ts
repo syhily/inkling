@@ -2,9 +2,10 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { getCardMenu } from '#/utils/card-menu'
 import { updateEditor } from '#/utils/test-editor'
 import { CalloutNode, $createCalloutNode, $isCalloutNode, INSERT_CALLOUT_COMMAND } from '@/nodes/CalloutNode'
-import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 
 const editorNodes = [CalloutNode]
 

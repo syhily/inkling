@@ -12,9 +12,12 @@ import { getSelectedNode } from '@/utils/getSelectedNode'
 // means "no verdict: leave the consumer's state as it is" (mid-composition,
 // a selection inside the open menu, a hover outside the editor or over a
 // card). The plugins keep only their DOM event wiring (slash keypress; plus
-// mousemove/selectionchange), their anchoring, and their rendering. The
-// popup session (cursor lease, close policy) and the keyboard navigator stay
-// with src/hooks/useCardMenuSession and src/hooks/card-menu-navigation.
+// mousemove/selectionchange), driving the popup through its handle — the
+// session (cursor lease, close policy), the anchor chrome, and the rendering
+// are CardMenuPopup's (src/plugins/CardMenuPopup.tsx), composing the session
+// core (src/hooks/useCardMenuSession.ts), the slash trigger binding
+// (src/hooks/useSlashCardMenuTrigger.ts), and the keyboard navigator
+// (src/hooks/card-menu-navigation.ts).
 //
 // The two triggers differ on purpose (document why, don't flatten):
 // 1. Slash is keypress-triggered: a '/' matching the valid-press grammar

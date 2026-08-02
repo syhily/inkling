@@ -1,20 +1,25 @@
-import type { LexicalNode } from 'lexical'
+import type { LexicalCommand, LexicalNode } from 'lexical'
 import type { ComponentType, ReactNode, SVGProps } from 'react'
 
-import type { CardDeclaration, CardIconId, CardMenuEntrySpec } from '@/nodes/cards/card-declaration'
+import type { CardDeclaration, CardIconId, CardMenuCommand, CardMenuEntrySpec } from '@/nodes/cards/card-declaration'
 import type { CardFencePayload } from '@/nodes/cards/card-markdown-transformers'
 
 /**
  * A host card's menu entry (CONTEXT.md: "host card"): the same shape as the
  * built-in declarations' `CardMenuEntrySpec`, except the icon may name a
  * built-in `CardIconId` or be an SVG component directly — host modules carry
- * no React-free layering constraint. The required `labelKey` matches the
- * built-in entries; the labels table is closed, so a host-defined key always
- * falls back to the entry's own English `label`/`desc` (a host localizes its
- * own card by writing the spec text directly).
+ * no React-free layering constraint — and the command may additionally be a
+ * raw `LexicalCommand` the host created itself (the built-in entries name
+ * commands by `CardMenuCommand` string; `'insert'` works for host cards too,
+ * resolving to the host card's own derived insert command). The required
+ * `labelKey` matches the built-in entries; the labels table is closed, so a
+ * host-defined key always falls back to the entry's own English
+ * `label`/`desc` (a host localizes its own card by writing the spec text
+ * directly).
  */
-export type HostCardMenuEntrySpec = Omit<CardMenuEntrySpec, 'icon'> & {
+export type HostCardMenuEntrySpec = Omit<CardMenuEntrySpec, 'icon' | 'command'> & {
   icon: CardIconId | ComponentType<SVGProps<SVGSVGElement>>
+  command: CardMenuCommand | LexicalCommand<unknown>
 }
 
 /**
@@ -25,7 +30,9 @@ export type HostCardMenuEntrySpec = Omit<CardMenuEntrySpec, 'icon'> & {
  * spec here. Build the `baseNode` with `generateDecoratorNode`
  * (`@/nodes/base/generate-decorator-node`) so the node satisfies the
  * InklingDecoratorNode contract the selection protocol and `exportDOM` gate
- * on.
+ * on. An `insert` spec carries no command: the host card's insert command is
+ * derived from its node type (`resolveCardInsertCommand` in
+ * `@/nodes/cards/card-commands`), exactly like a built-in card's.
  */
 export interface HostCardSpec<NodeType extends string = string, TNode extends LexicalNode = LexicalNode> extends Omit<
   CardDeclaration<NodeType>,

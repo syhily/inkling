@@ -9,7 +9,9 @@ import type {
 type UploadKind = Parameters<FileUploader['useFileUpload']>[0]
 type UploadChannel = ReturnType<FileUploader['useFileUpload']>
 
-// Options for the per-test host-integration fixture. The current
+// Options for the per-test host-integration fixture. Whole values feed the
+// InklingHostIntegrationProvider facade, which fans them out into the
+// per-lifecycle channels (plan C4). The current
 // InklingHostIntegrationContextValue shape: uploads, card behaviour config,
 // and the error sink. Older per-test fixtures carried pre-refactor keys
 // (darkMode, enableMultiplayer, createWebsocketProvider) that only compiled

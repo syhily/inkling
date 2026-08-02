@@ -1,7 +1,7 @@
-import type { Klass, LexicalCommand, LexicalNode } from 'lexical'
+import type { Klass, LexicalNode } from 'lexical'
 
 import type { CardConfig, FileUploader } from '@/context/InklingHostIntegrationContext'
-import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/card-specs'
 import type { CardImportSpec } from '@/nodes/base/import-spec'
 import type { CardWidth } from '@/nodes/base/utils/card-widths'
 
@@ -46,18 +46,17 @@ export interface DecorateTargetSpec {
 /**
  * The card's membership in the insert-command surface (CONTEXT.md: "card
  * declaration") — the per-card facts the eleven hand-written insert plugins
- * held: which insert command the card joins (named here as `command`, so menu
- * entry order carries no command semantics), whether it dispatches
- * `INSERT_CARD_COMMAND` with `openInEditMode: true`, and whether it claims
- * media inserts. The presence of `insert` is the opt-in; a spec carrying only
- * its command (file, gallery) is the common case. CodeBlock and
- * HorizontalRule omit the entry — they have no derived insert registration.
- * React-free; the registrar (`@/plugins/CardInsertPlugin`) is its derived
- * view.
+ * held: whether it dispatches `INSERT_CARD_COMMAND` with
+ * `openInEditMode: true`, and whether it claims media inserts. The presence
+ * of `insert` is the opt-in; an empty spec (file, gallery) is the common
+ * case. CodeBlock and HorizontalRule omit the entry — they have no derived
+ * insert registration. The insert command itself is NOT declared here: every
+ * insert-bearing card joins exactly one insert command, derived from its
+ * node type by `resolveCardInsertCommand` (`@/nodes/cards/card-commands`),
+ * so the command can never drift from the card. React-free; the registrar
+ * (`@/plugins/CardInsertPlugin`) is its derived view.
  */
 export interface CardInsertSpec {
-  /** the insert command this card joins (from `@/nodes/cards/card-commands`) */
-  command: LexicalCommand<unknown>
   /** dispatch INSERT_CARD_COMMAND with openInEditMode: true after construction */
   openInEditMode?: boolean
   /** claim INSERT_MEDIA_COMMAND payloads whose type equals this card's nodeType */
@@ -93,26 +92,40 @@ export type CardIconId =
   | 'video'
 
 /**
+ * The command a menu entry dispatches, NAMED instead of referenced: the
+ * direction reversal that makes `@/nodes/cards/card-commands` a derived view
+ * over the declarations rather than a module they import. `'insert'` names
+ * the entry's own card insert command (derived from the declaration's node
+ * type by `resolveCardInsertCommand`, so menu entry order never carries
+ * command semantics — Image's second entry is the GIF selector, not an
+ * insert command); the two named extras are the Image card's selector
+ * commands. Host menu entries may additionally carry a raw
+ * `LexicalCommand` for a host-defined command (see
+ * `HostCardMenuEntrySpec` in `@/nodes/cards/host-card-registry`). The menu
+ * projection (`@/nodes/cards/card-menus`) resolves the name to the command
+ * object through `resolveCardMenuCommand`.
+ */
+export type CardMenuCommand = 'insert' | 'openGifSelector' | 'openImageLibrary'
+
+/**
  * One slash/plus menu entry, React-free: everything a `MenuItem`
- * (`@/utils/buildCardMenu`) carries except the icon component and the command
- * object, which are named by id / referenced from
- * `@/nodes/cards/card-commands` instead. Each entry names the command it
- * dispatches, so entry order never carries command semantics (Image's second
- * entry is the GIF selector, not an insert command). The derived view in
+ * (`@/nodes/cards/card-menu-build`) carries except the icon component and the command
+ * object, which are named by id (`CardIconId` / `CardMenuCommand`) and
+ * resolved one layer up instead. The derived view in
  * `@/nodes/cards/card-menus` resolves `icon` to the SVGR component and
  * `command` to the entry's `insertCommand`.
  */
 export interface CardMenuEntrySpec {
   label: string
   /** the labels-table stem this entry resolves through at menu-build time
-   * (`menu.${labelKey}.label` / `.desc`; docs/kobato-fit-plan.md C7). The
+   * (`menu.${labelKey}.label` / `.desc`). The
    * English `label`/`desc` stay the self-describing defaults — resolution is
    * an override, never a replacement. */
   labelKey: string
   desc?: string
   icon: CardIconId
-  /** the command this entry dispatches */
-  command: LexicalCommand<unknown>
+  /** the command this entry dispatches, named — see `CardMenuCommand` */
+  command: CardMenuCommand
   insertParams?: Record<string, unknown> | (() => Record<string, unknown>)
   matches?: string[]
   priority?: number
@@ -130,6 +143,26 @@ export interface CardMenuEntrySpec {
  * carry one.
  */
 export type CardUploadType = keyof NonNullable<FileUploader['fileTypes']>
+
+/**
+ * How the card joins the markdown round-trip (`MARKDOWN_NODES` in
+ * `@/markdown/round-trip`):
+ *
+ * - `{ kind: 'fence' }` — the card speaks a ` ```inkling:<card>``` ` fence.
+ *   The per-card payload vocabulary (`getData`/`createNode`) attaches one
+ *   layer up in `@/nodes/cards/card-markdown-transformers`, keyed
+ *   exhaustively by the fence declarations' node types: the payload's
+ *   `createNode` must construct the wrapper node class the round-trip editor
+ *   registers, which the React-free declaration modules must never import.
+ * - `{ kind: 'exempt' }` — markdown-eligible with no card fence: CodeBlock
+ *   and HorizontalRule speak the dialect's own transformers (`CODE_FENCE` /
+ *   `HR`, covered by `DEFAULT_TRANSFORMERS`), and Image speaks standard
+ *   `![alt](src)` syntax via its hand-written transformer.
+ *
+ * Cards with no `markdown` entry (Header, Math, the footnote definition) sit
+ * out the round-trip entirely.
+ */
+export type CardMarkdownSpec = { kind: 'fence' } | { kind: 'exempt' }
 
 /**
  * The single per-card source of truth (CONTEXT.md: "card declaration"). Every
@@ -220,12 +253,8 @@ export interface CardDeclaration<NodeType extends string = string> {
    */
   toolbarLabel: string
   /**
-   * Whether the card joins the markdown round-trip node set (`MARKDOWN_NODES`
-   * in `@/markdown/round-trip`). CodeBlock and HorizontalRule are
-   * markdown-eligible with no card transformer (their markdown forms are
-   * handled by `DEFAULT_TRANSFORMERS`); the transformers themselves attach
-   * one layer up (`@/nodes/cards/card-markdown-transformers`) because they
-   * must construct the wrapper node classes the round-trip editor registers.
+   * The card's markdown round-trip eligibility; see `CardMarkdownSpec`.
+   * Absent means the card is not part of the round-trip.
    */
-  markdown: boolean
+  markdown?: CardMarkdownSpec
 }

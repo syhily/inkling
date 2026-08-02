@@ -29,6 +29,8 @@ import {
 } from '@/nodes/base'
 import { $createBookmarkNode } from '@/nodes/BookmarkNode'
 
+import { editorOwnsFocus } from './card-adjacency'
+
 // Headless half of the at-link plugin: node lifecycle (insertion, shape
 // transform, command guards), the search session (registerAtLinkSession —
 // the focused-node/query synchronization policy and the selection clamps),
@@ -418,7 +420,7 @@ export function registerAtLinkGuards(editor: LexicalEditor) {
       (clipboardEvent) => {
         const selection = $getSelection()
 
-        if (!$isRangeSelection(selection) || document.activeElement !== editor.getRootElement()) {
+        if (!$isRangeSelection(selection) || !editorOwnsFocus(editor)) {
           return false
         }
 

@@ -3,15 +3,15 @@ import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { updateEditor } from '#/utils/test-editor'
-import { $createVideoNode, VideoNode, type VideoNode as VideoNodeType } from '@/nodes/VideoNode'
-import { getImageDimensions } from '@/utils/getImageDimensions'
 import {
   customThumbnailUploadIntent,
   videoFlowUploadIntent,
   videoThumbnailUploadIntent,
   videoUploadIntent,
   type VideoFlowMetadata,
-} from '@/utils/upload-intent'
+} from '@/nodes/upload-intent'
+import { $createVideoNode, VideoNode, type VideoNode as VideoNodeType } from '@/nodes/VideoNode'
+import { getImageDimensions } from '@/utils/getImageDimensions'
 
 vi.mock('@/utils/getImageDimensions', () => ({
   getImageDimensions: vi.fn(),

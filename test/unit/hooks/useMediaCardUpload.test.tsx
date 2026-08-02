@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor, tick, updateEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider } from '@/context/InklingHostIntegrationContext'
 import { useMediaCardUpload, type UseMediaCardUploadOptions } from '@/hooks/useMediaCardUpload'
 import { $isFileNode } from '@/nodes/FileNode'
 import { $createImageNode, $isImageNode, ImageNode } from '@/nodes/ImageNode'
@@ -53,9 +53,9 @@ describe('useMediaCardUpload', () => {
   it('opens the picker and clears the node flag through the matching guard', async () => {
     const nodeKey = await insertImageNode(editor)
     const { container } = render(
-      <InklingHostIntegrationContext.Provider value={createHostIntegrationValue()}>
+      <InklingHostIntegrationProvider value={createHostIntegrationValue()}>
         <Harness nodeKey={nodeKey} guard={$isImageNode} />
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
     const clickSpy = vi.spyOn(container.querySelector('input')!, 'click')
 
@@ -71,9 +71,9 @@ describe('useMediaCardUpload', () => {
   it('leaves the node flag alone when the guard does not match the node', async () => {
     const nodeKey = await insertImageNode(editor)
     const { container } = render(
-      <InklingHostIntegrationContext.Provider value={createHostIntegrationValue()}>
+      <InklingHostIntegrationProvider value={createHostIntegrationValue()}>
         <Harness nodeKey={nodeKey} guard={$isFileNode} />
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
     const clickSpy = vi.spyOn(container.querySelector('input')!, 'click')
 

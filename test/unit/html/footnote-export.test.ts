@@ -1,4 +1,4 @@
-// The footnote export byte contract (docs/kobato-fit-plan.md C4 §3.2(e)):
+// The footnote export byte contract:
 // the ref anchors, the definition `<li>` with its backref, and the
 // string-layer `<section class="footnotes">` wrap — pinned byte-exact so the
 // kobato SSR anchor contract cannot drift. Live path only (`renderLive` like
@@ -95,16 +95,35 @@ describe('footnote HTML export (live path)', () => {
   })
 
   it('uses the host-configured section title', () => {
+    // oxlint-disable-next-line typescript/no-deprecated -- intentionally pins the deprecated flat key's compatibility forwarding
     const html = renderLive(footnoteDoc([definition('keyA', '<p>Note</p>')]), { footnotesSectionTitle: 'Notes' })
 
     expect(html).toContain('<h3 id="footnotes-section-heading">Notes</h3>')
   })
 
+  it('resolves the section title through the keyed policy seam, winning over the deprecated key', () => {
+    const resolved = renderLive(footnoteDoc([definition('keyA', '<p>Note</p>')]), {
+      // oxlint-disable-next-line typescript/no-deprecated -- intentionally pins the resolver winning over the deprecated key
+      footnotesSectionTitle: 'Legacy',
+      resolveExportPolicy: (key) => (key === 'footnotes-section-title' ? 'Notes' : undefined),
+    })
+    expect(resolved).toContain('<h3 id="footnotes-section-heading">Notes</h3>')
+
+    const fallback = renderLive(footnoteDoc([definition('keyA', '<p>Note</p>')]), {
+      // oxlint-disable-next-line typescript/no-deprecated -- intentionally pins the deprecated key as the unanswered-resolver fallback
+      footnotesSectionTitle: 'Legacy',
+      resolveExportPolicy: () => undefined,
+    })
+    expect(fallback).toContain('<h3 id="footnotes-section-heading">Legacy</h3>')
+  })
+
   it('falls back to the default title for blank input and escapes markup in the title', () => {
+    // oxlint-disable-next-line typescript/no-deprecated -- intentionally pins the deprecated flat key's blank handling
     const blank = renderLive(footnoteDoc([definition('keyA', '<p>Note</p>')]), { footnotesSectionTitle: '   ' })
     expect(blank).toContain('<h3 id="footnotes-section-heading">Footnotes</h3>')
 
     const hostile = renderLive(footnoteDoc([definition('keyA', '<p>Note</p>')]), {
+      // oxlint-disable-next-line typescript/no-deprecated -- intentionally pins the deprecated flat key's escaping
       footnotesSectionTitle: 'Footnotes & <References>',
     })
     expect(hostile).toContain('<h3 id="footnotes-section-heading">Footnotes &amp; &lt;References&gt;</h3>')

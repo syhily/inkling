@@ -19,7 +19,7 @@ import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import { createFootnoteHandle, type FootnoteHandle } from '@/plugins/behaviour/footnoteHandle'
 import { $collectFootnoteSnapshot, registerFootnotes } from '@/plugins/behaviour/footnotes'
 
-// The undo-merge pin (docs/kobato-fit-plan.md C4 §5, "重编号并入打字事务"):
+// The undo-merge pin:
 // the caret-trigger insertion commits untagged, so it merges into the typing
 // history entry — ONE undo reverts the whole footnote insertion (ref +
 // definition) together with the `^ ` typing, kobato's `addToHistory: false`

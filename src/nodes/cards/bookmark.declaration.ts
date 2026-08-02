@@ -1,11 +1,10 @@
-import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/card-specs'
 
 import { BaseBookmarkNode } from '@/nodes/base/nodes/bookmark/BookmarkNode'
 
 import type { CardDeclaration } from './card-declaration'
 
 import { captionEditorSpec } from './caption-editor-spec'
-import { INSERT_BOOKMARK_COMMAND } from './card-commands'
 
 // `as const` keeps the literal `name`s and value types on the declaration's
 // type — the `__*` field map derives both from them (CardSpecFieldMap)
@@ -30,14 +29,14 @@ export const bookmarkDeclaration = {
       labelKey: 'bookmark',
       desc: 'Embed a link as a visual bookmark',
       icon: 'bookmark',
-      command: INSERT_BOOKMARK_COMMAND,
+      command: 'insert',
       matches: ['bookmark'],
       queryParams: ['url'],
       priority: 4,
       shortcut: '/bookmark [url]',
     },
   ],
-  insert: { command: INSERT_BOOKMARK_COMMAND, requiresRangeSelection: true, insertCommandPriority: 'high' },
+  insert: { requiresRangeSelection: true, insertCommandPriority: 'high' },
   toolbarLabel: 'bookmark',
-  markdown: true,
+  markdown: { kind: 'fence' },
 } satisfies CardDeclaration<'bookmark'>

@@ -8,7 +8,7 @@ import { INSERT_CARD_COMMAND } from './commands'
 
 // Snippet insertion — the headless module behind InklingSnippetPlugin. A
 // snippet is a host-managed fragment of serialized editor state (the
-// `{ name, value }` menu insertParams built by `@/utils/buildCardMenu`);
+// `{ name, value }` menu insertParams built by `@/nodes/cards/card-menu-build`);
 // inserting one parses the value, regenerates the nodes, and splices them at
 // the selection. Two special cases live here: a single-card snippet goes
 // through the card insert path (`INSERT_CARD_COMMAND`) so the card lands like
@@ -18,7 +18,7 @@ import { INSERT_CARD_COMMAND } from './commands'
 
 /** The snippet insert payload — the `{ name, value }` pair the snippet menu
  * entry dispatches through the type-erased menu insert path
- * (`@/utils/buildCardMenu`). */
+ * (`@/nodes/cards/card-menu-build`). */
 export interface SnippetDataset {
   name: string
   value: string

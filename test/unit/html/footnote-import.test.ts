@@ -1,4 +1,4 @@
-// The footnote import lanes (docs/kobato-fit-plan.md C4 §3.2(f)): the
+// The footnote import lanes: the
 // markdown `[^n]` paste dialect (markdown-it-footnote → sanitize → DOM
 // import), kobato/inkling HTML, and the export → import → export round trip.
 // The targetKey policy is import-is-a-new-entity: source anchor slugs only

@@ -2,7 +2,7 @@ import type { LexicalCommand } from 'lexical'
 
 import React from 'react'
 
-import type { MenuSection, ResolvedMenuItem } from '@/utils/buildCardMenu'
+import type { MenuSection, ResolvedMenuItem } from '@/nodes/cards/card-menu-build'
 
 import TrashCardIcon from '@/assets/icons/inkling-trash.svg?react'
 import { useInklingLabels } from '@/hooks/useInklingLabels'

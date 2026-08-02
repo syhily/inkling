@@ -1,6 +1,6 @@
 import type { DOMConversionMap, LexicalNode } from 'lexical'
 
-import type { DecoratorNodeProperty } from '@/nodes/base/generate-decorator-node'
+import type { DecoratorNodeProperty } from '@/nodes/base/card-specs'
 
 import { readCaptionFromElement } from '@/nodes/base/utils/read-caption-from-element'
 

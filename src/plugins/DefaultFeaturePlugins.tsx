@@ -20,10 +20,11 @@ export interface FeaturePluginEntry {
   Component: React.ComponentType
 }
 
-// The feature plugin entries InklingEditor adds on top of the core plugins
-// InklingComposableEditor always mounts (behaviour, toolbar, markdown,
-// drag-drop, history), as data and in render order. This is deliberately not
-// "all defaults": the core set lives in InklingComposableEditor.
+// The feature plugin entries InklingEditor adds on top of the core plugin
+// set every InklingComposableEditor mounts (CORE_PLUGINS, ./CorePlugins:
+// rich-text, history, behaviour, toolbar, markdown, drag-drop, events), as
+// data and in render order. The default editor surface is the concatenation
+// of the two lists — this is deliberately not "all defaults".
 export const DEFAULT_FEATURE_PLUGINS: readonly FeaturePluginEntry[] = [
   // Lexical
   { key: 'list', Component: ListPlugin }, // adds indent/outdent/remove etc support

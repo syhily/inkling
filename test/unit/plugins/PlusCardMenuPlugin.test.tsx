@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { updateEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider } from '@/context/InklingHostIntegrationContext'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import { INSERT_HTML_COMMAND } from '@/nodes/HtmlNode'
 import PlusCardMenuPlugin from '@/plugins/PlusCardMenuPlugin'
@@ -48,9 +48,9 @@ async function setupPlusPlugin() {
   const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
 
   render(
-    <InklingHostIntegrationContext.Provider value={contextValue}>
+    <InklingHostIntegrationProvider value={contextValue}>
       <PlusCardMenuPlugin />
-    </InklingHostIntegrationContext.Provider>,
+    </InklingHostIntegrationProvider>,
   )
 
   return { editor, rootElement, paragraphElement, dispatchCommandSpy }

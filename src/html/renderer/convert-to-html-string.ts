@@ -1,19 +1,26 @@
-import type { DOMExportOutput, ElementNode, LexicalEditor, LexicalNode } from 'lexical'
+import type { DOMExportOutput, ElementNode, LexicalEditor, LexicalNode, TextNode } from 'lexical'
 
 import { $isLinkNode } from '@lexical/link'
 import { $getRoot, $isDecoratorNode, $isElementNode, $isLineBreakNode, $isParagraphNode, $isTextNode } from 'lexical'
 
-import type { ExportDOMOptions } from '@/nodes/base/export-dom'
+import type { ExportDOMOptions, ExportDOMOutputType, InlineMarkupTextEntity } from '@/nodes/base/export-dom'
 
+import { HTML_POST_PROCESSORS, isTrailingRunNode } from '@/html/renderer/post-process'
 import elementTransformers from '@/html/renderer/transformers/index'
 import TextContent from '@/html/renderer/utils/TextContent'
 import { $isInklingCard } from '@/nodes/base'
-import { $isFootnoteDefinitionNode } from '@/nodes/base/nodes/footnotedefinition/FootnoteDefinitionNode'
 import { createRenderContext } from '@/nodes/base/render-context'
-import { FOOTNOTES_SECTION_HEADING_ID } from '@/nodes/footnote/footnote-anchors'
-import { $isFootnoteRefNode } from '@/nodes/footnote/FootnoteRefNode'
 
-const DEFAULT_FOOTNOTES_SECTION_TITLE = 'Footnotes'
+/**
+ * The inline-markup-entity protocol guard (`@/nodes/base/export-dom`): a
+ * TextNode entity that opts in exports element markup spliced into the text
+ * flow instead of joining the pending text run. FootnoteRefNode is the
+ * first implementor; TKNode (a plain text entity) does not opt in and keeps
+ * flowing through TextContent.
+ */
+function $isInlineMarkupTextEntity(node: LexicalNode): node is TextNode & InlineMarkupTextEntity {
+  return $isTextNode(node) && (node as Partial<InlineMarkupTextEntity>).isInlineMarkupEntity?.() === true
+}
 
 export default function $convertToHtmlString(editor: LexicalEditor, options: ExportDOMOptions = {}): string {
   // One read-only render context per string render — the only export-time
@@ -32,22 +39,45 @@ export default function $convertToHtmlString(editor: LexicalEditor, options: Exp
   // The recursion closes over the per-render triple (editor, options,
   // context): fixed for the whole pass, so it is not re-passed per level.
 
+  // The one type dispatch every exportDOM splice goes through — top-level
+  // cards and inline markup (entities and decorators) alike: 'inner' takes
+  // the element's innerHTML, 'value' its value property, anything else
+  // (including an absent type) its outerHTML.
+  function renderExportOutput(output: {
+    element: HTMLElement | DocumentFragment | Text | null
+    type?: ExportDOMOutputType
+  }): string {
+    switch (output.type) {
+      case 'inner':
+        return getElementInnerHTML(output.element)
+      case 'value':
+        if (output.element && 'value' in output.element && typeof output.element.value === 'string') {
+          return output.element.value
+        }
+
+        return ''
+      default:
+        return getElementOuterHTML(output.element)
+    }
+  }
+
+  // Inline markup (text entities and inline decorators) exports through the
+  // same per-node exportDOM dispatch the cards get, with the options bag
+  // flowing so headless renders resolve their DOM. The base-class exportDOM
+  // signature takes no options parameter; inkling's inline exporters
+  // (FootnoteRefNode/MathInlineNode) declare the two-parameter form this
+  // assertion names — it is load-bearing (removing it is a TS2554 on the
+  // call below).
+  function exportInlineMarkup(node: LexicalNode): string {
+    const exporter = node as LexicalNode & {
+      exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): DOMExportOutput & { type?: ExportDOMOutputType }
+    }
+    return renderExportOutput(exporter.exportDOM(editor, options))
+  }
+
   function exportTopLevelElementOrDecorator(node: LexicalNode): string | null {
     if ($isInklingCard(node)) {
-      const { element, type } = node.exportDOM(editor, options)
-
-      switch (type) {
-        case 'inner':
-          return getElementInnerHTML(element)
-        case 'value':
-          if (element && 'value' in element && typeof element.value === 'string') {
-            return element.value
-          }
-
-          return ''
-        default:
-          return getElementOuterHTML(element)
-      }
+      return renderExportOutput(node.exportDOM(editor, options))
     }
 
     if ($isElementNode(node)) {
@@ -71,11 +101,12 @@ export default function $convertToHtmlString(editor: LexicalEditor, options: Exp
     const textContent = new TextContent(exportChildren, context)
 
     for (const child of node.getChildren()) {
-      // element/decorator children flush the pending text run — footnote
-      // refs are TextNodes and flush in their own branch below instead
+      // element/decorator children flush the pending text run — inline
+      // markup entities are TextNodes and flush in their own branch below
+      // instead
       if (
         !textContent.isEmpty() &&
-        !$isFootnoteRefNode(child) &&
+        !$isInlineMarkupTextEntity(child) &&
         !$isLineBreakNode(child) &&
         !$isTextNode(child) &&
         !$isLinkNode(child)
@@ -84,31 +115,22 @@ export default function $convertToHtmlString(editor: LexicalEditor, options: Exp
         textContent.clear()
       }
 
-      if ($isFootnoteRefNode(child)) {
+      if ($isInlineMarkupTextEntity(child)) {
         // A TextNode entity whose export is element markup (`<sup><a…>`), not
         // text — flush the pending run here (the pre-loop flush never sees
-        // it: refs ARE TextNodes) and splice the outer HTML like the
+        // it: entities ARE TextNodes) and splice the export like the
         // inline-decorator branch below.
         if (!textContent.isEmpty()) {
           output.push(textContent.render())
           textContent.clear()
         }
-        output.push(getElementOuterHTML(child.exportDOM(editor, options).element))
+        output.push(exportInlineMarkup(child))
       } else if ($isLineBreakNode(child) || $isTextNode(child) || $isLinkNode(child)) {
         textContent.addNode(child)
       } else if ($isDecoratorNode(child) && child.isInline()) {
-        // Inline decorators (the math inline node is the first) export through
-        // the same per-node exportDOM dispatch the cards get, with the options
-        // bag flowing so headless renders resolve their DOM. The exported
-        // element splices into the text flow as outer HTML.
-        // The base-class exportDOM signature takes no options parameter;
-        // inkling's inline decorators (FootnoteRefNode/MathInlineNode)
-        // declare the two-parameter form this assertion names — it is
-        // load-bearing (removing it is a TS2554 on the call below)
-        const exporter = child as LexicalNode & {
-          exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): DOMExportOutput
-        }
-        output.push(getElementOuterHTML(exporter.exportDOM(editor, options).element))
+        // Inline decorators (the math inline node is the first) splice into
+        // the text flow through the same exportDOM dispatch.
+        output.push(exportInlineMarkup(child))
       } else if ($isElementNode(child)) {
         output.push(exportChildren(child))
       }
@@ -140,11 +162,11 @@ export default function $convertToHtmlString(editor: LexicalEditor, options: Exp
   }
 
   // Inkling keeps a blank paragraph at the end of a doc but we want to
-  // make sure it doesn't get rendered. The doc-end footnote definition run
-  // (the behaviour module's run transform) sits after it, so walk back past
-  // the definitions to the last prose element before checking.
+  // make sure it doesn't get rendered. A post-processor's doc-end trailing
+  // run (the footnote definition run) sits after it, so walk back past the
+  // claimed run nodes to the last prose element before checking.
   let lastProseIndex = children.length - 1
-  while (lastProseIndex >= 0 && $isFootnoteDefinitionNode(children[lastProseIndex])) {
+  while (lastProseIndex >= 0 && isTrailingRunNode(children[lastProseIndex])) {
     lastProseIndex -= 1
   }
   const lastProse = children[lastProseIndex]
@@ -154,25 +176,11 @@ export default function $convertToHtmlString(editor: LexicalEditor, options: Exp
     output.splice(outputIndexByChild[lastProseIndex], 1)
   }
 
-  // The footnotes-section wrap (docs/kobato-fit-plan.md C4 §3.2(e)): the
-  // behaviour module's run transform keeps every definition card one
-  // trailing run, so wrapping the run's `<li>` outputs is a mechanical
-  // post-processing step here. The heading text is the host's
-  // `footnotesSectionTitle` (kobato's `footnotes-section-title`).
-  let firstDefinitionIndex = children.length
-  while (firstDefinitionIndex > 0 && $isFootnoteDefinitionNode(children[firstDefinitionIndex - 1])) {
-    firstDefinitionIndex -= 1
-  }
-  if (firstDefinitionIndex < children.length) {
-    const definitionCount = children.length - firstDefinitionIndex
-    const items = output.splice(output.length - definitionCount, definitionCount)
-    const configuredTitle = options.footnotesSectionTitle?.trim()
-    const title = context.escapeText(configuredTitle || DEFAULT_FOOTNOTES_SECTION_TITLE)
-    output.push(
-      `<section class="footnotes" data-footnotes="" aria-labelledby="${FOOTNOTES_SECTION_HEADING_ID}">` +
-        `<h3 id="${FOOTNOTES_SECTION_HEADING_ID}">${title}</h3>` +
-        `<ol>${items.join('')}</ol></section>`,
-    )
+  // Declarative post-processing: each subsystem's registered post-processor
+  // gets one pass over the assembled outputs (the footnotes `<section>` wrap
+  // lives in `@/nodes/footnote/footnote-html-export`).
+  for (const processor of HTML_POST_PROCESSORS) {
+    processor.process({ children, output, context })
   }
 
   return output.join('')

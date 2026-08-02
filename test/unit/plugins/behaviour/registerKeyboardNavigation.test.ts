@@ -1,5 +1,5 @@
 import { $createLinkNode, $isLinkNode, LinkNode } from '@lexical/link'
-import { ListItemNode, ListNode } from '@lexical/list'
+import { $createListItemNode, $createListNode, ListItemNode, ListNode } from '@lexical/list'
 import {
   $createLineBreakNode,
   $createNodeSelection,
@@ -17,6 +17,7 @@ import {
   $setSelection,
   createEditor,
   DELETE_LINE_COMMAND,
+  INSERT_PARAGRAPH_COMMAND,
   KEY_ARROW_DOWN_COMMAND,
   KEY_ARROW_UP_COMMAND,
   KEY_BACKSPACE_COMMAND,
@@ -28,6 +29,7 @@ import {
   type LexicalCommand,
   type LexicalEditor,
   type LexicalNodeConfig,
+  COMMAND_PRIORITY_LOW,
 } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -369,6 +371,77 @@ describe('registerKeyboardNavigation', () => {
       expect(link?.getTextContent()).toBe('link tex')
     })
 
+    cleanup()
+  })
+
+  it('converts a populated top-level list item to a paragraph on backspace at its start', async () => {
+    await updateEditor(editor, () => {
+      const root = $getRoot()
+      const list = $createListNode('bullet')
+      const item = $createListItemNode()
+      const text = $createTextNode('item text')
+      item.append(text)
+      list.append(item)
+      root.append(list)
+      text.select(0, 0)
+    })
+
+    mounted = mountEditor(editor)
+    const cleanup = registerWithCardKey(null)
+
+    const result = await dispatchAndCommit(
+      editor,
+      KEY_BACKSPACE_COMMAND,
+      new KeyboardEvent('keydown', { key: 'Backspace' }),
+    )
+    expect(result).toBe(true)
+
+    editor.getEditorState().read(() => {
+      const root = $getRoot()
+      expect(root.getChildrenSize()).toBe(1)
+      const first = root.getFirstChild()
+      expect($isParagraphNode(first)).toBe(true)
+      expect(first?.getTextContent()).toBe('item text')
+    })
+
+    cleanup()
+  })
+
+  it('dispatches INSERT_PARAGRAPH_COMMAND for an empty top-level list item on backspace', async () => {
+    await updateEditor(editor, () => {
+      const root = $getRoot()
+      const list = $createListNode('bullet')
+      const item = $createListItemNode()
+      list.append(item)
+      root.append(list)
+      item.select(0, 0)
+    })
+
+    mounted = mountEditor(editor)
+    const cleanup = registerWithCardKey(null)
+
+    // the conversion itself is upstream rich-text's INSERT_PARAGRAPH handler
+    // (the real editor mounts it via RichTextPlugin) — this test pins the
+    // policy: the key is claimed and the command dispatched
+    let dispatched = false
+    const unregisterSpy = editor.registerCommand(
+      INSERT_PARAGRAPH_COMMAND,
+      () => {
+        dispatched = true
+        return false
+      },
+      COMMAND_PRIORITY_LOW,
+    )
+
+    const result = await dispatchAndCommit(
+      editor,
+      KEY_BACKSPACE_COMMAND,
+      new KeyboardEvent('keydown', { key: 'Backspace' }),
+    )
+    expect(result).toBe(true)
+    expect(dispatched).toBe(true)
+
+    unregisterSpy()
     cleanup()
   })
 

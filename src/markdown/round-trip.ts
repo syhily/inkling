@@ -16,6 +16,7 @@ import { $createParagraphNode } from 'lexical'
 import type { HostCard } from '@/nodes/cards/host-cards'
 
 import { codeBlockFence, stripFenceLines } from '@/markdown/card-shortcuts'
+import { FENCE_END_REGEXP, FENCE_IMPORT_REGEXP } from '@/markdown/grammar'
 import { DEFAULT_TRANSFORMERS } from '@/markdown/transformers'
 import { MINIMAL_TRANSFORMERS } from '@/markdown/transformers-core'
 import { $createMarkdownNode, $isMarkdownNode, MarkdownNode } from '@/nodes/base/nodes/markdown/MarkdownNode'
@@ -39,14 +40,14 @@ import {
 /**
  * The card-aware round-trip dialect — one of Inkling's two markdown dialects
  * (the paste dialect is `@/markdown/paste-dialect`) and the public markdown
- * import/export API (`markdownToLexicalState` / `lexicalStateToMarkdown`,
- * documented in `docs/markdown-api.md`).
+ * import/export API (`markdownToLexicalState` / `lexicalStateToMarkdown`).
  *
  * What the dialect speaks: ```inkling:<card>``` fences, standard
- * `![alt](src)` image syntax, and `~`/`^` sub/sup — but not footnotes.
- * (`==mark==` converts in both dialects: `@lexical/markdown`'s
- * TEXT_FORMAT_TRANSFORMERS include HIGHLIGHT.) Conversion runs through
- * `@lexical/markdown`'s `$convertFromMarkdownString` /
+ * `![alt](src)` image syntax, and the shared grammar table's inline
+ * delimiters (`@/markdown/grammar`: `==mark==` rides upstream's
+ * TEXT_FORMAT_TRANSFORMERS HIGHLIGHT, `~`/`^` sub/sup are projected in
+ * `@/markdown/transformers-core`) — but not footnotes. Conversion runs
+ * through `@lexical/markdown`'s `$convertFromMarkdownString` /
  * `$convertToMarkdownString` on a temporary headless editor with the
  * constrained node set below.
  */
@@ -86,7 +87,7 @@ const MARKDOWN_CARD_TRANSFORMER: MultilineElementTransformer = {
     }
     return '```inkling:markdown\n' + node.markdown + '\n```'
   },
-  regExpEnd: /^```\s*$/,
+  regExpEnd: FENCE_END_REGEXP,
   regExpStart: /^```inkling:markdown\s*$/,
   replace: (rootNode, _children, _startMatch, _endMatch, linesInBetween, _isImport) => {
     rootNode.append($createMarkdownNode({ markdown: stripFenceLines(linesInBetween) }))
@@ -118,8 +119,9 @@ const CODE_FENCE: MultilineElementTransformer = {
     // transformer's variance is the text source (node.code)
     return codeBlockFence(node.language, node.code)
   },
-  regExpEnd: /^```\s*$/,
-  // Language names are free input on export (codeBlockFence emits them
+  regExpEnd: FENCE_END_REGEXP,
+  // the import policy lives in the shared grammar table (`@/markdown/grammar`):
+  // language names are free input on export (codeBlockFence emits them
   // verbatim), so the import side must accept more than \w — c++,
   // shell-session, etc. used to fall back to literal paragraphs. Card fences
   // (```inkling:<card>```) still win: buildTransformers orders
@@ -127,7 +129,7 @@ const CODE_FENCE: MultilineElementTransformer = {
   // ```inkling:xxx fence is malformed input no card transformer claims, and
   // it now imports as a code block with language 'inkling:xxx' instead of a
   // literal paragraph.
-  regExpStart: /^```([^\s`]+)?\s*$/,
+  regExpStart: FENCE_IMPORT_REGEXP,
   replace: (rootNode, _children, startMatch, _endMatch, linesInBetween, _isImport) => {
     rootNode.append($createCodeBlockNode({ code: stripFenceLines(linesInBetween), language: startMatch[1] }))
   },

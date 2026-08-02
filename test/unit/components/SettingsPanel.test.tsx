@@ -37,10 +37,10 @@ function createListOptionItem(): ListOptionItem {
   }
 }
 
-// Mock the host-integration context used by InputUrlSetting
-vi.mock('../../../src/context/InklingHostIntegrationContext', async () => {
-  const React = await import('react')
-  return { default: React.createContext(mocks.contextValue) }
+// Mock the host-integration linking channel used by InputUrlSetting
+vi.mock('../../../src/context/InklingHostIntegrationContext', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../src/context/InklingHostIntegrationContext')>()
+  return { ...actual, useInklingLinkingSettings: () => mocks.contextValue.cardConfig }
 })
 
 describe('SettingsPanel', function () {

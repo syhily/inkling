@@ -6,7 +6,7 @@ import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider, type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { ButtonNode } from '@/nodes/ButtonNode'
 import { ButtonNodeComponent } from '@/nodes/ButtonNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
@@ -65,7 +65,7 @@ describe('ButtonNodeComponent', () => {
     const composerValue = createHostIntegrationValue()
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           <ButtonNodeComponent
             alignment="center"
@@ -74,7 +74,7 @@ describe('ButtonNodeComponent', () => {
             nodeKey={nodeKey}
           />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
 
     expect(screen.getByTestId('button-card')).toBeTruthy()
@@ -88,7 +88,7 @@ describe('ButtonNodeComponent', () => {
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, { editing: false })
 
     render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           <ButtonNodeComponent
             alignment="center"
@@ -97,7 +97,7 @@ describe('ButtonNodeComponent', () => {
             nodeKey={nodeKey}
           />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
 
     fireEvent.click(screen.getByTestId('edit-button-card'))
@@ -113,7 +113,7 @@ describe('ButtonNodeComponent', () => {
       const composerValue = createHostIntegrationValue({ cardConfig })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
-        <InklingHostIntegrationContext.Provider value={composerValue}>
+        <InklingHostIntegrationProvider value={composerValue}>
           <CardSelectionStoreProvider>
             <ButtonNodeComponent
               alignment="center"
@@ -122,7 +122,7 @@ describe('ButtonNodeComponent', () => {
               nodeKey={nodeKey}
             />
           </CardSelectionStoreProvider>
-        </InklingHostIntegrationContext.Provider>,
+        </InklingHostIntegrationProvider>,
       )
     }
 

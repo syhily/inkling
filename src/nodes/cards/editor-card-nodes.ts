@@ -1,7 +1,7 @@
 import type { LexicalEditor } from 'lexical'
 
 import type { CardUploadType } from '@/nodes/cards/card-declaration'
-import type { CardMenuSource, MenuItem } from '@/utils/buildCardMenu'
+import type { CardMenuSource, MenuItem } from '@/nodes/cards/card-menu-build'
 
 import { resolveAllCardFacts } from '@/nodes/cards/card-facts'
 import { resolveCardMenuEntries } from '@/nodes/cards/card-menus'
@@ -15,7 +15,7 @@ import { getRegisteredNodeMap } from '@/utils/lexical-internals'
  * menu-less entries (CodeBlock), `DragDropPastePlugin` reads `uploadType`.
  */
 export interface EditorCardNode extends CardMenuSource {
-  /** the declaration's menu entries resolved through `getCardMenu` — always
+  /** the declaration's menu entries resolved through `resolveCardMenuEntries` — always
    * normalized to an array; undefined for menu-less cards (CodeBlock) */
   cardMenu: MenuItem[] | undefined
   uploadType?: CardUploadType
@@ -29,9 +29,9 @@ export interface EditorCardNode extends CardMenuSource {
  * accessor) and intersected with `CARD_DECLARATIONS`. This replaces the
  * historical recovery that walked the registered-node map and cast each
  * class's static side (`inkling-node-class`); the declaration's assembled
- * node class is deliberately not recovered here because importing the wrapper
- * registry would close an import cycle (wrapper layer → decorate tree →
- * `InklingComposableEditor` → `DragDropPastePlugin` → here).
+ * node class is deliberately not recovered here — the wrapper registry stays
+ * unimported, pinned by the layering guard
+ * (test/unit/nodes/card-layering-imports.test.ts).
  */
 export function getEditorCardNodes(editor: LexicalEditor): [string, EditorCardNode][] {
   return getRegisteredCardNodes(new Set(getRegisteredNodeMap(editor).keys()))

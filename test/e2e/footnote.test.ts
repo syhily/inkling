@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { focusEditor, initialize, loadSerializedState } from '#/utils/e2e'
 
-// Footnotes (docs/kobato-fit-plan.md C4 §5 e2e): `^ ` triggers the insert,
+// Footnotes: `^ ` triggers the insert,
 // focus hands off to the fresh definition row, edits renumber automatically,
 // and deleting a definition takes its refs with it.
 

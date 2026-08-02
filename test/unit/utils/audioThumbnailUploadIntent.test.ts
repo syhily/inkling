@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { updateEditor } from '#/utils/test-editor'
 import { AudioNode, $createAudioNode, type AudioNode as AudioNodeType } from '@/nodes/AudioNode'
-import { audioThumbnailUploadIntent } from '@/utils/upload-intent'
+import { audioThumbnailUploadIntent } from '@/nodes/upload-intent'
 
 describe('audioThumbnailUploadIntent', () => {
   let editor: LexicalEditor

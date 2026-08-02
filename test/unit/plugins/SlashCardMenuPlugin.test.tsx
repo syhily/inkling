@@ -16,7 +16,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { updateEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider } from '@/context/InklingHostIntegrationContext'
 import DEFAULT_NODES from '@/nodes/DefaultNodes'
 import { INSERT_HTML_COMMAND } from '@/nodes/HtmlNode'
 import SlashCardMenuPlugin from '@/plugins/SlashCardMenuPlugin'
@@ -119,9 +119,9 @@ async function setupSlashPlugin() {
   const dispatchCommandSpy = vi.spyOn(editor, 'dispatchCommand')
 
   render(
-    <InklingHostIntegrationContext.Provider value={contextValue}>
+    <InklingHostIntegrationProvider value={contextValue}>
       <SlashCardMenuPlugin />
-    </InklingHostIntegrationContext.Provider>,
+    </InklingHostIntegrationProvider>,
   )
 
   return { editor, rootElement, dispatchCommandSpy }

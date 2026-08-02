@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { updateEditor } from '#/utils/test-editor'
 import { FileNode, $createFileNode, type FileNode as FileNodeType } from '@/nodes/FileNode'
-import { fileUploadIntent } from '@/utils/upload-intent'
+import { fileUploadIntent } from '@/nodes/upload-intent'
 
 describe('fileUploadIntent', () => {
   let editor: LexicalEditor

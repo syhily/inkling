@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider, type CardConfig } from '@/context/InklingHostIntegrationContext'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { ToggleNode, $createToggleNode } from '@/nodes/ToggleNode'
 import { ToggleNodeComponent } from '@/nodes/ToggleNodeComponent'
@@ -71,11 +71,11 @@ describe('ToggleNodeComponent', () => {
     return render(
       <CollaborationContext.Provider value={collaborationValue}>
         <LexicalComposerContext.Provider value={composerValue}>
-          <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
+          <InklingHostIntegrationProvider value={inklingComposerValue}>
             <CardSelectionStoreProvider>
               <ToggleNodeComponent contentEditor={contentEditor} headingEditor={headingEditor} nodeKey={nodeKey} />
             </CardSelectionStoreProvider>
-          </InklingHostIntegrationContext.Provider>
+          </InklingHostIntegrationProvider>
         </LexicalComposerContext.Provider>
       </CollaborationContext.Provider>,
     )

@@ -22,7 +22,7 @@ export default function readTextContent(node: Record<string, unknown>, property:
   }
 
   // the editor case: nested editors are created by `createEditor` and stored
-  // on the node (`@/utils/nested-editors`). Lexical 0.46 exports no
+  // on the node (`@/nodes/nested-editors`). Lexical 0.46 exports no
   // editor-class value to instanceof against, so prove each call shape
   // before invoking instead of asserting the whole chain
   if (typeof value === 'object' && value !== null && 'getEditorState' in value) {

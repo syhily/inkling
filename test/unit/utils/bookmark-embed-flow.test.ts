@@ -2,8 +2,8 @@ import { $getNodeByKey, $getRoot, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createTestEditor, updateEditor } from '#/utils/test-editor'
+import { createBookmarkEmbedFlow, isEmbedResponse, type BookmarkEmbedFlow } from '@/hooks/bookmark-embed-flow'
 import { $createBookmarkNode, $isBookmarkNode, BookmarkNode } from '@/nodes/BookmarkNode'
-import { createBookmarkEmbedFlow, isEmbedResponse, type BookmarkEmbedFlow } from '@/utils/services/bookmark-embed-flow'
 
 const EMBED = {
   url: 'https://canonical.example.com',

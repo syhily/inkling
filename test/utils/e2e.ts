@@ -122,6 +122,79 @@ export async function waitForHistoryGroupBoundary(page: Page) {
   await page.waitForTimeout(HISTORY_MERGE_WINDOW_MS + 200)
 }
 
+// Waits until the editor has been update-silent for the full history merge
+// window. Stronger than waitForHistoryGroupBoundary: that one only waits a
+// fixed wall-clock span from the last keystroke, so a straggler update
+// (debounced card-content sync, late React effect) can still commit after it
+// — landing ABOVE the next change's entry on the undo stack, which a later
+// undo then pops instead of the intended one. Here the window re-arms on
+// every update, so it only ends once the stack has truly settled and the
+// merge window has elapsed since the last commit. The cap keeps a chatty
+// editor from hanging the test; on cap the wait is best-effort.
+// Waits until the editor (and every nested card editor reachable through the
+// node map) has been update-silent for the full history merge window.
+// Stronger than waitForHistoryGroupBoundary: that one only waits a fixed
+// wall-clock span from the last keystroke, so a straggler update (debounced
+// card-content sync, late React effect) can still commit after it — landing
+// ABOVE the next change's entry on the undo stack, which a later undo then
+// pops instead of the intended one. The nested editors matter too: the
+// shared undo stack's merge bookkeeping is per-editor, but a nested editor's
+// selection-only update can still rewrite the shared `current` entry
+// (upstream merges `!hasDirtyNodes && selection !== null` updates without an
+// isSameEditor check) — a late nested update right before a card deletion
+// pollutes the deletion's undo entry, so undo restores a pre-deletion state
+// with the wrong selection (the toggle undo/redo e2e flake). The window
+// re-arms on every update from any of those editors and only ends once all
+// have been silent past the merge window; the cap keeps a chatty editor from
+// hanging the test, on cap the wait is best-effort.
+export async function waitForEditorQuiet(page: Page, quietMs = HISTORY_MERGE_WINDOW_MS + 200, capMs = 8000) {
+  await page.evaluate(
+    ([quiet, cap]) => {
+      const editors = new Set<{ registerUpdateListener: (listener: () => void) => () => void }>()
+      const main = window.lexicalEditor
+      editors.add(main)
+      main.getEditorState().read(() => {
+        const nodeMap = (main as unknown as { _editorState: { _nodeMap: Map<string, unknown> } })._editorState._nodeMap
+        for (const node of nodeMap.values()) {
+          const record = node as Record<string, unknown>
+          for (const key of Object.keys(record)) {
+            const value = record[key]
+            if (value && typeof value === 'object' && 'registerUpdateListener' in value) {
+              editors.add(value as { registerUpdateListener: (listener: () => void) => () => void })
+            }
+          }
+        }
+      })
+
+      const unregister: Array<() => void> = []
+      let lastActivity = performance.now()
+      for (const editor of editors) {
+        unregister.push(
+          editor.registerUpdateListener(() => {
+            lastActivity = performance.now()
+          }),
+        )
+      }
+
+      const quieted = new Promise<void>((resolveQuiet) => {
+        const timer = setInterval(() => {
+          if (performance.now() - lastActivity >= quiet) {
+            clearInterval(timer)
+            resolveQuiet()
+          }
+        }, 50)
+      })
+      const capped = new Promise<void>((resolveCap) => {
+        setTimeout(resolveCap, cap)
+      })
+      return Promise.race([quieted, capped]).then(() => {
+        unregister.forEach((detach) => detach())
+      })
+    },
+    [quietMs, capMs] as const,
+  )
+}
+
 // CodeMirror groups transactions that occur within 500ms into a single undo
 // group (history newGroupDelay). Wait it out so the next change is undoable
 // on its own.

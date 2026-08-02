@@ -1,7 +1,7 @@
 import { createEditor } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
-import type { EditorCardNode } from '@/utils/getEditorCardNodes'
+import type { EditorCardNode } from '@/nodes/cards/editor-card-nodes'
 
 import { ImageNode } from '@/nodes/ImageNode'
 import { VideoNode } from '@/nodes/VideoNode'

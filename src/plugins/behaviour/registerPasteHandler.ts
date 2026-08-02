@@ -6,6 +6,7 @@ import { $isRangeSelection, $getSelection, $insertNodes, COMMAND_PRIORITY_LOW, P
 
 import { shouldIgnoreEvent } from '@/utils/shouldIgnoreEvent'
 
+import { editorOwnsFocus } from './card-adjacency'
 import { MIME_TEXT_HTML } from './clipboard-protocol'
 import { handlePlainTextPaste } from './plainTextPaste'
 
@@ -40,7 +41,7 @@ export function registerPasteHandler(editor: LexicalEditor, deps: PasteHandlerDe
     (clipboardEvent) => {
       // avoid Inkling behaviours when an inner element (e.g. a card input) has focus
       // and event wasn't triggered from nested editor
-      if (document.activeElement !== editor.getRootElement() && !isNested) {
+      if (!editorOwnsFocus(editor) && !isNested) {
         // ignore default Lexical behaviour when inside an inner input or contenteditable,
         // without this paste events inside CodeMirror for example will replace the card
         if (shouldIgnoreEvent(clipboardEvent)) {

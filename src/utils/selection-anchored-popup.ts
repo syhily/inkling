@@ -1,6 +1,7 @@
 import { $getSelection, type LexicalEditor } from 'lexical'
 
 import { $getSelectionRangeRect } from '@/utils/$getSelectionRangeRect'
+import { ANCHOR_POPUP_GAP, fitRectWithin } from '@/utils/fit-rect'
 
 // Anchored popup layout — the one module owning how a popup is placed against
 // its anchor. Two positioning modes share the module: 'fixed' (viewport
@@ -8,7 +9,8 @@ import { $getSelectionRangeRect } from '@/utils/$getSelectionRangeRect'
 // below position plus the max-height budget would overflow the scroll
 // container — the at-link results popup and the link-action toolbar) and
 // 'absolute' (parent-relative offsets at natural width — the slash and plus
-// card menus, whose per-policy flip rules arrive as inputs). Rects arrive as
+// card menus, whose per-policy flip rules arrive as inputs). Both flip rules
+// project onto @/utils/fit-rect's 'flip-below-above' policy. Rects arrive as
 // plain data (the ReorderGeometry pattern from
 // @/utils/draggable/reorder-rules), so every policy is unit-testable with
 // fake rects. The anchor adapters (node-element rect, selection-range rect)
@@ -16,8 +18,8 @@ import { $getSelectionRangeRect } from '@/utils/$getSelectionRangeRect'
 // writes, and the resize/scroll/MutationObserver subscription set is
 // @/hooks/useSelectionAnchoredPopup.
 
-/** Vertical gap between the anchor rect and the popup placed below it. */
-export const POPUP_VERTICAL_GAP = 10
+/** Vertical gap between the anchor rect and the popup placed below it. Alias of @/utils/fit-rect's ANCHOR_POPUP_GAP (the single source). */
+export const POPUP_VERTICAL_GAP = ANCHOR_POPUP_GAP
 
 /**
  * Max height of the scrollable results list inside a selection-anchored popup.
@@ -125,30 +127,40 @@ export function resolveAnchoredPopupPlacement({
     // below the anchor; the measured flip fires only when below overflows
     // the viewport and the popup fits above — both judged in the anchor
     // rect's native viewport coordinates
-    const belowOverflowsViewport = anchorRect.bottom + popupHeight > viewportHeight
-    const fitsAbove = anchorRect.top - popupHeight >= 0
-    if (absoluteFlip === 'measured' && belowOverflowsViewport && fitsAbove) {
-      return { bottom: containerRect.height - anchorTop, left: 0, flipped: true }
+    if (absoluteFlip === 'measured') {
+      const fitted = fitRectWithin({
+        bounds: { top: 0, left: 0, right: 0, bottom: viewportHeight },
+        rect: anchorRect,
+        size: { width: 0, height: popupHeight },
+        policy: 'flip-below-above',
+        requireFitAbove: true,
+      })
+      if (fitted.flipped) {
+        return { bottom: containerRect.height - anchorTop, left: 0, flipped: true }
+      }
     }
     return { top: anchorTop + anchorRect.height, left: 0, flipped: false }
   }
 
   const belowGap = gap ?? POPUP_VERTICAL_GAP
-  const belowTop = anchorRect.bottom + belowGap
-  const placement: AnchoredPopupPlacement = {
-    top: belowTop,
+  // the flip is judged against the scroll container's document extent,
+  // shifted into the anchor's viewport coordinates: the visible region's
+  // bottom edge sits at scrollHeight - scrollTop
+  const fitted = fitRectWithin({
+    bounds: { top: 0, left: 0, right: 0, bottom: scrollHeight - scrollTop },
+    rect: anchorRect,
+    size: { width: 0, height: popupHeight },
+    gap: { below: belowGap, above: aboveGap ?? belowGap },
+    policy: 'flip-below-above',
+    belowBudget: popupMaxHeightBudget(viewportHeight),
+  })
+
+  return {
+    top: fitted.top,
     left: containerRect.left,
     width: containerRect.right - containerRect.left,
-    flipped: false,
+    flipped: fitted.flipped,
   }
-
-  const overflowsScrollContainer = scrollTop + belowTop + popupMaxHeightBudget(viewportHeight) > scrollHeight
-  if (overflowsScrollContainer) {
-    placement.top = anchorRect.top - popupHeight - (aboveGap ?? belowGap)
-    placement.flipped = true
-  }
-
-  return placement
 }
 
 /**

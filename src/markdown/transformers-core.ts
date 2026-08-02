@@ -12,16 +12,20 @@ import {
   type Transformer,
 } from '@lexical/markdown'
 
-// custom text format transformers
+import { inlineDelimiterTag } from '@/markdown/grammar'
+
+// custom text format transformers — the `@lexical/markdown` engine's
+// projection of the shared grammar table (`@/markdown/grammar`);
+// HIGHLIGHT's `==` rides upstream's TEXT_FORMAT_TRANSFORMERS.
 export const SUBSCRIPT = {
   format: ['subscript'] as const,
-  tag: '~',
+  tag: inlineDelimiterTag('subscript'),
   type: 'text-format' as const,
 }
 
 export const SUPERSCRIPT = {
   format: ['superscript'] as const,
-  tag: '^',
+  tag: inlineDelimiterTag('superscript'),
   type: 'text-format' as const,
 }
 

@@ -7,7 +7,7 @@ import type { CardConfig, FileUploader, FileUploaderInput } from '@/context/Inkl
 
 import { ComposerHandlesProvider } from '@/context/ComposerHandlesProvider'
 import InklingCollaborationContext, { noopWebsocketProviderFactory } from '@/context/InklingCollaborationContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider } from '@/context/InklingHostIntegrationContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import { useCollaborationProviderFactory } from '@/hooks/useCollaborationProviderFactory'
 import { resolveLabels, type InklingLabelsInput } from '@/labels/inkling-labels'
@@ -55,7 +55,7 @@ export interface InklingComposerProps {
   darkMode?: boolean
   enableMultiplayer?: boolean
   isTKEnabled?: boolean
-  /** Host label overrides (docs/kobato-fit-plan.md C7) — a partial table
+  /** Host label overrides — a partial table
    * merged over the English defaults; unknown keys are compile errors. */
   labels?: InklingLabelsInput
   multiplayerEndpoint?: string
@@ -132,6 +132,9 @@ const InklingComposerBase = ({
   // plausible/posthog adapter page-wide while this composer is mounted
   React.useEffect(() => setTelemetryHandler(cardConfig.telemetry), [cardConfig.telemetry])
 
+  // the whole-value transport — InklingHostIntegrationProvider fans it out
+  // into the per-lifecycle channels (plan C4), each memoized on its own
+  // leaves, so a fresh `cardConfig = {}` default keeps every channel stable
   const hostIntegrationValue = React.useMemo(
     () => ({
       fileUploader: normalizedFileUploader,
@@ -161,7 +164,7 @@ const InklingComposerBase = ({
   return (
     <LexicalComposer initialConfig={initialConfig}>
       <ComposerHandlesProvider>
-        <InklingHostIntegrationContext.Provider value={hostIntegrationValue}>
+        <InklingHostIntegrationProvider value={hostIntegrationValue}>
           <InklingCollaborationContext.Provider value={collaborationValue}>
             <InklingUiPrefsContext.Provider value={uiPrefsValue}>
               <LexicalCollaboration>
@@ -178,7 +181,7 @@ const InklingComposerBase = ({
               </LexicalCollaboration>
             </InklingUiPrefsContext.Provider>
           </InklingCollaborationContext.Provider>
-        </InklingHostIntegrationContext.Provider>
+        </InklingHostIntegrationProvider>
       </ComposerHandlesProvider>
     </LexicalComposer>
   )

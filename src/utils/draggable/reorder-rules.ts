@@ -17,8 +17,7 @@ import type { DroppablePosition } from '@/utils/draggable/DragDropContainer'
 // This module is deliberately NOT vendor-synced with inkling-card-gallery:
 // the drop-allowance rule used to live in draggable-utils.ts mirrored across
 // both repos; it is consolidated here (the gallery repo keeps its own
-// direction-specific copy). See the header in draggable-utils.ts and
-// docs/tech-debt-triage.md.
+// direction-specific copy). See the header in draggable-utils.ts.
 
 export type ReorderDirection = 'vertical' | 'horizontal'
 

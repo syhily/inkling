@@ -2,10 +2,11 @@ import type { LexicalEditor, LexicalNode } from 'lexical'
 
 import { $canShowPlaceholderCurry } from '@lexical/text'
 
+import type { DecoratorNodeProperty } from '@/nodes/base/card-specs'
+
 import {
   generateDecoratorNode,
   type DecoratorNodeData,
-  type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
 } from '@/nodes/base/generate-decorator-node'
 import { parseHeaderNode } from '@/nodes/base/nodes/header/parsers/header-parser'

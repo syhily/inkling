@@ -2,7 +2,8 @@
  * The bookmark embed flow — the headless module behind `useBookmarkMetadata`
  * (the fetch choreography for a bookmark card's metadata): the loading/
  * urlError machine, the init-vs-submit divergence, and the defensive
- * `isEmbedResponse` classifier, composed from the request-track guard
+ * `isEmbedResponse` classifier, composed from the tracked-request skeleton
+ * (src/utils/services/service-machine.ts) over the request-track guard
  * (CONTEXT.md "request track") so the latest ISSUED fetch wins — an
  * impatient `submitUrl` supersedes a slower mount-time fetch, which
  * previously could resolve last and patch the node (or paste-as-link) over
@@ -19,6 +20,7 @@ import type { BookmarkEmbedResponse, LinkingSettings } from '@/context/InklingHo
 import { $isBookmarkNode, $updateCardNode } from '@/nodes/base'
 import { focusEditorRoot } from '@/plugins/behaviour/card-adjacency'
 import { createRequestTrack } from '@/utils/services/request-track'
+import { runTrackedRequest } from '@/utils/services/service-machine'
 import { createSnapshotStore } from '@/utils/services/snapshot-store'
 
 // Keep the runtime boundary defensive for untyped JavaScript hosts even though
@@ -89,30 +91,34 @@ export function createBookmarkEmbedFlow({
     }
     store.emit({ loading: true })
 
-    const response = await Promise.resolve(fetchEmbed?.(href, { type: 'bookmark' })).catch((e: unknown) => {
-      // a newer fetch was issued while this one was in flight — it owns the
-      // card: no error state, and no init rethrow (no paste-as-link over the
-      // newer flow)
-      if (!track.isLatest(generation)) {
-        return undefined
-      }
+    const outcome = await runTrackedRequest(track, generation, () =>
+      Promise.resolve(fetchEmbed?.(href, { type: 'bookmark' })),
+    )
+
+    // a newer fetch was issued while this one was in flight — it owns the
+    // card: no error state, and no init rethrow (no paste-as-link over the
+    // newer flow)
+    if (!outcome) {
+      return
+    }
+
+    // a rejected embed folds into urlError; the init path rethrows so the
+    // caller can paste-as-link
+    if (!outcome.ok) {
       store.emit({ loading: false, urlError: true })
       if (init) {
-        throw e
+        throw outcome.error
       }
-      return undefined
-    })
-
-    if (!track.isLatest(generation)) {
       return
     }
 
-    // a rejected embed resolves to undefined (unless init rethrows above)
-    // and falls through the same not-an-embed-response exit
-    if (!isEmbedResponse(response)) {
+    // an undefined response (no fetchEmbed, or a deliberate host skip)
+    // falls through the same not-an-embed-response exit
+    if (!isEmbedResponse(outcome.value)) {
       store.emit({ loading: false, urlError: true })
       return
     }
+    const response = outcome.value
 
     editor.update(() => {
       $updateCardNode(nodeKey, $isBookmarkNode, (node) => {
@@ -158,6 +164,10 @@ export function createBookmarkEmbedFlow({
     },
     submitUrl: (href: string) => fetchAndApply(href, false),
     fetchInitialMetadata: (href: string) => fetchAndApply(href, true),
-    dispose: () => track.dispose(),
+    /** Supersede every in-flight fetch (adapter teardown / recreation) — a late response then no-ops instead of patching the node. */
+    dispose: () => {
+      track.dispose()
+      store.dispose()
+    },
   }
 }

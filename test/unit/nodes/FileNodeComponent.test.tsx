@@ -6,7 +6,8 @@ import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor, tick } from '#/utils/test-editor'
-import InklingHostIntegrationContext, {
+import {
+  InklingHostIntegrationProvider,
   type CardConfig,
   type FileUploader,
 } from '@/context/InklingHostIntegrationContext'
@@ -75,7 +76,7 @@ describe('FileNodeComponent', () => {
     const composerValue = createHostIntegrationValue({ upload, fileTypes: FILE_FILE_TYPES })
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     return render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           <FileNodeComponent
             fileDesc=""
@@ -90,7 +91,7 @@ describe('FileNodeComponent', () => {
             triggerFileDialog={triggerFileDialog}
           />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
   }
 
@@ -158,7 +159,7 @@ describe('FileNodeComponent', () => {
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       const fileProps = populated ? populatedProps : { fileName: '', fileSize: '', fileSrc: '' }
       return render(
-        <InklingHostIntegrationContext.Provider value={composerValue}>
+        <InklingHostIntegrationProvider value={composerValue}>
           <CardSelectionStoreProvider>
             <FileNodeComponent
               fileDesc=""
@@ -172,7 +173,7 @@ describe('FileNodeComponent', () => {
               triggerFileDialog={false}
             />
           </CardSelectionStoreProvider>
-        </InklingHostIntegrationContext.Provider>,
+        </InklingHostIntegrationProvider>,
       )
     }
 

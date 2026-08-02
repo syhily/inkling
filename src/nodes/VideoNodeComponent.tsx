@@ -6,13 +6,14 @@ import type { VideoNode } from '@/nodes/VideoNode'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { VideoCard } from '@/components/ui/cards/VideoCard'
 import { useCardIsEditing, useCardIsSelected } from '@/context/CardSelectionStoreContext'
+import { useInklingHostEssentials } from '@/context/InklingHostIntegrationContext'
 import { useCardChrome } from '@/hooks/useCardChrome'
 import { useMediaCardUpload, useMediaUploader } from '@/hooks/useMediaCardUpload'
 import { usePreviewLease } from '@/hooks/usePreviewLease'
 import { $isVideoNode } from '@/nodes/base'
 import { isCardWidth, normalizeCardWidth } from '@/nodes/base/utils/card-widths'
+import { customThumbnailUploadIntent, videoFlowUploadIntent, type UploadFn } from '@/nodes/upload-intent'
 import extractVideoMetadata, { type VideoMetadata } from '@/utils/extractVideoMetadata'
-import { customThumbnailUploadIntent, videoFlowUploadIntent, type UploadFn } from '@/utils/upload-intent'
 
 interface VideoNodeComponentProps {
   nodeKey: NodeKey
@@ -44,8 +45,8 @@ export function VideoNodeComponent({
   isLoopChecked,
   initialFile,
 }: VideoNodeComponentProps) {
-  const { editor, host, write, setField } = useCardChrome(nodeKey, $isVideoNode)
-  const { fileUploader } = host
+  const { editor, write, setField } = useCardChrome(nodeKey, $isVideoNode)
+  const { fileUploader } = useInklingHostEssentials()
   const isSelected = useCardIsSelected(nodeKey)
   const isEditing = useCardIsEditing(nodeKey)
   const [previewThumbnail, setThumbnailPreview] = usePreviewLease()

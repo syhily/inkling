@@ -3,6 +3,7 @@ import type { Klass, LexicalCommand, LexicalNode } from 'lexical'
 import type { CardInsertSpec } from '@/nodes/cards/card-declaration'
 
 import { assembleCardNodeOnce } from '@/nodes/assemble-card-node'
+import { resolveCardInsertCommand } from '@/nodes/cards/card-commands'
 import { resolveAllCardFacts } from '@/nodes/cards/card-facts'
 import { CARD_WRAPPER_NODES } from '@/nodes/cards/card-wrappers'
 
@@ -17,11 +18,12 @@ export interface CardInsertRegistration {
  * Wrapper-layer projection of the card declarations (plan 043): each
  * insert-bearing declaration paired with the wrapper node class the
  * registration guards and constructs (from the `card-wrappers` projection)
- * and the insert command named on its insert spec — menu entry order carries
- * no command semantics. Kept out of the declaration modules so they stay
- * React-free; the registrar (`@/plugins/CardInsertPlugin`) is the derived
- * view over this list. CodeBlock and HorizontalRule declare no `insert` and
- * drop out here.
+ * and the card's insert command, derived from its node type by
+ * `resolveCardInsertCommand` — the declaration's insert spec carries only
+ * flags, never a command object. Kept out of the declaration modules so they
+ * stay React-free; the registrar (`@/plugins/CardInsertPlugin`) is the
+ * derived view over this list. CodeBlock and HorizontalRule declare no
+ * `insert` and drop out here.
  */
 export const CARD_INSERT_COMMANDS: CardInsertRegistration[] = CARD_WRAPPER_NODES.flatMap((declaration) => {
   // `in` narrows the union to the declarations carrying the optional insert entry
@@ -33,7 +35,7 @@ export const CARD_INSERT_COMMANDS: CardInsertRegistration[] = CARD_WRAPPER_NODES
     {
       nodeType: declaration.nodeType,
       node: declaration.node,
-      command: insert.command,
+      command: resolveCardInsertCommand(declaration.nodeType),
       insert,
     },
   ]
@@ -69,9 +71,11 @@ export function getCardInsertRegistrations(): CardInsertRegistration[] {
         nodeType: facts.nodeType,
         // the registry stores the raw spec; the class comes from the same
         // memoized assembler defineCard used, so the registration guards and
-        // constructs the exact class the host composed
+        // constructs the exact class the host composed — and the insert
+        // command derives from the node type through the same resolver the
+        // menu projection uses, so dispatch and registration name one object
         node: assembleCardNodeOnce<LexicalNode>(facts.host.spec),
-        command: insert.command,
+        command: resolveCardInsertCommand(facts.nodeType),
         insert,
       },
     ]

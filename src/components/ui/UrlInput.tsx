@@ -9,7 +9,7 @@ import {
   useLinkDropdownEscape,
   useLinkDropdownOpenedTracking,
 } from '@/components/ui/LinkSuggestionList'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingLinkingSettings } from '@/context/InklingHostIntegrationContext'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { useSearchLinks, type ListOptionItem } from '@/hooks/useSearchLinks'
 
@@ -66,9 +66,8 @@ export function UrlInput({
   placeholder,
   value = '',
 }: UrlInputProps) {
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
+  const { searchLinks } = useInklingLinkingSettings()
   const labels = useInklingLabels()
-  const searchLinks = cardConfig.searchLinks
   const searchEnabled = typeof searchLinks === 'function'
   const { isSearching, listOptions } = useSearchLinks(value || '', searchEnabled ? searchLinks : undefined)
 

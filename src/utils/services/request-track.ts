@@ -20,8 +20,10 @@
  * (src/utils/services/library-browser.ts), and the link-search coordinator
  * (src/hooks/search-coordinator.ts) compose their own policy on top —
  * pagination, the prefetch track, the URL short-circuit stay per-module
- * data. Their per-module scheduler type names survive as aliases of
- * `RequestScheduler` (the public `LibraryScheduler` must not break).
+ * data — over the shared tracked-request skeleton and dispatch protocol in
+ * src/utils/services/service-machine.ts. Their per-module scheduler type
+ * names survive as aliases of `RequestScheduler` (the public
+ * `LibraryScheduler` must not break).
  */
 
 /** Scheduler port for debounced dispatches — tests inject a manual one. */

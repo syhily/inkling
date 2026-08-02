@@ -6,9 +6,9 @@ import React from 'react'
 import type { FileUploader } from '@/context/InklingHostIntegrationContext'
 import type { UseFileDragAndDropResult } from '@/hooks/useFileDragAndDrop'
 import type { TriggerFileDialogCardNode } from '@/hooks/useTriggerFileDialog'
-import type { UploadFn } from '@/utils/upload-intent'
+import type { UploadFn } from '@/nodes/upload-intent'
 
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingHostEssentials } from '@/context/InklingHostIntegrationContext'
 import useFileDragAndDrop from '@/hooks/useFileDragAndDrop'
 import { useInitialFileUpload } from '@/hooks/useInitialFileUpload'
 import { useTriggerFileDialog } from '@/hooks/useTriggerFileDialog'
@@ -37,7 +37,7 @@ export type MediaUploader = ReturnType<FileUploader['useFileUpload']>
  * directly instead of re-typing the contract's lint suppression.
  */
 export function useMediaUploader(kind: MediaUploadKind): MediaUploader {
-  const { fileUploader } = React.useContext(InklingHostIntegrationContext)
+  const { fileUploader } = useInklingHostEssentials()
   // oxlint-disable-next-line react/react-compiler -- host-provided hook; identity is a composer contract
   return fileUploader.useFileUpload(kind)
 }
@@ -83,7 +83,7 @@ export function useMediaCardUpload<TNode>({
   dragDisabled = false,
 }: UseMediaCardUploadOptions<TNode>): UseMediaCardUploadResult {
   const [editor] = useLexicalComposerContext()
-  const { fileUploader } = React.useContext(InklingHostIntegrationContext)
+  const { fileUploader } = useInklingHostEssentials()
   const uploader = useMediaUploader(kind)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
 

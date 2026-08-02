@@ -7,7 +7,7 @@ import { SnippetCreateToolbar } from '@/components/ui/SnippetCreateToolbar'
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator, type ToolbarIconName } from '@/components/ui/ToolbarMenu'
 import CardContext from '@/context/CardContext'
 import { useCardIsEditing, useCardIsSelected } from '@/context/CardSelectionStoreContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingSnippetSettings } from '@/context/InklingHostIntegrationContext'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { getCardToolbarLabel } from '@/nodes/cards/card-facts'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
@@ -74,7 +74,7 @@ export function CardActionToolbar({
       ? [{ kind: 'edit', dataTestId: editDataTestId }, { kind: 'separator' }, { kind: 'snippet' }]
       : DEFAULT_ITEMS)
   const [editor] = useLexicalComposerContext()
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
+  const { createSnippet } = useInklingSnippetSettings()
   const labels = useInklingLabels()
   const isSelected = useCardIsSelected(nodeKey)
   const isEditing = useCardIsEditing(nodeKey)
@@ -117,7 +117,7 @@ export function CardActionToolbar({
           <ToolbarMenuItem
             key="snippet"
             dataTestId="create-snippet"
-            hide={!cardConfig.createSnippet}
+            hide={!createSnippet}
             icon="snippet"
             isActive={false}
             label={labels['toolbar.saveAsSnippet']}
@@ -126,10 +126,7 @@ export function CardActionToolbar({
         )
       case 'separator':
         return (
-          <ToolbarMenuSeparator
-            key={`separator-${separatorKeys.get(item) ?? 0}`}
-            hide={item.hide ?? !cardConfig.createSnippet}
-          />
+          <ToolbarMenuSeparator key={`separator-${separatorKeys.get(item) ?? 0}`} hide={item.hide ?? !createSnippet} />
         )
       case 'custom':
         return (

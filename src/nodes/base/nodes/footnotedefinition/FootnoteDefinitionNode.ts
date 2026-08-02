@@ -1,11 +1,11 @@
 import type { LexicalEditor, LexicalNode } from 'lexical'
 
+import type { DecoratorNodeProperty } from '@/nodes/base/card-specs'
 import type { ExportDOMOptions } from '@/nodes/base/export-dom'
 
 import {
   generateDecoratorNode,
   type DecoratorNodeData,
-  type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
 } from '@/nodes/base/generate-decorator-node'
 import { parseFootnoteDefinitionSection } from '@/nodes/base/nodes/footnotedefinition/footnotedefinition-parser'

@@ -1,4 +1,4 @@
-// The footnote behaviour module (docs/kobato-fit-plan.md C4 §3.2(d)) —
+// The footnote behaviour module —
 // headless; `FootnotePlugin` is only the React/DOM adapter. Four pieces:
 //
 // - **Caret trigger** — `^ ` at the caret tail inserts ref + definition

@@ -1,7 +1,7 @@
 import type { CardIconId, CardMenuEntrySpec } from '@/nodes/cards/card-declaration'
 import type { CardFacts } from '@/nodes/cards/card-facts'
+import type { MenuItem } from '@/nodes/cards/card-menu-build'
 import type { HostCardMenuEntrySpec } from '@/nodes/cards/host-card-registry'
-import type { MenuItem } from '@/utils/buildCardMenu'
 
 import AudioCardIcon from '@/assets/icons/inkling-card-type-audio.svg?react'
 import BookmarkCardIcon from '@/assets/icons/inkling-card-type-bookmark.svg?react'
@@ -18,6 +18,7 @@ import ImageCardIcon from '@/assets/icons/inkling-card-type-image.svg?react'
 import MathCardIcon from '@/assets/icons/inkling-card-type-math.svg?react'
 import ToggleIcon from '@/assets/icons/inkling-card-type-toggle.svg?react'
 import VideoCardIcon from '@/assets/icons/inkling-card-type-video.svg?react'
+import { resolveCardMenuCommand } from '@/nodes/cards/card-commands'
 import { resolveCardFacts } from '@/nodes/cards/card-facts'
 
 /**
@@ -58,22 +59,27 @@ export function resolveCardIcon(id: CardIconId): NonNullable<MenuItem['Icon']> {
  * The one menu projection every view shares: a card's menu spec resolved to
  * `MenuItem[]` — the icon (a built-in `CardIconId` or, for host cards, an
  * SVG component directly) becomes the SVGR component and the entry's named
- * `command` becomes its `insertCommand`. Built-in declarations and host
- * specs flow through this same function; there is no host-side copy.
+ * `command` (`CardMenuCommand`, or a raw `LexicalCommand` on host entries)
+ * becomes its `insertCommand` through `resolveCardMenuCommand`. Built-in
+ * declarations and host specs flow through this same function; there is no
+ * host-side copy.
  */
-function projectMenuEntries(menu: readonly (CardMenuEntrySpec | HostCardMenuEntrySpec)[]): MenuItem[] {
+function projectMenuEntries(
+  nodeType: string,
+  menu: readonly (CardMenuEntrySpec | HostCardMenuEntrySpec)[],
+): MenuItem[] {
   return menu.map(({ icon, command, ...item }) => ({
     ...item,
     Icon: typeof icon === 'string' ? resolveCardIcon(icon) : icon,
-    insertCommand: command,
+    insertCommand: typeof command === 'string' ? resolveCardMenuCommand(command, nodeType) : command,
   }))
 }
 
 /**
  * Resolves a card's slash/plus menu entries from its merged facts — what the
  * hand-written `CARD_MENUS` map keyed by node type used to hold. CodeBlock
- * declares no menu and resolves none. Consumed by `getCardMenu`,
- * `getCardDragIcon`, and `getEditorCardNodes`.
+ * declares no menu and resolves none. Consumed by `getCardDragIcon` and
+ * `getEditorCardNodes`.
  */
 export function resolveCardMenuEntries(facts: CardFacts): MenuItem[] | undefined {
   // `in` narrows the built-in union to the declarations carrying the
@@ -84,16 +90,7 @@ export function resolveCardMenuEntries(facts: CardFacts): MenuItem[] | undefined
         ? facts.declaration.menu
         : undefined
       : facts.host.spec.menu
-  return menu === undefined ? undefined : projectMenuEntries(menu)
-}
-
-/**
- * Resolves a card's menu entries by node type. The built-in-first /
- * host-fallback merge lives in `@/nodes/cards/card-facts`.
- */
-export function getCardMenu(nodeType: string): MenuItem[] | undefined {
-  const facts = resolveCardFacts(nodeType)
-  return facts === undefined ? undefined : resolveCardMenuEntries(facts)
+  return menu === undefined ? undefined : projectMenuEntries(facts.nodeType, menu)
 }
 
 /**

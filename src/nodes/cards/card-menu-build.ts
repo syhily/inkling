@@ -1,6 +1,11 @@
 import type { LexicalCommand } from 'lexical'
 
-import type { CardConfig, SnippetItem } from '@/context/InklingHostIntegrationContext'
+import type {
+  GifSettings,
+  LibrarySettings,
+  SnippetItem,
+  SnippetSettings,
+} from '@/context/InklingHostIntegrationContext'
 
 import SnippetCardIcon from '@/assets/icons/inkling-card-type-snippet.svg?react'
 import { INSERT_SNIPPET_COMMAND } from '@/nodes/cards/card-commands'
@@ -18,7 +23,7 @@ interface MenuItemBase {
   matches?: ((query: string, label: string) => boolean) | string[]
   priority?: number
   shortcut?: string
-  isHidden?: (args: { config: CardConfig | undefined }) => boolean
+  isHidden?: (args: { config: MenuBuildConfig | undefined }) => boolean
   section?: string
   // closed discriminant: menu items are cards (the default) or snippets —
   // CardMenu renders anything else as null, so a typo must not compile
@@ -57,11 +62,29 @@ export interface ResolvedMenuItem extends MenuItemBase {
   insertParams?: Record<string, unknown>
 }
 
-export interface BuildCardMenuConfig {
-  config?: CardConfig
+/**
+ * What the menu build reads from the host config — the FLAT subset of
+ * `CardConfig`'s feature slices the declarations' `isHidden` gates and the
+ * snippet list consume. Typed as this closed subset (never the whole
+ * `CardConfig`), so a host menu entry cannot smuggle a slice the build does
+ * not read, and the caller composes exactly these keys.
+ */
+export interface MenuBuildConfig {
+  /** GifSettings keys — the gif menu entry's hide gate. */
+  tenor?: GifSettings['tenor']
+  klipy?: GifSettings['klipy']
+  /** SnippetSettings keys — the snippets section. */
+  snippets?: SnippetSettings['snippets']
+  deleteSnippet?: SnippetSettings['deleteSnippet']
+  /** LibrarySettings key — the image-library entry's hide gate. */
+  imageLibrary?: LibrarySettings['imageLibrary']
 }
 
-/** Label resolver injected at menu-build time (docs/kobato-fit-plan.md C7):
+export interface BuildCardMenuConfig {
+  config?: MenuBuildConfig
+}
+
+/** Label resolver injected at menu-build time:
  * receives a labels-table key and the entry's declared English fallback. */
 export type ResolveMenuLabel = (key: string, fallback: string) => string
 
@@ -93,7 +116,7 @@ export interface BuildCardMenuResult {
 
 export function buildCardMenu(
   nodes: Map<string, CardMenuSource> | Iterable<[string, CardMenuSource]>,
-  { query, config, resolveLabel }: { query?: string; config?: CardConfig; resolveLabel?: ResolveMenuLabel } = {},
+  { query, config, resolveLabel }: { query?: string; config?: MenuBuildConfig; resolveLabel?: ResolveMenuLabel } = {},
 ): BuildCardMenuResult {
   let menu = new Map<string, ResolvedMenuItem[]>()
 
@@ -204,7 +227,7 @@ export function buildCardMenu(
   return { sections, items, maxItemIndex: items.length - 1 }
 }
 
-function buildSnippetMenuItem(data: SnippetItem, config: CardConfig | undefined): MenuItem {
+function buildSnippetMenuItem(data: SnippetItem, config: MenuBuildConfig | undefined): MenuItem {
   const name = data.name.toLowerCase()
   const snippet: MenuItem = {
     type: 'snippet',

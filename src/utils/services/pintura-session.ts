@@ -5,8 +5,10 @@
  *
  * - the asset loader (`createPinturaAssetLoader`): the dynamic import +
  *   CSS link choreography behind DOM ports, composed from the
- *   request-track guard so a `jsUrl` change mid-load never lets the stale
- *   import flip the flag for the new URL;
+ *   tracked-request skeleton (src/utils/services/service-machine.ts) over
+ *   the request-track guard so a `jsUrl` change mid-load never lets the
+ *   stale import flip the flag for the new URL (the CSS line is
+ *   callback-driven, not a promise — it keeps the explicit guard);
  * - `buildPinturaOptions`: the options table (frame options, crop presets,
  *   the locale-merge precedence "labels first, host locale on top") as pure
  *   data + policy;
@@ -20,6 +22,7 @@
  */
 
 import { createRequestTrack } from '@/utils/services/request-track'
+import { runTrackedRequest } from '@/utils/services/service-machine'
 import { createSnapshotStore } from '@/utils/services/snapshot-store'
 
 /**
@@ -92,18 +95,16 @@ export function createPinturaAssetLoader(
       store.emit({ error: e instanceof Error ? e : new Error('Failed to load Pintura script') })
     }
     if (importUrl) {
-      void ports
-        .importModule(importUrl)
-        .then(() => {
-          if (track.isLatest(generation)) {
-            store.emit({ scriptLoaded: true })
-          }
-        })
-        .catch(() => {
-          if (track.isLatest(generation)) {
-            store.emit({ error: new Error(`Failed to load Pintura script from ${jsUrl}`) })
-          }
-        })
+      void runTrackedRequest(track, generation, () => ports.importModule(importUrl)).then((outcome) => {
+        if (!outcome) {
+          return
+        }
+        if (outcome.ok) {
+          store.emit({ scriptLoaded: true })
+        } else {
+          store.emit({ error: new Error(`Failed to load Pintura script from ${jsUrl}`) })
+        }
+      })
     }
   }
 
@@ -125,7 +126,10 @@ export function createPinturaAssetLoader(
   return {
     getSnapshot: store.getSnapshot,
     subscribe: store.subscribe,
-    dispose: () => track.dispose(),
+    dispose: () => {
+      track.dispose()
+      store.dispose()
+    },
   }
 }
 
@@ -172,7 +176,7 @@ export interface PinturaOptionsLabels {
 /**
  * The options table for `openDefaultEditor`: frame options, crop presets,
  * and the locale merge — the labels table's `pintura.*` entries first, the
- * host's `pinturaConfig.locale` ON TOP (docs/kobato-fit-plan.md C7), so a
+ * host's `pinturaConfig.locale` ON TOP, so a
  * host can patch any Pintura string the labels table does not cover.
  *
  * The `Record<string, unknown>` return is deliberate: Pintura is a

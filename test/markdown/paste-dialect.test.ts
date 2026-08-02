@@ -12,7 +12,9 @@ describe('Paste dialect markdown-it engine', function () {
     it('deduplicates heading ids', function () {
       const result = pasteDialect.render('# Hello\n# Hello', { inklingVersion: '4.0' })
       expect(result).toMatch(/<h1 id="hello">/)
-      expect(result).toMatch(/<h1 id="hello2">/)
+      // the shared dedup policy (`@/utils/heading-id-tracker`): repeats get
+      // the hyphenated `<base>-<n>` form, same as the HTML renderer
+      expect(result).toMatch(/<h1 id="hello-1">/)
     })
 
     it('does not leak heading dedup state across pasteDialect.render() calls', function () {

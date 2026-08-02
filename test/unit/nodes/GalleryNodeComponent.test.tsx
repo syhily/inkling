@@ -8,7 +8,8 @@ import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext, {
+import {
+  InklingHostIntegrationProvider,
   type CardConfig,
   type FileUploader,
 } from '@/context/InklingHostIntegrationContext'
@@ -88,7 +89,7 @@ describe('GalleryNodeComponent', () => {
     const composerValue = createHostIntegrationValue({ upload, fileTypes: IMAGE_FILE_TYPES })
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     return render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           <GalleryNodeComponent
             captionEditor={createTestEditor({ nodes: [GalleryNode], headless: false })}
@@ -96,7 +97,7 @@ describe('GalleryNodeComponent', () => {
             nodeKey={nodeKey}
           />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
   }
 
@@ -264,7 +265,7 @@ describe('GalleryNodeComponent', () => {
       const composerValue = createHostIntegrationValue({ cardConfig, fileTypes: IMAGE_FILE_TYPES })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
-        <InklingHostIntegrationContext.Provider value={composerValue}>
+        <InklingHostIntegrationProvider value={composerValue}>
           <CardSelectionStoreProvider>
             <GalleryNodeComponent
               captionEditor={createTestEditor({ nodes: [GalleryNode], headless: false })}
@@ -272,7 +273,7 @@ describe('GalleryNodeComponent', () => {
               nodeKey={nodeKey}
             />
           </CardSelectionStoreProvider>
-        </InklingHostIntegrationContext.Provider>,
+        </InklingHostIntegrationProvider>,
       )
     }
 

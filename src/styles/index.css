@@ -21,10 +21,11 @@
 /* -------------------------------------------------------------------- */
 
 /* Theme token defaults, scoped to the editor container. Hosts override any
-   token by re-declaring it under `.inkling-lexical` (see docs/theming.md);
-   the declarations live in `@layer theme` so unlayered host styles always
-   win. Keep this block in name/value parity with ./theme.css — the parity
-   is pinned by test/unit/theme-tokens.test.ts. */
+   token by re-declaring it under `.inkling-lexical` (see ./theme.css — the
+   theming contract's single source of truth); the declarations live in
+   `@layer theme` so unlayered host styles always win. Keep this block in
+   name/value parity with ./theme.css — the parity is pinned by
+   test/unit/theme-tokens.test.ts. */
 @layer theme {
   .inkling-lexical {
     --color-accent: var(--inkling-accent-color, #ff0095);

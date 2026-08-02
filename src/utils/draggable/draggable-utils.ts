@@ -5,8 +5,7 @@
 // drop-allowance / insert-index rules that used to live here
 // (isCardDropAllowed) were consolidated into @/utils/draggable/reorder-rules,
 // which is deliberately NOT synced — the gallery repo keeps its own
-// direction-specific copy. See docs/tech-debt-triage.md for the duplication
-// decision.
+// direction-specific copy.
 //
 // unlike Element.closest, getParent can match the passed-in element itself;
 // the name is kept for parity with the inkling-card-gallery copy — renaming

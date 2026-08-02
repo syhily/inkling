@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { tick, updateEditor } from '#/utils/test-editor'
 import { $createBaseHeaderNode, BaseHeaderNode } from '@/nodes/base/nodes/header/HeaderNode'
+import { headerBackgroundUploadIntent } from '@/nodes/upload-intent'
 import { getImageDimensions } from '@/utils/getImageDimensions'
-import { headerBackgroundUploadIntent } from '@/utils/upload-intent'
 
 vi.mock('@/utils/getImageDimensions', () => ({
   getImageDimensions: vi.fn(),

@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockedFunction } 
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { tick, updateEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext, { type FileUploader } from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider, type FileUploader } from '@/context/InklingHostIntegrationContext'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 import { VideoNode, $createVideoNode } from '@/nodes/VideoNode'
 import { VideoNodeComponent } from '@/nodes/VideoNodeComponent'
@@ -153,7 +153,7 @@ describe('VideoNodeComponent', () => {
     return render(
       <CollaborationContext.Provider value={collaborationValue}>
         <LexicalComposerContext.Provider value={composerValue}>
-          <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
+          <InklingHostIntegrationProvider value={inklingComposerValue}>
             <CardSelectionStoreProvider>
               <VideoNodeComponent
                 captionEditor={captionEditor}
@@ -168,7 +168,7 @@ describe('VideoNodeComponent', () => {
                 triggerFileDialog={triggerFileDialog}
               />
             </CardSelectionStoreProvider>
-          </InklingHostIntegrationContext.Provider>
+          </InklingHostIntegrationProvider>
         </LexicalComposerContext.Provider>
       </CollaborationContext.Provider>,
     )
@@ -398,7 +398,7 @@ describe('VideoNodeComponent', () => {
       return render(
         <CollaborationContext.Provider value={collaborationValue}>
           <LexicalComposerContext.Provider value={composerValue}>
-            <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
+            <InklingHostIntegrationProvider value={inklingComposerValue}>
               <CardSelectionStoreProvider>
                 <VideoNodeComponent
                   captionEditor={captionEditor}
@@ -413,7 +413,7 @@ describe('VideoNodeComponent', () => {
                   triggerFileDialog={false}
                 />
               </CardSelectionStoreProvider>
-            </InklingHostIntegrationContext.Provider>
+            </InklingHostIntegrationProvider>
           </LexicalComposerContext.Provider>
         </CollaborationContext.Provider>,
       )

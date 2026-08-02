@@ -1,11 +1,12 @@
 import DOMPurify, { type Config as DOMPurifyConfig, type WindowLike } from 'dompurify'
 
-import type { ExportDOMDom, ExportDOMOptions, ImageOptimizationOptions } from '@/nodes/base/export-dom'
+import type { ExportDOMDom, ExportDOMOptions, ExportPolicyKey, ImageOptimizationOptions } from '@/nodes/base/export-dom'
 
 import { cleanDOM } from '@/nodes/base/utils/clean-dom'
 import { isLocalContentImage as isLocalContentImageImpl } from '@/nodes/base/utils/content-image-url'
 import { escapeHtml } from '@/nodes/base/utils/escape-html'
 import { isSafeMediaUrl, isSafeUrl } from '@/nodes/base/utils/is-safe-url'
+import { createHeadingIdTracker } from '@/utils/heading-id-tracker'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 
 /**
@@ -184,10 +185,21 @@ export interface RenderContext {
   readonly imageOptimization: ImageOptimizationOptions | undefined
   readonly canTransformImage: ((src: string) => boolean) | undefined
   readonly canTransformImageToFormat: ((format: string) => boolean) | undefined
-  /** The markdown card's slug-policy input, consumed by `@/markdown/paste-dialect`. */
+  /**
+   * The markdown card's slug-policy input, consumed by `@/markdown/paste-dialect`.
+   *
+   * @deprecated Read `resolveExportPolicy('inkling-version')` instead — this
+   * field is that call's resolved value, kept for renderer compatibility.
+   */
   readonly inklingVersion: string | undefined
   /** image renderer: emit `<picture>` sources for modern formats (absent when not passed). */
   readonly pictureImageFormats: boolean | undefined
+  /**
+   * Keyed export-policy resolution (CONTEXT.md-style render-time policy):
+   * the host's `options.resolveExportPolicy` answer, falling back to the
+   * deprecated flat option key when the resolver leaves it unanswered.
+   */
+  resolveExportPolicy(key: ExportPolicyKey): string | undefined
   /**
    * Request-scoped render-time meta resolver, carried by reference (absent
    * when not passed). Synchronous by contract — see the option's declaration
@@ -237,7 +249,8 @@ export interface RenderContext {
    * `usedIdAttributes` (plan 040 Step 6): records one use of the slugified
    * base `id` and returns the id to emit — the base id on first use,
    * `<id>-<n>` on repeats. The one mutable-state method on the context; the
-   * map is internal per-render state, safe because a context is never shared
+   * map is internal per-render state (the shared tracker in
+   * `@/utils/heading-id-tracker`), safe because a context is never shared
    * across renders.
    */
   trackIdAttribute(id: string): string
@@ -290,7 +303,6 @@ function resolveCreateDocument(options: ExportDOMOptions): () => Document {
 const VERBATIM_OPTION_KEYS = [
   'canTransformImage',
   'canTransformImageToFormat',
-  'inklingVersion',
   'pictureImageFormats',
   'resolveRenderMeta',
 ] as const satisfies readonly (keyof ExportDOMOptions)[]
@@ -308,11 +320,35 @@ function pickVerbatimOptions(options: ExportDOMOptions): VerbatimOptions {
 }
 
 /**
+ * The deprecated flat option keys each policy key falls back to when the
+ * host's resolver leaves it unanswered — the compatibility forwarding from
+ * the pre-seam `ExportDOMOptions` shape.
+ */
+const LEGACY_POLICY_OPTION_KEYS: Record<ExportPolicyKey, keyof ExportDOMOptions> = {
+  'footnotes-section-title': 'footnotesSectionTitle',
+  'inkling-version': 'inklingVersion',
+}
+
+/**
  * Builds the read-only render context for one render pass.
  */
 export function createRenderContext(options: ExportDOMOptions): RenderContext {
   const createDocument = resolveCreateDocument(options)
-  const usedIdAttributes: Record<string, number> = {}
+  // the per-render heading-id dedup state — the shared tracker's map
+  // (`@/utils/heading-id-tracker`), not a local one
+  const trackIdAttribute = createHeadingIdTracker()
+
+  // The keyed policy seam: the resolver answers first, the deprecated flat
+  // keys forward as its fallback, and an unanswered key stays undefined (the
+  // consumer's documented default path).
+  const resolveExportPolicy = (key: ExportPolicyKey): string | undefined => {
+    const resolved = options.resolveExportPolicy?.(key)
+    if (resolved !== undefined) {
+      return resolved
+    }
+    const legacy = options[LEGACY_POLICY_OPTION_KEYS[key]]
+    return typeof legacy === 'string' ? legacy : undefined
+  }
 
   const siteUrl = options.siteUrl
   const imageBaseUrl = options.imageBaseUrl
@@ -351,6 +387,9 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
 
   const context: RenderContext = {
     ...pickVerbatimOptions(options),
+    // oxlint-disable-next-line typescript/no-deprecated -- the deprecated compatibility field is populated here, at the seam, so external renderers reading it keep working
+    inklingVersion: resolveExportPolicy('inkling-version'),
+    resolveExportPolicy,
     imageOptimization,
     createDocument,
     safeUrl(kind, value) {
@@ -379,15 +418,7 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
       boundDOMPurify ??= DOMPurify(resolveWindow() as unknown as WindowLike)
       return boundDOMPurify.sanitize(html, config)
     },
-    trackIdAttribute(id) {
-      const seen = usedIdAttributes[id]
-      if (seen === undefined) {
-        usedIdAttributes[id] = 1
-        return id
-      }
-      usedIdAttributes[id] = seen + 1
-      return `${id}-${seen}`
-    },
+    trackIdAttribute,
   }
 
   return Object.freeze(context)

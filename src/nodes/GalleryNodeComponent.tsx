@@ -7,13 +7,13 @@ import type { GalleryImage } from '@/types/gallery'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { GalleryCard } from '@/components/ui/cards/GalleryCard'
 import { useCardIsSelected } from '@/context/CardSelectionStoreContext'
-import { useCardChrome } from '@/hooks/useCardChrome'
+import { useInklingHostEssentials } from '@/context/InklingHostIntegrationContext'
 import { useGalleryImages } from '@/hooks/useGalleryImages'
 import useGalleryReorder from '@/hooks/useGalleryReorder'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import { $isGalleryNode, recalculateImageRows } from '@/nodes/GalleryNode'
+import { galleryUploadIntent } from '@/nodes/upload-intent'
 import { createPreviewLeasePool } from '@/utils/preview-lease'
-import { galleryUploadIntent } from '@/utils/upload-intent'
 
 export interface GalleryNodeComponentProps {
   nodeKey: NodeKey
@@ -28,8 +28,7 @@ export function GalleryNodeComponent({
   captionEditorInitialState,
   triggerFileDialog,
 }: GalleryNodeComponentProps) {
-  const { host } = useCardChrome(nodeKey, $isGalleryNode)
-  const { fileUploader } = host
+  const { fileUploader } = useInklingHostEssentials()
   const isSelected = useCardIsSelected(nodeKey)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const { images, setImages, setPreviewImages } = useGalleryImages(nodeKey)

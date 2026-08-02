@@ -83,6 +83,25 @@ describe('card pipeline layering guard', () => {
     expect(offenders).toEqual({})
   })
 
+  it('card declarations never import the command table — the direction is reversed', () => {
+    // card-commands is a DERIVED VIEW over the declarations: menu entries and
+    // insert specs name commands by string (CardMenuCommand), and
+    // card-commands keys its command objects by node type. A declaration
+    // importing card-commands (even type-only) restores the old reverse
+    // dependency — fail here, not in code review.
+    const declarationsDir = join('src', 'nodes', 'cards')
+    const offenders: string[] = []
+
+    for (const name of listSourceFiles(declarationsDir).filter((name) => name.endsWith('.declaration.ts'))) {
+      const source = readFileSync(join(declarationsDir, name), 'utf8')
+      if (/from\s+['"](\.\/card-commands|@\/nodes\/cards\/card-commands)['"]/.test(source)) {
+        offenders.push(name.split(sep).join('/'))
+      }
+    }
+
+    expect(offenders).toEqual([])
+  })
+
   it('registry-layer modules never value-import the wrapper layer', () => {
     const offenders: Record<string, string[]> = {}
 
@@ -99,7 +118,7 @@ describe('card pipeline layering guard', () => {
   it('getEditorCardNodes stays off the wrapper node registry', () => {
     // its own comment: importing the wrapper registry would close an import
     // cycle (wrapper layer → decorate tree → InklingComposableEditor →
-    // DragDropPastePlugin → getEditorCardNodes)
-    expect(runtimeImportSpecifiers('src/utils/getEditorCardNodes.ts')).not.toContain('@/nodes/cards/card-wrappers')
+    // DragDropPastePlugin → file-drop-routing → editor-card-nodes)
+    expect(runtimeImportSpecifiers('src/nodes/cards/editor-card-nodes.ts')).not.toContain('@/nodes/cards/card-wrappers')
   })
 })

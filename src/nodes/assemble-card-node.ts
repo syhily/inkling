@@ -6,7 +6,7 @@ import type {
   CardSpecFieldMap,
   NestedEditorSpec,
   TransientPropSpec,
-} from '@/nodes/base/generate-decorator-node'
+} from '@/nodes/base/card-specs'
 import type { CardImportSpec } from '@/nodes/base/import-spec'
 import type { CardDeclaration } from '@/nodes/cards/card-declaration'
 

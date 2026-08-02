@@ -11,7 +11,7 @@ import InklingCollaborationContext, {
   noopWebsocketProviderFactory,
   type LexicalProviderFactory,
 } from '@/context/InklingCollaborationContext'
-import InklingHostIntegrationContext, { type FileUploader } from '@/context/InklingHostIntegrationContext'
+import { type FileUploader, useInklingHostEssentials } from '@/context/InklingHostIntegrationContext'
 import trackEvent from '@/utils/analytics'
 import { normalizeInitialEditorState } from '@/utils/initial-document'
 
@@ -110,7 +110,7 @@ describe('InklingComposer', function () {
     let upload: ((files: FileList | File[]) => Promise<unknown>) | undefined
 
     function FileUploadConsumer() {
-      const { fileUploader } = React.useContext(InklingHostIntegrationContext)
+      const { fileUploader } = useInklingHostEssentials()
       const uploader = fileUploader.useFileUpload('image')
       upload = uploader.upload
       return null
@@ -249,7 +249,7 @@ describe('InklingComposer', function () {
     let captured: FileUploader | undefined
 
     function FileUploaderConsumer() {
-      captured = React.useContext(InklingHostIntegrationContext).fileUploader
+      captured = useInklingHostEssentials().fileUploader
       return null
     }
 

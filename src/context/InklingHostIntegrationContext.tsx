@@ -106,7 +106,7 @@ export interface ImageLibrarySettings {
 
 export interface LibrarySettings {
   /**
-   * The host's image media library (docs/kobato-fit-plan.md C8). Present =
+   * The host's image media library. Present =
    * the image card's menu gains an "Image library" entry opening the picker.
    * The three host-schema keys (`thumbhash`/`storagePath`/`imageId`) ride the
    * insert dataset and are silently ignored by the stock image declaration —
@@ -151,6 +151,11 @@ export interface CardConfig
 
 // Host-integration lifecycle (plan 047): the values the host application
 // hands the editor — uploads, card behaviour flags, and the error sink.
+// This is the WHOLE-value transport shape: the composer props and the
+// `InklingHostIntegrationProvider` facade speak it, but no component
+// subscribes to it — consumers subscribe to the per-lifecycle channels
+// below (plan C4), so one feature config's identity change re-renders only
+// that feature's consumers instead of every host-integration consumer.
 export interface InklingHostIntegrationContextValue {
   fileUploader: FileUploader
   cardConfig: CardConfig
@@ -164,12 +169,151 @@ export interface InklingHostIntegrationContextValue {
   dragScrollContainerSelector?: string
 }
 
-const InklingHostIntegrationContext = React.createContext<InklingHostIntegrationContextValue>({
+/* The editor-level channel: the uploader and the error sink — stable for
+ * the editor's lifetime (the `useFileUpload` identity contract in
+ * src/hooks/useMediaCardUpload.ts), so one context serves every consumer. */
+export interface InklingHostEssentials {
+  fileUploader: FileUploader
+  onError: (error: unknown, info: React.ErrorInfo) => void
+}
+
+const InklingHostEssentialsContext = React.createContext<InklingHostEssentials>({
   fileUploader: {
     useFileUpload: () => ({ upload: () => Promise.resolve(undefined) }),
   },
-  cardConfig: {},
   onError: () => {},
 })
 
-export default InklingHostIntegrationContext
+/** The editor-level channel: the host's file uploader and error sink. */
+export function useInklingHostEssentials(): InklingHostEssentials {
+  return React.useContext(InklingHostEssentialsContext)
+}
+
+/* The feature-level channels: one context per CardConfig slice (telemetry
+ * excepted — it never enters a context; the composer reads it from props
+ * and hands it to the page-global telemetry port directly). A slice's
+ * identity changing re-renders only that channel's consumers. */
+const InklingGifSettingsContext = React.createContext<GifSettings>({})
+const InklingLinkingSettingsContext = React.createContext<LinkingSettings>({})
+const InklingSnippetSettingsContext = React.createContext<SnippetSettings>({})
+const InklingUploadSettingsContext = React.createContext<UploadSettings>({})
+const InklingMathSettingsContext = React.createContext<MathSettings>({})
+const InklingLibrarySettingsContext = React.createContext<LibrarySettings>({})
+
+/** The GIF feature channel (`klipy`/`tenor` provider config). */
+export function useInklingGifSettings(): GifSettings {
+  return React.useContext(InklingGifSettingsContext)
+}
+
+/** The linking feature channel (link search/autocomplete, site URL, bookmark embed). */
+export function useInklingLinkingSettings(): LinkingSettings {
+  return React.useContext(InklingLinkingSettingsContext)
+}
+
+/** The snippet feature channel (snippet list and create/delete callbacks). */
+export function useInklingSnippetSettings(): SnippetSettings {
+  return React.useContext(InklingSnippetSettingsContext)
+}
+
+/** The upload feature channel (image widths, the Pintura editor config). */
+export function useInklingUploadSettings(): UploadSettings {
+  return React.useContext(InklingUploadSettingsContext)
+}
+
+/** The math feature channel (the host's server-side render callback). */
+export function useInklingMathSettings(): MathSettings {
+  return React.useContext(InklingMathSettingsContext)
+}
+
+/** The media-library feature channel (the host's image library). */
+export function useInklingLibrarySettings(): LibrarySettings {
+  return React.useContext(InklingLibrarySettingsContext)
+}
+
+/* The drag-scroll narrow channel: a single consumer
+ * (DragDropReorderPlugin), so it rides its own context instead of
+ * re-rendering the editor-level channel's consumers on identity changes. */
+const InklingDragScrollContext = React.createContext<string | undefined>(undefined)
+
+/** The host's drag auto-scroll container selector (undefined = the document default). */
+export function useInklingDragScrollContainerSelector(): string | undefined {
+  return React.useContext(InklingDragScrollContext)
+}
+
+/**
+ * The whole-value facade over the per-lifecycle channels: the composer
+ * (and tests, which build whole values through
+ * `test/utils/host-integration-context.ts`) mounts this once; every slice
+ * is memoized on its own leaf references, so a host rebuilding `cardConfig`
+ * every render only invalidates the channels whose leaves actually
+ * changed. `cardConfig.telemetry` is deliberately dropped here — telemetry
+ * is page-global and stays a composer-prop concern
+ * (src/components/InklingComposerBase.tsx).
+ */
+export function InklingHostIntegrationProvider({
+  value,
+  children,
+}: {
+  value: InklingHostIntegrationContextValue
+  children: React.ReactNode
+}) {
+  const { cardConfig } = value
+
+  const essentials = React.useMemo<InklingHostEssentials>(
+    () => ({ fileUploader: value.fileUploader, onError: value.onError }),
+    [value.fileUploader, value.onError],
+  )
+  const gifSettings = React.useMemo<GifSettings>(
+    () => ({ klipy: cardConfig.klipy, tenor: cardConfig.tenor }),
+    [cardConfig.klipy, cardConfig.tenor],
+  )
+  const linkingSettings = React.useMemo<LinkingSettings>(
+    () => ({
+      searchLinks: cardConfig.searchLinks,
+      fetchAutocompleteLinks: cardConfig.fetchAutocompleteLinks,
+      siteUrl: cardConfig.siteUrl,
+      fetchEmbed: cardConfig.fetchEmbed,
+    }),
+    [cardConfig.searchLinks, cardConfig.fetchAutocompleteLinks, cardConfig.siteUrl, cardConfig.fetchEmbed],
+  )
+  const snippetSettings = React.useMemo<SnippetSettings>(
+    () => ({
+      snippets: cardConfig.snippets,
+      createSnippet: cardConfig.createSnippet,
+      deleteSnippet: cardConfig.deleteSnippet,
+    }),
+    [cardConfig.snippets, cardConfig.createSnippet, cardConfig.deleteSnippet],
+  )
+  const uploadSettings = React.useMemo<UploadSettings>(
+    () => ({ image: cardConfig.image, pinturaConfig: cardConfig.pinturaConfig }),
+    [cardConfig.image, cardConfig.pinturaConfig],
+  )
+  const mathSettings = React.useMemo<MathSettings>(
+    () => ({ renderMath: cardConfig.renderMath }),
+    [cardConfig.renderMath],
+  )
+  const librarySettings = React.useMemo<LibrarySettings>(
+    () => ({ imageLibrary: cardConfig.imageLibrary }),
+    [cardConfig.imageLibrary],
+  )
+
+  return (
+    <InklingHostEssentialsContext.Provider value={essentials}>
+      <InklingGifSettingsContext.Provider value={gifSettings}>
+        <InklingLinkingSettingsContext.Provider value={linkingSettings}>
+          <InklingSnippetSettingsContext.Provider value={snippetSettings}>
+            <InklingUploadSettingsContext.Provider value={uploadSettings}>
+              <InklingMathSettingsContext.Provider value={mathSettings}>
+                <InklingLibrarySettingsContext.Provider value={librarySettings}>
+                  <InklingDragScrollContext.Provider value={value.dragScrollContainerSelector}>
+                    {children}
+                  </InklingDragScrollContext.Provider>
+                </InklingLibrarySettingsContext.Provider>
+              </InklingMathSettingsContext.Provider>
+            </InklingUploadSettingsContext.Provider>
+          </InklingSnippetSettingsContext.Provider>
+        </InklingLinkingSettingsContext.Provider>
+      </InklingGifSettingsContext.Provider>
+    </InklingHostEssentialsContext.Provider>
+  )
+}

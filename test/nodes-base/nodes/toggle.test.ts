@@ -8,7 +8,7 @@ import { expectPrettifiedHtml } from '#/nodes-base/test-utils/assertions'
 import { createDocument, dom, html } from '#/nodes-base/test-utils/index'
 import { editorTest } from '#/utils/test-editor'
 import { BaseToggleNode, $createBaseToggleNode, $isToggleNode } from '@/nodes/base/index'
-import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
+import { populateNestedEditor, setupNestedEditor } from '@/nodes/nested-editors'
 
 const editorNodes = [BaseToggleNode]
 

@@ -7,7 +7,7 @@ import {
   useLinkDropdownEscape,
   useLinkDropdownOpenedTracking,
 } from '@/components/ui/LinkSuggestionList'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingLinkingSettings } from '@/context/InklingHostIntegrationContext'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { useSearchLinks, type ListOptionItem } from '@/hooks/useSearchLinks'
@@ -24,9 +24,7 @@ interface LinkInputProps {
 // Enter-submits-raw) lives here once; the search capability only changes
 // what renders below the input.
 export function LinkInput({ href, update, cancel }: LinkInputProps) {
-  const {
-    cardConfig: { searchLinks },
-  } = React.useContext(InklingHostIntegrationContext)
+  const { searchLinks } = useInklingLinkingSettings()
   const labels = useInklingLabels()
 
   // store the href/query in state so we can update it without affecting the saved editor value

@@ -9,7 +9,7 @@ import { cx } from '@/utils/cx'
 
 /**
  * Upload chrome — the visual half of the media cards' upload UI (the headless
- * flow is "upload intent", src/utils/upload-intent.ts; this module never
+ * flow is "upload intent", src/nodes/upload-intent.ts; this module never
  * touches it). It owns the pieces that were copy-pasted across AudioCard,
  * FileCard, ImageCard, VideoCard, GalleryCard, and MediaUploader: the
  * empty↔uploading swap (UploadPlaceholder), the hidden file input

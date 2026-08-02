@@ -4,7 +4,7 @@ import { FORMAT_TEXT_COMMAND, type LexicalEditor } from 'lexical'
 import React from 'react'
 
 import { ToolbarMenu, ToolbarMenuItem, ToolbarMenuSeparator, type ToolbarIconName } from '@/components/ui/ToolbarMenu'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingSnippetSettings } from '@/context/InklingHostIntegrationContext'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import {
   $cycleQuoteBlock,
@@ -52,9 +52,7 @@ export default function FormatToolbar({
     isItalic: false,
     blockType: 'paragraph',
   })
-  const {
-    cardConfig: { createSnippet },
-  } = React.useContext(InklingHostIntegrationContext)
+  const { createSnippet } = useInklingSnippetSettings()
   const labels = useInklingLabels()
 
   const { hideHeading, hideQuotes, hideSnippets, hideBold } = resolveFormatToolbarVisibility(editor, {

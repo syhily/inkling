@@ -1,11 +1,9 @@
-import type { TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type { TransientPropSpec } from '@/nodes/base/card-specs'
 
-import { transientInitialFileProp, transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
+import { transientInitialFileProp, transientTriggerFileDialogProp } from '@/nodes/base/card-specs'
 import { BaseFileNode } from '@/nodes/base/nodes/file/FileNode'
 
 import type { CardDeclaration } from './card-declaration'
-
-import { INSERT_FILE_COMMAND } from './card-commands'
 
 // `as const` keeps the literal `name`s and `initial` value types on the
 // declaration's type — the `__*` field map derives both from them
@@ -25,7 +23,7 @@ export const fileDeclaration = {
       labelKey: 'file',
       desc: 'Upload a downloadable file',
       icon: 'file',
-      command: INSERT_FILE_COMMAND,
+      command: 'insert',
       insertParams: {
         triggerFileDialog: true,
       },
@@ -34,10 +32,11 @@ export const fileDeclaration = {
       shortcut: '/file',
     },
   ],
-  insert: { command: INSERT_FILE_COMMAND },
+  // presence is the opt-in — no flags
+  insert: {},
   uploadType: 'file',
   // diverges from the node type: the toolbar label is a live e2e selector
   // contract ("file-upload"), not a transform of "file"
   toolbarLabel: 'file-upload',
-  markdown: true,
+  markdown: { kind: 'fence' },
 } satisfies CardDeclaration<'file'>

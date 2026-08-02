@@ -8,7 +8,7 @@ import {
   html,
   initialize,
   waitForCardContentSynced,
-  waitForHistoryGroupBoundary,
+  waitForEditorQuiet,
 } from '#/utils/e2e'
 
 async function insertToggleCard(page: Page) {
@@ -282,10 +282,18 @@ test.describe('Toggle card', () => {
     await page.keyboard.press('Escape')
     await page.keyboard.press('Enter')
     await page.keyboard.press('Backspace')
+    // First Backspace deletes the empty paragraph and selects the card; wait for
+    // the selection so the update has committed before the merge-window wait
+    // starts — under load the commit lags the keyup, shrinking the effective gap.
+    await expect(page.locator('[data-inkling-card="toggle"]')).toHaveAttribute('data-inkling-card-selected', 'true')
     // Lexical's history merges consecutive same-type changes within 1000ms;
-    // wait so the card deletion becomes its own undo group
-    await waitForHistoryGroupBoundary(page)
+    // wait for full update-silence past the merge window (across the nested
+    // editors too — a late nested update would pollute the deletion's undo
+    // entry) so the card deletion becomes its own undo group.
+    await waitForEditorQuiet(page)
     await page.keyboard.press('Backspace')
+    // wait for the deletion to commit so the undo below targets it
+    await expect(page.locator('[data-inkling-card="toggle"]')).not.toBeVisible()
     await page.keyboard.press(`${ctrlOrCmd(page)}+z`)
 
     // verify the card is restored and selected after undo

@@ -1,4 +1,4 @@
-import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/card-specs'
 
 import { BaseCodeBlockNode } from '@/nodes/base/nodes/codeblock/CodeBlockNode'
 
@@ -35,7 +35,7 @@ export const codeBlockDeclaration = {
   // diverges from the node type: the toolbar label is a live e2e selector
   // contract ("code-block"), not a transform of "codeblock"
   toolbarLabel: 'code-block',
-  // Markdown-eligible with no card transformer: the code fence is handled
+  // Markdown-eligible with no card fence: the code fence is handled
   // by DEFAULT_TRANSFORMERS (`CODE_BLOCK` in `@/markdown/transformers`).
-  markdown: true,
+  markdown: { kind: 'exempt' },
 } satisfies CardDeclaration<'codeblock'>

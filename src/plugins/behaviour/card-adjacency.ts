@@ -7,12 +7,13 @@ import {
   $getSelection,
   $isDecoratorNode,
   $isElementNode,
+  $isParagraphNode,
   $isRangeSelection,
   $setSelection,
 } from 'lexical'
 
 import { $isInklingCard } from '@/nodes/base'
-import { $isAtTopOfNode, getTopLevelNativeElement } from '@/utils'
+import { $isAtTopOfNode, $selectDecoratorNode, getTopLevelNativeElement } from '@/utils'
 import { $ensureParagraphAfterCard } from '@/utils/$ensureParagraphAfterCard'
 
 import type { CardSelectionStore } from './cardSelectionStore'
@@ -185,6 +186,98 @@ function getCardSibling(node: LexicalNode, direction: 'previous' | 'next'): Deco
   return $isDecoratorNode(sibling) ? sibling : null
 }
 
+// The two destructive-key surgeries below were the backspace/delete mirror
+// blocks — same body, flipped direction ('previous'/'next') — merged into
+// direction-parameterized $ functions on the selection-extension precedent
+// (see ./keyboard-navigation/selection-extension.ts's header note). The
+// handlers keep their event choreography (which branch preventDefaults) and
+// their position in the policy cascade; the tree reads and writes live here.
+
+/**
+ * The "key eats the adjacent card, the caret stays put" surgery: remove the
+ * card logically before ('previous', backspace) or after ('next', forward
+ * delete) the collapsed caret. The 'previous' direction keeps its two extra
+ * guards from the backspace handler — the anchor's parent must BE the
+ * top-level element (lists, where the parent is not the paragraph) and the
+ * anchor must be its first child (LinkNode / HorizontalRule children in
+ * paragraphs). Returns true when a card was removed.
+ */
+export function $removeLogicallyAdjacentCard(direction: 'previous' | 'next'): boolean {
+  const selection = $getSelection()
+  if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
+    return false
+  }
+  const anchorNode = selection.anchor.getNode()
+
+  if (direction === 'previous') {
+    const topLevelElement = anchorNode.getTopLevelElement()
+    if (!topLevelElement) {
+      return false
+    }
+    const anchorNodeParent = anchorNode.getParent()
+    if (anchorNodeParent !== topLevelElement || !anchorNodeParent?.getFirstChild()?.is(anchorNode)) {
+      return false
+    }
+  }
+
+  const card = $getLogicallyAdjacentCard(direction)
+  if (!card) {
+    return false
+  }
+  card.remove()
+  return true
+}
+
+/**
+ * How the empty-block surgery reads emptiness — the deliberate divergence
+ * between the two mirror sites, kept as a named policy:
+ *
+ * - 'paragraph-is-empty' (backspace): the anchor node itself must be an
+ *   empty ParagraphNode.
+ * - 'from-mode-blank' (forward delete): the whole top-level block's text is
+ *   blank and the caret sits at offset 0. From-mode, not selection-mode:
+ *   selection-mode's 'next' boundary requires an element anchor at
+ *   offset === getChildrenSize(), which a whitespace-only block with
+ *   zero-text children (e.g. a lone LineBreakNode, caret at element
+ *   offset 0) does not satisfy — this policy still removes the block and
+ *   selects the card there.
+ */
+export type EmptyBlockCheck = 'paragraph-is-empty' | 'from-mode-blank'
+
+/**
+ * The "delete the empty block, select the adjacent card" surgery: remove
+ * the caret's top-level block when `check` judges it empty and select the
+ * card logically adjacent to it ('previous' for backspace, 'next' for
+ * forward delete). Returns true when the block was removed.
+ */
+export function $removeEmptyBlockAndSelectCard(direction: 'previous' | 'next', check: EmptyBlockCheck): boolean {
+  const selection = $getSelection()
+  if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
+    return false
+  }
+  const anchorNode = selection.anchor.getNode()
+  const topLevelElement = anchorNode.getTopLevelElement()
+  if (!topLevelElement) {
+    return false
+  }
+
+  const isEmpty =
+    check === 'paragraph-is-empty'
+      ? $isParagraphNode(anchorNode) && anchorNode.isEmpty()
+      : topLevelElement.getTextContent().trim() === '' && selection.anchor.offset === 0
+  if (!isEmpty) {
+    return false
+  }
+
+  const card = $getLogicallyAdjacentCard(direction, topLevelElement)
+  if (!card) {
+    return false
+  }
+  topLevelElement.remove()
+  $selectDecoratorNode(card)
+  return true
+}
+
 /** First-visual-line verdict through the geometry seam (delete-line's isFirstLine check). */
 export function $isCaretAtBlockTop(geometry: CardAdjacencyGeometry = defaultCardAdjacencyGeometry): boolean {
   return geometry.isCaretAtBlockTop()
@@ -260,7 +353,7 @@ export function $selectCard(
   selection.add(typeof nodeOrKey === 'string' ? nodeOrKey : nodeOrKey.getKey())
   $setSelection(selection)
   const rootElement = editor.getRootElement()
-  if (rootElement && (focus === 'always' || (focus === 'if-blurred' && document.activeElement !== rootElement))) {
+  if (rootElement && (focus === 'always' || (focus === 'if-blurred' && !editorOwnsFocus(editor)))) {
     focusEditorRoot(editor)
   }
 }

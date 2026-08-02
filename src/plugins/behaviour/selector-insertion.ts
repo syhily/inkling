@@ -9,7 +9,7 @@ import { INSERT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { getRegisteredNodeMap } from '@/utils/lexical-internals'
 
 // Selector insertion — the headless surgery behind the gif and image-library
-// selector overlays (docs/kobato-fit-plan.md C8 §6): build the card from the
+// selector overlays: build the card from the
 // picked dataset, insert it through the shared card insert command, and
 // remove the placeholder node the overlay rode on.
 // INSERT_FROM_GIF_COMMAND and INSERT_FROM_LIBRARY_COMMAND share the one

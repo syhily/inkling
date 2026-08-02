@@ -3,7 +3,7 @@ import React from 'react'
 
 import { AtLinkResultsPopup } from '@/components/ui/AtLinkResultsPopup'
 import Portal from '@/components/ui/Portal'
-import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
+import { type LinkingSettings, useInklingLinkingSettings } from '@/context/InklingHostIntegrationContext'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { useSearchLinks, type ListOptionItem, type ListOptionSection } from '@/hooks/useSearchLinks'
 import { AtLinkNode, AtLinkSearchNode } from '@/nodes/base'
@@ -30,8 +30,8 @@ function noResultOptions(noResultsLabel: string): ListOptionSection[] {
 }
 
 interface AtLinkPluginProps {
-  searchLinks: NonNullable<CardConfig['searchLinks']>
-  siteUrl?: CardConfig['siteUrl']
+  searchLinks: NonNullable<LinkingSettings['searchLinks']>
+  siteUrl?: LinkingSettings['siteUrl']
 }
 
 // At-link search adapter: subscribes to the headless session in
@@ -123,11 +123,10 @@ export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps)
 // wrapping InklingAtLinkPlugin means we can ensure all dependencies are available
 // before rendering the plugin, avoiding complex conditionals in the plugin itself
 export const AtLinkPlugin = () => {
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
+  const { searchLinks, siteUrl } = useInklingLinkingSettings()
   const [editor] = useLexicalComposerContext()
 
   // do nothing if we haven't been passed a way to search internal links
-  const { searchLinks, siteUrl } = cardConfig
   if (typeof searchLinks !== 'function') {
     return null
   }

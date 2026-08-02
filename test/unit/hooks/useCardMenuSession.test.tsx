@@ -19,10 +19,12 @@ function createFakeSelection() {
 
 function Harness({ getSelection }: { getSelection: () => CardMenuSessionSelection | null }) {
   const session = useCardMenuSession({ getSelection })
+  const anchorRange = React.useMemo(() => document.createRange(), [])
   return (
     <div>
       <output data-testid="is-open">{String(session.isOpen)}</output>
       <button type="button" data-testid="open" onClick={() => session.openMenu()} />
+      <button type="button" data-testid="open-anchor" onClick={() => session.openMenu({ anchor: anchorRange })} />
       <button type="button" data-testid="close" onClick={() => session.closeMenu()} />
       <button type="button" data-testid="close-reset" onClick={() => session.closeMenu({ resetCursor: true })} />
       <button type="button" data-testid="save" onClick={() => session.saveCursor(document.createRange())} />
@@ -64,6 +66,28 @@ describe('useCardMenuSession', () => {
 
     click('close')
     expect(isOpen()).toBe(false)
+  })
+
+  it('opening with an anchor leases it and restores the caret onto it', () => {
+    const fake = setup()
+    click('open-anchor')
+
+    expect(isOpen()).toBe(true)
+    expect(fake.selection.removeAllRanges).toHaveBeenCalledTimes(1)
+    expect(fake.ranges).toHaveLength(1)
+
+    // the anchor is the lease: a resetCursor close restores it again
+    click('close-reset')
+    expect(fake.selection.removeAllRanges).toHaveBeenCalledTimes(2)
+    expect(fake.ranges).toHaveLength(1)
+  })
+
+  it('opening without an anchor leaves the selection alone', () => {
+    const fake = setup()
+    click('open')
+
+    expect(isOpen()).toBe(true)
+    expect(fake.selection.removeAllRanges).not.toHaveBeenCalled()
   })
 
   it('restores the leased cursor range when closing with resetCursor', () => {

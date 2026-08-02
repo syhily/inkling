@@ -3,7 +3,7 @@ import React from 'react'
 
 import { LinkInput } from '@/components/ui/LinkInput'
 import Portal from '@/components/ui/Portal'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { useInklingLinkingSettings } from '@/context/InklingHostIntegrationContext'
 import { useSelectionAnchoredPopup } from '@/hooks/useSelectionAnchoredPopup'
 import { $applyLinkToSelection } from '@/plugins/behaviour/link-editing'
 import trackEvent from '@/utils/analytics'
@@ -18,7 +18,7 @@ interface LinkActionToolbarWithSearchProps {
 
 export function LinkActionToolbarWithSearch({ anchorElem, href, onClose }: LinkActionToolbarWithSearchProps) {
   const [editor] = useLexicalComposerContext()
-  const { cardConfig } = React.useContext(InklingHostIntegrationContext)
+  const { siteUrl } = useInklingLinkingSettings()
 
   const linkToolbarRef = React.useRef<HTMLDivElement | null>(null)
 
@@ -39,7 +39,7 @@ export function LinkActionToolbarWithSearch({ anchorElem, href, onClose }: LinkA
         trackEvent('Link dropdown: Internal link chosen', { context: 'text', fromLatest: type === 'default' })
       } else {
         try {
-          const target = isInternalUrl(updatedHref, cardConfig?.siteUrl) ? 'internal' : 'external'
+          const target = isInternalUrl(updatedHref, siteUrl) ? 'internal' : 'external'
           trackEvent('Link dropdown: URL entered', { context: 'text', target })
         } catch {
           // noop

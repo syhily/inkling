@@ -1,8 +1,4 @@
-import { createCommand } from 'lexical'
-
 import { defineCard, type DecoratorNodeProperty, generateDecoratorNode } from '@/'
-
-export const INSERT_MUSIC_PLAYER_COMMAND = createCommand('INSERT_MUSIC_PLAYER_COMMAND')
 
 const musicPlayerProperties = [{ name: 'src', default: '' }] as const satisfies readonly DecoratorNodeProperty[]
 
@@ -31,15 +27,14 @@ function MusicPlayerCard() {
 
 // A host card (CONTEXT.md: "host card") declared through the public seam:
 // this single defineCard call registers the assembled node class, the slash
-// menu entry, the insert command, the decorate render, and the toolbar label.
-// Runs at module top level, before the composer mounts.
+// menu entry, the insert command (derived from the node type — the spec
+// names it by string, never by object), the decorate render, and the
+// toolbar label. Runs at module top level, before the composer mounts.
 export const musicPlayer = defineCard({
   nodeType: 'musicPlayer',
   baseNode: BaseMusicPlayerNode,
-  insert: { command: INSERT_MUSIC_PLAYER_COMMAND },
-  menu: [
-    { label: 'Music', labelKey: 'music', icon: 'audio', command: INSERT_MUSIC_PLAYER_COMMAND, matches: ['music'] },
-  ],
+  insert: {},
+  menu: [{ label: 'Music', labelKey: 'music', icon: 'audio', command: 'insert', matches: ['music'] }],
   toolbarLabel: 'music-player',
   render: () => <MusicPlayerCard />,
 })

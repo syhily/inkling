@@ -3,9 +3,10 @@ import type { LexicalEditor } from 'lexical'
 import { createHeadlessEditor } from '@lexical/headless'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { getCardMenu } from '#/utils/card-menu'
 import { updateEditor } from '#/utils/test-editor'
 import { ButtonNode, $createButtonNode, $isButtonNode, INSERT_BUTTON_COMMAND } from '@/nodes/ButtonNode'
-import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
+import { getCardDragIcon } from '@/nodes/cards/card-menus'
 
 const editorNodes = [ButtonNode]
 

@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider, type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { CalloutNode, $createCalloutNode } from '@/nodes/CalloutNode'
 import { CalloutNodeComponent } from '@/nodes/CalloutNodeComponent'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
@@ -69,7 +69,7 @@ describe('CalloutNodeComponent', () => {
     return render(
       <CollaborationContext.Provider value={collaborationValue}>
         <LexicalComposerContext.Provider value={composerValue}>
-          <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
+          <InklingHostIntegrationProvider value={inklingComposerValue}>
             <CardSelectionStoreProvider>
               <CalloutNodeComponent
                 backgroundColor="blue"
@@ -78,7 +78,7 @@ describe('CalloutNodeComponent', () => {
                 nodeKey={nodeKey}
               />
             </CardSelectionStoreProvider>
-          </InklingHostIntegrationContext.Provider>
+          </InklingHostIntegrationProvider>
         </LexicalComposerContext.Provider>
       </CollaborationContext.Provider>,
     )

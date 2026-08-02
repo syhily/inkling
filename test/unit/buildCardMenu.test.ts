@@ -2,10 +2,10 @@ import { createCommand } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
 import type { CardConfig, SnippetItem } from '@/context/InklingHostIntegrationContext'
-import type { CardMenuSource, ResolveMenuLabel } from '@/utils/buildCardMenu'
+import type { CardMenuSource, ResolveMenuLabel } from '@/nodes/cards/card-menu-build'
 
-import { getCardMenu } from '@/nodes/cards/card-menus'
-import { buildCardMenu } from '@/utils/buildCardMenu'
+import { getCardMenu } from '#/utils/card-menu'
+import { buildCardMenu } from '@/nodes/cards/card-menu-build'
 
 const Icon = () => null
 type NodeEntries = Array<[string, CardMenuSource]>
@@ -827,7 +827,7 @@ describe('buildCardMenu', function () {
     })
   })
 
-  // Label resolution (docs/kobato-fit-plan.md C7 §3.3): the resolver is
+  // Label resolution: the resolver is
   // optional, so every test above also pins the default path — no resolver,
   // output byte-identical to the pre-C7 builder.
   describe('label resolution', function () {

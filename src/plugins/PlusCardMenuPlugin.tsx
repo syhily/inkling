@@ -1,231 +1,51 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { $setSelection, type LexicalCommand, type LexicalEditor } from 'lexical'
 import React from 'react'
 
-import { CardMenu } from '@/components/ui/CardMenu'
-import { PlusButton, PlusMenu } from '@/components/ui/PlusMenu'
-import { useCardMenu } from '@/hooks/useCardMenu'
-import { useCardMenuSession } from '@/hooks/useCardMenuSession'
-import {
-  registerPlusCardMenuTrigger,
-  resolvePlusHoverButtonVerdict,
-  shouldHidePlusButtonOnSelectionChange,
-  type PlusButtonVerdict,
-} from '@/plugins/behaviour/card-menu-trigger'
-import { resolveAnchoredPopupPlacement } from '@/utils/selection-anchored-popup'
+import { registerPlusCardMenuTrigger, resolvePlusHoverButtonVerdict } from '@/plugins/behaviour/card-menu-trigger'
+import { CardMenuPopup, type CardMenuPopupHandle } from '@/plugins/CardMenuPopup'
 
-// the button sits at its paragraph's top, parent-relative — the
-// anchored-popup seam's absolute at-anchor policy
-function getTopPosition(elem: Element): number {
-  const parent = elem.parentElement
-  if (!parent) {
-    return 0
-  }
-  const placement = resolveAnchoredPopupPlacement({
-    positioning: 'absolute',
-    absoluteEdge: 'at-anchor',
-    anchorRect: elem.getBoundingClientRect(),
-    containerRect: parent.getBoundingClientRect(),
-    popupHeight: 0,
-    scrollTop: 0,
-    scrollHeight: 0,
-    viewportHeight: 0,
-  })
-  return placement.top ?? 0
-}
-
-function getElementRange(elem: Element): Range {
-  const range = new Range()
-  range.setStart(elem, 0)
-  range.setEnd(elem, 0)
-  return range
-}
-
-function usePlusCardMenu(editor: LexicalEditor): React.ReactElement | null {
-  // the popup session (cursor lease, close policy, Escape/outside-mousedown)
-  // lives in useCardMenuSession and the trigger policy (caret/hover verdicts,
-  // the selectionchange hide rule) in @/plugins/behaviour/card-menu-trigger;
-  // this plugin keeps the mousemove/selectionchange wiring and the button's
-  // anchoring. cachedRange here is the button's anchor — a copy is leased to
-  // the session when the menu opens so closes can release it without losing
-  // the button's position.
-  const {
-    containerRef,
-    isOpen: isShowingMenu,
-    openMenu: openSessionMenu,
-    closeMenu,
-    insert: sessionInsert,
-    saveCursor,
-    restoreCursor,
-  } = useCardMenuSession()
-  const [isShowingButton, setIsShowingButton] = React.useState<boolean>(false)
-  const [topPosition, setTopPosition] = React.useState<number>(0)
-  const [cachedRange, setCachedRange] = React.useState<Range | null>(null)
-
-  const showButton = React.useCallback(
-    (elem: Element) => {
-      const range = getElementRange(elem)
-      setCachedRange(range)
-      setIsShowingButton(true)
-    },
-    [setIsShowingButton, setCachedRange],
-  )
-
-  const hideButton = React.useCallback(() => {
-    setIsShowingButton(false)
-    setCachedRange(null)
-    closeMenu()
-  }, [setIsShowingButton, setCachedRange, closeMenu])
-
-  const openMenu = React.useCallback(
-    (event?: React.MouseEvent) => {
-      event?.preventDefault()
-
-      editor.update(
-        () => {
-          $setSelection(null)
-        },
-        { discrete: true },
-      )
-
-      saveCursor(cachedRange)
-      restoreCursor()
-      openSessionMenu()
-    },
-    [editor, cachedRange, saveCursor, restoreCursor, openSessionMenu],
-  )
-
-  // apply a trigger verdict: anchor the button to the verdict's paragraph or
-  // hide it (a null verdict — composing, hover outside the editor — is
-  // filtered before this runs)
-  const applyButtonVerdict = React.useCallback(
-    (verdict: PlusButtonVerdict) => {
-      if (verdict.type === 'show') {
-        setTopPosition(getTopPosition(verdict.paragraph))
-        showButton(verdict.paragraph)
-      } else {
-        hideButton()
-      }
-    },
-    [showButton, hideButton],
-  )
-
-  const { cardMenu, insert: insertCardItem } = useCardMenu(editor)
-
-  // insert-and-close is the session's seam (it owns the close policy);
-  // this adapter only names the dispatch
-  const insert = React.useCallback(
-    (
-      insertCommand: LexicalCommand<unknown> | undefined,
-      params: { insertParams?: Record<string, unknown> } = {},
-    ): void => {
-      // a menu item without an insert command has nothing to dispatch
-      if (!insertCommand) {
-        return
-      }
-      sessionInsert(() => insertCardItem(insertCommand, params))
-    },
-    [sessionInsert, insertCardItem],
-  )
+// Plus card menu — trigger wiring only. The trigger policy (caret/hover
+// verdicts, the selectionchange hide rule) lives in
+// @/plugins/behaviour/card-menu-trigger; everything downstream — the session,
+// the button's anchor chrome (including its Range, handed to the session on
+// open), the menu itself — is CardMenuPopup's 'button' anchor policy, driven
+// through the popup handle.
+export default function PlusCardMenuPlugin(): React.ReactElement | null {
+  const [editor] = useLexicalComposerContext()
+  const popupRef = React.useRef<CardMenuPopupHandle | null>(null)
 
   // the caret-based button verdicts arrive through the trigger registration
   React.useEffect(() => {
-    return registerPlusCardMenuTrigger(editor, { onVerdict: applyButtonVerdict })
-  }, [editor, applyButtonVerdict])
-
-  const hideButtonOnOutsideSelection = React.useCallback(() => {
-    if (!isShowingButton) {
-      return
-    }
-
-    const shouldHide = shouldHidePlusButtonOnSelectionChange(
-      window.getSelection()?.anchorNode ?? null,
-      editor.getRootElement(),
-      isShowingMenu ? containerRef.current : null,
-    )
-
-    if (shouldHide) {
-      hideButton()
-    }
-  }, [editor, isShowingButton, isShowingMenu, hideButton, containerRef])
-
-  React.useEffect(() => {
-    document.addEventListener('selectionchange', hideButtonOnOutsideSelection)
-    return () => {
-      document.removeEventListener('selectionchange', hideButtonOnOutsideSelection)
-    }
-  }, [hideButtonOnOutsideSelection])
+    return registerPlusCardMenuTrigger(editor, {
+      onVerdict: (verdict) => popupRef.current?.applyButtonVerdict(verdict),
+    })
+  }, [editor])
 
   // the hover policy (elementFromPoint hit-testing, the left-gutter fudge)
   // lives in the trigger module; this is only the mousemove wiring
-  const updateButtonOnMousemove = React.useCallback(
-    (event: MouseEvent) => {
-      if (isShowingMenu) {
-        return
-      }
-
-      const verdict = resolvePlusHoverButtonVerdict(editor, event.pageX, event.pageY)
-
-      if (verdict) {
-        applyButtonVerdict(verdict)
-      }
-    },
-    [editor, isShowingMenu, applyButtonVerdict],
-  )
-
   React.useEffect(() => {
+    const updateButtonOnMousemove = (event: MouseEvent) => {
+      const verdict = resolvePlusHoverButtonVerdict(editor, event.pageX, event.pageY)
+      if (verdict) {
+        popupRef.current?.applyHoverButtonVerdict(verdict)
+      }
+    }
+
     window.addEventListener('mousemove', updateButtonOnMousemove)
     return () => {
       window.removeEventListener('mousemove', updateButtonOnMousemove)
     }
-  }, [updateButtonOnMousemove])
+  }, [editor])
 
-  // arrows close the menu (leaving the cursor alone); Escape and
-  // outside-mousedown are owned by the session
-  const handleKeydown = React.useCallback(
-    (event: KeyboardEvent) => {
-      if (isShowingMenu) {
-        const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
-        if (arrowKeys.includes(event.key)) {
-          closeMenu()
-        }
-      }
-    },
-    [isShowingMenu, closeMenu],
-  )
-
+  // a native selection landing outside the editor hides the button — the rule
+  // itself (including the open-menu exception) is the popup's
   React.useEffect(() => {
-    window.addEventListener('keydown', handleKeydown)
+    const hideOnOutsideSelection = () => popupRef.current?.hideButtonOnOutsideSelection()
+    document.addEventListener('selectionchange', hideOnOutsideSelection)
     return () => {
-      window.removeEventListener('keydown', handleKeydown)
+      document.removeEventListener('selectionchange', hideOnOutsideSelection)
     }
-  }, [handleKeydown])
+  }, [])
 
-  const style: React.CSSProperties = {
-    top: `${topPosition}px`,
-  }
-
-  if (cardMenu.items.length === 0) {
-    return null
-  }
-
-  if (isShowingButton) {
-    return (
-      <div ref={containerRef} className="absolute z-50" style={style} data-inkling-plus-container>
-        <PlusButton onClick={openMenu} />
-        {isShowingMenu && (
-          <PlusMenu>
-            <CardMenu closeMenu={closeMenu} insert={insert} sections={cardMenu.sections} />
-          </PlusMenu>
-        )}
-      </div>
-    )
-  } else {
-    return null
-  }
-}
-
-export default function PlusCardMenuPlugin(): React.ReactElement | null {
-  const [editor] = useLexicalComposerContext()
-  return usePlusCardMenu(editor)
+  return <CardMenuPopup ref={popupRef} anchor="button" editor={editor} trigger="button" />
 }

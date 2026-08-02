@@ -1,12 +1,10 @@
-import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec } from '@/nodes/base/card-specs'
 
-import { nullableNestedEditor } from '@/nodes/base/generate-decorator-node'
+import { nullableNestedEditor } from '@/nodes/base/card-specs'
 import { BaseCalloutNode } from '@/nodes/base/nodes/callout/CalloutNode'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
-
-import { INSERT_CALLOUT_COMMAND } from './card-commands'
 
 // `as const` keeps the literal `name`s and value types on the declaration's
 // type — the `__*` field map derives both from them (CardSpecFieldMap). The
@@ -31,13 +29,13 @@ export const calloutDeclaration = {
       labelKey: 'callout',
       desc: 'Info boxes that stand out',
       icon: 'callout',
-      command: INSERT_CALLOUT_COMMAND,
+      command: 'insert',
       matches: ['callout'],
       priority: 9,
       shortcut: '/callout',
     },
   ],
-  insert: { command: INSERT_CALLOUT_COMMAND, openInEditMode: true },
+  insert: { openInEditMode: true },
   toolbarLabel: 'callout',
-  markdown: true,
+  markdown: { kind: 'fence' },
 } satisfies CardDeclaration<'callout'>

@@ -16,7 +16,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
-import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider, type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { BookmarkNode, $createBookmarkNode, $isBookmarkNode } from '@/nodes/BookmarkNode'
 import { BookmarkNodeComponent } from '@/nodes/BookmarkNodeComponent'
 import trackEvent from '@/utils/analytics'
@@ -96,7 +96,7 @@ describe('BookmarkNodeComponent', () => {
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
 
     render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           <BookmarkNodeComponent
             captionEditor={null}
@@ -106,7 +106,7 @@ describe('BookmarkNodeComponent', () => {
             url="https://example.com"
           />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
 
     await waitFor(() => {
@@ -130,7 +130,7 @@ describe('BookmarkNodeComponent', () => {
       const composerValue = createHostIntegrationValue({ cardConfig, fileTypes: IMAGE_FILE_TYPES })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
-        <InklingHostIntegrationContext.Provider value={composerValue}>
+        <InklingHostIntegrationProvider value={composerValue}>
           <CardSelectionStoreProvider>
             <BookmarkNodeComponent
               captionEditor={null}
@@ -140,7 +140,7 @@ describe('BookmarkNodeComponent', () => {
               url="https://example.com"
             />
           </CardSelectionStoreProvider>
-        </InklingHostIntegrationContext.Provider>,
+        </InklingHostIntegrationProvider>,
       )
     }
 
@@ -232,7 +232,7 @@ describe('BookmarkNodeComponent', () => {
       const composerValue = createHostIntegrationValue({ cardConfig, fileTypes: IMAGE_FILE_TYPES })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
       const component = (
-        <InklingHostIntegrationContext.Provider value={composerValue}>
+        <InklingHostIntegrationProvider value={composerValue}>
           <CardSelectionStoreProvider>
             <BookmarkNodeComponent
               captionEditor={null}
@@ -241,7 +241,7 @@ describe('BookmarkNodeComponent', () => {
               url=""
             />
           </CardSelectionStoreProvider>
-        </InklingHostIntegrationContext.Provider>
+        </InklingHostIntegrationProvider>
       )
       // UrlInputPlugin reads the real composer context (not the mocked hook)
       // to register its editor-level Enter handler

@@ -1,12 +1,15 @@
 import type { LexicalEditor } from 'lexical'
 
-import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_LOW, KEY_DELETE_COMMAND } from 'lexical'
-
-import { $selectDecoratorNode } from '@/utils'
+import { COMMAND_PRIORITY_LOW, KEY_DELETE_COMMAND } from 'lexical'
 
 import type { KeyboardNavigationDeps } from './types'
 
-import { $getLogicallyAdjacentCard, dispatchSelectedCardDeletion, editorOwnsFocus } from '../card-adjacency'
+import {
+  $removeEmptyBlockAndSelectCard,
+  $removeLogicallyAdjacentCard,
+  dispatchSelectedCardDeletion,
+  editorOwnsFocus,
+} from '../card-adjacency'
 
 export function registerDeleteCommand(editor: LexicalEditor, deps: KeyboardNavigationDeps): () => void {
   const { store, isNested } = deps
@@ -24,41 +27,19 @@ export function registerDeleteCommand(editor: LexicalEditor, deps: KeyboardNavig
         return true
       }
 
-      // handle card selection around card boundaries
-      const selection = $getSelection()
-      if ($isRangeSelection(selection)) {
-        if (selection.isCollapsed()) {
-          const anchor = selection.anchor
-          const anchorNode = anchor.getNode()
-          const topLevelElement = anchorNode.getTopLevelElement()
+      // handle card selection around card boundaries — the surgeries are the
+      // direction-flipped mirrors of backspace's, merged into card-adjacency;
+      // 'from-mode-blank' keeps this handler's deliberate empty-block check
+      // (see EmptyBlockCheck there)
+      if ($removeEmptyBlockAndSelectCard('next', 'from-mode-blank')) {
+        event.preventDefault()
+        return true
+      }
 
-          const onEmptyNode = topLevelElement?.getTextContent().trim() === '' && selection.anchor.offset === 0
-
-          // from-mode, not selection-mode: selection-mode's 'next' boundary requires an
-          // element anchor at offset === getChildrenSize(), which a whitespace-only block
-          // with zero-text children (e.g. a lone LineBreakNode, caret at element offset 0)
-          // does not satisfy — this site still removes the block and selects the card there
-          const nextCardSibling = topLevelElement ? $getLogicallyAdjacentCard('next', topLevelElement) : null
-
-          if (onEmptyNode && nextCardSibling) {
-            // delete the empty node and select the next card
-            event.preventDefault()
-            topLevelElement?.remove()
-            $selectDecoratorNode(nextCardSibling)
-            return true
-          }
-
-          // selection-mode 'next' is gated on exactly the atEndOfNode derivation
-          // previously inlined here (element anchor at children size, or text anchor
-          // at the end of the parent's last child)
-          const nextCard = $getLogicallyAdjacentCard('next')
-          if (nextCard) {
-            // delete the card, keeping selection in place
-            event.preventDefault()
-            nextCard.remove()
-            return true
-          }
-        }
+      // delete the next card, keeping selection in place
+      if ($removeLogicallyAdjacentCard('next')) {
+        event.preventDefault()
+        return true
       }
 
       return false

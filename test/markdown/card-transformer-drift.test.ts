@@ -4,7 +4,7 @@ import { createHeadlessEditor } from '@lexical/headless'
 import { $getRoot, type Klass, type LexicalEditor, type LexicalNode } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
-import { CARD_MARKDOWN_DECLARATIONS, MARKDOWN_EXEMPT } from '@/nodes/cards/card-markdown-transformers'
+import { CARD_MARKDOWN_DECLARATIONS } from '@/nodes/cards/card-markdown-transformers'
 
 /**
  * Drift guard tying the card markdown transformers' field vocabulary to each
@@ -13,10 +13,11 @@ import { CARD_MARKDOWN_DECLARATIONS, MARKDOWN_EXEMPT } from '@/nodes/cards/card-
  * `round-trip-cards.test.ts`):
  *
  * - exhaustiveness leg: every markdown-eligible card (the declaration's
- *   `markdown` flag) carries a card transformer or names an exemption in
- *   `MARKDOWN_EXEMPT`.
- *   The projection already throws at module init on a violation; this leg
- *   pins the contract explicitly.
+ *   `markdown` spec) carries a card transformer or names its exemption
+ *   (`markdown: { kind: 'exempt' }` on the declaration).
+ *   The projection already throws at module init on a fence-eligible card
+ *   with no payload (and the payload table's exhaustive `Record` fails
+ *   typecheck first); this leg pins the contract explicitly.
  * - export leg: every node field a transformer's `getData` reads must be a
  *   declared property of the card's node class. A renamed/typo'd read
  *   (`node.titel`) would otherwise export `undefined` silently.
@@ -91,9 +92,14 @@ const cardsWithTransformers = CARD_MARKDOWN_DECLARATIONS.filter((card) => card.m
 
 describe('card markdown transformer field vocabulary', function () {
   it('every markdown-eligible card has a transformer or a named exemption', function () {
-    CARD_MARKDOWN_DECLARATIONS.filter((card) => card.markdown).forEach((card) => {
+    CARD_MARKDOWN_DECLARATIONS.forEach((card) => {
+      // `in` narrows the union to the declarations carrying the optional markdown entry
+      const markdown = 'markdown' in card ? card.markdown : undefined
+      if (markdown === undefined) {
+        return
+      }
       expect(
-        card.markdownTransformer !== undefined || MARKDOWN_EXEMPT.has(card.nodeType),
+        card.markdownTransformer !== undefined || markdown.kind === 'exempt',
         `${card.nodeType} is markdown-eligible but has neither a card transformer nor a named exemption`,
       ).toBe(true)
     })

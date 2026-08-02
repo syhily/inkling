@@ -21,7 +21,7 @@ import type { ListOptionItem, ListOptionSection } from '@/hooks/useSearchLinks'
 
 import { mockComposerContext } from '#/utils/composer-context'
 import { tick, updateEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider, type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { AtLinkNode, AtLinkSearchNode, ZWNJNode } from '@/nodes/base'
 import { AtLinkPlugin, InklingAtLinkPlugin } from '@/plugins/AtLinkPlugin'
 import trackEvent from '@/utils/analytics'
@@ -72,7 +72,7 @@ const searchLinksContextValue = {
 
 const contextWrapper = (value: typeof atLinkContextValue) =>
   function Wrapper({ children }: { children: React.ReactNode }) {
-    return <InklingHostIntegrationContext.Provider value={value}>{children}</InklingHostIntegrationContext.Provider>
+    return <InklingHostIntegrationProvider value={value}>{children}</InklingHostIntegrationProvider>
   }
 
 interface PopupProps {

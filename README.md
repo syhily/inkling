@@ -79,7 +79,7 @@ Everything below is exported from the package entry point.
 
 ### Markdown API
 
-- `markdownToLexicalState` / `lexicalStateToMarkdown` — synchronous round-trip conversion between markdown strings and serialized Lexical editor states. See `docs/markdown-api.md`.
+- `markdownToLexicalState` / `lexicalStateToMarkdown` — synchronous round-trip conversion between markdown strings and serialized Lexical editor states, exported from the package root.
 
 ### Components
 

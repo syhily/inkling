@@ -4,7 +4,16 @@ import { describe, expect, it } from 'vitest'
 
 import CardContext from '@/context/CardContext'
 import InklingCollaborationContext from '@/context/InklingCollaborationContext'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import {
+  useInklingDragScrollContainerSelector,
+  useInklingGifSettings,
+  useInklingHostEssentials,
+  useInklingLibrarySettings,
+  useInklingLinkingSettings,
+  useInklingMathSettings,
+  useInklingSnippetSettings,
+  useInklingUploadSettings,
+} from '@/context/InklingHostIntegrationContext'
 import InklingUiPrefsContext from '@/context/InklingUiPrefsContext'
 import {
   SharedEditorStateContext,
@@ -12,20 +21,40 @@ import {
   type SharedEditorStateContextValue,
 } from '@/context/SharedEditorStateContext'
 
-describe('InklingHostIntegrationContext', () => {
-  it('provides the default context value', () => {
-    let captured: typeof InklingHostIntegrationContext extends React.Context<infer V> ? V : never
+describe('host-integration channels', () => {
+  it('provides the default channel values without a provider', () => {
+    let essentials: ReturnType<typeof useInklingHostEssentials> | undefined
+    let gif: ReturnType<typeof useInklingGifSettings> | undefined
+    let linking: ReturnType<typeof useInklingLinkingSettings> | undefined
+    let snippet: ReturnType<typeof useInklingSnippetSettings> | undefined
+    let upload: ReturnType<typeof useInklingUploadSettings> | undefined
+    let math: ReturnType<typeof useInklingMathSettings> | undefined
+    let library: ReturnType<typeof useInklingLibrarySettings> | undefined
+    let dragScroll: ReturnType<typeof useInklingDragScrollContainerSelector>
 
     function Consumer() {
-      captured = React.useContext(InklingHostIntegrationContext)
+      essentials = useInklingHostEssentials()
+      gif = useInklingGifSettings()
+      linking = useInklingLinkingSettings()
+      snippet = useInklingSnippetSettings()
+      upload = useInklingUploadSettings()
+      math = useInklingMathSettings()
+      library = useInklingLibrarySettings()
+      dragScroll = useInklingDragScrollContainerSelector()
       return null
     }
 
     render(<Consumer />)
 
-    expect(captured!.fileUploader).toBeDefined()
-    expect(captured!.cardConfig).toEqual({})
-    expect(captured!.onError).toBeDefined()
+    expect(essentials!.fileUploader).toBeDefined()
+    expect(essentials!.onError).toBeDefined()
+    expect(gif).toEqual({})
+    expect(linking).toEqual({})
+    expect(snippet).toEqual({})
+    expect(upload).toEqual({})
+    expect(math).toEqual({})
+    expect(library).toEqual({})
+    expect(dragScroll).toBeUndefined()
   })
 })
 

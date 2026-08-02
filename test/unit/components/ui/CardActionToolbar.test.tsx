@@ -7,7 +7,7 @@ import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { CardActionToolbar, type CardToolbarItem } from '@/components/ui/CardActionToolbar'
-import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider, type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { ButtonNode } from '@/nodes/ButtonNode'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 
@@ -59,11 +59,11 @@ describe('CardActionToolbar', () => {
       initialState: { selectedCardKey: selected ? nodeKey : null, isEditingCard: editing },
     })
     return render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           <CardActionToolbar nodeKey={nodeKey} {...props} />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
   }
 

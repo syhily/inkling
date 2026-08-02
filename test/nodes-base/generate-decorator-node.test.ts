@@ -1,18 +1,15 @@
 import { createHeadlessEditor } from '@lexical/headless'
 import { $getRoot, type EditorState, type LexicalEditor, type LexicalNodeConfig } from 'lexical'
 
-import type {
-  GeneratedDecoratorNodeClass,
-  NestedEditorSpec,
-  TransientPropSpec,
-} from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/card-specs'
+import type { GeneratedDecoratorNodeClass } from '@/nodes/base/generate-decorator-node'
 
 import { dom } from '#/nodes-base/test-utils/index'
 import { editorTest } from '#/utils/test-editor'
 import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
 import { ensureLexicalNodeOwnMethods, type ExportDOMOutput } from '@/nodes/base/index'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
-import { populateNestedEditor } from '@/utils/nested-editors'
+import { populateNestedEditor } from '@/nodes/nested-editors'
 
 function createRenderResult(tagName: 'div' | 'span', content: string) {
   const element = dom.window.document.createElement(tagName)

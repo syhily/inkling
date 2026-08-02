@@ -1,13 +1,21 @@
 // Floating panel — the one headless module owning the settings panel's layout
-// decisions: the clamp math (keepWithinSpacing*), the card-origin resolution,
-// the initial placement, the wide-card width transition, and the drag session
-// (start threshold → move → end with declared side effects). Everything
-// DOM-shaped arrives as plain data or
-// behind injected ports (position get/set, effect activate/deactivate), so the
-// rules are unit-testable without layout or pointer events. The React adapter
-// owning the DOM ports (body-level pointer listeners, the user-select
-// stylesheet, click suppression, ResizeObservers) is
-// @/hooks/useFloatingPanel; SettingsPanel is the sole consumer above that.
+// decisions: the clamp math (clampWithinSpacing*, projected onto
+// @/utils/fit-rect's 'clamp' policy), the card-origin resolution, the initial
+// placement, the wide-card width transition, and the drag session
+// (createDragSession — a port adapter over the shared press-threshold core in
+// @/utils/draggable/press-threshold-session, which it shares with
+// DragDropHandler's drag-start session). Everything DOM-shaped arrives as
+// plain data or behind injected ports (position get/set, effect
+// activate/deactivate), so the rules are unit-testable without layout or
+// pointer events. The grab/listener choreography above the drag session lives
+// in @/utils/panel-drag-session, the re-clamp resolutions in
+// @/utils/panel-resize-choreography; the React adapter owning the DOM ports
+// (body-level pointer listeners, the user-select stylesheet, click
+// suppression, ResizeObservers) is @/hooks/useFloatingPanel; SettingsPanel is
+// the sole consumer above that.
+
+import { createPressThresholdSession, type PressThresholdSession } from '@/utils/draggable/press-threshold-session'
+import { fitRectWithin } from '@/utils/fit-rect'
 
 export interface PanelPosition {
   x: number
@@ -51,7 +59,9 @@ export function isMobileViewport(viewport: PanelViewport): boolean {
  * The origin every clamp agrees on. When the card has a transform applied
  * (e.g. wide cards) the panel is positioned relative to the card element
  * rather than the window, so the card's rect becomes the origin. DOM edge —
- * takes the card element, returns plain data.
+ * takes the card element, returns plain data; deliberately kept as this
+ * module's single direct DOM read (the getComputedStyle transform check),
+ * everything else arrives as data.
  */
 export function resolveCardOrigin(cardElement: HTMLElement | null): PanelPosition {
   if (!cardElement || window.getComputedStyle(cardElement).transform === 'none') {
@@ -77,7 +87,8 @@ export interface ClampInput {
  * Clamps a panel position so the panel keeps the given spacing from the
  * viewport edges. A previous spacing tighter than the requested one is kept
  * (negative spacing allowed) so a panel the user deliberately pushed offscreen
- * is not dragged back.
+ * is not dragged back. The fit itself projects onto @/utils/fit-rect's
+ * 'clamp' policy over the rendered (origin-adjusted) rect.
  */
 export function clampWithinSpacing({
   x,
@@ -106,31 +117,13 @@ export function clampWithinSpacing({
     left = lastSpacing.left
   }
 
-  const panelRight = x + panelSize.width + origin.x
-  const panelBottom = y + panelSize.height + origin.y
-
-  const topIsOffscreen = y + origin.y < top
-  const bottomIsOffscreen = viewport.height - panelBottom < bottom
-  const rightIsOffscreen = viewport.width - panelRight < right
-  const leftIsOffscreen = x + origin.x < left
-
-  let yAdjustment = 0
-  let xAdjustment = 0
-
-  if (topIsOffscreen && !bottomIsOffscreen) {
-    yAdjustment = top - y - origin.y
-  }
-  if (bottomIsOffscreen && !topIsOffscreen) {
-    yAdjustment = -(bottom - (viewport.height - panelBottom))
-  }
-  if (rightIsOffscreen) {
-    xAdjustment = -(right - (viewport.width - panelRight))
-  }
-  if (leftIsOffscreen) {
-    xAdjustment = left - x - origin.x
-  }
-
-  return { x: x + xAdjustment, y: y + yAdjustment }
+  const fitted = fitRectWithin({
+    bounds: { top: 0, left: 0, right: viewport.width, bottom: viewport.height },
+    rect: { top: y + origin.y, left: x + origin.x, width: panelSize.width, height: panelSize.height },
+    gap: { top, right, bottom, left },
+    policy: 'clamp',
+  })
+  return { x: fitted.left - origin.x, y: fitted.top - origin.y }
 }
 
 type ClampRest = Omit<ClampInput, 'spacing' | 'lastSpacing'>
@@ -339,8 +332,11 @@ export interface DragSession {
 
 /**
  * Headless drag session: start threshold → move → end, with the side effects
- * declared behind ports. The React adapter feeds it pointer coordinates and
- * owns every DOM consequence.
+ * declared behind ports. A port adapter over the shared press-threshold core
+ * (@/utils/draggable/press-threshold-session): the core's grab origin is the
+ * zero point and this adapter feeds it travel deltas measured against the
+ * live position, preserving the historical threshold math. The React adapter
+ * feeds it pointer coordinates and owns every DOM consequence.
  */
 export function createDragSession({
   getPosition,
@@ -352,6 +348,9 @@ export function createDragSession({
   let dragging = false
   let offsetX = 0
   let offsetY = 0
+  // re-created per grab; never given an onCancel — ending the session is the
+  // adapter's own concern (end always unwinds the effects)
+  let press: PressThresholdSession | null = null
 
   return {
     start(point) {
@@ -359,17 +358,22 @@ export function createDragSession({
       const current = getPosition()
       offsetX = point.x - current.x
       offsetY = point.y - current.y
+      press = createPressThresholdSession(
+        { x: 0, y: 0 },
+        {
+          threshold: DRAG_MOVE_THRESHOLD,
+          onBegin: () => {
+            activateEffects()
+            dragging = true
+          },
+        },
+      )
     },
 
     move(point) {
-      if (!dragging) {
+      if (!dragging && press) {
         const current = getPosition()
-        const movedX = Math.abs(point.x - offsetX - current.x) > DRAG_MOVE_THRESHOLD
-        const movedY = Math.abs(point.y - offsetY - current.y) > DRAG_MOVE_THRESHOLD
-        if (movedX || movedY) {
-          activateEffects()
-          dragging = true
-        }
+        press.move({ x: point.x - offsetX - current.x, y: point.y - offsetY - current.y })
       }
 
       if (dragging) {
@@ -382,6 +386,8 @@ export function createDragSession({
     },
 
     end() {
+      press?.cancel()
+      press = null
       dragging = false
       deactivateEffects()
     },

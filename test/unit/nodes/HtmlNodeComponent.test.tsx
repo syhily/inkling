@@ -6,7 +6,7 @@ import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider, type CardConfig } from '@/context/InklingHostIntegrationContext'
 import { HtmlNode } from '@/nodes/HtmlNode'
 import { HtmlNodeComponent } from '@/nodes/HtmlNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
@@ -52,11 +52,11 @@ describe('HtmlNodeComponent', () => {
     const composerValue = createHostIntegrationValue()
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           <HtmlNodeComponent html="<p>Hello</p>" nodeKey={nodeKey} />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
 
     expect(screen.getByText('Hello')).toBeTruthy()
@@ -71,11 +71,11 @@ describe('HtmlNodeComponent', () => {
       const composerValue = createHostIntegrationValue({ cardConfig })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
-        <InklingHostIntegrationContext.Provider value={composerValue}>
+        <InklingHostIntegrationProvider value={composerValue}>
           <CardSelectionStoreProvider>
             <HtmlNodeComponent html="<p>Hello</p>" nodeKey={nodeKey} />
           </CardSelectionStoreProvider>
-        </InklingHostIntegrationContext.Provider>,
+        </InklingHostIntegrationProvider>,
       )
     }
 

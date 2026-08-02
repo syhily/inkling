@@ -6,7 +6,7 @@ import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor, tick } from '#/utils/test-editor'
-import InklingHostIntegrationContext, { type FileUploader } from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider, type FileUploader } from '@/context/InklingHostIntegrationContext'
 import { AudioNode, $createAudioNode } from '@/nodes/AudioNode'
 import { AudioNodeComponent } from '@/nodes/AudioNodeComponent'
 import { EDIT_CARD_COMMAND } from '@/plugins/behaviour/commands'
@@ -95,7 +95,7 @@ describe('AudioNodeComponent', () => {
     const composerValue = createHostIntegrationValue({ upload, isLoading, fileTypes: AUDIO_FILE_TYPES })
     const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey)
     return render(
-      <InklingHostIntegrationContext.Provider value={composerValue}>
+      <InklingHostIntegrationProvider value={composerValue}>
         <CardSelectionStoreProvider>
           <AudioNodeComponent
             duration={125}
@@ -107,7 +107,7 @@ describe('AudioNodeComponent', () => {
             triggerFileDialog={triggerFileDialog}
           />
         </CardSelectionStoreProvider>
-      </InklingHostIntegrationContext.Provider>,
+      </InklingHostIntegrationProvider>,
     )
   }
 
@@ -185,7 +185,7 @@ describe('AudioNodeComponent', () => {
       const composerValue = createHostIntegrationValue({ cardConfig, fileTypes: AUDIO_FILE_TYPES })
       const { wrapper: CardSelectionStoreProvider } = createSelection(nodeKey, selection)
       return render(
-        <InklingHostIntegrationContext.Provider value={composerValue}>
+        <InklingHostIntegrationProvider value={composerValue}>
           <CardSelectionStoreProvider>
             <AudioNodeComponent
               duration={125}
@@ -197,7 +197,7 @@ describe('AudioNodeComponent', () => {
               triggerFileDialog={false}
             />
           </CardSelectionStoreProvider>
-        </InklingHostIntegrationContext.Provider>,
+        </InklingHostIntegrationProvider>,
       )
     }
 

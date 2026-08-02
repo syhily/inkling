@@ -123,9 +123,19 @@ test.describe('Emoji Picker Plugin', function () {
     await focusEditor(page)
 
     await page.keyboard.type(':tac', { delay: 10 })
+    await expect(page.getByTestId('emoji-menu')).toBeVisible()
+    // small wait for emoji picker to fully process typed characters
+    await page.waitForTimeout(50)
     await page.keyboard.press('Enter')
+    await expect(page.getByTestId('emoji-menu')).not.toBeVisible()
+
     await page.keyboard.type(':tac', { delay: 10 })
+    await expect(page.getByTestId('emoji-menu')).toBeVisible()
+    // small wait for emoji picker to fully process typed characters
+    await page.waitForTimeout(50)
     await page.keyboard.press('Enter')
+    await expect(page.getByTestId('emoji-menu')).not.toBeVisible()
+
     await page.keyboard.type('s for all', { delay: 10 })
 
     await assertHTML(page, '<p dir="ltr"><span data-lexical-text="true">🌮🌮s for all</span></p>')

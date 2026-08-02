@@ -1,11 +1,11 @@
-import type { CardMenuSource } from '@/utils/buildCardMenu'
+import type { CardMenuSource } from '@/nodes/cards/card-menu-build'
 
 import TableCardIcon from '@/assets/icons/inkling-card-type-table.svg?react'
 import { INSERT_TABLE_COMMAND } from '@/plugins/behaviour/table'
 
 /**
  * The table slash/plus menu entry as a pseudo `CardMenuSource` (the snippet
- * precedent in `@/utils/buildCardMenu`): the table family is not a card, so
+ * precedent in `@/nodes/cards/card-menu-build`): the table family is not a card, so
  * the entry never joins CARD_DECLARATIONS — `useCardMenu` merges it into
  * buildCardMenu's nodes parameter on editors that register TableNode. The
  * key is the family's node type, same as the card entries.

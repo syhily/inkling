@@ -1,8 +1,9 @@
 import type { SerializedLexicalNode } from 'lexical'
 
+import type { DecoratorNodeProperty } from '@/nodes/base/card-specs'
 import type { CaptionEditorDataset } from '@/types/card-node-datasets'
 
-import { generateDecoratorNode, type DecoratorNodeProperty } from '@/nodes/base/generate-decorator-node'
+import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'
 import { parseBookmarkNode } from '@/nodes/base/nodes/bookmark/bookmark-parser'
 import { renderBookmarkNode } from '@/nodes/base/nodes/bookmark/bookmark-renderer'
 

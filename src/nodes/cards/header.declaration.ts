@@ -1,11 +1,9 @@
-import type { NestedEditorSpec } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec } from '@/nodes/base/card-specs'
 
 import { BaseHeaderNode, headerCardWidth } from '@/nodes/base/nodes/header/HeaderNode'
 import MINIMAL_NODES from '@/nodes/MinimalNodes'
 
 import type { CardDeclaration } from './card-declaration'
-
-import { INSERT_HEADER_COMMAND } from './card-commands'
 
 // `as const` keeps the literal `name`s and value types on the declaration's
 // type — the `__*` field map derives both from them (CardSpecFieldMap)
@@ -34,14 +32,14 @@ export const headerDeclaration = {
   decorateTarget: {
     width: headerCardWidth,
   },
-  insert: { command: INSERT_HEADER_COMMAND, openInEditMode: true },
+  insert: { openInEditMode: true },
   menu: [
     {
       label: 'Header',
       labelKey: 'header',
       desc: 'Add a header',
       icon: 'header',
-      command: INSERT_HEADER_COMMAND,
+      command: 'insert',
       matches: ['header', 'heading'],
       priority: 11,
       insertParams: () => ({
@@ -51,6 +49,5 @@ export const headerDeclaration = {
     },
   ],
   toolbarLabel: 'header',
-  // Not markdown-eligible: the header card has no markdown representation.
-  markdown: false,
+  // No markdown entry: the header card has no markdown representation.
 } satisfies CardDeclaration<'header'>

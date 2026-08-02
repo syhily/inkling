@@ -221,15 +221,27 @@ const musicPlayerMenuEntry: HostCardMenuEntrySpec = {
   labelKey: 'music',
   // a built-in CardIconId names the icon; a component is accepted too
   icon: 'audio',
+  // a raw host-defined LexicalCommand passes through …
   command: INSERT_AUDIO_COMMAND,
   matches: ['music'],
+}
+
+// … and the `'insert'` name resolves to the host card's own derived insert
+// command — the same mechanism the built-in declarations use
+const derivedCommandMenuEntry: HostCardMenuEntrySpec = {
+  label: 'Music (derived)',
+  labelKey: 'musicDerived',
+  icon: 'audio',
+  command: 'insert',
+  matches: ['music derived'],
 }
 
 const musicPlayerSpec: HostCardSpec<'musicPlayer'> = {
   nodeType: 'musicPlayer',
   baseNode: generateDecoratorNode({ nodeType: 'musicPlayer', properties: musicPlayerProperties }),
-  insert: { command: INSERT_AUDIO_COMMAND },
-  menu: [musicPlayerMenuEntry],
+  // presence is the opt-in — the insert command is derived from the node type
+  insert: {},
+  menu: [musicPlayerMenuEntry, derivedCommandMenuEntry],
   toolbarLabel: 'music-player',
   render: () => null,
 }

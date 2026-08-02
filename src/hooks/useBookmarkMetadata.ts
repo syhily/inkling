@@ -4,8 +4,8 @@ import React from 'react'
 
 import type { LinkingSettings } from '@/context/InklingHostIntegrationContext'
 
+import { createBookmarkEmbedFlow } from '@/hooks/bookmark-embed-flow'
 import { useDisposableStore } from '@/hooks/useDisposableStore'
-import { createBookmarkEmbedFlow } from '@/utils/services/bookmark-embed-flow'
 
 interface UseBookmarkMetadataOptions {
   editor: LexicalEditor
@@ -27,7 +27,7 @@ export interface UseBookmarkMetadataResult {
 }
 
 // the fetch choreography, the loading/urlError machine, and the
-// isEmbedResponse classifier live in @/utils/services/bookmark-embed-flow
+// isEmbedResponse classifier live in @/hooks/bookmark-embed-flow
 // (a request-track guard, so the latest issued fetch wins the node patch);
 // this hook is the subscription adapter
 export function useBookmarkMetadata({

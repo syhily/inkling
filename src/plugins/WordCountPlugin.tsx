@@ -5,8 +5,8 @@ import { useWordCountHandle } from '@/context/WordCountHandleContext'
 import { createWordCounter } from '@/plugins/behaviour/word-counter'
 import { publishWordCountCallback } from '@/plugins/behaviour/wordCountHandle'
 
-// `language` selects the Intl.Segmenter word-granularity path in countWords
-// (docs/kobato-fit-plan.md C7 §3.4); without Segmenter the counter falls back
+// `language` selects the Intl.Segmenter word-granularity path in countWords;
+// without Segmenter the counter falls back
 // to the regex path. It is published on the composer handle alongside
 // onChange so nested composers count with the same language — the
 // top-level-only publish gate lives in publishWordCountCallback beside the

@@ -1,13 +1,12 @@
-import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type { NestedEditorSpec, TransientPropSpec } from '@/nodes/base/card-specs'
 
-import { transientInitialFileProp, transientTriggerFileDialogProp } from '@/nodes/base/generate-decorator-node'
+import { transientInitialFileProp, transientTriggerFileDialogProp } from '@/nodes/base/card-specs'
 import { BaseVideoNode } from '@/nodes/base/nodes/video/VideoNode'
 import { decorateCardWidth } from '@/nodes/base/utils/card-widths'
 
 import type { CardDeclaration } from './card-declaration'
 
 import { captionEditorSpec } from './caption-editor-spec'
-import { INSERT_VIDEO_COMMAND } from './card-commands'
 
 // `as const` keeps the literal `name`s and value types on the declaration's
 // type — the `__*` field map derives both from them (CardSpecFieldMap). The
@@ -34,7 +33,7 @@ export const videoDeclaration = {
       labelKey: 'video',
       desc: 'Upload and play a video file',
       icon: 'video',
-      command: INSERT_VIDEO_COMMAND,
+      command: 'insert',
       insertParams: {
         triggerFileDialog: true,
       },
@@ -43,8 +42,8 @@ export const videoDeclaration = {
       shortcut: '/video',
     },
   ],
-  insert: { command: INSERT_VIDEO_COMMAND, claimsMediaInsert: true },
+  insert: { claimsMediaInsert: true },
   uploadType: 'video',
   toolbarLabel: 'video',
-  markdown: true,
+  markdown: { kind: 'fence' },
 } satisfies CardDeclaration<'video'>

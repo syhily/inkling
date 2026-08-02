@@ -10,7 +10,7 @@ import { useCardChrome } from '@/hooks/useCardChrome'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import { $isFileNode } from '@/nodes/base'
-import { fileUploadIntent } from '@/utils/upload-intent'
+import { fileUploadIntent } from '@/nodes/upload-intent'
 
 export interface FileNodeComponentProps {
   fileDesc: string

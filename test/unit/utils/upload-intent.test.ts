@@ -14,7 +14,7 @@ import {
 } from '@/nodes/base'
 import { FileNode, $createFileNode } from '@/nodes/FileNode'
 import { ImageNode, $createImageNode } from '@/nodes/ImageNode'
-import { runUploadIntent, type RunUploadIntentOptions } from '@/utils/upload-intent'
+import { runUploadIntent, type RunUploadIntentOptions } from '@/nodes/upload-intent'
 
 describe('runUploadIntent', () => {
   let editor: LexicalEditor

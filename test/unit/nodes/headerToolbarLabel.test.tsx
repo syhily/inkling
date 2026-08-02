@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { createCardSelectionStoreWrapper } from '#/utils/card-selection-store'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { createTestEditor } from '#/utils/test-editor'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider } from '@/context/InklingHostIntegrationContext'
 import { CARD_DECLARATIONS } from '@/nodes/cards'
 import { getCardToolbarLabel } from '@/nodes/cards/card-facts'
 import HeaderNodeComponent from '@/nodes/header/HeaderNodeComponent'
@@ -68,7 +68,7 @@ describe('card toolbar labels as a derived view over the declarations', () => {
     const { container } = render(
       <CollaborationContext.Provider value={collaborationValue}>
         <LexicalComposerContext.Provider value={composerValue}>
-          <InklingHostIntegrationContext.Provider value={inklingComposerValue}>
+          <InklingHostIntegrationProvider value={inklingComposerValue}>
             <CardSelectionStoreProvider>
               <HeaderNodeComponent
                 alignment="left"
@@ -94,7 +94,7 @@ describe('card toolbar labels as a derived view over the declarations', () => {
                 textColor=""
               />
             </CardSelectionStoreProvider>
-          </InklingHostIntegrationContext.Provider>
+          </InklingHostIntegrationProvider>
         </LexicalComposerContext.Provider>
       </CollaborationContext.Provider>,
     )

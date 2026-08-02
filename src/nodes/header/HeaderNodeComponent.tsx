@@ -6,13 +6,14 @@ import type { HeaderNode } from '@/nodes/HeaderNode'
 import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { HeaderCard } from '@/components/ui/cards/HeaderCard/HeaderCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
+import { useInklingUploadSettings } from '@/context/InklingHostIntegrationContext'
 import { useCardChrome } from '@/hooks/useCardChrome'
 import { useHeaderBackgroundImage } from '@/hooks/useHeaderBackgroundImage'
 import { useMediaCardUpload } from '@/hooks/useMediaCardUpload'
 import usePinturaEditor from '@/hooks/usePinturaEditor'
 import { headerFieldWriter } from '@/nodes/header/header-field-writer'
 import { $isHeaderNode } from '@/nodes/HeaderNode'
-import { headerBackgroundUploadIntent } from '@/utils/upload-intent'
+import { headerBackgroundUploadIntent } from '@/nodes/upload-intent'
 
 interface HeaderNodeComponentProps {
   alignment: string
@@ -57,12 +58,12 @@ function HeaderNodeComponent({
   textColor,
   isSwapped,
 }: HeaderNodeComponentProps) {
-  const { editor, host, write } = useCardChrome(nodeKey, $isHeaderNode)
-  const { cardConfig } = host
+  const { editor, write } = useCardChrome(nodeKey, $isHeaderNode)
+  const { pinturaConfig } = useInklingUploadSettings()
   const isEditing = useCardIsEditing(nodeKey)
 
   const { isEnabled: isPinturaEnabled, openEditor: openImageEditor } = usePinturaEditor({
-    config: cardConfig.pinturaConfig,
+    config: pinturaConfig,
   })
 
   // the background-image show/hide/remove policy lives in the hook; the

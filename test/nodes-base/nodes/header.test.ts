@@ -6,7 +6,7 @@ import { $generateNodesFromDOM } from '@lexical/html'
 import { createDocument, dom } from '#/nodes-base/test-utils/index'
 import { editorTest } from '#/utils/test-editor'
 import { BaseHeaderNode, $createBaseHeaderNode, $isHeaderNode } from '@/nodes/base/index'
-import { populateNestedEditor, setupNestedEditor } from '@/utils/nested-editors'
+import { populateNestedEditor, setupNestedEditor } from '@/nodes/nested-editors'
 
 const editorNodes = [BaseHeaderNode]
 

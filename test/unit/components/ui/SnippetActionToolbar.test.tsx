@@ -7,7 +7,7 @@ import { mockComposerContext } from '#/utils/composer-context'
 import { createHostIntegrationValue } from '#/utils/host-integration-context'
 import { updateEditor } from '#/utils/test-editor'
 import { SnippetActionToolbar } from '@/components/ui/SnippetActionToolbar'
-import InklingHostIntegrationContext from '@/context/InklingHostIntegrationContext'
+import { InklingHostIntegrationProvider } from '@/context/InklingHostIntegrationContext'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
@@ -37,9 +37,9 @@ function renderToolbar(
     cardConfig: { createSnippet, snippets: [] as Array<{ name: string; value: string }> },
   })
   return render(
-    <InklingHostIntegrationContext.Provider value={composerValue}>
+    <InklingHostIntegrationProvider value={composerValue}>
       <SnippetActionToolbar onClose={onClose} />
-    </InklingHostIntegrationContext.Provider>,
+    </InklingHostIntegrationProvider>,
   )
 }
 

@@ -16,7 +16,7 @@ export interface PinturaConfig {
   cssUrl?: string
   /** Pintura `locale` overrides — merged ON TOP of the labels table's
    * `pintura.*` entries, so a host can patch any Pintura string the labels
-   * table does not cover (docs/kobato-fit-plan.md C7). */
+   * table does not cover. */
   locale?: Record<string, string>
 }
 

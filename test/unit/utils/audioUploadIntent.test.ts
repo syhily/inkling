@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { tick, updateEditor } from '#/utils/test-editor'
 import { AudioNode, $createAudioNode, type AudioNode as AudioNodeType } from '@/nodes/AudioNode'
+import { audioUploadIntent } from '@/nodes/upload-intent'
 import { getAudioMetadata } from '@/utils/getAudioMetadata'
-import { audioUploadIntent } from '@/utils/upload-intent'
 
 vi.mock('@/utils/getAudioMetadata', () => ({
   getAudioMetadata: vi.fn(),

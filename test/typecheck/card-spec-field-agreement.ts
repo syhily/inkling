@@ -19,7 +19,7 @@
    value is being checked by tsc, never being referenced */
 import type { DecoratorNode, EditorState, LexicalEditor } from 'lexical'
 
-import type { CardSpecFieldMap, CardSpecFieldNames, TransientPropSpec } from '@/nodes/base/generate-decorator-node'
+import type { CardSpecFieldMap, CardSpecFieldNames, TransientPropSpec } from '@/nodes/base/card-specs'
 import type { HostCardSpec } from '@/nodes/cards/host-cards'
 
 import { generateDecoratorNode } from '@/nodes/base/generate-decorator-node'

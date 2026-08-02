@@ -14,7 +14,7 @@ import {
 } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { CardNode } from '@/types/lexical-internals'
+import type { CardNode } from '#/utils/card-node'
 
 import { updateEditor } from '#/utils/test-editor'
 import { $createMarkdownNode, MarkdownNode } from '@/nodes/base'

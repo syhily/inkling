@@ -7,6 +7,7 @@ import {
   isGifResponse,
 } from '@/utils/services/gif'
 import { createRequestTrack, type RequestScheduler } from '@/utils/services/request-track'
+import { runTrackedRequest, type ServiceMachine } from '@/utils/services/service-machine'
 import { createSnapshotStore } from '@/utils/services/snapshot-store'
 
 // Gif browser — the headless module behind the GIF selector: fetch/pagination
@@ -15,8 +16,9 @@ import { createSnapshotStore } from '@/utils/services/snapshot-store'
 // the browser keeps the gif list, the balanced columns, the highlight, and the
 // loading/error flags; React subscribes to the snapshot and dispatches
 // intents. The churn (debounced search, overlapping requests, stale
-// responses) composes the request-track primitives
-// (src/utils/services/request-track.ts — scheduler port, snapshot store,
+// responses) composes the service-machine primitives
+// (src/utils/services/service-machine.ts — the dispatch+effect protocol and
+// the tracked-request skeleton over the request track's scheduler port and
 // latest-wins guard) with the fetchPage promise factory port, so the race
 // matrix and the navigation table are synchronous unit tests instead of
 // renderHook + wall-clock sleeps. The
@@ -355,7 +357,7 @@ export function createGifBrowser({
   fetchPage = defaultFetchPage,
   scheduler,
   debounceMs = GIF_SEARCH_DEBOUNCE_MS,
-}: CreateGifBrowserOptions) {
+}: CreateGifBrowserOptions): ServiceMachine<GifBrowserSnapshot, GifBrowserIntent, GifBrowserEffect, GifGeometry> {
   let gifs: GifData[] = []
   let columns: GifData[][] = []
   let columnHeights: number[] = []
@@ -447,37 +449,38 @@ export function createGifBrowser({
     isLoading = true
     emitFlags()
 
-    let outcome: GifFetchOutcome
-    try {
-      outcome = await fetchPage(buildUrl(path, params))
-    } catch (e: unknown) {
-      outcome = { ok: false, message: e instanceof Error ? e.message : 'Unknown error' }
-    }
+    const outcome = await runTrackedRequest(track, seq, () => fetchPage(buildUrl(path, params)))
 
     // a newer search superseded this request while we were awaiting — the
     // newer request owns the flags, and the stale outcome must not apply
-    if (!track.isLatest(seq)) {
+    if (!outcome) {
       return
     }
 
     if (outcome.ok) {
-      // a malformed item must not wedge the loading flags or escape as an
-      // unhandled rejection — surface the failure as the common error state
-      try {
-        nextPos = outcome.next
-        for (const gif of outcome.results) {
-          addGif(gif)
+      const fetchOutcome = outcome.value
+      if (fetchOutcome.ok) {
+        // a malformed item must not wedge the loading flags or escape as an
+        // unhandled rejection — surface the failure as the common error state
+        try {
+          nextPos = fetchOutcome.next
+          for (const gif of fetchOutcome.results) {
+            addGif(gif)
+          }
+          // keep the highlight by stable id across list swaps (the selector's
+          // historical sync effect), clearing it when the gif is gone
+          if (highlightedId && !gifs.some((gif) => gif.id === highlightedId)) {
+            highlightedId = null
+          }
+        } catch {
+          error = ERROR_TYPE.COMMON
         }
-        // keep the highlight by stable id across list swaps (the selector's
-        // historical sync effect), clearing it when the gif is gone
-        if (highlightedId && !gifs.some((gif) => gif.id === highlightedId)) {
-          highlightedId = null
-        }
-      } catch {
-        error = ERROR_TYPE.COMMON
+      } else {
+        error = isInvalidKeyError(fetchOutcome.message) ? ERROR_TYPE.INVALID_API_KEY : ERROR_TYPE.COMMON
       }
     } else {
-      error = isInvalidKeyError(outcome.message) ? ERROR_TYPE.INVALID_API_KEY : ERROR_TYPE.COMMON
+      const message = outcome.error instanceof Error ? outcome.error.message : 'Unknown error'
+      error = isInvalidKeyError(message) ? ERROR_TYPE.INVALID_API_KEY : ERROR_TYPE.COMMON
     }
 
     isLoading = false
@@ -595,8 +598,11 @@ export function createGifBrowser({
 
     dispatch,
 
-    /** Cancel the pending search and invalidate every in-flight request. */
-    dispose: () => track.dispose(),
+    /** Cancel the pending search, invalidate every in-flight request, and drop the store's listeners. */
+    dispose: () => {
+      track.dispose()
+      store.dispose()
+    },
   }
 }
 

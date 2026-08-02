@@ -1,7 +1,8 @@
+import type { DecoratorNodeProperty } from '@/nodes/base/card-specs'
+
 import {
   generateDecoratorNode,
   type DecoratorNodeData,
-  type DecoratorNodeProperty,
   type DecoratorNodeValueMap,
 } from '@/nodes/base/generate-decorator-node'
 import { renderMathNode } from '@/nodes/base/nodes/math/math-renderer'

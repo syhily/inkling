@@ -12,6 +12,31 @@ export interface ExportDOMDom {
 }
 
 /**
+ * The keyed export-policy kinds a host resolves through
+ * `ExportDOMOptions.resolveExportPolicy` — the narrow seam the
+ * subsystem-specific flat keys (`inklingVersion`, `footnotesSectionTitle`)
+ * folded into. Each key names one policy exactly one subsystem consumes:
+ *
+ * - `'inkling-version'`: the markdown card's slug-policy input (consumed by
+ *   `@/markdown/paste-dialect`).
+ * - `'footnotes-section-title'`: the visible `<h3>` of the exported
+ *   footnotes section (consumed by the footnote post-processor).
+ */
+export type ExportPolicyKey = 'inkling-version' | 'footnotes-section-title'
+
+/**
+ * Opt-in protocol for a TextNode entity whose `exportDOM` produces element
+ * markup that the string layer splices into the text flow, instead of
+ * flowing into the pending text run like ordinary text (the `isTextEntity`
+ * precedent — a capability predicate on the node). `FootnoteRefNode` is the
+ * first implementor; a plain entity like TKNode stays text and does not opt
+ * in.
+ */
+export interface InlineMarkupTextEntity {
+  isInlineMarkupEntity(): boolean
+}
+
+/**
  * The image-optimization keys the image/gallery renderers and the srcset
  * helper consume, single-sourced here (plan 042) from the three renderer-local
  * declarations it replaces. The render-context factory validates the known
@@ -45,16 +70,32 @@ export interface ExportDOMOptions {
   /**
    * The markdown card's slug-policy input (consumed by
    * `@/markdown/paste-dialect`).
+   *
+   * @deprecated Resolve `'inkling-version'` through `resolveExportPolicy`
+   * instead. Still honored as the fallback when the resolver leaves the key
+   * unanswered.
    */
   inklingVersion?: string
   /** image renderer: emit `<picture>` sources for modern formats */
   pictureImageFormats?: boolean
   /**
    * The visible `<h3>` of the exported footnotes section (the host's
-   * counterpart of kobato's `footnotes-section-title` content setting);
-   * consumed by the string layer's section wrap. Defaults to 'Footnotes'.
+   * counterpart of kobato's `footnotes-section-title` content setting).
+   * Defaults to 'Footnotes'.
+   *
+   * @deprecated Resolve `'footnotes-section-title'` through
+   * `resolveExportPolicy` instead. Still honored as the fallback when the
+   * resolver leaves the key unanswered.
    */
   footnotesSectionTitle?: string
+  /**
+   * Keyed export-policy resolution, `resolveRenderMeta`-style: the host
+   * answers the `ExportPolicyKey`s it cares about and leaves the rest
+   * unanswered (undefined falls back to the deprecated flat key, then the
+   * subsystem default). The resolver wins over the flat keys when both are
+   * present.
+   */
+  resolveExportPolicy?: (key: ExportPolicyKey) => string | undefined
   /**
    * Request-scoped render-time meta (CONTEXT.md): a card renderer resolves
    * host enrichment data by (kind, id); an unresolved pair returns undefined

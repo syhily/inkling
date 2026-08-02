@@ -4,7 +4,7 @@ import { DEFAULT_LABELS, type InklingLabels } from '@/labels/inkling-labels'
 
 // UI-preference lifecycle (plan 047): display toggles that re-render the
 // editor chrome but never change document behaviour. `labels` is the resolved
-// labels table (docs/kobato-fit-plan.md C7) — the composer merges the host's
+// labels table — the composer merges the host's
 // overrides once; the default keeps context consumers usable without a
 // provider (isolated component tests, stories).
 export interface InklingUiPrefsContextValue {
