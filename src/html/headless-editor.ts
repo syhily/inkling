@@ -18,6 +18,17 @@ import { registerRemoveAtLinkNodesTransform } from '@/transforms'
 // - 'wholesale' (importer): the caller's editorConfig replaces the defaults
 //   — nothing is merged. Do NOT "unify" these.
 
+/**
+ * The headless surface's default error sink: swallows errors (the
+ * renderer's pinned behavior) instead of falling back to upstream's
+ * console.error. Every leg applies it unless the caller passes its own
+ * onError — server callers should pass one and fail fast.
+ */
+export function defaultOnError(error: Error) {
+  void error
+  // do nothing
+}
+
 export type HeadlessEditorSpec =
   | { merge: 'additive'; nodes?: LexicalNodeConfig[]; onError?: (error: Error) => void }
   | { merge: 'wholesale'; editorConfig?: CreateEditorArgs }
@@ -33,6 +44,9 @@ export function createHeadlessHtmlEditor(spec: HeadlessEditorSpec): LexicalEdito
   const defaultEditorConfig = {
     nodes: [...DEFAULT_HTML_NODES],
     html: DEFAULT_CONFIG.html,
+    // The importer leg gets the same swallow-by-default onError as the two
+    // render legs; Object.assign below still lets editorConfig.onError win.
+    onError: defaultOnError,
   }
   return createHeadlessEditor(Object.assign({}, defaultEditorConfig, spec.editorConfig))
 }

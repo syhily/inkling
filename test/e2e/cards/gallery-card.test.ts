@@ -161,7 +161,6 @@ test.describe('Gallery card', () => {
                     <div>Type caption for gallery (optional)</div>
                   </div>
                 </div>
-                <button name="alt-toggle-button" type="button">Alt</button>
               </figcaption>
             </figure>
           </div>
@@ -233,7 +232,6 @@ test.describe('Gallery card', () => {
                     <div>Type caption for gallery (optional)</div>
                   </div>
                 </div>
-                <button name="alt-toggle-button" type="button">Alt</button>
               </figcaption>
             </figure>
             <div data-inkling-card-toolbar="gallery"></div>

@@ -120,14 +120,7 @@ export function InputListGroup({
   )
 }
 
-/**
- * Little warning here: this has an onChange handler that doesn't have an event as parameter, but just the value.
- *
- * @param {object} options
- * @param {{value: string, label: string}[]} [options.listOptions]
- * @param {string} [options.list]
- * @returns
- */
+// The onChange handler receives the input's value directly, not the change event.
 export function InputList<T extends InputListItemData = InputListItemData>({
   autoFocus,
   className,

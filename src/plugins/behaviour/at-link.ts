@@ -426,12 +426,17 @@ export function registerAtLinkGuards(editor: LexicalEditor) {
           return false
         }
 
+        const clipboardData = clipboardEvent.clipboardData
+        if (!clipboardData) {
+          return false
+        }
+
         const anchorNode = selection.anchor.getNode()
         if ($isAtLinkNode(anchorNode) || $isAtLinkSearchNode(anchorNode)) {
           clipboardEvent.preventDefault()
 
           const atLinkSearchNode = $isAtLinkSearchNode(anchorNode) ? anchorNode : anchorNode.getChildAtIndex(1)
-          const text = clipboardEvent.clipboardData?.getData('text/plain')
+          const text = clipboardData.getData('text/plain')
 
           if (text && $isAtLinkSearchNode(atLinkSearchNode)) {
             atLinkSearchNode.setTextContent(atLinkSearchNode.getTextContent() + text)

@@ -26,6 +26,10 @@ export const nestedEditors = [
 export const transientProps = [
   {
     name: 'previewSrc',
+    // the `string | null` annotation is the type source for the `__previewSrc`
+    // field (CardSpecFieldMap) — `strOr` itself returns string, but the field
+    // must stay nullable because the upload lifecycle clears it by writing
+    // `node.previewSrc = null` (src/utils/upload-intent.ts)
     initial: (dataset): string | null => strOr(dataset.previewSrc, ''),
     datasetKey: '__previewSrc',
     accessor: true,

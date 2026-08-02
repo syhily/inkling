@@ -53,7 +53,12 @@ export class FootnoteRefNode extends TextNode {
   }
 
   static importJSON(serializedNode: SerializedFootnoteRefNode): FootnoteRefNode {
-    return new FootnoteRefNode(serializedNode.text, serializedNode.targetKey).updateFromJSON(serializedNode)
+    // Trust boundary like MathInlineNode's importJSON: a hand-crafted payload
+    // can omit targetKey, and `undefined` would violate the field's `string`
+    // type — fall back to '' so the ref lands on the renumber engine's skip
+    // path (no resolvable definition) instead of carrying a phantom key
+    const targetKey = typeof serializedNode.targetKey === 'string' ? serializedNode.targetKey : ''
+    return new FootnoteRefNode(serializedNode.text, targetKey).updateFromJSON(serializedNode)
   }
 
   exportJSON(): SerializedFootnoteRefNode {

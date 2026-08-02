@@ -6,6 +6,7 @@ import {
   COMMAND_PRIORITY_HIGH,
   createEditor,
   type LexicalEditor,
+  type LexicalNodeConfig,
 } from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -21,10 +22,10 @@ vi.mock('@lexical/react/LexicalComposerContext', () => ({
   useLexicalComposerContext: vi.fn(),
 }))
 
-function createTestEditor(nodes: Array<unknown> = []) {
+function createTestEditor(nodes: LexicalNodeConfig[] = []) {
   return createEditor({
     namespace: 'test',
-    nodes: [ImageNode, HorizontalRuleNode, ...(nodes as [])],
+    nodes: [ImageNode, HorizontalRuleNode, ...nodes],
     onError: () => {},
   })
 }

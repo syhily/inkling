@@ -1,4 +1,3 @@
-// import {calloutColorPicker} from '../../../src/components/ui/cards/CalloutCardx';
 import { test, type Page } from '@playwright/test'
 
 import { assertHTML, html, initialize } from '#/utils/e2e'

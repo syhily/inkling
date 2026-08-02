@@ -5,8 +5,6 @@ import type { LexicalProviderFactory } from '@/context/InklingCollaborationConte
 
 import { requireMultiplayerConfig } from './multiplayer-config'
 
-export { requireMultiplayerConfig }
-
 // The events Lexical's Provider interface registers handlers for. Of these,
 // y-websocket's WebsocketProvider only ever emits 'sync' and 'status' — its
 // typed event map doesn't even admit 'update' or 'reload' — so adapt by

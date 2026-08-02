@@ -16,7 +16,6 @@ export function MediaPlayer({ duration, theme }: MediaPlayerProps) {
         <span className={theme === 'light' ? 'text-white' : 'text-black dark:text-white'}>0:00 </span>/{' '}
         <span data-testid="media-duration">{duration}</span>
       </div>
-      {/* <input type="range" max="100" value="0" className="relative grow bg-transparent mx-1" /> */}
       <div
         className={`relative mx-2 h-1 grow rounded ${theme === 'light' ? 'bg-white/40' : 'bg-grey/30 dark:bg-white/40'}`}
       >

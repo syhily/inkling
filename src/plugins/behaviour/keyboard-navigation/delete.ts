@@ -42,7 +42,7 @@ export function registerDeleteCommand(editor: LexicalEditor, deps: KeyboardNavig
 
           if (onEmptyNode && nextCardSibling) {
             // delete the empty node and select the next card
-            event?.preventDefault()
+            event.preventDefault()
             topLevelElement?.remove()
             $selectDecoratorNode(nextCardSibling)
             return true
@@ -54,7 +54,7 @@ export function registerDeleteCommand(editor: LexicalEditor, deps: KeyboardNavig
           const nextCard = $getLogicallyAdjacentCard('next')
           if (nextCard) {
             // delete the card, keeping selection in place
-            event?.preventDefault()
+            event.preventDefault()
             nextCard.remove()
             return true
           }

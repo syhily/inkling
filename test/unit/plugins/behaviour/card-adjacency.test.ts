@@ -10,6 +10,7 @@ import {
   createEditor,
   type LexicalEditor,
   type LexicalNode,
+  type LexicalNodeConfig,
 } from 'lexical'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -36,10 +37,10 @@ import { $selectDecoratorNode } from '@/utils'
 // Minimal node set: one card type is enough to exercise adjacency in jsdom.
 const CARD_ADJACENCY_TEST_NODES = [ImageNode]
 
-function createTestEditor(nodes: unknown[] = CARD_ADJACENCY_TEST_NODES) {
+function createTestEditor(nodes: LexicalNodeConfig[] = CARD_ADJACENCY_TEST_NODES) {
   return createEditor({
     namespace: 'test',
-    nodes: nodes as [],
+    nodes,
     onError: () => {},
   })
 }

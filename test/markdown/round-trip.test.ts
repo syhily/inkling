@@ -50,6 +50,17 @@ describe('Markdown round-trip', function () {
     expect(roundTrip(markdown)).toBe(markdown)
   })
 
+  it('round-trips a code block with a non-word language name', function () {
+    // the export side emits free-input languages verbatim, so the import side
+    // accepts more than \w — c++/shell-session used to import as literal
+    // paragraphs
+    const markdown = '```c++\nint main() {}\n```'
+    const state = markdownToLexicalState(markdown)
+    expect((state.root.children[0] as SerializedCodeBlockNode).type).toBe('codeblock')
+    expect((state.root.children[0] as SerializedCodeBlockNode).language).toBe('c++')
+    expect(lexicalStateToMarkdown(state)).toBe(markdown)
+  })
+
   it('round-trips a horizontal rule', function () {
     const markdown = '---'
     expect(roundTrip(markdown)).toBe('---')

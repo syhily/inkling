@@ -1,4 +1,11 @@
-import { $createParagraphNode, $createTextNode, $getRoot, createEditor, type LexicalEditor } from 'lexical'
+import {
+  $createParagraphNode,
+  $createTextNode,
+  $getRoot,
+  createEditor,
+  type LexicalEditor,
+  type LexicalNodeConfig,
+} from 'lexical'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { updateEditor } from '#/utils/test-editor'
@@ -8,10 +15,10 @@ import { createCardSelectionStore, type CardSelectionStore } from '@/plugins/beh
 import { DELETE_CARD_COMMAND, INSERT_CARD_COMMAND, SELECT_CARD_COMMAND } from '@/plugins/behaviour/commands'
 import { registerCardCommands } from '@/plugins/behaviour/registerCardCommands'
 
-function createTestEditor(nodes: Array<unknown> = []) {
+function createTestEditor(nodes: LexicalNodeConfig[] = []) {
   return createEditor({
     namespace: 'test',
-    nodes: [ImageNode, HorizontalRuleNode, ...(nodes as [])],
+    nodes: [ImageNode, HorizontalRuleNode, ...nodes],
     onError: () => {},
   })
 }

@@ -49,7 +49,10 @@ function cardTemplate(nodeData: HeaderV2NodeData, context: RenderContext) {
   const backgroundAccent = nodeData.backgroundColor === 'accent' ? 'inkling-style-accent' : ''
   const buttonAccent = nodeData.buttonColor === 'accent' ? 'inkling-style-accent' : ''
   const buttonStyle = nodeData.buttonColor !== 'accent' ? `background-color: ${buttonColor};` : ``
-  const alignment = nodeData.alignment === 'center' ? 'inkling-align-center' : ''
+  // symmetric with the parser (inkling-align-left ⇔ 'left'): legacy '' and
+  // out-of-vocabulary values emit no class, the button renderer's idiom
+  const alignment =
+    nodeData.alignment === 'left' || nodeData.alignment === 'center' ? `inkling-align-${nodeData.alignment}` : ''
   const backgroundImageStyle =
     nodeData.backgroundColor !== 'accent' && (!safeBackgroundImageSrc || nodeData.layout === 'split')
       ? `background-color: ${backgroundColor}`
@@ -123,20 +126,6 @@ export function renderHeaderNodeV2(nodeData: HeaderV2NodeData, context: RenderCo
 
   const element = document.createElement('div')
   element.innerHTML = htmlString.trim()
-
-  if (nodeData.header === '') {
-    const h2Element = element.querySelector('.inkling-header-card-heading')
-    if (h2Element) {
-      h2Element.remove()
-    }
-  }
-
-  if (nodeData.subheader === '') {
-    const pElement = element.querySelector('.inkling-header-card-subheading')
-    if (pElement) {
-      pElement.remove()
-    }
-  }
 
   const rootElement = getFirstHtmlElement(element, 'renderHeaderV2Node')
   // getFirstHtmlElement validates the namespace, not the tag — tagName, not

@@ -217,6 +217,5 @@ test.describe('Text transforms > Headings', () => {
     })
 
     // TODO: add aside node support
-    //test.fixme('aside #\\s -> h1');
   })
 })

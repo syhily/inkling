@@ -56,7 +56,7 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
 
           // convert empty top level list items to paragraphs
           if (atStartOfElement && $isListItemNode(anchorNode) && anchorNode.getIndent() === 0 && anchorNode.isEmpty()) {
-            event?.preventDefault()
+            event.preventDefault()
             editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND, undefined)
             return true
           }
@@ -89,7 +89,7 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
           if (atStartOfElement && $isListItemNode(anchorNode.getParent())) {
             const listItemNode = anchorNode.getParent()
             if (listItemNode && listItemNode.getIndent() === 0) {
-              event?.preventDefault()
+              event.preventDefault()
               const paragraphNode = $createParagraphNode()
               paragraphNode.append(...listItemNode.getChildren())
               listItemNode.replace(paragraphNode)
@@ -111,7 +111,7 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
             })
             anchorNodeParent.replace(paragraph)
             paragraph.selectStart()
-            event?.preventDefault()
+            event.preventDefault()
             return true
           }
 
@@ -123,7 +123,7 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
             anchorNodeParent === topLevelElement && // handles lists, where the parent node is not the paragraph
             anchorNodeParent?.getFirstChild()?.is(anchorNode) // handles child nodes in paragraphs, e.g. LinkNode and HorizontalRule
           ) {
-            event?.preventDefault()
+            event.preventDefault()
             previousCard.remove()
             return true
           }
@@ -154,7 +154,7 @@ export function registerBackspaceCommand(editor: LexicalEditor, deps: KeyboardNa
                 selection.anchor.offset = selection.anchor.offset + newText.length - textContent.length
                 selection.focus.offset = selection.focus.offset + newText.length - textContent.length
 
-                event?.preventDefault()
+                event.preventDefault()
                 return true
               }
             }

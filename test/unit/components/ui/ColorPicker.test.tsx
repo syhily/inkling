@@ -96,24 +96,59 @@ describe('ColorPicker', () => {
     expect(document.querySelector('.react-colorful')).toBeInTheDocument()
   })
 
-  it('handles mouse down and mouse up on color picker', () => {
+  it('focuses the hex input on mouse down and removes the document gesture listener on mouse up', () => {
     render(<ColorPicker value="#ff0000" onChange={onChange} />)
+
+    const input = screen.getByLabelText('Color value') as HTMLInputElement
+    input.blur()
+
+    const addListenerSpy = vi.spyOn(document, 'addEventListener')
+    const removeListenerSpy = vi.spyOn(document, 'removeEventListener')
 
     const picker = document.querySelector('.react-colorful') as HTMLElement
     fireEvent.mouseDown(picker)
+
+    // clicking inside the picker returns focus to the hex input and arms the
+    // per-gesture document listeners
+    expect(document.activeElement).toBe(input)
+    expect(addListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function))
+    expect(addListenerSpy).toHaveBeenCalledWith('touchend', expect.any(Function))
+
     fireEvent.mouseUp(picker)
 
-    expect(document.querySelector('.react-colorful')).toBeInTheDocument()
+    // releasing the gesture keeps focus on the hex input and removes the listeners
+    expect(document.activeElement).toBe(input)
+    expect(removeListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function))
+    expect(removeListenerSpy).toHaveBeenCalledWith('touchend', expect.any(Function))
+
+    addListenerSpy.mockRestore()
+    removeListenerSpy.mockRestore()
   })
 
-  it('handles touch start and touch end on color picker', () => {
+  it('focuses the hex input on touch start and removes the document gesture listener on touch end', () => {
     render(<ColorPicker value="#ff0000" onChange={onChange} />)
+
+    const input = screen.getByLabelText('Color value') as HTMLInputElement
+    input.blur()
+
+    const addListenerSpy = vi.spyOn(document, 'addEventListener')
+    const removeListenerSpy = vi.spyOn(document, 'removeEventListener')
 
     const picker = document.querySelector('.react-colorful') as HTMLElement
     fireEvent.touchStart(picker)
+
+    expect(document.activeElement).toBe(input)
+    expect(addListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function))
+    expect(addListenerSpy).toHaveBeenCalledWith('touchend', expect.any(Function))
+
     fireEvent.touchEnd(picker)
 
-    expect(document.querySelector('.react-colorful')).toBeInTheDocument()
+    expect(document.activeElement).toBe(input)
+    expect(removeListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function))
+    expect(removeListenerSpy).toHaveBeenCalledWith('touchend', expect.any(Function))
+
+    addListenerSpy.mockRestore()
+    removeListenerSpy.mockRestore()
   })
 })
 

@@ -78,10 +78,10 @@ describe('cleanBasicHtml', function () {
 
   describe('options.removeCodeWrappers', function () {
     it('removes any <code> wrappers around replacement strings {foo}', function () {
-      const html = '<code><span>{foo}</span></code>'
+      const html = '<code>{foo}</code>'
       const result = cleanBasicHtml(html, { ...options, removeCodeWrappers: true })
 
-      expect(result).toBe('<span>{foo}</span>')
+      expect(result).toBe('{foo}')
     })
 
     it('removes any <code> wrappers around replacement strings <span>{foo}</span>', function () {

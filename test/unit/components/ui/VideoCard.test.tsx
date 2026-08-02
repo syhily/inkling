@@ -20,7 +20,7 @@ describe('VideoCard', () => {
   const defaultProps: React.ComponentProps<typeof VideoCard> = {
     captionEditor: createCaptionEditor(),
     captionEditorInitialState: undefined,
-    fileInputRef: fileInputRef as React.RefObject<HTMLInputElement>,
+    fileInputRef,
     onVideoFileChange: vi.fn(),
     videoDragHandler: createDragHandler(),
     videoUploader: createUploader({ progress: 0 }),

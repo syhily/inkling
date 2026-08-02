@@ -73,9 +73,9 @@ export function registerPasteHandler(editor: LexicalEditor, deps: PasteHandlerDe
       // Lexical code:
       // https://github.com/facebook/lexical/blob/main/packages/lexical-rich-text/src/index.ts#L492-L494
       // https://github.com/facebook/lexical/blob/main/packages/lexical-rich-text/src/index.ts#L1035
-      const files = clipboardData.files ? Array.from(clipboardData.files) : []
+      const files = Array.from(clipboardData.files)
       const imageFiles = files.filter((file): file is File => file instanceof File && file.type.startsWith('image/'))
-      const imgTagMatch = html && !!html.match(/<\s*img\b/gi)
+      const imgTagMatch = html.match(/<\s*img\b/i) !== null
 
       if (imageFiles.length === 1 && imgTagMatch) {
         clipboardEvent.preventDefault()

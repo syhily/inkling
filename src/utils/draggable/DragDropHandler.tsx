@@ -186,7 +186,7 @@ export class DragDropHandler {
       this.draggableInfo.mousePosition.x = event.clientX
       this.draggableInfo.mousePosition.y = event.clientY
 
-      this._handleDrag(event)
+      this._handleDrag()
     }
   }
 
@@ -380,7 +380,7 @@ export class DragDropHandler {
   // machine (hover-transitions) decides; this adapter measures the frame,
   // applies the next state, and interprets the ordered effects — container
   // callbacks, the indicator, and the drop resolution write
-  _handleDrag(_event?: MouseEvent) {
+  _handleDrag() {
     const drag = this._activeDrag
     if (!drag || !this._dragPreviewContainerElement) {
       return

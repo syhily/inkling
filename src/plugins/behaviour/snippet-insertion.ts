@@ -89,8 +89,8 @@ export function $insertSnippet(editor: LexicalEditor, dataset: unknown): boolean
   } catch (_e) {
     return false
   }
-  const firstNode = nodes.length === 1 && nodes[0]
-  const lastNode = !!nodes.length && nodes[nodes.length - 1]
+  const firstNode = nodes.length === 1 ? nodes[0] : null
+  const lastNode = nodes.length > 0 ? nodes[nodes.length - 1] : null
 
   if (firstNode && $isInklingCard(firstNode)) {
     editor.dispatchCommand(INSERT_CARD_COMMAND, { cardNode: firstNode })

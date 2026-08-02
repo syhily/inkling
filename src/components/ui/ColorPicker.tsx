@@ -29,7 +29,7 @@ const CONIC_RING_BACKGROUND =
   'conic-gradient(hsl(360,100%,50%),hsl(315,100%,50%),hsl(270,100%,50%),hsl(225,100%,50%),hsl(180,100%,50%),hsl(135,100%,50%),hsl(90,100%,50%),hsl(45,100%,50%),hsl(0,100%,50%))'
 
 /** The rainbow ring marking "custom color" on the selector and picker-toggle buttons. */
-function ConicRing() {
+export function ConicRing() {
   return (
     <div
       className="absolute inset-0 rounded-full bg-clip-content p-[3px]"
@@ -258,7 +258,7 @@ export function ColorIndicator({
   // the indicator paints 'transparent' as white (the button needs a visible
   // paint); the picker and swatch resolutions share the one grammar module
   const backgroundColor = resolveSwatchDisplayColor(value, { transparentAs: 'white' })
-  let selectedSwatch = resolveSelectedSwatchTitle(value, swatches)
+  let selectedSwatch: string | undefined = resolveSelectedSwatchTitle(value, swatches)
 
   if (isExpanded) {
     selectedSwatch = undefined

@@ -9,6 +9,7 @@ import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin'
 import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin'
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
+import { BLUR_COMMAND, FOCUS_COMMAND } from 'lexical'
 import React from 'react'
 
 import type { ExternalControlAPI } from '@/plugins/ExternalControlPlugin'
@@ -24,8 +25,7 @@ import DragDropReorderPlugin from '@/plugins/DragDropReorderPlugin'
 import { ExternalControlPlugin } from '@/plugins/ExternalControlPlugin'
 import FloatingToolbarPlugin from '@/plugins/FloatingToolbarPlugin'
 import InklingBehaviourPlugin from '@/plugins/InklingBehaviourPlugin'
-import { InklingBlurPlugin } from '@/plugins/InklingBlurPlugin'
-import { InklingFocusPlugin } from '@/plugins/InklingFocusPlugin'
+import { InklingEditorEventPlugin } from '@/plugins/InklingEditorEventPlugin'
 import MarkdownPastePlugin from '@/plugins/MarkdownPastePlugin'
 import MarkdownShortcutPlugin from '@/plugins/MarkdownShortcutPlugin'
 import RestrictContentPlugin from '@/plugins/RestrictContentPlugin'
@@ -154,7 +154,7 @@ const InklingComposableEditor = ({
       />
       <LinkPlugin />
       <OnChangePlugin ignoreHistoryMergeTagChange={false} ignoreSelectionChange={true} onChange={_onChange} />
-      {!isCollabActive && <HistoryPlugin externalHistoryState={historyState} />}{' '}
+      {!isCollabActive && <HistoryPlugin externalHistoryState={historyState} />}
       {/* adds undo/redo, in multiplayer that's handled by yjs */}
       <InklingBehaviourPlugin
         containerElem={editorContainerRef}
@@ -174,8 +174,8 @@ const InklingComposableEditor = ({
       {registerAPI ? <ExternalControlPlugin registerAPI={registerAPI} /> : null}
       {isDragReorderEnabled && <DragDropReorderPlugin />}
       {singleParagraph && <RestrictContentPlugin paragraphs={1} />}
-      {onBlur && <InklingBlurPlugin onBlur={onBlur} />}
-      {onFocus && <InklingFocusPlugin onFocus={onFocus} />}
+      {onBlur && <InklingEditorEventPlugin command={BLUR_COMMAND} onEvent={onBlur} />}
+      {onFocus && <InklingEditorEventPlugin command={FOCUS_COMMAND} onEvent={onFocus} />}
       <MarkdownPastePlugin />
       {isTKEnabled && <TKPlugin />}
       {children}

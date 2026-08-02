@@ -19,9 +19,15 @@ export interface GalleryNodeComponentProps {
   nodeKey: NodeKey
   captionEditor: LexicalEditor | null
   captionEditorInitialState: EditorState | undefined
+  triggerFileDialog?: boolean
 }
 
-export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInitialState }: GalleryNodeComponentProps) {
+export function GalleryNodeComponent({
+  nodeKey,
+  captionEditor,
+  captionEditorInitialState,
+  triggerFileDialog,
+}: GalleryNodeComponentProps) {
   const { host } = useCardChrome(nodeKey, $isGalleryNode)
   const { fileUploader } = host
   const isSelected = useCardIsSelected(nodeKey)
@@ -40,6 +46,7 @@ export function GalleryNodeComponent({ nodeKey, captionEditor, captionEditorInit
     kind: 'image',
     nodeKey,
     guard: $isGalleryNode,
+    triggerFileDialog,
     onFiles: (files, upload) =>
       galleryUploadIntent({
         upload,
@@ -128,6 +135,7 @@ export function renderGalleryCard(node: GalleryNode) {
       captionEditor={node.__captionEditor}
       captionEditorInitialState={node.__captionEditorInitialState}
       nodeKey={node.getKey()}
+      triggerFileDialog={node.__triggerFileDialog}
     />
   )
 }

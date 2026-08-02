@@ -29,7 +29,7 @@ export function registerTabCommand(editor: LexicalEditor, deps: KeyboardNavigati
       }
 
       // exit the editor if we're shift tabbing on an element that isn't tabbed
-      if (event?.shiftKey && cursorDidExitAtTop) {
+      if (event.shiftKey && cursorDidExitAtTop) {
         const selection = $getSelection()
 
         if ($isNodeSelection(selection)) {
@@ -62,7 +62,7 @@ export function registerTabCommand(editor: LexicalEditor, deps: KeyboardNavigati
 
       // code card shortcut — trigger only; the regex, language extraction, and
       // replace-and-select live in the card-shortcut seam (@/markdown/card-shortcuts)
-      if (!isNested && event) {
+      if (!isNested) {
         if ($fireFenceKeyboardShortcut(event)) {
           return true
         }

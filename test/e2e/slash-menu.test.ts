@@ -209,7 +209,7 @@ test.describe('Slash menu', () => {
       await expect(menuItems.nth(1)).toHaveAttribute('data-inkling-cardmenu-selected', 'false')
     })
 
-    test('LEFT selects previous time', async function () {
+    test('LEFT selects previous item', async function () {
       await focusEditor(page)
       await page.keyboard.type('/')
       await page.keyboard.press('ArrowDown')

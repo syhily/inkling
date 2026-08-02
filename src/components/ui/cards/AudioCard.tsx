@@ -17,6 +17,7 @@ import {
   useFileInputRefTunnel,
 } from '@/components/ui/UploadChrome'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
+import { formatVideoDuration } from '@/nodes/base/nodes/video/format-video-duration'
 
 interface AudioThumbnailProps {
   mimeTypes?: string[]
@@ -136,7 +137,7 @@ function AudioThumbnail({
           onClick={() => fileInputRef.current?.click()}
         >
           {(isEditing && (
-            <FilePlaceholderIcon className="ease-inx size-6 text-white transition-all duration-75 group-hover:scale-105" />
+            <FilePlaceholderIcon className="size-6 text-white transition-all duration-75 ease-in group-hover:scale-105" />
           )) || <AudioFileIcon className="size-6 text-white" />}
         </button>
         <UploadFileInput
@@ -167,13 +168,6 @@ function PopulatedAudioCard({
   thumbnailDragHandler,
 }: PopulatedAudioCardProps) {
   const { isLoading: isUploading, progress, errors } = thumbnailUploader
-  const formatDuration = (rawDuration: number) => {
-    const minutes = Math.floor(rawDuration / 60)
-    const seconds = Math.floor(rawDuration - minutes * 60)
-    const returnedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`
-    const formattedDuration = `${minutes}:${returnedSeconds}`
-    return formattedDuration
-  }
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     updateTitle(event.target.value)
@@ -210,7 +204,7 @@ function PopulatedAudioCard({
               onChange={handleChange}
             />
           )}
-          <MediaPlayer duration={formatDuration(duration ?? 0)} theme="dark" />
+          <MediaPlayer duration={formatVideoDuration(duration ?? 0)} theme="dark" />
         </div>
       </div>
       {!isEditing && <ReadOnlyOverlay />}

@@ -27,16 +27,13 @@ interface HeaderNodeComponentProps {
   buttonUrl: string
   buttonEnabled: boolean
   nodeKey: NodeKey
-  header?: string
   headerTextEditor: LexicalEditor
   headerTextEditorInitialState?: EditorState | undefined
   layout: string
-  subheader?: string
   subheaderTextEditor: LexicalEditor
   subheaderTextEditorInitialState?: EditorState | undefined
   textColor: string
   isSwapped: boolean
-  accentColor?: string
 }
 
 function HeaderNodeComponent({
@@ -52,16 +49,13 @@ function HeaderNodeComponent({
   buttonUrl,
   buttonEnabled,
   nodeKey,
-  header,
   headerTextEditor,
   headerTextEditorInitialState,
   layout,
-  subheader,
   subheaderTextEditor,
   subheaderTextEditorInitialState,
   textColor,
   isSwapped,
-  accentColor,
 }: HeaderNodeComponentProps) {
   const { editor, host, write } = useCardChrome(nodeKey, $isHeaderNode)
   const { cardConfig } = host
@@ -207,7 +201,6 @@ export default HeaderNodeComponent
 export function renderHeaderCard(node: HeaderNode) {
   return (
     <HeaderNodeComponent
-      accentColor={node.accentColor}
       alignment={node.alignment}
       backgroundColor={node.backgroundColor}
       backgroundImageHeight={node.backgroundImageHeight}
@@ -219,13 +212,11 @@ export function renderHeaderCard(node: HeaderNode) {
       buttonText={node.buttonText}
       buttonTextColor={node.buttonTextColor}
       buttonUrl={node.buttonUrl}
-      header={node.header}
       headerTextEditor={node.__headerTextEditor}
       headerTextEditorInitialState={node.__headerTextEditorInitialState}
       isSwapped={node.swapped}
       layout={node.layout}
       nodeKey={node.getKey()}
-      subheader={node.subheader}
       subheaderTextEditor={node.__subheaderTextEditor}
       subheaderTextEditorInitialState={node.__subheaderTextEditorInitialState}
       textColor={node.textColor}

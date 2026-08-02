@@ -11,7 +11,7 @@ const loadJsdom: LoadJsdom = async () => {
   return new JSDOM()
 }
 
-let cachedDefaultDom: ExportDOMDom | undefined
+let cachedDefaultDom: Promise<ExportDOMDom> | undefined
 
 /**
  * The headless DOM port — the only module in the package that knows jsdom
@@ -22,6 +22,12 @@ let cachedDefaultDom: ExportDOMDom | undefined
  * renderer used to carry, moved here. The jsdom loader hides behind the
  * `load` injection port so the failure leg is a synchronous test table with
  * no module mocking: any loader failure is rethrown as the named error.
+ *
+ * The cache stores the load PROMISE, not the resolved DOM, so concurrent
+ * first calls share one JSDOM construction instead of racing into several.
+ * A failed load clears the cache again — failures never populate it, so a
+ * later call retries (and can succeed) instead of rethrowing a cached
+ * rejection.
  */
 export async function resolveHeadlessDom(injected?: ExportDOMDom, load: LoadJsdom = loadJsdom): Promise<ExportDOMDom> {
   if (injected) {
@@ -35,11 +41,22 @@ export async function resolveHeadlessDom(injected?: ExportDOMDom, load: LoadJsdo
     return { window }
   }
 
+  if (!cachedDefaultDom) {
+    const pending = load()
+    cachedDefaultDom = pending
+    // Clear the cache on failure so the failure leg never poisons later
+    // resolutions; the identity guard skips the clear if a newer load has
+    // already replaced this promise.
+    pending.catch(() => {
+      if (cachedDefaultDom === pending) {
+        cachedDefaultDom = undefined
+      }
+    })
+  }
+
   try {
-    cachedDefaultDom ??= await load()
+    return await cachedDefaultDom
   } catch (error) {
     throw new Error(HEADLESS_DOM_MISSING_MESSAGE, { cause: error })
   }
-
-  return cachedDefaultDom
 }

@@ -4,6 +4,7 @@ import React from 'react'
 import { AtLinkResultsPopup } from '@/components/ui/AtLinkResultsPopup'
 import Portal from '@/components/ui/Portal'
 import InklingHostIntegrationContext, { type CardConfig } from '@/context/InklingHostIntegrationContext'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { useSearchLinks, type ListOptionItem, type ListOptionSection } from '@/hooks/useSearchLinks'
 import { AtLinkNode, AtLinkSearchNode } from '@/nodes/base'
 import trackEvent from '@/utils/analytics'
@@ -19,10 +20,10 @@ import {
   type AtLinkSessionSnapshot,
 } from './behaviour/at-link'
 
-function noResultOptions(): ListOptionSection[] {
+function noResultOptions(noResultsLabel: string): ListOptionSection[] {
   return [
     {
-      label: 'No results found',
+      label: noResultsLabel,
       items: [],
     },
   ]
@@ -40,11 +41,15 @@ interface AtLinkPluginProps {
 // here — it is product glue, not tree policy.
 export const InklingAtLinkPlugin = ({ searchLinks, siteUrl }: AtLinkPluginProps) => {
   const [editor] = useLexicalComposerContext()
+  const labels = useInklingLabels()
   const [{ focusedNode, query }, setSession] = React.useState<AtLinkSessionSnapshot>({
     focusedNode: null,
     query: '',
   })
-  const searchOptions = React.useMemo(() => ({ noResultOptions }), [])
+  const searchOptions = React.useMemo(
+    () => ({ noResultOptions: () => noResultOptions(labels['search.noResults']) }),
+    [labels],
+  )
   const { isSearching, listOptions } = useSearchLinks(query, searchLinks, searchOptions)
 
   // Convert a typed '@' into an at-link node (headless lifecycle module).

@@ -166,6 +166,48 @@ describe('BaseHeaderNode', function () {
       )
 
       it(
+        'parses the left alignment class back to left',
+        editorTest(
+          () => editor,
+          function () {
+            const htmlstring = `
+                    <div class="inkling-card inkling-header-card inkling-v2" data-background-color="#abcdef">
+                        <div class="inkling-header-card-content">
+                            <div class="inkling-header-card-text inkling-align-left">
+                                <h2 class="inkling-header-card-heading" data-text-color="#abcdef">Header</h2>
+                            </div>
+                        </div>
+                    </div>`
+            const document = createDocument(htmlstring)
+            const nodes = $generateNodesFromDOM(editor, document) as BaseHeaderNode[]
+            expect(nodes.length).toBe(1)
+            expect(nodes[0].alignment).toBe('left')
+          },
+        ),
+      )
+
+      it(
+        'reads legacy markup with no alignment class as an empty alignment',
+        editorTest(
+          () => editor,
+          function () {
+            const htmlstring = `
+                    <div class="inkling-card inkling-header-card inkling-v2" data-background-color="#abcdef">
+                        <div class="inkling-header-card-content">
+                            <div class="inkling-header-card-text">
+                                <h2 class="inkling-header-card-heading" data-text-color="#abcdef">Header</h2>
+                            </div>
+                        </div>
+                    </div>`
+            const document = createDocument(htmlstring)
+            const nodes = $generateNodesFromDOM(editor, document) as BaseHeaderNode[]
+            expect(nodes.length).toBe(1)
+            expect(nodes[0].alignment).toBe('')
+          },
+        ),
+      )
+
+      it(
         'does not parse a v1 header',
         editorTest(
           () => editor,
@@ -378,6 +420,34 @@ describe('BaseHeaderNode', function () {
       )
 
       it(
+        'renders the left alignment class',
+        editorTest(
+          () => editor,
+          function () {
+            const node = $createBaseHeaderNode({ ...dataset, alignment: 'left' })
+            const { element } = node.exportDOM(editor, exportOptions)
+            const textElement = (element as HTMLElement).querySelector('.inkling-header-card-text')
+            expect(textElement?.classList.contains('inkling-align-left')).toBe(true)
+          },
+        ),
+      )
+
+      it(
+        'round-trips the left alignment through export and import',
+        editorTest(
+          () => editor,
+          function () {
+            const node = $createBaseHeaderNode({ ...dataset, alignment: 'left' })
+            const { element } = node.exportDOM(editor, exportOptions)
+            const document = createDocument((element as HTMLElement).outerHTML)
+            const nodes = $generateNodesFromDOM(editor, document) as BaseHeaderNode[]
+            expect(nodes.length).toBe(1)
+            expect(nodes[0].alignment).toBe('left')
+          },
+        ),
+      )
+
+      it(
         'renders empty card when header and subheader is undefined and the button is disabled',
         editorTest(
           () => editor,
@@ -388,7 +458,6 @@ describe('BaseHeaderNode', function () {
             node.buttonEnabled = false
             const { element } = node.exportDOM(editor, exportOptions)
             // v2 renderer has no empty check — it always returns a card element
-            expect(element).toBeDefined()
             expect(element).not.toBeNull()
             expect((element as HTMLElement).querySelector('.inkling-header-card-heading') ?? null).toBeNull()
             expect((element as HTMLElement).querySelector('.inkling-header-card-subheading') ?? null).toBeNull()
@@ -505,7 +574,6 @@ describe('BaseHeaderNode', function () {
             expect(html).toContain('&lt;em&gt;Button&lt;/em&gt;')
             expect(html).not.toContain('<script>alert(1)</script>')
             expect(html).not.toContain('javascript:alert(1)')
-            expect((element as HTMLElement).querySelector('.inkling-header-card-button')).toBeDefined()
             expect((element as HTMLElement).querySelector('.inkling-header-card-button')).not.toBeNull()
           },
         ),

@@ -155,7 +155,6 @@ describe('createPinturaCloseGate', () => {
 
     const closeButton = document.createElement('button')
     closeButton.title = 'Close'
-    document.createElement('div')
     const modal = document.createElement('div')
     modal.className = 'PinturaModal'
     modal.appendChild(closeButton)

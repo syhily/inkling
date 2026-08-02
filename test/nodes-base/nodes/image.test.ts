@@ -429,15 +429,157 @@ describe('BaseImageNode', function () {
     )
 
     describe('srcset attribute', function () {
-      it('is included for absolute images when siteUrl has trailing slash')
-      it('is omitted when no contentImageSizes are passed as options')
-      it('is omitted when `srcsets: false` is passed in as an option')
-      it('is omitted when canTransformImages is provided and returns false')
-      it('is omitted when no width is provided')
-      it('is omitted when image is smaller than minimum responsive width')
-      it('omits sizes larger than image width and includes origin image width if smaller than largest responsive width')
-      it('works correctly with subdirectories')
-      it('works correctly with absolute subdirectories')
+      it(
+        'is included for absolute images when siteUrl has trailing slash',
+        editorTest(
+          () => editor,
+          async function () {
+            dataset.src = 'https://example.com/content/images/2022/11/inkling-lexical.jpg'
+            exportOptions.siteUrl = 'https://example.com/'
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).toContain('https://example.com/content/images/size/w600/2022/11/inkling-lexical.jpg 600w')
+          },
+        ),
+      )
+
+      it(
+        'is omitted when no contentImageSizes are passed as options',
+        editorTest(
+          () => editor,
+          async function () {
+            exportOptions.imageOptimization = {}
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).not.toContain('srcset=')
+          },
+        ),
+      )
+
+      it(
+        'is omitted when `srcsets: false` is passed in as an option',
+        editorTest(
+          () => editor,
+          async function () {
+            ;(exportOptions.imageOptimization as Record<string, unknown>).srcsets = false
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).not.toContain('srcset=')
+          },
+        ),
+      )
+
+      it(
+        'is omitted when canTransformImages is provided and returns false',
+        editorTest(
+          () => editor,
+          async function () {
+            exportOptions.canTransformImage = () => false
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).not.toContain('srcset=')
+          },
+        ),
+      )
+
+      it(
+        'is omitted when no width is provided',
+        editorTest(
+          () => editor,
+          async function () {
+            dataset.width = null
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).not.toContain('srcset=')
+          },
+        ),
+      )
+
+      it(
+        'is omitted when image is smaller than minimum responsive width',
+        editorTest(
+          () => editor,
+          async function () {
+            dataset.width = 500
+            dataset.height = 500
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).not.toContain('srcset=')
+          },
+        ),
+      )
+
+      it(
+        'omits sizes larger than image width and includes origin image width if smaller than largest responsive width',
+        editorTest(
+          () => editor,
+          async function () {
+            dataset.width = 2000
+            dataset.height = 2000
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).toContain('/content/images/size/w1600/2022/11/inkling-lexical.jpg 1600w')
+            expect(output).toContain('/content/images/2022/11/inkling-lexical.jpg 2000w')
+            expect(output).not.toContain('w2400')
+          },
+        ),
+      )
+
+      it(
+        'works correctly with subdirectories',
+        editorTest(
+          () => editor,
+          async function () {
+            dataset.src = '/blog/content/images/2022/11/inkling-lexical.jpg'
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).toContain('srcset="/blog/content/images/size/w600/2022/11/inkling-lexical.jpg 600w')
+          },
+        ),
+      )
+
+      it(
+        'works correctly with absolute subdirectories',
+        editorTest(
+          () => editor,
+          async function () {
+            dataset.src = 'https://example.com/blog/content/images/2022/11/inkling-lexical.jpg'
+            exportOptions.siteUrl = 'https://example.com/blog/'
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).toContain(
+              'https://example.com/blog/content/images/size/w600/2022/11/inkling-lexical.jpg 600w',
+            )
+          },
+        ),
+      )
     })
 
     describe('sizes attribute', function () {
@@ -476,12 +618,110 @@ describe('BaseImageNode', function () {
         ),
       )
 
-      it('is omitted when srcset is not added')
-      it('is omitted when width is missing')
-      it('is included when only height is missing')
-      it('is omitted for standard images when width is less than 720')
-      it('is omitted for wide images when width is less than 1200')
-      it('is omitted for full images')
+      it(
+        'is omitted when srcset is not added',
+        editorTest(
+          () => editor,
+          async function () {
+            ;(exportOptions.imageOptimization as Record<string, unknown>).srcsets = false
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).not.toContain('srcset=')
+            expect(output).not.toContain('sizes=')
+          },
+        ),
+      )
+
+      it(
+        'is omitted when width is missing',
+        editorTest(
+          () => editor,
+          async function () {
+            dataset.width = null
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).not.toContain('sizes=')
+          },
+        ),
+      )
+
+      it(
+        'is included when only height is missing',
+        editorTest(
+          () => editor,
+          async function () {
+            dataset.height = null
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).toContain('sizes="(min-width: 720px) 720px"')
+          },
+        ),
+      )
+
+      it(
+        'is omitted for standard images when width is less than 720',
+        editorTest(
+          () => editor,
+          async function () {
+            dataset.width = 600
+            dataset.height = 600
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).toContain('srcset=')
+            expect(output).not.toContain('sizes=')
+          },
+        ),
+      )
+
+      it(
+        'is omitted for wide images when width is less than 1200',
+        editorTest(
+          () => editor,
+          async function () {
+            dataset.width = 1000
+            dataset.height = 1000
+            dataset.cardWidth = 'wide'
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).toContain('srcset=')
+            expect(output).not.toContain('sizes=')
+          },
+        ),
+      )
+
+      it(
+        'is omitted for full images',
+        editorTest(
+          () => editor,
+          async function () {
+            dataset.width = 3000
+            dataset.height = 2000
+            dataset.cardWidth = 'full'
+
+            const imageNode = $createBaseImageNode(dataset)
+            const { element } = imageNode.exportDOM(editor, exportOptions)
+            const output = (element as HTMLElement).outerHTML
+
+            expect(output).toContain('srcset=')
+            expect(output).not.toContain('sizes=')
+          },
+        ),
+      )
     })
 
     describe('picture element', function () {
@@ -707,7 +947,7 @@ describe('BaseImageNode', function () {
         async function () {
           const document = createDocument(html`
             <figure>
-              <img src="http://example.com/test.png" width="640" height="480" />
+              <img src="http://example.com/test.png" data-width="640" data-height="480" />
             </figure>
           `)
           const nodes = $generateNodesFromDOM(editor, document) as BaseImageNode[]

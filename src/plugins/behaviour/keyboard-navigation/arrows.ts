@@ -36,7 +36,7 @@ function registerVerticalArrowCommand(
     direction,
     logicalDirection,
   }: {
-    command: LexicalCommand<KeyboardEvent | undefined>
+    command: LexicalCommand<KeyboardEvent>
     direction: 'up' | 'down'
     logicalDirection: 'previous' | 'next'
   },
@@ -50,7 +50,7 @@ function registerVerticalArrowCommand(
       const selection = $getSelection()
 
       // if a selection is being made, we need to handle it ourselves (lexical does not handle decorator nodes at this time)
-      if (event?.shiftKey) {
+      if (event.shiftKey) {
         if ($isRangeSelection(selection)) {
           return $extendSelectionAcrossCardBoundary(direction, selection, event)
         }
@@ -98,7 +98,7 @@ function registerVerticalArrowCommand(
         }
 
         // move cursor to the sibling's near edge
-        event?.preventDefault()
+        event.preventDefault()
         if (isUp) {
           sibling?.selectEnd()
         } else {
@@ -167,13 +167,13 @@ export function registerArrowLeftCommand(editor: LexicalEditor, deps: KeyboardNa
           const previousSibling = currentNode.getPreviousSibling()
 
           if (!previousSibling) {
-            event?.preventDefault()
+            event.preventDefault()
             selection.clear()
             cursorDidExitAtTop()
             return true
           }
         } else if (selection && $isAtStartOfDocument(selection)) {
-          event?.preventDefault()
+          event.preventDefault()
           cursorDidExitAtTop()
           return true
         }
@@ -192,7 +192,7 @@ export function registerArrowLeftCommand(editor: LexicalEditor, deps: KeyboardNa
       const previousCard = referenceNode ? $getLogicallyAdjacentCard('previous', referenceNode) : null
 
       if (previousCard) {
-        event?.preventDefault()
+        event.preventDefault()
         $selectDecoratorNode(previousCard)
         return true
       }
@@ -229,7 +229,7 @@ export function registerArrowRightCommand(editor: LexicalEditor, _deps: Keyboard
       const nextCard = referenceNode ? $getLogicallyAdjacentCard('next', referenceNode) : null
 
       if (nextCard) {
-        event?.preventDefault()
+        event.preventDefault()
         $selectDecoratorNode(nextCard)
         return true
       }

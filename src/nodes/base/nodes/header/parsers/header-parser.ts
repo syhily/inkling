@@ -20,9 +20,14 @@ export function parseHeaderNode(BaseHeaderNode: new (data: Record<string, unknow
             const headerElement = div.querySelector('.inkling-header-card-heading')
             const subheaderElement = div.querySelector('.inkling-header-card-subheading')
             const buttonElement = div.querySelector('.inkling-header-card-button')
-            const alignment = div.querySelector('.inkling-header-card-text')?.classList.contains('inkling-align-center')
-              ? 'center'
-              : ''
+            // symmetric with the renderer: legacy markup with no alignment
+            // class still reads back ''
+            const textClasses = div.querySelector('.inkling-header-card-text')?.classList
+            const alignment = textClasses?.contains('inkling-align-left')
+              ? 'left'
+              : textClasses?.contains('inkling-align-center')
+                ? 'center'
+                : ''
             const backgroundImageSrc = div.querySelector('.inkling-header-card-image')?.getAttribute('src')
             const isSplitLayout = div.classList.contains('inkling-layout-split')
             // split also emits inkling-width-full, so the split check wins;

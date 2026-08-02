@@ -149,7 +149,9 @@ export function $mergeImagesIntoGallery(
 
   // images don't contain the filename dataset property so we need to add
   // it — on a copy of the payload, not by mutating the caller's object (the
-  // shared fill policy applies the same fallback for the conversion itself)
+  // shared fill policy applies the same fallback for the conversion itself).
+  // `||` over `??` is deliberate: an empty-string fileName is as useless as a
+  // missing one, and datasetToGalleryImage applies the same fallback.
   const draggedFileName = typeof draggedDataset.fileName === 'string' ? draggedDataset.fileName : undefined
   const filledDraggedDataset = {
     ...draggedDataset,

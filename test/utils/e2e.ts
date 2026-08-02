@@ -296,8 +296,10 @@ export function prettifyJSON(string: string) {
   })
 }
 
-// This function does not suppose to do anything, it's only used as a trigger
-// for prettier auto-formatting (https://prettier.io/blog/2020/08/24/2.1.0.html#api)
+// Tagged-template passthrough: joins the partials and params back into a
+// plain string. It exists so prettier's embedded-language formatting treats
+// the template's contents as HTML
+// (https://prettier.io/blog/2020/08/24/2.1.0.html#api)
 export function html(partials: TemplateStringsArray, ...params: unknown[]) {
   let output = ''
   for (let i = 0; i < partials.length; i++) {
@@ -458,7 +460,12 @@ export async function paste(page: Page, data: Record<string, string>) {
 
         ${setDataCommands.join('\n')};
 
-        document.activeElement.dispatchEvent(new ClipboardEvent('paste', {
+        const activeElement = document.activeElement;
+        if (!activeElement) {
+            throw new Error('Expected an active element before pasting');
+        }
+
+        activeElement.dispatchEvent(new ClipboardEvent('paste', {
             clipboardData: dataTransfer,
             bubbles: true,
             cancelable: true

@@ -1,6 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
-import { $getRoot } from 'lexical'
+import { $getRoot, $isParagraphNode } from 'lexical'
 import React from 'react'
 
 import { $insertHtmlDocument } from '@/html/html-to-lexical/insert-html'
@@ -29,9 +29,16 @@ export const HtmlOutputPlugin = ({
       // Byte-level identity with the headless output is pinned by
       // test/unit/plugins/HtmlOutputPlugin.export-parity.test.ts.
       const htmlString = $convertToHtmlString(editor)
-      const rootText = $getRoot().getTextContent()
-      const hasContent = rootText.trim().length > 0
-      setHtml?.(hasContent ? htmlString : '')
+      // Emptiness is structural, not textual: a document is empty only when
+      // it holds nothing or one blank paragraph — the shape the serializer
+      // strips to ''. A text-less but structured document (a bare <hr>, an
+      // image card) has real export output; judging by root text would
+      // collapse it to '' here while the headless path emits the markup.
+      const children = $getRoot().getChildren()
+      const isEmptyDocument =
+        children.length === 0 ||
+        (children.length === 1 && $isParagraphNode(children[0]) && children[0].getTextContent().trim() === '')
+      setHtml?.(isEmptyDocument ? '' : htmlString)
     })
   }, [editor, setHtml])
 

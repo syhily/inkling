@@ -101,6 +101,10 @@ export default function $convertToHtmlString(editor: LexicalEditor, options: Exp
         // the same per-node exportDOM dispatch the cards get, with the options
         // bag flowing so headless renders resolve their DOM. The exported
         // element splices into the text flow as outer HTML.
+        // The base-class exportDOM signature takes no options parameter;
+        // inkling's inline decorators (FootnoteRefNode/MathInlineNode)
+        // declare the two-parameter form this assertion names — it is
+        // load-bearing (removing it is a TS2554 on the call below)
         const exporter = child as LexicalNode & {
           exportDOM(editor: LexicalEditor, options?: ExportDOMOptions): DOMExportOutput
         }

@@ -56,7 +56,6 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-      'process.env.VITEST_SEGFAULT_RETRY': 3,
       __APP_VERSION__: JSON.stringify(pkg.version),
     },
     resolve: {

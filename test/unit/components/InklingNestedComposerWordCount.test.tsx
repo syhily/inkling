@@ -1,6 +1,5 @@
-import type { LexicalEditor } from 'lexical'
-
 import { act, render } from '@testing-library/react'
+import { createEditor } from 'lexical'
 import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -45,7 +44,7 @@ function renderNestedComposer(wordCountHandle: WordCountHandle) {
   return render(
     <InklingCollaborationContext.Provider value={collaborationValue}>
       <WordCountHandleContext.Provider value={wordCountHandle}>
-        <InklingNestedComposer initialEditor={{} as LexicalEditor}>
+        <InklingNestedComposer initialEditor={createEditor({ namespace: 'test', onError: () => {} })}>
           <div />
         </InklingNestedComposer>
       </WordCountHandleContext.Provider>

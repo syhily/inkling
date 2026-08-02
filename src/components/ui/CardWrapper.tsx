@@ -53,7 +53,7 @@ export const CardWrapper = React.forwardRef<HTMLDivElement, CardWrapperProps>(
       wrapperClass(),
     ].join(' ')
 
-    let indicatorIcon
+    let indicatorIcon: React.ReactNode = null
     if (IndicatorIcon) {
       indicatorIcon = (
         <div className="sticky top-0 lg:top-8">

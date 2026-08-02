@@ -232,13 +232,7 @@ interface InputListSettingProps {
   value: string
 }
 
-/**
- * A text input with autocomplete suggestions.
- * @param {object} options
- * @param {(value: string) => void} options.onChange Does not pass an event, only the value
- * @param {{value: string, label: string}[]} options.listOptions
- * @returns
- */
+// A text input with autocomplete suggestions; onChange passes the value, not an event
 export function InputListSetting({
   dataTestId,
   description,

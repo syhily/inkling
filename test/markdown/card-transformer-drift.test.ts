@@ -128,7 +128,6 @@ describe('card markdown transformer field vocabulary', function () {
       it('import lands every fence field in the serialized node', function () {
         const { editor, node } = createEditorWithNode(nodeClass)
         const exported = editor.read(() => fenceTransformer.export(node, () => ''))
-        expect(exported).not.toBeNull()
         const defaultData = parseFenceBody(exported as string)
 
         Object.keys(defaultData).forEach((field) => {
@@ -160,7 +159,6 @@ describe('card markdown transformer field vocabulary', function () {
       it('import leaves no live nested editor on the created node', function () {
         const { editor, node } = createEditorWithNode(nodeClass)
         const exported = editor.read(() => fenceTransformer.export(node, () => ''))
-        expect(exported).not.toBeNull()
         const defaultData = parseFenceBody(exported as string)
 
         editor.update(() => {

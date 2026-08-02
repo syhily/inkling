@@ -116,5 +116,10 @@ export function usePopupRepositionSubscriptions(
       scrollElement.removeEventListener('scroll', onReposition)
       observer?.disconnect()
     }
-  }, [update, scrollElement, observeRef])
+    // observeRef.current joins the deps even though ref values are usually
+    // unstable dep candidates: a late-mounted popup element is always mounted
+    // by a render, and the deps comparison on that re-render is what re-runs
+    // this effect to attach the MutationObserver.
+    // oxlint-disable-next-line react/react-compiler -- deliberate ref-in-deps: the late-mount re-render is the re-attach signal
+  }, [update, scrollElement, observeRef, observeRef?.current])
 }

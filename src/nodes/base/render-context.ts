@@ -332,8 +332,15 @@ export function createRenderContext(options: ExportDOMOptions): RenderContext {
     if (resolvedWindow) {
       return resolvedWindow
     }
-    const candidate: ExportDOMDom['window'] | undefined =
-      options.dom?.window ?? createDocument().defaultView ?? browserWindow
+    // When the caller passed options.createDocument, sanitize must bind to
+    // that factory's own document — options.dom?.window may point at a
+    // different document, and binding window B while elements are written to
+    // document A breaks the single-document invariant of one render pass. A
+    // createHTMLDocument()'s defaultView is always null, so options.dom?.window
+    // stays the fallback for factory-made documents without a view.
+    const candidate: ExportDOMDom['window'] | undefined = options.createDocument
+      ? (createDocument().defaultView ?? options.dom?.window ?? browserWindow)
+      : (options.dom?.window ?? createDocument().defaultView ?? browserWindow)
     if (!candidate) {
       throw new Error('Must be passed a `createDocument` function as an option when used in a non-browser environment')
     }

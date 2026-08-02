@@ -101,23 +101,23 @@ export interface DropResolution {
 const noop = () => {}
 
 export class DragDropContainer {
-  element!: HTMLElement
-  draggables!: HTMLElement[]
-  droppables!: HTMLElement[]
+  element: HTMLElement
+  draggables: HTMLElement[]
+  droppables: HTMLElement[]
   isDragEnabled = true
-  draggableSelector!: string
-  droppableSelector!: string
-  onDragStart!: NonNullable<ContainerLifecycleHandlers['onDragStart']>
-  onDragEnterContainer!: NonNullable<ContainerDroppableConfig['onDragEnterContainer']>
-  onDragEnterDroppable!: NonNullable<ContainerDroppableConfig['onDragEnterDroppable']>
-  onDragOverDroppable!: NonNullable<ContainerDroppableConfig['onDragOverDroppable']>
-  onDragLeaveDroppable!: NonNullable<ContainerDroppableConfig['onDragLeaveDroppable']>
-  onDragLeaveContainer!: NonNullable<ContainerDroppableConfig['onDragLeaveContainer']>
-  onDragEnd!: NonNullable<ContainerLifecycleHandlers['onDragEnd']>
-  onDrop!: ContainerDroppableConfig['onDrop']
-  onDropEnd!: NonNullable<ContainerLifecycleHandlers['onDropEnd']>
-  getDraggableInfo!: ContainerDraggableConfig['getDraggableInfo']
-  getIndicatorPosition!: ContainerDroppableConfig['getIndicatorPosition']
+  draggableSelector: string
+  droppableSelector: string
+  onDragStart: NonNullable<ContainerLifecycleHandlers['onDragStart']>
+  onDragEnterContainer: NonNullable<ContainerDroppableConfig['onDragEnterContainer']>
+  onDragEnterDroppable: NonNullable<ContainerDroppableConfig['onDragEnterDroppable']>
+  onDragOverDroppable: NonNullable<ContainerDroppableConfig['onDragOverDroppable']>
+  onDragLeaveDroppable: NonNullable<ContainerDroppableConfig['onDragLeaveDroppable']>
+  onDragLeaveContainer: NonNullable<ContainerDroppableConfig['onDragLeaveContainer']>
+  onDragEnd: NonNullable<ContainerLifecycleHandlers['onDragEnd']>
+  onDrop: ContainerDroppableConfig['onDrop']
+  onDropEnd: NonNullable<ContainerLifecycleHandlers['onDropEnd']>
+  getDraggableInfo: ContainerDraggableConfig['getDraggableInfo']
+  getIndicatorPosition: ContainerDroppableConfig['getIndicatorPosition']
   _createDragPreviewElement?: ContainerDraggableConfig['createDragPreviewElement']
 
   constructor(element: HTMLElement, options: ContainerDragHandlers) {
@@ -129,25 +129,23 @@ export class DragDropContainer {
 
     // assemble the flat members the handler calls, filling absent optional
     // callbacks with no-ops
-    Object.assign(this, {
-      element,
-      draggables: [],
-      droppables: [],
-      isDragEnabled: draggable.isDragEnabled ?? true,
-      draggableSelector: draggable.draggableSelector,
-      getDraggableInfo: draggable.getDraggableInfo,
-      droppableSelector: droppable.droppableSelector,
-      getIndicatorPosition: droppable.getIndicatorPosition,
-      onDrop: droppable.onDrop,
-      onDragEnterContainer: droppable.onDragEnterContainer ?? noop,
-      onDragEnterDroppable: droppable.onDragEnterDroppable ?? noop,
-      onDragOverDroppable: droppable.onDragOverDroppable ?? noop,
-      onDragLeaveDroppable: droppable.onDragLeaveDroppable ?? noop,
-      onDragLeaveContainer: droppable.onDragLeaveContainer ?? noop,
-      onDragStart: lifecycle?.onDragStart ?? noop,
-      onDragEnd: lifecycle?.onDragEnd ?? noop,
-      onDropEnd: lifecycle?.onDropEnd ?? noop,
-    })
+    this.element = element
+    this.draggables = []
+    this.droppables = []
+    this.isDragEnabled = draggable.isDragEnabled ?? true
+    this.draggableSelector = draggable.draggableSelector
+    this.getDraggableInfo = draggable.getDraggableInfo
+    this.droppableSelector = droppable.droppableSelector
+    this.getIndicatorPosition = droppable.getIndicatorPosition
+    this.onDrop = droppable.onDrop
+    this.onDragEnterContainer = droppable.onDragEnterContainer ?? noop
+    this.onDragEnterDroppable = droppable.onDragEnterDroppable ?? noop
+    this.onDragOverDroppable = droppable.onDragOverDroppable ?? noop
+    this.onDragLeaveDroppable = droppable.onDragLeaveDroppable ?? noop
+    this.onDragLeaveContainer = droppable.onDragLeaveContainer ?? noop
+    this.onDragStart = lifecycle?.onDragStart ?? noop
+    this.onDragEnd = lifecycle?.onDragEnd ?? noop
+    this.onDropEnd = lifecycle?.onDropEnd ?? noop
 
     element.dataset[CONTAINER_DATA_ATTR] = 'true'
 

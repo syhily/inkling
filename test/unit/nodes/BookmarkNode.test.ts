@@ -1,7 +1,8 @@
 import { createHeadlessEditor } from '@lexical/headless'
-import { $createParagraphNode, $getRoot, $createTextNode, type LexicalEditor } from 'lexical'
+import { type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { attachCaptionEditorWithText } from '#/utils/caption-editor'
 import { updateEditor } from '#/utils/test-editor'
 import { BookmarkNode, $createBookmarkNode, $isBookmarkNode, INSERT_BOOKMARK_COMMAND } from '@/nodes/BookmarkNode'
 import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
@@ -52,20 +53,7 @@ describe('BookmarkNode', () => {
   it('exports caption as html when a caption editor exists', async () => {
     await updateEditor(editor, () => {
       const node = $createBookmarkNode({})
-      node.__captionEditor = createHeadlessEditor({
-        nodes: editorNodes,
-        onError: () => {},
-      })
-
-      node.__captionEditor.update(
-        () => {
-          const root = $getRoot()
-          root.clear()
-          const paragraph = root.append($createParagraphNode())
-          paragraph.append($createTextNode('Hello caption'))
-        },
-        { onUpdate: () => {} },
-      )
+      attachCaptionEditorWithText(node)
 
       const json = node.exportJSON()
       expect(json.caption).toContain('Hello caption')

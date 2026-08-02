@@ -43,7 +43,7 @@ export default function FloatingToolbar({
           return
         }
 
-        let rangeRect
+        let rangeRect: DOMRect | null = null
 
         if (targetElem) {
           rangeRect = targetElem.getClientRects()[0]

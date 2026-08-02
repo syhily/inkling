@@ -13,7 +13,7 @@ describeBookmarkCardSuite({
 // bookmark-card.suite.ts (URI + placeholder are the only divergence).
 test.describe('Bookmark card search', () => {
   let page: Page
-  let errors: string[]
+  let errors: string[] = []
 
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

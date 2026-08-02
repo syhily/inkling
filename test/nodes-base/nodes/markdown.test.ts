@@ -28,7 +28,7 @@ describe('MarkdownNode', function () {
   })
 
   it(
-    'matches node with $isImageNode',
+    'matches node with $isMarkdownNode',
     editorTest(
       () => editor,
       async function () {

@@ -5,7 +5,7 @@ import { $getRoot } from 'lexical'
 import type { ExportDOMDom, ExportDOMOptions } from '@/nodes/base'
 
 import { resolveHeadlessDom } from '@/html/headless-dom'
-import { prepareHeadlessRenderEditor } from '@/html/headless-editor'
+import { defaultOnError, prepareHeadlessRenderEditor } from '@/html/headless-editor'
 import { htmlToLexical } from '@/html/html-to-lexical/index'
 import $convertToHtmlString from '@/html/renderer/convert-to-html-string'
 import { type DefaultTransformsOptions } from '@/transforms'
@@ -15,13 +15,8 @@ export { DEFAULT_HTML_NODES } from '@/html/default-html-nodes'
 export interface LexicalStateToHtmlOptions extends ExportDOMOptions {
   /** Additive on top of DEFAULT_HTML_NODES; a same-type entry registered later wins (renderer semantics). */
   nodes?: LexicalNodeConfig[]
-  /** Swallows errors by default (the renderer's pinned behavior); server callers should pass one and fail fast. */
+  /** Swallows errors by default (the renderer's pinned behavior, via the shared `defaultOnError`); server callers should pass one and fail fast. */
   onError?: (error: Error) => void
-}
-
-function defaultOnError(error: Error) {
-  void error
-  // do nothing
 }
 
 /**
@@ -74,6 +69,7 @@ export async function htmlToLexicalState(
 export interface LexicalStateToPlainTextOptions {
   /** Same semantics as the renderer: additive on top of DEFAULT_HTML_NODES. */
   nodes?: LexicalNodeConfig[]
+  /** Same default as the HTML leg: errors are swallowed unless a handler is passed. */
   onError?: (error: Error) => void
 }
 
@@ -87,7 +83,10 @@ export function lexicalStateToPlainText(
   state: SerializedEditorState | string,
   options?: LexicalStateToPlainTextOptions,
 ): string {
-  const editor = prepareHeadlessRenderEditor(state, { nodes: options?.nodes, onError: options?.onError })
+  const editor = prepareHeadlessRenderEditor(state, {
+    nodes: options?.nodes,
+    onError: options?.onError ?? defaultOnError,
+  })
 
   let text = ''
   editor.update(() => {

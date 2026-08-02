@@ -25,11 +25,7 @@ function $isCellInlineOnly(cell: TableCellNode): boolean {
   }
 
   const stack: LexicalNode[] = children[0].getChildren()
-  while (stack.length > 0) {
-    const node = stack.pop()
-    if (!node) {
-      break
-    }
+  for (let node = stack.pop(); node !== undefined; node = stack.pop()) {
     if (!node.isInline() || $isIllegalCellInlineNode(node)) {
       return false
     }

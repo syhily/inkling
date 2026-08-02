@@ -63,9 +63,36 @@ export function extractErrorMessage(json: unknown): string {
   )
 }
 
+/** One result entry: `media_formats` must be an object, and a present `tinygif` must carry a [width, height] pair. */
+function isGifResultItem(item: unknown): boolean {
+  if (typeof item !== 'object' || item === null || !('media_formats' in item)) {
+    return false
+  }
+  const mediaFormats: unknown = item.media_formats
+  if (typeof mediaFormats !== 'object' || mediaFormats === null) {
+    return false
+  }
+  const tinygif: unknown = 'tinygif' in mediaFormats ? mediaFormats.tinygif : undefined
+  if (tinygif === undefined || tinygif === null) {
+    // only the full gif format is fine — tinygif is a layout hint, not a requirement
+    return true
+  }
+  if (typeof tinygif !== 'object' || !('dims' in tinygif)) {
+    return false
+  }
+  const dims: unknown = tinygif.dims
+  return Array.isArray(dims) && dims.length === 2
+}
+
 /** The provider's success payload — untyped network data is checked at the fetch boundary, not asserted. */
 export function isGifResponse(json: unknown): json is GifResponse {
-  return typeof json === 'object' && json !== null && 'results' in json && Array.isArray(json.results)
+  return (
+    typeof json === 'object' &&
+    json !== null &&
+    'results' in json &&
+    Array.isArray(json.results) &&
+    json.results.every(isGifResultItem)
+  )
 }
 
 export function isInvalidKeyError(message: string | null | undefined): boolean {

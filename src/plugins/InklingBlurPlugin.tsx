@@ -1,21 +1,7 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { BLUR_COMMAND, COMMAND_PRIORITY_EDITOR } from 'lexical'
-import { useEffect } from 'react'
+import { BLUR_COMMAND } from 'lexical'
 
-export const InklingBlurPlugin = ({ onBlur }: { onBlur?: () => void }) => {
-  const [editor] = useLexicalComposerContext()
-  useEffect(() => {
-    // return the unregister handle so the listener is removed on unmount
-    return editor.registerCommand(
-      BLUR_COMMAND,
-      () => {
-        onBlur?.()
-        // mark handled at editor priority so propagation stops here
-        return true
-      },
-      COMMAND_PRIORITY_EDITOR,
-    )
-  }, [editor, onBlur])
+import { InklingEditorEventPlugin } from '@/plugins/InklingEditorEventPlugin'
 
-  return null
-}
+export const InklingBlurPlugin = ({ onBlur }: { onBlur?: () => void }) => (
+  <InklingEditorEventPlugin command={BLUR_COMMAND} onEvent={onBlur} />
+)

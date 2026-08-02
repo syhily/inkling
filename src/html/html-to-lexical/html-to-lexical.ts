@@ -17,6 +17,8 @@ export interface htmlToLexicalOptions {
 
 /* c8 ignore next -- V8 creates a phantom branch for the export */
 export function htmlToLexical(html: string, options: htmlToLexicalOptions): SerializedEditorState {
+  // `html` is typed as required, but hosts do pass null — the null-tolerance
+  // is a tested contract (test/html-to-lexical "can convert null document")
   if (!html?.trim()) {
     return MINIMAL_DOCUMENT
   }

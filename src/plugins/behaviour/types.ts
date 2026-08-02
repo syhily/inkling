@@ -7,12 +7,6 @@ export interface OpenCardInEditModePayload {
 
 export interface SelectCardPayload {
   cardKey: string
-  focusEditor?: boolean
-}
-
-export interface FocusCardPayload {
-  cardKey: string
-  focusEditor?: boolean
 }
 
 export interface DeleteCardPayload {

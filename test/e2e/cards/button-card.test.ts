@@ -142,8 +142,8 @@ test.describe('Button Card', () => {
     await expect(page.getByTestId('button-input-url-listOption-Homepage')).toHaveText('Homepage')
     await page.getByTestId('button-input-url-listOption').click()
 
-    // need to make this any string value because we don't want to hardcode the window.location value
-    const anyString = new RegExp(`.*`)
+    // need to make this any non-empty string value because we don't want to hardcode the window.location value
+    const anyString = /.+/
     await expect(buttonTextInput).toHaveValue(anyString)
     const buttonLink = page.getByTestId('button-card-btn')
     await expect(buttonLink).toHaveAttribute('href', anyString)

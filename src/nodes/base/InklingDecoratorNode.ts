@@ -32,8 +32,15 @@ export function $isInklingCard(node: unknown): node is InklingCard {
 
   const card = node as Partial<InklingCard>
 
+  // hasEditMode/getDataset are part of the asserted InklingCard interface too
+  // (registerCardCommands/enter/card-interaction call hasEditMode() directly),
+  // so a node passing only the isInklingCard+exportDOM pair would crash there
   return (
-    typeof card.isInklingCard === 'function' && card.isInklingCard() === true && typeof card.exportDOM === 'function'
+    typeof card.isInklingCard === 'function' &&
+    card.isInklingCard() === true &&
+    typeof card.exportDOM === 'function' &&
+    typeof card.hasEditMode === 'function' &&
+    typeof card.getDataset === 'function'
   )
 }
 /* c8 ignore end */

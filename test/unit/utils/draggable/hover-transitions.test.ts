@@ -189,6 +189,29 @@ describe('resolveHoverTransition', () => {
     expect(next.droppableElem).toBeNull()
   })
 
+  it('clears the droppable on leave-container so re-entering the same droppable and quadrant re-resolves', () => {
+    const { containerElem, droppableA, container } = createScene()
+
+    const { state: left, effects: leaveEffects } = resolveHoverTransition(
+      state({ container, containerElem, droppableElem: droppableA, droppablePosition: 'top-left' }),
+      frame({}),
+    )
+
+    expect(leaveEffects).toEqual([{ kind: 'leave-container' }])
+    expect(left).toEqual({ container: null, containerElem: null, droppableElem: null, droppablePosition: null })
+
+    const { effects: reenterEffects } = resolveHoverTransition(
+      left,
+      frame({ containerElem, container, droppableElem: droppableA, droppableRect: RECT, mouse: { x: 10, y: 10 } }),
+    )
+
+    expect(reenterEffects).toEqual([
+      { kind: 'enter-container' },
+      { kind: 'enter-droppable', droppable: droppableA, position: 'top-left' },
+      { kind: 'resolve-drop', droppable: droppableA, position: 'top-left' },
+    ])
+  })
+
   it('suppresses droppable callbacks while over an unregistered container but still tracks the hover', () => {
     const { containerElem, droppableA } = createScene()
 

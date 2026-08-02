@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { mockComposerContext } from '#/utils/composer-context'
 import { createTestEditor, updateEditor } from '#/utils/test-editor'
+import { $createHorizontalRuleNode, HorizontalRuleNode } from '@/nodes/HorizontalRuleNode'
 import { HtmlOutputPlugin } from '@/plugins/HtmlOutputPlugin'
 
 vi.mock('@lexical/react/LexicalComposerContext', () => ({
@@ -79,6 +80,28 @@ describe('HtmlOutputPlugin', () => {
     })
 
     expect(setHtml).toHaveBeenLastCalledWith('')
+  })
+
+  it('calls setHtml with the card markup when the document only contains a text-less card', async () => {
+    // A pure-card document (here a bare horizontal rule) has no root text,
+    // but it is not empty — the headless path emits the card markup, so the
+    // live export must not collapse it to ''.
+    const cardEditor = createTestEditor({ headless: false, nodes: [HorizontalRuleNode] })
+    mockComposerContext(cardEditor)
+
+    await updateEditor(cardEditor, () => {
+      const root = $getRoot()
+      root.clear()
+      root.append($createHorizontalRuleNode())
+    })
+
+    const { result } = renderHook(() => HtmlOutputPlugin({ setHtml }))
+
+    await act(async () => {
+      ;(result.current as { props: { onChange: () => void } }).props.onChange()
+    })
+
+    expect(setHtml).toHaveBeenLastCalledWith('<hr>')
   })
 
   it('debounces rapid changes into a single setHtml call when debounceMs is set', async () => {

@@ -76,8 +76,10 @@ export function useKeyboardListSelection<T>({
         setScrollSelectedIntoView(true)
       }
       if (event.key === 'Enter') {
-        const selectedItem = items[selectedIndex]
-        if (!selectedItem && !onEnterWithoutSelection) {
+        // an explicit index check, not truthiness — a falsy item (''/0/false)
+        // is still a valid selection
+        const hasSelection = selectedIndex < items.length
+        if (!hasSelection && !onEnterWithoutSelection) {
           return
         }
 
@@ -93,8 +95,8 @@ export function useKeyboardListSelection<T>({
         event.preventDefault()
         event.stopPropagation()
 
-        if (selectedItem) {
-          onSelect(selectedItem)
+        if (hasSelection) {
+          onSelect(items[selectedIndex])
         } else {
           onEnterWithoutSelection?.()
         }

@@ -97,6 +97,7 @@ function debounceInternal<T extends (...args: never[]) => unknown>(
       }
       if (maxing) {
         // Handle invocations in a tight loop.
+        clearTimeout(timerId)
         timerId = setTimeout(timerExpired, wait)
         return invokeFunc(time)
       }

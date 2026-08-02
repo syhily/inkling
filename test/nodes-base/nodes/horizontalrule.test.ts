@@ -13,13 +13,10 @@ const editorNodes = [BaseHorizontalRuleNode]
 
 describe('HorizontalNode', function () {
   let editor: LexicalEditor
-  let dataset: Record<string, unknown>
   let exportOptions: { dom: typeof dom }
 
   beforeEach(function () {
     editor = createHeadlessEditor({ nodes: editorNodes })
-
-    dataset = {}
 
     exportOptions = {
       dom,
@@ -74,10 +71,8 @@ describe('HorizontalNode', function () {
       editorTest(
         () => editor,
         async function () {
-          dataset.cardWidth = 'wide'
-
-          const asideNode = $createBaseHorizontalRuleNode()
-          const json = asideNode.exportJSON()
+          const hrNode = $createBaseHorizontalRuleNode()
+          const json = hrNode.exportJSON()
 
           expect(json).toEqual({
             type: 'horizontalrule',

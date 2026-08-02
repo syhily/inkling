@@ -83,7 +83,6 @@ const DropdownItem = ({
   return (
     <li className="mb-1">
       <button
-        // ref={buttonRef}
         className={`flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left text-sm hover:bg-grey-100 ${index === active ? 'bg-grey-100 dark:bg-black' : ''} dark:hover:bg-black`}
         type="button"
         onClick={() => onClick?.(name)}

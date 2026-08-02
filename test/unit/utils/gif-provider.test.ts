@@ -14,7 +14,9 @@ describe('Utils: getGifProviderConfig', () => {
   test('returns null when neither provider is configured', () => {
     expect(getGifProviderConfig(undefined)).toBeNull()
     expect(getGifProviderConfig({})).toBeNull()
-    expect(Reflect.apply(getGifProviderConfig, undefined, [{ tenor: null, klipy: null }])).toBeNull()
+    expect(
+      getGifProviderConfig({ tenor: null, klipy: null } as unknown as Parameters<typeof getGifProviderConfig>[0]),
+    ).toBeNull()
   })
 
   test('resolves Tenor when only Tenor is configured', () => {

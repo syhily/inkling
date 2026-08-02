@@ -4,18 +4,16 @@ import { selectNamedColor } from '#/utils/color-select-helper'
 import {
   assertHTML,
   createSnippet,
+  ctrlOrCmd,
   focusEditor,
   html,
   initialize,
   insertCard,
-  isMac,
   waitForCardContentSynced,
   waitForHistoryGroupBoundary,
 } from '#/utils/e2e'
 
 test.describe('Callout Card', () => {
-  const ctrlOrCmd = isMac() ? 'Meta' : 'Control'
-
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
@@ -142,10 +140,14 @@ test.describe('Callout Card', () => {
     await focusEditor(page)
     await insertCard(page, { cardName: 'callout' })
 
-    // await Promise.all(calloutColorPicker.map(async (color) => {
-    //     const colorPicker = page.locator(`[data-testid="color-picker-${color.name}"]`);
-    //     await expect(colorPicker).toBeVisible();
-    // }));
+    // colour list mirrors calloutColorPicker in src/components/ui/cards/CalloutCard.tsx
+    const colours = ['white', 'grey', 'blue', 'green', 'yellow', 'red', 'pink', 'purple', 'accent']
+    // the swatches live inside the popover, which only renders once the toggle is opened
+    await page.locator('[data-testid="color-options-button"]').click()
+    await expect(page.locator('[data-testid="color-options-popover"]')).toBeVisible()
+    for (const colour of colours) {
+      await expect(page.locator(`[data-testid="color-picker-${colour}"]`)).toBeVisible()
+    }
   })
 
   test('can change background color', async function () {
@@ -259,7 +261,7 @@ test.describe('Callout Card', () => {
     await insertCard(page, { cardName: 'callout' })
     await page.keyboard.type('testing nesting')
 
-    await page.keyboard.press(`${ctrlOrCmd}+Enter`)
+    await page.keyboard.press(`${ctrlOrCmd(page)}+Enter`)
 
     await assertHTML(
       page,
@@ -294,7 +296,7 @@ test.describe('Callout Card', () => {
       { ignoreCardToolbarContents: true },
     )
 
-    await page.keyboard.press(`${ctrlOrCmd}+Enter`)
+    await page.keyboard.press(`${ctrlOrCmd(page)}+Enter`)
 
     await assertHTML(
       page,
@@ -376,7 +378,7 @@ test.describe('Callout Card', () => {
     // wait so the card deletion becomes its own undo group
     await waitForHistoryGroupBoundary(page)
     await page.keyboard.press('Backspace')
-    await page.keyboard.press(`${ctrlOrCmd}+z`)
+    await page.keyboard.press(`${ctrlOrCmd(page)}+z`)
     await expect(page.locator('[data-inkling-card="callout"]')).toBeVisible()
     await expect(page.locator('[data-inkling-card-toolbar="callout"]')).toBeVisible()
 

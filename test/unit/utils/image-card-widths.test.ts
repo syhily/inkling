@@ -8,7 +8,7 @@ describe('image-card-widths utils', () => {
   })
 
   it('returns all widths when config is invalid or empty', () => {
-    expect(Reflect.apply(getAllowedImageCardWidths, undefined, ['regular'])).toEqual(['regular', 'wide', 'full'])
+    expect(getAllowedImageCardWidths('regular' as unknown as string[])).toEqual(['regular', 'wide', 'full'])
     expect(getAllowedImageCardWidths([])).toEqual(['regular', 'wide', 'full'])
     expect(getAllowedImageCardWidths(['invalid'])).toEqual(['regular', 'wide', 'full'])
   })

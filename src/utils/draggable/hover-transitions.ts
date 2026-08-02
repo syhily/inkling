@@ -92,6 +92,11 @@ export function resolveHoverTransition<C>(
     effects.push({ kind: 'leave-container' })
     state.container = null
     state.containerElem = null
+    // drop the droppable too: re-entering the same droppable in the same
+    // quadrant must re-fire enter-droppable + resolve-drop, otherwise the
+    // stale identity/position match swallows the resolution
+    state.droppableElem = null
+    state.droppablePosition = null
   }
 
   if (isOverContainer) {

@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { assertHTML, focusEditor, html, initialize, selectBackwards } from '#/utils/e2e'
 
-test.describe('Koening Editor with minimal nodes', function () {
+test.describe('Koenig Editor with minimal nodes', function () {
   let page: Page
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()

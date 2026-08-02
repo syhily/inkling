@@ -152,8 +152,11 @@ export interface InklingLabels {
   'snippet.replaceExisting': string
   'snippet.remove': string
 
-  /* Link search */
+  /* Link search (urlOption = the "link to web page" section and its hint item) */
   'search.loading': string
+  'search.noResults': string
+  'search.urlOption.label': string
+  'search.urlOption.hint': string
 
   /* Error boundary fallback */
   'error.boundary': string
@@ -343,6 +346,9 @@ export const DEFAULT_LABELS: InklingLabels = {
   'snippet.remove': 'Remove snippet',
 
   'search.loading': 'Searching...',
+  'search.noResults': 'No results found',
+  'search.urlOption.label': 'Link to web page',
+  'search.urlOption.hint': 'Enter URL to create link',
 
   'error.boundary': 'An error was thrown.',
 

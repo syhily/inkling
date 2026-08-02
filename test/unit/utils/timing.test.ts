@@ -124,4 +124,29 @@ describe('throttle', () => {
 
     expect(fn).toHaveBeenCalledTimes(1)
   })
+
+  it('clears the stale pending timer when re-invoking in a tight loop (maxing)', () => {
+    const fn = vi.fn()
+    const throttled = throttle(fn, 100)
+
+    throttled('a')
+    expect(fn).toHaveBeenCalledTimes(1)
+    expect(vi.getTimerCount()).toBe(1)
+
+    // the clock jumps past maxWait while the first timer is still pending
+    // (event-loop lag), so the maxing branch re-invokes in a tight loop;
+    // it must clear the stale timer before scheduling the new one
+    vi.setSystemTime(150)
+    throttled('b')
+    expect(fn).toHaveBeenCalledTimes(2)
+    expect(vi.getTimerCount()).toBe(1)
+
+    // cancel() only clears the current timerId, so a stale timer left over
+    // from the maxing branch would survive it
+    throttled.cancel()
+    expect(vi.getTimerCount()).toBe(0)
+
+    vi.advanceTimersByTime(1000)
+    expect(fn).toHaveBeenCalledTimes(2)
+  })
 })

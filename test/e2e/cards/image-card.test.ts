@@ -1,7 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 import { readFileSync } from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import {
   assertHTML,
@@ -19,13 +17,10 @@ import {
   html,
   initialize,
   insertCardWithUpload,
-  isMac,
   loadSerializedState,
   pasteHtml,
   waitForCardContentSynced,
 } from '#/utils/e2e'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 test.describe('Image card', () => {
   let page: Page
@@ -168,7 +163,7 @@ test.describe('Image card', () => {
       route.fulfill({
         status: 200,
         contentType: 'image/png',
-        body: readFileSync(__dirname + '/../fixtures/large-image.png'),
+        body: readFileSync(fixture('large-image.png')),
       }),
     )
     await focusEditor(page)
@@ -211,7 +206,7 @@ test.describe('Image card', () => {
       route.fulfill({
         status: 200,
         contentType: 'image/png',
-        body: readFileSync(__dirname + '/../fixtures/large-image.png'),
+        body: readFileSync(fixture('large-image.png')),
       }),
     )
 
@@ -253,7 +248,7 @@ test.describe('Image card', () => {
       route.fulfill({
         status: 200,
         contentType: 'image/png',
-        body: readFileSync(__dirname + '/../fixtures/large-image.png'),
+        body: readFileSync(fixture('large-image.png')),
       }),
     )
 
@@ -1088,7 +1083,7 @@ test.describe('Image card', () => {
   test.describe('image should be a top-level element', () => {
     test('can insert image to nested list', async function () {
       await insertImage(page)
-      const modifier = isMac() ? 'Meta' : 'Control'
+      const modifier = ctrlOrCmd(page)
       await page.keyboard.press(`${modifier}+KeyC`)
       await page.keyboard.press('Enter')
       await page.keyboard.type('- First item')

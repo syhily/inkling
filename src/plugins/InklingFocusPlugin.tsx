@@ -1,21 +1,7 @@
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { COMMAND_PRIORITY_EDITOR, FOCUS_COMMAND } from 'lexical'
-import { useEffect } from 'react'
+import { FOCUS_COMMAND } from 'lexical'
 
-export const InklingFocusPlugin = ({ onFocus }: { onFocus?: () => void }) => {
-  const [editor] = useLexicalComposerContext()
-  useEffect(() => {
-    // return the unregister handle so the listener is removed on unmount
-    return editor.registerCommand(
-      FOCUS_COMMAND,
-      () => {
-        onFocus?.()
-        // mark handled at editor priority so propagation stops here
-        return true
-      },
-      COMMAND_PRIORITY_EDITOR,
-    )
-  }, [editor, onFocus])
+import { InklingEditorEventPlugin } from '@/plugins/InklingEditorEventPlugin'
 
-  return null
-}
+export const InklingFocusPlugin = ({ onFocus }: { onFocus?: () => void }) => (
+  <InklingEditorEventPlugin command={FOCUS_COMMAND} onEvent={onFocus} />
+)

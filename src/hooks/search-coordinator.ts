@@ -23,6 +23,12 @@ export const SEARCH_DEBOUNCE_MS = 100
 // in `@/nodes/base/utils/is-safe-url`).
 const URL_QUERY_REGEX = /^http|^#|^\/|^mailto:|^tel:/
 
+// English fallbacks for the URL option — the React adapter (useSearchLinks)
+// injects the resolved labels from the host's labels table; the headless
+// module stays self-sufficient with these.
+const DEFAULT_URL_OPTION_LABEL = 'Link to web page'
+const DEFAULT_URL_OPTION_HINT = 'Enter URL to create link'
+
 export interface ListOptionItem {
   label: string
   value: string | null
@@ -53,10 +59,10 @@ export interface SearchResult {
 
 export type SearchLinksFn = (term?: string) => Promise<SearchResult[] | undefined>
 
-function urlQueryOptions(query: string): ListOptionSection[] {
+function urlQueryOptions(query: string, sectionLabel: string): ListOptionSection[] {
   return [
     {
-      label: 'Link to web page',
+      label: sectionLabel,
       items: [
         {
           label: query,
@@ -70,13 +76,13 @@ function urlQueryOptions(query: string): ListOptionSection[] {
   ]
 }
 
-function defaultNoResultOptions(query: string): ListOptionSection[] {
+function defaultNoResultOptions(sectionLabel: string, hintLabel: string): ListOptionSection[] {
   return [
     {
-      label: 'Link to web page',
+      label: sectionLabel,
       items: [
         {
-          label: `Enter URL to create link`,
+          label: hintLabel,
           value: null,
           Icon: EarthIcon,
           highlight: false,
@@ -90,10 +96,10 @@ function defaultNoResultOptions(query: string): ListOptionSection[] {
 function convertSearchResultsToListOptions(
   results: SearchResult[] | undefined,
   query: string,
-  { noResultOptions, type }: { noResultOptions?: (query: string) => ListOptionSection[]; type?: string } = {},
+  { noResultOptions, type }: { noResultOptions: (query: string) => ListOptionSection[]; type?: string },
 ): ListOptionSection[] {
   if (!results || !results.length) {
-    return (noResultOptions || defaultNoResultOptions)(query)
+    return noResultOptions(query)
   }
 
   return results.map((result) => {
@@ -128,6 +134,8 @@ interface CreateSearchCoordinatorOptions {
   noResultOptions?: (query: string) => ListOptionSection[]
   scheduler?: SearchScheduler
   debounceMs?: number
+  urlOptionLabel?: string
+  urlOptionHint?: string
 }
 
 export function createSearchCoordinator({
@@ -135,12 +143,18 @@ export function createSearchCoordinator({
   noResultOptions,
   scheduler,
   debounceMs = SEARCH_DEBOUNCE_MS,
+  urlOptionLabel = DEFAULT_URL_OPTION_LABEL,
+  urlOptionHint = DEFAULT_URL_OPTION_HINT,
 }: CreateSearchCoordinatorOptions) {
   const store = createSnapshotStore<SearchCoordinatorSnapshot>({
     isSearching: false,
     listOptions: [],
     defaultListOptions: [],
   })
+
+  // the coordinator's own no-results fallback, carrying the injected (or
+  // English-default) URL option labels
+  const fallbackNoResultOptions = noResultOptions ?? (() => defaultNoResultOptions(urlOptionLabel, urlOptionHint))
 
   // query track (debounced) and default (prefetch) track — the latest-wins
   // guards are the shared request-track primitive
@@ -169,7 +183,9 @@ export function createSearchCoordinator({
       // undefined means the search was cancelled: keep the current options
       // instead of flashing "no results" while a later search is in flight
       if (results !== undefined) {
-        store.emit({ listOptions: convertSearchResultsToListOptions(results, term, { noResultOptions }) })
+        store.emit({
+          listOptions: convertSearchResultsToListOptions(results, term, { noResultOptions: fallbackNoResultOptions }),
+        })
       }
     } catch {
       // Search is best-effort. Preserve the last options when the host
@@ -188,7 +204,12 @@ export function createSearchCoordinator({
         const results = searchLinks ? await searchLinks() : undefined
         if (defaultTrack.isLatest(id)) {
           defaultOptionsLoaded = true
-          store.emit({ defaultListOptions: convertSearchResultsToListOptions(results, '', { type: 'default' }) })
+          store.emit({
+            defaultListOptions: convertSearchResultsToListOptions(results, '', {
+              noResultOptions: fallbackNoResultOptions,
+              type: 'default',
+            }),
+          })
         }
       } catch {
         // Default suggestions are best-effort.
@@ -222,7 +243,7 @@ export function createSearchCoordinator({
       // option updates more responsively
       if (URL_QUERY_REGEX.test(query)) {
         queryTrack.cancelScheduled()
-        store.emit({ listOptions: urlQueryOptions(query), isSearching: false })
+        store.emit({ listOptions: urlQueryOptions(query, urlOptionLabel), isSearching: false })
         return
       }
 

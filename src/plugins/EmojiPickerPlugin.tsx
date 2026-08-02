@@ -48,7 +48,6 @@ const EmojiMenuItem = function ({ index, isSelected, onClick, onMouseEnter, emoj
   )
   return (
     <li
-      key={emoji.id}
       ref={attachRef}
       aria-selected={isSelected}
       className={`mb-0 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 font-sans text-sm leading-[1.65] tracking-wide whitespace-nowrap text-grey-800 dark:text-grey-200 ${isSelected ? 'bg-grey-100 text-grey-900 dark:bg-grey-900 dark:text-white' : ''}`}
@@ -143,17 +142,6 @@ export function EmojiPickerPlugin() {
     [editor],
   )
 
-  // close menu on escape
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setSearchResults(null)
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
-
   function getPositionStyles() {
     const selection = window.getSelection()
     if (!selection || selection.rangeCount === 0) {
@@ -181,22 +169,21 @@ export function EmojiPickerPlugin() {
               style={getPositionStyles()}
             >
               {searchResults.map((emoji, index) => (
-                <div key={emoji.id}>
-                  <EmojiMenuItem
-                    emoji={emoji}
-                    index={index}
-                    isSelected={selectedIndex === index}
-                    onClick={(event) => {
-                      setHighlightedIndex(index)
-                      selectOptionAndCleanUp(emoji)
-                      event.stopPropagation()
-                      event.preventDefault()
-                    }}
-                    onMouseEnter={() => {
-                      setHighlightedIndex(index)
-                    }}
-                  />
-                </div>
+                <EmojiMenuItem
+                  key={emoji.id}
+                  emoji={emoji}
+                  index={index}
+                  isSelected={selectedIndex === index}
+                  onClick={(event) => {
+                    setHighlightedIndex(index)
+                    selectOptionAndCleanUp(emoji)
+                    event.stopPropagation()
+                    event.preventDefault()
+                  }}
+                  onMouseEnter={() => {
+                    setHighlightedIndex(index)
+                  }}
+                />
               ))}
             </ul>
           </Portal>

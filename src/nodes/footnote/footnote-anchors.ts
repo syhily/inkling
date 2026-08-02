@@ -10,7 +10,6 @@ export const FOOTNOTE_REF_ID_PREFIX = 'user-content-fnref-'
 
 /** Marker attribute on the back-reference link inside a definition row. */
 export const FOOTNOTE_BACKREF_ATTRIBUTE = 'data-footnote-backref'
-export const FOOTNOTE_BACKREF_ARIA_LABEL = '返回引用'
 
 /** `id` of the footnotes-section heading; the `<section>` points at it via `aria-labelledby`. */
 export const FOOTNOTES_SECTION_HEADING_ID = 'footnotes-section-heading'

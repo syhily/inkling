@@ -83,7 +83,7 @@ const CONSUMER_DEPENDENCIES = {
   'react-dom': '19.2.7',
 }
 const CONSUMER_DEV_DEPENDENCIES = {
-  typescript: '6.0.3',
+  typescript: '7.0.2',
   '@types/react': '19.2.17',
   '@types/react-dom': '19.2.3',
 }

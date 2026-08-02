@@ -41,11 +41,11 @@ export class ExtendedHeadingNode extends HeadingNode {
   }
 
   static importJSON(serializedNode: SerializedHeadingNode): ExtendedHeadingNode {
-    const node = new ExtendedHeadingNode(serializedNode.tag)
-    node.setFormat(serializedNode.format)
-    node.setIndent(serializedNode.indent)
-    node.setDirection(serializedNode.direction)
-    return node
+    // construct our own class (the sibling ExtendedQuoteNode pattern):
+    // updateFromJSON restores the full element-level shape (textFormat /
+    // textStyle included), which the manual setFormat/setIndent/setDirection
+    // trio dropped
+    return new ExtendedHeadingNode(serializedNode.tag).updateFromJSON(serializedNode)
   }
 
   exportJSON() {

@@ -346,7 +346,6 @@ test.describe('Card behaviour', () => {
       })
     })
 
-    //test.fixme('lazy click puts card in edit mode');
     test('clicking in the space between cards selects the card under it', async function () {
       await focusEditor(page)
       await page.keyboard.type('---')
@@ -504,7 +503,6 @@ test.describe('Card behaviour', () => {
     })
 
     // triggers "caret left at top" prop fn
-    //test.fixme('when selected card is first section');
   })
 
   test.describe('RIGHT', function () {

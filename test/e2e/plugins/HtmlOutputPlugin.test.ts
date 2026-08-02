@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-import { assertHTML, focusEditor, html, initialize, isMac, pasteHtml } from '#/utils/e2e'
+import { assertHTML, ctrlOrCmd, focusEditor, html, initialize, pasteHtml } from '#/utils/e2e'
 
 test.describe('Html Output Plugin', function () {
   let page: Page
@@ -33,7 +33,7 @@ test.describe('Html Output Plugin', function () {
   })
 
   test('can parse editor state to html', async function () {
-    const ctrl = isMac() ? 'Meta' : 'Control'
+    const ctrl = ctrlOrCmd(page)
     await focusEditor(page)
 
     // check that default content renders to html

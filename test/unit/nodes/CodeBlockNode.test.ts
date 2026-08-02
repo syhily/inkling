@@ -1,7 +1,8 @@
 import { createHeadlessEditor } from '@lexical/headless'
-import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
+import { type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { attachCaptionEditorWithText } from '#/utils/caption-editor'
 import { updateEditor } from '#/utils/test-editor'
 import { getCardDragIcon } from '@/nodes/cards/card-menus'
 import { CodeBlockNode, $createCodeBlockNode, $isCodeBlockNode } from '@/nodes/CodeBlockNode'
@@ -50,20 +51,7 @@ describe('CodeBlockNode', () => {
   it('exports caption as html when a caption editor exists', async () => {
     await updateEditor(editor, () => {
       const node = $createCodeBlockNode({})
-      node.__captionEditor = createHeadlessEditor({
-        nodes: editorNodes,
-        onError: () => {},
-      })
-
-      node.__captionEditor.update(
-        () => {
-          const root = $getRoot()
-          root.clear()
-          const paragraph = root.append($createParagraphNode())
-          paragraph.append($createTextNode('Hello caption'))
-        },
-        { onUpdate: () => {} },
-      )
+      attachCaptionEditorWithText(node)
 
       const json = node.exportJSON()
       if (!('caption' in json)) {

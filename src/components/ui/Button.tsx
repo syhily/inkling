@@ -7,8 +7,6 @@ export interface ButtonProps {
   dataTestId?: string
   disabled?: boolean
   href?: string
-  icon?: string
-  isActive?: boolean
   label?: string
   placeholder?: string
   rounded?: boolean
@@ -29,8 +27,6 @@ export function Button({
   dataTestId,
   disabled,
   href,
-  icon,
-  isActive,
   label,
   placeholder,
   rounded = true,

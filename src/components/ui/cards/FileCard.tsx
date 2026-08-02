@@ -1,6 +1,7 @@
 import type { DragHandlerLike, FileInputRef, FileUploaderLike } from '@/components/ui/cards/card-ui-types'
 
 import FileUploadIcon from '@/assets/icons/inkling-file-upload.svg?react'
+import { ReadOnlyOverlay } from '@/components/ui/ReadOnlyOverlay'
 import { TextInput } from '@/components/ui/TextInput'
 import { UploadingPanel, UploadPlaceholder } from '@/components/ui/UploadChrome'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
@@ -91,7 +92,7 @@ function PopulatedFileCard({
           />
         </div>
       </div>
-      {!isEditing && <div className="absolute inset-0 z-50"></div>}
+      {!isEditing && <ReadOnlyOverlay />}
     </div>
   )
 }

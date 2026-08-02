@@ -3,6 +3,7 @@ import type { EditorState, LexicalEditor } from 'lexical'
 import React from 'react'
 
 import { CardCaptionEditor } from '@/components/ui/CardCaptionEditor'
+import { ReadOnlyOverlay } from '@/components/ui/ReadOnlyOverlay'
 import { UrlInput } from '@/components/ui/UrlInput'
 import { useInklingLabels } from '@/hooks/useInklingLabels'
 
@@ -109,7 +110,7 @@ export function BookmarkCard({
               />
             </div>
           )}
-          <div className="absolute inset-0 z-50 mt-0"></div>
+          <ReadOnlyOverlay />
         </div>
         <CardCaptionEditor
           captionEditor={captionEditor}

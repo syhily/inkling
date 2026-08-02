@@ -11,19 +11,19 @@ function removeCodeWrappers(html: string): string {
   return html.replace(/<code\b[^>]*>((.*?){.*?}(.*?))<\/code>/gi, '$1')
 }
 
-export function cleanBasicHtml(html: string = '', _options: CleanBasicHtmlOptions = {}): string {
-  const options: CleanBasicHtmlOptions = { ..._options }
+export function cleanBasicHtml(html: string = '', options: CleanBasicHtmlOptions = {}): string {
+  const resolvedOptions: CleanBasicHtmlOptions = { ...options }
 
-  if (!options.createDocument && options.ownerDocument) {
-    const ownerDocument = options.ownerDocument
-    options.createDocument = (docHtml: string): Document => {
+  if (!resolvedOptions.createDocument && resolvedOptions.ownerDocument) {
+    const ownerDocument = resolvedOptions.ownerDocument
+    resolvedOptions.createDocument = (docHtml: string): Document => {
       const newDoc = ownerDocument.implementation.createHTMLDocument()
       newDoc.body.innerHTML = docHtml
       return newDoc
     }
   }
 
-  if (!options.createDocument) {
+  if (!resolvedOptions.createDocument) {
     const Parser =
       (typeof DOMParser !== 'undefined' && DOMParser) || (typeof window !== 'undefined' && window.DOMParser)
 
@@ -33,7 +33,7 @@ export function cleanBasicHtml(html: string = '', _options: CleanBasicHtmlOption
       )
     }
 
-    options.createDocument = function (docHtml: string): Document {
+    resolvedOptions.createDocument = function (docHtml: string): Document {
       const parser = new Parser()
       return parser.parseFromString(docHtml, 'text/html')
     }
@@ -41,11 +41,11 @@ export function cleanBasicHtml(html: string = '', _options: CleanBasicHtmlOption
 
   let cleanHtml: string = html
 
-  if (!options.allowBr || cleanHtml === '<br>') {
+  if (!resolvedOptions.allowBr || cleanHtml === '<br>') {
     cleanHtml = cleanHtml.replace(/<br\s?\/?>/g, ' ')
   }
 
-  if (options.removeCodeWrappers) {
+  if (resolvedOptions.removeCodeWrappers) {
     cleanHtml = removeCodeWrappers(cleanHtml)
   }
 
@@ -57,7 +57,7 @@ export function cleanBasicHtml(html: string = '', _options: CleanBasicHtmlOption
 
   // remove any elements that have a blank textContent
   if (cleanHtml) {
-    const doc = options.createDocument(cleanHtml)
+    const doc = resolvedOptions.createDocument(cleanHtml)
 
     // don't analyze the document if it's empty (can result in storing <br> tags if allowed)
     if (doc.body.textContent === '') {
@@ -67,11 +67,11 @@ export function cleanBasicHtml(html: string = '', _options: CleanBasicHtmlOption
     doc.body.querySelectorAll('*').forEach((element) => {
       // Treat Zero Width Non-Joiner characters as spaces
       if (!element.textContent?.trim().replace(/\u200c+/g, '')) {
-        if (options.allowBr && element.tagName === 'BR') {
+        if (resolvedOptions.allowBr && element.tagName === 'BR') {
           // keep it
           return
         }
-        if (options.allowBr && element.querySelector('br')) {
+        if (resolvedOptions.allowBr && element.querySelector('br')) {
           return element.replaceWith(doc.createElement('br'))
         }
         if (element.textContent && element.textContent.length > 0) {
@@ -83,7 +83,7 @@ export function cleanBasicHtml(html: string = '', _options: CleanBasicHtmlOption
       }
     })
 
-    if (options.firstChildInnerContent && doc.body.firstElementChild) {
+    if (resolvedOptions.firstChildInnerContent && doc.body.firstElementChild) {
       cleanHtml = doc.body.firstElementChild.innerHTML.trim()
     } else {
       cleanHtml = doc.body.innerHTML.trim()

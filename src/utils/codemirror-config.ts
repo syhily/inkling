@@ -10,92 +10,70 @@ const disableHistoryGroupingForTests = import.meta.env.VITE_TEST
 // recreating them on every render. CodeMirror tracks extensions by reference
 // identity, so new objects force expensive reconfiguration.
 
-export const lightCSS = EditorView.theme({
-  '&.cm-editor': {
-    background: 'transparent',
-  },
-  '&.cm-focused': {
-    outline: '0',
-  },
-  '&.cm-editor .cm-content': {
-    padding: '7px 0',
-  },
-  '&.cm-editor .cm-content, &.cm-editor .cm-gutter': {
-    minHeight: '170px',
-  },
-  '&.cm-editor .cm-scroller': {
-    overflow: 'auto',
-  },
-  '&.cm-editor .cm-gutters': {
-    background: 'none',
-    border: 'none',
-    fontFamily: 'Consolas,Liberation Mono,Menlo,Courier,monospace;',
-    color: '#CED4D9',
-    lineHeight: '2.25rem',
-  },
-  '&.cm-editor .cm-lineNumbers': {
-    padding: '0',
-  },
-  '&.cm-editor .cm-foldGutter': {
-    width: '0',
-  },
-  '&.cm-editor .cm-line': {
-    padding: '0 .8rem',
-    color: '#394047',
-    fontFamily: 'Consolas,Liberation Mono,Menlo,Courier,monospace;',
-    fontSize: '1.6rem',
-    lineHeight: '2.25rem',
-  },
-  '&.cm-editor .cm-activeLine, &.cm-editor .cm-activeLineGutter': {
-    background: 'none',
-  },
-  '&.cm-editor .cm-cursor, &.cm-editor .cm-dropCursor': {
-    borderLeft: '1.2px solid black',
-  },
+/** The light/dark editor themes only ever differ by these three colors. */
+const createEditorTheme = ({
+  gutterColor,
+  lineColor,
+  cursorColor,
+}: {
+  gutterColor: string
+  lineColor: string
+  cursorColor: string
+}) =>
+  EditorView.theme({
+    '&.cm-editor': {
+      background: 'transparent',
+    },
+    '&.cm-focused': {
+      outline: '0',
+    },
+    '&.cm-editor .cm-content': {
+      padding: '7px 0',
+    },
+    '&.cm-editor .cm-content, &.cm-editor .cm-gutter': {
+      minHeight: '170px',
+    },
+    '&.cm-editor .cm-scroller': {
+      overflow: 'auto',
+    },
+    '&.cm-editor .cm-gutters': {
+      background: 'none',
+      border: 'none',
+      fontFamily: 'Consolas,Liberation Mono,Menlo,Courier,monospace;',
+      color: gutterColor,
+      lineHeight: '2.25rem',
+    },
+    '&.cm-editor .cm-lineNumbers': {
+      padding: '0',
+    },
+    '&.cm-editor .cm-foldGutter': {
+      width: '0',
+    },
+    '&.cm-editor .cm-line': {
+      padding: '0 .8rem',
+      color: lineColor,
+      fontFamily: 'Consolas,Liberation Mono,Menlo,Courier,monospace;',
+      fontSize: '1.6rem',
+      lineHeight: '2.25rem',
+    },
+    '&.cm-editor .cm-activeLine, &.cm-editor .cm-activeLineGutter': {
+      background: 'none',
+    },
+    '&.cm-editor .cm-cursor, &.cm-editor .cm-dropCursor': {
+      borderLeft: `1.2px solid ${cursorColor}`,
+    },
+  })
+
+export const lightCSS = createEditorTheme({
+  gutterColor: '#CED4D9',
+  lineColor: '#394047',
+  cursorColor: 'black',
 })
 
-export const darkCSS = EditorView.theme({
-  '&.cm-editor': {
-    background: 'transparent',
-  },
-  '&.cm-focused': {
-    outline: '0',
-  },
-  '&.cm-editor .cm-content': {
-    padding: '7px 0',
-  },
-  '&.cm-editor .cm-content, &.cm-editor .cm-gutter': {
-    minHeight: '170px',
-  },
-  '&.cm-editor .cm-scroller': {
-    overflow: 'auto',
-  },
-  '&.cm-editor .cm-gutters': {
-    background: 'none',
-    border: 'none',
-    fontFamily: 'Consolas,Liberation Mono,Menlo,Courier,monospace;',
-    color: 'rgb(108, 118, 127);',
-    lineHeight: '2.25rem',
-  },
-  '&.cm-editor .cm-lineNumbers': {
-    padding: '0',
-  },
-  '&.cm-editor .cm-foldGutter': {
-    width: '0',
-  },
-  '&.cm-editor .cm-line': {
-    padding: '0 .8rem',
-    color: 'rgb(210, 215, 218)',
-    fontFamily: 'Consolas,Liberation Mono,Menlo,Courier,monospace;',
-    fontSize: '1.6rem',
-    lineHeight: '2.25rem',
-  },
-  '&.cm-editor .cm-activeLine, &.cm-editor .cm-activeLineGutter': {
-    background: 'none',
-  },
-  '&.cm-editor .cm-cursor, &.cm-editor .cm-dropCursor': {
-    borderLeft: '1.2px solid white',
-  },
+export const darkCSS = createEditorTheme({
+  gutterColor: 'rgb(108, 118, 127);',
+  lineColor: 'rgb(210, 215, 218)',
+  cursorColor: 'white',
 })
 
 export const lightHighlightStyle = HighlightStyle.define([

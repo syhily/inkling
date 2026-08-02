@@ -1,7 +1,8 @@
 import { createHeadlessEditor } from '@lexical/headless'
-import { $createParagraphNode, $createTextNode, $getRoot, type EditorConfig, type LexicalEditor } from 'lexical'
+import { type EditorConfig, type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { attachCaptionEditorWithText } from '#/utils/caption-editor'
 import { updateEditor } from '#/utils/test-editor'
 import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import { ImageNode, $createImageNode, $isImageNode, INSERT_IMAGE_COMMAND } from '@/nodes/ImageNode'
@@ -62,20 +63,7 @@ describe('ImageNode', () => {
   it('exports caption as HTML when a caption editor exists', async () => {
     await updateEditor(editor, () => {
       const imageNode = $createImageNode({ src: '/image.png' })
-      imageNode.__captionEditor = createHeadlessEditor({
-        nodes: editorNodes,
-        onError: () => {},
-      })
-
-      imageNode.__captionEditor.update(
-        () => {
-          const root = $getRoot()
-          root.clear()
-          const paragraph = root.append($createParagraphNode())
-          paragraph.append($createTextNode('Hello caption'))
-        },
-        { onUpdate: () => {} },
-      )
+      attachCaptionEditorWithText(imageNode)
 
       const json = imageNode.exportJSON()
       if (!('caption' in json)) {

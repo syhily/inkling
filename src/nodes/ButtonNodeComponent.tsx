@@ -7,6 +7,7 @@ import { CardActionToolbar } from '@/components/ui/CardActionToolbar'
 import { ButtonCard } from '@/components/ui/cards/ButtonCard'
 import { useCardIsEditing } from '@/context/CardSelectionStoreContext'
 import { useCardChrome } from '@/hooks/useCardChrome'
+import { useInklingLabels } from '@/hooks/useInklingLabels'
 import { $isButtonNode } from '@/nodes/base'
 
 export interface ButtonNodeComponentProps {
@@ -20,10 +21,12 @@ export interface ButtonNodeComponentProps {
 export function ButtonNodeComponent({
   alignment,
   buttonText,
-  buttonPlaceholder = 'Add button text',
+  buttonPlaceholder,
   buttonUrl,
   nodeKey,
 }: ButtonNodeComponentProps) {
+  const labels = useInklingLabels()
+  const resolvedButtonPlaceholder = buttonPlaceholder ?? labels['button.text.placeholder']
   const { write, setField } = useCardChrome(nodeKey, $isButtonNode)
   const isEditing = useCardIsEditing(nodeKey)
 
@@ -41,7 +44,7 @@ export function ButtonNodeComponent({
     <>
       <ButtonCard
         alignment={alignment}
-        buttonPlaceholder={buttonPlaceholder}
+        buttonPlaceholder={resolvedButtonPlaceholder}
         buttonText={buttonText}
         buttonUrl={buttonUrl}
         handleAlignmentChange={handleAlignmentChange}

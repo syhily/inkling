@@ -109,7 +109,7 @@ export function ImageNodeComponent({
   React.useEffect(() => {
     let isMounted = true
     void migrateImageDataUrl(
-      { src: src ?? '', isLoading: imageUploader.isLoading, isCancelled: () => !isMounted },
+      { src, isLoading: imageUploader.isLoading, isCancelled: () => !isMounted },
       { runUpload: (file) => runFiles([file], 'initial'), onError: (error) => onError(error, {}) },
     )
     return () => {

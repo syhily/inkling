@@ -414,7 +414,7 @@ export function createGifBrowser({
   }
 
   const addGif = (gif: GifData): void => {
-    const tinygif = gif.media_formats.tinygif
+    const tinygif = gif.media_formats?.tinygif
     if (tinygif) {
       const [width, height] = tinygif.dims
       gif.ratio = width > 0 ? height / width : 1
@@ -461,14 +461,20 @@ export function createGifBrowser({
     }
 
     if (outcome.ok) {
-      nextPos = outcome.next
-      for (const gif of outcome.results) {
-        addGif(gif)
-      }
-      // keep the highlight by stable id across list swaps (the selector's
-      // historical sync effect), clearing it when the gif is gone
-      if (highlightedId && !gifs.some((gif) => gif.id === highlightedId)) {
-        highlightedId = null
+      // a malformed item must not wedge the loading flags or escape as an
+      // unhandled rejection — surface the failure as the common error state
+      try {
+        nextPos = outcome.next
+        for (const gif of outcome.results) {
+          addGif(gif)
+        }
+        // keep the highlight by stable id across list swaps (the selector's
+        // historical sync effect), clearing it when the gif is gone
+        if (highlightedId && !gifs.some((gif) => gif.id === highlightedId)) {
+          highlightedId = null
+        }
+      } catch {
+        error = ERROR_TYPE.COMMON
       }
     } else {
       error = isInvalidKeyError(outcome.message) ? ERROR_TYPE.INVALID_API_KEY : ERROR_TYPE.COMMON

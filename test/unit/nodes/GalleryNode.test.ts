@@ -1,9 +1,10 @@
 import { createHeadlessEditor } from '@lexical/headless'
-import { $createParagraphNode, $createTextNode, $getRoot, type LexicalEditor } from 'lexical'
+import { type LexicalEditor } from 'lexical'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import type { GalleryImage } from '@/types/gallery'
 
+import { attachCaptionEditorWithText } from '#/utils/caption-editor'
 import { updateEditor } from '#/utils/test-editor'
 import { getCardDragIcon, getCardMenu } from '@/nodes/cards/card-menus'
 import {
@@ -54,20 +55,7 @@ describe('GalleryNode', () => {
   it('exports caption as html when a caption editor exists', async () => {
     await updateEditor(editor, () => {
       const node = $createGalleryNode({})
-      node.__captionEditor = createHeadlessEditor({
-        nodes: editorNodes,
-        onError: () => {},
-      })
-
-      node.__captionEditor.update(
-        () => {
-          const root = $getRoot()
-          root.clear()
-          const paragraph = root.append($createParagraphNode())
-          paragraph.append($createTextNode('Hello caption'))
-        },
-        { onUpdate: () => {} },
-      )
+      attachCaptionEditorWithText(node)
 
       const json = node.exportJSON()
       if (!('caption' in json)) {

@@ -118,15 +118,9 @@ export function registerCardInteraction(
         const clickedSettingsPanel = target.closest('[data-inkling-settings-panel]')
 
         if (isSelected() && cardNode?.hasEditMode() && !isEditing() && !clickedClickthrough && !clickedSettingsPanel) {
-          editor.dispatchCommand(EDIT_CARD_COMMAND, {
-            cardKey: nodeKey,
-            focusEditor: !clickedDifferentEditor,
-          })
+          editor.dispatchCommand(EDIT_CARD_COMMAND, { cardKey: nodeKey })
         } else if (!isSelected()) {
-          editor.dispatchCommand(SELECT_CARD_COMMAND, {
-            cardKey: nodeKey,
-            focusEditor: !clickedDifferentEditor,
-          })
+          editor.dispatchCommand(SELECT_CARD_COMMAND, { cardKey: nodeKey })
         }
 
         if (clickedDifferentEditor) {

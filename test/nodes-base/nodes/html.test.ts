@@ -32,7 +32,7 @@ describe('BaseHtmlNode', function () {
   })
 
   it(
-    'matches node with $isImageNode',
+    'matches node with $isHtmlNode',
     editorTest(
       () => editor,
       async function () {

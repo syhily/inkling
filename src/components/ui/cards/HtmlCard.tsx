@@ -1,4 +1,5 @@
 import HtmlEditor from '@/components/ui/cards/HtmlCard/HtmlEditor'
+import { ReadOnlyOverlay } from '@/components/ui/ReadOnlyOverlay'
 import { sanitizeHtml } from '@/utils/sanitize-html'
 
 export function HtmlCard({
@@ -21,7 +22,7 @@ export function HtmlCard({
       ) : (
         <div>
           <HtmlDisplay html={html} />
-          <div className="absolute inset-0 z-50 mt-0"></div>
+          <ReadOnlyOverlay />
         </div>
       )}
     </>

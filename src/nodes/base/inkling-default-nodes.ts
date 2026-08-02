@@ -46,7 +46,7 @@ export * from '@/nodes/base/nodes/at-link/index'
 export * from '@/nodes/base/nodes/zwnj/ZWNJNode'
 export * from '@/nodes/base/nodes/footnotedefinition/FootnoteDefinitionNode'
 
-export const serializers = {
+const serializers = {
   linebreak: linebreakSerializers,
   paragraph: paragraphSerializers,
 }

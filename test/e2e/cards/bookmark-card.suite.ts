@@ -3,11 +3,11 @@ import { expect, test, type Page } from '@playwright/test'
 import {
   assertHTML,
   createSnippet,
+  ctrlOrCmd,
   focusEditor,
   html,
   initialize,
   insertCard,
-  isMac,
   waitForCardContentSynced,
   waitForHistoryGroupBoundary,
 } from '#/utils/e2e'
@@ -27,7 +27,6 @@ export function describeBookmarkCardSuite({
   urlPlaceholder: string
 }) {
   test.describe(title, () => {
-    const ctrlOrCmd = isMac() ? 'Meta' : 'Control'
     let page: Page
     test.beforeAll(async ({ browser }) => {
       page = await browser.newPage()
@@ -303,7 +302,7 @@ export function describeBookmarkCardSuite({
       // wait so the card deletion becomes its own undo group
       await waitForHistoryGroupBoundary(page)
       await page.keyboard.press('Backspace')
-      await page.keyboard.press(`${ctrlOrCmd}+z`)
+      await page.keyboard.press(`${ctrlOrCmd(page)}+z`)
 
       // wait for the decorator to re-render after the historic update restores the card
       await page.waitForSelector('[data-inkling-card="bookmark"][data-inkling-card-editing="false"]')

@@ -119,7 +119,15 @@ const CODE_FENCE: MultilineElementTransformer = {
     return codeBlockFence(node.language, node.code)
   },
   regExpEnd: /^```\s*$/,
-  regExpStart: /^```(\w+)?\s*$/,
+  // Language names are free input on export (codeBlockFence emits them
+  // verbatim), so the import side must accept more than \w — c++,
+  // shell-session, etc. used to fall back to literal paragraphs. Card fences
+  // (```inkling:<card>```) still win: buildTransformers orders
+  // CARD_TRANSFORMERS before CODE_FENCE. One accepted tradeoff: an unclosed
+  // ```inkling:xxx fence is malformed input no card transformer claims, and
+  // it now imports as a code block with language 'inkling:xxx' instead of a
+  // literal paragraph.
+  regExpStart: /^```([^\s`]+)?\s*$/,
   replace: (rootNode, _children, startMatch, _endMatch, linesInBetween, _isImport) => {
     rootNode.append($createCodeBlockNode({ code: stripFenceLines(linesInBetween), language: startMatch[1] }))
   },

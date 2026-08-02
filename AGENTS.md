@@ -3,7 +3,7 @@
 ## Project overview
 
 - Single-package repo for `@inkling/editor`, a Lexical-based rich-text editor.
-- React 19, TypeScript 6, Lexical 0.46.
+- React 19, TypeScript 7, Lexical 0.46.
 - Source: `src/`, tests: `test/`, demo: `demo/`.
 
 ## Essential commands

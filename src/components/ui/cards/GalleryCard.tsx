@@ -160,11 +160,8 @@ function FileDragOverlay() {
   const labels = useInklingLabels()
 
   return (
-    <div
-      className="bg-black-60 pointer-events-none absolute inset-0 flex items-center bg-black/60"
-      data-inkling-card-drag-text
-    >
-      <span className="sans-serif fw7 f7 block w-full text-center font-bold text-white">
+    <div className="pointer-events-none absolute inset-0 flex items-center bg-black/60" data-inkling-card-drag-text>
+      <span className="block w-full text-center font-bold text-white">
         {interpolateLabel(labels['media.dragText.addToGallery'], { max: `${MAX_IMAGES}` })}
       </span>
     </div>
@@ -238,7 +235,7 @@ export function GalleryCard({
 
         {errorMessage && !isDragging ? (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60" data-testid="gallery-error">
-            <span className="center sans-serif f7 block bg-red px-2 font-bold text-white">
+            <span className="block bg-red px-2 font-bold text-white">
               {errorMessage}.
               <button
                 className="ml-2 cursor-pointer underline"
@@ -262,15 +259,12 @@ export function GalleryCard({
       </div>
 
       <CardCaptionEditor
-        altText={''}
-        altTextPlaceholder=""
         captionEditor={captionEditor}
         captionEditorInitialState={captionEditorInitialState}
         captionPlaceholder={labels['caption.gallery.placeholder']}
         dataTestId="gallery-card-caption"
         isSelected={isSelected ?? false}
         readOnly={!isSelected}
-        setAltText={() => {}}
       />
     </figure>
   )

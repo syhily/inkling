@@ -96,18 +96,6 @@ describe('EmojiPickerPlugin', () => {
     registerSpy.mockRestore()
   })
 
-  it('adds the document keydown listener once and removes it on unmount', () => {
-    const editor = createTestEditor()
-    const addSpy = vi.spyOn(document, 'addEventListener')
-    const removeSpy = vi.spyOn(document, 'removeEventListener')
-    const { unmount } = mountPlugin(editor)
-    expect(addSpy.mock.calls.filter(([type]) => type === 'keydown')).toHaveLength(1)
-    unmount()
-    expect(removeSpy.mock.calls.filter(([type]) => type === 'keydown')).toHaveLength(1)
-    addSpy.mockRestore()
-    removeSpy.mockRestore()
-  })
-
   it('applies only the latest query results when searches resolve out of order', async () => {
     const pending = new Map<string, (emojis: EmojiSearchResult[]) => void>()
     const searchMock = vi.mocked(SearchIndex.search)

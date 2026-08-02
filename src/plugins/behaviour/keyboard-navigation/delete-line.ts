@@ -51,7 +51,6 @@ export function registerDeleteLineCommand(editor: LexicalEditor, deps: KeyboardN
               // Delete from the paragraph start to the caret, preserving any text
               // after the caret and any later lines. If the paragraph becomes empty,
               // remove it and select the adjacent card.
-              const anchor = selection.anchor
               anchor.set(topLevelElement.getKey(), 0, 'element')
               selection.removeText()
               if (topLevelElement.getChildrenSize() === 0) {

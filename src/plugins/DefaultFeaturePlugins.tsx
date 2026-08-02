@@ -27,7 +27,6 @@ export interface FeaturePluginEntry {
 export const DEFAULT_FEATURE_PLUGINS: readonly FeaturePluginEntry[] = [
   // Lexical
   { key: 'list', Component: ListPlugin }, // adds indent/outdent/remove etc support
-  // <TabIndentationPlugin /> — tab/shift+tab triggers indent/outdent
   // Inkling
   { key: 'card-menu', Component: CardMenuPlugin },
   { key: 'snippet', Component: InklingSnippetPlugin },

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 
 import PlusIcon from '@/assets/icons/plus.svg?react'
+import { ConicRing } from '@/components/ui/ColorPicker'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { usePreviousFocus } from '@/hooks/usePreviousFocus'
@@ -34,19 +35,7 @@ export function ColorOptionButtons({ buttons = [], selectedName, onClick }: Colo
         type="button"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {selectedName && (
-          <div
-            className="absolute inset-0 rounded-full bg-clip-content p-[3px]"
-            style={{
-              background:
-                'conic-gradient(hsl(360,100%,50%),hsl(315,100%,50%),hsl(270,100%,50%),hsl(225,100%,50%),hsl(180,100%,50%),hsl(135,100%,50%),hsl(90,100%,50%),hsl(45,100%,50%),hsl(0,100%,50%))',
-              WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-              WebkitMaskComposite: 'xor',
-              mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-              maskComposite: 'exclude',
-            }}
-          />
-        )}
+        {selectedName && <ConicRing />}
         <span
           className={`${selectedButton?.color || ''} block size-full rounded-full border-2 border-white dark:border-grey-950`}
         ></span>

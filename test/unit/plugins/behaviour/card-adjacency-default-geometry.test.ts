@@ -16,7 +16,7 @@ const DEFAULT_GEOMETRY_TEST_NODES = [ImageNode]
 function createTestEditor() {
   return createEditor({
     namespace: 'test',
-    nodes: DEFAULT_GEOMETRY_TEST_NODES as [],
+    nodes: DEFAULT_GEOMETRY_TEST_NODES,
     onError: () => {},
   })
 }

@@ -165,7 +165,7 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
     if (backgroundColor && layout === 'split') {
       // Make sure the text color matches the background color
       // It might be different if an image was uploaded in a non-split layout
-      handleBackgroundColor(backgroundColor, matchingHeaderTextColor(backgroundColor || ''))
+      handleBackgroundColor(backgroundColor, matchingHeaderTextColor(backgroundColor))
     }
     // This is only needed when the layout is changed
     // oxlint-disable-next-line react-hooks/exhaustive-deps
@@ -265,6 +265,11 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
   }
 
   const correctedBackgroundSize = backgroundSize === 'contain' && backgroundImageSrc ? 'contain' : 'cover'
+
+  // Tailwind scans source text, so no runtime interpolation — map the
+  // alignment vocabulary to full class names ('' / legacy values read as
+  // left, the element's default)
+  const buttonAlignmentClass = alignment === 'center' ? 'text-center' : 'text-left'
 
   const getButtonSize = (layoutString: string) => {
     if (layoutString === 'regular') {
@@ -431,7 +436,7 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
 
             {buttonEnabled && (
               <div
-                className={`text-${alignment} w-full ${layout === 'regular' ? 'peer-[.inkling-lexical]:mt-8' : layout === 'wide' ? 'peer-[.inkling-lexical]:mt-8 md:w-2/3' : layout === 'full' ? 'peer-[.inkling-lexical]:mt-8 md:w-2/3 peer-[.inkling-lexical]:md:mt-8 xl:w-1/2' : 'max-w-[500px] peer-[.inkling-lexical]:mt-8 peer-[.inkling-lexical]:md:mt-8'}`}
+                className={`${buttonAlignmentClass} w-full ${layout === 'regular' ? 'peer-[.inkling-lexical]:mt-8' : layout === 'wide' ? 'peer-[.inkling-lexical]:mt-8 md:w-2/3' : layout === 'full' ? 'peer-[.inkling-lexical]:mt-8 md:w-2/3 peer-[.inkling-lexical]:md:mt-8 xl:w-1/2' : 'max-w-[500px] peer-[.inkling-lexical]:mt-8 peer-[.inkling-lexical]:md:mt-8'}`}
               >
                 <Button
                   dataTestId="header-card-button"
@@ -532,7 +537,7 @@ export function HeaderCard({ view, handlers, upload, editors }: HeaderCardProps)
                 }
 
                 if (backgroundColor) {
-                  handleBackgroundColor(backgroundColor, matchingHeaderTextColor(backgroundColor || ''))
+                  handleBackgroundColor(backgroundColor, matchingHeaderTextColor(backgroundColor))
                 }
               }
 

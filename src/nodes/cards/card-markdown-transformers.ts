@@ -103,7 +103,10 @@ export function createCardTransformer({
       return '```inkling:' + card + '\n' + JSON.stringify(data) + '\n```'
     },
     regExpEnd: /^```\s*$/,
-    regExpStart: new RegExp('^```inkling:' + card + '\\s*$'),
+    // `card` is an arbitrary host nodeType via `defineCard` — escape it so
+    // regex metacharacters in a host type cannot over-match or throw at
+    // RegExp construction
+    regExpStart: new RegExp('^```inkling:' + escapeRegExp(card) + '\\s*$'),
     replace: (rootNode, _children, _startMatch, _endMatch, linesInBetween, _isImport) => {
       const raw = linesInBetween?.join('\n') ?? ''
       const parsed: unknown = raw.trim() ? JSON.parse(raw) : {}
@@ -136,10 +139,18 @@ export function createCardTransformer({
  * the transformer's `replace`, before it is appended.
  */
 function $detachNestedEditorsForRoundTrip(node: LexicalNode): void {
+  // the spec-declared `__<name>` fields exist on the node at runtime but are
+  // not reachable through the widened LexicalNode signature — the assertion
+  // is the honest bridge to the record view the loop below writes through
   const target = node as unknown as Record<string, unknown>
   getNestedEditorSpecs(node).forEach((spec) => {
     target[`__${spec.name}`] = null
   })
+}
+
+// standard regex-literal escape for host-supplied fence tags
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 // `createNode` receives JSON.parse output from the card fence body: validate
