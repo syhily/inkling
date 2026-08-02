@@ -117,7 +117,23 @@ export function $insertSelectedEmoji(
   }
 
   if (nodeToRemove) {
+    const removedText = nodeToRemove.getTextContent()
+    const previousSibling = nodeToRemove.getPreviousSibling()
     nodeToRemove.remove()
+
+    // The typeahead's split state can leave the trigger ':' in the text node
+    // BEFORE nodeToRemove (rapid typing re-splits the query, and the last
+    // split can start after the colon) — when the removal span carries no
+    // leading ':', consume the trailing ':' of the previous sibling so the
+    // commit always eats the full `:query`. The guard keeps a legitimately
+    // typed colon before the trigger (e.g. "note: :tac" — the trigger colon
+    // rides nodeToRemove there, so no sibling consumption happens) untouched.
+    if (!removedText.startsWith(':') && previousSibling && $isTextNode(previousSibling)) {
+      const previousText = previousSibling.getTextContent()
+      if (previousText.endsWith(':')) {
+        previousSibling.spliceText(previousText.length - 1, 1, '', true)
+      }
+    }
   }
 
   const native = emoji.skins[0].native

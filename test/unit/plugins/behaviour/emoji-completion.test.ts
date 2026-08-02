@@ -357,4 +357,54 @@ describe('$insertSelectedEmoji', () => {
     expect(rootText(editor)).toBe('hi 🌮')
     expect(emojiNodeFormat(editor, '🌮')).toEqual([])
   })
+
+  it('consumes a trigger colon the typeahead split left in the previous sibling', async () => {
+    // the typeahead re-split the query after the colon — [`:`][`tac`] — and
+    // handed the surgery only the `tac` node; without the sibling consumption
+    // the commit leaves the stray ':' behind (the e2e flake)
+    const editor = createTestEditor()
+    await buildParagraph(editor, [{ text: ':tac' }], { segment: 0, offset: 4 })
+
+    let committed: EmojiCommitResult | null = null
+    await drainEnqueuedUpdates(editor, () => {
+      const selection = $getSelection()
+      if (!$isRangeSelection(selection)) {
+        throw new Error('expected a range selection')
+      }
+      const anchorNode = selection.anchor.getNode()
+      if (!$isTextNode(anchorNode)) {
+        throw new Error('expected a text anchor')
+      }
+      const split = anchorNode.splitText(1)
+      committed = $insertSelectedEmoji(taco, split[1])
+    })
+
+    expect(committed).toEqual({ id: 'taco', native: '🌮' })
+    expect(rootText(editor)).toBe('🌮')
+    expect(emojiNodeFormat(editor, '🌮')).toEqual([])
+  })
+
+  it('keeps a legitimately typed colon before the trigger untouched', async () => {
+    // "note: :tac" — the trigger colon rides nodeToRemove, so the previous
+    // sibling's trailing ':' (the legit one) must survive the commit
+    const editor = createTestEditor()
+    await buildParagraph(editor, [{ text: 'note: :tac' }], { segment: 0, offset: 10 })
+
+    let committed: EmojiCommitResult | null = null
+    await drainEnqueuedUpdates(editor, () => {
+      const selection = $getSelection()
+      if (!$isRangeSelection(selection)) {
+        throw new Error('expected a range selection')
+      }
+      const anchorNode = selection.anchor.getNode()
+      if (!$isTextNode(anchorNode)) {
+        throw new Error('expected a text anchor')
+      }
+      const split = anchorNode.splitText(7)
+      committed = $insertSelectedEmoji(taco, split[1])
+    })
+
+    expect(committed).toEqual({ id: 'taco', native: '🌮' })
+    expect(rootText(editor)).toBe('note: 🌮')
+  })
 })

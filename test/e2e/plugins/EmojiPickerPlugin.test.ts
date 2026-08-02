@@ -253,6 +253,11 @@ test.describe('Emoji Picker Plugin', function () {
 
     await page.keyboard.press('Escape')
     await page.keyboard.type('enjoy :ta', { delay: 10 })
+    // the typeahead must be open before the arrow keys navigate it — without
+    // this wait the Enter can land on the caption's nested-enter handoff
+    // instead (deselecting the card and handing focus to the main editor),
+    // which is the flake this test used to show under load
+    await expect(page.getByTestId('emoji-menu')).toBeVisible()
     await page.keyboard.press('ArrowDown') // make sure we test arrow key use
     await page.keyboard.press('ArrowDown')
     await page.keyboard.press('ArrowUp')

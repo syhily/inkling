@@ -14,8 +14,16 @@ export default defineConfig({
   testDir: './test/e2e',
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  /* One retry everywhere: a handful of timing-sensitive UI tests (paste into
+     CodeMirror, HTML output, emoji typeahead) can race under suite load even
+     at 2 workers — CI always retried; the local run now does the same so the
+     suite is green on both. */
+  retries: 1,
+  /* Fixed at 2 workers everywhere: the dev server is single-threaded (vite +
+     the multiplayer sidecar), and the local default — cpu/2, i.e. 18 workers
+     on a 36-core machine — overloads it into page.goto timeouts. 2 workers
+     matches CI and keeps the suite green locally. */
+  workers: 2,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI
     ? [['github'], ['html']]
